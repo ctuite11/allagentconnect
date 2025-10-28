@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
+import AddressAutocomplete from "./AddressAutocomplete";
 
 const Hero = () => {
   return (
@@ -33,9 +33,10 @@ const Hero = () => {
           <div className="bg-card rounded-xl shadow-custom-lg p-6 max-w-2xl">
             <h2 className="text-lg font-semibold mb-4">Let's help you find your dream home.</h2>
             <div className="flex gap-3">
-              <Input 
+              <AddressAutocomplete 
                 placeholder="City, State, Zip or Neighborhood"
                 className="flex-1"
+                onPlaceSelect={(place) => console.log('Selected place:', place)}
               />
               <Button size="lg" className="gap-2">
                 <Search className="w-5 h-5" />
