@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AgentDashboard from "./pages/AgentDashboard";
 import SubmitBuyerNeed from "./pages/SubmitBuyerNeed";
+import AddListing from "./pages/AddListing";
+import PropertyDetail from "./pages/PropertyDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/agent-dashboard" element={<AgentDashboard />} />
           <Route path="/submit-buyer-need" element={<SubmitBuyerNeed />} />
+          <Route path="/add-listing" element={<AddListing />} />
+          <Route path="/property/:id" element={<PropertyDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

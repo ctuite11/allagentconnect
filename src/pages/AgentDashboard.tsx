@@ -184,13 +184,23 @@ const AgentDashboard = () => {
 
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Submit Buyer Need</CardTitle>
+              <CardTitle>Quick Actions</CardTitle>
               <CardDescription>
-                Post a buyer need to alert matching agents
+                Add listings or post buyer needs
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button onClick={() => navigate("/submit-buyer-need")}>
+            <CardContent className="space-y-4">
+              <Button 
+                onClick={() => navigate("/add-listing")}
+                className="w-full"
+              >
+                Add New Listing
+              </Button>
+              <Button 
+                onClick={() => navigate("/submit-buyer-need")}
+                variant="secondary"
+                className="w-full"
+              >
                 Submit New Buyer Need
               </Button>
             </CardContent>
