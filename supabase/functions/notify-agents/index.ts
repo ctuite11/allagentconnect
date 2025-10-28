@@ -27,6 +27,20 @@ serve(async (req) => {
 
     const { countyId, propertyType, maxPrice, bedrooms, bathrooms, description }: BuyerNeedRequest = await req.json();
 
+    // Validate inputs
+    if (!countyId || typeof countyId !== "string" || countyId.length > 100) {
+      throw new Error("Invalid county ID");
+    }
+    if (!propertyType || typeof propertyType !== "string" || propertyType.length > 50) {
+      throw new Error("Invalid property type");
+    }
+    if (!maxPrice || typeof maxPrice !== "string" || !/^\d+(\.\d{1,2})?$/.test(maxPrice)) {
+      throw new Error("Invalid max price");
+    }
+    if (description && (typeof description !== "string" || description.length > 2000)) {
+      throw new Error("Description too long");
+    }
+
     console.log("Processing buyer need notification for county:", countyId);
 
     // Get county name

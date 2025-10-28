@@ -10,6 +10,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import Navigation from "@/components/Navigation";
+import { z } from "zod";
+
+const buyerNeedSchema = z.object({
+  propertyType: z.enum(["single_family", "condo", "townhouse", "multi_family", "land", "commercial"], {
+    errorMap: () => ({ message: "Please select a valid property type" }),
+  }),
+  countyId: z.string().uuid("Please select a valid county"),
+  maxPrice: z.string()
+    .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number")
+    .refine((val) => parseFloat(val) > 0 && parseFloat(val) < 100000000, {
+      message: "Price must be between $1 and $100,000,000",
+    }),
+  bedrooms: z.string()
+    .regex(/^\d*$/, "Bedrooms must be a whole number")
+    .optional()
+    .or(z.literal("")),
+  bathrooms: z.string()
+    .regex(/^\d*(\.\d{1})?$/, "Bathrooms must be a number (e.g., 2.5)")
+    .optional()
+    .or(z.literal("")),
+  description: z.string()
+    .max(2000, "Description must be less than 2000 characters")
+    .optional(),
+});
 
 interface County {
   id: string;
@@ -64,14 +88,17 @@ const SubmitBuyerNeed = () => {
     setLoading(true);
 
     try {
+      // Validate input
+      const validatedData = buyerNeedSchema.parse(formData);
+
       const { error: insertError } = await supabase.from("buyer_needs").insert({
         submitted_by: user?.id,
-        property_type: formData.propertyType as any,
-        county_id: formData.countyId,
-        max_price: parseFloat(formData.maxPrice),
-        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
-        bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
-        description: formData.description,
+        property_type: validatedData.propertyType as any,
+        county_id: validatedData.countyId,
+        max_price: parseFloat(validatedData.maxPrice),
+        bedrooms: validatedData.bedrooms ? parseInt(validatedData.bedrooms) : null,
+        bathrooms: validatedData.bathrooms ? parseFloat(validatedData.bathrooms) : null,
+        description: validatedData.description || null,
       } as any);
 
       if (insertError) throw insertError;
@@ -79,12 +106,12 @@ const SubmitBuyerNeed = () => {
       // Call edge function to send emails
       const { error: emailError } = await supabase.functions.invoke("notify-agents", {
         body: {
-          countyId: formData.countyId,
-          propertyType: formData.propertyType,
-          maxPrice: formData.maxPrice,
-          bedrooms: formData.bedrooms,
-          bathrooms: formData.bathrooms,
-          description: formData.description,
+          countyId: validatedData.countyId,
+          propertyType: validatedData.propertyType,
+          maxPrice: validatedData.maxPrice,
+          bedrooms: validatedData.bedrooms,
+          bathrooms: validatedData.bathrooms,
+          description: validatedData.description,
         },
       });
 
@@ -97,7 +124,11 @@ const SubmitBuyerNeed = () => {
 
       navigate("/agent-dashboard");
     } catch (error: any) {
-      toast.error("Error submitting buyer need: " + error.message);
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error("Error submitting buyer need: " + error.message);
+      }
     } finally {
       setLoading(false);
     }

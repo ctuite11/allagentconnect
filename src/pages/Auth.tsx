@@ -6,6 +6,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
+import { z } from "zod";
+
+const signUpSchema = z.object({
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .max(100, "Password must be less than 100 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+  firstName: z.string().trim().min(1, "First name is required").max(100, "First name must be less than 100 characters"),
+  lastName: z.string().trim().min(1, "Last name is required").max(100, "Last name must be less than 100 characters"),
+  phone: z.string().trim().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format").optional().or(z.literal("")),
+  company: z.string().trim().max(200, "Company name must be less than 200 characters").optional(),
+});
+
+const loginSchema = z.object({
+  email: z.string().trim().email("Invalid email address").max(255),
+  password: z.string().min(1, "Password is required"),
+});
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -46,9 +66,12 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Validate input
+      const validatedData = signUpSchema.parse(formData);
+
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+        email: validatedData.email,
+        password: validatedData.password,
         options: {
           emailRedirectTo: `${window.location.origin}/agent-dashboard`,
         },
@@ -59,11 +82,11 @@ const Auth = () => {
       if (authData.user) {
         const { error: profileError } = await supabase.from("agent_profiles").insert({
           id: authData.user.id,
-          email: formData.email,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          phone: formData.phone,
-          company: formData.company,
+          email: validatedData.email,
+          first_name: validatedData.firstName,
+          last_name: validatedData.lastName,
+          phone: validatedData.phone || null,
+          company: validatedData.company || null,
         });
 
         if (profileError) throw profileError;
@@ -71,7 +94,11 @@ const Auth = () => {
         toast.success("Account created successfully!");
       }
     } catch (error: any) {
-      toast.error(error.message);
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -82,15 +109,25 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // Validate input
+      const validatedData = loginSchema.parse({
         email: formData.email,
         password: formData.password,
+      });
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: validatedData.email,
+        password: validatedData.password,
       });
 
       if (error) throw error;
       toast.success("Logged in successfully!");
     } catch (error: any) {
-      toast.error(error.message);
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message);
+      }
     } finally {
       setLoading(false);
     }

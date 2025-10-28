@@ -13,6 +13,26 @@ Deno.serve(async (req) => {
   try {
     const { latitude, longitude, address, city, state, zip_code } = await req.json();
 
+    // Validate inputs
+    if (latitude !== undefined && (typeof latitude !== "number" || latitude < -90 || latitude > 90)) {
+      throw new Error("Invalid latitude");
+    }
+    if (longitude !== undefined && (typeof longitude !== "number" || longitude < -180 || longitude > 180)) {
+      throw new Error("Invalid longitude");
+    }
+    if (address && (typeof address !== "string" || address.length > 500)) {
+      throw new Error("Invalid address");
+    }
+    if (city && (typeof city !== "string" || city.length > 200)) {
+      throw new Error("Invalid city");
+    }
+    if (state && (typeof state !== "string" || state.length > 50)) {
+      throw new Error("Invalid state");
+    }
+    if (zip_code && (typeof zip_code !== "string" || !/^\d{5}(-\d{4})?$/.test(zip_code))) {
+      throw new Error("Invalid ZIP code");
+    }
+
     const attomApiKey = Deno.env.get("ATTOM_API_KEY");
     const walkScoreApiKey = Deno.env.get("WALKSCORE_API_KEY");
     const greatSchoolsApiKey = Deno.env.get("GREATSCHOOLS_API_KEY");
