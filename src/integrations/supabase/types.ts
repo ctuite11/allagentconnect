@@ -158,6 +158,84 @@ export type Database = {
         }
         Relationships: []
       }
+      listings: {
+        Row: {
+          address: string
+          agent_id: string
+          attom_data: Json | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string
+          created_at: string
+          description: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          lot_size: number | null
+          price: number
+          property_type: string | null
+          schools_data: Json | null
+          square_feet: number | null
+          state: string
+          status: string
+          updated_at: string
+          value_estimate: Json | null
+          walk_score_data: Json | null
+          year_built: number | null
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          agent_id: string
+          attom_data?: Json | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          lot_size?: number | null
+          price: number
+          property_type?: string | null
+          schools_data?: Json | null
+          square_feet?: number | null
+          state: string
+          status?: string
+          updated_at?: string
+          value_estimate?: Json | null
+          walk_score_data?: Json | null
+          year_built?: number | null
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          agent_id?: string
+          attom_data?: Json | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          lot_size?: number | null
+          price?: number
+          property_type?: string | null
+          schools_data?: Json | null
+          square_feet?: number | null
+          state?: string
+          status?: string
+          updated_at?: string
+          value_estimate?: Json | null
+          walk_score_data?: Json | null
+          year_built?: number | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
