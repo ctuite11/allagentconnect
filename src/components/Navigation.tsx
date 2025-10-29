@@ -30,30 +30,42 @@ const Navigation = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="text-2xl font-bold cursor-pointer" onClick={() => navigate("/")}>
-              <span className="text-primary">Direct</span> Connect MLS
+              <span className="text-primary">AllAgent</span>Connect
             </div>
           </div>
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="/#home" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+            >
               <Home className="w-4 h-4" />
               Home
-            </a>
-            <a href="/#properties" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
+            </button>
+            <button
+              onClick={() => navigate("/browse")}
+              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+            >
               <Search className="w-4 h-4" />
-              Buy
-            </a>
-            <a href="/#agents" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
+              Browse
+            </button>
+            <button
+              onClick={() => navigate("/our-agents")}
+              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+            >
               <Users className="w-4 h-4" />
               Our Agents
-            </a>
+            </button>
           </div>
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={() => navigate("/submit-buyer-need")}>
+              Submit Need
+            </Button>
             {user ? (
-              <Button variant="ghost" size="sm" onClick={() => navigate("/agent-dashboard")}>
+              <Button variant="default" size="sm" onClick={() => navigate("/agent-dashboard")}>
                 <LayoutDashboard className="w-4 h-4 mr-2" />
                 Dashboard
               </Button>
@@ -76,35 +88,50 @@ const Navigation = () => {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden mt-4 pb-4 space-y-2">
-            <a
-              href="/#home"
-              className="flex items-center gap-2 py-2 text-foreground hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+            <button
+              onClick={() => {
+                navigate("/");
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
             >
               <Home className="w-4 h-4" />
               Home
-            </a>
-            <a
-              href="/#properties"
-              className="flex items-center gap-2 py-2 text-foreground hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+            </button>
+            <button
+              onClick={() => {
+                navigate("/browse");
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
             >
               <Search className="w-4 h-4" />
-              Buy
-            </a>
-            <a
-              href="/#agents"
-              className="flex items-center gap-2 py-2 text-foreground hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+              Browse
+            </button>
+            <button
+              onClick={() => {
+                navigate("/our-agents");
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
             >
               <Users className="w-4 h-4" />
               Our Agents
-            </a>
-            <div className="pt-4 border-t border-border mt-4">
+            </button>
+            <div className="pt-4 border-t border-border mt-4 space-y-2">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  navigate("/submit-buyer-need");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Submit Need
+              </Button>
               {user ? (
                 <Button 
                   className="w-full" 
-                  variant="ghost"
                   onClick={() => {
                     navigate("/agent-dashboard");
                     setIsMenuOpen(false);

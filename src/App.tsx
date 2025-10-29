@@ -9,6 +9,8 @@ import AgentDashboard from "./pages/AgentDashboard";
 import SubmitBuyerNeed from "./pages/SubmitBuyerNeed";
 import AddListing from "./pages/AddListing";
 import PropertyDetail from "./pages/PropertyDetail";
+import BrowseProperties from "./pages/BrowseProperties";
+import OurAgents from "./pages/OurAgents";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/browse" element={<BrowseProperties />} />
+          <Route path="/our-agents" element={<OurAgents />} />
           <Route path="/agent-dashboard" element={<AgentDashboard />} />
           <Route path="/submit-buyer-need" element={<SubmitBuyerNeed />} />
           <Route path="/add-listing" element={<AddListing />} />
