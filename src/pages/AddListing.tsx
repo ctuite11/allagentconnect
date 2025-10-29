@@ -11,6 +11,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { z } from "zod";
+
+// Zod validation schema for listing data
+const listingSchema = z.object({
+  address: z.string().trim().min(1, "Address is required").max(500, "Address must be less than 500 characters"),
+  city: z.string().trim().min(1, "City is required").max(200, "City must be less than 200 characters"),
+  state: z.string().trim().length(2, "State must be 2 characters"),
+  zip_code: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code format"),
+  price: z.number().min(1000, "Price must be at least $1,000").max(100000000, "Price must be less than $100,000,000"),
+  property_type: z.string().optional(),
+  bedrooms: z.number().int().min(0, "Bedrooms must be 0 or more").max(50, "Bedrooms must be 50 or less").optional(),
+  bathrooms: z.number().min(0, "Bathrooms must be 0 or more").max(50, "Bathrooms must be 50 or less").optional(),
+  square_feet: z.number().int().min(1, "Square feet must be at least 1").max(100000, "Square feet must be less than 100,000").optional(),
+  year_built: z.number().int().min(1800, "Year built must be 1800 or later").max(new Date().getFullYear() + 1, "Year built cannot be in the future").optional(),
+  lot_size: z.number().min(0, "Lot size must be 0 or more").max(10000, "Lot size must be less than 10,000 acres").optional(),
+  description: z.string().max(5000, "Description must be less than 5,000 characters").optional(),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
+});
 
 const AddListing = () => {
   const navigate = useNavigate();
@@ -124,22 +143,43 @@ const AddListing = () => {
     setSubmitting(true);
 
     try {
-      const { error } = await supabase.from("listings").insert({
-        agent_id: user.id,
+      // Prepare data for validation
+      const dataToValidate = {
         address: formData.address,
         city: formData.city,
         state: formData.state,
         zip_code: formData.zip_code,
+        price: parseFloat(formData.price),
+        property_type: formData.property_type || undefined,
+        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : undefined,
+        bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : undefined,
+        square_feet: formData.square_feet ? parseInt(formData.square_feet) : undefined,
+        year_built: formData.year_built ? parseInt(formData.year_built) : undefined,
+        lot_size: formData.lot_size ? parseFloat(formData.lot_size) : undefined,
+        description: formData.description || undefined,
         latitude: formData.latitude,
         longitude: formData.longitude,
-        property_type: formData.property_type || null,
-        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
-        bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
-        square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
-        lot_size: formData.lot_size ? parseFloat(formData.lot_size) : null,
-        year_built: formData.year_built ? parseInt(formData.year_built) : null,
-        price: parseFloat(formData.price),
-        description: formData.description || null,
+      };
+
+      // Validate data with Zod
+      const validatedData = listingSchema.parse(dataToValidate);
+
+      const { error } = await supabase.from("listings").insert({
+        agent_id: user.id,
+        address: validatedData.address,
+        city: validatedData.city,
+        state: validatedData.state,
+        zip_code: validatedData.zip_code,
+        latitude: validatedData.latitude,
+        longitude: validatedData.longitude,
+        property_type: validatedData.property_type || null,
+        bedrooms: validatedData.bedrooms || null,
+        bathrooms: validatedData.bathrooms || null,
+        square_feet: validatedData.square_feet || null,
+        lot_size: validatedData.lot_size || null,
+        year_built: validatedData.year_built || null,
+        price: validatedData.price,
+        description: validatedData.description || null,
       });
 
       if (error) throw error;
@@ -148,7 +188,14 @@ const AddListing = () => {
       navigate("/agent-dashboard");
     } catch (error: any) {
       console.error("Error creating listing:", error);
-      toast.error(error.message || "Failed to create listing");
+      
+      // Handle Zod validation errors
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error(error.message || "Failed to create listing");
+      }
     } finally {
       setSubmitting(false);
     }
