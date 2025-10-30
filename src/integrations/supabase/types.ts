@@ -261,6 +261,38 @@ export type Database = {
           },
         ]
       }
+      hot_sheet_shares: {
+        Row: {
+          created_at: string
+          hot_sheet_id: string
+          id: string
+          shared_by_user_id: string
+          shared_with_email: string
+        }
+        Insert: {
+          created_at?: string
+          hot_sheet_id: string
+          id?: string
+          shared_by_user_id: string
+          shared_with_email: string
+        }
+        Update: {
+          created_at?: string
+          hot_sheet_id?: string
+          id?: string
+          shared_by_user_id?: string
+          shared_with_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_shares_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hot_sheets: {
         Row: {
           created_at: string

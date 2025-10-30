@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Search, Users, LayoutDashboard, Menu, X, Heart } from "lucide-react";
+import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -58,13 +58,22 @@ const Navigation = () => {
               Our Agents
             </button>
             {user && (
-              <button
-                onClick={() => navigate("/favorites")}
-                className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
-              >
-                <Heart className="w-4 h-4" />
-                Favorites
-              </button>
+              <>
+                <button
+                  onClick={() => navigate("/favorites")}
+                  className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+                >
+                  <Heart className="w-4 h-4" />
+                  Favorites
+                </button>
+                <button
+                  onClick={() => navigate("/hot-sheets")}
+                  className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+                >
+                  <Bell className="w-4 h-4" />
+                  Hot Sheets
+                </button>
+              </>
             )}
           </div>
 
@@ -128,16 +137,28 @@ const Navigation = () => {
               Our Agents
             </button>
             {user && (
-              <button
-                onClick={() => {
-                  navigate("/favorites");
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-              >
-                <Heart className="w-4 h-4" />
-                Favorites
-              </button>
+              <>
+                <button
+                  onClick={() => {
+                    navigate("/favorites");
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
+                >
+                  <Heart className="w-4 h-4" />
+                  Favorites
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/hot-sheets");
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
+                >
+                  <Bell className="w-4 h-4" />
+                  Hot Sheets
+                </button>
+              </>
             )}
             <div className="pt-4 border-t border-border mt-4 space-y-2">
               <Button 
