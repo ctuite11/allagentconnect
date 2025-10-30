@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Search, Users, LayoutDashboard, Menu, X } from "lucide-react";
+import { Home, Search, Users, LayoutDashboard, Menu, X, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -57,6 +57,15 @@ const Navigation = () => {
               <Users className="w-4 h-4" />
               Our Agents
             </button>
+            {user && (
+              <button
+                onClick={() => navigate("/favorites")}
+                className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+              >
+                <Heart className="w-4 h-4" />
+                Favorites
+              </button>
+            )}
           </div>
 
           {/* Desktop Auth Buttons */}
@@ -118,6 +127,18 @@ const Navigation = () => {
               <Users className="w-4 h-4" />
               Our Agents
             </button>
+            {user && (
+              <button
+                onClick={() => {
+                  navigate("/favorites");
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
+              >
+                <Heart className="w-4 h-4" />
+                Favorites
+              </button>
+            )}
             <div className="pt-4 border-t border-border mt-4 space-y-2">
               <Button 
                 className="w-full" 
