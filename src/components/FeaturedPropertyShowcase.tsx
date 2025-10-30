@@ -23,10 +23,12 @@ const FeaturedPropertyShowcase = () => {
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      setFeaturedProperty(data);
+      if (data) {
+        setFeaturedProperty(data);
+      }
     } catch (error) {
       console.error("Error fetching featured property:", error);
     } finally {
