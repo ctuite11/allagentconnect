@@ -35,15 +35,6 @@ const AgentDashboard = () => {
   const [listingToDelete, setListingToDelete] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setUser(session.user);
-        loadData(session.user.id);
-      }
-    });
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -51,6 +42,15 @@ const AgentDashboard = () => {
         navigate("/auth");
       } else {
         setUser(session.user);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUser(session.user);
+        loadData(session.user.id);
       }
     });
 
