@@ -3,15 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save, Eye, Upload } from "lucide-react";
 import { z } from "zod";
+import listingIcon from "@/assets/listing-creation-icon.png";
 
 // Zod validation schema for listing data
 const listingSchema = z.object({
@@ -37,19 +38,25 @@ const AddListing = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
+    status: "active",
     address: "",
     city: "",
     state: "",
     zip_code: "",
+    county: "",
+    town: "",
+    neighborhood: "",
     latitude: null as number | null,
     longitude: null as number | null,
-    property_type: "",
+    property_type: "Single Family",
     bedrooms: "",
     bathrooms: "",
     square_feet: "",
     lot_size: "",
     year_built: "",
     price: "",
+    list_date: new Date().toISOString().split('T')[0],
+    expiration_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     description: "",
   });
 
@@ -138,7 +145,15 @@ const AddListing = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSaveDraft = async () => {
+    toast.info("Draft saved locally");
+  };
+
+  const handlePreview = () => {
+    toast.info("Preview functionality coming soon");
+  };
+
+  const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
     e.preventDefault();
     setSubmitting(true);
 
@@ -166,6 +181,7 @@ const AddListing = () => {
 
       const { error } = await supabase.from("listings").insert({
         agent_id: user.id,
+        status: publishNow ? formData.status : "draft",
         address: validatedData.address,
         city: validatedData.city,
         state: validatedData.state,
@@ -213,21 +229,160 @@ const AddListing = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="container mx-auto px-4 py-8 mt-20">
-        <Card className="max-w-3xl mx-auto">
-          <CardHeader>
-            <CardTitle>Add New Listing</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="address">Property Address *</Label>
-                <AddressAutocomplete
-                  onPlaceSelect={handleAddressSelect}
-                  placeholder="Start typing address..."
-                />
-              </div>
+        <div className="max-w-5xl mx-auto">
+          {/* Header Section */}
+          <div className="flex items-center gap-4 mb-8">
+            <h1 className="text-4xl font-bold">Create a new listing for sale.</h1>
+            <img src={listingIcon} alt="Listing creation" className="w-16 h-16" />
+          </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Action Buttons */}
+          <div className="flex gap-4 mb-8">
+            <Button variant="default" size="lg" onClick={handleSaveDraft} className="gap-2">
+              <Save className="w-5 h-5" />
+              Save as Draft
+            </Button>
+            <Button variant="default" size="lg" onClick={handlePreview} className="gap-2">
+              <Eye className="w-5 h-5" />
+              Preview Listing
+            </Button>
+            <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} disabled={submitting} className="gap-2">
+              <Upload className="w-5 h-5" />
+              {submitting ? "Publishing..." : "Publish Listing"}
+            </Button>
+          </div>
+
+          {/* Form Card */}
+          <Card>
+            <CardContent className="pt-6">
+              <h2 className="text-2xl font-bold mb-6">Listing Details</h2>
+              
+              <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
+                {/* Row 1: Status, Property Type, List Date, Expiration Date */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => setFormData({ ...formData, status: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">New</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="sold">Sold</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="property_type">Property Type</Label>
+                    <Select
+                      value={formData.property_type}
+                      onValueChange={(value) => setFormData({ ...formData, property_type: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Single Family">Single Family</SelectItem>
+                        <SelectItem value="Condo">Condo</SelectItem>
+                        <SelectItem value="Townhouse">Townhouse</SelectItem>
+                        <SelectItem value="Multi-Family">Multi-Family</SelectItem>
+                        <SelectItem value="Land">Land</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="list_date">List Date</Label>
+                    <Input
+                      id="list_date"
+                      type="date"
+                      value={formData.list_date}
+                      onChange={(e) => setFormData({ ...formData, list_date: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expiration_date">Expiration Date</Label>
+                    <Input
+                      id="expiration_date"
+                      type="date"
+                      value={formData.expiration_date}
+                      onChange={(e) => setFormData({ ...formData, expiration_date: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 2: List Price, Enter Address, Zip Code */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">List Price *</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      placeholder="$500,000"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Enter Address *</Label>
+                    <AddressAutocomplete
+                      onPlaceSelect={handleAddressSelect}
+                      placeholder="Listing Address"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="zip_code">Zip Code *</Label>
+                    <Input
+                      id="zip_code"
+                      value={formData.zip_code}
+                      onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Row 3: State, County, Town, Neighborhood */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State *</Label>
+                    <Input
+                      id="state"
+                      value={formData.state}
+                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="county">County</Label>
+                    <Input
+                      id="county"
+                      value={formData.county}
+                      onChange={(e) => setFormData({ ...formData, county: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="town">Town</Label>
+                    <Input
+                      id="town"
+                      value={formData.town}
+                      onChange={(e) => setFormData({ ...formData, town: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="neighborhood">Neighborhood</Label>
+                    <Input
+                      id="neighborhood"
+                      value={formData.neighborhood}
+                      onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 4: City */}
                 <div className="space-y-2">
                   <Label htmlFor="city">City *</Label>
                   <Input
@@ -237,130 +392,73 @@ const AddListing = () => {
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="state">State *</Label>
-                  <Input
-                    id="state"
-                    value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zip_code">Zip Code *</Label>
-                  <Input
-                    id="zip_code"
-                    value={formData.zip_code}
-                    onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="property_type">Property Type</Label>
-                  <Select
-                    value={formData.property_type}
-                    onValueChange={(value) => setFormData({ ...formData, property_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Single Family">Single Family</SelectItem>
-                      <SelectItem value="Condo">Condo</SelectItem>
-                      <SelectItem value="Townhouse">Townhouse</SelectItem>
-                      <SelectItem value="Multi-Family">Multi-Family</SelectItem>
-                      <SelectItem value="Land">Land</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Property Details */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bedrooms">Bedrooms</Label>
+                    <Input
+                      id="bedrooms"
+                      type="number"
+                      value={formData.bedrooms}
+                      onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bathrooms">Bathrooms</Label>
+                    <Input
+                      id="bathrooms"
+                      type="number"
+                      step="0.5"
+                      value={formData.bathrooms}
+                      onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="square_feet">Sq Ft</Label>
+                    <Input
+                      id="square_feet"
+                      type="number"
+                      value={formData.square_feet}
+                      onChange={(e) => setFormData({ ...formData, square_feet: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="year_built">Year Built</Label>
+                    <Input
+                      id="year_built"
+                      type="number"
+                      value={formData.year_built}
+                      onChange={(e) => setFormData({ ...formData, year_built: e.target.value })}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="price">Price *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bedrooms">Bedrooms</Label>
+                  <Label htmlFor="lot_size">Lot Size (acres)</Label>
                   <Input
-                    id="bedrooms"
+                    id="lot_size"
                     type="number"
-                    value={formData.bedrooms}
-                    onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                    step="0.01"
+                    value={formData.lot_size}
+                    onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bathrooms">Bathrooms</Label>
-                  <Input
-                    id="bathrooms"
-                    type="number"
-                    step="0.5"
-                    value={formData.bathrooms}
-                    onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="square_feet">Sq Ft</Label>
-                  <Input
-                    id="square_feet"
-                    type="number"
-                    value={formData.square_feet}
-                    onChange={(e) => setFormData({ ...formData, square_feet: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="year_built">Year Built</Label>
-                  <Input
-                    id="year_built"
-                    type="number"
-                    value={formData.year_built}
-                    onChange={(e) => setFormData({ ...formData, year_built: e.target.value })}
-                  />
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="lot_size">Lot Size (acres)</Label>
-                <Input
-                  id="lot_size"
-                  type="number"
-                  step="0.01"
-                  value={formData.lot_size}
-                  onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={4}
-                />
-              </div>
-
-              <div className="flex gap-4">
-                <Button type="submit" disabled={submitting}>
-                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Listing
-                </Button>
-                <Button type="button" variant="outline" onClick={() => navigate("/agent-dashboard")}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={4}
+                    placeholder="Describe the property features, location highlights, and any special details..."
+                  />
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
