@@ -3,29 +3,36 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import Navigation from "@/components/Navigation";
+import ListingCard from "@/components/ListingCard";
+import forSaleImg from "@/assets/listing-for-sale.jpg";
+import privateSaleImg from "@/assets/listing-private-sale.jpg";
+import forRentImg from "@/assets/listing-for-rent.jpg";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-interface County {
+interface Listing {
   id: string;
-  name: string;
+  address: string;
+  city: string;
   state: string;
-}
-
-interface AgentProfile {
-  receive_buyer_alerts: boolean;
+  zip_code: string;
+  price: number;
+  property_type: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  square_feet: number | null;
+  status: string;
 }
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [counties, setCounties] = useState<County[]>([]);
-  const [selectedCounties, setSelectedCounties] = useState<Set<string>>(new Set());
-  const [receiveAlerts, setReceiveAlerts] = useState(true);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [listingToDelete, setListingToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -52,62 +59,44 @@ const AgentDashboard = () => {
 
   const loadData = async (userId: string) => {
     try {
-      const [countiesRes, prefsRes, profileRes] = await Promise.all([
-        supabase.from("counties").select("*").order("name"),
-        supabase.from("agent_county_preferences").select("county_id").eq("agent_id", userId),
-        supabase.from("agent_profiles").select("receive_buyer_alerts").eq("id", userId).single(),
-      ]);
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("agent_id", userId)
+        .order("created_at", { ascending: false });
 
-      if (countiesRes.data) setCounties(countiesRes.data);
-      if (prefsRes.data) {
-        setSelectedCounties(new Set(prefsRes.data.map((p) => p.county_id)));
-      }
-      if (profileRes.data) {
-        setReceiveAlerts(profileRes.data.receive_buyer_alerts);
-      }
+      if (error) throw error;
+      if (data) setListings(data);
     } catch (error: any) {
-      toast.error("Error loading data: " + error.message);
+      toast.error("Error loading listings: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCountyToggle = async (countyId: string) => {
-    const newSelected = new Set(selectedCounties);
-    
-    try {
-      if (newSelected.has(countyId)) {
-        newSelected.delete(countyId);
-        await supabase
-          .from("agent_county_preferences")
-          .delete()
-          .eq("agent_id", user?.id)
-          .eq("county_id", countyId);
-      } else {
-        newSelected.add(countyId);
-        await supabase.from("agent_county_preferences").insert({
-          agent_id: user?.id,
-          county_id: countyId,
-        });
-      }
-      setSelectedCounties(newSelected);
-      toast.success("County preferences updated");
-    } catch (error: any) {
-      toast.error("Error updating preferences: " + error.message);
-    }
+  const handleDeleteClick = (listingId: string) => {
+    setListingToDelete(listingId);
+    setDeleteDialogOpen(true);
   };
 
-  const handleAlertsToggle = async () => {
+  const handleDeleteConfirm = async () => {
+    if (!listingToDelete) return;
+
     try {
-      const newValue = !receiveAlerts;
-      await supabase
-        .from("agent_profiles")
-        .update({ receive_buyer_alerts: newValue })
-        .eq("id", user?.id);
-      setReceiveAlerts(newValue);
-      toast.success(newValue ? "Email alerts enabled" : "Email alerts disabled");
+      const { error } = await supabase
+        .from("listings")
+        .delete()
+        .eq("id", listingToDelete);
+
+      if (error) throw error;
+
+      setListings(listings.filter((l) => l.id !== listingToDelete));
+      toast.success("Listing deleted successfully");
     } catch (error: any) {
-      toast.error("Error updating alert preference: " + error.message);
+      toast.error("Error deleting listing: " + error.message);
+    } finally {
+      setDeleteDialogOpen(false);
+      setListingToDelete(null);
     }
   };
 
@@ -124,89 +113,108 @@ const AgentDashboard = () => {
     );
   }
 
+  const listingTypes = [
+    {
+      title: "For Sale",
+      description: "Add a new listing for sale.",
+      image: forSaleImg,
+      action: () => navigate("/add-listing?type=sale"),
+    },
+    {
+      title: "For Private Sale",
+      description: "Add a new private listing for sale.",
+      image: privateSaleImg,
+      action: () => navigate("/add-listing?type=private"),
+    },
+    {
+      title: "For Rent",
+      description: "Add a new listing for rent.",
+      image: forRentImg,
+      action: () => navigate("/add-listing?type=rent"),
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">Agent Dashboard</h1>
+          <div>
+            <p className="text-sm text-muted-foreground mb-2">
+              Hello. Bonjour. Hola. 你好. Ciao
+            </p>
+            <h1 className="text-4xl font-bold">My Listings</h1>
+            <p className="text-muted-foreground mt-2">
+              A convenient way to add for sale and for rent listings, update listing status, easily edit property details and track all of your listings.
+            </p>
+          </div>
           <Button variant="outline" onClick={handleSignOut}>
             Sign Out
           </Button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Email Alerts</CardTitle>
-              <CardDescription>
-                Control whether you receive buyer need notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="receive-alerts"
-                  checked={receiveAlerts}
-                  onCheckedChange={handleAlertsToggle}
+        {/* Listing Type Cards */}
+        <div className="grid gap-6 md:grid-cols-3 mb-12">
+          {listingTypes.map((type) => (
+            <Card key={type.title} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="aspect-[4/3] relative overflow-hidden">
+                <img
+                  src={type.image}
+                  alt={type.title}
+                  className="w-full h-full object-cover"
                 />
-                <Label htmlFor="receive-alerts" className="cursor-pointer">
-                  Receive buyer need email alerts
-                </Label>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>County Preferences</CardTitle>
-              <CardDescription>
-                Select counties where you want to receive buyer alerts
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {counties.map((county) => (
-                  <div key={county.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={county.id}
-                      checked={selectedCounties.has(county.id)}
-                      onCheckedChange={() => handleCountyToggle(county.id)}
-                    />
-                    <Label htmlFor={county.id} className="cursor-pointer">
-                      {county.name}, {county.state}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
-                Add listings or post buyer needs
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
-                onClick={() => navigate("/add-listing")}
-                className="w-full"
-              >
-                Add New Listing
-              </Button>
-              <Button 
-                onClick={() => navigate("/submit-buyer-need")}
-                variant="secondary"
-                className="w-full"
-              >
-                Submit New Buyer Need
-              </Button>
-            </CardContent>
-          </Card>
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold mb-2">{type.title}</h3>
+                <p className="text-muted-foreground text-sm mb-4">{type.description}</p>
+                <Button onClick={type.action} className="w-full">
+                  Create Here
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+
+        {/* Existing Listings */}
+        {listings.length > 0 ? (
+          <div>
+            <h2 className="text-2xl font-bold mb-6">Your Listings</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {listings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  onDelete={handleDeleteClick}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <p className="text-muted-foreground mb-4">You haven't added any listings yet.</p>
+              <Button onClick={() => navigate("/add-listing")}>
+                Add Your First Listing
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Listing</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this listing? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
