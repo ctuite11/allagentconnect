@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import FavoriteButton from "@/components/FavoriteButton";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
+import MatchingBuyerAgents from "@/components/MatchingBuyerAgents";
 
 interface Listing {
   id: string;
@@ -583,6 +584,15 @@ const PropertyDetail = () => {
                     </div>
                   </CardContent>
                 </Card>
+              )}
+
+              {/* Matching Buyer Agents */}
+              {isAgent && (
+                <MatchingBuyerAgents 
+                  listingCity={listing.city}
+                  listingState={listing.state}
+                  listingZipCode={listing.zip_code}
+                />
               )}
             </div>
           </div>
