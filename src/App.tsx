@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import AgentDashboard from "./pages/AgentDashboard";
 import SubmitBuyerNeed from "./pages/SubmitBuyerNeed";
 import AddListing from "./pages/AddListing";
+import AddRentalListing from "./pages/AddRentalListing";
 import EditListing from "./pages/EditListing";
 import PropertyDetail from "./pages/PropertyDetail";
 import BrowseProperties from "./pages/BrowseProperties";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/agent-dashboard" element={<AgentDashboard />} />
           <Route path="/submit-buyer-need" element={<SubmitBuyerNeed />} />
           <Route path="/add-listing" element={<AddListing />} />
+          <Route path="/add-rental-listing" element={<AddRentalListing />} />
           <Route path="/edit-listing/:id" element={<EditListing />} />
           <Route path="/property/:id" element={<PropertyDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
