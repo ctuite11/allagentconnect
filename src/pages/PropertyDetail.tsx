@@ -15,6 +15,7 @@ import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import MatchingBuyerAgents from "@/components/MatchingBuyerAgents";
 import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
+import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo";
 
 interface Listing {
   id: string;
@@ -453,10 +454,13 @@ const PropertyDetail = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6 space-y-4">
-                      {/* Commission Information */}
+                      {/* Buyer Agent Compensation */}
                       {(listing.commission_rate || listing.commission_notes) && (
                         <div>
-                          <h4 className="font-semibold mb-2">Commission</h4>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold">Buyer Agent Compensation</h4>
+                            <BuyerAgentCompensationInfo />
+                          </div>
                           {listing.commission_rate && (
                             <p className="text-sm text-muted-foreground">
                               {listing.commission_type === 'percentage' 
