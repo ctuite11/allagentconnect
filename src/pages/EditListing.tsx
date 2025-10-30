@@ -196,7 +196,6 @@ const EditListing = () => {
                   <SelectContent>
                     <SelectItem value="for_sale">For Sale</SelectItem>
                     <SelectItem value="for_rent">For Rent</SelectItem>
-                    <SelectItem value="for_private_sale">For Private Sale</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
