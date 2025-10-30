@@ -201,10 +201,13 @@ export type Database = {
           city: string
           created_at: string
           description: string | null
+          documents: Json | null
+          floor_plans: Json | null
           id: string
           latitude: number | null
           longitude: number | null
           lot_size: number | null
+          photos: Json | null
           price: number
           property_type: string | null
           schools_data: Json | null
@@ -226,10 +229,13 @@ export type Database = {
           city: string
           created_at?: string
           description?: string | null
+          documents?: Json | null
+          floor_plans?: Json | null
           id?: string
           latitude?: number | null
           longitude?: number | null
           lot_size?: number | null
+          photos?: Json | null
           price: number
           property_type?: string | null
           schools_data?: Json | null
@@ -251,10 +257,13 @@ export type Database = {
           city?: string
           created_at?: string
           description?: string | null
+          documents?: Json | null
+          floor_plans?: Json | null
           id?: string
           latitude?: number | null
           longitude?: number | null
           lot_size?: number | null
+          photos?: Json | null
           price?: number
           property_type?: string | null
           schools_data?: Json | null

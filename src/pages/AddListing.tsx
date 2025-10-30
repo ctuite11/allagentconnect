@@ -10,9 +10,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical } from "lucide-react";
 import { z } from "zod";
 import listingIcon from "@/assets/listing-creation-icon.png";
+
+interface FileWithPreview {
+  file: File;
+  preview: string;
+  id: string;
+  uploaded?: boolean;
+  url?: string;
+}
 
 // Zod validation schema for listing data
 const listingSchema = z.object({
@@ -59,6 +67,11 @@ const AddListing = () => {
     expiration_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     description: "",
   });
+
+  const [photos, setPhotos] = useState<FileWithPreview[]>([]);
+  const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
+  const [documents, setDocuments] = useState<FileWithPreview[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -145,6 +158,121 @@ const AddListing = () => {
     }
   };
 
+  const handleFileSelect = (files: FileList | null, type: 'photos' | 'floorplans' | 'documents') => {
+    if (!files) return;
+
+    const fileArray = Array.from(files);
+    const newFiles: FileWithPreview[] = fileArray.map(file => ({
+      file,
+      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
+      id: Math.random().toString(36).substr(2, 9),
+    }));
+
+    if (type === 'photos') {
+      setPhotos(prev => [...prev, ...newFiles]);
+    } else if (type === 'floorplans') {
+      setFloorPlans(prev => [...prev, ...newFiles]);
+    } else {
+      setDocuments(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const handleRemoveFile = (id: string, type: 'photos' | 'floorplans' | 'documents') => {
+    if (type === 'photos') {
+      setPhotos(prev => {
+        const file = prev.find(f => f.id === id);
+        if (file?.preview) URL.revokeObjectURL(file.preview);
+        return prev.filter(f => f.id !== id);
+      });
+    } else if (type === 'floorplans') {
+      setFloorPlans(prev => {
+        const file = prev.find(f => f.id === id);
+        if (file?.preview) URL.revokeObjectURL(file.preview);
+        return prev.filter(f => f.id !== id);
+      });
+    } else {
+      setDocuments(prev => prev.filter(f => f.id !== id));
+    }
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    setPhotos(prev => {
+      const newPhotos = [...prev];
+      const draggedItem = newPhotos[draggedIndex];
+      newPhotos.splice(draggedIndex, 1);
+      newPhotos.splice(index, 0, draggedItem);
+      return newPhotos;
+    });
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  const uploadFiles = async (): Promise<{ photos: any[], floorPlans: any[], documents: any[] }> => {
+    const uploadedPhotos: any[] = [];
+    const uploadedFloorPlans: any[] = [];
+    const uploadedDocuments: any[] = [];
+
+    // Upload photos
+    for (const photo of photos) {
+      const filePath = `${user.id}/${Date.now()}_${photo.file.name}`;
+      const { error } = await supabase.storage
+        .from('listing-photos')
+        .upload(filePath, photo.file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('listing-photos')
+        .getPublicUrl(filePath);
+
+      uploadedPhotos.push({ url: publicUrl, name: photo.file.name });
+    }
+
+    // Upload floor plans
+    for (const plan of floorPlans) {
+      const filePath = `${user.id}/${Date.now()}_${plan.file.name}`;
+      const { error } = await supabase.storage
+        .from('listing-floorplans')
+        .upload(filePath, plan.file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('listing-floorplans')
+        .getPublicUrl(filePath);
+
+      uploadedFloorPlans.push({ url: publicUrl, name: plan.file.name });
+    }
+
+    // Upload documents
+    for (const doc of documents) {
+      const filePath = `${user.id}/${Date.now()}_${doc.file.name}`;
+      const { error } = await supabase.storage
+        .from('listing-documents')
+        .upload(filePath, doc.file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('listing-documents')
+        .getPublicUrl(filePath);
+
+      uploadedDocuments.push({ url: publicUrl, name: doc.file.name });
+    }
+
+    return { photos: uploadedPhotos, floorPlans: uploadedFloorPlans, documents: uploadedDocuments };
+  };
+
   const handleSaveDraft = async () => {
     toast.info("Draft saved locally");
   };
@@ -179,6 +307,10 @@ const AddListing = () => {
       // Validate data with Zod
       const validatedData = listingSchema.parse(dataToValidate);
 
+      // Upload files first
+      toast.info("Uploading files...");
+      const uploadedFiles = await uploadFiles();
+
       const { error } = await supabase.from("listings").insert({
         agent_id: user.id,
         status: publishNow ? formData.status : "draft",
@@ -196,6 +328,9 @@ const AddListing = () => {
         year_built: validatedData.year_built || null,
         price: validatedData.price,
         description: validatedData.description || null,
+        photos: uploadedFiles.photos,
+        floor_plans: uploadedFiles.floorPlans,
+        documents: uploadedFiles.documents,
       });
 
       if (error) throw error;
@@ -454,6 +589,193 @@ const AddListing = () => {
                     rows={4}
                     placeholder="Describe the property features, location highlights, and any special details..."
                   />
+                </div>
+
+                {/* Property Photos Section */}
+                <div className="space-y-4 border-t pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xl font-semibold">Property Photos</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Drag and drop to reorder. First photo will be the main image.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('photo-upload')?.click()}
+                      className="gap-2"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      Add Photos
+                    </Button>
+                  </div>
+                  <Input
+                    id="photo-upload"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleFileSelect(e.target.files, 'photos')}
+                  />
+                  
+                  {photos.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {photos.map((photo, index) => (
+                        <div
+                          key={photo.id}
+                          draggable
+                          onDragStart={() => handleDragStart(index)}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragEnd={handleDragEnd}
+                          className="relative group cursor-move border rounded-lg overflow-hidden bg-muted"
+                        >
+                          <div className="absolute top-2 left-2 z-10 bg-background/80 rounded p-1">
+                            <GripVertical className="w-4 h-4" />
+                          </div>
+                          {index === 0 && (
+                            <div className="absolute top-2 right-2 z-10 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
+                              Main
+                            </div>
+                          )}
+                          <img
+                            src={photo.preview}
+                            alt={`Property ${index + 1}`}
+                            className="w-full h-32 object-cover"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleRemoveFile(photo.id, 'photos')}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Floor Plans Section */}
+                <div className="space-y-4 border-t pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xl font-semibold">Floor Plans</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Upload floor plan images or PDFs
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('floorplan-upload')?.click()}
+                      className="gap-2"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Add Floor Plans
+                    </Button>
+                  </div>
+                  <Input
+                    id="floorplan-upload"
+                    type="file"
+                    accept="image/*,application/pdf"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleFileSelect(e.target.files, 'floorplans')}
+                  />
+                  
+                  {floorPlans.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {floorPlans.map((plan) => (
+                        <div
+                          key={plan.id}
+                          className="relative group border rounded-lg overflow-hidden bg-muted"
+                        >
+                          {plan.preview ? (
+                            <img
+                              src={plan.preview}
+                              alt={plan.file.name}
+                              className="w-full h-32 object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-32 flex items-center justify-center">
+                              <FileText className="w-8 h-8 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="absolute bottom-0 left-0 right-0 bg-background/90 p-2 text-xs truncate">
+                            {plan.file.name}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleRemoveFile(plan.id, 'floorplans')}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Documents Section */}
+                <div className="space-y-4 border-t pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xl font-semibold">Documents</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Upload property documents (PDF, Word)
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('document-upload')?.click()}
+                      className="gap-2"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Add Documents
+                    </Button>
+                  </div>
+                  <Input
+                    id="document-upload"
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleFileSelect(e.target.files, 'documents')}
+                  />
+                  
+                  {documents.length > 0 && (
+                    <div className="space-y-2">
+                      {documents.map((doc) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-center justify-between p-3 border rounded-lg bg-muted"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-muted-foreground" />
+                            <span className="text-sm">{doc.file.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              ({(doc.file.size / 1024 / 1024).toFixed(2)} MB)
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveFile(doc.id, 'documents')}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </form>
             </CardContent>
