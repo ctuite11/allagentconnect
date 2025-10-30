@@ -11,6 +11,7 @@ import AddListing from "./pages/AddListing";
 import AddRentalListing from "./pages/AddRentalListing";
 import EditListing from "./pages/EditListing";
 import PropertyDetail from "./pages/PropertyDetail";
+import ConsumerPropertyDetail from "./pages/ConsumerPropertyDetail";
 import BrowseProperties from "./pages/BrowseProperties";
 import OurAgents from "./pages/OurAgents";
 import NotFound from "./pages/NotFound";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/add-rental-listing" element={<AddRentalListing />} />
           <Route path="/edit-listing/:id" element={<EditListing />} />
           <Route path="/property/:id" element={<PropertyDetail />} />
+          <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
