@@ -152,6 +152,21 @@ const AgentDashboard = () => {
             Sign Out
           </Button>
         </div>
+        {/* Quick Access to new pages */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-3">Quick Access</h2>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Button onClick={() => navigate("/agent-search")}>
+              Agent Search
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/hot-sheets")}>
+              Manage Hot Sheets
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/favorites")}>
+              Favorites
+            </Button>
+          </div>
+        </div>
 
         {/* Listing Type Cards */}
         <div className="grid gap-6 md:grid-cols-3 mb-12">
