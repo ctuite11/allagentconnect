@@ -93,6 +93,7 @@ export type Database = {
       }
       agent_profiles: {
         Row: {
+          bio: string | null
           company: string | null
           created_at: string | null
           email: string
@@ -101,9 +102,11 @@ export type Database = {
           last_name: string
           phone: string | null
           receive_buyer_alerts: boolean | null
+          social_links: Json | null
           updated_at: string | null
         }
         Insert: {
+          bio?: string | null
           company?: string | null
           created_at?: string | null
           email: string
@@ -112,9 +115,11 @@ export type Database = {
           last_name: string
           phone?: string | null
           receive_buyer_alerts?: boolean | null
+          social_links?: Json | null
           updated_at?: string | null
         }
         Update: {
+          bio?: string | null
           company?: string | null
           created_at?: string | null
           email?: string
@@ -123,6 +128,7 @@ export type Database = {
           last_name?: string
           phone?: string | null
           receive_buyer_alerts?: boolean | null
+          social_links?: Json | null
           updated_at?: string | null
         }
         Relationships: []
@@ -495,6 +501,47 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      testimonials: {
+        Row: {
+          agent_id: string
+          client_name: string
+          client_title: string | null
+          created_at: string | null
+          id: string
+          rating: number | null
+          testimonial_text: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          client_name: string
+          client_title?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          testimonial_text: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          client_name?: string
+          client_title?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          testimonial_text?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "testimonials_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profiles"
             referencedColumns: ["id"]
           },
         ]

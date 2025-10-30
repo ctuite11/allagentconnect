@@ -1,0 +1,378 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { Trash2, Plus, Star } from "lucide-react";
+import Navigation from "@/components/Navigation";
+
+interface SocialLinks {
+  linkedin: string;
+  twitter: string;
+  facebook: string;
+  instagram: string;
+  website: string;
+}
+
+interface Testimonial {
+  id: string;
+  client_name: string;
+  client_title: string;
+  testimonial_text: string;
+  rating: number;
+}
+
+const AgentProfileEditor = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [bio, setBio] = useState("");
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>({
+    linkedin: "",
+    twitter: "",
+    facebook: "",
+    instagram: "",
+    website: "",
+  });
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [newTestimonial, setNewTestimonial] = useState({
+    client_name: "",
+    client_title: "",
+    testimonial_text: "",
+    rating: 5,
+  });
+
+  useEffect(() => {
+    checkAuthAndLoadProfile();
+  }, []);
+
+  const checkAuthAndLoadProfile = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    await loadProfile(session.user.id);
+  };
+
+  const loadProfile = async (userId: string) => {
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from("agent_profiles")
+        .select("bio, social_links")
+        .eq("id", userId)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (profile) {
+        setBio(profile.bio || "");
+        const links = profile.social_links as unknown as SocialLinks;
+        setSocialLinks(links || {
+          linkedin: "",
+          twitter: "",
+          facebook: "",
+          instagram: "",
+          website: "",
+        });
+      }
+
+      const { data: testimonialData, error: testimonialError } = await supabase
+        .from("testimonials")
+        .select("*")
+        .eq("agent_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (testimonialError) throw testimonialError;
+      setTestimonials(testimonialData || []);
+    } catch (error) {
+      console.error("Error loading profile:", error);
+      toast.error("Failed to load profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { error } = await supabase
+        .from("agent_profiles")
+        .update({
+          bio,
+          social_links: socialLinks as any,
+        })
+        .eq("id", session.user.id);
+
+      if (error) throw error;
+      toast.success("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast.error("Failed to save profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddTestimonial = async () => {
+    if (!newTestimonial.client_name || !newTestimonial.testimonial_text) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await supabase
+        .from("testimonials")
+        .insert({
+          agent_id: session.user.id,
+          ...newTestimonial,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setTestimonials([data, ...testimonials]);
+      setNewTestimonial({
+        client_name: "",
+        client_title: "",
+        testimonial_text: "",
+        rating: 5,
+      });
+      toast.success("Testimonial added!");
+    } catch (error) {
+      console.error("Error adding testimonial:", error);
+      toast.error("Failed to add testimonial");
+    }
+  };
+
+  const handleDeleteTestimonial = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("testimonials")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      
+      setTestimonials(testimonials.filter((t) => t.id !== id));
+      toast.success("Testimonial deleted");
+    } catch (error) {
+      console.error("Error deleting testimonial:", error);
+      toast.error("Failed to delete testimonial");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold">Edit Your Profile</h1>
+            <Button variant="outline" onClick={() => navigate("/agent-dashboard")}>
+              Back to Dashboard
+            </Button>
+          </div>
+
+          {/* Bio Section */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Your Bio</CardTitle>
+              <CardDescription>Tell clients about yourself and your expertise</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                placeholder="Write your professional bio here..."
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={6}
+                className="mb-4"
+              />
+              <Button onClick={handleSaveProfile} disabled={saving}>
+                {saving ? "Saving..." : "Save Bio"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Social Links Section */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Social Media Links</CardTitle>
+              <CardDescription>Connect your social media profiles</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="linkedin">LinkedIn</Label>
+                <Input
+                  id="linkedin"
+                  placeholder="https://linkedin.com/in/yourprofile"
+                  value={socialLinks.linkedin}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, linkedin: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="twitter">Twitter/X</Label>
+                <Input
+                  id="twitter"
+                  placeholder="https://twitter.com/yourhandle"
+                  value={socialLinks.twitter}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="facebook">Facebook</Label>
+                <Input
+                  id="facebook"
+                  placeholder="https://facebook.com/yourpage"
+                  value={socialLinks.facebook}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, facebook: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="instagram">Instagram</Label>
+                <Input
+                  id="instagram"
+                  placeholder="https://instagram.com/yourprofile"
+                  value={socialLinks.instagram}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="website">Personal Website</Label>
+                <Input
+                  id="website"
+                  placeholder="https://yourwebsite.com"
+                  value={socialLinks.website}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
+                />
+              </div>
+              <Button onClick={handleSaveProfile} disabled={saving}>
+                {saving ? "Saving..." : "Save Social Links"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Testimonials Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Testimonials</CardTitle>
+              <CardDescription>Add client testimonials to build trust</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Add New Testimonial */}
+              <div className="border rounded-lg p-4 mb-6 bg-muted/50">
+                <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add New Testimonial
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="client_name">Client Name *</Label>
+                    <Input
+                      id="client_name"
+                      placeholder="John Smith"
+                      value={newTestimonial.client_name}
+                      onChange={(e) => setNewTestimonial({ ...newTestimonial, client_name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="client_title">Client Title (Optional)</Label>
+                    <Input
+                      id="client_title"
+                      placeholder="First-time Homebuyer"
+                      value={newTestimonial.client_title}
+                      onChange={(e) => setNewTestimonial({ ...newTestimonial, client_title: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="testimonial_text">Testimonial *</Label>
+                    <Textarea
+                      id="testimonial_text"
+                      placeholder="Write the testimonial here..."
+                      value={newTestimonial.testimonial_text}
+                      onChange={(e) => setNewTestimonial({ ...newTestimonial, testimonial_text: e.target.value })}
+                      rows={4}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="rating">Rating (1-5 stars)</Label>
+                    <Input
+                      id="rating"
+                      type="number"
+                      min="1"
+                      max="5"
+                      value={newTestimonial.rating}
+                      onChange={(e) => setNewTestimonial({ ...newTestimonial, rating: parseInt(e.target.value) || 5 })}
+                    />
+                  </div>
+                  <Button onClick={handleAddTestimonial}>Add Testimonial</Button>
+                </div>
+              </div>
+
+              {/* Existing Testimonials */}
+              <div className="space-y-4">
+                <h3 className="font-semibold">Your Testimonials</h3>
+                {testimonials.length === 0 ? (
+                  <p className="text-muted-foreground">No testimonials yet. Add your first one above!</p>
+                ) : (
+                  testimonials.map((testimonial) => (
+                    <div key={testimonial.id} className="border rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-semibold">{testimonial.client_name}</p>
+                          {testimonial.client_title && (
+                            <p className="text-sm text-muted-foreground">{testimonial.client_title}</p>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteTestimonial(testimonial.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-1 mb-2">
+                        {Array.from({ length: testimonial.rating }).map((_, i) => (
+                          <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                        ))}
+                      </div>
+                      <p className="text-sm">{testimonial.testimonial_text}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AgentProfileEditor;
+

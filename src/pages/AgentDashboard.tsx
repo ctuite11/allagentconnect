@@ -155,8 +155,11 @@ const AgentDashboard = () => {
         {/* Quick Access to new pages */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-3">Quick Access</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Button onClick={() => navigate("/agent-search")}>
+          <div className="grid gap-3 sm:grid-cols-4">
+            <Button onClick={() => navigate("/agent-profile-editor")}>
+              Edit Profile
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/agent-search")}>
               Agent Search
             </Button>
             <Button variant="outline" onClick={() => navigate("/hot-sheets")}>
