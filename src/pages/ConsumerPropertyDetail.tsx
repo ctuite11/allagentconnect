@@ -6,8 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, MapPin, Bed, Bath, Square, Calendar, Share2, Heart, ArrowLeft, Home, FileText, Video, Globe, AlertCircle } from "lucide-react";
+import { Loader2, MapPin, Bed, Bath, Square, Calendar, ArrowLeft, Home, FileText, Video, Globe, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import SocialShareMenu from "@/components/SocialShareMenu";
+import FavoriteButton from "@/components/FavoriteButton";
+import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 
 interface Listing {
   id: string;
@@ -90,15 +93,6 @@ const ConsumerPropertyDetail = () => {
     }
   }, [id]);
 
-  const handleShare = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    toast.success("Link copied to clipboard!");
-  };
-
-  const handleSave = () => {
-    toast.info("Save functionality coming soon");
-  };
 
   if (loading) {
     return (
@@ -154,24 +148,22 @@ const ConsumerPropertyDetail = () => {
                   Search
                 </Button>
                 <div className="flex gap-2">
-                  <Button 
-                    variant="secondary" 
-                    size="lg"
-                    onClick={handleShare}
-                    className="gap-2"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    Share
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    size="lg"
-                    onClick={handleSave}
-                    className="gap-2"
-                  >
-                    <Heart className="w-4 h-4" />
-                    Save
-                  </Button>
+                  <SocialShareMenu
+                    url={window.location.href}
+                    title={`${listing.address}, ${listing.city}, ${listing.state}`}
+                    description={`$${listing.price.toLocaleString()} - ${listing.bedrooms} bed, ${listing.bathrooms} bath`}
+                  />
+                  <FavoriteButton listingId={listing.id} />
+                  <SaveToHotSheetDialog
+                    currentSearch={{
+                      min_price: listing.price * 0.8,
+                      max_price: listing.price * 1.2,
+                      bedrooms: listing.bedrooms || undefined,
+                      bathrooms: listing.bathrooms || undefined,
+                      property_type: listing.property_type || undefined,
+                      listing_type: listing.listing_type,
+                    }}
+                  />
                 </div>
               </div>
 
