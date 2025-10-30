@@ -83,10 +83,15 @@ const Navigation = () => {
               Submit Need
             </Button>
             {user ? (
-              <Button variant="default" size="sm" onClick={() => navigate("/agent-dashboard")}>
-                <LayoutDashboard className="w-4 h-4 mr-2" />
-                Dashboard
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={() => navigate("/agent-search")}>
+                  Agent Search
+                </Button>
+                <Button variant="default" size="sm" onClick={() => navigate("/agent-dashboard")}>
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Dashboard
+                </Button>
+              </>
             ) : (
               <Button size="sm" onClick={() => navigate("/auth")}>
                 Agent Login
@@ -172,16 +177,28 @@ const Navigation = () => {
                 Submit Need
               </Button>
               {user ? (
-                <Button 
-                  className="w-full" 
-                  onClick={() => {
-                    navigate("/agent-dashboard");
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Button>
+                <>
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => {
+                      navigate("/agent-search");
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Agent Search
+                  </Button>
+                  <Button 
+                    className="w-full" 
+                    onClick={() => {
+                      navigate("/agent-dashboard");
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </Button>
+                </>
               ) : (
                 <Button 
                   className="w-full" 

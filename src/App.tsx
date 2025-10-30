@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AgentDashboard from "./pages/AgentDashboard";
+import AgentSearch from "./pages/AgentSearch";
 import SubmitBuyerNeed from "./pages/SubmitBuyerNeed";
 import AddListing from "./pages/AddListing";
 import AddRentalListing from "./pages/AddRentalListing";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/our-agents" element={<OurAgents />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/hot-sheets" element={<HotSheets />} />
+          <Route path="/agent-search" element={<AgentSearch />} />
           <Route path="/agent-dashboard" element={<AgentDashboard />} />
           <Route path="/submit-buyer-need" element={<SubmitBuyerNeed />} />
           <Route path="/add-listing" element={<AddListing />} />
