@@ -193,24 +193,37 @@ export type Database = {
       }
       listings: {
         Row: {
+          additional_notes: string | null
           address: string
           agent_id: string
+          amenities: Json | null
+          appointment_required: boolean | null
           attom_data: Json | null
           bathrooms: number | null
           bedrooms: number | null
           city: string
+          commission_notes: string | null
+          commission_rate: number | null
+          commission_type: string | null
           created_at: string
           description: string | null
+          disclosures: Json | null
           documents: Json | null
           floor_plans: Json | null
           id: string
           latitude: number | null
+          listing_type: string | null
+          lockbox_code: string | null
           longitude: number | null
           lot_size: number | null
           photos: Json | null
           price: number
+          property_features: Json | null
           property_type: string | null
           schools_data: Json | null
+          showing_contact_name: string | null
+          showing_contact_phone: string | null
+          showing_instructions: string | null
           square_feet: number | null
           state: string
           status: string
@@ -221,24 +234,37 @@ export type Database = {
           zip_code: string
         }
         Insert: {
+          additional_notes?: string | null
           address: string
           agent_id: string
+          amenities?: Json | null
+          appointment_required?: boolean | null
           attom_data?: Json | null
           bathrooms?: number | null
           bedrooms?: number | null
           city: string
+          commission_notes?: string | null
+          commission_rate?: number | null
+          commission_type?: string | null
           created_at?: string
           description?: string | null
+          disclosures?: Json | null
           documents?: Json | null
           floor_plans?: Json | null
           id?: string
           latitude?: number | null
+          listing_type?: string | null
+          lockbox_code?: string | null
           longitude?: number | null
           lot_size?: number | null
           photos?: Json | null
           price: number
+          property_features?: Json | null
           property_type?: string | null
           schools_data?: Json | null
+          showing_contact_name?: string | null
+          showing_contact_phone?: string | null
+          showing_instructions?: string | null
           square_feet?: number | null
           state: string
           status?: string
@@ -249,24 +275,37 @@ export type Database = {
           zip_code: string
         }
         Update: {
+          additional_notes?: string | null
           address?: string
           agent_id?: string
+          amenities?: Json | null
+          appointment_required?: boolean | null
           attom_data?: Json | null
           bathrooms?: number | null
           bedrooms?: number | null
           city?: string
+          commission_notes?: string | null
+          commission_rate?: number | null
+          commission_type?: string | null
           created_at?: string
           description?: string | null
+          disclosures?: Json | null
           documents?: Json | null
           floor_plans?: Json | null
           id?: string
           latitude?: number | null
+          listing_type?: string | null
+          lockbox_code?: string | null
           longitude?: number | null
           lot_size?: number | null
           photos?: Json | null
           price?: number
+          property_features?: Json | null
           property_type?: string | null
           schools_data?: Json | null
+          showing_contact_name?: string | null
+          showing_contact_phone?: string | null
+          showing_instructions?: string | null
           square_feet?: number | null
           state?: string
           status?: string

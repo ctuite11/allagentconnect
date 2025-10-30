@@ -47,6 +47,7 @@ const AddListing = () => {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     status: "active",
+    listing_type: "for_sale",
     address: "",
     city: "",
     state: "",
@@ -66,7 +67,20 @@ const AddListing = () => {
     list_date: new Date().toISOString().split('T')[0],
     expiration_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     description: "",
+    commission_rate: "",
+    commission_type: "percentage",
+    commission_notes: "",
+    showing_instructions: "",
+    lockbox_code: "",
+    appointment_required: false,
+    showing_contact_name: "",
+    showing_contact_phone: "",
+    additional_notes: "",
   });
+
+  const [disclosures, setDisclosures] = useState<string[]>([]);
+  const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
+  const [amenities, setAmenities] = useState<string[]>([]);
 
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
@@ -314,6 +328,7 @@ const AddListing = () => {
       const { error } = await supabase.from("listings").insert({
         agent_id: user.id,
         status: publishNow ? formData.status : "draft",
+        listing_type: formData.listing_type,
         address: validatedData.address,
         city: validatedData.city,
         state: validatedData.state,
@@ -328,6 +343,18 @@ const AddListing = () => {
         year_built: validatedData.year_built || null,
         price: validatedData.price,
         description: validatedData.description || null,
+        commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
+        commission_type: formData.commission_type,
+        commission_notes: formData.commission_notes || null,
+        showing_instructions: formData.showing_instructions || null,
+        lockbox_code: formData.lockbox_code || null,
+        appointment_required: formData.appointment_required,
+        showing_contact_name: formData.showing_contact_name || null,
+        showing_contact_phone: formData.showing_contact_phone || null,
+        disclosures: disclosures,
+        property_features: propertyFeatures,
+        amenities: amenities,
+        additional_notes: formData.additional_notes || null,
         photos: uploadedFiles.photos,
         floor_plans: uploadedFiles.floorPlans,
         documents: uploadedFiles.documents,
@@ -393,8 +420,24 @@ const AddListing = () => {
               <h2 className="text-2xl font-bold mb-6">Listing Details</h2>
               
               <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
-                {/* Row 1: Status, Property Type, List Date, Expiration Date */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Row 1: Listing Type, Status, Property Type */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="listing_type">Listing Type *</Label>
+                    <Select
+                      value={formData.listing_type}
+                      onValueChange={(value) => setFormData({ ...formData, listing_type: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="for_sale">For Sale</SelectItem>
+                        <SelectItem value="for_rent">For Rent</SelectItem>
+                        <SelectItem value="for_private_sale">For Private Sale</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
                     <Select
@@ -429,6 +472,10 @@ const AddListing = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                {/* Row 2: List Date, Expiration Date */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="list_date">List Date</Label>
                     <Input
@@ -580,14 +627,255 @@ const AddListing = () => {
                   />
                 </div>
 
+                {/* Property Description */}
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">Property Description</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={4}
+                    rows={6}
                     placeholder="Describe the property features, location highlights, and any special details..."
+                  />
+                </div>
+
+                {/* Commission Information Section */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Commission Information</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="commission_type">Commission Type</Label>
+                      <Select
+                        value={formData.commission_type}
+                        onValueChange={(value) => setFormData({ ...formData, commission_type: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="percentage">Percentage</SelectItem>
+                          <SelectItem value="flat_fee">Flat Fee</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="commission_rate">
+                        {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Amount ($)'}
+                      </Label>
+                      <Input
+                        id="commission_rate"
+                        type="number"
+                        step="0.01"
+                        placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
+                        value={formData.commission_rate}
+                        onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-1">
+                      <Label htmlFor="commission_notes">Commission Notes</Label>
+                      <Input
+                        id="commission_notes"
+                        placeholder="Additional commission details"
+                        value={formData.commission_notes}
+                        onChange={(e) => setFormData({ ...formData, commission_notes: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Showing Instructions Section */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Showing Instructions</Label>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="showing_instructions">Instructions</Label>
+                      <Textarea
+                        id="showing_instructions"
+                        placeholder="Please call 24 hours in advance. Remove shoes. Beware of dog..."
+                        value={formData.showing_instructions}
+                        onChange={(e) => setFormData({ ...formData, showing_instructions: e.target.value })}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="lockbox_code">Lockbox Code</Label>
+                        <Input
+                          id="lockbox_code"
+                          type="password"
+                          placeholder="1234"
+                          value={formData.lockbox_code}
+                          onChange={(e) => setFormData({ ...formData, lockbox_code: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="showing_contact_name">Contact Name</Label>
+                        <Input
+                          id="showing_contact_name"
+                          placeholder="John Doe"
+                          value={formData.showing_contact_name}
+                          onChange={(e) => setFormData({ ...formData, showing_contact_name: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="showing_contact_phone">Contact Phone</Label>
+                        <Input
+                          id="showing_contact_phone"
+                          type="tel"
+                          placeholder="(555) 123-4567"
+                          value={formData.showing_contact_phone}
+                          onChange={(e) => setFormData({ ...formData, showing_contact_phone: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="appointment_required"
+                        checked={formData.appointment_required}
+                        onChange={(e) => setFormData({ ...formData, appointment_required: e.target.checked })}
+                        className="rounded border-gray-300"
+                      />
+                      <Label htmlFor="appointment_required" className="font-normal cursor-pointer">
+                        Appointment required for showing
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Disclosures Section */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Disclosures</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {[
+                      'Lead-based paint',
+                      'Asbestos',
+                      'Radon',
+                      'Flood zone',
+                      'HOA restrictions',
+                      'Previous damage/repairs',
+                      'Environmental hazards',
+                      'Easements',
+                      'Pending litigation',
+                      'Property liens'
+                    ].map((disclosure) => (
+                      <div key={disclosure} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={disclosure}
+                          checked={disclosures.includes(disclosure)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setDisclosures([...disclosures, disclosure]);
+                            } else {
+                              setDisclosures(disclosures.filter(d => d !== disclosure));
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor={disclosure} className="font-normal cursor-pointer">
+                          {disclosure}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Property Features Section */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Property Features</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[
+                      'Hardwood floors',
+                      'Granite countertops',
+                      'Stainless appliances',
+                      'Updated kitchen',
+                      'Updated bathrooms',
+                      'Fireplace',
+                      'Central air',
+                      'Forced air heating',
+                      'Basement',
+                      'Finished basement',
+                      'Attic',
+                      'Garage',
+                      'Carport',
+                      'Energy efficient',
+                      'Smart home features'
+                    ].map((feature) => (
+                      <div key={feature} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={feature}
+                          checked={propertyFeatures.includes(feature)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setPropertyFeatures([...propertyFeatures, feature]);
+                            } else {
+                              setPropertyFeatures(propertyFeatures.filter(f => f !== feature));
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor={feature} className="font-normal cursor-pointer">
+                          {feature}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Amenities Section */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Amenities</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[
+                      'Pool',
+                      'Hot tub',
+                      'Tennis court',
+                      'Gym/Fitness center',
+                      'Playground',
+                      'Clubhouse',
+                      'Pet friendly',
+                      'Gated community',
+                      'Security system',
+                      'Concierge',
+                      'Elevator',
+                      'Storage units',
+                      'Bike storage',
+                      'EV charging',
+                      'Package room'
+                    ].map((amenity) => (
+                      <div key={amenity} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={amenity}
+                          checked={amenities.includes(amenity)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setAmenities([...amenities, amenity]);
+                            } else {
+                              setAmenities(amenities.filter(a => a !== amenity));
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor={amenity} className="font-normal cursor-pointer">
+                          {amenity}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Additional Notes */}
+                <div className="space-y-2 border-t pt-6">
+                  <Label htmlFor="additional_notes">Additional Notes</Label>
+                  <Textarea
+                    id="additional_notes"
+                    placeholder="Any other important information about the property..."
+                    value={formData.additional_notes}
+                    onChange={(e) => setFormData({ ...formData, additional_notes: e.target.value })}
+                    rows={4}
                   />
                 </div>
 
