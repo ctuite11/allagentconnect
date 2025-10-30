@@ -179,10 +179,10 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode }: Matc
                 <Button 
                   className="w-full mt-2" 
                   onClick={() => {
-                    window.location.href = `mailto:${agent.email}?subject=Property Inquiry - ${listingCity}, ${listingState}`;
+                    window.location.href = `/agent/${agent.id}`;
                   }}
                 >
-                  Contact Agent
+                  View Agent Profile
                 </Button>
               </div>
             </CardContent>

@@ -11,9 +11,12 @@ import { toast } from "sonner";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import FavoriteButton from "@/components/FavoriteButton";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
+import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
+import ContactAgentDialog from "@/components/ContactAgentDialog";
 
 interface Listing {
   id: string;
+  agent_id: string;
   address: string;
   city: string;
   state: string;
@@ -58,6 +61,7 @@ const ConsumerPropertyDetail = () => {
         if (data) {
           setListing({
             id: data.id,
+            agent_id: data.agent_id,
             address: data.address,
             city: data.city,
             state: data.state,
@@ -261,6 +265,26 @@ const ConsumerPropertyDetail = () => {
                 <p className="text-muted-foreground">/month</p>
               )}
             </div>
+          </div>
+
+          {/* Call to Action Buttons */}
+          <div className="flex flex-wrap gap-3 mb-6">
+            <ScheduleShowingDialog 
+              listingId={listing.id}
+              listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+            />
+            <ContactAgentDialog 
+              listingId={listing.id}
+              agentId={listing.agent_id}
+              listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+            />
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={() => navigate(`/agent/${listing.agent_id}`)}
+            >
+              View Agent Profile
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

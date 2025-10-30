@@ -50,6 +50,47 @@ export type Database = {
           },
         ]
       }
+      agent_messages: {
+        Row: {
+          agent_id: string
+          created_at: string
+          id: string
+          listing_id: string
+          message: string
+          sender_email: string
+          sender_name: string
+          sender_phone: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          message: string
+          sender_email: string
+          sender_name: string
+          sender_phone?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          message?: string
+          sender_email?: string
+          sender_name?: string
+          sender_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_messages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_profiles: {
         Row: {
           company: string | null
@@ -375,6 +416,56 @@ export type Database = {
           zip_code?: string
         }
         Relationships: []
+      }
+      showing_requests: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          message: string | null
+          preferred_date: string
+          preferred_time: string
+          requester_email: string
+          requester_name: string
+          requester_phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          message?: string | null
+          preferred_date: string
+          preferred_time: string
+          requester_email: string
+          requester_name: string
+          requester_phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          message?: string | null
+          preferred_date?: string
+          preferred_time?: string
+          requester_email?: string
+          requester_name?: string
+          requester_phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showing_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

@@ -159,8 +159,8 @@ const OurAgents = () => {
                           </div>
                         )}
 
-                        <Button className="w-full mt-4" asChild>
-                          <a href={`mailto:${agent.email}`}>Contact Agent</a>
+                        <Button className="w-full mt-4" onClick={() => window.location.href = `/agent/${agent.id}`}>
+                          View Profile
                         </Button>
                       </CardContent>
                     </Card>

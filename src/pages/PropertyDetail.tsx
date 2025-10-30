@@ -13,6 +13,8 @@ import SocialShareMenu from "@/components/SocialShareMenu";
 import FavoriteButton from "@/components/FavoriteButton";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import MatchingBuyerAgents from "@/components/MatchingBuyerAgents";
+import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
+import ContactAgentDialog from "@/components/ContactAgentDialog";
 
 interface Listing {
   id: string;
@@ -281,6 +283,26 @@ const PropertyDetail = () => {
                 <p className="text-muted-foreground">/month</p>
               )}
             </div>
+          </div>
+
+          {/* Call to Action Buttons */}
+          <div className="flex flex-wrap gap-3 mb-6">
+            <ScheduleShowingDialog 
+              listingId={listing.id}
+              listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+            />
+            <ContactAgentDialog 
+              listingId={listing.id}
+              agentId={listing.agent_id}
+              listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+            />
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={() => navigate(`/agent/${listing.agent_id}`)}
+            >
+              View Agent Profile
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
