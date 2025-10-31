@@ -7,7 +7,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div>
             <h3 className="text-xl font-bold mb-4">
-              <span className="text-primary">Direct</span> Connect MLS
+              <span className="text-primary">Agent</span> Connect
             </h3>
             <p className="text-muted-foreground">
               Revolutionizing real estate through complete transparency.
@@ -54,7 +54,7 @@ const Footer = () => {
         </div>
         
         <div className="pt-8 border-t border-border text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Direct Connect MLS. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Agent Connect. All rights reserved.</p>
         </div>
       </div>
     </footer>

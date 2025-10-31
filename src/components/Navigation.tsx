@@ -39,7 +39,7 @@ const Navigation = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="text-2xl font-bold cursor-pointer" onClick={() => navigate("/")}>
-              <span className="text-primary">AllAgent</span>Connect
+              <span className="text-primary">Agent</span> Connect
             </div>
           </div>
           

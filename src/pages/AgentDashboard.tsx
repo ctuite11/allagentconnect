@@ -35,7 +35,7 @@ const AgentDashboard = () => {
   const [listingToDelete, setListingToDelete] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Agent Dashboard - Direct Connect MLS";
+    document.title = "Agent Dashboard - Agent Connect";
   }, []);
 
   useEffect(() => {

@@ -27,7 +27,7 @@ const Hero = () => {
           </h1>
           
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl">
-            Forward-thinking and consumer-focused, Direct Connect MLS has redefined the home buying and home selling process, saving consumers billions along the way.
+            Forward-thinking and consumer-focused, Agent Connect has redefined the home buying and home selling process, saving consumers billions along the way.
           </p>
           
           <div className="bg-card rounded-xl shadow-custom-lg p-6 max-w-2xl">
