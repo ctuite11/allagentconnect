@@ -178,7 +178,7 @@ const OurAgents = () => {
               Are You a Real Estate Agent?
             </h2>
             <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
-              Join AllAgentConnect and connect with buyers actively searching for properties in your area
+              Join Agent Connect and connect with buyers actively searching for properties in your area
             </p>
             <Button size="lg" variant="secondary" asChild>
               <a href="/auth">Register as an Agent</a>

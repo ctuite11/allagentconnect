@@ -29,7 +29,7 @@ const PropertySearchHero = () => {
               <span className="text-primary">Through Complete Transparency</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Forward-thinking and consumer-focused, AllAgentConnect has redefined the home buying process, 
+              Forward-thinking and consumer-focused, Agent Connect has redefined the home buying process, 
               connecting buyers directly with qualified agents in their target areas.
             </p>
           </div>
