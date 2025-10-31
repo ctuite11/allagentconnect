@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +44,17 @@ const AgentSearch = () => {
   const [streetName, setStreetName] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [radius, setRadius] = useState("");
+  const [selectedState, setSelectedState] = useState("MA");
+  const [selectedCounty, setSelectedCounty] = useState("Suffolk County");
+  const [townSearch, setTownSearch] = useState("");
+  const [selectedTowns, setSelectedTowns] = useState<string[]>([]);
+  const [showTownAreas, setShowTownAreas] = useState("yes");
+  const [openHouses, setOpenHouses] = useState(false);
+  const [brokerTours, setBrokerTours] = useState(false);
+  const [eventTimeframe, setEventTimeframe] = useState("Next 3 Days");
+  const [keywordMatch, setKeywordMatch] = useState("any");
+  const [keywordType, setKeywordType] = useState("include");
+  const [keywords, setKeywords] = useState("");
   
   // Collapsible sections
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(true);
@@ -52,6 +64,9 @@ const AgentSearch = () => {
   const [additionalCriteriaOpen, setAdditionalCriteriaOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false);
+  const [townsOpen, setTownsOpen] = useState(false);
+  const [listingEventsOpen, setListingEventsOpen] = useState(false);
+  const [keywordsOpen, setKeywordsOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -194,6 +209,17 @@ const AgentSearch = () => {
     setStreetName("");
     setZipCode("");
     setRadius("");
+    setSelectedState("MA");
+    setSelectedCounty("Suffolk County");
+    setTownSearch("");
+    setSelectedTowns([]);
+    setShowTownAreas("yes");
+    setOpenHouses(false);
+    setBrokerTours(false);
+    setEventTimeframe("Next 3 Days");
+    setKeywordMatch("any");
+    setKeywordType("include");
+    setKeywords("");
     toast.success("Search criteria cleared");
   };
 
@@ -690,6 +716,247 @@ const AgentSearch = () => {
               </CollapsibleContent>
             </Card>
           </Collapsible>
+
+          {/* Towns */}
+          <Collapsible open={townsOpen} onOpenChange={setTownsOpen} className="mb-4">
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-base">TOWNS</CardTitle>
+                  {townsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Button variant="link" className="text-primary gap-1 p-0 h-auto">
+                      BACK TO TOP
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="state">State</Label>
+                          <Select value={selectedState} onValueChange={setSelectedState}>
+                            <SelectTrigger id="state">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="MA">MA</SelectItem>
+                              <SelectItem value="NH">NH</SelectItem>
+                              <SelectItem value="RI">RI</SelectItem>
+                              <SelectItem value="CT">CT</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="county">Coverage Areas</Label>
+                          <Select value={selectedCounty} onValueChange={setSelectedCounty}>
+                            <SelectTrigger id="county">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Suffolk County">Suffolk County</SelectItem>
+                              <SelectItem value="Middlesex County">Middlesex County</SelectItem>
+                              <SelectItem value="Norfolk County">Norfolk County</SelectItem>
+                              <SelectItem value="Essex County">Essex County</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label>Show Areas</Label>
+                          <RadioGroup value={showTownAreas} onValueChange={setShowTownAreas} className="flex gap-4">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="yes" id="show-yes" />
+                              <Label htmlFor="show-yes" className="cursor-pointer">Yes</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="no" id="show-no" />
+                              <Label htmlFor="show-no" className="cursor-pointer">No</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                        
+                        <div className="relative">
+                          <Input
+                            placeholder="Type Full or Partial Name"
+                            value={townSearch}
+                            onChange={(e) => setTownSearch(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="border rounded-md p-3 max-h-64 overflow-y-auto">
+                        <p className="font-semibold mb-2">- Add All Towns -</p>
+                        <div className="space-y-1 text-sm">
+                          <p className="cursor-pointer hover:bg-muted p-1 rounded" onClick={() => !selectedTowns.includes("Boston, MA") && setSelectedTowns([...selectedTowns, "Boston, MA"])}>Boston, MA</p>
+                          <p className="cursor-pointer hover:bg-muted p-1 rounded pl-4" onClick={() => !selectedTowns.includes("Boston, MA-Aberdeen") && setSelectedTowns([...selectedTowns, "Boston, MA-Aberdeen"])}>Boston, MA-Aberdeen</p>
+                          <p className="cursor-pointer hover:bg-muted p-1 rounded pl-4" onClick={() => !selectedTowns.includes("Boston, MA-Allston") && setSelectedTowns([...selectedTowns, "Boston, MA-Allston"])}>Boston, MA-Allston</p>
+                          <p className="cursor-pointer hover:bg-muted p-1 rounded pl-4" onClick={() => !selectedTowns.includes("Boston, MA-Back Bay") && setSelectedTowns([...selectedTowns, "Boston, MA-Back Bay"])}>Boston, MA-Back Bay</p>
+                          <p className="cursor-pointer hover:bg-muted p-1 rounded pl-4" onClick={() => !selectedTowns.includes("Boston, MA-Bay Village") && setSelectedTowns([...selectedTowns, "Boston, MA-Bay Village"])}>Boston, MA-Bay Village</p>
+                          <p className="cursor-pointer hover:bg-muted p-1 rounded pl-4" onClick={() => !selectedTowns.includes("Boston, MA-Beacon Hill") && setSelectedTowns([...selectedTowns, "Boston, MA-Beacon Hill"])}>Boston, MA-Beacon Hill</p>
+                          <p className="cursor-pointer hover:bg-muted p-1 rounded pl-4" onClick={() => !selectedTowns.includes("Boston, MA-Brighton") && setSelectedTowns([...selectedTowns, "Boston, MA-Brighton"])}>Boston, MA-Brighton</p>
+                          <p className="cursor-pointer hover:bg-muted p-1 rounded pl-4" onClick={() => !selectedTowns.includes("Boston, MA-Brighton's Chestnut Hill") && setSelectedTowns([...selectedTowns, "Boston, MA-Brighton's Chestnut Hill"])}>Boston, MA-Brighton's Chestnut Hill</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="multiple-towns">Type Multiple Towns/Areas</Label>
+                        <Textarea
+                          id="multiple-towns"
+                          placeholder="Type Towns/Areas"
+                          className="mt-1 min-h-20"
+                        />
+                        <Button variant="default" size="sm" className="mt-2">Add</Button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Selected Towns</Label>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setSelectedTowns([])}
+                        >
+                          Remove All
+                        </Button>
+                      </div>
+                      <div className="border rounded-md p-3 min-h-64 max-h-64 overflow-y-auto">
+                        {selectedTowns.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No towns selected</p>
+                        ) : (
+                          <div className="space-y-1">
+                            {selectedTowns.map((town, index) => (
+                              <div key={index} className="flex items-center justify-between text-sm">
+                                <span>{town}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2"
+                                  onClick={() => setSelectedTowns(selectedTowns.filter((_, i) => i !== index))}
+                                >
+                                  ✕
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          {/* Listing Events */}
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
+            <Collapsible open={listingEventsOpen} onOpenChange={setListingEventsOpen}>
+              <Card>
+                <CollapsibleTrigger className="w-full">
+                  <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                    <CardTitle className="text-base">LISTING EVENTS</CardTitle>
+                    {listingEventsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="open-houses"
+                          checked={openHouses}
+                          onCheckedChange={(checked) => setOpenHouses(checked as boolean)}
+                        />
+                        <Label htmlFor="open-houses" className="cursor-pointer flex items-center gap-1">
+                          🏠 Open Houses
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="broker-tours"
+                          checked={brokerTours}
+                          onCheckedChange={(checked) => setBrokerTours(checked as boolean)}
+                        />
+                        <Label htmlFor="broker-tours" className="cursor-pointer flex items-center gap-1">
+                          🚐 Broker Tours
+                        </Label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="event-timeframe">For:</Label>
+                      <Select value={eventTimeframe} onValueChange={setEventTimeframe}>
+                        <SelectTrigger id="event-timeframe" className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Today">Today</SelectItem>
+                          <SelectItem value="Tomorrow">Tomorrow</SelectItem>
+                          <SelectItem value="Next 3 Days">Next 3 Days</SelectItem>
+                          <SelectItem value="Next 7 Days">Next 7 Days</SelectItem>
+                          <SelectItem value="Next 30 Days">Next 30 Days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* Keywords */}
+            <Collapsible open={keywordsOpen} onOpenChange={setKeywordsOpen}>
+              <Card>
+                <CollapsibleTrigger className="w-full">
+                  <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                    <CardTitle className="text-base">KEYWORDS (Public Remarks only)</CardTitle>
+                    {keywordsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <RadioGroup value={keywordMatch} onValueChange={setKeywordMatch} className="flex gap-4">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="any" id="keyword-any" />
+                          <Label htmlFor="keyword-any" className="cursor-pointer">Any</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="all" id="keyword-all" />
+                          <Label htmlFor="keyword-all" className="cursor-pointer">All</Label>
+                        </div>
+                      </RadioGroup>
+
+                      <RadioGroup value={keywordType} onValueChange={setKeywordType} className="flex gap-4">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="include" id="keyword-include" />
+                          <Label htmlFor="keyword-include" className="cursor-pointer">Include</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="exclude" id="keyword-exclude" />
+                          <Label htmlFor="keyword-exclude" className="cursor-pointer">Exclude</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <Textarea
+                      placeholder="Enter keywords to search in public remarks..."
+                      value={keywords}
+                      onChange={(e) => setKeywords(e.target.value)}
+                      className="min-h-32"
+                    />
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          </div>
         </div>
       </main>
 
