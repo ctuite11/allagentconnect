@@ -62,7 +62,7 @@ const Navigation = () => {
                   <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-background z-50">
+              <DropdownMenuContent className="w-56 bg-card border-border shadow-lg z-[100]">
                 <DropdownMenuLabel>Properties</DropdownMenuLabel>
                 <DropdownMenuGroup>
                   <DropdownMenuItem onClick={() => navigate("/browse")}>
