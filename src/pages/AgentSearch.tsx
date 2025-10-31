@@ -45,7 +45,7 @@ const AgentSearch = () => {
   const [zipCode, setZipCode] = useState("");
   const [radius, setRadius] = useState("");
   const [selectedState, setSelectedState] = useState("MA");
-  const [selectedCounty, setSelectedCounty] = useState("Suffolk County");
+  const [selectedCounty, setSelectedCounty] = useState("Suffolk");
   const [townSearch, setTownSearch] = useState("");
   const [selectedTowns, setSelectedTowns] = useState<string[]>([]);
   const [showTownAreas, setShowTownAreas] = useState("yes");
@@ -55,6 +55,13 @@ const AgentSearch = () => {
   const [keywordMatch, setKeywordMatch] = useState("any");
   const [keywordType, setKeywordType] = useState("include");
   const [keywords, setKeywords] = useState("");
+  const [waterfront, setWaterfront] = useState(false);
+  const [poolProperty, setPoolProperty] = useState(false);
+  const [golfCourse, setGolfCourse] = useState(false);
+  const [gatedCommunity, setGatedCommunity] = useState(false);
+  const [newConstruction, setNewConstruction] = useState(false);
+  const [foreclosure, setForeclosure] = useState(false);
+  const [shortSale, setShortSale] = useState(false);
   
   // Collapsible sections
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(true);
@@ -96,6 +103,24 @@ const AgentSearch = () => {
     "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
     "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
   ];
+
+  const countiesByState: Record<string, string[]> = {
+    MA: ["Barnstable", "Berkshire", "Bristol", "Dukes", "Essex", "Franklin", "Hampden", "Hampshire", "Middlesex", "Nantucket", "Norfolk", "Plymouth", "Suffolk", "Worcester"],
+    NY: ["Albany", "Bronx", "Broome", "Cattaraugus", "Cayuga", "Chautauqua", "Chemung", "Chenango", "Clinton", "Columbia", "Cortland", "Delaware", "Dutchess", "Erie", "Essex", "Franklin", "Fulton", "Genesee", "Greene", "Hamilton", "Herkimer", "Jefferson", "Kings", "Lewis", "Livingston", "Madison", "Monroe", "Montgomery", "Nassau", "New York", "Niagara", "Oneida", "Onondaga", "Ontario", "Orange", "Orleans", "Oswego", "Otsego", "Putnam", "Queens", "Rensselaer", "Richmond", "Rockland", "Saratoga", "Schenectady", "Schoharie", "Schuyler", "Seneca", "St. Lawrence", "Steuben", "Suffolk", "Sullivan", "Tioga", "Tompkins", "Ulster", "Warren", "Washington", "Wayne", "Westchester", "Wyoming", "Yates"],
+    CA: ["Alameda", "Alpine", "Amador", "Butte", "Calaveras", "Colusa", "Contra Costa", "Del Norte", "El Dorado", "Fresno", "Glenn", "Humboldt", "Imperial", "Inyo", "Kern", "Kings", "Lake", "Lassen", "Los Angeles", "Madera", "Marin", "Mariposa", "Mendocino", "Merced", "Modoc", "Mono", "Monterey", "Napa", "Nevada", "Orange", "Placer", "Plumas", "Riverside", "Sacramento", "San Benito", "San Bernardino", "San Diego", "San Francisco", "San Joaquin", "San Luis Obispo", "San Mateo", "Santa Barbara", "Santa Clara", "Santa Cruz", "Shasta", "Sierra", "Siskiyou", "Solano", "Sonoma", "Stanislaus", "Sutter", "Tehama", "Trinity", "Tulare", "Tuolumne", "Ventura", "Yolo", "Yuba"],
+    FL: ["Alachua", "Baker", "Bay", "Bradford", "Brevard", "Broward", "Calhoun", "Charlotte", "Citrus", "Clay", "Collier", "Columbia", "DeSoto", "Dixie", "Duval", "Escambia", "Flagler", "Franklin", "Gadsden", "Gilchrist", "Glades", "Gulf", "Hamilton", "Hardee", "Hendry", "Hernando", "Highlands", "Hillsborough", "Holmes", "Indian River", "Jackson", "Jefferson", "Lafayette", "Lake", "Lee", "Leon", "Levy", "Liberty", "Madison", "Manatee", "Marion", "Martin", "Miami-Dade", "Monroe", "Nassau", "Okaloosa", "Okeechobee", "Orange", "Osceola", "Palm Beach", "Pasco", "Pinellas", "Polk", "Putnam", "St. Johns", "St. Lucie", "Santa Rosa", "Sarasota", "Seminole", "Sumter", "Suwannee", "Taylor", "Union", "Volusia", "Wakulla", "Walton", "Washington"],
+    TX: ["Anderson", "Andrews", "Angelina", "Aransas", "Archer", "Armstrong", "Atascosa", "Austin", "Bailey", "Bandera", "Bastrop", "Baylor", "Bee", "Bell", "Bexar", "Blanco", "Borden", "Bosque", "Bowie", "Brazoria", "Brazos", "Brewster", "Briscoe", "Brooks", "Brown", "Burleson", "Burnet", "Caldwell", "Calhoun", "Callahan", "Cameron", "Camp", "Carson", "Cass", "Castro", "Chambers", "Cherokee", "Childress", "Clay", "Cochran", "Coke", "Coleman", "Collin", "Collingsworth", "Colorado", "Comal", "Comanche", "Concho", "Cooke", "Coryell", "Cottle", "Crane", "Crockett", "Crosby", "Culberson", "Dallam", "Dallas", "Dawson", "Deaf Smith", "Delta", "Denton", "DeWitt", "Dickens", "Dimmit", "Donley", "Duval", "Eastland", "Ector", "Edwards", "Ellis", "El Paso", "Erath", "Falls", "Fannin", "Fayette", "Fisher", "Floyd", "Foard", "Fort Bend", "Franklin", "Freestone", "Frio", "Gaines", "Galveston", "Garza", "Gillespie", "Glasscock", "Goliad", "Gonzales", "Gray", "Grayson", "Gregg", "Grimes", "Guadalupe", "Hale", "Hall", "Hamilton", "Hansford", "Hardeman", "Hardin", "Harris", "Harrison", "Hartley", "Haskell", "Hays", "Hemphill", "Henderson", "Hidalgo", "Hill", "Hockley", "Hood", "Hopkins", "Houston", "Howard", "Hudspeth", "Hunt", "Hutchinson", "Irion", "Jack", "Jackson", "Jasper", "Jeff Davis", "Jefferson", "Jim Hogg", "Jim Wells", "Johnson", "Jones", "Karnes", "Kaufman", "Kendall", "Kenedy", "Kent", "Kerr", "Kimble", "King", "Kinney", "Kleberg", "Knox", "Lamar", "Lamb", "Lampasas", "La Salle", "Lavaca", "Lee", "Leon", "Liberty", "Limestone", "Lipscomb", "Live Oak", "Llano", "Loving", "Lubbock", "Lynn", "McCulloch", "McLennan", "McMullen", "Madison", "Marion", "Martin", "Mason", "Matagorda", "Maverick", "Medina", "Menard", "Midland", "Milam", "Mills", "Mitchell", "Montague", "Montgomery", "Moore", "Morris", "Motley", "Nacogdoches", "Navarro", "Newton", "Nolan", "Nueces", "Ochiltree", "Oldham", "Orange", "Palo Pinto", "Panola", "Parker", "Parmer", "Pecos", "Polk", "Potter", "Presidio", "Rains", "Randall", "Reagan", "Real", "Red River", "Reeves", "Refugio", "Roberts", "Robertson", "Rockwall", "Runnels", "Rusk", "Sabine", "San Augustine", "San Jacinto", "San Patricio", "San Saba", "Schleicher", "Scurry", "Shackelford", "Shelby", "Sherman", "Smith", "Somervell", "Starr", "Stephens", "Sterling", "Stonewall", "Sutton", "Swisher", "Tarrant", "Taylor", "Terrell", "Terry", "Throckmorton", "Titus", "Tom Green", "Travis", "Trinity", "Tyler", "Upshur", "Upton", "Uvalde", "Val Verde", "Van Zandt", "Victoria", "Walker", "Waller", "Ward", "Washington", "Webb", "Wharton", "Wheeler", "Wichita", "Wilbarger", "Willacy", "Williamson", "Wilson", "Winkler", "Wise", "Wood", "Yoakum", "Young", "Zapata", "Zavala"],
+    // Add more states as needed - showing major real estate markets
+    IL: ["Cook", "DuPage", "Kane", "Lake", "McHenry", "Will", "Winnebago", "Champaign", "Madison", "St. Clair", "Peoria", "Sangamon", "McLean", "Rock Island", "Tazewell", "LaSalle", "Kankakee", "DeKalb", "Macon", "Vermilion"],
+    PA: ["Philadelphia", "Allegheny", "Montgomery", "Bucks", "Delaware", "Chester", "Lancaster", "York", "Berks", "Lackawanna", "Luzerne", "Lehigh", "Northampton", "Westmoreland", "Erie", "Dauphin", "Cumberland", "Butler", "Washington", "Cambria"],
+    OH: ["Cuyahoga", "Franklin", "Hamilton", "Summit", "Montgomery", "Lucas", "Stark", "Butler", "Lorain", "Mahoning", "Warren", "Clermont", "Lake", "Trumbull", "Medina", "Greene", "Portage", "Delaware", "Fairfield", "Licking"],
+    NJ: ["Bergen", "Essex", "Middlesex", "Hudson", "Monmouth", "Ocean", "Union", "Camden", "Passaic", "Morris", "Mercer", "Burlington", "Somerset", "Gloucester", "Atlantic", "Cumberland", "Cape May", "Hunterdon", "Sussex", "Warren"],
+    VA: ["Fairfax", "Prince William", "Virginia Beach", "Loudoun", "Chesterfield", "Henrico", "Arlington", "Norfolk", "Chesapeake", "Richmond", "Newport News", "Alexandria", "Hampton", "Roanoke", "Portsmouth", "Suffolk", "Lynchburg", "Harrisonburg", "Charlottesville", "Danville"],
+  };
+
+  const getCountiesForState = (state: string) => {
+    return countiesByState[state] || ["All Counties"];
+  };
 
   const propertyTypeOptions = [
     { value: "single_family", label: "Single Family (SF)" },
@@ -218,7 +243,7 @@ const AgentSearch = () => {
     setZipCode("");
     setRadius("");
     setSelectedState("MA");
-    setSelectedCounty("Suffolk County");
+    setSelectedCounty("Suffolk");
     setTownSearch("");
     setSelectedTowns([]);
     setShowTownAreas("yes");
@@ -228,6 +253,13 @@ const AgentSearch = () => {
     setKeywordMatch("any");
     setKeywordType("include");
     setKeywords("");
+    setWaterfront(false);
+    setPoolProperty(false);
+    setGolfCourse(false);
+    setGatedCommunity(false);
+    setNewConstruction(false);
+    setForeclosure(false);
+    setShortSale(false);
     toast.success("Search criteria cleared");
   };
 
@@ -748,7 +780,15 @@ const AgentSearch = () => {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label htmlFor="state">State</Label>
-                          <Select value={selectedState} onValueChange={setSelectedState}>
+                          <Select 
+                            value={selectedState} 
+                            onValueChange={(value) => {
+                              setSelectedState(value);
+                              // Reset county when state changes
+                              const counties = getCountiesForState(value);
+                              setSelectedCounty(counties[0] || "All Counties");
+                            }}
+                          >
                             <SelectTrigger id="state">
                               <SelectValue />
                             </SelectTrigger>
@@ -767,11 +807,12 @@ const AgentSearch = () => {
                             <SelectTrigger id="county">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Suffolk County">Suffolk County</SelectItem>
-                              <SelectItem value="Middlesex County">Middlesex County</SelectItem>
-                              <SelectItem value="Norfolk County">Norfolk County</SelectItem>
-                              <SelectItem value="Essex County">Essex County</SelectItem>
+                            <SelectContent className="max-h-[300px]">
+                              {getCountiesForState(selectedState).map((county) => (
+                                <SelectItem key={county} value={county}>
+                                  {county}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -857,6 +898,113 @@ const AgentSearch = () => {
                             ))}
                           </div>
                         )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          {/* Additional Criteria */}
+          <Collapsible open={additionalCriteriaOpen} onOpenChange={setAdditionalCriteriaOpen} className="mb-4">
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-base text-primary">ADDITIONAL CRITERIA ⬇️</CardTitle>
+                  {additionalCriteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm">Property Features</h4>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="waterfront"
+                          checked={waterfront}
+                          onCheckedChange={(checked) => setWaterfront(checked as boolean)}
+                        />
+                        <Label htmlFor="waterfront" className="cursor-pointer">Waterfront</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="pool"
+                          checked={poolProperty}
+                          onCheckedChange={(checked) => setPoolProperty(checked as boolean)}
+                        />
+                        <Label htmlFor="pool" className="cursor-pointer">Pool</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="golf"
+                          checked={golfCourse}
+                          onCheckedChange={(checked) => setGolfCourse(checked as boolean)}
+                        />
+                        <Label htmlFor="golf" className="cursor-pointer">Golf Course Community</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="gated"
+                          checked={gatedCommunity}
+                          onCheckedChange={(checked) => setGatedCommunity(checked as boolean)}
+                        />
+                        <Label htmlFor="gated" className="cursor-pointer">Gated Community</Label>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm">Property Status</h4>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="new-construction"
+                          checked={newConstruction}
+                          onCheckedChange={(checked) => setNewConstruction(checked as boolean)}
+                        />
+                        <Label htmlFor="new-construction" className="cursor-pointer">New Construction</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="foreclosure"
+                          checked={foreclosure}
+                          onCheckedChange={(checked) => setForeclosure(checked as boolean)}
+                        />
+                        <Label htmlFor="foreclosure" className="cursor-pointer">Foreclosure</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="short-sale"
+                          checked={shortSale}
+                          onCheckedChange={(checked) => setShortSale(checked as boolean)}
+                        />
+                        <Label htmlFor="short-sale" className="cursor-pointer">Short Sale</Label>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm">Lot Size</h4>
+                      <div>
+                        <Label htmlFor="min-lot-size" className="text-xs">Min Acres</Label>
+                        <Input
+                          id="min-lot-size"
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          placeholder="0"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="max-lot-size" className="text-xs">Max Acres</Label>
+                        <Input
+                          id="max-lot-size"
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          placeholder="Any"
+                          className="mt-1"
+                        />
                       </div>
                     </div>
                   </div>
