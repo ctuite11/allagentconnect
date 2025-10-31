@@ -20,6 +20,7 @@ import OurAgents from "./pages/OurAgents";
 import Favorites from "./pages/Favorites";
 import HotSheets from "./pages/HotSheets";
 import MyClients from "./pages/MyClients";
+import ClientHotSheet from "./pages/ClientHotSheet";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/hot-sheets" element={<HotSheets />} />
           <Route path="/my-clients" element={<MyClients />} />
+          <Route path="/client-hot-sheet/:token" element={<ClientHotSheet />} />
           <Route path="/agent-search" element={<AgentSearch />} />
           <Route path="/agent-dashboard" element={<AgentDashboard />} />
           <Route path="/submit-buyer-need" element={<SubmitBuyerNeed />} />

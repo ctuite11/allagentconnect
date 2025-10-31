@@ -309,6 +309,120 @@ export type Database = {
           },
         ]
       }
+      hot_sheet_comments: {
+        Row: {
+          comment: string
+          created_at: string | null
+          hot_sheet_id: string
+          id: string
+          listing_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          comment: string
+          created_at?: string | null
+          hot_sheet_id: string
+          id?: string
+          listing_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          comment?: string
+          created_at?: string | null
+          hot_sheet_id?: string
+          id?: string
+          listing_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_comments_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_comments_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hot_sheet_favorites: {
+        Row: {
+          created_at: string | null
+          hot_sheet_id: string
+          id: string
+          listing_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          hot_sheet_id: string
+          id?: string
+          listing_id: string
+        }
+        Update: {
+          created_at?: string | null
+          hot_sheet_id?: string
+          id?: string
+          listing_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_favorites_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hot_sheet_sent_listings: {
+        Row: {
+          hot_sheet_id: string
+          id: string
+          listing_id: string
+          sent_at: string | null
+        }
+        Insert: {
+          hot_sheet_id: string
+          id?: string
+          listing_id: string
+          sent_at?: string | null
+        }
+        Update: {
+          hot_sheet_id?: string
+          id?: string
+          listing_id?: string
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_sent_listings_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_sent_listings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hot_sheet_shares: {
         Row: {
           created_at: string
@@ -343,11 +457,13 @@ export type Database = {
       }
       hot_sheets: {
         Row: {
+          access_token: string | null
           client_id: string | null
           created_at: string
           criteria: Json
           id: string
           is_active: boolean
+          last_sent_at: string | null
           name: string
           notification_schedule: string | null
           notify_agent_email: boolean | null
@@ -356,11 +472,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          access_token?: string | null
           client_id?: string | null
           created_at?: string
           criteria?: Json
           id?: string
           is_active?: boolean
+          last_sent_at?: string | null
           name: string
           notification_schedule?: string | null
           notify_agent_email?: boolean | null
@@ -369,11 +487,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          access_token?: string | null
           client_id?: string | null
           created_at?: string
           criteria?: Json
           id?: string
           is_active?: boolean
+          last_sent_at?: string | null
           name?: string
           notification_schedule?: string | null
           notify_agent_email?: boolean | null

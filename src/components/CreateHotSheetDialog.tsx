@@ -117,6 +117,26 @@ export function CreateHotSheetDialog({
 
       if (error) throw error;
 
+      // Get the created hot sheet ID to process it
+      const { data: createdHotSheet } = await supabase
+        .from("hot_sheets")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("name", hotSheetName)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      // Trigger initial batch send
+      if (createdHotSheet) {
+        await supabase.functions.invoke("process-hot-sheet", {
+          body: {
+            hotSheetId: createdHotSheet.id,
+            sendInitialBatch: true,
+          },
+        });
+      }
+
       toast.success(`Hot sheet created${clientName ? ` for ${clientName}` : ""}`);
       onSuccess();
       onOpenChange(false);

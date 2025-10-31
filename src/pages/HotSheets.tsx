@@ -10,9 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Share2, Plus, Trash2, Users } from "lucide-react";
+import { Share2, Plus, Trash2, Users, MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
+import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
 
 interface HotSheet {
   id: string;
@@ -36,6 +37,7 @@ const HotSheets = () => {
   const [user, setUser] = useState<any>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState<string | null>(null);
+  const [commentsDialogOpen, setCommentsDialogOpen] = useState<string | null>(null);
   const [friendEmail, setFriendEmail] = useState("");
   const [sharing, setSharing] = useState(false);
   const [selectedSheets, setSelectedSheets] = useState<Set<string>>(new Set());
@@ -87,6 +89,21 @@ const HotSheets = () => {
 
   const handleHotSheetSuccess = () => {
     fetchHotSheets(user.id);
+  };
+
+  const handleSendUpdate = async (hotSheetId: string) => {
+    try {
+      await supabase.functions.invoke("process-hot-sheet", {
+        body: {
+          hotSheetId,
+          sendInitialBatch: true,
+        },
+      });
+      toast.success("Update sent to client");
+    } catch (error: any) {
+      console.error("Error sending update:", error);
+      toast.error("Failed to send update");
+    }
   };
 
   const handleShareHotSheet = async (hotSheetId: string) => {
@@ -301,6 +318,22 @@ const HotSheets = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSendUpdate(sheet.id)}
+                            title="Send Update"
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCommentsDialogOpen(sheet.id)}
+                            title="View Comments"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
                           <Dialog 
                             open={shareDialogOpen === sheet.id} 
                             onOpenChange={(open) => {
@@ -397,6 +430,16 @@ const HotSheets = () => {
         userId={user?.id}
         onSuccess={handleHotSheetSuccess}
       />
+
+      {/* Comments Dialog */}
+      {commentsDialogOpen && (
+        <HotSheetCommentsDialog
+          open={!!commentsDialogOpen}
+          onOpenChange={(open) => !open && setCommentsDialogOpen(null)}
+          hotSheetId={commentsDialogOpen}
+          hotSheetName={hotSheets.find(s => s.id === commentsDialogOpen)?.name || ""}
+        />
+      )}
 
       <Footer />
     </div>
