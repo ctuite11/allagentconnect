@@ -35,6 +35,10 @@ const AgentDashboard = () => {
   const [listingToDelete, setListingToDelete] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "Agent Dashboard - Direct Connect MLS";
+  }, []);
+
+  useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
