@@ -1,9 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell } from "lucide-react";
+import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,38 +52,87 @@ const Navigation = () => {
               <Home className="w-4 h-4" />
               Home
             </button>
-            <button
-              onClick={() => navigate("/browse")}
-              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
-            >
-              <Search className="w-4 h-4" />
-              Browse
-            </button>
-            <button
-              onClick={() => navigate("/our-agents")}
-              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
-            >
-              <Users className="w-4 h-4" />
-              Our Agents
-            </button>
-            {user && (
-              <>
-                <button
-                  onClick={() => navigate("/favorites")}
-                  className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
-                >
-                  <Heart className="w-4 h-4" />
-                  Favorites
+            
+            {/* All Pages Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
+                  <Menu className="w-4 h-4" />
+                  All Pages
+                  <ChevronDown className="w-3 h-3" />
                 </button>
-                <button
-                  onClick={() => navigate("/hot-sheets")}
-                  className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
-                >
-                  <Bell className="w-4 h-4" />
-                  Hot Sheets
-                </button>
-              </>
-            )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 bg-background z-50">
+                <DropdownMenuLabel>Properties</DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => navigate("/browse")}>
+                    <Search className="mr-2 h-4 w-4" />
+                    Browse Properties
+                  </DropdownMenuItem>
+                  {user && (
+                    <DropdownMenuItem onClick={() => navigate("/favorites")}>
+                      <Heart className="mr-2 h-4 w-4" />
+                      Favorites
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuGroup>
+                
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Agents</DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => navigate("/our-agents")}>
+                    <Users className="mr-2 h-4 w-4" />
+                    Our Agents
+                  </DropdownMenuItem>
+                  {user && (
+                    <DropdownMenuItem onClick={() => navigate("/agent-search")}>
+                      <Search className="mr-2 h-4 w-4" />
+                      Agent Search
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuGroup>
+                
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Tools</DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  {user && (
+                    <DropdownMenuItem onClick={() => navigate("/hot-sheets")}>
+                      <Bell className="mr-2 h-4 w-4" />
+                      Hot Sheets
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => navigate("/submit-buyer-need")}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Submit Buyer Need
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                
+                {user && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/add-listing")}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add For Sale Listing
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/add-rental-listing")}>
+                        <Building2 className="mr-2 h-4 w-4" />
+                        Add Rental Listing
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")}>
+                        <UserCog className="mr-2 h-4 w-4" />
+                        Edit Profile
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Desktop Auth Buttons */}
