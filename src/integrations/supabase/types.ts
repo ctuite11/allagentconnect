@@ -94,6 +94,7 @@ export type Database = {
       agent_profiles: {
         Row: {
           bio: string | null
+          buyer_incentives: string | null
           company: string | null
           created_at: string | null
           email: string
@@ -102,11 +103,13 @@ export type Database = {
           last_name: string
           phone: string | null
           receive_buyer_alerts: boolean | null
+          seller_incentives: string | null
           social_links: Json | null
           updated_at: string | null
         }
         Insert: {
           bio?: string | null
+          buyer_incentives?: string | null
           company?: string | null
           created_at?: string | null
           email: string
@@ -115,11 +118,13 @@ export type Database = {
           last_name: string
           phone?: string | null
           receive_buyer_alerts?: boolean | null
+          seller_incentives?: string | null
           social_links?: Json | null
           updated_at?: string | null
         }
         Update: {
           bio?: string | null
+          buyer_incentives?: string | null
           company?: string | null
           created_at?: string | null
           email?: string
@@ -128,6 +133,7 @@ export type Database = {
           last_name?: string
           phone?: string | null
           receive_buyer_alerts?: boolean | null
+          seller_incentives?: string | null
           social_links?: Json | null
           updated_at?: string | null
         }

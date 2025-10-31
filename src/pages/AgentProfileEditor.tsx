@@ -31,6 +31,8 @@ const AgentProfileEditor = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [bio, setBio] = useState("");
+  const [buyerIncentives, setBuyerIncentives] = useState("");
+  const [sellerIncentives, setSellerIncentives] = useState("");
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({
     linkedin: "",
     twitter: "",
@@ -65,7 +67,7 @@ const AgentProfileEditor = () => {
     try {
       const { data: profile, error: profileError } = await supabase
         .from("agent_profiles")
-        .select("bio, social_links")
+        .select("bio, social_links, buyer_incentives, seller_incentives")
         .eq("id", userId)
         .single();
 
@@ -73,6 +75,8 @@ const AgentProfileEditor = () => {
 
       if (profile) {
         setBio(profile.bio || "");
+        setBuyerIncentives(profile.buyer_incentives || "");
+        setSellerIncentives(profile.seller_incentives || "");
         const links = profile.social_links as unknown as SocialLinks;
         setSocialLinks(links || {
           linkedin: "",
@@ -109,6 +113,8 @@ const AgentProfileEditor = () => {
         .from("agent_profiles")
         .update({
           bio,
+          buyer_incentives: buyerIncentives,
+          seller_incentives: sellerIncentives,
           social_links: socialLinks as any,
         })
         .eq("id", session.user.id);
@@ -214,6 +220,39 @@ const AgentProfileEditor = () => {
               />
               <Button onClick={handleSaveProfile} disabled={saving}>
                 {saving ? "Saving..." : "Save Bio"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Incentives Section */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Client Incentives</CardTitle>
+              <CardDescription>Highlight special offers or incentives you provide to clients</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="buyer_incentives">Buyer Incentives</Label>
+                <Textarea
+                  id="buyer_incentives"
+                  placeholder="e.g., Free home inspection, closing cost assistance, buyer rebate..."
+                  value={buyerIncentives}
+                  onChange={(e) => setBuyerIncentives(e.target.value)}
+                  rows={4}
+                />
+              </div>
+              <div>
+                <Label htmlFor="seller_incentives">Seller Incentives</Label>
+                <Textarea
+                  id="seller_incentives"
+                  placeholder="e.g., Professional photography, staging consultation, reduced commission..."
+                  value={sellerIncentives}
+                  onChange={(e) => setSellerIncentives(e.target.value)}
+                  rows={4}
+                />
+              </div>
+              <Button onClick={handleSaveProfile} disabled={saving}>
+                {saving ? "Saving..." : "Save Incentives"}
               </Button>
             </CardContent>
           </Card>
