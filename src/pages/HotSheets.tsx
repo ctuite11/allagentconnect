@@ -154,6 +154,24 @@ const HotSheets = () => {
         return;
       }
 
+      // Get hot sheet details and send invite email
+      const hotSheet = hotSheets.find(s => s.id === hotSheetId);
+      if (hotSheet) {
+        try {
+          await supabase.functions.invoke("send-hot-sheet-invite", {
+            body: {
+              invitedEmail: friendEmail.toLowerCase(),
+              inviterName: user.email?.split('@')[0] || "A friend",
+              hotSheetName: hotSheet.name,
+              hotSheetLink: `${window.location.origin}/hot-sheets`,
+            },
+          });
+        } catch (emailError) {
+          console.error("Failed to send invite email:", emailError);
+          // Don't block the user experience if email fails
+        }
+      }
+
       toast.success("Hot sheet shared successfully");
       setFriendEmail("");
       setShareDialogOpen(null);

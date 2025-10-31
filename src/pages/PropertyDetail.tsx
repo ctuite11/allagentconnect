@@ -528,6 +528,15 @@ const PropertyDetail = () => {
                           </div>
                         </div>
                       )}
+                      
+                      {/* Contact Listing Agent Button */}
+                      <div className="pt-4">
+                        <ContactAgentDialog 
+                          listingId={listing.id}
+                          agentId={listing.agent_id}
+                          listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                        />
+                      </div>
                     </CardContent>
                   </Card>
                 </>

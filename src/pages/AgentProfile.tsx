@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Mail, Phone, Building2, MapPin, ArrowLeft, Loader2, Home } from "lucide-react";
 import { toast } from "sonner";
+import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 
 interface AgentProfile {
   id: string;
@@ -189,12 +190,11 @@ const AgentProfile = () => {
                   </Badge>
                 )}
 
-                <Button className="w-full" asChild>
-                  <a href={`mailto:${agent.email}`}>
-                    <Mail className="h-4 w-4 mr-2" />
-                    Contact Agent
-                  </a>
-                </Button>
+                <ContactAgentProfileDialog 
+                  agentId={agent.id}
+                  agentName={`${agent.first_name} ${agent.last_name}`}
+                  agentEmail={agent.email}
+                />
               </CardContent>
             </Card>
           </div>
