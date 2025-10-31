@@ -134,28 +134,66 @@ serve(async (req) => {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
-    // Send notification to each agent (placeholder for now - will use Resend in next step)
-    const notifications = agentsToNotify.map(async (agent: any) => {
+    // Send email notifications to agents
+    const countyName = `${county.name}, ${county.state}`;
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    
+    console.log(`Sending notifications to ${agentsToNotify.length} agents`);
+    
+    const emailPromises = agentsToNotify.map(async (agent: any) => {
       const profile = agent.agent_profiles;
-      
-      console.log(`Would notify ${profile.email} about:`, {
-        propertyType: propertyTypeDisplay,
-        county: `${county.name}, ${county.state}`,
-        maxPrice: `$${parseFloat(maxPrice).toLocaleString()}`,
-        bedrooms,
-        bathrooms,
-        description,
-      });
-
-      // TODO: Integrate with Resend to send actual emails
-      return {
-        email: profile.email,
-        name: `${profile.first_name} ${profile.last_name}`,
-        notified: true,
-      };
+      try {
+        const emailResponse = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${RESEND_API_KEY}`,
+          },
+          body: JSON.stringify({
+            from: "Your Real Estate Platform <onboarding@resend.dev>",
+            to: [profile.email],
+            subject: `New buyer looking in ${countyName}`,
+            html: `
+              <h2>New Buyer Alert</h2>
+              <p>Hi ${profile.first_name},</p>
+              <p>A new buyer is looking for properties in <strong>${countyName}</strong>, one of your preferred areas!</p>
+              
+              <h3>Buyer Requirements:</h3>
+              <ul>
+                <li><strong>Property Type:</strong> ${propertyTypeDisplay}</li>
+                <li><strong>Maximum Price:</strong> $${parseFloat(maxPrice).toLocaleString()}</li>
+                ${bedrooms ? `<li><strong>Bedrooms:</strong> ${bedrooms}+</li>` : ""}
+                ${bathrooms ? `<li><strong>Bathrooms:</strong> ${bathrooms}+</li>` : ""}
+              </ul>
+              
+              ${description ? `<h3>Additional Details:</h3><p>${description}</p>` : ""}
+              
+              <p>Log in to your dashboard to view more details and connect with this buyer.</p>
+              
+              <p>Best regards,<br>Your Real Estate Platform</p>
+            `,
+          }),
+        });
+        
+        const data = await emailResponse.json();
+        console.log(`Email sent to ${profile.email}:`, data);
+        
+        return {
+          email: profile.email,
+          name: `${profile.first_name} ${profile.last_name}`,
+          notified: true,
+        };
+      } catch (error) {
+        console.error(`Failed to send email to ${profile.email}:`, error);
+        return {
+          email: profile.email,
+          name: `${profile.first_name} ${profile.last_name}`,
+          notified: false,
+        };
+      }
     });
-
-    const results = await Promise.all(notifications);
+    
+    const results = await Promise.all(emailPromises);
 
     return new Response(
       JSON.stringify({

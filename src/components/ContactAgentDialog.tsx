@@ -54,6 +54,33 @@ const ContactAgentDialog = ({ listingId, agentId, listingAddress }: ContactAgent
 
       if (error) throw error;
 
+      // Fetch agent details to send email
+      const { data: agentData, error: agentError } = await supabase
+        .from("agent_profiles")
+        .select("email, first_name, last_name")
+        .eq("id", agentId)
+        .single();
+
+      if (!agentError && agentData) {
+        // Send email notification to agent
+        try {
+          await supabase.functions.invoke("send-contact-email", {
+            body: {
+              agentEmail: agentData.email,
+              agentName: `${agentData.first_name} ${agentData.last_name}`,
+              senderName: validatedData.sender_name,
+              senderEmail: validatedData.sender_email,
+              senderPhone: validatedData.sender_phone,
+              message: validatedData.message,
+              listingAddress: listingAddress,
+            },
+          });
+        } catch (emailError) {
+          console.error("Failed to send email notification:", emailError);
+          // Don't block the user experience if email fails
+        }
+      }
+
       toast.success("Message sent successfully! The agent will get back to you soon.");
       setOpen(false);
       setFormData({
