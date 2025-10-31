@@ -682,6 +682,130 @@ const AgentSearch = () => {
             </Card>
           </Collapsible>
 
+          {/* Additional Criteria */}
+          <Collapsible open={additionalCriteriaOpen} onOpenChange={setAdditionalCriteriaOpen} className="mb-4">
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-base text-primary">ADDITIONAL CRITERIA ⬇️</CardTitle>
+                  {additionalCriteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm">Property Features</h4>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="waterfront"
+                          checked={waterfront}
+                          onCheckedChange={(checked) => setWaterfront(checked as boolean)}
+                        />
+                        <Label htmlFor="waterfront" className="cursor-pointer">Waterfront</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="pool"
+                          checked={poolProperty}
+                          onCheckedChange={(checked) => setPoolProperty(checked as boolean)}
+                        />
+                        <Label htmlFor="pool" className="cursor-pointer">Pool</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="golf"
+                          checked={golfCourse}
+                          onCheckedChange={(checked) => setGolfCourse(checked as boolean)}
+                        />
+                        <Label htmlFor="golf" className="cursor-pointer">Golf Course Community</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="gated"
+                          checked={gatedCommunity}
+                          onCheckedChange={(checked) => setGatedCommunity(checked as boolean)}
+                        />
+                        <Label htmlFor="gated" className="cursor-pointer">Gated Community</Label>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm">Property Status</h4>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="new-construction"
+                          checked={newConstruction}
+                          onCheckedChange={(checked) => setNewConstruction(checked as boolean)}
+                        />
+                        <Label htmlFor="new-construction" className="cursor-pointer">New Construction</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="foreclosure"
+                          checked={foreclosure}
+                          onCheckedChange={(checked) => setForeclosure(checked as boolean)}
+                        />
+                        <Label htmlFor="foreclosure" className="cursor-pointer">Foreclosure</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="short-sale"
+                          checked={shortSale}
+                          onCheckedChange={(checked) => setShortSale(checked as boolean)}
+                        />
+                        <Label htmlFor="short-sale" className="cursor-pointer">Short Sale</Label>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm">Lot Size</h4>
+                      <div>
+                        <Label htmlFor="min-lot-size" className="text-xs">Min Acres</Label>
+                        <Input
+                          id="min-lot-size"
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          placeholder="0"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="max-lot-size" className="text-xs">Max Acres</Label>
+                        <Input
+                          id="max-lot-size"
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          placeholder="Any"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          {/* Map */}
+          <Collapsible open={mapOpen} onOpenChange={setMapOpen} className="mb-4">
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-base">MAP</CardTitle>
+                  {mapOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">Map visualization for property locations</p>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
           {/* Address */}
           <Collapsible open={addressOpen} onOpenChange={setAddressOpen}>
             <Card>
@@ -898,113 +1022,6 @@ const AgentSearch = () => {
                             ))}
                           </div>
                         )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-
-          {/* Additional Criteria */}
-          <Collapsible open={additionalCriteriaOpen} onOpenChange={setAdditionalCriteriaOpen} className="mb-4">
-            <Card>
-              <CollapsibleTrigger className="w-full">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                  <CardTitle className="text-base text-primary">ADDITIONAL CRITERIA ⬇️</CardTitle>
-                  {additionalCriteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-sm">Property Features</h4>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="waterfront"
-                          checked={waterfront}
-                          onCheckedChange={(checked) => setWaterfront(checked as boolean)}
-                        />
-                        <Label htmlFor="waterfront" className="cursor-pointer">Waterfront</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="pool"
-                          checked={poolProperty}
-                          onCheckedChange={(checked) => setPoolProperty(checked as boolean)}
-                        />
-                        <Label htmlFor="pool" className="cursor-pointer">Pool</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="golf"
-                          checked={golfCourse}
-                          onCheckedChange={(checked) => setGolfCourse(checked as boolean)}
-                        />
-                        <Label htmlFor="golf" className="cursor-pointer">Golf Course Community</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="gated"
-                          checked={gatedCommunity}
-                          onCheckedChange={(checked) => setGatedCommunity(checked as boolean)}
-                        />
-                        <Label htmlFor="gated" className="cursor-pointer">Gated Community</Label>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-sm">Property Status</h4>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="new-construction"
-                          checked={newConstruction}
-                          onCheckedChange={(checked) => setNewConstruction(checked as boolean)}
-                        />
-                        <Label htmlFor="new-construction" className="cursor-pointer">New Construction</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="foreclosure"
-                          checked={foreclosure}
-                          onCheckedChange={(checked) => setForeclosure(checked as boolean)}
-                        />
-                        <Label htmlFor="foreclosure" className="cursor-pointer">Foreclosure</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="short-sale"
-                          checked={shortSale}
-                          onCheckedChange={(checked) => setShortSale(checked as boolean)}
-                        />
-                        <Label htmlFor="short-sale" className="cursor-pointer">Short Sale</Label>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-sm">Lot Size</h4>
-                      <div>
-                        <Label htmlFor="min-lot-size" className="text-xs">Min Acres</Label>
-                        <Input
-                          id="min-lot-size"
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          placeholder="0"
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="max-lot-size" className="text-xs">Max Acres</Label>
-                        <Input
-                          id="max-lot-size"
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          placeholder="Any"
-                          className="mt-1"
-                        />
                       </div>
                     </div>
                   </div>
