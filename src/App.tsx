@@ -19,6 +19,7 @@ import BrowseProperties from "./pages/BrowseProperties";
 import OurAgents from "./pages/OurAgents";
 import Favorites from "./pages/Favorites";
 import HotSheets from "./pages/HotSheets";
+import MyClients from "./pages/MyClients";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/our-agents" element={<OurAgents />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/hot-sheets" element={<HotSheets />} />
+          <Route path="/my-clients" element={<MyClients />} />
           <Route path="/agent-search" element={<AgentSearch />} />
           <Route path="/agent-dashboard" element={<AgentDashboard />} />
           <Route path="/submit-buyer-need" element={<SubmitBuyerNeed />} />
