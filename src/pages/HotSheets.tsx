@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Share2, Plus, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 
 interface HotSheet {
   id: string;
@@ -33,8 +34,7 @@ const HotSheets = () => {
   const [hotSheets, setHotSheets] = useState<HotSheet[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
-  const [newHotSheetName, setNewHotSheetName] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState<string | null>(null);
   const [friendEmail, setFriendEmail] = useState("");
   const [sharing, setSharing] = useState(false);
@@ -85,41 +85,8 @@ const HotSheets = () => {
     }
   };
 
-  const handleCreateHotSheet = async () => {
-    if (!newHotSheetName.trim()) {
-      toast.error("Please enter a hot sheet name");
-      return;
-    }
-
-    try {
-      setCreating(true);
-      const { error } = await supabase
-        .from("hot_sheets")
-        .insert({
-          user_id: user.id,
-          name: newHotSheetName,
-          criteria: {
-            listingType: "all",
-            minPrice: null,
-            maxPrice: null,
-            bedrooms: null,
-            bathrooms: null,
-            propertyType: "all"
-          },
-          is_active: true
-        });
-
-      if (error) throw error;
-
-      toast.success("Hot sheet created");
-      setNewHotSheetName("");
-      fetchHotSheets(user.id);
-    } catch (error: any) {
-      console.error("Error creating hot sheet:", error);
-      toast.error("Failed to create hot sheet");
-    } finally {
-      setCreating(false);
-    }
+  const handleHotSheetSuccess = () => {
+    fetchHotSheets(user.id);
   };
 
   const handleShareHotSheet = async (hotSheetId: string) => {
@@ -279,21 +246,10 @@ const HotSheets = () => {
               <CardTitle>Let's create or view your custom Hot Sheets.</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="New Hot Sheet Name"
-                  value={newHotSheetName}
-                  onChange={(e) => setNewHotSheetName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCreateHotSheet()}
-                />
-                <Button 
-                  onClick={handleCreateHotSheet}
-                  disabled={creating}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create
-                </Button>
-              </div>
+              <Button onClick={() => setCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Hot Sheet
+              </Button>
             </CardContent>
           </Card>
 
@@ -433,6 +389,14 @@ const HotSheets = () => {
           )}
         </div>
       </main>
+
+      {/* Hot Sheet Creation Dialog */}
+      <CreateHotSheetDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        userId={user?.id}
+        onSuccess={handleHotSheetSuccess}
+      />
 
       <Footer />
     </div>

@@ -349,6 +349,9 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          notification_schedule: string | null
+          notify_agent_email: boolean | null
+          notify_client_email: boolean | null
           updated_at: string
           user_id: string
         }
@@ -359,6 +362,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          notification_schedule?: string | null
+          notify_agent_email?: boolean | null
+          notify_client_email?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -369,6 +375,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          notification_schedule?: string | null
+          notify_agent_email?: boolean | null
+          notify_client_email?: boolean | null
           updated_at?: string
           user_id?: string
         }

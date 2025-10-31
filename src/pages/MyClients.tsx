@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 
 const clientSchema = z.object({
   first_name: z.string().trim().min(2, "First name must be at least 2 characters").max(100),
@@ -48,8 +49,8 @@ const MyClients = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
-  const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState<string | null>(null);
-  const [hotSheetName, setHotSheetName] = useState("");
+  const [hotSheetClientId, setHotSheetClientId] = useState<string | null>(null);
+  const [hotSheetClientName, setHotSheetClientName] = useState("");
 
   useEffect(() => {
     checkAuth();
@@ -194,39 +195,15 @@ const MyClients = () => {
     }
   };
 
-  const handleCreateHotSheet = async (clientId: string) => {
-    if (!hotSheetName.trim()) {
-      toast.error("Please enter a hot sheet name");
-      return;
-    }
+  const handleOpenHotSheetDialog = (client: Client) => {
+    setHotSheetClientId(client.id);
+    setHotSheetClientName(`${client.first_name} ${client.last_name}`);
+  };
 
-    try {
-      const { error } = await supabase
-        .from("hot_sheets")
-        .insert({
-          user_id: user.id,
-          client_id: clientId,
-          name: hotSheetName,
-          criteria: {
-            listingType: "all",
-            minPrice: null,
-            maxPrice: null,
-            bedrooms: null,
-            bathrooms: null,
-            propertyType: "all"
-          },
-          is_active: true
-        });
-
-      if (error) throw error;
-
-      toast.success("Hot sheet created for client");
-      setHotSheetDialogOpen(null);
-      setHotSheetName("");
-    } catch (error: any) {
-      console.error("Error creating hot sheet:", error);
-      toast.error("Failed to create hot sheet");
-    }
+  const handleHotSheetSuccess = () => {
+    setHotSheetClientId(null);
+    setHotSheetClientName("");
+    fetchClients(user.id);
   };
 
   if (loading) {
@@ -397,54 +374,16 @@ const MyClients = () => {
                           {client.notes || "—"}
                         </p>
                       </TableCell>
-                      <TableCell className="text-right">
+                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Dialog 
-                            open={hotSheetDialogOpen === client.id} 
-                            onOpenChange={(open) => {
-                              setHotSheetDialogOpen(open ? client.id : null);
-                              if (!open) setHotSheetName("");
-                            }}
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            title="Create Hot Sheet"
+                            onClick={() => handleOpenHotSheetDialog(client)}
                           >
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm" title="Create Hot Sheet">
-                                <ListPlus className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Create Hot Sheet for {client.first_name}</DialogTitle>
-                                <DialogDescription>
-                                  Create a personalized hot sheet to track properties for this client
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div>
-                                  <Label htmlFor="hotsheet-name">Hot Sheet Name</Label>
-                                  <Input
-                                    id="hotsheet-name"
-                                    placeholder="e.g., Downtown Condos for John"
-                                    value={hotSheetName}
-                                    onChange={(e) => setHotSheetName(e.target.value)}
-                                  />
-                                </div>
-                                <div className="flex gap-2 justify-end">
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setHotSheetDialogOpen(null);
-                                      setHotSheetName("");
-                                    }}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button onClick={() => handleCreateHotSheet(client.id)}>
-                                    Create Hot Sheet
-                                  </Button>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                            <ListPlus className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -471,6 +410,21 @@ const MyClients = () => {
           )}
         </div>
       </main>
+
+      {/* Hot Sheet Creation Dialog */}
+      <CreateHotSheetDialog
+        open={!!hotSheetClientId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setHotSheetClientId(null);
+            setHotSheetClientName("");
+          }
+        }}
+        clientId={hotSheetClientId || undefined}
+        clientName={hotSheetClientName}
+        userId={user?.id}
+        onSuccess={handleHotSheetSuccess}
+      />
 
       <Footer />
     </div>
