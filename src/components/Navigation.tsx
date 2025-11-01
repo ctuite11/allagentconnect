@@ -151,9 +151,14 @@ const Navigation = () => {
                 Dashboard
               </Button>
             ) : (
-              <Button size="sm" onClick={() => navigate("/auth")}>
-                Agent Login
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={() => navigate("/buyer-auth")}>
+                  Sign In
+                </Button>
+                <Button size="sm" onClick={() => navigate("/auth")}>
+                  Agent Login
+                </Button>
+              </>
             )}
           </div>
 
@@ -246,7 +251,6 @@ const Navigation = () => {
               </Button>
               {user ? (
                 <>
-                  {/* Agent Search moved to main menu for all users */}
                   <Button 
                     className="w-full" 
                     onClick={() => {
@@ -259,15 +263,27 @@ const Navigation = () => {
                   </Button>
                 </>
               ) : (
-                <Button 
-                  className="w-full" 
-                  onClick={() => {
-                    navigate("/auth");
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Agent Login
-                </Button>
+                <>
+                  <Button 
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => {
+                      navigate("/buyer-auth");
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    className="w-full" 
+                    onClick={() => {
+                      navigate("/auth");
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Agent Login
+                  </Button>
+                </>
               )}
             </div>
           </div>

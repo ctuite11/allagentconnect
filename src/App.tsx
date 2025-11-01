@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AgentDashboard from "./pages/AgentDashboard";
+import BuyerAuth from "./pages/BuyerAuth";
 // import removed: AgentSearch (redirect to OurAgents)
 import SubmitBuyerNeed from "./pages/SubmitBuyerNeed";
 import AddListing from "./pages/AddListing";
@@ -35,6 +36,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/buyer-auth" element={<BuyerAuth />} />
           <Route path="/browse" element={<BrowseProperties />} />
           <Route path="/our-agents" element={<OurAgents />} />
           <Route path="/favorites" element={<Favorites />} />

@@ -19,7 +19,6 @@ const signUpSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required").max(100, "First name must be less than 100 characters"),
   lastName: z.string().trim().min(1, "Last name is required").max(100, "Last name must be less than 100 characters"),
   phone: z.string().trim().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format").optional().or(z.literal("")),
-  company: z.string().trim().max(200, "Company name must be less than 200 characters").optional(),
 });
 
 const loginSchema = z.object({
@@ -27,7 +26,7 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-const Auth = () => {
+const BuyerAuth = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -39,7 +38,6 @@ const Auth = () => {
     firstName: "",
     lastName: "",
     phone: "",
-    company: "",
   });
 
   useEffect(() => {
@@ -48,14 +46,14 @@ const Auth = () => {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        navigate("/agent-dashboard");
+        navigate("/");
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        navigate("/agent-dashboard");
+        navigate("/");
       }
     });
 
@@ -67,35 +65,34 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Validate input
       const validatedData = signUpSchema.parse(formData);
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: validatedData.email,
         password: validatedData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/agent-dashboard`,
+          emailRedirectTo: `${window.location.origin}/`,
         },
       });
 
       if (signUpError) throw signUpError;
 
       if (authData.user) {
-        const { error: profileError } = await supabase.from("agent_profiles").insert({
+        // Create buyer profile
+        const { error: profileError } = await supabase.from("profiles").insert({
           id: authData.user.id,
           email: validatedData.email,
           first_name: validatedData.firstName,
           last_name: validatedData.lastName,
           phone: validatedData.phone || null,
-          company: validatedData.company || null,
         });
 
         if (profileError) throw profileError;
 
-        // Assign agent role
+        // Assign buyer role
         const { error: roleError } = await supabase.from("user_roles").insert({
           user_id: authData.user.id,
-          role: "agent",
+          role: "buyer",
         });
 
         if (roleError) throw roleError;
@@ -118,7 +115,6 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Validate input
       const validatedData = loginSchema.parse({
         email: formData.email,
         password: formData.password,
@@ -150,7 +146,7 @@ const Auth = () => {
       const validatedData = z.object({ email: z.string().email() }).parse({ email: formData.email });
       
       const { error } = await supabase.auth.resetPasswordForEmail(validatedData.email, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/buyer-auth`,
       });
 
       if (error) throw error;
@@ -174,14 +170,14 @@ const Auth = () => {
         <div className="bg-card rounded-lg shadow-xl p-8 border border-border">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              {isForgotPassword ? "Reset Password" : isLogin ? "Agent Login" : "Agent Registration"}
+              {isForgotPassword ? "Reset Password" : isLogin ? "Buyer Login" : "Create Buyer Account"}
             </h1>
             <p className="text-muted-foreground">
               {isForgotPassword
                 ? "Enter your email to receive a reset link"
                 : isLogin
-                ? "Sign in to access your dashboard"
-                : "Create your agent account"}
+                ? "Sign in to save favorites and create hot sheets"
+                : "Register to access buyer features"}
             </p>
           </div>
 
@@ -215,24 +211,13 @@ const Auth = () => {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">Phone (Optional)</Label>
                   <Input
                     id="phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="company">Company</Label>
-                  <Input
-                    id="company"
-                    type="text"
-                    value={formData.company}
-                    onChange={(e) =>
-                      setFormData({ ...formData, company: e.target.value })
                     }
                   />
                 </div>
@@ -303,13 +288,13 @@ const Auth = () => {
                     : "Already have an account? Sign in"}
                 </button>
                 <div className="pt-4 border-t">
-                  <p className="text-sm text-muted-foreground mb-2">Not a real estate agent?</p>
+                  <p className="text-sm text-muted-foreground mb-2">Are you a real estate agent?</p>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate("/buyer-auth")}
+                    onClick={() => navigate("/auth")}
                   >
-                    Buyer Sign In
+                    Register as Agent
                   </Button>
                 </div>
               </>
@@ -321,4 +306,4 @@ const Auth = () => {
   );
 };
 
-export default Auth;
+export default BuyerAuth;
