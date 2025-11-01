@@ -271,60 +271,6 @@ const HotSheets = () => {
     setSelectedSheets(newSelected);
   };
 
-  const getCriteriaDisplay = (criteria: any) => {
-    if (!criteria) return "All";
-    
-    const parts = [];
-    
-    // Property types
-    if (criteria.propertyTypes?.length > 0) {
-      const types = criteria.propertyTypes.map((t: string) => 
-        t.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
-      ).join(", ");
-      parts.push(`Property: ${types}`);
-    }
-    
-    // Price range
-    if (criteria.minPrice || criteria.maxPrice) {
-      if (criteria.minPrice && criteria.maxPrice) {
-        parts.push(`$${criteria.minPrice.toLocaleString()} - $${criteria.maxPrice.toLocaleString()}`);
-      } else if (criteria.minPrice) {
-        parts.push(`Min: $${criteria.minPrice.toLocaleString()}`);
-      } else if (criteria.maxPrice) {
-        parts.push(`Max: $${criteria.maxPrice.toLocaleString()}`);
-      }
-    }
-    
-    // Bedrooms
-    if (criteria.bedrooms) {
-      parts.push(`${criteria.bedrooms}+ beds`);
-    }
-    
-    // Bathrooms
-    if (criteria.bathrooms) {
-      parts.push(`${criteria.bathrooms}+ baths`);
-    }
-    
-    // Location
-    if (criteria.city) {
-      parts.push(`City: ${criteria.city}`);
-    }
-    if (criteria.state) {
-      parts.push(`State: ${criteria.state}`);
-    }
-    if (criteria.zipCode) {
-      parts.push(`Zip: ${criteria.zipCode}`);
-    }
-    
-    // Client info (show name if available)
-    if (criteria.clientFirstName || criteria.clientLastName) {
-      const name = `${criteria.clientFirstName || ''} ${criteria.clientLastName || ''}`.trim();
-      if (name) parts.push(`Client: ${name}`);
-    }
-    
-    return parts.length > 0 ? parts.join(" • ") : "All Properties";
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -383,134 +329,160 @@ const HotSheets = () => {
                   <TableRow>
                     <TableHead className="w-12"></TableHead>
                     <TableHead>Title</TableHead>
-                    <TableHead>Criteria</TableHead>
-                    <TableHead>Shared With</TableHead>
+                    <TableHead>Property Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Beds</TableHead>
+                    <TableHead>Min Price</TableHead>
+                    <TableHead>Max Price</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {hotSheets.map((sheet) => (
-                    <TableRow key={sheet.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedSheets.has(sheet.id)}
-                          onCheckedChange={() => toggleSelection(sheet.id)}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{sheet.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {getCriteriaDisplay(sheet.criteria)}
-                      </TableCell>
-                      <TableCell>
-                        {sheet.shares && sheet.shares.length > 0 ? (
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4" />
-                            <span className="text-sm">{sheet.shares.length}</span>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">None</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleSendUpdate(sheet.id)}
-                            title="Send Update"
-                          >
-                            <Send className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setCommentsDialogOpen(sheet.id)}
-                            title="View Comments"
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                          </Button>
-                          <Dialog 
-                            open={shareDialogOpen === sheet.id} 
-                            onOpenChange={(open) => {
-                              setShareDialogOpen(open ? sheet.id : null);
-                              if (!open) setFriendEmail("");
-                            }}
-                          >
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <Share2 className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Share Hot Sheet</DialogTitle>
-                                <DialogDescription>
-                                  Share this hot sheet with friends. They'll receive the same listing alerts.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div>
-                                  <Label htmlFor="friend-email">Friend's Email</Label>
-                                  <Input
-                                    id="friend-email"
-                                    type="email"
-                                    placeholder="friend@example.com"
-                                    value={friendEmail}
-                                    onChange={(e) => setFriendEmail(e.target.value)}
-                                  />
-                                </div>
-
-                                {sheet.shares && sheet.shares.length > 0 && (
+                  {hotSheets.map((sheet) => {
+                    const criteria = sheet.criteria as any;
+                    return (
+                      <TableRow key={sheet.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedSheets.has(sheet.id)}
+                            onCheckedChange={() => toggleSelection(sheet.id)}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">{sheet.name}</TableCell>
+                        <TableCell className="text-sm">
+                          {criteria.propertyTypes?.length > 0 
+                            ? criteria.propertyTypes.map((t: string) => 
+                                t.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
+                              ).join(", ")
+                            : "All"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {criteria.statuses?.length > 0
+                            ? criteria.statuses.map((s: string) => 
+                                s.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
+                              ).join(", ")
+                            : "All"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {[criteria.city, criteria.state, criteria.zipCode]
+                            .filter(Boolean)
+                            .join(", ") || "All"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {criteria.bedrooms || "0"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {criteria.minPrice 
+                            ? `$${criteria.minPrice.toLocaleString()}` 
+                            : "No Min Price"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {criteria.maxPrice 
+                            ? `$${criteria.maxPrice.toLocaleString()}` 
+                            : "No Max Price"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSendUpdate(sheet.id)}
+                              title="Send Update"
+                            >
+                              <Send className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setCommentsDialogOpen(sheet.id)}
+                              title="View Comments"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                            <Dialog 
+                              open={shareDialogOpen === sheet.id} 
+                              onOpenChange={(open) => {
+                                setShareDialogOpen(open ? sheet.id : null);
+                                if (!open) setFriendEmail("");
+                              }}
+                            >
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Share2 className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Share Hot Sheet</DialogTitle>
+                                  <DialogDescription>
+                                    Share this hot sheet with friends. They'll receive the same listing alerts.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
                                   <div>
-                                    <Label>Currently Shared With:</Label>
-                                    <div className="mt-2 space-y-2">
-                                      {sheet.shares.map((share) => (
-                                        <div key={share.id} className="flex items-center justify-between p-2 bg-muted rounded">
-                                          <span className="text-sm">{share.shared_with_email}</span>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleDeleteShare(share.id)}
-                                          >
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                          </Button>
-                                        </div>
-                                      ))}
-                                    </div>
+                                    <Label htmlFor="friend-email">Friend's Email</Label>
+                                    <Input
+                                      id="friend-email"
+                                      type="email"
+                                      placeholder="friend@example.com"
+                                      value={friendEmail}
+                                      onChange={(e) => setFriendEmail(e.target.value)}
+                                    />
                                   </div>
-                                )}
 
-                                <div className="flex gap-2 justify-end">
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setShareDialogOpen(null);
-                                      setFriendEmail("");
-                                    }}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleShareHotSheet(sheet.id)}
-                                    disabled={sharing || !friendEmail.trim()}
-                                  >
-                                    Share
-                                  </Button>
+                                  {sheet.shares && sheet.shares.length > 0 && (
+                                    <div>
+                                      <Label>Currently Shared With:</Label>
+                                      <div className="mt-2 space-y-2">
+                                        {sheet.shares.map((share) => (
+                                          <div key={share.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                                            <span className="text-sm">{share.shared_with_email}</span>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => handleDeleteShare(share.id)}
+                                            >
+                                              <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="flex gap-2 justify-end">
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => {
+                                        setShareDialogOpen(null);
+                                        setFriendEmail("");
+                                      }}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      onClick={() => handleShareHotSheet(sheet.id)}
+                                      disabled={sharing || !friendEmail.trim()}
+                                    >
+                                      Share
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteHotSheet(sheet.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                              </DialogContent>
+                            </Dialog>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteHotSheet(sheet.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
 
