@@ -198,6 +198,9 @@ const HotSheetReview = () => {
     if (criteria.city) {
       parts.push(`City: ${criteria.city}`);
     }
+    if (criteria.state) {
+      parts.push(`State: ${criteria.state}`);
+    }
     if (criteria.zipCode) {
       parts.push(`Zip: ${criteria.zipCode}`);
     }
