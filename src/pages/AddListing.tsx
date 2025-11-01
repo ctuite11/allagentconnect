@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical } from "lucide-react";
 import { z } from "zod";
@@ -81,6 +83,27 @@ const AddListing = () => {
   const [disclosures, setDisclosures] = useState<string[]>([]);
   const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
   const [amenities, setAmenities] = useState<string[]>([]);
+
+  // Sale listing criteria
+  const [listingAgreementTypes, setListingAgreementTypes] = useState<string[]>([]);
+  const [entryOnly, setEntryOnly] = useState<boolean | null>(null);
+  const [lenderOwned, setLenderOwned] = useState<boolean | null>(null);
+  const [shortSale, setShortSale] = useState<boolean | null>(null);
+  const [propertyStyles, setPropertyStyles] = useState<string[]>([]);
+  const [waterfront, setWaterfront] = useState<boolean | null>(null);
+  const [waterView, setWaterView] = useState<boolean | null>(null);
+  const [beachNearby, setBeachNearby] = useState<boolean | null>(null);
+  const [facingDirection, setFacingDirection] = useState<string[]>([]);
+  const [minFireplaces, setMinFireplaces] = useState("");
+  const [basement, setBasement] = useState<boolean | null>(null);
+  const [garageSpaces, setGarageSpaces] = useState("");
+  const [parkingSpaces, setParkingSpaces] = useState("");
+  const [constructionFeatures, setConstructionFeatures] = useState<string[]>([]);
+  const [roofMaterials, setRoofMaterials] = useState<string[]>([]);
+  const [exteriorFeatures, setExteriorFeatures] = useState<string[]>([]);
+  const [heatingTypes, setHeatingTypes] = useState<string[]>([]);
+  const [coolingTypes, setCoolingTypes] = useState<string[]>([]);
+  const [greenFeatures, setGreenFeatures] = useState<string[]>([]);
 
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
@@ -358,6 +381,26 @@ const AddListing = () => {
         photos: uploadedFiles.photos,
         floor_plans: uploadedFiles.floorPlans,
         documents: uploadedFiles.documents,
+        // Sale listing criteria
+        listing_agreement_types: listingAgreementTypes.length > 0 ? listingAgreementTypes : null,
+        entry_only: entryOnly,
+        lender_owned: lenderOwned,
+        short_sale: shortSale,
+        property_styles: propertyStyles.length > 0 ? propertyStyles : null,
+        waterfront: waterfront,
+        water_view: waterView,
+        beach_nearby: beachNearby,
+        facing_direction: facingDirection.length > 0 ? facingDirection : null,
+        num_fireplaces: minFireplaces ? parseInt(minFireplaces) : null,
+        has_basement: basement,
+        garage_spaces: garageSpaces ? parseInt(garageSpaces) : null,
+        total_parking_spaces: parkingSpaces ? parseInt(parkingSpaces) : null,
+        construction_features: constructionFeatures.length > 0 ? constructionFeatures : null,
+        roof_materials: roofMaterials.length > 0 ? roofMaterials : null,
+        exterior_features_list: exteriorFeatures.length > 0 ? exteriorFeatures : null,
+        heating_types: heatingTypes.length > 0 ? heatingTypes : null,
+        cooling_types: coolingTypes.length > 0 ? coolingTypes : null,
+        green_features: greenFeatures.length > 0 ? greenFeatures : null,
       });
 
       if (error) throw error;
@@ -637,6 +680,445 @@ const AddListing = () => {
                     placeholder="Describe the property features, location highlights, and any special details..."
                   />
                 </div>
+
+                <Separator className="my-6" />
+
+                {/* Sale Listing Criteria Section */}
+                <div className="space-y-6 border-t pt-6">
+                  <Label className="text-2xl font-semibold">Sale Listing Criteria</Label>
+
+                  {/* Listing Agreement Types */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Listing Agreement Type</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {["Exclusive Right to Sell", "Exclusive Right to Auction", "Exclusive Agency"].map((type) => (
+                        <div key={type} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`agreement-${type}`}
+                            checked={listingAgreementTypes.includes(type)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setListingAgreementTypes([...listingAgreementTypes, type]);
+                              } else {
+                                setListingAgreementTypes(listingAgreementTypes.filter((t) => t !== type));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`agreement-${type}`} className="text-sm cursor-pointer">
+                            {type}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Special Conditions */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Special Conditions</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <label className="text-sm font-medium">Entry Only Listing</label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={entryOnly === true ? "default" : "outline"}
+                            onClick={() => setEntryOnly(entryOnly === true ? null : true)}
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={entryOnly === false ? "default" : "outline"}
+                            onClick={() => setEntryOnly(entryOnly === false ? null : false)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <label className="text-sm font-medium">Lender Owned</label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={lenderOwned === true ? "default" : "outline"}
+                            onClick={() => setLenderOwned(lenderOwned === true ? null : true)}
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={lenderOwned === false ? "default" : "outline"}
+                            onClick={() => setLenderOwned(lenderOwned === false ? null : false)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <label className="text-sm font-medium">Short Sale</label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={shortSale === true ? "default" : "outline"}
+                            onClick={() => setShortSale(shortSale === true ? null : true)}
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={shortSale === false ? "default" : "outline"}
+                            onClick={() => setShortSale(shortSale === false ? null : false)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Property Style */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Property Style</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {["Colonial", "Contemporary", "Cape", "Ranch", "Victorian", "Farmhouse", "Cottage", "Split Entry"].map((style) => (
+                        <div key={style} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`style-${style}`}
+                            checked={propertyStyles.includes(style)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setPropertyStyles([...propertyStyles, style]);
+                              } else {
+                                setPropertyStyles(propertyStyles.filter((s) => s !== style));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`style-${style}`} className="text-sm cursor-pointer">
+                            {style}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Area Features */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Area Features</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <label className="text-sm font-medium">Waterfront</label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={waterfront === true ? "default" : "outline"}
+                            onClick={() => setWaterfront(waterfront === true ? null : true)}
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={waterfront === false ? "default" : "outline"}
+                            onClick={() => setWaterfront(waterfront === false ? null : false)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <label className="text-sm font-medium">Water View</label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={waterView === true ? "default" : "outline"}
+                            onClick={() => setWaterView(waterView === true ? null : true)}
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={waterView === false ? "default" : "outline"}
+                            onClick={() => setWaterView(waterView === false ? null : false)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <label className="text-sm font-medium">Beach Nearby</label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={beachNearby === true ? "default" : "outline"}
+                            onClick={() => setBeachNearby(beachNearby === true ? null : true)}
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={beachNearby === false ? "default" : "outline"}
+                            onClick={() => setBeachNearby(beachNearby === false ? null : false)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Facing Direction */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Facing Direction</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {["North", "South", "East", "West", "Northeast", "Northwest", "Southeast", "Southwest"].map((dir) => (
+                        <div key={dir} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`facing-${dir}`}
+                            checked={facingDirection.includes(dir)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setFacingDirection([...facingDirection, dir]);
+                              } else {
+                                setFacingDirection(facingDirection.filter((d) => d !== dir));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`facing-${dir}`} className="text-sm cursor-pointer">
+                            {dir}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Interior Features & Parking */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label className="text-base font-medium">Interior Features</Label>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="minFireplaces">Number of Fireplaces</Label>
+                          <Input
+                            id="minFireplaces"
+                            type="number"
+                            value={minFireplaces}
+                            onChange={(e) => setMinFireplaces(e.target.value)}
+                            placeholder="e.g., 1"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between p-3 border rounded-lg">
+                          <label className="text-sm font-medium">Basement</label>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={basement === true ? "default" : "outline"}
+                              onClick={() => setBasement(basement === true ? null : true)}
+                            >
+                              Yes
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={basement === false ? "default" : "outline"}
+                              onClick={() => setBasement(basement === false ? null : false)}
+                            >
+                              No
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-base font-medium">Parking</Label>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="garageSpaces">Garage Spaces</Label>
+                          <Input
+                            id="garageSpaces"
+                            type="number"
+                            value={garageSpaces}
+                            onChange={(e) => setGarageSpaces(e.target.value)}
+                            placeholder="e.g., 2"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="parkingSpaces">Total Parking Spaces</Label>
+                          <Input
+                            id="parkingSpaces"
+                            type="number"
+                            value={parkingSpaces}
+                            onChange={(e) => setParkingSpaces(e.target.value)}
+                            placeholder="e.g., 3"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Construction Features */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Construction Features</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {["Insulated Concrete Form", "Structural Insulated Panels", "Conventional", "Adobe", "Cork", "Rammed Earth"].map((feat) => (
+                        <div key={feat} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`construction-${feat}`}
+                            checked={constructionFeatures.includes(feat)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setConstructionFeatures([...constructionFeatures, feat]);
+                              } else {
+                                setConstructionFeatures(constructionFeatures.filter((f) => f !== feat));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`construction-${feat}`} className="text-sm cursor-pointer">
+                            {feat}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Roof Material */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Roof Material</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {["Asphalt/Composition Shingles", "Wood Shingles", "Tile", "Slate", "Metal", "Solar Shingles", "Reflective Roofing"].map((mat) => (
+                        <div key={mat} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`roof-${mat}`}
+                            checked={roofMaterials.includes(mat)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setRoofMaterials([...roofMaterials, mat]);
+                              } else {
+                                setRoofMaterials(roofMaterials.filter((m) => m !== mat));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`roof-${mat}`} className="text-sm cursor-pointer">
+                            {mat}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Exterior Features */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Exterior Features</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {["Deck", "Patio", "Pool", "Professional Landscaping", "Irrigation", "Solar Powered Area Lighting", "Drought Tolerant Landscaping", "Cistern Water Storage"].map((feat) => (
+                        <div key={feat} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`exterior-${feat}`}
+                            checked={exteriorFeatures.includes(feat)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setExteriorFeatures([...exteriorFeatures, feat]);
+                              } else {
+                                setExteriorFeatures(exteriorFeatures.filter((f) => f !== feat));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`exterior-${feat}`} className="text-sm cursor-pointer">
+                            {feat}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Heating & Cooling */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label className="text-base font-medium">Heating Type</Label>
+                      <div className="grid grid-cols-1 gap-3">
+                        {["Central Heat", "Forced Air", "Heat Pump", "Active Solar", "Ground Source Heat Pump", "Geothermal Heat Source", "Passive Solar", "Wind"].map((type) => (
+                          <div key={type} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`heating-${type}`}
+                              checked={heatingTypes.includes(type)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setHeatingTypes([...heatingTypes, type]);
+                                } else {
+                                  setHeatingTypes(heatingTypes.filter((t) => t !== type));
+                                }
+                              }}
+                            />
+                            <label htmlFor={`heating-${type}`} className="text-sm cursor-pointer">
+                              {type}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-base font-medium">Cooling Type</Label>
+                      <div className="grid grid-cols-1 gap-3">
+                        {["Central Air", "Window AC", "Wall AC", "Geothermal Heat Pump", "High Seer Heat Pump", "Active Solar", "Passive Cooling"].map((type) => (
+                          <div key={type} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`cooling-${type}`}
+                              checked={coolingTypes.includes(type)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setCoolingTypes([...coolingTypes, type]);
+                                } else {
+                                  setCoolingTypes(coolingTypes.filter((t) => t !== type));
+                                }
+                              }}
+                            />
+                            <label htmlFor={`cooling-${type}`} className="text-sm cursor-pointer">
+                              {type}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Green Features */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Green/Energy Features</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {["Smart Grid Meter", "Pre-Wired for Renewables", "Ready for Renewables", "Energy Star", "Solar PV", "Ground Source Heat Pump", "Geothermal/GSHP Hot Water"].map((feat) => (
+                        <div key={feat} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`green-${feat}`}
+                            checked={greenFeatures.includes(feat)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setGreenFeatures([...greenFeatures, feat]);
+                              } else {
+                                setGreenFeatures(greenFeatures.filter((f) => f !== feat));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`green-${feat}`} className="text-sm cursor-pointer">
+                            {feat}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="my-6" />
 
                 {/* Commission Information Section */}
                 <div className="space-y-4 border-t pt-6">
