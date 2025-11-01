@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +56,33 @@ export function CreateHotSheetDialog({
   const [preferredCounties, setPreferredCounties] = useState<string[]>([]);
   const [requiresBuyerIncentives, setRequiresBuyerIncentives] = useState(false);
   const [counties, setCounties] = useState<Array<{ id: string; name: string }>>([]);
+  
+  // Sale listing criteria
+  const [listingAgreementTypes, setListingAgreementTypes] = useState<string[]>([]);
+  const [entryOnly, setEntryOnly] = useState<boolean | null>(null);
+  const [lenderOwned, setLenderOwned] = useState<boolean | null>(null);
+  const [shortSale, setShortSale] = useState<boolean | null>(null);
+  const [propertyStyles, setPropertyStyles] = useState<string[]>([]);
+  const [minYearBuilt, setMinYearBuilt] = useState("");
+  const [maxYearBuilt, setMaxYearBuilt] = useState("");
+  const [minLotSize, setMinLotSize] = useState("");
+  const [maxLotSize, setMaxLotSize] = useState("");
+  const [waterfront, setWaterfront] = useState<boolean | null>(null);
+  const [waterView, setWaterView] = useState<boolean | null>(null);
+  const [beachNearby, setBeachNearby] = useState<boolean | null>(null);
+  const [facingDirection, setFacingDirection] = useState<string[]>([]);
+  const [minFireplaces, setMinFireplaces] = useState("");
+  const [basement, setBasement] = useState<boolean | null>(null);
+  const [minGarageSpaces, setMinGarageSpaces] = useState("");
+  const [minParkingSpaces, setMinParkingSpaces] = useState("");
+  const [constructionFeatures, setConstructionFeatures] = useState<string[]>([]);
+  const [roofMaterials, setRoofMaterials] = useState<string[]>([]);
+  const [exteriorFeatures, setExteriorFeatures] = useState<string[]>([]);
+  const [heatingTypes, setHeatingTypes] = useState<string[]>([]);
+  const [coolingTypes, setCoolingTypes] = useState<string[]>([]);
+  const [greenFeatures, setGreenFeatures] = useState<string[]>([]);
+  
+  const [saleCriteriaOpen, setSaleCriteriaOpen] = useState(false);
   
   // Notification settings
   const [notifyClient, setNotifyClient] = useState(true);
@@ -145,6 +173,30 @@ export function CreateHotSheetDialog({
         clientLastName: clientLastName || null,
         clientEmail: clientEmail || null,
         clientPhone: clientPhone || null,
+        // Sale listing criteria
+        listingAgreementTypes: listingAgreementTypes.length > 0 ? listingAgreementTypes : null,
+        entryOnly,
+        lenderOwned,
+        shortSale,
+        propertyStyles: propertyStyles.length > 0 ? propertyStyles : null,
+        minYearBuilt: minYearBuilt ? parseInt(minYearBuilt) : null,
+        maxYearBuilt: maxYearBuilt ? parseInt(maxYearBuilt) : null,
+        minLotSize: minLotSize ? parseFloat(minLotSize) : null,
+        maxLotSize: maxLotSize ? parseFloat(maxLotSize) : null,
+        waterfront,
+        waterView,
+        beachNearby,
+        facingDirection: facingDirection.length > 0 ? facingDirection : null,
+        minFireplaces: minFireplaces ? parseInt(minFireplaces) : null,
+        basement,
+        minGarageSpaces: minGarageSpaces ? parseInt(minGarageSpaces) : null,
+        minParkingSpaces: minParkingSpaces ? parseInt(minParkingSpaces) : null,
+        constructionFeatures: constructionFeatures.length > 0 ? constructionFeatures : null,
+        roofMaterials: roofMaterials.length > 0 ? roofMaterials : null,
+        exteriorFeatures: exteriorFeatures.length > 0 ? exteriorFeatures : null,
+        heatingTypes: heatingTypes.length > 0 ? heatingTypes : null,
+        coolingTypes: coolingTypes.length > 0 ? coolingTypes : null,
+        greenFeatures: greenFeatures.length > 0 ? greenFeatures : null,
       };
 
       const { data: createdHotSheet, error } = await supabase
@@ -195,6 +247,29 @@ export function CreateHotSheetDialog({
     setState("MA");
     setPreferredCounties([]);
     setRequiresBuyerIncentives(false);
+    setListingAgreementTypes([]);
+    setEntryOnly(null);
+    setLenderOwned(null);
+    setShortSale(null);
+    setPropertyStyles([]);
+    setMinYearBuilt("");
+    setMaxYearBuilt("");
+    setMinLotSize("");
+    setMaxLotSize("");
+    setWaterfront(null);
+    setWaterView(null);
+    setBeachNearby(null);
+    setFacingDirection([]);
+    setMinFireplaces("");
+    setBasement(null);
+    setMinGarageSpaces("");
+    setMinParkingSpaces("");
+    setConstructionFeatures([]);
+    setRoofMaterials([]);
+    setExteriorFeatures([]);
+    setHeatingTypes([]);
+    setCoolingTypes([]);
+    setGreenFeatures([]);
     setNotifyClient(true);
     setNotifyAgent(true);
     setNotificationSchedule("immediately");
