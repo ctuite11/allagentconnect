@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,11 @@ export function CreateHotSheetDialog({
   const [city, setCity] = useState("");
   const [state, setState] = useState("MA");
   
+  // Agent criteria
+  const [preferredCounties, setPreferredCounties] = useState<string[]>([]);
+  const [requiresBuyerIncentives, setRequiresBuyerIncentives] = useState(false);
+  const [counties, setCounties] = useState<Array<{ id: string; name: string }>>([]);
+  
   // Notification settings
   const [notifyClient, setNotifyClient] = useState(true);
   const [notifyAgent, setNotifyAgent] = useState(true);
@@ -52,7 +57,20 @@ export function CreateHotSheetDialog({
 
   // Collapsible sections
   const [criteriaOpen, setCriteriaOpen] = useState(true);
+  const [agentCriteriaOpen, setAgentCriteriaOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(true);
+
+  // Fetch counties on mount
+  useEffect(() => {
+    const fetchCounties = async () => {
+      const { data } = await supabase
+        .from("counties")
+        .select("id, name")
+        .order("name");
+      if (data) setCounties(data);
+    };
+    fetchCounties();
+  }, []);
 
   const propertyTypeOptions = [
     { value: "single_family", label: "Single Family" },
@@ -81,6 +99,12 @@ export function CreateHotSheetDialog({
     );
   };
 
+  const toggleCounty = (countyId: string) => {
+    setPreferredCounties(prev =>
+      prev.includes(countyId) ? prev.filter(c => c !== countyId) : [...prev, countyId]
+    );
+  };
+
   const handleCreate = async () => {
     if (!hotSheetName.trim()) {
       toast.error("Please enter a hot sheet name");
@@ -102,6 +126,9 @@ export function CreateHotSheetDialog({
         zipCode: zipCode || null,
         city: city || null,
         state: state || null,
+        // Agent criteria
+        preferredCounties: preferredCounties.length > 0 ? preferredCounties : null,
+        requiresBuyerIncentives: requiresBuyerIncentives || null,
       };
 
       const { error } = await supabase.from("hot_sheets").insert({
@@ -162,6 +189,8 @@ export function CreateHotSheetDialog({
     setZipCode("");
     setCity("");
     setState("MA");
+    setPreferredCounties([]);
+    setRequiresBuyerIncentives(false);
     setNotifyClient(true);
     setNotifyAgent(true);
     setNotificationSchedule("immediately");
@@ -354,6 +383,58 @@ export function CreateHotSheetDialog({
                         value={zipCode}
                         onChange={(e) => setZipCode(e.target.value)}
                       />
+                    </div>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          {/* Agent Criteria */}
+          <Collapsible open={agentCriteriaOpen} onOpenChange={setAgentCriteriaOpen}>
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
+                  <CardTitle className="text-base">Agent Preferences (Optional)</CardTitle>
+                  {agentCriteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-4">
+                  {/* Preferred Counties */}
+                  <div className="space-y-2">
+                    <Label>Preferred Agent Counties</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Select counties where you prefer agents to be active
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                      {counties.map((county) => (
+                        <div key={county.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`county-${county.id}`}
+                            checked={preferredCounties.includes(county.id)}
+                            onCheckedChange={() => toggleCounty(county.id)}
+                          />
+                          <Label htmlFor={`county-${county.id}`} className="cursor-pointer text-sm">
+                            {county.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Agent Incentives */}
+                  <div className="space-y-2">
+                    <Label>Agent Requirements</Label>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="buyer-incentives"
+                        checked={requiresBuyerIncentives}
+                        onCheckedChange={(checked) => setRequiresBuyerIncentives(checked as boolean)}
+                      />
+                      <Label htmlFor="buyer-incentives" className="cursor-pointer">
+                        Prefer agents offering buyer incentives
+                      </Label>
                     </div>
                   </div>
                 </CardContent>
