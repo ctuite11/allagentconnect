@@ -21,6 +21,8 @@ interface CreateHotSheetDialogProps {
   clientName?: string;
   userId: string;
   onSuccess: (hotSheetId: string) => void;
+  hotSheetId?: string;
+  editMode?: boolean;
 }
 
 export function CreateHotSheetDialog({
@@ -30,6 +32,8 @@ export function CreateHotSheetDialog({
   clientName,
   userId,
   onSuccess,
+  hotSheetId,
+  editMode = false,
 }: CreateHotSheetDialogProps) {
   const [hotSheetName, setHotSheetName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -95,7 +99,7 @@ export function CreateHotSheetDialog({
   const [agentCriteriaOpen, setAgentCriteriaOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(true);
 
-  // Fetch counties on mount
+  // Fetch counties and hot sheet data on mount
   useEffect(() => {
     const fetchCounties = async () => {
       const { data } = await supabase
@@ -105,7 +109,53 @@ export function CreateHotSheetDialog({
       if (data) setCounties(data);
     };
     fetchCounties();
-  }, []);
+
+    // If editing, load the hot sheet data
+    if (editMode && hotSheetId && open) {
+      loadHotSheet();
+    }
+  }, [editMode, hotSheetId, open]);
+
+  const loadHotSheet = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("hot_sheets")
+        .select("*")
+        .eq("id", hotSheetId)
+        .single();
+
+      if (error) throw error;
+      if (!data) return;
+
+      // Populate form fields
+      setHotSheetName(data.name);
+      const criteria = data.criteria as any;
+      
+      setPropertyTypes(criteria.propertyTypes || []);
+      setStatuses(criteria.statuses || []);
+      setMinPrice(criteria.minPrice?.toString() || "");
+      setMaxPrice(criteria.maxPrice?.toString() || "");
+      setBedrooms(criteria.bedrooms?.toString() || "");
+      setBathrooms(criteria.bathrooms?.toString() || "");
+      setMinSqft(criteria.minSqft?.toString() || "");
+      setMaxSqft(criteria.maxSqft?.toString() || "");
+      setZipCode(criteria.zipCode || "");
+      setCity(criteria.city || "");
+      setState(criteria.state || "");
+      setClientFirstName(criteria.clientFirstName || "");
+      setClientLastName(criteria.clientLastName || "");
+      setClientEmail(criteria.clientEmail || "");
+      setClientPhone(criteria.clientPhone || "");
+      setPreferredCounties(criteria.preferredCounties || []);
+      setRequiresBuyerIncentives(criteria.requiresBuyerIncentives || false);
+      setNotifyClient(data.notify_client_email);
+      setNotifyAgent(data.notify_agent_email);
+      setNotificationSchedule(data.notification_schedule);
+    } catch (error) {
+      console.error("Error loading hot sheet:", error);
+      toast.error("Failed to load hot sheet data");
+    }
+  };
 
   const propertyTypeOptions = [
     { value: "single_family", label: "Single Family" },
@@ -200,25 +250,46 @@ export function CreateHotSheetDialog({
         greenFeatures: greenFeatures.length > 0 ? greenFeatures : null,
       };
 
-      const { data: createdHotSheet, error } = await supabase
-        .from("hot_sheets")
-        .insert({
-          user_id: userId,
-          client_id: clientId || null,
-          name: hotSheetName,
-          criteria,
-          is_active: true,
-          notify_client_email: notifyClient,
-          notify_agent_email: notifyAgent,
-          notification_schedule: notificationSchedule,
-        })
-        .select()
-        .single();
+      if (editMode && hotSheetId) {
+        // Update existing hot sheet
+        const { error } = await supabase
+          .from("hot_sheets")
+          .update({
+            name: hotSheetName,
+            criteria,
+            notify_client_email: notifyClient,
+            notify_agent_email: notifyAgent,
+            notification_schedule: notificationSchedule,
+          })
+          .eq("id", hotSheetId);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast.success("Hot sheet created");
-      onSuccess(createdHotSheet.id);
+        toast.success("Hot sheet updated");
+        onSuccess(hotSheetId);
+      } else {
+        // Create new hot sheet
+        const { data: createdHotSheet, error } = await supabase
+          .from("hot_sheets")
+          .insert({
+            user_id: userId,
+            client_id: clientId || null,
+            name: hotSheetName,
+            criteria,
+            is_active: true,
+            notify_client_email: notifyClient,
+            notify_agent_email: notifyAgent,
+            notification_schedule: notificationSchedule,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        toast.success("Hot sheet created");
+        onSuccess(createdHotSheet.id);
+      }
+      
       onOpenChange(false);
       resetForm();
     } catch (error: any) {
@@ -245,7 +316,7 @@ export function CreateHotSheetDialog({
     setMaxSqft("");
     setZipCode("");
     setCity("");
-    setState("MA");
+    setState("");
     setPreferredCounties([]);
     setRequiresBuyerIncentives(false);
     setListingAgreementTypes([]);

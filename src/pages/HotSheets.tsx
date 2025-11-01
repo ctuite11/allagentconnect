@@ -41,6 +41,8 @@ const HotSheets = () => {
   const [friendEmail, setFriendEmail] = useState("");
   const [sharing, setSharing] = useState(false);
   const [selectedSheets, setSelectedSheets] = useState<Set<string>>(new Set());
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingHotSheetId, setEditingHotSheetId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -88,7 +90,60 @@ const HotSheets = () => {
   };
 
   const handleHotSheetSuccess = (hotSheetId: string) => {
-    navigate(`/hot-sheets/${hotSheetId}/review`);
+    if (editingHotSheetId) {
+      // If editing, just refresh the list
+      fetchHotSheets(user.id);
+      setEditingHotSheetId(null);
+    } else {
+      // If creating, navigate to review
+      navigate(`/hot-sheets/${hotSheetId}/review`);
+    }
+  };
+
+  const handleEditSelected = () => {
+    if (selectedSheets.size !== 1) {
+      toast.error("Please select exactly one hot sheet to edit");
+      return;
+    }
+    const sheetId = Array.from(selectedSheets)[0];
+    setEditingHotSheetId(sheetId);
+    setEditDialogOpen(true);
+  };
+
+  const handleShowResults = () => {
+    if (selectedSheets.size !== 1) {
+      toast.error("Please select exactly one hot sheet to view");
+      return;
+    }
+    const sheetId = Array.from(selectedSheets)[0];
+    navigate(`/hot-sheets/${sheetId}/review`);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedSheets.size === 0) {
+      toast.error("Please select at least one hot sheet to delete");
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedSheets.size} hot sheet(s)?`)) {
+      return;
+    }
+
+    try {
+      for (const sheetId of selectedSheets) {
+        await supabase
+          .from("hot_sheets")
+          .delete()
+          .eq("id", sheetId);
+      }
+
+      toast.success(`Deleted ${selectedSheets.size} hot sheet(s)`);
+      setSelectedSheets(new Set());
+      fetchHotSheets(user.id);
+    } catch (error: any) {
+      console.error("Error deleting hot sheets:", error);
+      toast.error("Failed to delete hot sheets");
+    }
   };
 
   const handleSendUpdate = async (hotSheetId: string) => {
@@ -418,6 +473,33 @@ const HotSheets = () => {
                   ))}
                 </TableBody>
               </Table>
+
+              {/* Bulk Actions */}
+              {hotSheets.length > 0 && (
+                <div className="flex justify-center gap-4 p-6 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={handleEditSelected}
+                    disabled={selectedSheets.size !== 1}
+                  >
+                    Edit Hot Sheet
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleShowResults}
+                    disabled={selectedSheets.size !== 1}
+                  >
+                    Show Results
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteSelected}
+                    disabled={selectedSheets.size === 0}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              )}
             </Card>
           )}
         </div>
@@ -429,6 +511,16 @@ const HotSheets = () => {
         onOpenChange={setCreateDialogOpen}
         userId={user?.id}
         onSuccess={handleHotSheetSuccess}
+      />
+
+      {/* Hot Sheet Edit Dialog */}
+      <CreateHotSheetDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        userId={user?.id}
+        onSuccess={handleHotSheetSuccess}
+        hotSheetId={editingHotSheetId || undefined}
+        editMode={true}
       />
 
       {/* Comments Dialog */}
