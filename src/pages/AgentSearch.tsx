@@ -360,9 +360,9 @@ const AgentSearch = () => {
             <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
               Join Agent Connect and get matched with buyers actively searching for properties in your area
             </p>
-            <Button size="lg" variant="secondary" asChild>
-              <a href="/auth">Register as an Agent</a>
-            </Button>
+              <Button size="lg" variant="secondary" onClick={() => navigate("/auth")}>
+                Register as an Agent
+              </Button>
           </div>
         </section>
       </main>

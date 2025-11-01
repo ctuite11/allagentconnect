@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,13 +10,14 @@ import { Mail, Phone, Building2, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
 
 const OurAgents = () => {
+  const navigate = useNavigate();
   const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-
   useEffect(() => {
     fetchAgents();
   }, []);
+
 
   const fetchAgents = async () => {
     try {
@@ -159,7 +161,7 @@ const OurAgents = () => {
                           </div>
                         )}
 
-                        <Button className="w-full mt-4" onClick={() => window.location.href = `/agent/${agent.id}`}>
+                        <Button className="w-full mt-4" onClick={() => navigate(`/agent/${agent.id}`)}>
                           View Profile
                         </Button>
                       </CardContent>
@@ -180,8 +182,8 @@ const OurAgents = () => {
             <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
               Join Agent Connect and connect with buyers actively searching for properties in your area
             </p>
-            <Button size="lg" variant="secondary" asChild>
-              <a href="/auth">Register as an Agent</a>
+            <Button size="lg" variant="secondary" onClick={() => navigate("/auth")}>
+              Register as an Agent
             </Button>
           </div>
         </section>

@@ -84,12 +84,10 @@ const Navigation = () => {
                     <Users className="mr-2 h-4 w-4" />
                     Our Agents
                   </DropdownMenuItem>
-                  {user && (
-                    <DropdownMenuItem onClick={() => navigate("/agent-search")}>
-                      <Search className="mr-2 h-4 w-4" />
-                      Agent Search
-                    </DropdownMenuItem>
-                  )}
+                  <DropdownMenuItem onClick={() => navigate("/agent-search") }>
+                    <Search className="mr-2 h-4 w-4" />
+                    Agent Search
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
                 
                 <DropdownMenuSeparator />
@@ -144,16 +142,14 @@ const Navigation = () => {
             <Button variant="outline" size="sm" onClick={() => navigate("/submit-buyer-need")}>
               Submit Need
             </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/agent-search")}>
+              Agent Search
+            </Button>
             {user ? (
-              <>
-                <Button variant="outline" size="sm" onClick={() => navigate("/agent-search")}>
-                  Agent Search
-                </Button>
-                <Button variant="default" size="sm" onClick={() => navigate("/agent-dashboard")}>
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Button>
-              </>
+              <Button variant="default" size="sm" onClick={() => navigate("/agent-dashboard")}>
+                <LayoutDashboard className="w-4 h-4 mr-2" />
+                Dashboard
+              </Button>
             ) : (
               <Button size="sm" onClick={() => navigate("/auth")}>
                 Agent Login
@@ -192,6 +188,16 @@ const Navigation = () => {
             >
               <Search className="w-4 h-4" />
               Browse
+            </button>
+            <button
+              onClick={() => {
+                navigate("/agent-search");
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
+            >
+              <Search className="w-4 h-4" />
+              Agent Search
             </button>
             <button
               onClick={() => {
@@ -240,16 +246,7 @@ const Navigation = () => {
               </Button>
               {user ? (
                 <>
-                  <Button 
-                    className="w-full" 
-                    variant="outline"
-                    onClick={() => {
-                      navigate("/agent-search");
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Agent Search
-                  </Button>
+                  {/* Agent Search moved to main menu for all users */}
                   <Button 
                     className="w-full" 
                     onClick={() => {
