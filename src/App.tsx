@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AgentDashboard from "./pages/AgentDashboard";
-import AgentSearch from "./pages/AgentSearch";
+// import removed: AgentSearch (redirect to OurAgents)
 import SubmitBuyerNeed from "./pages/SubmitBuyerNeed";
 import AddListing from "./pages/AddListing";
 import AddRentalListing from "./pages/AddRentalListing";
@@ -42,7 +42,7 @@ const App = () => (
           <Route path="/hot-sheets/:id/review" element={<HotSheetReview />} />
           <Route path="/my-clients" element={<MyClients />} />
           <Route path="/client-hot-sheet/:token" element={<ClientHotSheet />} />
-          <Route path="/agent-search" element={<AgentSearch />} />
+          <Route path="/agent-search" element={<OurAgents />} />
           <Route path="/agent-dashboard" element={<AgentDashboard />} />
           <Route path="/submit-buyer-need" element={<SubmitBuyerNeed />} />
           <Route path="/add-listing" element={<AddListing />} />
