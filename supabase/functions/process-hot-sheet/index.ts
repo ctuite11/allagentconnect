@@ -12,6 +12,7 @@ const corsHeaders = {
 interface ProcessHotSheetRequest {
   hotSheetId: string;
   sendInitialBatch?: boolean;
+  selectedListingIds?: string[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -30,7 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    const { hotSheetId, sendInitialBatch = false }: ProcessHotSheetRequest = await req.json();
+    const { hotSheetId, sendInitialBatch = false, selectedListingIds }: ProcessHotSheetRequest = await req.json();
 
     console.log("Processing hot sheet:", hotSheetId);
 
@@ -120,8 +121,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     const sentListingIds = new Set(sentListings?.map(sl => sl.listing_id) || []);
 
-    // Filter out already sent listings
-    const newListings = matchingListings?.filter(listing => !sentListingIds.has(listing.id)) || [];
+    // Filter out already sent listings or use selected listings
+    let newListings;
+    if (selectedListingIds && selectedListingIds.length > 0) {
+      // Use only the selected listings
+      newListings = matchingListings?.filter(listing => 
+        selectedListingIds.includes(listing.id) && !sentListingIds.has(listing.id)
+      ) || [];
+    } else {
+      // Use all new listings not yet sent
+      newListings = matchingListings?.filter(listing => !sentListingIds.has(listing.id)) || [];
+    }
 
     console.log("New listings to send:", newListings.length);
 
@@ -152,8 +162,12 @@ const handler = async (req: Request): Promise<Response> => {
         }
       }
 
-      if (hotSheet.notify_client_email && hotSheet.clients?.email) {
-        recipients.push(hotSheet.clients.email);
+      if (hotSheet.notify_client_email) {
+        // Try to get client email from criteria first, then from clients table
+        const clientEmail = hotSheet.criteria?.clientEmail || hotSheet.clients?.email;
+        if (clientEmail) {
+          recipients.push(clientEmail);
+        }
       }
 
       if (recipients.length > 0) {
@@ -175,7 +189,9 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         `).join('');
 
-        const clientName = hotSheet.clients ? 
+        const clientName = hotSheet.criteria?.clientFirstName && hotSheet.criteria?.clientLastName ?
+          `${hotSheet.criteria.clientFirstName} ${hotSheet.criteria.clientLastName}` :
+          hotSheet.clients ? 
           `${hotSheet.clients.first_name} ${hotSheet.clients.last_name}` : 
           "Client";
 

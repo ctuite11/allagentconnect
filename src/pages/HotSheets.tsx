@@ -87,8 +87,8 @@ const HotSheets = () => {
     }
   };
 
-  const handleHotSheetSuccess = () => {
-    fetchHotSheets(user.id);
+  const handleHotSheetSuccess = (hotSheetId: string) => {
+    navigate(`/hot-sheets/${hotSheetId}/review`);
   };
 
   const handleSendUpdate = async (hotSheetId: string) => {

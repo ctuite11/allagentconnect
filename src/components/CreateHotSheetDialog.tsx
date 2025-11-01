@@ -18,7 +18,7 @@ interface CreateHotSheetDialogProps {
   clientId?: string;
   clientName?: string;
   userId: string;
-  onSuccess: () => void;
+  onSuccess: (hotSheetId: string) => void;
 }
 
 export function CreateHotSheetDialog({
@@ -31,6 +31,12 @@ export function CreateHotSheetDialog({
 }: CreateHotSheetDialogProps) {
   const [hotSheetName, setHotSheetName] = useState("");
   const [saving, setSaving] = useState(false);
+  
+  // Client information
+  const [clientFirstName, setClientFirstName] = useState("");
+  const [clientLastName, setClientLastName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
   
   // Search criteria
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
@@ -110,6 +116,11 @@ export function CreateHotSheetDialog({
       toast.error("Please enter a hot sheet name");
       return;
     }
+    
+    if (!clientEmail.trim()) {
+      toast.error("Please enter client email");
+      return;
+    }
 
     try {
       setSaving(true);
@@ -129,43 +140,32 @@ export function CreateHotSheetDialog({
         // Agent criteria
         preferredCounties: preferredCounties.length > 0 ? preferredCounties : null,
         requiresBuyerIncentives: requiresBuyerIncentives || null,
+        // Client information
+        clientFirstName: clientFirstName || null,
+        clientLastName: clientLastName || null,
+        clientEmail: clientEmail || null,
+        clientPhone: clientPhone || null,
       };
 
-      const { error } = await supabase.from("hot_sheets").insert({
-        user_id: userId,
-        client_id: clientId || null,
-        name: hotSheetName,
-        criteria,
-        is_active: true,
-        notify_client_email: notifyClient,
-        notify_agent_email: notifyAgent,
-        notification_schedule: notificationSchedule,
-      });
+      const { data: createdHotSheet, error } = await supabase
+        .from("hot_sheets")
+        .insert({
+          user_id: userId,
+          client_id: clientId || null,
+          name: hotSheetName,
+          criteria,
+          is_active: true,
+          notify_client_email: notifyClient,
+          notify_agent_email: notifyAgent,
+          notification_schedule: notificationSchedule,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      // Get the created hot sheet ID to process it
-      const { data: createdHotSheet } = await supabase
-        .from("hot_sheets")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("name", hotSheetName)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      // Trigger initial batch send
-      if (createdHotSheet) {
-        await supabase.functions.invoke("process-hot-sheet", {
-          body: {
-            hotSheetId: createdHotSheet.id,
-            sendInitialBatch: true,
-          },
-        });
-      }
-
-      toast.success(`Hot sheet created${clientName ? ` for ${clientName}` : ""}`);
-      onSuccess();
+      toast.success("Hot sheet created");
+      onSuccess(createdHotSheet.id);
       onOpenChange(false);
       resetForm();
     } catch (error: any) {
@@ -178,6 +178,10 @@ export function CreateHotSheetDialog({
 
   const resetForm = () => {
     setHotSheetName("");
+    setClientFirstName("");
+    setClientLastName("");
+    setClientEmail("");
+    setClientPhone("");
     setPropertyTypes([]);
     setStatuses([]);
     setMinPrice("");
@@ -220,6 +224,55 @@ export function CreateHotSheetDialog({
               maxLength={100}
             />
           </div>
+
+          {/* Client Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Client Information *</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="client-first-name">First Name *</Label>
+                  <Input
+                    id="client-first-name"
+                    placeholder="John"
+                    value={clientFirstName}
+                    onChange={(e) => setClientFirstName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="client-last-name">Last Name *</Label>
+                  <Input
+                    id="client-last-name"
+                    placeholder="Doe"
+                    value={clientLastName}
+                    onChange={(e) => setClientLastName(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="client-email">Email *</Label>
+                <Input
+                  id="client-email"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="client-phone">Phone (Optional)</Label>
+                <Input
+                  id="client-phone"
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Search Criteria */}
           <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
