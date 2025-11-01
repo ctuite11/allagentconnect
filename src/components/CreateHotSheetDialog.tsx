@@ -51,7 +51,7 @@ export function CreateHotSheetDialog({
   const [maxSqft, setMaxSqft] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [city, setCity] = useState("");
-  const [state, setState] = useState("MA");
+  const [state, setState] = useState("");
   
   // Agent criteria
   const [preferredCounties, setPreferredCounties] = useState<string[]>([]);
