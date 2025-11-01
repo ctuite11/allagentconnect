@@ -275,14 +275,54 @@ const HotSheets = () => {
     if (!criteria) return "All";
     
     const parts = [];
-    if (criteria.propertyType && criteria.propertyType !== "all") {
-      parts.push(criteria.propertyType.replace("_", " "));
-    }
-    if (criteria.minPrice) parts.push(`Min: $${criteria.minPrice.toLocaleString()}`);
-    if (criteria.maxPrice) parts.push(`Max: $${criteria.maxPrice.toLocaleString()}`);
-    if (criteria.bedrooms) parts.push(`${criteria.bedrooms}+ beds`);
     
-    return parts.length > 0 ? parts.join(", ") : "All";
+    // Property types
+    if (criteria.propertyTypes?.length > 0) {
+      const types = criteria.propertyTypes.map((t: string) => 
+        t.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
+      ).join(", ");
+      parts.push(`Property: ${types}`);
+    }
+    
+    // Price range
+    if (criteria.minPrice || criteria.maxPrice) {
+      if (criteria.minPrice && criteria.maxPrice) {
+        parts.push(`$${criteria.minPrice.toLocaleString()} - $${criteria.maxPrice.toLocaleString()}`);
+      } else if (criteria.minPrice) {
+        parts.push(`Min: $${criteria.minPrice.toLocaleString()}`);
+      } else if (criteria.maxPrice) {
+        parts.push(`Max: $${criteria.maxPrice.toLocaleString()}`);
+      }
+    }
+    
+    // Bedrooms
+    if (criteria.bedrooms) {
+      parts.push(`${criteria.bedrooms}+ beds`);
+    }
+    
+    // Bathrooms
+    if (criteria.bathrooms) {
+      parts.push(`${criteria.bathrooms}+ baths`);
+    }
+    
+    // Location
+    if (criteria.city) {
+      parts.push(`City: ${criteria.city}`);
+    }
+    if (criteria.state) {
+      parts.push(`State: ${criteria.state}`);
+    }
+    if (criteria.zipCode) {
+      parts.push(`Zip: ${criteria.zipCode}`);
+    }
+    
+    // Client info (show name if available)
+    if (criteria.clientFirstName || criteria.clientLastName) {
+      const name = `${criteria.clientFirstName || ''} ${criteria.clientLastName || ''}`.trim();
+      if (name) parts.push(`Client: ${name}`);
+    }
+    
+    return parts.length > 0 ? parts.join(" • ") : "All Properties";
   };
 
   if (loading) {
