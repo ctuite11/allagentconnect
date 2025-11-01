@@ -1142,7 +1142,7 @@ const AddListing = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="commission_rate">
-                        {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Amount ($)'}
+                        {formData.commission_type === 'percentage' ? 'Rate' : 'Amount'}
                       </Label>
                       <FormattedInput
                         id="commission_rate"

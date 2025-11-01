@@ -253,7 +253,7 @@ const EditListing = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price">Price ($)</Label>
+                <Label htmlFor="price">Price</Label>
                 <FormattedInput
                   id="price"
                   format="currency"
@@ -339,7 +339,9 @@ const EditListing = () => {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="commission_rate">Rate/Amount</Label>
+                    <Label htmlFor="commission_rate">
+                      {formData.commission_type === 'percentage' ? 'Rate' : 'Amount'}
+                    </Label>
                     <FormattedInput
                       id="commission_rate"
                       format={formData.commission_type === 'percentage' ? 'percentage' : 'currency'}
