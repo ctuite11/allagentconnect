@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Phone, Building2, MapPin, Search, X } from "lucide-react";
 import { toast } from "sonner";
@@ -19,6 +20,7 @@ const AgentSearch = () => {
   const [selectedCounties, setSelectedCounties] = useState<string[]>([]);
   const [counties, setCounties] = useState<any[]>([]);
   const [showBuyerIncentivesOnly, setShowBuyerIncentivesOnly] = useState(false);
+  const [sortOrder, setSortOrder] = useState<"a-z" | "z-a">("a-z");
 
   useEffect(() => {
     fetchCounties();
@@ -76,6 +78,7 @@ const AgentSearch = () => {
     setSearchQuery("");
     setSelectedCounties([]);
     setShowBuyerIncentivesOnly(false);
+    setSortOrder("a-z");
   };
 
   const filteredAgents = agents.filter((agent) => {
@@ -104,6 +107,18 @@ const AgentSearch = () => {
     }
 
     return true;
+  });
+
+  // Apply sorting
+  const sortedAgents = [...filteredAgents].sort((a, b) => {
+    const nameA = `${a.last_name} ${a.first_name}`.toLowerCase();
+    const nameB = `${b.last_name} ${b.first_name}`.toLowerCase();
+    
+    if (sortOrder === "a-z") {
+      return nameA.localeCompare(nameB);
+    } else {
+      return nameB.localeCompare(nameA);
+    }
   });
 
   return (
@@ -236,10 +251,22 @@ const AgentSearch = () => {
                       <p className="text-sm text-muted-foreground">
                         {filteredAgents.length} {filteredAgents.length === 1 ? "agent" : "agents"} found
                       </p>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="sort-order" className="text-sm">Sort:</Label>
+                        <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as "a-z" | "z-a")}>
+                          <SelectTrigger id="sort-order" className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="a-z">A-Z</SelectItem>
+                            <SelectItem value="z-a">Z-A</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-6">
-                      {filteredAgents.map((agent) => (
+                      {sortedAgents.map((agent) => (
                         <Card key={agent.id} className="hover:shadow-lg transition-shadow">
                           <CardHeader>
                             <div className="flex items-start gap-4">
