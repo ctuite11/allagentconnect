@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
 import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical } from "lucide-react";
 import { z } from "zod";
@@ -542,12 +543,12 @@ const AddListing = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price">List Price *</Label>
-                    <Input
+                    <FormattedInput
                       id="price"
-                      type="number"
-                      placeholder="$500,000"
+                      format="currency"
+                      placeholder="500000"
                       value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, price: value })}
                       required
                     />
                   </div>
@@ -660,12 +661,12 @@ const AddListing = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="lot_size">Lot Size (acres)</Label>
-                  <Input
+                  <FormattedInput
                     id="lot_size"
-                    type="number"
-                    step="0.01"
+                    format="number"
+                    decimals={2}
                     value={formData.lot_size}
-                    onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
+                    onChange={(value) => setFormData({ ...formData, lot_size: value })}
                   />
                 </div>
 
@@ -1143,13 +1144,13 @@ const AddListing = () => {
                       <Label htmlFor="commission_rate">
                         {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Amount ($)'}
                       </Label>
-                      <Input
+                      <FormattedInput
                         id="commission_rate"
-                        type="number"
-                        step="0.01"
+                        format={formData.commission_type === 'percentage' ? 'percentage' : 'currency'}
+                        decimals={2}
                         placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
                         value={formData.commission_rate}
-                        onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                        onChange={(value) => setFormData({ ...formData, commission_rate: value })}
                       />
                     </div>
                     <div className="space-y-2 md:col-span-1">

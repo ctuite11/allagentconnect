@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
 import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical } from "lucide-react";
 import { z } from "zod";
@@ -465,12 +466,12 @@ const AddRentalListing = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price">Monthly Rent *</Label>
-                    <Input
+                    <FormattedInput
                       id="price"
-                      type="number"
-                      placeholder="$2,000"
+                      format="currency"
+                      placeholder="2000"
                       value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, price: value })}
                       required
                     />
                   </div>
@@ -554,11 +555,11 @@ const AddRentalListing = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="square_feet">Sq Ft</Label>
-                    <Input
+                    <FormattedInput
                       id="square_feet"
-                      type="number"
+                      format="number"
                       value={formData.square_feet}
-                      onChange={(e) => setFormData({ ...formData, square_feet: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, square_feet: value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -607,13 +608,13 @@ const AddRentalListing = () => {
                       <Label htmlFor="commission_rate">
                         {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Amount ($)'}
                       </Label>
-                      <Input
+                      <FormattedInput
                         id="commission_rate"
-                        type="number"
-                        step="0.01"
+                        format={formData.commission_type === 'percentage' ? 'percentage' : 'currency'}
+                        decimals={2}
                         placeholder={formData.commission_type === 'percentage' ? '2.5' : '500'}
                         value={formData.commission_rate}
-                        onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                        onChange={(value) => setFormData({ ...formData, commission_rate: value })}
                       />
                     </div>
                     <div className="space-y-2">

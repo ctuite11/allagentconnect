@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -253,11 +254,11 @@ const EditListing = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="price">Price ($)</Label>
-                <Input
+                <FormattedInput
                   id="price"
-                  type="number"
+                  format="currency"
                   value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, price: value })}
                   required
                 />
               </div>
@@ -284,11 +285,11 @@ const EditListing = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="square_feet">Square Feet</Label>
-                  <Input
+                  <FormattedInput
                     id="square_feet"
-                    type="number"
+                    format="number"
                     value={formData.square_feet}
-                    onChange={(e) => setFormData({ ...formData, square_feet: e.target.value })}
+                    onChange={(value) => setFormData({ ...formData, square_feet: value })}
                   />
                 </div>
               </div>
@@ -339,12 +340,12 @@ const EditListing = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="commission_rate">Rate/Amount</Label>
-                    <Input
+                    <FormattedInput
                       id="commission_rate"
-                      type="number"
-                      step="0.01"
+                      format={formData.commission_type === 'percentage' ? 'percentage' : 'currency'}
+                      decimals={2}
                       value={formData.commission_rate}
-                      onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, commission_rate: value })}
                     />
                   </div>
                 </div>

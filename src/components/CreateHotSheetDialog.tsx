@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -402,24 +403,22 @@ export function CreateHotSheetDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="min-price">Min Price</Label>
-                      <Input
+                      <FormattedInput
                         id="min-price"
-                        type="number"
-                        placeholder="$0"
+                        format="currency"
+                        placeholder="0"
                         value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
-                        min="0"
+                        onChange={(value) => setMinPrice(value)}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="max-price">Max Price</Label>
-                      <Input
+                      <FormattedInput
                         id="max-price"
-                        type="number"
+                        format="currency"
                         placeholder="Any"
                         value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
-                        min="0"
+                        onChange={(value) => setMaxPrice(value)}
                       />
                     </div>
                   </div>
@@ -455,24 +454,22 @@ export function CreateHotSheetDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="min-sqft">Min Sq Ft</Label>
-                      <Input
+                      <FormattedInput
                         id="min-sqft"
-                        type="number"
+                        format="number"
                         placeholder="0"
                         value={minSqft}
-                        onChange={(e) => setMinSqft(e.target.value)}
-                        min="0"
+                        onChange={(value) => setMinSqft(value)}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="max-sqft">Max Sq Ft</Label>
-                      <Input
+                      <FormattedInput
                         id="max-sqft"
-                        type="number"
+                        format="number"
                         placeholder="Any"
                         value={maxSqft}
-                        onChange={(e) => setMaxSqft(e.target.value)}
-                        min="0"
+                        onChange={(value) => setMaxSqft(value)}
                       />
                     </div>
                   </div>
