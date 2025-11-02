@@ -14,6 +14,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usCitiesByState } from "@/data/usCitiesData";
+import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 
 interface CreateHotSheetDialogProps {
   open: boolean;
@@ -304,7 +305,25 @@ export function CreateHotSheetDialog({
 
     // Get cities from US geographical data
     const citiesForState = usCitiesByState[state] || [];
-    setAvailableCities(citiesForState);
+    
+    // Expand cities with neighborhoods
+    const expandedCities: string[] = [];
+    citiesForState.forEach(city => {
+      const areas = getAreasForCity(city, state);
+      if (areas.length > 0) {
+        // Add "Add All Towns" option for this city
+        expandedCities.push(`${city}, ${state}`);
+        // Add each neighborhood
+        areas.forEach(area => {
+          expandedCities.push(`${city}, ${state}-${area}`);
+        });
+      } else {
+        // No neighborhoods, just add the city
+        expandedCities.push(`${city}, ${state}`);
+      }
+    });
+    
+    setAvailableCities(expandedCities);
     setSelectedCities([]);
   }, [state]);
 
@@ -803,7 +822,7 @@ export function CreateHotSheetDialog({
                               onClick={() => toggleCity(city)}
                               className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted rounded"
                             >
-                              {city}, {state || "MA"}
+                              {city}
                             </button>
                           ))}
                         </div>
