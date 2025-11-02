@@ -59,8 +59,10 @@ export function CreateHotSheetDialog({
   const [maxSqft, setMaxSqft] = useState("");
   const [pricePerSqft, setPricePerSqft] = useState("");
   const [zipCode, setZipCode] = useState("");
-  const [city, setCity] = useState("");
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [citySearch, setCitySearch] = useState("");
   const [state, setState] = useState("");
+  const [matchingListingsCount, setMatchingListingsCount] = useState<number>(0);
   
   // Agent criteria
   const [preferredCounties, setPreferredCounties] = useState<string[]>([]);
@@ -150,7 +152,7 @@ export function CreateHotSheetDialog({
       setMaxSqft(criteria.maxSqft?.toString() || "");
       setPricePerSqft(criteria.pricePerSqft?.toString() || "");
       setZipCode(criteria.zipCode || "");
-      setCity(criteria.city || "");
+      setSelectedCities(criteria.cities || []);
       setState(criteria.state || "");
       setClientFirstName(criteria.clientFirstName || "");
       setClientLastName(criteria.clientLastName || "");
@@ -212,6 +214,72 @@ export function CreateHotSheetDialog({
     );
   };
 
+  const toggleCity = (city: string) => {
+    setSelectedCities(prev =>
+      prev.includes(city) ? prev.filter(c => c !== city) : [...prev, city]
+    );
+  };
+
+  const availableCities = [
+    "Boston", "Cambridge", "Somerville", "Quincy", "Newton", "Brookline",
+    "Waltham", "Medford", "Malden", "Revere", "Arlington", "Watertown",
+    "Lexington", "Belmont", "Milton", "Dedham", "Needham", "Wellesley",
+    "Framingham", "Natick", "Weston", "Wayland", "Lincoln", "Concord"
+  ];
+
+  const filteredCities = availableCities.filter(city =>
+    city.toLowerCase().includes(citySearch.toLowerCase())
+  );
+
+  // Fetch matching listings count
+  useEffect(() => {
+    const fetchMatchingCount = async () => {
+      if (!open) return;
+      
+      try {
+        let query = supabase
+          .from("listings")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "active");
+
+        if (propertyTypes.length > 0) {
+          query = query.in("property_type", propertyTypes);
+        }
+        if (state) {
+          query = query.eq("state", state);
+        }
+        if (selectedCities.length > 0) {
+          query = query.in("city", selectedCities);
+        }
+        if (minPrice) {
+          query = query.gte("price", parseFloat(minPrice));
+        }
+        if (maxPrice) {
+          query = query.lte("price", parseFloat(maxPrice));
+        }
+        if (bedrooms) {
+          query = query.gte("bedrooms", parseInt(bedrooms));
+        }
+        if (bathrooms) {
+          query = query.gte("bathrooms", parseFloat(bathrooms));
+        }
+        if (minSqft) {
+          query = query.gte("square_feet", parseInt(minSqft));
+        }
+        if (maxSqft) {
+          query = query.lte("square_feet", parseInt(maxSqft));
+        }
+
+        const { count } = await query;
+        setMatchingListingsCount(count || 0);
+      } catch (error) {
+        console.error("Error fetching matching count:", error);
+      }
+    };
+
+    fetchMatchingCount();
+  }, [open, propertyTypes, state, selectedCities, minPrice, maxPrice, bedrooms, bathrooms, minSqft, maxSqft]);
+
   const handleCreate = async () => {
     if (!hotSheetName.trim()) {
       toast.error("Please enter a hot sheet name");
@@ -241,7 +309,7 @@ export function CreateHotSheetDialog({
         maxSqft: maxSqft ? parseInt(maxSqft) : null,
         pricePerSqft: pricePerSqft ? parseFloat(pricePerSqft) : null,
         zipCode: zipCode || null,
-        city: city || null,
+        cities: selectedCities.length > 0 ? selectedCities : null,
         state: state || null,
         // Agent criteria
         preferredCounties: preferredCounties.length > 0 ? preferredCounties : null,
@@ -347,7 +415,8 @@ export function CreateHotSheetDialog({
     setMaxSqft("");
     setPricePerSqft("");
     setZipCode("");
-    setCity("");
+    setSelectedCities([]);
+    setCitySearch("");
     setState("");
     setPreferredCounties([]);
     setRequiresBuyerIncentives(false);
@@ -384,11 +453,18 @@ export function CreateHotSheetDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            Create Hot Sheet{clientName ? ` for ${clientName}` : ""}
+            {editMode ? "Edit Hot Sheet" : "Create Hot Sheet"}{clientName ? ` for ${clientName}` : ""}
           </DialogTitle>
           <DialogDescription>
             Set up search criteria and notification preferences for automatic listing alerts
           </DialogDescription>
+          {matchingListingsCount > 0 && (
+            <div className="mt-2 p-3 bg-primary/10 rounded-md">
+              <p className="text-sm font-medium text-primary">
+                {matchingListingsCount} {matchingListingsCount === 1 ? "property" : "properties"} match your current criteria
+              </p>
+            </div>
+          )}
         </DialogHeader>
 
         <div className="space-y-6">
@@ -488,25 +564,22 @@ export function CreateHotSheetDialog({
                           onChange={(e) => setAddress(e.target.value)}
                         />
                       </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="city">City</Label>
-                          <Input
-                            id="city"
-                            placeholder="City"
-                            value={city}
-                            onChange={(e) => setCity(e.target.value)}
-                          />
-                        </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="state">State</Label>
-                          <Input
-                            id="state"
-                            placeholder="State"
-                            value={state}
-                            onChange={(e) => setState(e.target.value)}
-                            maxLength={2}
-                          />
+                          <Select value={state} onValueChange={setState}>
+                            <SelectTrigger id="state" className="bg-background">
+                              <SelectValue placeholder="Select state" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover z-50">
+                              <SelectItem value="MA">Massachusetts</SelectItem>
+                              <SelectItem value="NY">New York</SelectItem>
+                              <SelectItem value="CA">California</SelectItem>
+                              <SelectItem value="FL">Florida</SelectItem>
+                              <SelectItem value="TX">Texas</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="zip">ZIP Code</Label>
@@ -517,6 +590,55 @@ export function CreateHotSheetDialog({
                             onChange={(e) => setZipCode(e.target.value)}
                             maxLength={10}
                           />
+                        </div>
+                      </div>
+
+                      {/* Cities/Towns Dropdown */}
+                      <div className="space-y-2">
+                        <Label>Cities/Towns</Label>
+                        <div className="border rounded-md p-3 space-y-3">
+                          <Input
+                            placeholder="Type city or town name..."
+                            value={citySearch}
+                            onChange={(e) => setCitySearch(e.target.value)}
+                            className="mb-2"
+                          />
+                          <div className="max-h-48 overflow-y-auto space-y-2 border rounded p-2">
+                            {filteredCities.map((city) => (
+                              <div key={city} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`city-${city}`}
+                                  checked={selectedCities.includes(city)}
+                                  onCheckedChange={() => toggleCity(city)}
+                                />
+                                <Label htmlFor={`city-${city}`} className="cursor-pointer text-sm">
+                                  {city}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                          {selectedCities.length > 0 && (
+                            <div className="pt-2 border-t">
+                              <Label className="text-xs font-medium">Selected Cities:</Label>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {selectedCities.map((city) => (
+                                  <span
+                                    key={city}
+                                    className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs px-2 py-1 rounded"
+                                  >
+                                    {city}
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleCity(city)}
+                                      className="hover:text-primary/70"
+                                    >
+                                      ×
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

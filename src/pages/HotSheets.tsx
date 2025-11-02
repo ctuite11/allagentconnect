@@ -369,9 +369,11 @@ const HotSheets = () => {
                             : "All"}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {[criteria.city, criteria.state, criteria.zipCode]
-                            .filter(Boolean)
-                            .join(", ") || "All"}
+                          {criteria.cities?.length > 0
+                            ? criteria.cities.join(", ")
+                            : [criteria.state, criteria.zipCode]
+                                .filter(Boolean)
+                                .join(", ") || "All"}
                         </TableCell>
                         <TableCell className="text-sm">
                           {criteria.bedrooms || "Any"}
