@@ -46,6 +46,7 @@ export function CreateHotSheetDialog({
   
   // Search criteria
   const [listingNumbers, setListingNumbers] = useState("");
+  const [address, setAddress] = useState("");
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
@@ -136,6 +137,7 @@ export function CreateHotSheetDialog({
       const criteria = data.criteria as any;
       
       setListingNumbers(criteria.listingNumbers || "");
+      setAddress(criteria.address || "");
       setPropertyTypes(criteria.propertyTypes || []);
       setStatuses(criteria.statuses || []);
       setMinPrice(criteria.minPrice?.toString() || "");
@@ -226,6 +228,7 @@ export function CreateHotSheetDialog({
 
       const criteria = {
         listingNumbers: listingNumbers || null,
+        address: address || null,
         propertyTypes: propertyTypes.length > 0 ? propertyTypes : null,
         statuses: statuses.length > 0 ? statuses : null,
         minPrice: minPrice ? parseFloat(minPrice) : null,
@@ -331,6 +334,7 @@ export function CreateHotSheetDialog({
     setClientEmail("");
     setClientPhone("");
     setListingNumbers("");
+    setAddress("");
     setPropertyTypes([]);
     setStatuses([]);
     setMinPrice("");
@@ -462,13 +466,60 @@ export function CreateHotSheetDialog({
                 <CardContent className="space-y-6">
                   {/* Listing Numbers */}
                   <div className="space-y-2">
-                    <Label htmlFor="listing-numbers">LIST NUMBER(S)</Label>
+                    <Label htmlFor="listing-numbers" className="text-sm font-semibold uppercase">List Number(s)</Label>
                     <Input
                       id="listing-numbers"
                       placeholder="Enter listing number(s)"
                       value={listingNumbers}
                       onChange={(e) => setListingNumbers(e.target.value)}
                     />
+                  </div>
+
+                  {/* Location Search */}
+                  <div className="space-y-4 border-t pt-4">
+                    <Label className="text-sm font-semibold uppercase">Location</Label>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="address">Address</Label>
+                        <Input
+                          id="address"
+                          placeholder="Street address"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="city">City</Label>
+                          <Input
+                            id="city"
+                            placeholder="City"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="state">State</Label>
+                          <Input
+                            id="state"
+                            placeholder="State"
+                            value={state}
+                            onChange={(e) => setState(e.target.value)}
+                            maxLength={2}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="zip">ZIP Code</Label>
+                          <Input
+                            id="zip"
+                            placeholder="ZIP"
+                            value={zipCode}
+                            onChange={(e) => setZipCode(e.target.value)}
+                            maxLength={10}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
@@ -661,43 +712,6 @@ export function CreateHotSheetDialog({
                           onChange={(value) => setMaxSqft(value)}
                         />
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="city">City</Label>
-                      <Input
-                        id="city"
-                        placeholder="Any"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="state">State</Label>
-                      <Select value={state} onValueChange={setState}>
-                        <SelectTrigger id="state">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="MA">MA</SelectItem>
-                          <SelectItem value="NY">NY</SelectItem>
-                          <SelectItem value="CA">CA</SelectItem>
-                          <SelectItem value="FL">FL</SelectItem>
-                          <SelectItem value="TX">TX</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="zip">Zip Code</Label>
-                      <Input
-                        id="zip"
-                        placeholder="Any"
-                        value={zipCode}
-                        onChange={(e) => setZipCode(e.target.value)}
-                      />
                     </div>
                   </div>
                 </CardContent>
