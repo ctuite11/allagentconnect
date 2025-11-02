@@ -134,36 +134,55 @@ const AddListing = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleAddressSelect = async (place: google.maps.places.PlaceResult) => {
-    const addressComponents = place.address_components || [];
+  const handleAddressSelect = async (place: any) => {
+    // Normalize address components between legacy Autocomplete and new PlaceAutocompleteElement
+    const legacyComponents = place.address_components;
+    const newComponents = place.addressComponents?.map((c: any) => ({
+      long_name: c.longText,
+      short_name: c.shortText,
+      types: c.types || [],
+    }));
+    const addressComponents = legacyComponents || newComponents || [];
+
     const getComponent = (type: string) => {
-      const component = addressComponents.find((c) => c.types.includes(type));
+      const component = addressComponents.find((c: any) => c.types?.includes(type));
       return component?.long_name || "";
     };
 
-    const address = place.formatted_address?.split(",")[0] || "";
-    const city = getComponent("locality") || getComponent("sublocality");
+    const formattedAddress = place.formatted_address || place.formattedAddress || place.name || "";
+    const address = formattedAddress.split(",")[0] || "";
+    const city = getComponent("locality") || getComponent("sublocality") || getComponent("postal_town");
     const state = getComponent("administrative_area_level_1");
     const zip_code = getComponent("postal_code");
-    const latitude = place.geometry?.location?.lat() || null;
-    const longitude = place.geometry?.location?.lng() || null;
 
-    setFormData({
-      ...formData,
-      address,
+    // Normalize location
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+    const loc = place.geometry?.location || place.location;
+    try {
+      if (typeof loc?.lat === "function") {
+        latitude = loc.lat();
+        longitude = loc.lng();
+      } else if (typeof loc?.lat === "number") {
+        latitude = loc.lat;
+        longitude = loc.lng;
+      }
+    } catch {}
+
+    setFormData(prev => ({
+      ...prev,
+      address: address || formattedAddress,
       city,
       state,
       zip_code,
       latitude,
       longitude,
-    });
+    }));
 
-    // Fetch property data from Attom API
     if (latitude && longitude) {
-      await fetchPropertyData(latitude, longitude, address, city, state, zip_code);
+      await fetchPropertyData(latitude, longitude, address || formattedAddress, city, state, zip_code);
     }
   };
-
   const fetchPropertyData = async (lat: number, lng: number, address: string, city: string, state: string, zip: string) => {
     setSubmitting(true);
     try {
@@ -557,6 +576,8 @@ const AddListing = () => {
                     <AddressAutocomplete
                       onPlaceSelect={handleAddressSelect}
                       placeholder="Listing Address"
+                      value={formData.address}
+                      onChange={(val) => setFormData({ ...formData, address: val })}
                     />
                   </div>
                   <div className="space-y-2">

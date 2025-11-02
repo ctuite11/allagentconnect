@@ -26,7 +26,7 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
       }
 
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places&v=weekly`;
       script.async = true;
       script.defer = true;
       script.onload = () => initAutocomplete();
@@ -43,6 +43,7 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
       if (places?.PlaceAutocompleteElement && containerRef.current) {
         setUseNewElement(true);
         try {
+          console.info("[AddressAutocomplete] Using PlaceAutocompleteElement");
           containerRef.current.innerHTML = "";
           const el = new places.PlaceAutocompleteElement({});
           // Try to restrict to US if supported
@@ -114,6 +115,7 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
 
       autocompleteRef.current.addListener('place_changed', () => {
         const place = autocompleteRef.current?.getPlace();
+        console.info("[AddressAutocomplete] Legacy Autocomplete place_changed", place);
         if (place && onPlaceSelect) {
           onPlaceSelect(place);
         }
