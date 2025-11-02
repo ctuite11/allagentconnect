@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { usCitiesByState } from "@/data/usCitiesData";
 
 interface CreateHotSheetDialogProps {
   open: boolean;
@@ -294,43 +295,18 @@ export function CreateHotSheetDialog({
     city.toLowerCase().includes(citySearch.toLowerCase())
   );
 
-  // Fetch cities when state or county changes
+  // Load cities when state changes
   useEffect(() => {
-    const fetchCities = async () => {
-      if (!state) {
-        setAvailableCities([]);
-        return;
-      }
+    if (!state) {
+      setAvailableCities([]);
+      return;
+    }
 
-      try {
-        // Try to get cities from listings first
-        const { data: listingData } = await supabase
-          .from("listings")
-          .select("city")
-          .eq("state", state)
-          .eq("status", "active");
-
-        // Get unique cities from listings
-        const citiesFromListings = Array.from(new Set(listingData?.map(item => item.city).filter(Boolean) || []));
-
-        // If no cities from listings, fall back to county names
-        if (citiesFromListings.length === 0) {
-          const countiesForState = counties.filter(c => c.state === state);
-          setAvailableCities(countiesForState.map(c => c.name).sort());
-        } else {
-          setAvailableCities(citiesFromListings.sort());
-        }
-      } catch (error) {
-        console.error("Error fetching cities:", error);
-        // Fall back to counties on error
-        const countiesForState = counties.filter(c => c.state === state);
-        setAvailableCities(countiesForState.map(c => c.name).sort());
-      }
-    };
-
-    fetchCities();
+    // Get cities from US geographical data
+    const citiesForState = usCitiesByState[state] || [];
+    setAvailableCities(citiesForState);
     setSelectedCities([]);
-  }, [state, selectedCountyId, counties]);
+  }, [state]);
 
   // Fetch matching listings count
   useEffect(() => {
