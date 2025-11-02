@@ -333,6 +333,10 @@ const HotSheets = () => {
                     <TableHead>Status</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Beds</TableHead>
+                    <TableHead>Baths</TableHead>
+                    <TableHead>Rooms</TableHead>
+                    <TableHead>Acres</TableHead>
+                    <TableHead>Min Sqft</TableHead>
                     <TableHead>Min Price</TableHead>
                     <TableHead>Max Price</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -370,7 +374,19 @@ const HotSheets = () => {
                             .join(", ") || "All"}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {criteria.bedrooms || "0"}
+                          {criteria.bedrooms || "Any"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {criteria.bathrooms || "Any"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {criteria.rooms || "Any"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {criteria.acres || "Any"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {criteria.minSqft ? criteria.minSqft.toLocaleString() : "Any"}
                         </TableCell>
                         <TableCell className="text-sm">
                           {criteria.minPrice 

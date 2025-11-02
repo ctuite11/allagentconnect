@@ -45,14 +45,18 @@ export function CreateHotSheetDialog({
   const [clientPhone, setClientPhone] = useState("");
   
   // Search criteria
+  const [listingNumbers, setListingNumbers] = useState("");
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
+  const [rooms, setRooms] = useState("");
+  const [acres, setAcres] = useState("");
   const [minSqft, setMinSqft] = useState("");
   const [maxSqft, setMaxSqft] = useState("");
+  const [pricePerSqft, setPricePerSqft] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -131,14 +135,18 @@ export function CreateHotSheetDialog({
       setHotSheetName(data.name);
       const criteria = data.criteria as any;
       
+      setListingNumbers(criteria.listingNumbers || "");
       setPropertyTypes(criteria.propertyTypes || []);
       setStatuses(criteria.statuses || []);
       setMinPrice(criteria.minPrice?.toString() || "");
       setMaxPrice(criteria.maxPrice?.toString() || "");
       setBedrooms(criteria.bedrooms?.toString() || "");
       setBathrooms(criteria.bathrooms?.toString() || "");
+      setRooms(criteria.rooms?.toString() || "");
+      setAcres(criteria.acres?.toString() || "");
       setMinSqft(criteria.minSqft?.toString() || "");
       setMaxSqft(criteria.maxSqft?.toString() || "");
+      setPricePerSqft(criteria.pricePerSqft?.toString() || "");
       setZipCode(criteria.zipCode || "");
       setCity(criteria.city || "");
       setState(criteria.state || "");
@@ -158,18 +166,30 @@ export function CreateHotSheetDialog({
   };
 
   const propertyTypeOptions = [
-    { value: "single_family", label: "Single Family" },
-    { value: "condo", label: "Condo" },
-    { value: "multi_family", label: "Multi Family" },
-    { value: "townhouse", label: "Townhouse" },
-    { value: "land", label: "Land" },
+    { value: "single_family", label: "Single Family (SF)" },
+    { value: "condo", label: "Condominium (CC)" },
+    { value: "multi_family", label: "Multi Family (MF)" },
+    { value: "townhouse", label: "Townhouse (TH)" },
+    { value: "land", label: "Land (LD)" },
+    { value: "commercial", label: "Commercial (CI)" },
+    { value: "business_opp", label: "Business Opp. (BU)" },
   ];
 
   const statusOptions = [
-    { value: "new", label: "New" },
-    { value: "active", label: "Active" },
-    { value: "pending", label: "Pending" },
-    { value: "price_changed", label: "Price Changed" },
+    { value: "new", label: "New (NEW)" },
+    { value: "active", label: "Active (ACT)" },
+    { value: "price_changed", label: "Price Changed (PCG)" },
+    { value: "back_on_market", label: "Back on Market (BOM)" },
+    { value: "extended", label: "Extended (EXT)" },
+    { value: "reactivated", label: "Reactivated (RAC)" },
+    { value: "contingent", label: "Contingent (CTG)" },
+    { value: "under_agreement", label: "Under Agreement (UAG)" },
+    { value: "sold", label: "Sold (SLD)" },
+    { value: "rented", label: "Rented (RNT)" },
+    { value: "temporarily_withdrawn", label: "Temporarily Withdrawn (WDN)" },
+    { value: "expired", label: "Expired (EXP)" },
+    { value: "canceled", label: "Canceled (CAN)" },
+    { value: "coming_soon", label: "Coming Soon (CSO)" },
   ];
 
   const togglePropertyType = (value: string) => {
@@ -205,14 +225,18 @@ export function CreateHotSheetDialog({
       setSaving(true);
 
       const criteria = {
+        listingNumbers: listingNumbers || null,
         propertyTypes: propertyTypes.length > 0 ? propertyTypes : null,
         statuses: statuses.length > 0 ? statuses : null,
         minPrice: minPrice ? parseFloat(minPrice) : null,
         maxPrice: maxPrice ? parseFloat(maxPrice) : null,
         bedrooms: bedrooms ? parseInt(bedrooms) : null,
         bathrooms: bathrooms ? parseFloat(bathrooms) : null,
+        rooms: rooms ? parseInt(rooms) : null,
+        acres: acres ? parseFloat(acres) : null,
         minSqft: minSqft ? parseInt(minSqft) : null,
         maxSqft: maxSqft ? parseInt(maxSqft) : null,
+        pricePerSqft: pricePerSqft ? parseFloat(pricePerSqft) : null,
         zipCode: zipCode || null,
         city: city || null,
         state: state || null,
@@ -306,14 +330,18 @@ export function CreateHotSheetDialog({
     setClientLastName("");
     setClientEmail("");
     setClientPhone("");
+    setListingNumbers("");
     setPropertyTypes([]);
     setStatuses([]);
     setMinPrice("");
     setMaxPrice("");
     setBedrooms("");
     setBathrooms("");
+    setRooms("");
+    setAcres("");
     setMinSqft("");
     setMaxSqft("");
+    setPricePerSqft("");
     setZipCode("");
     setCity("");
     setState("");
@@ -431,117 +459,208 @@ export function CreateHotSheetDialog({
                 </CardHeader>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <CardContent className="space-y-4">
-                  {/* Property Types */}
+                <CardContent className="space-y-6">
+                  {/* Listing Numbers */}
                   <div className="space-y-2">
-                    <Label>Property Types</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {propertyTypeOptions.map((option) => (
-                        <div key={option.value} className="flex items-center space-x-2">
+                    <Label htmlFor="listing-numbers">LIST NUMBER(S)</Label>
+                    <Input
+                      id="listing-numbers"
+                      placeholder="Enter listing number(s)"
+                      value={listingNumbers}
+                      onChange={(e) => setListingNumbers(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Property Types */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold uppercase">Property Type</Label>
+                      <div className="space-y-2 border rounded-md p-3 max-h-64 overflow-y-auto">
+                        <div className="flex items-center space-x-2">
                           <Checkbox
-                            id={`pt-${option.value}`}
-                            checked={propertyTypes.includes(option.value)}
-                            onCheckedChange={() => togglePropertyType(option.value)}
+                            id="pt-select-all"
+                            checked={propertyTypes.length === propertyTypeOptions.length}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setPropertyTypes(propertyTypeOptions.map(opt => opt.value));
+                              } else {
+                                setPropertyTypes([]);
+                              }
+                            }}
                           />
-                          <Label htmlFor={`pt-${option.value}`} className="cursor-pointer">
-                            {option.label}
+                          <Label htmlFor="pt-select-all" className="cursor-pointer font-medium">
+                            Select All
                           </Label>
                         </div>
-                      ))}
+                        {propertyTypeOptions.map((option) => (
+                          <div key={option.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`pt-${option.value}`}
+                              checked={propertyTypes.includes(option.value)}
+                              onCheckedChange={() => togglePropertyType(option.value)}
+                            />
+                            <Label htmlFor={`pt-${option.value}`} className="cursor-pointer text-sm">
+                              {option.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Status */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold uppercase">Status</Label>
+                      <div className="space-y-2 border rounded-md p-3 max-h-64 overflow-y-auto">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="st-select-all"
+                            checked={statuses.length === statusOptions.length}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setStatuses(statusOptions.map(opt => opt.value));
+                              } else {
+                                setStatuses([]);
+                              }
+                            }}
+                          />
+                          <Label htmlFor="st-select-all" className="cursor-pointer font-medium">
+                            Select All
+                          </Label>
+                        </div>
+                        {statusOptions.map((option) => (
+                          <div key={option.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`st-${option.value}`}
+                              checked={statuses.includes(option.value)}
+                              onCheckedChange={() => toggleStatus(option.value)}
+                            />
+                            <Label htmlFor={`st-${option.value}`} className="cursor-pointer text-sm">
+                              {option.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Status */}
-                  <div className="space-y-2">
-                    <Label>Status</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {statusOptions.map((option) => (
-                        <div key={option.value} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`st-${option.value}`}
-                            checked={statuses.includes(option.value)}
-                            onCheckedChange={() => toggleStatus(option.value)}
-                          />
-                          <Label htmlFor={`st-${option.value}`} className="cursor-pointer">
-                            {option.label}
-                          </Label>
-                        </div>
-                      ))}
+                  {/* Standard Search Criteria */}
+                  <div className="space-y-4 border-t pt-4">
+                    <Label className="text-sm font-semibold uppercase">Standard Search Criteria</Label>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="bedrooms">Bedrooms</Label>
+                        <Input
+                          id="bedrooms"
+                          type="number"
+                          placeholder="Any"
+                          value={bedrooms}
+                          onChange={(e) => setBedrooms(e.target.value)}
+                          min="0"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="bathrooms">Total Bathrooms</Label>
+                        <Input
+                          id="bathrooms"
+                          type="number"
+                          step="0.5"
+                          placeholder="Any"
+                          value={bathrooms}
+                          onChange={(e) => setBathrooms(e.target.value)}
+                          min="0"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="rooms">Rooms</Label>
+                        <Input
+                          id="rooms"
+                          type="number"
+                          placeholder="Any"
+                          value={rooms}
+                          onChange={(e) => setRooms(e.target.value)}
+                          min="0"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="acres">Acres</Label>
+                        <Input
+                          id="acres"
+                          type="number"
+                          step="0.01"
+                          placeholder="Any"
+                          value={acres}
+                          onChange={(e) => setAcres(e.target.value)}
+                          min="0"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="min-sqft">Living Area Total (SqFt) - Min</Label>
+                        <FormattedInput
+                          id="min-sqft"
+                          format="number"
+                          placeholder="0"
+                          value={minSqft}
+                          onChange={(value) => setMinSqft(value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="price-per-sqft">Price per SqFt</Label>
+                        <FormattedInput
+                          id="price-per-sqft"
+                          format="currency"
+                          placeholder="Any"
+                          value={pricePerSqft}
+                          onChange={(value) => setPricePerSqft(value)}
+                        />
+                      </div>
                     </div>
                   </div>
 
                   {/* Price Range */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="min-price">Min Price</Label>
-                      <FormattedInput
-                        id="min-price"
-                        format="currency"
-                        placeholder="0"
-                        value={minPrice}
-                        onChange={(value) => setMinPrice(value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="max-price">Max Price</Label>
-                      <FormattedInput
-                        id="max-price"
-                        format="currency"
-                        placeholder="Any"
-                        value={maxPrice}
-                        onChange={(value) => setMaxPrice(value)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Bedrooms & Bathrooms */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="bedrooms">Min Bedrooms</Label>
-                      <Input
-                        id="bedrooms"
-                        type="number"
-                        placeholder="Any"
-                        value={bedrooms}
-                        onChange={(e) => setBedrooms(e.target.value)}
-                        min="0"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="bathrooms">Min Bathrooms</Label>
-                      <Input
-                        id="bathrooms"
-                        type="number"
-                        step="0.5"
-                        placeholder="Any"
-                        value={bathrooms}
-                        onChange={(e) => setBathrooms(e.target.value)}
-                        min="0"
-                      />
+                  <div className="space-y-4 border-t pt-4">
+                    <Label className="text-sm font-semibold">Price Range</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="min-price">Min Price</Label>
+                        <FormattedInput
+                          id="min-price"
+                          format="currency"
+                          placeholder="0"
+                          value={minPrice}
+                          onChange={(value) => setMinPrice(value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="max-price">Max Price</Label>
+                        <FormattedInput
+                          id="max-price"
+                          format="currency"
+                          placeholder="Any"
+                          value={maxPrice}
+                          onChange={(value) => setMaxPrice(value)}
+                        />
+                      </div>
                     </div>
                   </div>
 
                   {/* Square Footage */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="min-sqft">Min Sq Ft</Label>
-                      <FormattedInput
-                        id="min-sqft"
-                        format="number"
-                        placeholder="0"
-                        value={minSqft}
-                        onChange={(value) => setMinSqft(value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="max-sqft">Max Sq Ft</Label>
-                      <FormattedInput
-                        id="max-sqft"
-                        format="number"
-                        placeholder="Any"
-                        value={maxSqft}
-                        onChange={(value) => setMaxSqft(value)}
-                      />
+                  <div className="space-y-4 border-t pt-4">
+                    <Label className="text-sm font-semibold">Square Footage Range</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="max-sqft">Max Sq Ft</Label>
+                        <FormattedInput
+                          id="max-sqft"
+                          format="number"
+                          placeholder="Any"
+                          value={maxSqft}
+                          onChange={(value) => setMaxSqft(value)}
+                        />
+                      </div>
                     </div>
                   </div>
 
