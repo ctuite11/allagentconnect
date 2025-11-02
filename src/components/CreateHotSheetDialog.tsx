@@ -47,6 +47,11 @@ export function CreateHotSheetDialog({
   // Search criteria
   const [listingNumbers, setListingNumbers] = useState("");
   const [address, setAddress] = useState("");
+  const [addressMode, setAddressMode] = useState<"street" | "mylocation">("street");
+  const [streetNumber, setStreetNumber] = useState("");
+  const [streetName, setStreetName] = useState("");
+  const [radiusMiles, setRadiusMiles] = useState("");
+
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
@@ -59,9 +64,15 @@ export function CreateHotSheetDialog({
   const [maxSqft, setMaxSqft] = useState("");
   const [pricePerSqft, setPricePerSqft] = useState("");
   const [zipCode, setZipCode] = useState("");
+
+  // Towns / coverage areas
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [citySearch, setCitySearch] = useState("");
   const [state, setState] = useState("");
+  const [selectedCountyId, setSelectedCountyId] = useState<string>("");
+  const [showAreas, setShowAreas] = useState<boolean>(true);
+
+  // Live results counter
   const [matchingListingsCount, setMatchingListingsCount] = useState<number>(0);
   
   // Agent criteria
@@ -111,9 +122,9 @@ export function CreateHotSheetDialog({
     const fetchCounties = async () => {
       const { data } = await supabase
         .from("counties")
-        .select("id, name")
+        .select("id, name, state")
         .order("name");
-      if (data) setCounties(data);
+      if (data) setCounties(data as Array<{ id: string; name: string; state: string }>);
     };
     fetchCounties();
 
@@ -273,14 +284,22 @@ export function CreateHotSheetDialog({
     { code: "WY", name: "Wyoming" }
   ];
 
-  const availableCities = [
-    "Boston", "Cambridge", "Somerville", "Quincy", "Newton", "Brookline",
-    "Waltham", "Medford", "Malden", "Revere", "Arlington", "Watertown",
-    "Lexington", "Belmont", "Milton", "Dedham", "Needham", "Wellesley",
-    "Framingham", "Natick", "Weston", "Wayland", "Lincoln", "Concord"
-  ];
+  const staticCitiesByCounty: Record<string, string[]> = {
+    suffolk: ["Boston", "Chelsea", "Revere", "Winthrop"],
+    middlesex: ["Cambridge", "Somerville", "Arlington", "Belmont", "Medford", "Newton", "Waltham", "Framingham", "Natick"],
+    norfolk: ["Quincy", "Brookline", "Dedham", "Needham", "Wellesley", "Milton"],
+    essex: ["Salem", "Lynn", "Peabody", "Beverly"],
+    plymouth: ["Plymouth", "Brockton", "Hingham", "Duxbury"],
+  };
+  const defaultCityList = Array.from(new Set(Object.values(staticCitiesByCounty).flat()));
 
-  const filteredCities = availableCities.filter(city =>
+  const resolvedCities = (() => {
+    if (!selectedCountyId) return defaultCityList;
+    const countyName = counties.find(c => c.id === selectedCountyId)?.name?.toLowerCase() || "";
+    return staticCitiesByCounty[countyName] || defaultCityList;
+  })();
+
+  const filteredCities = resolvedCities.filter(city =>
     city.toLowerCase().includes(citySearch.toLowerCase())
   );
 
@@ -604,109 +623,237 @@ export function CreateHotSheetDialog({
                     />
                   </div>
 
-                  {/* Location Search */}
+                  {/* Address Section */}
                   <div className="space-y-4 border-t pt-4">
-                    <Label className="text-sm font-semibold uppercase">Location</Label>
-                    <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm font-semibold uppercase">Address</Label>
+                      <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">?</div>
+                    </div>
+                    
+                    {/* Address Mode Radio Buttons */}
+                    <div className="flex gap-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id="street-address"
+                          name="address-mode"
+                          checked={addressMode === "street"}
+                          onChange={() => setAddressMode("street")}
+                          className="w-4 h-4"
+                        />
+                        <Label htmlFor="street-address" className="text-sm">Street Address</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id="my-location"
+                          name="address-mode"
+                          checked={addressMode === "mylocation"}
+                          onChange={() => setAddressMode("mylocation")}
+                          className="w-4 h-4"
+                        />
+                        <Label htmlFor="my-location" className="text-sm">My Location</Label>
+                      </div>
+                    </div>
+
+                    {/* Address Fields */}
+                    <div className="grid grid-cols-4 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="address">Address</Label>
+                        <Label htmlFor="street-number" className="text-sm">Street #</Label>
                         <Input
-                          id="address"
-                          placeholder="Street address"
-                          value={address}
-                          onChange={(e) => setAddress(e.target.value)}
+                          id="street-number"
+                          placeholder=""
+                          value={streetNumber}
+                          onChange={(e) => setStreetNumber(e.target.value)}
+                          className="text-sm"
                         />
                       </div>
-                      
-                      {/* State and ZIP Code */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="state">State</Label>
-                          <Select value={state} onValueChange={setState}>
-                            <SelectTrigger id="state" className="bg-background">
-                              <SelectValue placeholder="Select state" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-popover z-50 max-h-[300px]">
-                              {usStates.map((state) => (
-                                <SelectItem key={state.code} value={state.code}>
-                                  {state.code} - {state.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="zip">ZIP Code</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="street-name" className="text-sm">Street Name</Label>
+                        <Input
+                          id="street-name"
+                          placeholder=""
+                          value={streetName}
+                          onChange={(e) => setStreetName(e.target.value)}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="zip-code" className="text-sm">Zip Code</Label>
+                        <Input
+                          id="zip-code"
+                          placeholder=""
+                          value={zipCode}
+                          onChange={(e) => setZipCode(e.target.value)}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2 relative">
+                        <Label htmlFor="radius" className="text-sm flex items-center gap-1">
+                          Radius
+                          <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">?</div>
+                        </Label>
+                        <div className="relative">
                           <Input
-                            id="zip"
-                            placeholder="Enter ZIP code"
-                            value={zipCode}
-                            onChange={(e) => setZipCode(e.target.value)}
-                            maxLength={10}
+                            id="radius"
+                            placeholder=""
+                            value={radiusMiles}
+                            onChange={(e) => setRadiusMiles(e.target.value)}
+                            className="text-sm pr-12"
                           />
+                          <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground">
+                            Miles
+                          </span>
                         </div>
                       </div>
+                    </div>
+                  </div>
 
-                      {/* Towns/Cities Section */}
-                      <div className="space-y-3 border rounded-md p-4 bg-muted/30">
-                        <Label className="text-sm font-semibold uppercase">Towns</Label>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="city-search" className="text-xs text-muted-foreground">
-                            Type Full or Partial Name
-                          </Label>
-                          <Input
-                            id="city-search"
-                            placeholder="Search cities/towns..."
-                            value={citySearch}
-                            onChange={(e) => setCitySearch(e.target.value)}
-                          />
+                  {/* Towns Section */}
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold uppercase">Towns</Label>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="text-sm text-green-600 p-0 h-auto"
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                      >
+                        BACK TO TOP ↑
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      {/* State Dropdown */}
+                      <div className="space-y-2">
+                        <Label htmlFor="state" className="text-sm">State</Label>
+                        <Select value={state} onValueChange={setState}>
+                          <SelectTrigger id="state" className="bg-background text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover z-50 max-h-[300px]">
+                            {usStates.map((stateItem) => (
+                              <SelectItem key={stateItem.code} value={stateItem.code} className="text-sm">
+                                {stateItem.code}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Coverage Areas Dropdown */}
+                      <div className="space-y-2">
+                        <Label htmlFor="coverage-areas" className="text-sm">Coverage Areas</Label>
+                        <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
+                          <SelectTrigger id="coverage-areas" className="bg-background text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover z-50 max-h-[300px]">
+                            {counties.map((county) => (
+                              <SelectItem key={county.id} value={county.id} className="text-sm">
+                                {county.name} County
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Show Areas Toggle */}
+                      <div className="space-y-2">
+                        <Label className="text-sm">Show Areas</Label>
+                        <div className="flex gap-4 mt-2">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="show-yes"
+                              name="show-areas"
+                              checked={showAreas === true}
+                              onChange={() => setShowAreas(true)}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor="show-yes" className="text-sm">Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="show-no"
+                              name="show-areas"
+                              checked={showAreas === false}
+                              onChange={() => setShowAreas(false)}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor="show-no" className="text-sm">No</Label>
+                          </div>
                         </div>
+                      </div>
+                    </div>
 
-                        {/* City List */}
+                    {/* Town Search and Selection */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="town-search" className="text-sm">Type Full or Partial Name</Label>
+                        <Input
+                          id="town-search"
+                          placeholder=""
+                          value={citySearch}
+                          onChange={(e) => setCitySearch(e.target.value)}
+                          className="text-sm"
+                        />
                         {citySearch && (
-                          <div className="max-h-48 overflow-y-auto border rounded-md bg-background">
-                            {filteredCities.length > 0 ? (
-                              <div className="p-2 space-y-1">
-                                {filteredCities.map((city) => (
-                                  <button
-                                    key={city}
-                                    type="button"
-                                    onClick={() => toggleCity(city)}
-                                    className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted rounded"
-                                  >
-                                    {city}, {state || "MA"}
-                                  </button>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="p-3 text-sm text-muted-foreground">No cities found</p>
-                            )}
+                          <div className="border rounded-md bg-background max-h-40 overflow-y-auto">
+                            {filteredCities.map((city) => (
+                              <button
+                                key={city}
+                                type="button"
+                                onClick={() => toggleCity(city)}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-muted border-b last:border-b-0"
+                              >
+                                {city}, {state || "MA"}
+                              </button>
+                            ))}
                           </div>
                         )}
+                      </div>
 
-                        {/* Selected Towns Display */}
-                        {selectedCities.length > 0 && (
-                          <div className="space-y-2">
-                            <Label className="text-xs font-medium">Selected Towns</Label>
-                            <div className="border rounded-md p-3 bg-background min-h-[60px] max-h-32 overflow-y-auto">
-                              {selectedCities.map((city) => (
-                                <div key={city} className="flex items-center justify-between py-1">
-                                  <span className="text-sm">{city}</span>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => toggleCity(city)}
-                                    className="h-6 px-2 text-xs"
-                                  >
-                                    Remove
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                      <div className="space-y-2">
+                        <Label className="text-sm">Selected Towns</Label>
+                        <div className="border rounded-md p-3 bg-background min-h-[100px] max-h-40 overflow-y-auto">
+                          {selectedCities.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No towns selected</p>
+                          ) : (
+                            selectedCities.map((city) => (
+                              <div key={city} className="flex items-center justify-between py-1 border-b last:border-b-0">
+                                <span className="text-sm">{city}</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleCity(city)}
+                                  className="h-6 px-2 text-xs text-red-600"
+                                >
+                                  Remove All
+                                </Button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Type Multiple Towns/Areas */}
+                    <div className="space-y-2">
+                      <Label className="text-sm flex items-center gap-1">
+                        Type Multiple Towns/Areas
+                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">?</div>
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Type Towns/Areas"
+                          className="text-sm flex-1"
+                        />
+                        <Button type="button" className="bg-blue-500 hover:bg-blue-600 text-white px-4 text-sm">
+                          Add
+                        </Button>
                       </div>
                     </div>
                   </div>
