@@ -71,6 +71,7 @@ export function CreateHotSheetDialog({
   const [state, setState] = useState("");
   const [selectedCountyId, setSelectedCountyId] = useState<string>("");
   const [showAreas, setShowAreas] = useState<boolean>(true);
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
 
   // Live results counter
   const [matchingListingsCount, setMatchingListingsCount] = useState<number>(0);
@@ -289,19 +290,40 @@ export function CreateHotSheetDialog({
     ? counties.filter(c => c.state === state)
     : counties;
 
-  // Use county names as the town list
-  const resolvedCities = countiesForState.map(c => c.name);
-
-  const filteredCities = resolvedCities.filter(city =>
+  const filteredCities = availableCities.filter(city =>
     city.toLowerCase().includes(citySearch.toLowerCase())
   );
 
-  // Clear selected cities when state changes
+  // Fetch cities when state or county changes
   useEffect(() => {
-    if (state) {
-      setSelectedCities([]);
-    }
-  }, [state]);
+    const fetchCities = async () => {
+      if (!state) {
+        setAvailableCities([]);
+        return;
+      }
+
+      try {
+        let query = supabase
+          .from("listings")
+          .select("city")
+          .eq("state", state)
+          .eq("status", "active");
+
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        
+        // Get unique cities and sort them
+        const uniqueCities = Array.from(new Set(data?.map(item => item.city) || [])).sort();
+        setAvailableCities(uniqueCities);
+      } catch (error) {
+        console.error("Error fetching cities:", error);
+      }
+    };
+
+    fetchCities();
+    setSelectedCities([]);
+  }, [state, selectedCountyId]);
 
   // Fetch matching listings count
   useEffect(() => {
