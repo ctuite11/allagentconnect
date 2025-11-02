@@ -625,10 +625,7 @@ export function CreateHotSheetDialog({
 
                   {/* Address Section */}
                   <div className="space-y-4 border-t pt-4">
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm font-semibold uppercase">Address</Label>
-                      <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">?</div>
-                    </div>
+                    <Label className="text-sm font-semibold uppercase">Address</Label>
                     
                     {/* Address Mode Radio Buttons */}
                     <div className="flex gap-4">
@@ -689,10 +686,7 @@ export function CreateHotSheetDialog({
                         />
                       </div>
                       <div className="space-y-2 relative">
-                        <Label htmlFor="radius" className="text-sm flex items-center gap-1">
-                          Radius
-                          <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">?</div>
-                        </Label>
+                        <Label htmlFor="radius" className="text-sm">Radius</Label>
                         <div className="relative">
                           <Input
                             id="radius"
@@ -724,7 +718,6 @@ export function CreateHotSheetDialog({
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
-                      {/* State Dropdown */}
                       <div className="space-y-2">
                         <Label htmlFor="state" className="text-sm">State</Label>
                         <Select value={state} onValueChange={setState}>
@@ -741,12 +734,11 @@ export function CreateHotSheetDialog({
                         </Select>
                       </div>
 
-                      {/* Coverage Areas Dropdown */}
                       <div className="space-y-2">
                         <Label htmlFor="coverage-areas" className="text-sm">Coverage Areas</Label>
                         <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
                           <SelectTrigger id="coverage-areas" className="bg-background text-sm">
-                            <SelectValue />
+                            <SelectValue placeholder="All Towns" />
                           </SelectTrigger>
                           <SelectContent className="bg-popover z-50 max-h-[300px]">
                             {counties.map((county) => (
@@ -758,7 +750,6 @@ export function CreateHotSheetDialog({
                         </Select>
                       </div>
 
-                      {/* Show Areas Toggle */}
                       <div className="space-y-2">
                         <Label className="text-sm">Show Areas</Label>
                         <div className="flex gap-4 mt-2">
@@ -788,51 +779,50 @@ export function CreateHotSheetDialog({
                       </div>
                     </div>
 
-                    {/* Town Search and Selection */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="town-search" className="text-sm">Type Full or Partial Name</Label>
                         <Input
-                          id="town-search"
-                          placeholder=""
+                          placeholder="Type Full or Partial Name"
                           value={citySearch}
                           onChange={(e) => setCitySearch(e.target.value)}
                           className="text-sm"
                         />
-                        {citySearch && (
-                          <div className="border rounded-md bg-background max-h-40 overflow-y-auto">
-                            {filteredCities.map((city) => (
-                              <button
-                                key={city}
-                                type="button"
-                                onClick={() => toggleCity(city)}
-                                className="w-full text-left px-3 py-2 text-sm hover:bg-muted border-b last:border-b-0"
-                              >
-                                {city}, {state || "MA"}
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2">
+                          {filteredCities.map((city) => (
+                            <button
+                              key={city}
+                              type="button"
+                              onClick={() => toggleCity(city)}
+                              className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted rounded"
+                            >
+                              {city}, {state || "MA"}
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm">Selected Towns</Label>
-                        <div className="border rounded-md p-3 bg-background min-h-[100px] max-h-40 overflow-y-auto">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Selected Towns</Label>
+                          {selectedCities.length > 0 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedCities([])}
+                              className="h-7 px-2 text-xs"
+                            >
+                              Remove All
+                            </Button>
+                          )}
+                        </div>
+                        <div className="border rounded-md p-3 bg-background min-h-[200px] max-h-60 overflow-y-auto">
                           {selectedCities.length === 0 ? (
                             <p className="text-sm text-muted-foreground">No towns selected</p>
                           ) : (
                             selectedCities.map((city) => (
-                              <div key={city} className="flex items-center justify-between py-1 border-b last:border-b-0">
-                                <span className="text-sm">{city}</span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleCity(city)}
-                                  className="h-6 px-2 text-xs text-red-600"
-                                >
-                                  Remove All
-                                </Button>
+                              <div key={city} className="py-1 text-sm border-b last:border-b-0">
+                                {city}
                               </div>
                             ))
                           )}
@@ -840,12 +830,8 @@ export function CreateHotSheetDialog({
                       </div>
                     </div>
 
-                    {/* Type Multiple Towns/Areas */}
                     <div className="space-y-2">
-                      <Label className="text-sm flex items-center gap-1">
-                        Type Multiple Towns/Areas
-                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">?</div>
-                      </Label>
+                      <Label className="text-sm">Type Multiple Towns/Areas</Label>
                       <div className="flex gap-2">
                         <Input
                           placeholder="Type Towns/Areas"
