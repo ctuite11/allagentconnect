@@ -45,34 +45,50 @@ const Auth = () => {
   });
 
   useEffect(() => {
-    // Check if user is coming from password reset email
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get('type');
-    
-    if (type === 'recovery') {
-      setIsResettingPassword(true);
-      setIsForgotPassword(false);
-      setIsLogin(false);
-    }
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Check if this is a password recovery flow by looking at URL hash
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = hashParams.get('type');
+      
+      if (type === 'recovery' && session?.user) {
+        // User clicked reset link - show password reset form, don't redirect
+        setIsResettingPassword(true);
+        setIsForgotPassword(false);
+        setIsLogin(false);
+        setUser(session.user);
+        return;
+      }
+      
       setUser(session?.user ?? null);
-      if (session?.user && !isResettingPassword) {
+      if (session?.user) {
         navigate("/agent-dashboard");
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      // Check if this is a password recovery flow
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = hashParams.get('type');
+      
+      if (type === 'recovery' && session?.user) {
+        // User clicked reset link - show password reset form, don't redirect
+        setIsResettingPassword(true);
+        setIsForgotPassword(false);
+        setIsLogin(false);
+        setUser(session.user);
+        return;
+      }
+      
       setUser(session?.user ?? null);
-      if (session?.user && !isResettingPassword) {
+      if (session?.user) {
         navigate("/agent-dashboard");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, isResettingPassword]);
+  }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
