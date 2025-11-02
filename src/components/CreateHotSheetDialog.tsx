@@ -98,9 +98,9 @@ export function CreateHotSheetDialog({
   const [notifyAgent, setNotifyAgent] = useState(true);
   const [notificationSchedule, setNotificationSchedule] = useState("immediately");
 
-  // Collapsible sections
+  // Collapsible sections - All open by default for better visibility
   const [criteriaOpen, setCriteriaOpen] = useState(true);
-  const [agentCriteriaOpen, setAgentCriteriaOpen] = useState(false);
+  const [agentCriteriaOpen, setAgentCriteriaOpen] = useState(true);
   const [notificationsOpen, setNotificationsOpen] = useState(true);
 
   // Fetch counties and hot sheet data on mount
