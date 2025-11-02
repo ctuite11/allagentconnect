@@ -78,7 +78,7 @@ export function CreateHotSheetDialog({
   // Agent criteria
   const [preferredCounties, setPreferredCounties] = useState<string[]>([]);
   const [requiresBuyerIncentives, setRequiresBuyerIncentives] = useState(false);
-  const [counties, setCounties] = useState<Array<{ id: string; name: string }>>([]);
+  const [counties, setCounties] = useState<Array<{ id: string; name: string; state: string }>>([]);
   
   // Sale listing criteria
   const [listingAgreementTypes, setListingAgreementTypes] = useState<string[]>([]);
@@ -284,20 +284,13 @@ export function CreateHotSheetDialog({
     { code: "WY", name: "Wyoming" }
   ];
 
-  const staticCitiesByCounty: Record<string, string[]> = {
-    suffolk: ["Boston", "Chelsea", "Revere", "Winthrop"],
-    middlesex: ["Cambridge", "Somerville", "Arlington", "Belmont", "Medford", "Newton", "Waltham", "Framingham", "Natick"],
-    norfolk: ["Quincy", "Brookline", "Dedham", "Needham", "Wellesley", "Milton"],
-    essex: ["Salem", "Lynn", "Peabody", "Beverly"],
-    plymouth: ["Plymouth", "Brockton", "Hingham", "Duxbury"],
-  };
-  const defaultCityList = Array.from(new Set(Object.values(staticCitiesByCounty).flat()));
+  // Get counties for the selected state
+  const countiesForState = state 
+    ? counties.filter(c => c.state === state)
+    : counties;
 
-  const resolvedCities = (() => {
-    if (!selectedCountyId) return defaultCityList;
-    const countyName = counties.find(c => c.id === selectedCountyId)?.name?.toLowerCase() || "";
-    return staticCitiesByCounty[countyName] || defaultCityList;
-  })();
+  // Use county names as the town list
+  const resolvedCities = countiesForState.map(c => c.name);
 
   const filteredCities = resolvedCities.filter(city =>
     city.toLowerCase().includes(citySearch.toLowerCase())
