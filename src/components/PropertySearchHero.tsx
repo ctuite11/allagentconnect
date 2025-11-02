@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin } from "lucide-react";
 
@@ -12,6 +12,26 @@ const PropertySearchHero = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/browse?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
+    const addressComponents = place.address_components || [];
+    const getComponent = (type: string) => {
+      const component = addressComponents.find((c) => c.types.includes(type));
+      return component?.long_name || "";
+    };
+
+    const city = getComponent("locality") || getComponent("sublocality");
+    const state = getComponent("administrative_area_level_1");
+    const zip = getComponent("postal_code");
+    
+    // Build search query from selected location
+    const parts = [city, state, zip].filter(Boolean);
+    const query = parts.join(", ");
+    
+    if (query) {
+      navigate(`/browse?search=${encodeURIComponent(query)}`);
     }
   };
 
@@ -41,12 +61,10 @@ const PropertySearchHero = () => {
             </p>
             <form onSubmit={handleSearch} className="flex gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-                <Input
-                  type="text"
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10" />
+                <AddressAutocomplete
+                  onPlaceSelect={handlePlaceSelect}
                   placeholder="City, State, Zip or Neighborhood"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-12 h-14 text-lg"
                 />
               </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormattedInput } from "@/components/ui/formatted-input";
@@ -124,6 +125,27 @@ const EditListing = () => {
     }
   };
 
+  const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
+    const addressComponents = place.address_components || [];
+    const getComponent = (type: string) => {
+      const component = addressComponents.find((c) => c.types.includes(type));
+      return component?.long_name || "";
+    };
+
+    const address = place.formatted_address?.split(",")[0] || "";
+    const city = getComponent("locality") || getComponent("sublocality");
+    const state = getComponent("administrative_area_level_1");
+    const zip_code = getComponent("postal_code");
+
+    setFormData({
+      ...formData,
+      address,
+      city,
+      state,
+      zip_code,
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -202,11 +224,9 @@ const EditListing = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  required
+                <AddressAutocomplete
+                  onPlaceSelect={handleAddressSelect}
+                  placeholder="Enter property address"
                 />
               </div>
 

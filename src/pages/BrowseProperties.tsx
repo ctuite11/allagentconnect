@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
-import { Input } from "@/components/ui/input";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,6 +66,26 @@ const BrowseProperties = () => {
     fetchListings();
   };
 
+  const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
+    const addressComponents = place.address_components || [];
+    const getComponent = (type: string) => {
+      const component = addressComponents.find((c) => c.types.includes(type));
+      return component?.long_name || "";
+    };
+
+    const city = getComponent("locality") || getComponent("sublocality");
+    const state = getComponent("administrative_area_level_1");
+    const zip = getComponent("postal_code");
+    
+    // Build search query from selected location
+    const parts = [city, state, zip].filter(Boolean);
+    const query = parts.join(", ");
+    
+    if (query) {
+      setSearchQuery(query);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
@@ -85,12 +105,10 @@ const BrowseProperties = () => {
             <form onSubmit={handleSearch} className="space-y-4">
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-                  <Input
-                    type="text"
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10" />
+                  <AddressAutocomplete
+                    onPlaceSelect={handlePlaceSelect}
                     placeholder="Search by city, zip code, or address..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
                   />
                 </div>
