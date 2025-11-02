@@ -303,27 +303,34 @@ export function CreateHotSheetDialog({
       }
 
       try {
-        let query = supabase
+        // Try to get cities from listings first
+        const { data: listingData } = await supabase
           .from("listings")
           .select("city")
           .eq("state", state)
           .eq("status", "active");
 
-        const { data, error } = await query;
-        
-        if (error) throw error;
-        
-        // Get unique cities and sort them
-        const uniqueCities = Array.from(new Set(data?.map(item => item.city) || [])).sort();
-        setAvailableCities(uniqueCities);
+        // Get unique cities from listings
+        const citiesFromListings = Array.from(new Set(listingData?.map(item => item.city).filter(Boolean) || []));
+
+        // If no cities from listings, fall back to county names
+        if (citiesFromListings.length === 0) {
+          const countiesForState = counties.filter(c => c.state === state);
+          setAvailableCities(countiesForState.map(c => c.name).sort());
+        } else {
+          setAvailableCities(citiesFromListings.sort());
+        }
       } catch (error) {
         console.error("Error fetching cities:", error);
+        // Fall back to counties on error
+        const countiesForState = counties.filter(c => c.state === state);
+        setAvailableCities(countiesForState.map(c => c.name).sort());
       }
     };
 
     fetchCities();
     setSelectedCities([]);
-  }, [state, selectedCountyId]);
+  }, [state, selectedCountyId, counties]);
 
   // Fetch matching listings count
   useEffect(() => {
