@@ -746,7 +746,7 @@ export function CreateHotSheetDialog({
                             <SelectValue placeholder="All Towns" />
                           </SelectTrigger>
                           <SelectContent className="bg-popover z-50 max-h-[300px]">
-                            <SelectItem value="" className="text-sm">
+                            <SelectItem value="all" className="text-sm">
                               All Towns
                             </SelectItem>
                             {countiesForState.map((county) => (
