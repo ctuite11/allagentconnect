@@ -829,9 +829,14 @@ export function CreateHotSheetDialog({
                             <p className="text-sm text-muted-foreground">No towns selected</p>
                           ) : (
                             selectedCities.map((city) => (
-                              <div key={city} className="py-1 text-sm border-b last:border-b-0">
+                              <button
+                                key={city}
+                                type="button"
+                                onClick={() => toggleCity(city)}
+                                className="w-full text-left py-1 px-2 text-sm border-b last:border-b-0 hover:bg-muted rounded cursor-pointer"
+                              >
                                 {city}
-                              </div>
+                              </button>
                             ))
                           )}
                         </div>
