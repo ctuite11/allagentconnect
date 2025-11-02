@@ -5,9 +5,11 @@ interface AddressAutocompleteProps {
   onPlaceSelect?: (place: any) => void;
   placeholder?: string;
   className?: string;
+  value?: string;
+  onChange?: (value: string) => void;
 }
 
-const AddressAutocomplete = ({ onPlaceSelect, placeholder, className }: AddressAutocompleteProps) => {
+const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onChange }: AddressAutocompleteProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
 
@@ -63,6 +65,8 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className }: AddressA
       ref={inputRef}
       placeholder={placeholder || "City, State, Zip or Neighborhood"}
       className={className}
+      value={value}
+      onChange={(e) => onChange?.(e.target.value)}
     />
   );
 };

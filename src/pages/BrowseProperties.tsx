@@ -110,6 +110,8 @@ const BrowseProperties = () => {
                     onPlaceSelect={handlePlaceSelect}
                     placeholder="Search by city, zip code, or address..."
                     className="pl-10"
+                    value={searchQuery}
+                    onChange={setSearchQuery}
                   />
                 </div>
                 <Button type="submit">Search</Button>

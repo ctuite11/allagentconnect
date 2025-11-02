@@ -31,6 +31,7 @@ const PropertySearchHero = () => {
     const query = parts.join(", ");
     
     if (query) {
+      setSearchQuery(query);
       navigate(`/browse?search=${encodeURIComponent(query)}`);
     }
   };
@@ -66,6 +67,8 @@ const PropertySearchHero = () => {
                   onPlaceSelect={handlePlaceSelect}
                   placeholder="City, State, Zip or Neighborhood"
                   className="pl-12 h-14 text-lg"
+                  value={searchQuery}
+                  onChange={setSearchQuery}
                 />
               </div>
               <Button type="submit" size="lg" className="h-14 px-8 text-lg">
