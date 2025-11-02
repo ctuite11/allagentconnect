@@ -220,6 +220,59 @@ export function CreateHotSheetDialog({
     );
   };
 
+  const usStates = [
+    { code: "AL", name: "Alabama" },
+    { code: "AK", name: "Alaska" },
+    { code: "AZ", name: "Arizona" },
+    { code: "AR", name: "Arkansas" },
+    { code: "CA", name: "California" },
+    { code: "CO", name: "Colorado" },
+    { code: "CT", name: "Connecticut" },
+    { code: "DE", name: "Delaware" },
+    { code: "FL", name: "Florida" },
+    { code: "GA", name: "Georgia" },
+    { code: "HI", name: "Hawaii" },
+    { code: "ID", name: "Idaho" },
+    { code: "IL", name: "Illinois" },
+    { code: "IN", name: "Indiana" },
+    { code: "IA", name: "Iowa" },
+    { code: "KS", name: "Kansas" },
+    { code: "KY", name: "Kentucky" },
+    { code: "LA", name: "Louisiana" },
+    { code: "ME", name: "Maine" },
+    { code: "MD", name: "Maryland" },
+    { code: "MA", name: "Massachusetts" },
+    { code: "MI", name: "Michigan" },
+    { code: "MN", name: "Minnesota" },
+    { code: "MS", name: "Mississippi" },
+    { code: "MO", name: "Missouri" },
+    { code: "MT", name: "Montana" },
+    { code: "NE", name: "Nebraska" },
+    { code: "NV", name: "Nevada" },
+    { code: "NH", name: "New Hampshire" },
+    { code: "NJ", name: "New Jersey" },
+    { code: "NM", name: "New Mexico" },
+    { code: "NY", name: "New York" },
+    { code: "NC", name: "North Carolina" },
+    { code: "ND", name: "North Dakota" },
+    { code: "OH", name: "Ohio" },
+    { code: "OK", name: "Oklahoma" },
+    { code: "OR", name: "Oregon" },
+    { code: "PA", name: "Pennsylvania" },
+    { code: "RI", name: "Rhode Island" },
+    { code: "SC", name: "South Carolina" },
+    { code: "SD", name: "South Dakota" },
+    { code: "TN", name: "Tennessee" },
+    { code: "TX", name: "Texas" },
+    { code: "UT", name: "Utah" },
+    { code: "VT", name: "Vermont" },
+    { code: "VA", name: "Virginia" },
+    { code: "WA", name: "Washington" },
+    { code: "WV", name: "West Virginia" },
+    { code: "WI", name: "Wisconsin" },
+    { code: "WY", name: "Wyoming" }
+  ];
+
   const availableCities = [
     "Boston", "Cambridge", "Somerville", "Quincy", "Newton", "Brookline",
     "Waltham", "Medford", "Malden", "Revere", "Arlington", "Watertown",
@@ -565,6 +618,7 @@ export function CreateHotSheetDialog({
                         />
                       </div>
                       
+                      {/* State and ZIP Code */}
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="state">State</Label>
@@ -572,12 +626,12 @@ export function CreateHotSheetDialog({
                             <SelectTrigger id="state" className="bg-background">
                               <SelectValue placeholder="Select state" />
                             </SelectTrigger>
-                            <SelectContent className="bg-popover z-50">
-                              <SelectItem value="MA">Massachusetts</SelectItem>
-                              <SelectItem value="NY">New York</SelectItem>
-                              <SelectItem value="CA">California</SelectItem>
-                              <SelectItem value="FL">Florida</SelectItem>
-                              <SelectItem value="TX">Texas</SelectItem>
+                            <SelectContent className="bg-popover z-50 max-h-[300px]">
+                              {usStates.map((state) => (
+                                <SelectItem key={state.code} value={state.code}>
+                                  {state.code} - {state.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -585,7 +639,7 @@ export function CreateHotSheetDialog({
                           <Label htmlFor="zip">ZIP Code</Label>
                           <Input
                             id="zip"
-                            placeholder="ZIP"
+                            placeholder="Enter ZIP code"
                             value={zipCode}
                             onChange={(e) => setZipCode(e.target.value)}
                             maxLength={10}
@@ -593,53 +647,66 @@ export function CreateHotSheetDialog({
                         </div>
                       </div>
 
-                      {/* Cities/Towns Dropdown */}
-                      <div className="space-y-2">
-                        <Label>Cities/Towns</Label>
-                        <div className="border rounded-md p-3 space-y-3">
+                      {/* Towns/Cities Section */}
+                      <div className="space-y-3 border rounded-md p-4 bg-muted/30">
+                        <Label className="text-sm font-semibold uppercase">Towns</Label>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="city-search" className="text-xs text-muted-foreground">
+                            Type Full or Partial Name
+                          </Label>
                           <Input
-                            placeholder="Type city or town name..."
+                            id="city-search"
+                            placeholder="Search cities/towns..."
                             value={citySearch}
                             onChange={(e) => setCitySearch(e.target.value)}
-                            className="mb-2"
                           />
-                          <div className="max-h-48 overflow-y-auto space-y-2 border rounded p-2">
-                            {filteredCities.map((city) => (
-                              <div key={city} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`city-${city}`}
-                                  checked={selectedCities.includes(city)}
-                                  onCheckedChange={() => toggleCity(city)}
-                                />
-                                <Label htmlFor={`city-${city}`} className="cursor-pointer text-sm">
-                                  {city}
-                                </Label>
-                              </div>
-                            ))}
-                          </div>
-                          {selectedCities.length > 0 && (
-                            <div className="pt-2 border-t">
-                              <Label className="text-xs font-medium">Selected Cities:</Label>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {selectedCities.map((city) => (
-                                  <span
+                        </div>
+
+                        {/* City List */}
+                        {citySearch && (
+                          <div className="max-h-48 overflow-y-auto border rounded-md bg-background">
+                            {filteredCities.length > 0 ? (
+                              <div className="p-2 space-y-1">
+                                {filteredCities.map((city) => (
+                                  <button
                                     key={city}
-                                    className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs px-2 py-1 rounded"
+                                    type="button"
+                                    onClick={() => toggleCity(city)}
+                                    className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted rounded"
                                   >
-                                    {city}
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleCity(city)}
-                                      className="hover:text-primary/70"
-                                    >
-                                      ×
-                                    </button>
-                                  </span>
+                                    {city}, {state || "MA"}
+                                  </button>
                                 ))}
                               </div>
+                            ) : (
+                              <p className="p-3 text-sm text-muted-foreground">No cities found</p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Selected Towns Display */}
+                        {selectedCities.length > 0 && (
+                          <div className="space-y-2">
+                            <Label className="text-xs font-medium">Selected Towns</Label>
+                            <div className="border rounded-md p-3 bg-background min-h-[60px] max-h-32 overflow-y-auto">
+                              {selectedCities.map((city) => (
+                                <div key={city} className="flex items-center justify-between py-1">
+                                  <span className="text-sm">{city}</span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => toggleCity(city)}
+                                    className="h-6 px-2 text-xs"
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              ))}
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
