@@ -303,6 +303,13 @@ export function CreateHotSheetDialog({
     city.toLowerCase().includes(citySearch.toLowerCase())
   );
 
+  // Clear selected cities when state changes
+  useEffect(() => {
+    if (state) {
+      setSelectedCities([]);
+    }
+  }, [state]);
+
   // Fetch matching listings count
   useEffect(() => {
     const fetchMatchingCount = async () => {
