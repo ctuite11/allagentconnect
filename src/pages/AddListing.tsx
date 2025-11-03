@@ -605,31 +605,18 @@ const AddListing = () => {
                       value={formData.address}
                       onChange={(val) => setFormData({ ...formData, address: val })}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="zip_code">Zip Code *</Label>
-                    <Input
-                      id="zip_code"
-                      value={formData.zip_code}
-                      onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
-                      required
-                    />
+                    {formData.city && formData.state && formData.zip_code && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {formData.city}, {formData.state} {formData.zip_code}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {/* Row 3: State, County, Town, Neighborhood */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Row 3: County, Neighborhood (optional fields) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="state">State *</Label>
-                    <Input
-                      id="state"
-                      value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="county">County</Label>
+                    <Label htmlFor="county">County (Optional)</Label>
                     <Input
                       id="county"
                       value={formData.county}
@@ -637,15 +624,7 @@ const AddListing = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="town">Town</Label>
-                    <Input
-                      id="town"
-                      value={formData.town}
-                      onChange={(e) => setFormData({ ...formData, town: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="neighborhood">Neighborhood</Label>
+                    <Label htmlFor="neighborhood">Neighborhood (Optional)</Label>
                     <Input
                       id="neighborhood"
                       value={formData.neighborhood}
