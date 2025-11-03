@@ -43,14 +43,18 @@ const BuyerAuth = () => {
   });
 
   useEffect(() => {
+    // Check URL hash immediately to prevent premature navigation
+    const checkRecoveryFlow = () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      return hashParams.get('type') === 'recovery';
+    };
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      // Check if this is a password recovery flow by looking at URL hash
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const type = hashParams.get('type');
+      const isRecovery = checkRecoveryFlow();
       
-      if (type === 'recovery' && session?.user) {
+      if (isRecovery && session?.user) {
         // User clicked reset link - show password reset form, don't redirect
         setIsResettingPassword(true);
         setIsForgotPassword(false);
@@ -60,17 +64,15 @@ const BuyerAuth = () => {
       }
       
       setUser(session?.user ?? null);
-      if (session?.user) {
+      if (session?.user && !isRecovery) {
         navigate("/");
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // Check if this is a password recovery flow
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const type = hashParams.get('type');
+      const isRecovery = checkRecoveryFlow();
       
-      if (type === 'recovery' && session?.user) {
+      if (isRecovery && session?.user) {
         // User clicked reset link - show password reset form, don't redirect
         setIsResettingPassword(true);
         setIsForgotPassword(false);
@@ -80,7 +82,7 @@ const BuyerAuth = () => {
       }
       
       setUser(session?.user ?? null);
-      if (session?.user) {
+      if (session?.user && !isRecovery) {
         navigate("/");
       }
     });

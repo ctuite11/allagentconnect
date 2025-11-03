@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -144,7 +144,7 @@ const AddListing = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleAddressSelect = async (place: any) => {
+  const handleAddressSelect = useCallback(async (place: any) => {
     console.log("[AddListing] Address selected - raw place data:", place);
     
     // Normalize address components between legacy Autocomplete and new PlaceAutocompleteElement
@@ -204,7 +204,7 @@ const AddListing = () => {
     if (latitude && longitude) {
       await fetchPropertyData(latitude, longitude, address || formattedAddress, city, state, zip_code);
     }
-  };
+  }, []);
   const fetchPropertyData = async (lat: number, lng: number, address: string, city: string, state: string, zip: string) => {
     setSubmitting(true);
     try {
