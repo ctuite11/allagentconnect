@@ -116,8 +116,10 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
       autocompleteRef.current.addListener('place_changed', () => {
         const place = autocompleteRef.current?.getPlace();
         console.info("[AddressAutocomplete] Legacy Autocomplete place_changed", place);
-        if (place && onPlaceSelect) {
-          onPlaceSelect(place);
+        if (place) {
+          onPlaceSelect?.(place);
+          const formatted = place.formatted_address || place.name || "";
+          onChange?.(formatted);
         }
       });
     };
