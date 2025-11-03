@@ -164,6 +164,8 @@ const AddListing = () => {
     const city = getComponent("locality") || getComponent("sublocality") || getComponent("postal_town");
     const state = getComponent("administrative_area_level_1");
     const zip_code = getComponent("postal_code");
+    const county = getComponent("administrative_area_level_2");
+    const neighborhood = getComponent("neighborhood") || getComponent("sublocality_level_1");
 
     // Normalize location
     let latitude: number | null = null;
@@ -185,6 +187,8 @@ const AddListing = () => {
       city,
       state,
       zip_code,
+      county,
+      neighborhood,
       latitude,
       longitude,
     }));
@@ -613,32 +617,42 @@ const AddListing = () => {
                       onChange={(val) => setFormData({ ...formData, address: val })}
                     />
                     {formData.city && formData.state && formData.zip_code && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {formData.city}, {formData.state} {formData.zip_code}
-                      </p>
+                      <div className="text-sm text-muted-foreground mt-1 space-y-0.5">
+                        <p>{formData.city}, {formData.state} {formData.zip_code}</p>
+                        {formData.county && <p>County: {formData.county}</p>}
+                        {formData.neighborhood && <p>Neighborhood: {formData.neighborhood}</p>}
+                      </div>
                     )}
                   </div>
                 </div>
 
-                {/* Row 3: County, Neighborhood (optional fields) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="county">County (Optional)</Label>
-                    <Input
-                      id="county"
-                      value={formData.county}
-                      onChange={(e) => setFormData({ ...formData, county: e.target.value })}
-                    />
+                {/* Row 3: County, Neighborhood (only show if not auto-filled) */}
+                {(!formData.county || !formData.neighborhood) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {!formData.county && (
+                      <div className="space-y-2">
+                        <Label htmlFor="county">County (Optional - Not found in address)</Label>
+                        <Input
+                          id="county"
+                          value={formData.county}
+                          onChange={(e) => setFormData({ ...formData, county: e.target.value })}
+                          placeholder="Enter county if known"
+                        />
+                      </div>
+                    )}
+                    {!formData.neighborhood && (
+                      <div className="space-y-2">
+                        <Label htmlFor="neighborhood">Neighborhood (Optional - Not found in address)</Label>
+                        <Input
+                          id="neighborhood"
+                          value={formData.neighborhood}
+                          onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                          placeholder="Enter neighborhood if known"
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="neighborhood">Neighborhood (Optional)</Label>
-                    <Input
-                      id="neighborhood"
-                      value={formData.neighborhood}
-                      onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                    />
-                  </div>
-                </div>
+                )}
 
                 {/* Row 4: City */}
                 <div className="space-y-2">
