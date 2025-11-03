@@ -176,7 +176,7 @@ const BuyerAuth = () => {
       const validatedData = z.object({ email: z.string().email() }).parse({ email: formData.email });
       
       const { error } = await supabase.auth.resetPasswordForEmail(validatedData.email, {
-        redirectTo: `${window.location.origin}/buyer-auth`,
+        redirectTo: `${window.location.origin}/?auth=buyer-reset`,
       });
 
       if (error) throw error;
