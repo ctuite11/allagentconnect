@@ -145,6 +145,8 @@ const AddListing = () => {
   }, [navigate]);
 
   const handleAddressSelect = async (place: any) => {
+    console.log("[AddListing] Address selected - raw place data:", place);
+    
     // Normalize address components between legacy Autocomplete and new PlaceAutocompleteElement
     const legacyComponents = place.address_components;
     const newComponents = place.addressComponents?.map((c: any) => ({
@@ -153,6 +155,8 @@ const AddListing = () => {
       types: c.types || [],
     }));
     const addressComponents = legacyComponents || newComponents || [];
+    
+    console.log("[AddListing] Normalized address components:", addressComponents);
 
     const getComponent = (type: string) => {
       const component = addressComponents.find((c: any) => c.types?.includes(type));
@@ -166,6 +170,8 @@ const AddListing = () => {
     const zip_code = getComponent("postal_code");
     const county = getComponent("administrative_area_level_2");
     const neighborhood = getComponent("neighborhood") || getComponent("sublocality_level_1");
+    
+    console.log("[AddListing] Extracted data:", { address, city, state, zip_code, county, neighborhood });
 
     // Normalize location
     let latitude: number | null = null;
@@ -180,6 +186,8 @@ const AddListing = () => {
         longitude = loc.lng;
       }
     } catch {}
+    
+    console.log("[AddListing] Extracted location:", { latitude, longitude });
 
     setFormData(prev => ({
       ...prev,
