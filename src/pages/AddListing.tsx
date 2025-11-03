@@ -86,6 +86,12 @@ const AddListing = () => {
   const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
   const [amenities, setAmenities] = useState<string[]>([]);
 
+  // Store fetched property data
+  const [attomData, setAttomData] = useState<any>(null);
+  const [walkScoreData, setWalkScoreData] = useState<any>(null);
+  const [schoolsData, setSchoolsData] = useState<any>(null);
+  const [valueEstimate, setValueEstimate] = useState<any>(null);
+
   // Sale listing criteria
   const [listingAgreementTypes, setListingAgreementTypes] = useState<string[]>([]);
   const [entryOnly, setEntryOnly] = useState<boolean | null>(null);
@@ -194,8 +200,9 @@ const AddListing = () => {
       if (error) throw error;
 
       if (data) {
-        // Autofill form with Attom data
+        // Store all fetched data in state
         if (data.attom) {
+          setAttomData(data.attom);
           setFormData(prev => ({
             ...prev,
             bedrooms: data.attom.bedrooms?.toString() || prev.bedrooms,
@@ -206,6 +213,19 @@ const AddListing = () => {
             property_type: data.attom.property_type || prev.property_type,
           }));
         }
+        
+        if (data.walkScore) {
+          setWalkScoreData(data.walkScore);
+        }
+        
+        if (data.schools) {
+          setSchoolsData(data.schools);
+        }
+        
+        if (data.valueEstimate) {
+          setValueEstimate(data.valueEstimate);
+        }
+        
         toast.success("Property data loaded successfully");
       }
     } catch (error: any) {
@@ -402,6 +422,11 @@ const AddListing = () => {
         photos: uploadedFiles.photos,
         floor_plans: uploadedFiles.floorPlans,
         documents: uploadedFiles.documents,
+        // ATTOM and third-party data
+        attom_data: attomData,
+        walk_score_data: walkScoreData,
+        schools_data: schoolsData,
+        value_estimate: valueEstimate,
         // Sale listing criteria
         listing_agreement_types: listingAgreementTypes.length > 0 ? listingAgreementTypes : null,
         entry_only: entryOnly,
