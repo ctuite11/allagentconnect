@@ -30,11 +30,13 @@ const BuyerAuth = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
     firstName: "",
     lastName: "",
     phone: "",
@@ -44,6 +46,19 @@ const BuyerAuth = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Check if this is a password recovery flow by looking at URL hash
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = hashParams.get('type');
+      
+      if (type === 'recovery' && session?.user) {
+        // User clicked reset link - show password reset form, don't redirect
+        setIsResettingPassword(true);
+        setIsForgotPassword(false);
+        setIsLogin(false);
+        setUser(session.user);
+        return;
+      }
+      
       setUser(session?.user ?? null);
       if (session?.user) {
         navigate("/");
@@ -51,6 +66,19 @@ const BuyerAuth = () => {
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      // Check if this is a password recovery flow
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = hashParams.get('type');
+      
+      if (type === 'recovery' && session?.user) {
+        // User clicked reset link - show password reset form, don't redirect
+        setIsResettingPassword(true);
+        setIsForgotPassword(false);
+        setIsLogin(false);
+        setUser(session.user);
+        return;
+      }
+      
       setUser(session?.user ?? null);
       if (session?.user) {
         navigate("/");
@@ -164,16 +192,69 @@ const BuyerAuth = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Validate passwords match
+      if (formData.password !== formData.confirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+
+      // Validate password strength
+      const passwordSchema = z.string()
+        .min(8, "Password must be at least 8 characters")
+        .max(100, "Password must be less than 100 characters")
+        .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+        .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+        .regex(/[0-9]/, "Password must contain at least one number");
+
+      passwordSchema.parse(formData.password);
+
+      const { error } = await supabase.auth.updateUser({
+        password: formData.password,
+      });
+
+      if (error) throw error;
+
+      toast.success("Password updated successfully!");
+      setIsResettingPassword(false);
+      setIsLogin(true);
+      setFormData({ ...formData, password: "", confirmPassword: "" });
+      
+      // Clear the hash from URL
+      window.history.replaceState(null, "", window.location.pathname);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
       <div className="w-full max-w-md">
         <div className="bg-card rounded-lg shadow-xl p-8 border border-border">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              {isForgotPassword ? "Reset Password" : isLogin ? "Buyer Login" : "Create Buyer Account"}
+              {isResettingPassword 
+                ? "Set New Password" 
+                : isForgotPassword 
+                ? "Reset Password" 
+                : isLogin 
+                ? "Buyer Login" 
+                : "Create Buyer Account"}
             </h1>
             <p className="text-muted-foreground">
-              {isForgotPassword
+              {isResettingPassword
+                ? "Enter your new password"
+                : isForgotPassword
                 ? "Enter your email to receive a reset link"
                 : isLogin
                 ? "Sign in to save favorites and create hot sheets"
@@ -181,7 +262,18 @@ const BuyerAuth = () => {
             </p>
           </div>
 
-          <form onSubmit={isForgotPassword ? handleForgotPassword : isLogin ? handleLogin : handleSignUp} className="space-y-4">
+          <form 
+            onSubmit={
+              isResettingPassword 
+                ? handleResetPassword 
+                : isForgotPassword 
+                ? handleForgotPassword 
+                : isLogin 
+                ? handleLogin 
+                : handleSignUp
+            } 
+            className="space-y-4"
+          >
             {!isLogin && !isForgotPassword && (
               <>
                 <div className="grid grid-cols-2 gap-4">
@@ -224,20 +316,52 @@ const BuyerAuth = () => {
               </>
             )}
 
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-              />
-            </div>
+            {!isResettingPassword && (
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                />
+              </div>
+            )}
 
-            {!isForgotPassword && (
+            {isResettingPassword ? (
+              <>
+                <div>
+                  <Label htmlFor="password">New Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Must be 8+ characters with uppercase, lowercase, and number
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={(e) =>
+                      setFormData({ ...formData, confirmPassword: e.target.value })
+                    }
+                  />
+                </div>
+              </>
+            ) : !isForgotPassword && (
               <div>
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -253,7 +377,15 @@ const BuyerAuth = () => {
             )}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Processing..." : isForgotPassword ? "Send Reset Link" : isLogin ? "Sign In" : "Sign Up"}
+              {loading 
+                ? "Processing..." 
+                : isResettingPassword 
+                ? "Update Password" 
+                : isForgotPassword 
+                ? "Send Reset Link" 
+                : isLogin 
+                ? "Sign In" 
+                : "Sign Up"}
             </Button>
 
             {isLogin && !isForgotPassword && (
@@ -268,7 +400,19 @@ const BuyerAuth = () => {
           </form>
 
           <div className="mt-6 text-center space-y-2">
-            {isForgotPassword ? (
+            {isResettingPassword ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsResettingPassword(false);
+                  setIsLogin(true);
+                  window.history.replaceState(null, "", window.location.pathname);
+                }}
+                className="text-primary hover:underline text-sm"
+              >
+                Back to login
+              </button>
+            ) : isForgotPassword ? (
               <button
                 type="button"
                 onClick={() => setIsForgotPassword(false)}
