@@ -56,7 +56,9 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
 
           const handleSelect = async (event: any) => {
             try {
+              console.log("[AddressAutocomplete] PlaceAutocompleteElement gmp-select fired");
               const prediction = event?.placePrediction;
+              console.log("[AddressAutocomplete] Prediction:", prediction);
               if (!prediction) return;
               const place = await prediction.toPlace();
               await place.fetchFields({
@@ -84,10 +86,11 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
                 name: place.displayName?.text || "",
               };
 
+              console.log("[AddressAutocomplete] Mapped place data:", mapped);
               onPlaceSelect?.(mapped);
               onChange?.(mapped.formatted_address || "");
             } catch (err) {
-              // no-op
+              console.error("[AddressAutocomplete] Error in handleSelect:", err);
             }
           };
 
@@ -115,11 +118,15 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
 
       autocompleteRef.current.addListener('place_changed', () => {
         const place = autocompleteRef.current?.getPlace();
-        console.info("[AddressAutocomplete] Legacy Autocomplete place_changed", place);
+        console.log("[AddressAutocomplete] Legacy place_changed fired");
+        console.log("[AddressAutocomplete] Place data:", place);
         if (place) {
+          console.log("[AddressAutocomplete] Calling onPlaceSelect with place data");
           onPlaceSelect?.(place);
           const formatted = place.formatted_address || place.name || "";
           onChange?.(formatted);
+        } else {
+          console.warn("[AddressAutocomplete] No place data received");
         }
       });
     };
