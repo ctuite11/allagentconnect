@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical } from "lucide-react";
 import { z } from "zod";
 import listingIcon from "@/assets/listing-creation-icon.png";
+import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
 
 interface FileWithPreview {
   file: File;
@@ -1385,67 +1386,16 @@ const AddListing = () => {
                 {/* Property Photos Section */}
                 <div className="space-y-4 border-t pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-xl font-semibold">Property Photos</Label>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Drag and drop to reorder. First photo will be the main image.
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('photo-upload')?.click()}
-                      className="gap-2"
-                    >
-                      <ImageIcon className="w-4 h-4" />
-                      Add Photos
-                    </Button>
+                    <Label className="text-xl font-semibold">Property Photos</Label>
+                    <PhotoManagementDialog
+                      photos={photos}
+                      onPhotosChange={setPhotos}
+                    />
                   </div>
-                  <Input
-                    id="photo-upload"
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => handleFileSelect(e.target.files, 'photos')}
-                  />
-                  
                   {photos.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {photos.map((photo, index) => (
-                        <div
-                          key={photo.id}
-                          draggable
-                          onDragStart={() => handleDragStart(index)}
-                          onDragOver={(e) => handleDragOver(e, index)}
-                          onDragEnd={handleDragEnd}
-                          className="relative group cursor-move border rounded-lg overflow-hidden bg-muted"
-                        >
-                          <div className="absolute top-2 left-2 z-10 bg-background/80 rounded p-1">
-                            <GripVertical className="w-4 h-4" />
-                          </div>
-                          {index === 0 && (
-                            <div className="absolute top-2 right-2 z-10 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-                              Main
-                            </div>
-                          )}
-                          <img
-                            src={photo.preview}
-                            alt={`Property ${index + 1}`}
-                            className="w-full h-32 object-cover"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handleRemoveFile(photo.id, 'photos')}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {photos.length} {photos.length === 1 ? 'photo' : 'photos'} uploaded. First photo will be the main image.
+                    </p>
                   )}
                 </div>
 
