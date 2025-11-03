@@ -517,6 +517,7 @@ export type Database = {
           address: string
           agent_id: string
           amenities: Json | null
+          annual_property_tax: number | null
           appointment_required: boolean | null
           attom_data: Json | null
           bathrooms: number | null
@@ -547,6 +548,8 @@ export type Database = {
           square_feet: number | null
           state: string
           status: string
+          tax_assessment_value: number | null
+          tax_year: number | null
           updated_at: string
           value_estimate: Json | null
           walk_score_data: Json | null
@@ -558,6 +561,7 @@ export type Database = {
           address: string
           agent_id: string
           amenities?: Json | null
+          annual_property_tax?: number | null
           appointment_required?: boolean | null
           attom_data?: Json | null
           bathrooms?: number | null
@@ -588,6 +592,8 @@ export type Database = {
           square_feet?: number | null
           state: string
           status?: string
+          tax_assessment_value?: number | null
+          tax_year?: number | null
           updated_at?: string
           value_estimate?: Json | null
           walk_score_data?: Json | null
@@ -599,6 +605,7 @@ export type Database = {
           address?: string
           agent_id?: string
           amenities?: Json | null
+          annual_property_tax?: number | null
           appointment_required?: boolean | null
           attom_data?: Json | null
           bathrooms?: number | null
@@ -629,6 +636,8 @@ export type Database = {
           square_feet?: number | null
           state?: string
           status?: string
+          tax_assessment_value?: number | null
+          tax_year?: number | null
           updated_at?: string
           value_estimate?: Json | null
           walk_score_data?: Json | null

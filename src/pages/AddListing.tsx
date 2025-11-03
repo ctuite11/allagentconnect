@@ -80,6 +80,9 @@ const AddListing = () => {
     showing_contact_name: "",
     showing_contact_phone: "",
     additional_notes: "",
+    annual_property_tax: "",
+    tax_year: new Date().getFullYear().toString(),
+    tax_assessment_value: "",
   });
 
   const [disclosures, setDisclosures] = useState<string[]>([]);
@@ -422,6 +425,10 @@ const AddListing = () => {
         photos: uploadedFiles.photos,
         floor_plans: uploadedFiles.floorPlans,
         documents: uploadedFiles.documents,
+        // Property tax information
+        annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
+        tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
+        tax_assessment_value: formData.tax_assessment_value ? parseFloat(formData.tax_assessment_value) : null,
         // ATTOM and third-party data
         attom_data: attomData,
         walk_score_data: walkScoreData,
@@ -695,6 +702,48 @@ const AddListing = () => {
                     onChange={(value) => setFormData({ ...formData, lot_size: value })}
                   />
                 </div>
+
+                <Separator className="my-6" />
+
+                {/* Property Tax Information */}
+                <div className="space-y-6">
+                  <Label className="text-xl font-semibold">Property Tax Information</Label>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="annual_property_tax">Annual Property Tax</Label>
+                      <FormattedInput
+                        id="annual_property_tax"
+                        format="currency"
+                        value={formData.annual_property_tax}
+                        onChange={(value) => setFormData({ ...formData, annual_property_tax: value })}
+                        placeholder="$0.00"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tax_year">Tax Year</Label>
+                      <Input
+                        id="tax_year"
+                        type="number"
+                        value={formData.tax_year}
+                        onChange={(e) => setFormData({ ...formData, tax_year: e.target.value })}
+                        placeholder={new Date().getFullYear().toString()}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tax_assessment_value">Tax Assessment Value</Label>
+                      <FormattedInput
+                        id="tax_assessment_value"
+                        format="currency"
+                        value={formData.tax_assessment_value}
+                        onChange={(value) => setFormData({ ...formData, tax_assessment_value: value })}
+                        placeholder="$0.00"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="my-6" />
 
                 {/* Property Description */}
                 <div className="space-y-2">
