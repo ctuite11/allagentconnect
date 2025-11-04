@@ -883,22 +883,6 @@ const AddListing = () => {
                       value={formData.address}
                       onChange={(val) => setFormData({ ...formData, address: val })}
                     />
-                    <div className="mt-2">
-                      <Button 
-                        type="button" 
-                        variant="secondary" 
-                        size="sm" 
-                        onClick={handleManualFetch}
-                        disabled={!formData.address?.trim()}
-                      >
-                        Fetch Property Data
-                      </Button>
-                      {debugInfo && (
-                        <pre className="mt-2 text-xs whitespace-pre-wrap p-2 rounded bg-muted/30">
-                          {JSON.stringify(debugInfo, null, 2)}
-                        </pre>
-                      )}
-                    </div>
                   </div>
                 </div>
 
