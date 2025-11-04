@@ -17,11 +17,17 @@ const BrowseProperties = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [priceRange, setPriceRange] = useState("all");
   const [propertyType, setPropertyType] = useState("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const [listingType, setListingType] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [bedrooms, setBedrooms] = useState("all");
+  const [bathrooms, setBathrooms] = useState("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [showFilters, setShowFilters] = useState(true);
 
   useEffect(() => {
     fetchListings();
-  }, [searchQuery, priceRange, propertyType]);
+  }, [searchQuery, priceRange, propertyType, listingType, status, bedrooms, bathrooms, minPrice, maxPrice]);
 
   const fetchListings = async () => {
     try {
@@ -29,16 +35,30 @@ const BrowseProperties = () => {
       let query = supabase
         .from("listings")
         .select("*")
-        .eq("status", "active")
         .order("created_at", { ascending: false });
+
+      // Apply status filter (default to active only if not filtered)
+      if (status !== "all") {
+        query = query.eq("status", status);
+      } else {
+        query = query.eq("status", "active");
+      }
 
       // Apply search filter
       if (searchQuery) {
         query = query.or(`address.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,zip_code.ilike.%${searchQuery}%`);
       }
 
-      // Apply price filter
-      if (priceRange !== "all") {
+      // Apply price filters
+      if (minPrice) {
+        query = query.gte("price", parseFloat(minPrice));
+      }
+      if (maxPrice) {
+        query = query.lte("price", parseFloat(maxPrice));
+      }
+      
+      // Legacy price range filter (fallback)
+      if (priceRange !== "all" && !minPrice && !maxPrice) {
         const [min, max] = priceRange.split("-").map(Number);
         query = query.gte("price", min);
         if (max) query = query.lte("price", max);
@@ -49,7 +69,22 @@ const BrowseProperties = () => {
         query = query.eq("property_type", propertyType);
       }
 
-      const { data, error } = await query.limit(50);
+      // Apply listing type filter
+      if (listingType !== "all") {
+        query = query.eq("listing_type", listingType);
+      }
+
+      // Apply bedrooms filter
+      if (bedrooms !== "all") {
+        query = query.gte("bedrooms", parseInt(bedrooms));
+      }
+
+      // Apply bathrooms filter
+      if (bathrooms !== "all") {
+        query = query.gte("bathrooms", parseFloat(bathrooms));
+      }
+
+      const { data, error } = await query.limit(100);
 
       if (error) throw error;
       setListings(data || []);
@@ -94,9 +129,9 @@ const BrowseProperties = () => {
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Browse Properties</h1>
+            <h1 className="text-4xl font-bold mb-2">Search Listings</h1>
             <p className="text-muted-foreground">
-              Discover your perfect home from our extensive listings
+              Advanced search with all available filters for agents
             </p>
           </div>
 
@@ -126,40 +161,119 @@ const BrowseProperties = () => {
               </div>
 
               {showFilters && (
-                <div className="grid md:grid-cols-2 gap-4 pt-4 border-t">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Price Range</label>
-                    <Select value={priceRange} onValueChange={setPriceRange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select price range" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Prices</SelectItem>
-                        <SelectItem value="0-200000">Under $200,000</SelectItem>
-                        <SelectItem value="200000-400000">$200,000 - $400,000</SelectItem>
-                        <SelectItem value="400000-600000">$400,000 - $600,000</SelectItem>
-                        <SelectItem value="600000-800000">$600,000 - $800,000</SelectItem>
-                        <SelectItem value="800000-1000000">$800,000 - $1,000,000</SelectItem>
-                        <SelectItem value="1000000-9999999999">Over $1,000,000</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-4 pt-4 border-t">
+                  {/* Row 1: Listing Type and Status */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Listing Type</label>
+                      <Select value={listingType} onValueChange={setListingType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All listing types" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Listing Types</SelectItem>
+                          <SelectItem value="for_sale">For Sale</SelectItem>
+                          <SelectItem value="for_rent">For Rent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Status</label>
+                      <Select value={status} onValueChange={setStatus}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All statuses" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Statuses</SelectItem>
+                          <SelectItem value="active">New</SelectItem>
+                          <SelectItem value="coming_soon">Coming Soon</SelectItem>
+                          <SelectItem value="off_market">Off Market</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="sold">Sold</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Property Type</label>
-                    <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select property type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="single_family">Single Family</SelectItem>
-                        <SelectItem value="condo">Condo</SelectItem>
-                        <SelectItem value="townhouse">Townhouse</SelectItem>
-                        <SelectItem value="multi_family">Multi Family</SelectItem>
-                        <SelectItem value="land">Land</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  {/* Row 2: Price Range */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Min Price</label>
+                      <input
+                        type="number"
+                        placeholder="$0"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Max Price</label>
+                      <input
+                        type="number"
+                        placeholder="No limit"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 3: Property Type and Beds/Baths */}
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Property Type</label>
+                      <Select value={propertyType} onValueChange={setPropertyType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All types" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Types</SelectItem>
+                          <SelectItem value="Single Family">Single Family</SelectItem>
+                          <SelectItem value="Condominium">Condominium</SelectItem>
+                          <SelectItem value="Townhouse">Townhouse</SelectItem>
+                          <SelectItem value="Multi Family">Multi Family</SelectItem>
+                          <SelectItem value="Land">Land</SelectItem>
+                          <SelectItem value="Commercial">Commercial</SelectItem>
+                          <SelectItem value="Business Opp.">Business Opp.</SelectItem>
+                          <SelectItem value="Residential Rental">Residential Rental</SelectItem>
+                          <SelectItem value="Mobile Home">Mobile Home</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Min Bedrooms</label>
+                      <Select value={bedrooms} onValueChange={setBedrooms}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="1">1+</SelectItem>
+                          <SelectItem value="2">2+</SelectItem>
+                          <SelectItem value="3">3+</SelectItem>
+                          <SelectItem value="4">4+</SelectItem>
+                          <SelectItem value="5">5+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Min Bathrooms</label>
+                      <Select value={bathrooms} onValueChange={setBathrooms}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="1">1+</SelectItem>
+                          <SelectItem value="1.5">1.5+</SelectItem>
+                          <SelectItem value="2">2+</SelectItem>
+                          <SelectItem value="2.5">2.5+</SelectItem>
+                          <SelectItem value="3">3+</SelectItem>
+                          <SelectItem value="4">4+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               )}
@@ -180,6 +294,12 @@ const BrowseProperties = () => {
                   setSearchQuery("");
                   setPriceRange("all");
                   setPropertyType("all");
+                  setListingType("all");
+                  setStatus("all");
+                  setBedrooms("all");
+                  setBathrooms("all");
+                  setMinPrice("");
+                  setMaxPrice("");
                 }}
               >
                 Clear Filters

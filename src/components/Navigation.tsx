@@ -65,9 +65,9 @@ const Navigation = () => {
               <DropdownMenuContent className="w-56 bg-card border-border shadow-lg z-[100]">
                 <DropdownMenuLabel>Properties</DropdownMenuLabel>
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate("/browse")}>
+                <DropdownMenuItem onClick={() => navigate("/browse")}>
                     <Search className="mr-2 h-4 w-4" />
-                    Browse Properties
+                    Search
                   </DropdownMenuItem>
                   {user && (
                     <DropdownMenuItem onClick={() => navigate("/favorites")}>
@@ -192,7 +192,7 @@ const Navigation = () => {
               className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
             >
               <Search className="w-4 h-4" />
-              Browse
+              Search
             </button>
             <button
               onClick={() => {
