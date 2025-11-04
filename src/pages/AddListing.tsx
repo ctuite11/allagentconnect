@@ -795,43 +795,47 @@ const AddListing = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-4 mb-8">
-            <Button variant="default" size="lg" onClick={handleSaveDraft} className="gap-2">
-              <Save className="w-5 h-5" />
-              Save as Draft
-            </Button>
-            <Button variant="default" size="lg" onClick={handlePreview} className="gap-2">
-              <Eye className="w-5 h-5" />
-              Preview Listing
-            </Button>
-            <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} disabled={submitting} className="gap-2">
-              <Upload className="w-5 h-5" />
-              {submitting ? "Publishing..." : "Publish Listing"}
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              onClick={() => {
-                setOpenHouseDialogType('public');
-                setOpenHouseDialogOpen(true);
-              }} 
-              className="gap-2 border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
-            >
-              <Home className="w-5 h-5" />
-              Schedule Open House
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              onClick={() => {
-                setOpenHouseDialogType('broker');
-                setOpenHouseDialogOpen(true);
-              }} 
-              className="gap-2 border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
-            >
-              <Home className="w-5 h-5" />
-              Schedule Broker Open House
-            </Button>
+          <div className="space-y-4 mb-8">
+            <div className="flex flex-wrap gap-4">
+              <Button variant="default" size="lg" onClick={handleSaveDraft} className="gap-2">
+                <Save className="w-5 h-5" />
+                Save as Draft
+              </Button>
+              <Button variant="default" size="lg" onClick={handlePreview} className="gap-2">
+                <Eye className="w-5 h-5" />
+                Preview Listing
+              </Button>
+              <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} disabled={submitting} className="gap-2">
+                <Upload className="w-5 h-5" />
+                {submitting ? "Publishing..." : "Publish Listing"}
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-4">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={() => {
+                  setOpenHouseDialogType('public');
+                  setOpenHouseDialogOpen(true);
+                }} 
+                className="gap-2 border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
+              >
+                <span className="text-2xl">🎈</span>
+                Schedule Open House
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={() => {
+                  setOpenHouseDialogType('broker');
+                  setOpenHouseDialogOpen(true);
+                }} 
+                className="gap-2 border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
+              >
+                <span className="text-2xl">🚗</span>
+                Schedule Broker Open House
+              </Button>
+            </div>
           </div>
 
           {/* Form Card */}
