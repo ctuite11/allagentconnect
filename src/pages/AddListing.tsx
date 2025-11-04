@@ -13,13 +13,14 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home } from "lucide-react";
 import { z } from "zod";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -142,6 +143,13 @@ const AddListing = () => {
     end_time: string;
     notes: string;
   }>>([]);
+  
+  const [openHouseDialogOpen, setOpenHouseDialogOpen] = useState(false);
+  const [openHouseDialogType, setOpenHouseDialogType] = useState<'public' | 'broker'>('public');
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [dialogStartTime, setDialogStartTime] = useState('');
+  const [dialogEndTime, setDialogEndTime] = useState('');
+  const [dialogComments, setDialogComments] = useState('');
 
   useEffect(() => {
     const checkUser = async () => {
@@ -787,7 +795,7 @@ const AddListing = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 mb-8">
+          <div className="flex flex-wrap gap-4 mb-8">
             <Button variant="default" size="lg" onClick={handleSaveDraft} className="gap-2">
               <Save className="w-5 h-5" />
               Save as Draft
@@ -799,6 +807,30 @@ const AddListing = () => {
             <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} disabled={submitting} className="gap-2">
               <Upload className="w-5 h-5" />
               {submitting ? "Publishing..." : "Publish Listing"}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={() => {
+                setOpenHouseDialogType('public');
+                setOpenHouseDialogOpen(true);
+              }} 
+              className="gap-2"
+            >
+              <Home className="w-5 h-5" />
+              Schedule Open House
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={() => {
+                setOpenHouseDialogType('broker');
+                setOpenHouseDialogOpen(true);
+              }} 
+              className="gap-2"
+            >
+              <Home className="w-5 h-5" />
+              Schedule Broker Open House
             </Button>
           </div>
 
@@ -2206,6 +2238,126 @@ const AddListing = () => {
           </Card>
         </div>
       </div>
+      
+      {/* Open House Scheduling Dialog */}
+      <Dialog open={openHouseDialogOpen} onOpenChange={setOpenHouseDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Schedule {openHouseDialogType === 'public' ? 'Public' : 'Broker'} Open House
+            </DialogTitle>
+            <DialogDescription>
+              Select multiple dates and set the time for your {openHouseDialogType === 'public' ? 'public' : 'broker'} open house.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Date Selection */}
+            <div className="space-y-2">
+              <Label>Select Dates (click multiple dates)</Label>
+              <Calendar
+                mode="multiple"
+                selected={selectedDates}
+                onSelect={(dates) => setSelectedDates(dates || [])}
+                disabled={(date) => date < new Date()}
+                className="rounded-md border pointer-events-auto"
+              />
+              {selectedDates.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedDates.map((date, idx) => (
+                    <div key={idx} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                      {format(date, "MMM d, yyyy")}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDates(selectedDates.filter((_, i) => i !== idx))}
+                        className="hover:bg-primary/20 rounded-full"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Time Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Start Time</Label>
+                <Input
+                  type="time"
+                  value={dialogStartTime}
+                  onChange={(e) => setDialogStartTime(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Time</Label>
+                <Input
+                  type="time"
+                  value={dialogEndTime}
+                  onChange={(e) => setDialogEndTime(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            {/* Comments */}
+            <div className="space-y-2">
+              <Label>Comments (Optional)</Label>
+              <Textarea
+                placeholder="Refreshments will be served. Park in the driveway..."
+                value={dialogComments}
+                onChange={(e) => setDialogComments(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setOpenHouseDialogOpen(false);
+                setSelectedDates([]);
+                setDialogStartTime('');
+                setDialogEndTime('');
+                setDialogComments('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedDates.length === 0) {
+                  toast.error("Please select at least one date");
+                  return;
+                }
+                if (!dialogStartTime || !dialogEndTime) {
+                  toast.error("Please set start and end times");
+                  return;
+                }
+                
+                const newOpenHouses = selectedDates.map(date => ({
+                  type: openHouseDialogType,
+                  date: date.toISOString().split('T')[0],
+                  start_time: dialogStartTime,
+                  end_time: dialogEndTime,
+                  notes: dialogComments
+                }));
+                
+                setOpenHouses([...openHouses, ...newOpenHouses]);
+                setOpenHouseDialogOpen(false);
+                setSelectedDates([]);
+                setDialogStartTime('');
+                setDialogEndTime('');
+                setDialogComments('');
+                toast.success(`Added ${newOpenHouses.length} open house(s)`);
+              }}
+            >
+              Add Open House(s)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
