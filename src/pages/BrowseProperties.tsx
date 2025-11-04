@@ -343,7 +343,7 @@ const BrowseProperties = () => {
                           <Select value={county} onValueChange={setCounty} disabled={!hasCountyData}>
                             <SelectTrigger className={!hasCountyData ? "opacity-50 cursor-not-allowed" : ""}><SelectValue /></SelectTrigger>
                             <SelectContent className="max-h-[300px]">
-                              <SelectItem value="all">All Towns</SelectItem>
+                              <SelectItem value="all">All Counties/Areas</SelectItem>
                               {hasCountyData && currentStateCounties.map((c) => (
                                 <SelectItem key={c} value={c}>{c}</SelectItem>
                               ))}
