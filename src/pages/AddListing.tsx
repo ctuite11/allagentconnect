@@ -331,6 +331,7 @@ const AddListing = () => {
       const { data, error } = await supabase.functions.invoke("test-attom", {
         body: { address, city, state, zip: zip_code },
       });
+      setDebugInfo({ source: 'manual-test-attom', req: { address, city, state, zip_code }, data, error });
       if (error) throw error;
       const prop = (data as any)?.json?.property?.[0];
       if (!prop) {
