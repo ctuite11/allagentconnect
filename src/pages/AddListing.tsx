@@ -254,6 +254,51 @@ const AddListing = () => {
             year_built: data.attom.year_built?.toString() || prev.year_built,
             property_type: data.attom.property_type || prev.property_type,
           }));
+
+          // If some key fields are missing, try a lightweight fallback call to enrich data
+          const missingKeyFields = [
+            data.attom.bathrooms,
+            data.attom.square_feet,
+            data.attom.lot_size,
+            data.attom.year_built,
+            data.attom.property_type,
+          ].some((v) => v === null || v === undefined || v === "");
+
+          if (missingKeyFields) {
+            console.warn("[AddListing] Attom missing fields; attempting supplemental test-attom fetch...");
+            try {
+              const fallback = await supabase.functions.invoke("test-attom", {
+                body: { address, city, state, zip },
+              });
+              console.log("[AddListing] Supplemental test-attom response:", fallback);
+              const prop = (fallback.data as any)?.json?.property?.[0];
+              if (prop) {
+                const building = prop.building || {};
+                const lot = prop.lot || {};
+                const summary = prop.summary || {};
+                const mapped = {
+                  bedrooms: building.rooms?.beds || null,
+                  bathrooms: building.rooms?.bathstotal || building.rooms?.bathsfull || null,
+                  square_feet: building.size?.bldgsize || building.size?.livingsize || null,
+                  lot_size: lot.lotsize2 || lot.lotsize1 || null,
+                  year_built: summary.yearbuilt || null,
+                  property_type: summary.proptype || null,
+                };
+                setFormData(prev => ({
+                  ...prev,
+                  bedrooms: prev.bedrooms || (mapped.bedrooms?.toString() ?? prev.bedrooms),
+                  bathrooms: prev.bathrooms || (mapped.bathrooms?.toString() ?? prev.bathrooms),
+                  square_feet: prev.square_feet || (mapped.square_feet?.toString() ?? prev.square_feet),
+                  lot_size: prev.lot_size || (mapped.lot_size?.toString() ?? prev.lot_size),
+                  year_built: prev.year_built || (mapped.year_built?.toString() ?? prev.year_built),
+                  property_type: prev.property_type || (mapped.property_type ?? prev.property_type),
+                }));
+                setDebugInfo((d:any) => ({ ...(d||{}), supplemental: { used: true, mapped } }));
+              }
+            } catch (fbErr) {
+              console.error("[AddListing] Supplemental test-attom failed:", fbErr);
+            }
+          }
         } else {
           console.warn("[AddListing] No Attom data returned. Trying public test-attom fallback...");
           try {
