@@ -328,10 +328,38 @@ const AddListing = () => {
       }
 
       console.log("[AddListing] Manual fetch using test-attom with:", { address, city, state, zip_code });
+
+      // Try to derive city/state/zip from a single-line address if user typed it manually
+      let derivedAddress1 = address?.trim() || "";
+      let derivedCity = (city || "").trim();
+      let derivedState = (state || "").trim();
+      let derivedZip = (zip_code || "").trim();
+
+      if (!derivedCity || !derivedState) {
+        const parts = derivedAddress1.split(",");
+        if (parts.length >= 2) {
+          // last two chunks typically: City AND "ST ZIP"
+          const cityPart = parts[parts.length - 2].trim();
+          const stateZipPart = parts[parts.length - 1].trim();
+          const sz = stateZipPart.split(/\s+/);
+          if (!derivedCity && cityPart) derivedCity = cityPart;
+          if (!derivedState && sz[0] && sz[0].length === 2) derivedState = sz[0].toUpperCase();
+          if (!derivedZip && sz[1]) derivedZip = sz[1];
+          // Use street as address1 (everything before first comma)
+          derivedAddress1 = parts[0].trim();
+        }
+      }
+
+      if (!derivedCity || !derivedState) {
+        toast.error("Please select an address from suggestions, or enter 'Street, City, ST ZIP'.");
+        setDebugInfo({ hint: 'missing city/state', input: address, parsed: { derivedAddress1, derivedCity, derivedState, derivedZip } });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke("test-attom", {
-        body: { address, city, state, zip: zip_code },
+        body: { address: derivedAddress1, city: derivedCity, state: derivedState, zip: derivedZip },
       });
-      setDebugInfo({ source: 'manual-test-attom', req: { address, city, state, zip_code }, data, error });
+      setDebugInfo({ source: 'manual-test-attom', req: { address: derivedAddress1, city: derivedCity, state: derivedState, zip: derivedZip }, data, error });
       if (error) throw error;
       const prop = (data as any)?.json?.property?.[0];
       if (!prop) {
