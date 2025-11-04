@@ -162,16 +162,25 @@ const BrowseProperties = () => {
   // Generate town list with neighborhoods
   const getTownsList = () => {
     const towns: string[] = [];
-    currentStateCities.forEach(city => {
-      towns.push(`${city}, ${state}`);
-      // Only include neighborhoods when explicitly requested AND not using "All Towns"
-      if (showAreas === "yes" && county !== "all") {
-        const neighborhoods = getAreasForCity(city, state);
-        neighborhoods.forEach(neighborhood => {
-          towns.push(`${city}, ${state}-${neighborhood}`);
-        });
-      }
-    });
+    
+    // When "All Towns" is selected, show all cities in the state
+    if (county === "all") {
+      currentStateCities.forEach(city => {
+        towns.push(`${city}, ${state}`);
+      });
+    } else {
+      // For specific county, show cities with optional neighborhoods
+      currentStateCities.forEach(city => {
+        towns.push(`${city}, ${state}`);
+        if (showAreas === "yes") {
+          const neighborhoods = getAreasForCity(city, state);
+          neighborhoods.forEach(neighborhood => {
+            towns.push(`${city}, ${state}-${neighborhood}`);
+          });
+        }
+      });
+    }
+    
     return towns;
   };
   
