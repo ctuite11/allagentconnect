@@ -913,20 +913,20 @@ const AddListing = () => {
                       onValueChange={(value) => setFormData({ ...formData, neighborhood: value })}
                       disabled={!
                         ((formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
-                         (formData.state === 'MA' && (formData.county ?? '').toLowerCase().includes('suffolk')))
+                         (formData.county ?? '').toLowerCase().includes('suffolk'))
                       }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder={
                           ((formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
-                           (formData.state === 'MA' && (formData.county ?? '').toLowerCase().includes('suffolk')))
+                           (formData.county ?? '').toLowerCase().includes('suffolk'))
                             ? 'Select area'
-                            : 'Enter address first'
+                            : 'Enter address or set county first'
                         } />
                       </SelectTrigger>
                       {(
                         (formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
-                        (formData.state === 'MA' && (formData.county ?? '').toLowerCase().includes('suffolk'))
+                        (formData.county ?? '').toLowerCase().includes('suffolk')
                       ) && (
                         <SelectContent className="max-h-[300px]">
                           {(getAreasForCity(formData.city, formData.state).length > 0
