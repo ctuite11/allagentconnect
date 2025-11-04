@@ -102,58 +102,71 @@ serve(async (req) => {
         else if (state) parts.push(state);
         else if (zip_code) parts.push(zip_code);
         const address2 = parts.join(", ");
+        const fullAddress = [address, address2].filter(Boolean).join(", ");
 
-        const attomUrl = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address?address1=${encodeURIComponent(
-          address
-        )}&address2=${encodeURIComponent(address2)}`;
+        // Try basicprofile first (more tolerant), then fallback to address endpoint
+        const attomUrlBasic = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/basicprofile?address=${encodeURIComponent(fullAddress)}&debug=true`;
+        const attomUrlAddr = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address?address1=${encodeURIComponent(address)}&address2=${encodeURIComponent(address2)}`;
 
-        console.log("[fetch-property-data] Calling Attom API:", attomUrl);
+        console.log("[fetch-property-data] Calling Attom basicprofile:", attomUrlBasic);
 
-        const attomResponse = await fetch(attomUrl, {
+        let attomResponse = await fetch(attomUrlBasic, {
           headers: {
             accept: "application/json",
             apikey: attomApiKey,
           },
         });
 
+        let attomData: any = null;
         if (attomResponse.ok) {
-          const attomData = await attomResponse.json();
-          console.log("[fetch-property-data] Attom response status:", attomResponse.status);
-          
-          if (attomData.property && attomData.property.length > 0) {
-            const property = attomData.property[0];
-            const building = property.building || {};
-            const lot = property.lot || {};
-            const summary = property.summary || {};
+          attomData = await attomResponse.json();
+        } else {
+          console.warn("[fetch-property-data] basicprofile failed:", attomResponse.status);
+        }
 
-            results.attom = {
-              bedrooms: building.rooms?.beds || null,
-              bathrooms: building.rooms?.bathstotal || building.rooms?.bathsfull || null,
-              square_feet: building.size?.bldgsize || building.size?.livingsize || null,
-              lot_size: lot.lotsize2 || lot.lotsize1 || null,
-              year_built: summary.yearbuilt || null,
-              property_type: summary.proptype || null,
-              zoning: lot.zoning || null,
-              parking_spaces: building.parking?.prkgSpaces || null,
-              stories: building.summary?.stories || null,
-            };
-
-            console.log("[fetch-property-data] Extracted Attom data:", results.attom);
-
-            // Value estimate from Attom
-            if (property.assessment?.market) {
-              results.valueEstimate = {
-                estimate: property.assessment.market.mktttlvalue || null,
-                high: property.assessment.market.mkthighvalue || null,
-                low: property.assessment.market.mktlowvalue || null,
-              };
-            }
+        if (!attomData?.property?.length) {
+          console.warn("[fetch-property-data] No property from basicprofile, trying address endpoint:", attomUrlAddr);
+          attomResponse = await fetch(attomUrlAddr, {
+            headers: {
+              accept: "application/json",
+              apikey: attomApiKey,
+            },
+          });
+          if (attomResponse.ok) {
+            attomData = await attomResponse.json();
           } else {
-            console.warn("[fetch-property-data] No property data in Attom response");
+            const txt = await attomResponse.text();
+            console.error("[fetch-property-data] Address endpoint failed:", attomResponse.status, txt);
+          }
+        }
+        
+        if (attomData?.property?.length) {
+          const property = attomData.property[0];
+          const building = property.building || {};
+          const lot = property.lot || {};
+          const summary = property.summary || {};
+
+          results.attom = {
+            bedrooms: building.rooms?.beds || null,
+            bathrooms: building.rooms?.bathstotal || building.rooms?.bathsfull || null,
+            square_feet: building.size?.bldgsize || building.size?.livingsize || null,
+            lot_size: lot.lotsize2 || lot.lotsize1 || null,
+            year_built: summary.yearbuilt || null,
+            property_type: summary.proptype || null,
+            zoning: lot.zoning || null,
+            parking_spaces: building.parking?.prkgSpaces || null,
+            stories: building.summary?.stories || null,
+          };
+
+          if (property.assessment?.market) {
+            results.valueEstimate = {
+              estimate: property.assessment.market.mktttlvalue || null,
+              high: property.assessment.market.mkthighvalue || null,
+              low: property.assessment.market.mktlowvalue || null,
+            };
           }
         } else {
-          const txt = await attomResponse.text();
-          console.error("[fetch-property-data] Attom request failed:", attomResponse.status, txt);
+          console.warn("[fetch-property-data] Attom returned no properties for:", { fullAddress, address, address2 });
         }
       } catch (error) {
         console.error("[fetch-property-data] Error fetching Attom data:", error);

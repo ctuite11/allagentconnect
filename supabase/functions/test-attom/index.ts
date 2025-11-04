@@ -36,30 +36,43 @@ serve(async (req) => {
     else if (zip) parts.push(zip);
     const address2 = parts.join(", ");
 
-    const url = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address?address1=${encodeURIComponent(address)}&address2=${encodeURIComponent(address2)}`;
+    // Build address strings
+    const fullAddress = [address, city, state && zip ? `${state} ${zip}` : state || zip]
+      .filter(Boolean)
+      .join(", ");
 
-    console.log("[test-attom] Requesting:", url);
+    // Prefer basicprofile by full address, then fallback to address1/address2
+    const urlBasic = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/basicprofile?address=${encodeURIComponent(fullAddress)}&debug=true`;
+    const urlAddr = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address?address1=${encodeURIComponent(address)}&address2=${encodeURIComponent([city, state && zip ? `${state} ${zip}` : state || zip].filter(Boolean).join(', '))}`;
 
-    const resp = await fetch(url, {
-      headers: {
-        accept: "application/json",
-        apikey: attomApiKey,
-      },
+    console.log("[test-attom] Requesting basicprofile:", urlBasic);
+
+    let resp = await fetch(urlBasic, {
+      headers: { accept: "application/json", apikey: attomApiKey },
     });
 
-    const text = await resp.text();
+    let text = await resp.text();
     let json: any = null;
-    try { json = JSON.parse(text); } catch { /* leave as text */ }
+    try { json = JSON.parse(text); } catch {}
 
-    console.log("[test-attom] Status:", resp.status);
+    if (!resp.ok || !json?.property?.length) {
+      console.warn("[test-attom] basicprofile returned no property, trying address endpoint...", resp.status);
+      console.log("[test-attom] Requesting address:", urlAddr);
+      resp = await fetch(urlAddr, { headers: { accept: "application/json", apikey: attomApiKey } });
+      text = await resp.text();
+      json = null;
+      try { json = JSON.parse(text); } catch {}
+    }
+
+    console.log("[test-attom] Final status:", resp.status);
 
     return new Response(
       JSON.stringify({
         ok: resp.ok,
         status: resp.status,
-        url,
+        urlTried: { basicprofile: urlBasic, address: urlAddr },
         address1: address,
-        address2,
+        address2: [city, state && zip ? `${state} ${zip}` : state || zip].filter(Boolean).join(', '),
         json,
         raw: json ? undefined : text,
       }),
