@@ -47,6 +47,7 @@ const BrowseProperties = () => {
   const [openHouses, setOpenHouses] = useState(false);
   const [brokerTours, setBrokerTours] = useState(false);
   const [eventTimeframe, setEventTimeframe] = useState("next_3_days");
+  const [listingNumber, setListingNumber] = useState("");
   
   // Property Type filters
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
@@ -75,23 +76,19 @@ const BrowseProperties = () => {
   const [keywordMatch, setKeywordMatch] = useState("any");
   const [keywordType, setKeywordType] = useState("include");
   
-  // List numbers
-  const [listNumbers, setListNumbers] = useState("");
-  
   // Collapsible sections
   const [isAddressOpen, setIsAddressOpen] = useState(true);
+  const [isListingEventsOpen, setIsListingEventsOpen] = useState(true);
   const [isTownsOpen, setIsTownsOpen] = useState(true);
   const [isPropertyTypeOpen, setIsPropertyTypeOpen] = useState(true);
   const [isStatusOpen, setIsStatusOpen] = useState(true);
   const [isPriceOpen, setIsPriceOpen] = useState(true);
   const [isCriteriaOpen, setIsCriteriaOpen] = useState(true);
   const [isKeywordsOpen, setIsKeywordsOpen] = useState(false);
-  const [isListNumbersOpen, setIsListNumbersOpen] = useState(false);
-  const [isListingEventsOpen, setIsListingEventsOpen] = useState(false);
 
   useEffect(() => {
     fetchListings();
-  }, [statuses, propertyTypes, minPrice, maxPrice, bedrooms, bathrooms, county, selectedTowns, zipCode]);
+  }, [statuses, propertyTypes, minPrice, maxPrice, bedrooms, bathrooms, county, selectedTowns, zipCode, listingNumber]);
 
   // Reset selected towns when county changes
   useEffect(() => {
@@ -144,6 +141,11 @@ const BrowseProperties = () => {
       // Apply zip code filter
       if (zipCode) {
         query = query.ilike("zip_code", `%${zipCode}%`);
+      }
+
+      // Apply listing number filter
+      if (listingNumber) {
+        query = query.ilike("listing_number", `%${listingNumber}%`);
       }
 
       const { data, error } = await query.limit(100);
@@ -297,6 +299,63 @@ const BrowseProperties = () => {
                           <Label className="text-xs">Radius (Miles)</Label>
                           <Input value={radius} onChange={(e) => setRadius(e.target.value)} placeholder="5" type="number" />
                         </div>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              {/* LISTING EVENTS & NUMBER Section */}
+              <Collapsible open={isListingEventsOpen} onOpenChange={setIsListingEventsOpen}>
+                <div className="bg-card rounded-lg shadow-sm border">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                    <h3 className="font-semibold text-lg">LISTING EVENTS & NUMBER</h3>
+                    {isListingEventsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="p-4 pt-0 space-y-4">
+                      <div>
+                        <Label className="text-xs mb-2 block">Listing Number</Label>
+                        <Input
+                          value={listingNumber}
+                          onChange={(e) => setListingNumber(e.target.value)}
+                          placeholder="Enter listing number (e.g., L-1000)"
+                        />
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="open-houses" 
+                            checked={openHouses}
+                            onCheckedChange={(checked) => setOpenHouses(checked as boolean)}
+                          />
+                          <Home className="h-4 w-4 text-red-500" />
+                          <label htmlFor="open-houses" className="text-sm cursor-pointer">Open Houses</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="broker-tours" 
+                            checked={brokerTours}
+                            onCheckedChange={(checked) => setBrokerTours(checked as boolean)}
+                          />
+                          <Home className="h-4 w-4 text-red-500" />
+                          <label htmlFor="broker-tours" className="text-sm cursor-pointer">Broker Tours</label>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-[auto,1fr] gap-2 items-center">
+                        <Label className="text-xs">For:</Label>
+                        <Select value={eventTimeframe} onValueChange={setEventTimeframe}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="next_3_days">Next 3 Days</SelectItem>
+                            <SelectItem value="next_7_days">Next 7 Days</SelectItem>
+                            <SelectItem value="next_14_days">Next 14 Days</SelectItem>
+                            <SelectItem value="next_30_days">Next 30 Days</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </CollapsibleContent>
@@ -465,71 +524,6 @@ const BrowseProperties = () => {
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-
-              {/* LISTING EVENTS Section */}
-              <Collapsible open={isListingEventsOpen} onOpenChange={setIsListingEventsOpen}>
-                <div className="bg-card rounded-lg shadow-sm border">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
-                    <h3 className="font-semibold text-lg">LISTING EVENTS</h3>
-                    {isListingEventsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="p-4 pt-0 space-y-3">
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="open-houses" 
-                            checked={openHouses}
-                            onCheckedChange={(checked) => setOpenHouses(checked as boolean)}
-                          />
-                          <Home className="h-4 w-4 text-red-500" />
-                          <label htmlFor="open-houses" className="text-sm cursor-pointer">Open Houses</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="broker-tours" 
-                            checked={brokerTours}
-                            onCheckedChange={(checked) => setBrokerTours(checked as boolean)}
-                          />
-                          <Home className="h-4 w-4 text-red-500" />
-                          <label htmlFor="broker-tours" className="text-sm cursor-pointer">Broker Tours</label>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-[auto,1fr] gap-2 items-center">
-                        <Label className="text-xs">For:</Label>
-                        <Select value={eventTimeframe} onValueChange={setEventTimeframe}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="next_3_days">Next 3 Days</SelectItem>
-                            <SelectItem value="next_7_days">Next 7 Days</SelectItem>
-                            <SelectItem value="next_14_days">Next 14 Days</SelectItem>
-                            <SelectItem value="next_30_days">Next 30 Days</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-
-              {/* LIST NUMBER(S) Section */}
-              <Collapsible open={isListNumbersOpen} onOpenChange={setIsListNumbersOpen}>
-                <div className="bg-card rounded-lg shadow-sm border">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
-                    <h3 className="font-semibold text-lg">LIST NUMBER(S)</h3>
-                    {isListNumbersOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="p-4 pt-0">
-                      <Input
-                        value={listNumbers}
-                        onChange={(e) => setListNumbers(e.target.value)}
-                        placeholder="Enter listing numbers separated by commas"
-                      />
                     </div>
                   </CollapsibleContent>
                 </div>
