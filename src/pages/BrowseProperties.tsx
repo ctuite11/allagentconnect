@@ -18,6 +18,11 @@ import { getAreasForCity, usNeighborhoodsByCityState } from "@/data/usNeighborho
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
 import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
+import { CT_COUNTY_TOWNS } from "@/data/ctCountyTowns";
+import { RI_COUNTY_TOWNS } from "@/data/riCountyTowns";
+import { NH_COUNTY_TOWNS } from "@/data/nhCountyTowns";
+import { VT_COUNTY_TOWNS } from "@/data/vtCountyTowns";
+import { ME_COUNTY_TOWNS } from "@/data/meCountyTowns";
 
 const BrowseProperties = () => {
   const [listings, setListings] = useState<any[]>([]);
@@ -171,7 +176,8 @@ const BrowseProperties = () => {
 
   const currentStateCounties = getCountiesForState(state);
   const currentStateCities = usCitiesByState[state] || [];
-  const hasCountyData = state === "MA"; // Only MA has county-to-towns mapping
+  // New England states have county-to-towns mapping
+  const hasCountyData = ["MA", "CT", "RI", "NH", "VT", "ME"].includes(state);
   
   // Generate town list with neighborhoods
   const getTownsList = () => {
@@ -180,12 +186,17 @@ const BrowseProperties = () => {
     if (county === "all") {
       baseCities = currentStateCities;
     } else {
-      if (state === "MA") {
-        baseCities = MA_COUNTY_TOWNS[county] || [];
-      } else {
-        // Fallback for states without a county->city map yet
-        baseCities = currentStateCities;
-      }
+      // Get county-specific towns based on state
+      const countyMap = {
+        MA: MA_COUNTY_TOWNS,
+        CT: CT_COUNTY_TOWNS,
+        RI: RI_COUNTY_TOWNS,
+        NH: NH_COUNTY_TOWNS,
+        VT: VT_COUNTY_TOWNS,
+        ME: ME_COUNTY_TOWNS
+      }[state];
+      
+      baseCities = countyMap?.[county] || currentStateCities;
     }
 
     const towns: string[] = [];

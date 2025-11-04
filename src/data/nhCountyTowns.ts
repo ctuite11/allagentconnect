@@ -1,0 +1,14 @@
+// New Hampshire county to towns mapping  
+// New Hampshire has 10 counties
+export const NH_COUNTY_TOWNS: Record<string, string[]> = {
+  Belknap: ["Alton","Barnstead","Belmont","Center Harbor","Gilford","Gilmanton","Laconia","Meredith","New Hampton","Sanbornton","Tilton"],
+  Carroll: ["Albany","Bartlett","Brookfield","Chatham","Conway","Eaton","Effingham","Freedom","Hart's Location","Jackson","Madison","Moultonborough","Ossipee","Sandwich","Tamworth","Tuftonboro","Wakefield","Wolfeboro"],
+  Cheshire: ["Alstead","Chesterfield","Dublin","Fitzwilliam","Gilsum","Harrisville","Hinsdale","Jaffrey","Keene","Marlborough","Marlow","Nelson","Richmond","Rindge","Roxbury","Stoddard","Sullivan","Surry","Swanzey","Troy","Walpole","Westmoreland","Winchester"],
+  Coos: ["Berlin","Clarksville","Colebrook","Columbia","Dalton","Dummer","Errol","Gorham","Jefferson","Lancaster","Milan","Northumberland","Pittsburg","Randolph","Shelburne","Stark","Stewartstown","Stratford","Whitefield"],
+  Grafton: ["Alexandria","Ashland","Bath","Benton","Bethlehem","Bridgewater","Bristol","Campton","Canaan","Dorchester","Easton","Ellsworth","Enfield","Franconia","Grafton","Groton","Hanover","Haverhill","Hebron","Holderness","Landaff","Lebanon","Lincoln","Lisbon","Littleton","Lyman","Lyme","Monroe","Orange","Orford","Piermont","Plymouth","Rumney","Sugar Hill","Thornton","Warren","Waterville Valley","Wentworth","Woodstock"],
+  Hillsborough: ["Amherst","Antrim","Bedford","Bennington","Brookline","Deering","Francestown","Goffstown","Greenfield","Greenville","Hancock","Hillsborough","Hollis","Hudson","Litchfield","Lyndeborough","Manchester","Mason","Merrimack","Milford","Mont Vernon","Nashua","New Boston","New Ipswich","Pelham","Peterborough","Sharon","Temple","Weare","Wilton","Windsor"],
+  Merrimack: ["Allenstown","Andover","Boscawen","Bow","Bradford","Canterbury","Chichester","Concord","Danbury","Dunbarton","Epsom","Franklin","Henniker","Hill","Hooksett","Hopkinton","Loudon","Newbury","New London","Northfield","Pembroke","Pittsfield","Salisbury","Sutton","Warner","Webster","Wilmot"],
+  Rockingham: ["Atkinson","Auburn","Brentwood","Candia","Chester","Danville","Derry","East Kingston","Epping","Exeter","Fremont","Greenland","Hampstead","Hampton","Hampton Falls","Kensington","Kingston","Londonderry","New Castle","Newfields","Newington","Newmarket","Newton","North Hampton","Northwood","Nottingham","Plaistow","Portsmouth","Raymond","Rye","Salem","Sandown","Seabrook","South Hampton","Stratham","Windham"],
+  Strafford: ["Barrington","Dover","Durham","Farmington","Lee","Madbury","Middleton","Milton","New Durham","Rochester","Rollinsford","Somersworth","Strafford"],
+  Sullivan: ["Acworth","Charlestown","Claremont","Cornish","Croydon","Goshen","Grantham","Langdon","Lempster","Newport","Plainfield","Springfield","Sunapee","Unity","Washington"]
+};
