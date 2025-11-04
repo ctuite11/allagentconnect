@@ -800,6 +800,9 @@ const AddListing = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="for_sale">For Sale</SelectItem>
+                        <SelectItem value="coming_soon">Coming Soon</SelectItem>
+                        <SelectItem value="pre_market">Pre-Market</SelectItem>
+                        <SelectItem value="off_market">Off Market</SelectItem>
                         <SelectItem value="for_rent">For Rent</SelectItem>
                       </SelectContent>
                     </Select>
