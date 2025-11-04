@@ -308,14 +308,14 @@ const BrowseProperties = () => {
                           <label htmlFor="type-select-all" className="text-xs cursor-pointer">Select All</label>
                         </div>
                         {[
-                          { value: "Single Family", label: "Single Family (SF)" },
-                          { value: "Condominium", label: "Condominium (CC)" },
-                          { value: "Multi Family", label: "Multi Family (MF)" },
-                          { value: "Land", label: "Land (LD)" },
-                          { value: "Commercial", label: "Commercial (CI)" },
-                          { value: "Business Opp.", label: "Business Opp. (BU)" },
-                          { value: "Residential Rental", label: "Residential Rental (RN)" },
-                          { value: "Mobile Home", label: "Mobile Home (MH)" }
+                          { value: "Single Family", label: "Single Family" },
+                          { value: "Condominium", label: "Condominium" },
+                          { value: "Multi Family", label: "Multi Family" },
+                          { value: "Land", label: "Land" },
+                          { value: "Commercial", label: "Commercial" },
+                          { value: "Business Opp.", label: "Business Opp." },
+                          { value: "Residential Rental", label: "Residential Rental" },
+                          { value: "Mobile Home", label: "Mobile Home" }
                         ].map((type) => (
                           <div key={type.value} className="flex items-center space-x-2">
                             <Checkbox
@@ -340,7 +340,7 @@ const BrowseProperties = () => {
                     <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-sm text-primary">STATUS</h3>
-                        <span className="text-lime-600">🟢</span>
+                        <span className="text-lime-600 text-xs">🟢 ?</span>
                       </div>
                       {isStatusOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </CollapsibleTrigger>
@@ -388,7 +388,7 @@ const BrowseProperties = () => {
                     <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-sm text-primary">STANDARD SEARCH CRITERIA</h3>
-                        <span className="text-lime-600">🟢</span>
+                        <span className="text-lime-600 text-xs">🟢 ?</span>
                       </div>
                       {isCriteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </CollapsibleTrigger>
@@ -430,18 +430,49 @@ const BrowseProperties = () => {
                             <Input type="number" value={yearBuilt} onChange={(e) => setYearBuilt(e.target.value)} className="h-8" />
                           </div>
                           <div>
-                            <Label className="text-xs">Total Parking Spaces</Label>
-                            <Input type="number" value={totalParkingSpaces} onChange={(e) => setTotalParkingSpaces(e.target.value)} className="h-8" />
+                            <Label className="text-xs">Price</Label>
+                            <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="Min" className="h-8" />
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <Label className="text-xs">Garage Spaces</Label>
-                            <Input type="number" value={garageSpaces} onChange={(e) => setGarageSpaces(e.target.value)} className="h-8" />
+                            <Input 
+                              type="number" 
+                              value={garageSpaces} 
+                              onChange={(e) => {
+                                setGarageSpaces(e.target.value);
+                                const garage = parseInt(e.target.value) || 0;
+                                const nonGarage = parseInt(nonGarageSpaces) || 0;
+                                setTotalParkingSpaces((garage + nonGarage).toString());
+                              }} 
+                              className="h-8" 
+                            />
                           </div>
                           <div>
                             <Label className="text-xs">Parking Spaces (Non-Garage)</Label>
-                            <Input type="number" value={nonGarageSpaces} onChange={(e) => setNonGarageSpaces(e.target.value)} className="h-8" />
+                            <Input 
+                              type="number" 
+                              value={nonGarageSpaces} 
+                              onChange={(e) => {
+                                setNonGarageSpaces(e.target.value);
+                                const garage = parseInt(garageSpaces) || 0;
+                                const nonGarage = parseInt(e.target.value) || 0;
+                                setTotalParkingSpaces((garage + nonGarage).toString());
+                              }} 
+                              className="h-8" 
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs">Total Parking Spaces</Label>
+                            <Input 
+                              type="number" 
+                              value={totalParkingSpaces} 
+                              readOnly 
+                              className="h-8 bg-muted" 
+                            />
                           </div>
                         </div>
                       </div>
@@ -456,16 +487,12 @@ const BrowseProperties = () => {
                   <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-sm text-primary">PRICE</h3>
-                      <span className="text-lime-600">🟢</span>
+                      <span className="text-lime-600 text-xs">🟢 ?</span>
                     </div>
                     {isPriceOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="p-3 pt-0 grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-xs">Low</Label>
-                        <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="" className="h-8" />
-                      </div>
                       <div>
                         <Label className="text-xs">High</Label>
                         <Input type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="" className="h-8" />
@@ -480,7 +507,7 @@ const BrowseProperties = () => {
                 <div className="p-4">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-sm text-primary">MAP</h3>
-                    <span className="text-lime-600">🟢</span>
+                    <span className="text-lime-600 text-xs">🟢 ?</span>
                   </div>
                 </div>
               </div>
@@ -491,7 +518,7 @@ const BrowseProperties = () => {
                   <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-sm text-primary">ADDRESS</h3>
-                      <span className="text-lime-600">🟢</span>
+                      <span className="text-lime-600 text-xs">🟢 ?</span>
                     </div>
                     {isAddressOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                   </CollapsibleTrigger>
@@ -615,7 +642,7 @@ const BrowseProperties = () => {
                         )}
                       </div>
                       
-                      <div className="grid grid-cols-[1fr,200px] gap-3">
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
                           <div className="max-h-60 overflow-y-auto border rounded bg-background">
                             <div 
