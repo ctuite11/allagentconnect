@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { getAreasForCity, usNeighborhoodsByCityState } from "@/data/usNeighborhoodsData";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
+import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
 
 const BrowseProperties = () => {
   const [listings, setListings] = useState<any[]>([]);
@@ -92,6 +93,13 @@ const BrowseProperties = () => {
     setSelectedTowns([]);
   }, [county]);
 
+  // Reset county and towns when state changes
+  useEffect(() => {
+    setCounty("all");
+    setSelectedTowns([]);
+    setTownSearch("");
+  }, [state]);
+
   const fetchListings = async () => {
     try {
       setLoading(true);
@@ -166,26 +174,30 @@ const BrowseProperties = () => {
   
   // Generate town list with neighborhoods
   const getTownsList = () => {
-    const towns: string[] = [];
-    
-    // When "All Towns" is selected, show all cities in the state
+    // Build a base list of cities depending on county selection
+    let baseCities: string[] = [];
     if (county === "all") {
-      currentStateCities.forEach(city => {
-        towns.push(`${city}, ${state}`);
-      });
+      baseCities = currentStateCities;
     } else {
-      // For specific county, show cities with optional neighborhoods
-      currentStateCities.forEach(city => {
-        towns.push(`${city}, ${state}`);
-        if (showAreas === "yes") {
-          const neighborhoods = getAreasForCity(city, state);
-          neighborhoods.forEach(neighborhood => {
-            towns.push(`${city}, ${state}-${neighborhood}`);
-          });
-        }
-      });
+      if (state === "MA") {
+        baseCities = MA_COUNTY_TOWNS[county] || [];
+      } else {
+        // Fallback for states without a county->city map yet
+        baseCities = currentStateCities;
+      }
     }
-    
+
+    const towns: string[] = [];
+    baseCities.forEach((city) => {
+      towns.push(`${city}, ${state}`);
+      if (showAreas === "yes") {
+        const neighborhoods = getAreasForCity(city, state);
+        neighborhoods.forEach((neighborhood) => {
+          towns.push(`${city}, ${state}-${neighborhood}`);
+        });
+      }
+    });
+
     return towns;
   };
   
