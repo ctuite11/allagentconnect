@@ -538,6 +538,7 @@ export type Database = {
           lockbox_code: string | null
           longitude: number | null
           lot_size: number | null
+          open_houses: Json | null
           photos: Json | null
           price: number
           property_features: Json | null
@@ -583,6 +584,7 @@ export type Database = {
           lockbox_code?: string | null
           longitude?: number | null
           lot_size?: number | null
+          open_houses?: Json | null
           photos?: Json | null
           price: number
           property_features?: Json | null
@@ -628,6 +630,7 @@ export type Database = {
           lockbox_code?: string | null
           longitude?: number | null
           lot_size?: number | null
+          open_houses?: Json | null
           photos?: Json | null
           price?: number
           property_features?: Json | null
