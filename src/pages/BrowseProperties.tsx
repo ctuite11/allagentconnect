@@ -246,7 +246,7 @@ const BrowseProperties = () => {
     <div className="min-h-screen flex flex-col">
       <Navigation />
       
-      <main className="flex-1 bg-muted/30">
+      <main className="flex-1 bg-muted/30 pt-24">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-6">
@@ -280,7 +280,7 @@ const BrowseProperties = () => {
               </Collapsible>
 
               {/* Three Column Layout: Property Type, Status, Standard Criteria */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 {/* PROPERTY TYPE Section */}
                 <Collapsible open={isPropertyTypeOpen} onOpenChange={setIsPropertyTypeOpen}>
                   <div className="bg-card rounded-lg shadow-sm border">
@@ -627,24 +627,26 @@ const BrowseProperties = () => {
               {/* TOWNS Section */}
               <Collapsible open={isTownsOpen} onOpenChange={setIsTownsOpen}>
                 <div className="bg-card rounded-lg shadow-sm border">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
-                    <div className="flex items-center justify-between w-full">
-                      <h3 className="font-semibold text-lg">TOWNS</h3>
-                      <div className="flex items-center gap-4">
-                        <Button 
-                          variant="link" 
-                          className="text-xs gap-1 h-auto p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            scrollToTop();
-                          }}
-                        >
-                          BACK TO TOP <ArrowUp className="h-3 w-3" />
-                        </Button>
-                        {isTownsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                    <CollapsibleTrigger asChild>
+                      <div className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                        <div className="flex items-center justify-between w-full">
+                          <h3 className="font-semibold text-lg">TOWNS</h3>
+                          <div className="flex items-center gap-4">
+                            <Button 
+                              variant="link" 
+                              className="text-xs gap-1 h-auto p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                scrollToTop();
+                              }}
+                            >
+                              BACK TO TOP <ArrowUp className="h-3 w-3" />
+                            </Button>
+                            {isTownsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </CollapsibleTrigger>
+                    </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="p-4 pt-0 space-y-3">
                       <div className="grid grid-cols-3 gap-2 items-end">
