@@ -104,6 +104,7 @@ const AddListing = () => {
   const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
   const [amenities, setAmenities] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [manualAddressDialogOpen, setManualAddressDialogOpen] = useState(false);
 
   // Store fetched property data
   const [attomData, setAttomData] = useState<any>(null);
@@ -963,9 +964,20 @@ const AddListing = () => {
                 {/* Row 2: Enter Address, List Price */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="address" className={validationErrors.includes("Address") ? "text-destructive" : ""}>
-                      Enter Address *
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="address" className={validationErrors.includes("Address") ? "text-destructive" : ""}>
+                        Enter Address *
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setManualAddressDialogOpen(true)}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Enter manually
+                      </Button>
+                    </div>
                     <div className={validationErrors.includes("Address") ? "ring-2 ring-destructive rounded-md" : ""}>
                       <AddressAutocomplete
                         onPlaceSelect={handleAddressSelect}
@@ -980,6 +992,9 @@ const AddListing = () => {
                     {validationErrors.includes("Address") && (
                       <p className="text-sm text-destructive">Address is required</p>
                     )}
+                    <p className="text-xs text-muted-foreground">
+                      Can't find your address? Click "Enter manually" above
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="price" className={validationErrors.includes("Price") ? "text-destructive" : ""}>
@@ -2431,6 +2446,123 @@ const AddListing = () => {
               className="bg-green-600 hover:bg-green-700"
             >
               Add Open House(s)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manual Address Entry Dialog */}
+      <Dialog open={manualAddressDialogOpen} onOpenChange={setManualAddressDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Enter Address Manually</DialogTitle>
+            <DialogDescription>
+              Fill in the address details below if autocomplete didn't find your property.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="manual-address">Street Address *</Label>
+              <Input
+                id="manual-address"
+                placeholder="123 Main Street"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="manual-city">City</Label>
+                <Input
+                  id="manual-city"
+                  placeholder="Boston"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="manual-state">State</Label>
+                <Input
+                  id="manual-state"
+                  placeholder="MA"
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="manual-zip">ZIP Code</Label>
+                <Input
+                  id="manual-zip"
+                  placeholder="02101"
+                  value={formData.zip_code}
+                  onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="manual-county">County</Label>
+                <Select
+                  value={formData.county}
+                  onValueChange={(value) => setFormData({ ...formData, county: value })}
+                >
+                  <SelectTrigger id="manual-county">
+                    <SelectValue placeholder="Select county" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MA_COUNTIES.map((county) => (
+                      <SelectItem key={county} value={county}>
+                        {county}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="manual-town">Town/City</Label>
+              <Input
+                id="manual-town"
+                placeholder="Town name"
+                value={formData.town}
+                onChange={(e) => setFormData({ ...formData, town: e.target.value })}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="manual-neighborhood">Neighborhood (Optional)</Label>
+              <Input
+                id="manual-neighborhood"
+                placeholder="Neighborhood name"
+                value={formData.neighborhood}
+                onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setManualAddressDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (!formData.address.trim()) {
+                  toast.error("Street address is required");
+                  return;
+                }
+                setValidationErrors(errors => errors.filter(e => e !== "Address"));
+                setManualAddressDialogOpen(false);
+                toast.success("Address details saved");
+              }}
+            >
+              Save Address
             </Button>
           </DialogFooter>
         </DialogContent>
