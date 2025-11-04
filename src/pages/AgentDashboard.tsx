@@ -11,6 +11,7 @@ import forSaleImg from "@/assets/listing-for-sale.jpg";
 import privateSaleImg from "@/assets/listing-private-sale.jpg";
 import forRentImg from "@/assets/listing-for-rent.jpg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { LayoutGrid, List } from "lucide-react";
 
 interface Listing {
   id: string;
@@ -24,6 +25,10 @@ interface Listing {
   bathrooms: number | null;
   square_feet: number | null;
   status: string;
+  photos: any;
+  open_houses: any;
+  listing_type: string | null;
+  created_at: string;
 }
 
 const AgentDashboard = () => {
@@ -34,6 +39,7 @@ const AgentDashboard = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [listingToDelete, setListingToDelete] = useState<string | null>(null);
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
   useEffect(() => {
     document.title = "Agent Dashboard - Agent Connect";
@@ -173,11 +179,29 @@ const AgentDashboard = () => {
           </div>
         </div>
 
-        {/* Status Filter */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-3">Filter by Status</h2>
+        {/* Status Filter and View Toggle */}
+        <div className="mb-8 space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Filter by Status</h2>
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
-            {["sale", "rental", "active", "pending", "draft", "sold", "rented", "temporarily withdrawn", "cancelled", "expired"].map((status) => (
+            {["active", "pending", "draft", "sold", "rented", "temporarily withdrawn", "cancelled", "expired"].map((status) => (
               <label key={status} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -226,12 +250,13 @@ const AgentDashboard = () => {
             {listings.filter(l => l.status === "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold mb-6">Draft Listings</h2>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className={viewMode === 'grid' ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
                   {listings.filter(l => l.status === "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).map((listing) => (
                     <ListingCard
                       key={listing.id}
                       listing={listing}
                       onDelete={handleDeleteClick}
+                      viewMode={viewMode}
                     />
                   ))}
                 </div>
@@ -242,12 +267,13 @@ const AgentDashboard = () => {
             {listings.filter(l => l.status !== "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold mb-6">Active Listings</h2>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className={viewMode === 'grid' ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
                   {listings.filter(l => l.status !== "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).map((listing) => (
                     <ListingCard
                       key={listing.id}
                       listing={listing}
                       onDelete={handleDeleteClick}
+                      viewMode={viewMode}
                     />
                   ))}
                 </div>
