@@ -796,6 +796,18 @@ const AddListing = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-4 mb-8">
+            <Button variant="default" size="lg" onClick={handleSaveDraft} className="gap-2">
+              <Save className="w-5 h-5" />
+              Save as Draft
+            </Button>
+            <Button variant="default" size="lg" onClick={handlePreview} className="gap-2">
+              <Eye className="w-5 h-5" />
+              Preview Listing
+            </Button>
+            <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} disabled={submitting} className="gap-2">
+              <Upload className="w-5 h-5" />
+              {submitting ? "Publishing..." : "Publish Listing"}
+            </Button>
             <Button 
               variant="outline" 
               size="lg" 
@@ -819,18 +831,6 @@ const AddListing = () => {
             >
               <Home className="w-5 h-5" />
               Schedule Broker Open House
-            </Button>
-            <Button variant="default" size="lg" onClick={handleSaveDraft} className="gap-2">
-              <Save className="w-5 h-5" />
-              Save as Draft
-            </Button>
-            <Button variant="default" size="lg" onClick={handlePreview} className="gap-2">
-              <Eye className="w-5 h-5" />
-              Preview Listing
-            </Button>
-            <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} disabled={submitting} className="gap-2">
-              <Upload className="w-5 h-5" />
-              {submitting ? "Publishing..." : "Publish Listing"}
             </Button>
           </div>
 
