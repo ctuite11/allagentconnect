@@ -145,7 +145,9 @@ const AddListing = () => {
   }, [navigate]);
 
   const handleAddressSelect = useCallback(async (place: any) => {
+    console.log("=== [AddListing] handleAddressSelect CALLED ===");
     console.log("[AddListing] Address selected - raw place data:", place);
+    console.log("[AddListing] Place keys:", place ? Object.keys(place) : "NO PLACE");
     
     // Normalize address components between legacy Autocomplete and new PlaceAutocompleteElement
     const legacyComponents = place.address_components;
@@ -206,16 +208,33 @@ const AddListing = () => {
       longitude,
     }));
 
+    console.log("[AddListing] About to call fetchPropertyData:", { 
+      hasLatLng: !!(latitude && longitude),
+      latitude, 
+      longitude, 
+      address: address || formattedAddress,
+      city,
+      state: stateShort,
+      zip: zip_code
+    });
+
     if (latitude && longitude) {
       await fetchPropertyData(latitude, longitude, address || formattedAddress, city, stateShort, zip_code);
+    } else {
+      console.warn("[AddListing] Skipping fetchPropertyData - missing coordinates");
+      toast.error("Could not extract coordinates from address. Please try again.");
     }
   }, []);
   const fetchPropertyData = async (lat: number, lng: number, address: string, city: string, state: string, zip: string) => {
+    console.log("[AddListing] fetchPropertyData called with:", { lat, lng, address, city, state, zip });
     setSubmitting(true);
     try {
+      console.log("[AddListing] Invoking fetch-property-data edge function...");
       const { data, error } = await supabase.functions.invoke("fetch-property-data", {
         body: { latitude: lat, longitude: lng, address, city, state, zip_code: zip },
       });
+
+      console.log("[AddListing] Edge function response:", { data, error });
 
       if (error) throw error;
 
