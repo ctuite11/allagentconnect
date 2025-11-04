@@ -251,6 +251,41 @@ const AddListing = () => {
             year_built: data.attom.year_built?.toString() || prev.year_built,
             property_type: data.attom.property_type || prev.property_type,
           }));
+        } else {
+          console.warn("[AddListing] No Attom data returned. Trying public test-attom fallback...");
+          try {
+            const fallback = await supabase.functions.invoke("test-attom", {
+              body: { address, city, state, zip },
+            });
+            console.log("[AddListing] Fallback test-attom response:", fallback);
+            const prop = (fallback.data as any)?.json?.property?.[0];
+            if (prop) {
+              const building = prop.building || {};
+              const lot = prop.lot || {};
+              const summary = prop.summary || {};
+              const mapped = {
+                bedrooms: building.rooms?.beds || null,
+                bathrooms: building.rooms?.bathstotal || building.rooms?.bathsfull || null,
+                square_feet: building.size?.bldgsize || building.size?.livingsize || null,
+                lot_size: lot.lotsize2 || lot.lotsize1 || null,
+                year_built: summary.yearbuilt || null,
+                property_type: summary.proptype || null,
+              };
+              setAttomData(mapped as any);
+              setFormData(prev => ({
+                ...prev,
+                bedrooms: mapped.bedrooms?.toString() || prev.bedrooms,
+                bathrooms: mapped.bathrooms?.toString() || prev.bathrooms,
+                square_feet: mapped.square_feet?.toString() || prev.square_feet,
+                lot_size: mapped.lot_size?.toString() || prev.lot_size,
+                year_built: mapped.year_built?.toString() || prev.year_built,
+                property_type: mapped.property_type || prev.property_type,
+              }));
+              toast.success("Loaded property details from Attom (fallback)");
+            }
+          } catch (fbErr) {
+            console.error("[AddListing] Fallback test-attom failed:", fbErr);
+          }
         }
         
         if (data.walkScore) {
