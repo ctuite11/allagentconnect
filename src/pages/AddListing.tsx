@@ -172,14 +172,14 @@ const AddListing = () => {
     };
 
     const formattedAddress = place.formatted_address || place.formattedAddress || place.name || "";
-    const address = formattedAddress.split(",")[0] || "";
+    const streetAddress = formattedAddress.split(",")[0] || "";
     const city = getComponent("locality") || getComponent("sublocality") || getComponent("postal_town");
     const stateShort = getComponentShort("administrative_area_level_1") || getComponent("administrative_area_level_1");
     const zip_code = getComponent("postal_code");
     const county = getComponent("administrative_area_level_2");
     const neighborhood = getComponent("neighborhood") || getComponent("sublocality_level_1");
     
-    console.log("[AddListing] Extracted data:", { address, city, state: stateShort, zip_code, county, neighborhood });
+    console.log("[AddListing] Extracted data:", { streetAddress, city, state: stateShort, zip_code, county, neighborhood });
 
     // Normalize location
     let latitude: number | null = null;
@@ -199,7 +199,8 @@ const AddListing = () => {
 
     setFormData(prev => ({
       ...prev,
-      address: address || formattedAddress,
+      // Store the FULL formatted address so the input shows the complete selection
+      address: formattedAddress,
       city,
       state: stateShort,
       zip_code,
@@ -213,14 +214,14 @@ const AddListing = () => {
       hasLatLng: !!(latitude && longitude),
       latitude, 
       longitude, 
-      address: address || formattedAddress,
+      address: formattedAddress,
       city,
       state: stateShort,
       zip: zip_code
     });
 
     if (latitude && longitude) {
-      await fetchPropertyData(latitude, longitude, address || formattedAddress, city, stateShort, zip_code);
+      await fetchPropertyData(latitude, longitude, formattedAddress, city, stateShort, zip_code);
     } else {
       console.warn("[AddListing] Skipping fetchPropertyData - missing coordinates");
       toast.error("Could not extract coordinates from address. Please try again.");
