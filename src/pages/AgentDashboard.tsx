@@ -168,7 +168,7 @@ const AgentDashboard = () => {
         {/* Quick Access to new pages */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-3">Quick Access</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-4">
             <Button onClick={() => navigate("/add-listing")}>
               New Listing
             </Button>
@@ -177,6 +177,9 @@ const AgentDashboard = () => {
             </Button>
             <Button variant="outline" onClick={() => navigate("/favorites")}>
               Favorites
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/manage-coverage-areas")}>
+              Coverage Areas
             </Button>
           </div>
         </div>

@@ -16,6 +16,7 @@ import PropertyDetail from "./pages/PropertyDetail";
 import ConsumerPropertyDetail from "./pages/ConsumerPropertyDetail";
 import AgentProfile from "./pages/AgentProfile";
 import AgentProfileEditor from "./pages/AgentProfileEditor";
+import ManageCoverageAreas from "./pages/ManageCoverageAreas";
 import BrowseProperties from "./pages/BrowseProperties";
 import OurAgents from "./pages/OurAgents";
 import Favorites from "./pages/Favorites";
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
           <Route path="/agent/:id" element={<AgentProfile />} />
           <Route path="/agent-profile-editor" element={<AgentProfileEditor />} />
+          <Route path="/manage-coverage-areas" element={<ManageCoverageAreas />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
