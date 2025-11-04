@@ -340,7 +340,7 @@ const BrowseProperties = () => {
                     <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-sm text-primary">STATUS</h3>
-                        <span className="text-lime-600 text-xs">🟢 ?</span>
+                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
                       </div>
                       {isStatusOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </CollapsibleTrigger>
@@ -361,12 +361,20 @@ const BrowseProperties = () => {
                           <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
                         </div>
                         {[
-                          { value: "active", label: "New (NEW)" },
-                          { value: "active", label: "Active (ACT)" },
-                          { value: "coming_soon", label: "Coming Soon (CSO)" },
-                          { value: "off_market", label: "Off Market" },
-                          { value: "pending", label: "Pending" },
-                          { value: "sold", label: "Sold (SLD)" },
+                          { value: "active", label: "New" },
+                          { value: "active", label: "Active" },
+                          { value: "coming_soon", label: "Price Changed" },
+                          { value: "off_market", label: "Back on Market" },
+                          { value: "pending", label: "Extended" },
+                          { value: "sold", label: "Reactivated" },
+                          { value: "sold", label: "Contingent" },
+                          { value: "pending", label: "Under Agreement" },
+                          { value: "sold", label: "Sold" },
+                          { value: "off_market", label: "Rented" },
+                          { value: "off_market", label: "Temporarily Withdrawn" },
+                          { value: "off_market", label: "Expired" },
+                          { value: "off_market", label: "Canceled" },
+                          { value: "coming_soon", label: "Coming Soon" },
                         ].map((status, idx) => (
                           <div key={idx} className="flex items-center space-x-2">
                             <Checkbox
@@ -388,7 +396,7 @@ const BrowseProperties = () => {
                     <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-sm text-primary">STANDARD SEARCH CRITERIA</h3>
-                        <span className="text-lime-600 text-xs">🟢 ?</span>
+                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
                       </div>
                       {isCriteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </CollapsibleTrigger>
@@ -487,7 +495,7 @@ const BrowseProperties = () => {
                   <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-sm text-primary">PRICE</h3>
-                      <span className="text-lime-600 text-xs">🟢 ?</span>
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
                     </div>
                     {isPriceOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </CollapsibleTrigger>
@@ -507,7 +515,7 @@ const BrowseProperties = () => {
                 <div className="p-4">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-sm text-primary">MAP</h3>
-                    <span className="text-lime-600 text-xs">🟢 ?</span>
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
                   </div>
                 </div>
               </div>
@@ -518,7 +526,7 @@ const BrowseProperties = () => {
                   <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-sm text-primary">ADDRESS</h3>
-                      <span className="text-lime-600 text-xs">🟢 ?</span>
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
                     </div>
                     {isAddressOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                   </CollapsibleTrigger>
