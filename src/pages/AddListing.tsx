@@ -49,6 +49,7 @@ const AddListing = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   const [formData, setFormData] = useState({
     status: "active",
     listing_type: "for_sale",
@@ -235,6 +236,7 @@ const AddListing = () => {
       });
 
       console.log("[AddListing] Edge function response:", { data, error });
+      setDebugInfo({ source: 'fetch-property-data', payload: { lat, lng, address, city, state, zip }, data, error });
 
       if (error) throw error;
 
@@ -747,6 +749,11 @@ const AddListing = () => {
                       <Button type="button" variant="secondary" size="sm" onClick={handleManualFetch}>
                         Fetch Property Data
                       </Button>
+                      {debugInfo && (
+                        <pre className="mt-2 text-xs whitespace-pre-wrap p-2 rounded bg-muted/30">
+                          {JSON.stringify(debugInfo, null, 2)}
+                        </pre>
+                      )}
                     </div>
                   </div>
                 </div>
