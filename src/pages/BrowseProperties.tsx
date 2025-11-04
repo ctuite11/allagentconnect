@@ -256,6 +256,267 @@ const BrowseProperties = () => {
             </p>
           </div>
 
+          {/* Quick Filters Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mb-6">
+            {/* PROPERTY TYPE Section */}
+            <Collapsible open={isPropertyTypeOpen} onOpenChange={setIsPropertyTypeOpen}>
+              <div className="bg-card rounded-lg shadow-sm border">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm text-primary">PROPERTY TYPE</h3>
+                    <span className="text-yellow-600">⭐</span>
+                  </div>
+                  {isPropertyTypeOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="p-3 pt-0 space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="type-select-all"
+                        checked={propertyTypes.length === 8}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setPropertyTypes(["Single Family", "Condominium", "Multi Family", "Land", "Commercial", "Business Opp.", "Residential Rental", "Mobile Home"]);
+                          } else {
+                            setPropertyTypes([]);
+                          }
+                        }}
+                      />
+                      <label htmlFor="type-select-all" className="text-xs cursor-pointer">Select All</label>
+                    </div>
+                    {[
+                      { value: "Single Family", label: "Single Family" },
+                      { value: "Condominium", label: "Condominium" },
+                      { value: "Multi Family", label: "Multi Family" },
+                      { value: "Land", label: "Land" },
+                      { value: "Commercial", label: "Commercial" },
+                      { value: "Business Opp.", label: "Business Opportunity" },
+                      { value: "Residential Rental", label: "Residential Rental" },
+                      { value: "Mobile Home", label: "Mobile Home" }
+                    ].map((type) => (
+                      <div key={type.value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`type-${type.value}`}
+                          checked={propertyTypes.includes(type.value)}
+                          onCheckedChange={() => handlePropertyTypeToggle(type.value)}
+                        />
+                        <label htmlFor={`type-${type.value}`} className="text-xs cursor-pointer">{type.label}</label>
+                      </div>
+                    ))}
+                    <div className="pt-2 border-t mt-2">
+                      <div className="flex items-center gap-2 mt-2">
+                        <Label className="text-xs block font-semibold">TOWNS</Label>
+                        <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
+                      </div>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
+
+            {/* STATUS Section */}
+            <Collapsible open={isStatusOpen} onOpenChange={setIsStatusOpen}>
+              <div className="bg-card rounded-lg shadow-sm border">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm text-primary">STATUS</h3>
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
+                  </div>
+                  {isStatusOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="p-3 pt-0">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="status-select-all"
+                            checked={statuses.length >= 5}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setStatuses(["active", "coming_soon", "off_market", "pending", "sold"]);
+                              } else {
+                                setStatuses([]);
+                              }
+                            }}
+                          />
+                          <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
+                        </div>
+                        {[
+                          { value: "active", label: "New" },
+                          { value: "active", label: "Active" },
+                          { value: "coming_soon", label: "Price Changed" },
+                          { value: "off_market", label: "Back on Market" },
+                          { value: "pending", label: "Extended" },
+                          { value: "sold", label: "Reactivated" },
+                          { value: "sold", label: "Contingent" },
+                        ].map((status, idx) => (
+                          <div key={idx} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`status-${idx}`}
+                              checked={statuses.includes(status.value)}
+                              onCheckedChange={() => handleStatusToggle(status.value)}
+                            />
+                            <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer">{status.label}</label>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="space-y-1">
+                        {[
+                          { value: "pending", label: "Under Agreement" },
+                          { value: "sold", label: "Sold" },
+                          { value: "off_market", label: "Rented" },
+                          { value: "off_market", label: "Temporarily Withdrawn" },
+                          { value: "off_market", label: "Expired" },
+                          { value: "off_market", label: "Canceled" },
+                          { value: "coming_soon", label: "Coming Soon" },
+                        ].map((status, idx) => (
+                          <div key={`status-right-${idx}`} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`status-right-${idx}`}
+                              checked={statuses.includes(status.value)}
+                              onCheckedChange={() => handleStatusToggle(status.value)}
+                            />
+                            <label htmlFor={`status-right-${idx}`} className="text-xs cursor-pointer">{status.label}</label>
+                          </div>
+                        ))}
+                        
+                        <div className="pt-2 border-t mt-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Label className="text-xs font-semibold">List Date</Label>
+                            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
+                          </div>
+                          <Input className="h-7 text-xs" />
+                        </div>
+                        
+                        <div className="pt-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Label className="text-xs font-semibold">Off-Market Timeframe</Label>
+                            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
+                          </div>
+                          <Select defaultValue="today-6months">
+                            <SelectTrigger className="h-7 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="today-6months">TODAY - 6 MONTHS</SelectItem>
+                              <SelectItem value="today-3months">TODAY - 3 MONTHS</SelectItem>
+                              <SelectItem value="today-1month">TODAY - 1 MONTH</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
+
+            {/* STANDARD SEARCH CRITERIA Section */}
+            <Collapsible open={isCriteriaOpen} onOpenChange={setIsCriteriaOpen}>
+              <div className="bg-card rounded-lg shadow-sm border">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm text-primary">STANDARD SEARCH CRITERIA</h3>
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
+                  </div>
+                  {isCriteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="p-3 pt-0 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Bedrooms</Label>
+                        <Input type="number" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} className="h-8" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Total Bathrooms</Label>
+                        <Input type="number" step="0.5" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} className="h-8" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Rooms</Label>
+                        <Input type="number" value={rooms} onChange={(e) => setRooms(e.target.value)} className="h-8" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Acres</Label>
+                        <Input type="number" step="0.1" value={acres} onChange={(e) => setAcres(e.target.value)} className="h-8" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Living Area Total (SqFt)</Label>
+                        <Input type="number" value={livingArea} onChange={(e) => setLivingArea(e.target.value)} className="h-8" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Price per SqFt</Label>
+                        <Input type="number" value={pricePerSqFt} onChange={(e) => setPricePerSqFt(e.target.value)} className="h-8" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Year Built</Label>
+                        <Input type="number" value={yearBuilt} onChange={(e) => setYearBuilt(e.target.value)} className="h-8" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Price</Label>
+                        <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="Min" className="h-8" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Total Parking Spaces</Label>
+                        <Input 
+                          type="number" 
+                          value={totalParkingSpaces} 
+                          readOnly 
+                          className="h-8 bg-muted" 
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Garage Spaces</Label>
+                        <Input 
+                          type="number" 
+                          value={garageSpaces} 
+                          onChange={(e) => {
+                            setGarageSpaces(e.target.value);
+                            const garage = parseInt(e.target.value) || 0;
+                            const nonGarage = parseInt(nonGarageSpaces) || 0;
+                            setTotalParkingSpaces((garage + nonGarage).toString());
+                          }} 
+                          className="h-8" 
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Parking Spaces (Non-Garage)</Label>
+                        <Input 
+                          type="number" 
+                          value={nonGarageSpaces} 
+                          onChange={(e) => {
+                            setNonGarageSpaces(e.target.value);
+                            const garage = parseInt(garageSpaces) || 0;
+                            const nonGarage = parseInt(e.target.value) || 0;
+                            setTotalParkingSpaces((garage + nonGarage).toString());
+                          }} 
+                          className="h-8" 
+                        />
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t mt-2">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs block font-semibold">ADDITIONAL CRITERIA</Label>
+                        <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
+                      </div>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
+          </div>
+
           <div className="grid lg:grid-cols-[400px_1fr] gap-6">
             {/* Left Sidebar - Search Filters */}
             <div className="space-y-4">
@@ -279,266 +540,7 @@ const BrowseProperties = () => {
                 </div>
               </Collapsible>
 
-              {/* Three Column Layout: Property Type, Status, Standard Criteria */}
-              <div className="grid grid-cols-1 gap-3">
-                {/* PROPERTY TYPE Section */}
-                <Collapsible open={isPropertyTypeOpen} onOpenChange={setIsPropertyTypeOpen}>
-                  <div className="bg-card rounded-lg shadow-sm border">
-                    <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-sm text-primary">PROPERTY TYPE</h3>
-                        <span className="text-yellow-600">⭐</span>
-                      </div>
-                      {isPropertyTypeOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="p-3 pt-0 space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="type-select-all"
-                            checked={propertyTypes.length === 8}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setPropertyTypes(["Single Family", "Condominium", "Multi Family", "Land", "Commercial", "Business Opp.", "Residential Rental", "Mobile Home"]);
-                              } else {
-                                setPropertyTypes([]);
-                              }
-                            }}
-                          />
-                          <label htmlFor="type-select-all" className="text-xs cursor-pointer">Select All</label>
-                        </div>
-                        {[
-                          { value: "Single Family", label: "Single Family" },
-                          { value: "Condominium", label: "Condominium" },
-                          { value: "Multi Family", label: "Multi Family" },
-                          { value: "Land", label: "Land" },
-                          { value: "Commercial", label: "Commercial" },
-                          { value: "Business Opp.", label: "Business Opportunity" },
-                          { value: "Residential Rental", label: "Residential Rental" },
-                          { value: "Mobile Home", label: "Mobile Home" }
-                        ].map((type) => (
-                          <div key={type.value} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`type-${type.value}`}
-                              checked={propertyTypes.includes(type.value)}
-                              onCheckedChange={() => handlePropertyTypeToggle(type.value)}
-                            />
-                            <label htmlFor={`type-${type.value}`} className="text-xs cursor-pointer">{type.label}</label>
-                          </div>
-                        ))}
-                        <div className="pt-2 border-t mt-2">
-                          <div className="flex items-center gap-2 mt-2">
-                            <Label className="text-xs block font-semibold">TOWNS</Label>
-                            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CollapsibleContent>
-                  </div>
-                </Collapsible>
-
-                {/* STATUS Section */}
-                <Collapsible open={isStatusOpen} onOpenChange={setIsStatusOpen}>
-                  <div className="bg-card rounded-lg shadow-sm border">
-                    <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-sm text-primary">STATUS</h3>
-                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
-                      </div>
-                      {isStatusOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="p-3 pt-0">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="status-select-all"
-                                checked={statuses.length >= 5}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setStatuses(["active", "coming_soon", "off_market", "pending", "sold"]);
-                                  } else {
-                                    setStatuses([]);
-                                  }
-                                }}
-                              />
-                              <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
-                            </div>
-                            {[
-                              { value: "active", label: "New" },
-                              { value: "active", label: "Active" },
-                              { value: "coming_soon", label: "Price Changed" },
-                              { value: "off_market", label: "Back on Market" },
-                              { value: "pending", label: "Extended" },
-                              { value: "sold", label: "Reactivated" },
-                              { value: "sold", label: "Contingent" },
-                            ].map((status, idx) => (
-                              <div key={idx} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`status-${idx}`}
-                                  checked={statuses.includes(status.value)}
-                                  onCheckedChange={() => handleStatusToggle(status.value)}
-                                />
-                                <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer">{status.label}</label>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="space-y-1">
-                            {[
-                              { value: "pending", label: "Under Agreement" },
-                              { value: "sold", label: "Sold" },
-                              { value: "off_market", label: "Rented" },
-                              { value: "off_market", label: "Temporarily Withdrawn" },
-                              { value: "off_market", label: "Expired" },
-                              { value: "off_market", label: "Canceled" },
-                              { value: "coming_soon", label: "Coming Soon" },
-                            ].map((status, idx) => (
-                              <div key={`status-right-${idx}`} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`status-right-${idx}`}
-                                  checked={statuses.includes(status.value)}
-                                  onCheckedChange={() => handleStatusToggle(status.value)}
-                                />
-                                <label htmlFor={`status-right-${idx}`} className="text-xs cursor-pointer">{status.label}</label>
-                              </div>
-                            ))}
-                            
-                            <div className="pt-2 border-t mt-2">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Label className="text-xs font-semibold">List Date</Label>
-                                <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
-                              </div>
-                              <Input className="h-7 text-xs" />
-                            </div>
-                            
-                            <div className="pt-2">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Label className="text-xs font-semibold">Off-Market Timeframe</Label>
-                                <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
-                              </div>
-                              <Select defaultValue="today-6months">
-                                <SelectTrigger className="h-7 text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="today-6months">TODAY - 6 MONTHS</SelectItem>
-                                  <SelectItem value="today-3months">TODAY - 3 MONTHS</SelectItem>
-                                  <SelectItem value="today-1month">TODAY - 1 MONTH</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CollapsibleContent>
-                  </div>
-                </Collapsible>
-
-                {/* STANDARD SEARCH CRITERIA Section */}
-                <Collapsible open={isCriteriaOpen} onOpenChange={setIsCriteriaOpen}>
-                  <div className="bg-card rounded-lg shadow-sm border">
-                    <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-sm text-primary">STANDARD SEARCH CRITERIA</h3>
-                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
-                      </div>
-                      {isCriteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="p-3 pt-0 space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-xs">Bedrooms</Label>
-                            <Input type="number" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} className="h-8" />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Total Bathrooms</Label>
-                            <Input type="number" step="0.5" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} className="h-8" />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-xs">Rooms</Label>
-                            <Input type="number" value={rooms} onChange={(e) => setRooms(e.target.value)} className="h-8" />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Acres</Label>
-                            <Input type="number" step="0.1" value={acres} onChange={(e) => setAcres(e.target.value)} className="h-8" />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-xs">Living Area Total (SqFt)</Label>
-                            <Input type="number" value={livingArea} onChange={(e) => setLivingArea(e.target.value)} className="h-8" />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Price per SqFt</Label>
-                            <Input type="number" value={pricePerSqFt} onChange={(e) => setPricePerSqFt(e.target.value)} className="h-8" />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-xs">Year Built</Label>
-                            <Input type="number" value={yearBuilt} onChange={(e) => setYearBuilt(e.target.value)} className="h-8" />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Price</Label>
-                            <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="Min" className="h-8" />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-xs">Total Parking Spaces</Label>
-                            <Input 
-                              type="number" 
-                              value={totalParkingSpaces} 
-                              readOnly 
-                              className="h-8 bg-muted" 
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Garage Spaces</Label>
-                            <Input 
-                              type="number" 
-                              value={garageSpaces} 
-                              onChange={(e) => {
-                                setGarageSpaces(e.target.value);
-                                const garage = parseInt(e.target.value) || 0;
-                                const nonGarage = parseInt(nonGarageSpaces) || 0;
-                                setTotalParkingSpaces((garage + nonGarage).toString());
-                              }} 
-                              className="h-8" 
-                            />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-xs">Parking Spaces (Non-Garage)</Label>
-                            <Input 
-                              type="number" 
-                              value={nonGarageSpaces} 
-                              onChange={(e) => {
-                                setNonGarageSpaces(e.target.value);
-                                const garage = parseInt(garageSpaces) || 0;
-                                const nonGarage = parseInt(e.target.value) || 0;
-                                setTotalParkingSpaces((garage + nonGarage).toString());
-                              }} 
-                              className="h-8" 
-                            />
-                          </div>
-                        </div>
-                        <div className="pt-2 border-t mt-2">
-                          <div className="flex items-center gap-2">
-                            <Label className="text-xs block font-semibold">ADDITIONAL CRITERIA</Label>
-                            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CollapsibleContent>
-                  </div>
-                </Collapsible>
-              </div>
+              {/* Three Column Layout moved to top of page */}
 
               {/* PRICE Section */}
               <Collapsible open={isPriceOpen} onOpenChange={setIsPriceOpen}>
@@ -627,23 +629,21 @@ const BrowseProperties = () => {
               {/* TOWNS Section */}
               <Collapsible open={isTownsOpen} onOpenChange={setIsTownsOpen}>
                 <div className="bg-card rounded-lg shadow-sm border">
-                    <CollapsibleTrigger asChild>
-                      <div className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
-                        <div className="flex items-center justify-between w-full">
-                          <h3 className="font-semibold text-lg">TOWNS</h3>
-                          <div className="flex items-center gap-4">
-                            <Button 
-                              variant="link" 
-                              className="text-xs gap-1 h-auto p-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                scrollToTop();
-                              }}
-                            >
-                              BACK TO TOP <ArrowUp className="h-3 w-3" />
-                            </Button>
-                            {isTownsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                          </div>
+                    <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                      <div className="flex items-center justify-between w-full">
+                        <h3 className="font-semibold text-lg">TOWNS</h3>
+                        <div className="flex items-center gap-4">
+                          <Button 
+                            variant="link" 
+                            className="text-xs gap-1 h-auto p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              scrollToTop();
+                            }}
+                          >
+                            BACK TO TOP <ArrowUp className="h-3 w-3" />
+                          </Button>
+                          {isTownsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                         </div>
                       </div>
                     </CollapsibleTrigger>
