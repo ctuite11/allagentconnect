@@ -257,7 +257,7 @@ const BrowseProperties = () => {
           </div>
 
           {/* Quick Filters Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
             {/* PROPERTY TYPE Section */}
             <Collapsible open={isPropertyTypeOpen} onOpenChange={setIsPropertyTypeOpen}>
               <div className="bg-card rounded-lg shadow-sm border">
@@ -517,7 +517,7 @@ const BrowseProperties = () => {
             </Collapsible>
           </div>
 
-          <div className="grid lg:grid-cols-[400px_1fr] gap-6">
+          <div className="grid md:grid-cols-[360px_1fr] lg:grid-cols-[420px_1fr] gap-6">
             {/* Left Sidebar - Search Filters */}
             <div className="space-y-4">
               {/* LIST NUMBER(S) Section */}
