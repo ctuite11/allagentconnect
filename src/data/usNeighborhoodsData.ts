@@ -64,6 +64,17 @@ export function getAreasForCity(city: string, state: string): string[] {
   return usNeighborhoodsByCityState[key] || [];
 }
 
+// Get all neighborhoods for Massachusetts (combines all MA cities)
+export function getAllMANeighborhoods(): string[] {
+  const allNeighborhoods = new Set<string>();
+  Object.keys(usNeighborhoodsByCityState).forEach(key => {
+    if (key.endsWith('-MA')) {
+      usNeighborhoodsByCityState[key].forEach(n => allNeighborhoods.add(n));
+    }
+  });
+  return Array.from(allNeighborhoods).sort();
+}
+
 // Check if a city has neighborhood data
 export function hasNeighborhoodData(city: string, state: string): boolean {
   const key = `${city}-${state}`;

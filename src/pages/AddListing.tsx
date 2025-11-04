@@ -17,7 +17,7 @@ import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertic
 import { z } from "zod";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
-import { getAreasForCity } from "@/data/usNeighborhoodsData";
+import { getAllMANeighborhoods } from "@/data/usNeighborhoodsData";
 
 interface FileWithPreview {
   file: File;
@@ -916,14 +916,14 @@ const AddListing = () => {
                         <SelectValue placeholder="Select area" />
                       </SelectTrigger>
                       <SelectContent>
-                        {formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0 ? (
-                          getAreasForCity(formData.city, formData.state).map((area) => (
+                        {formData.state === 'MA' ? (
+                          getAllMANeighborhoods().map((area) => (
                             <SelectItem key={area} value={area}>
                               {area}
                             </SelectItem>
                           ))
                         ) : (
-                          <SelectItem value="none" disabled>No areas available</SelectItem>
+                          <SelectItem value="none" disabled>Select state first</SelectItem>
                         )}
                       </SelectContent>
                     </Select>
