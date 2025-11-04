@@ -278,11 +278,11 @@ const AddListing = () => {
                 const summary = prop.summary || {};
                 const mapped = {
                   bedrooms: building.rooms?.beds || null,
-                  bathrooms: building.rooms?.bathstotal || building.rooms?.bathsfull || null,
-                  square_feet: building.size?.bldgsize || building.size?.livingsize || null,
-                  lot_size: lot.lotsize2 || lot.lotsize1 || null,
-                  year_built: summary.yearbuilt || null,
-                  property_type: summary.proptype || null,
+                  bathrooms: building.rooms?.bathsTotal || building.rooms?.bathsFull || null,
+                  square_feet: building.size?.bldgSize || building.size?.livingSize || null,
+                  lot_size: lot.lotSize2 || lot.lotSize1 || null,
+                  year_built: summary.yearBuilt || null,
+                  property_type: summary.propType || null,
                 };
                 setFormData(prev => ({
                   ...prev,
@@ -313,11 +313,11 @@ const AddListing = () => {
               const summary = prop.summary || {};
               const mapped = {
                 bedrooms: building.rooms?.beds || null,
-                bathrooms: building.rooms?.bathstotal || building.rooms?.bathsfull || null,
-                square_feet: building.size?.bldgsize || building.size?.livingsize || null,
-                lot_size: lot.lotsize2 || lot.lotsize1 || null,
-                year_built: summary.yearbuilt || null,
-                property_type: summary.proptype || null,
+                bathrooms: building.rooms?.bathsTotal || building.rooms?.bathsFull || null,
+                square_feet: building.size?.bldgSize || building.size?.livingSize || null,
+                lot_size: lot.lotSize2 || lot.lotSize1 || null,
+                year_built: summary.yearBuilt || null,
+                property_type: summary.propType || null,
               };
               setAttomData(mapped as any);
               setFormData(prev => ({
@@ -427,11 +427,11 @@ const AddListing = () => {
       const summary = prop.summary || {};
       const mapped = {
         bedrooms: building.rooms?.beds || null,
-        bathrooms: building.rooms?.bathstotal || building.rooms?.bathsfull || null,
-        square_feet: building.size?.bldgsize || building.size?.livingsize || null,
-        lot_size: lot.lotsize2 || lot.lotsize1 || null,
-        year_built: summary.yearbuilt || null,
-        property_type: summary.proptype || null,
+        bathrooms: building.rooms?.bathsTotal || building.rooms?.bathsFull || null,
+        square_feet: building.size?.bldgSize || building.size?.livingSize || null,
+        lot_size: lot.lotSize2 || lot.lotSize1 || null,
+        year_built: summary.yearBuilt || null,
+        property_type: summary.propType || null,
       };
       setAttomData(mapped as any);
       setFormData((prev: any) => ({
