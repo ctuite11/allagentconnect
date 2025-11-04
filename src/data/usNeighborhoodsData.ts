@@ -1,7 +1,7 @@
 // Neighborhoods/Areas by major cities across US states
 export const usNeighborhoodsByCityState: Record<string, string[]> = {
   // Massachusetts
-  "Boston-MA": ["Aberdeen", "Allston", "Back Bay", "Bay Village", "Beacon Hill", "Brighton", "Brighton's Chestnut Hill", "Charlestown", "Chinatown", "Dorchester", "Downtown", "East Boston", "Fenway", "Hyde Park", "Jamaica Plain", "Mattapan", "Mission Hill", "North End", "Roslindale", "Roxbury", "South Boston", "South End", "West End", "West Roxbury"],
+  "Boston-MA": ["Aberdeen", "Allston", "Back Bay", "Bay Village", "Beacon Hill", "Brighton", "Brighton's Chestnut Hill", "Charlestown", "Chinatown", "Dorchester", "Downtown", "East Boston", "Fenway", "Hyde Park", "Jamaica Plain", "Mattapan", "Mission Hill", "North End", "Roslindale", "Roxbury", "Seaport", "South Boston", "South End", "West End", "West Roxbury"],
   "Worcester-MA": ["Burncoat", "Cherry Valley", "Crown Hill", "Downtown", "East Side", "Greendale", "Main South", "Tatnuck", "University Park", "Vernon Hill", "West Side"],
   "Springfield-MA": ["Bay", "Boston Road", "Brightwood", "Downtown", "East Forest Park", "Forest Park", "Liberty Heights", "McKnight", "Memorial Square", "Metro Center", "North End", "Old Hill", "Pine Point", "Sixteen Acres", "South End"],
   
