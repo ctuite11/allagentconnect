@@ -1676,145 +1676,240 @@ const AddListing = () => {
 
                 {/* Open House Scheduling Section */}
                 <div className="space-y-4 border-t pt-6">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xl font-semibold">Open House Schedule</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setOpenHouses([...openHouses, {
-                        type: 'public',
-                        date: '',
-                        start_time: '',
-                        end_time: '',
-                        notes: ''
-                      }])}
-                    >
-                      Add Open House
-                    </Button>
-                  </div>
+                  <Label className="text-xl font-semibold">Open House Days</Label>
                   
-                  {openHouses.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No open houses scheduled. Click "Add Open House" to schedule one.</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {openHouses.map((openHouse, index) => (
-                        <Card key={index} className="p-4">
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium">Open House {index + 1}</h4>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setOpenHouses(openHouses.filter((_, i) => i !== index))}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label>Type</Label>
-                                <Select
-                                  value={openHouse.type}
-                                  onValueChange={(value: 'public' | 'broker') => {
-                                    const updated = [...openHouses];
-                                    updated[index].type = value;
-                                    setOpenHouses(updated);
-                                  }}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="public">Public Open House</SelectItem>
-                                    <SelectItem value="broker">Broker Open House</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <Label>Date</Label>
-                                <Popover>
-                                  <PopoverTrigger asChild>
+                  <Card className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Public Open Houses */}
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">🎈</span>
+                          <h3 className="font-semibold">For Public:</h3>
+                        </div>
+                        
+                        {openHouses.filter(oh => oh.type === 'public').length === 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                            There are no future open house dates for the public.
+                          </p>
+                        ) : (
+                          <div className="space-y-3">
+                            {openHouses.filter(oh => oh.type === 'public').map((openHouse, idx) => {
+                              const originalIndex = openHouses.findIndex(oh => oh === openHouse);
+                              return (
+                                <Card key={originalIndex} className="p-3 bg-muted/50">
+                                  <div className="flex items-start justify-between">
+                                    <div className="space-y-1 flex-1">
+                                      <div className="font-medium">
+                                        {openHouse.date ? format(new Date(openHouse.date), "PPP") : "Date not set"}
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">
+                                        {openHouse.start_time && openHouse.end_time 
+                                          ? `${openHouse.start_time} - ${openHouse.end_time}`
+                                          : "Time not set"}
+                                      </div>
+                                      {openHouse.notes && (
+                                        <p className="text-sm text-muted-foreground mt-1">{openHouse.notes}</p>
+                                      )}
+                                    </div>
                                     <Button
-                                      variant="outline"
-                                      className={cn(
-                                        "w-full justify-start text-left font-normal",
-                                        !openHouse.date && "text-muted-foreground"
-                                      )}
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setOpenHouses(openHouses.filter((_, i) => i !== originalIndex))}
                                     >
-                                      <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {openHouse.date ? (
-                                        format(new Date(openHouse.date), "PPP")
-                                      ) : (
-                                        <span>Pick a date</span>
-                                      )}
+                                      <X className="h-4 w-4" />
                                     </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                      mode="single"
-                                      selected={openHouse.date ? new Date(openHouse.date) : undefined}
-                                      onSelect={(date) => {
-                                        const updated = [...openHouses];
-                                        updated[index].date = date ? date.toISOString().split('T')[0] : '';
-                                        setOpenHouses(updated);
-                                      }}
-                                      disabled={(date) => date < new Date()}
-                                      initialFocus
-                                      className="pointer-events-auto"
-                                    />
-                                  </PopoverContent>
-                                </Popover>
+                                  </div>
+                                </Card>
+                              );
+                            })}
+                          </div>
+                        )}
+                        
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => setOpenHouses([...openHouses, {
+                            type: 'public',
+                            date: '',
+                            start_time: '',
+                            end_time: '',
+                            notes: ''
+                          }])}
+                        >
+                          Schedule Open House
+                        </Button>
+                      </div>
+                      
+                      {/* Broker Open Houses */}
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">🚗</span>
+                          <h3 className="font-semibold">For Broker:</h3>
+                        </div>
+                        
+                        {openHouses.filter(oh => oh.type === 'broker').length === 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                            There are no future open house dates for the brokers.
+                          </p>
+                        ) : (
+                          <div className="space-y-3">
+                            {openHouses.filter(oh => oh.type === 'broker').map((openHouse, idx) => {
+                              const originalIndex = openHouses.findIndex(oh => oh === openHouse);
+                              return (
+                                <Card key={originalIndex} className="p-3 bg-muted/50">
+                                  <div className="flex items-start justify-between">
+                                    <div className="space-y-1 flex-1">
+                                      <div className="font-medium">
+                                        {openHouse.date ? format(new Date(openHouse.date), "PPP") : "Date not set"}
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">
+                                        {openHouse.start_time && openHouse.end_time 
+                                          ? `${openHouse.start_time} - ${openHouse.end_time}`
+                                          : "Time not set"}
+                                      </div>
+                                      {openHouse.notes && (
+                                        <p className="text-sm text-muted-foreground mt-1">{openHouse.notes}</p>
+                                      )}
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setOpenHouses(openHouses.filter((_, i) => i !== originalIndex))}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </Card>
+                              );
+                            })}
+                          </div>
+                        )}
+                        
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => setOpenHouses([...openHouses, {
+                            type: 'broker',
+                            date: '',
+                            start_time: '',
+                            end_time: '',
+                            notes: ''
+                          }])}
+                        >
+                          Schedule Broker Open House
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                  
+                  {/* Edit Dialog for Open Houses */}
+                  {openHouses.some(oh => !oh.date || !oh.start_time || !oh.end_time) && (
+                    <div className="space-y-4">
+                      {openHouses.map((openHouse, index) => {
+                        if (openHouse.date && openHouse.start_time && openHouse.end_time) return null;
+                        
+                        return (
+                          <Card key={index} className="p-4 border-primary">
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <h4 className="font-medium">
+                                  {openHouse.type === 'public' ? 'Public' : 'Broker'} Open House Details
+                                </h4>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setOpenHouses(openHouses.filter((_, i) => i !== index))}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
                               </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label>Start Time</Label>
-                                <Input
-                                  type="time"
-                                  value={openHouse.start_time}
-                                  onChange={(e) => {
-                                    const updated = [...openHouses];
-                                    updated[index].start_time = e.target.value;
-                                    setOpenHouses(updated);
-                                  }}
-                                />
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                  <Label>Date</Label>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        className={cn(
+                                          "w-full justify-start text-left font-normal",
+                                          !openHouse.date && "text-muted-foreground"
+                                        )}
+                                      >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {openHouse.date ? (
+                                          format(new Date(openHouse.date), "PPP")
+                                        ) : (
+                                          <span>Pick a date</span>
+                                        )}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                      <Calendar
+                                        mode="single"
+                                        selected={openHouse.date ? new Date(openHouse.date) : undefined}
+                                        onSelect={(date) => {
+                                          const updated = [...openHouses];
+                                          updated[index].date = date ? date.toISOString().split('T')[0] : '';
+                                          setOpenHouses(updated);
+                                        }}
+                                        disabled={(date) => date < new Date()}
+                                        initialFocus
+                                        className="pointer-events-auto"
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label>Start Time</Label>
+                                  <Input
+                                    type="time"
+                                    value={openHouse.start_time}
+                                    onChange={(e) => {
+                                      const updated = [...openHouses];
+                                      updated[index].start_time = e.target.value;
+                                      setOpenHouses(updated);
+                                    }}
+                                  />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label>End Time</Label>
+                                  <Input
+                                    type="time"
+                                    value={openHouse.end_time}
+                                    onChange={(e) => {
+                                      const updated = [...openHouses];
+                                      updated[index].end_time = e.target.value;
+                                      setOpenHouses(updated);
+                                    }}
+                                  />
+                                </div>
                               </div>
                               
                               <div className="space-y-2">
-                                <Label>End Time</Label>
-                                <Input
-                                  type="time"
-                                  value={openHouse.end_time}
+                                <Label>Notes (Optional)</Label>
+                                <Textarea
+                                  placeholder="Refreshments will be served. Park in the driveway..."
+                                  value={openHouse.notes}
                                   onChange={(e) => {
                                     const updated = [...openHouses];
-                                    updated[index].end_time = e.target.value;
+                                    updated[index].notes = e.target.value;
                                     setOpenHouses(updated);
                                   }}
+                                  rows={2}
                                 />
                               </div>
                             </div>
-                            
-                            <div className="space-y-2">
-                              <Label>Notes (Optional)</Label>
-                              <Textarea
-                                placeholder="Refreshments will be served. Park in the driveway..."
-                                value={openHouse.notes}
-                                onChange={(e) => {
-                                  const updated = [...openHouses];
-                                  updated[index].notes = e.target.value;
-                                  setOpenHouses(updated);
-                                }}
-                                rows={2}
-                              />
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
+                          </Card>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
