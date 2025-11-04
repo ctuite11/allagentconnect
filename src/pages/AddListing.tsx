@@ -786,7 +786,13 @@ const AddListing = () => {
                       </div>
                     )}
                     <div className="mt-2">
-                      <Button type="button" variant="secondary" size="sm" onClick={handleManualFetch}>
+                      <Button 
+                        type="button" 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={handleManualFetch}
+                        disabled={!formData.address?.trim()}
+                      >
                         Fetch Property Data
                       </Button>
                       {debugInfo && (
