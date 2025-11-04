@@ -203,6 +203,21 @@ const AgentDashboard = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
+            <label className="flex items-center gap-2 cursor-pointer font-semibold">
+              <input
+                type="checkbox"
+                checked={tempStatusFilters.length === 8}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setTempStatusFilters(["active", "pending", "draft", "sold", "rented", "temporarily withdrawn", "cancelled", "expired"]);
+                  } else {
+                    setTempStatusFilters([]);
+                  }
+                }}
+                className="w-4 h-4"
+              />
+              <span className="text-sm">All</span>
+            </label>
             {["active", "pending", "draft", "sold", "rented", "temporarily withdrawn", "cancelled", "expired"].map((status) => (
               <label key={status} className="flex items-center gap-2 cursor-pointer">
                 <input
