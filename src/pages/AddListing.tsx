@@ -797,15 +797,15 @@ const AddListing = () => {
           {/* Action Buttons */}
           <div className="space-y-4 mb-8">
             <div className="flex flex-wrap gap-4">
-              <Button variant="default" size="lg" onClick={handleSaveDraft} className="gap-2">
+              <Button variant="default" size="lg" onClick={handleSaveDraft} type="button" className="gap-2">
                 <Save className="w-5 h-5" />
                 Save as Draft
               </Button>
-              <Button variant="default" size="lg" onClick={handlePreview} className="gap-2">
+              <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
                 <Eye className="w-5 h-5" />
                 Preview Listing
               </Button>
-              <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} disabled={submitting} className="gap-2">
+              <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
                 <Upload className="w-5 h-5" />
                 {submitting ? "Publishing..." : "Publish Listing"}
               </Button>
@@ -2224,15 +2224,15 @@ const AddListing = () => {
 
                 {/* Action Buttons - Bottom */}
                 <div className="flex gap-4 mt-8 pt-6 border-t">
-                  <Button variant="default" size="lg" onClick={handleSaveDraft} className="gap-2">
+                  <Button variant="default" size="lg" onClick={handleSaveDraft} type="button" className="gap-2">
                     <Save className="w-5 h-5" />
                     Save as Draft
                   </Button>
-                  <Button variant="default" size="lg" onClick={handlePreview} className="gap-2">
+                  <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
                     <Eye className="w-5 h-5" />
                     Preview Listing
                   </Button>
-                  <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} disabled={submitting} className="gap-2">
+                  <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
                     <Upload className="w-5 h-5" />
                     {submitting ? "Publishing..." : "Publish Listing"}
                   </Button>
