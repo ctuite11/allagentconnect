@@ -33,6 +33,7 @@ const AgentDashboard = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [listingToDelete, setListingToDelete] = useState<string | null>(null);
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
 
   useEffect(() => {
     document.title = "Agent Dashboard - Agent Connect";
@@ -125,8 +126,8 @@ const AgentDashboard = () => {
       action: () => navigate("/add-listing?type=sale"),
     },
     {
-      title: "For Private Sale",
-      description: "Add a new private listing for sale.",
+      title: "For Off Market Sale",
+      description: "Add a new off market listing for sale.",
       image: privateSaleImg,
       action: () => navigate("/add-listing?type=private"),
     },
@@ -159,12 +160,9 @@ const AgentDashboard = () => {
         {/* Quick Access to new pages */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-3">Quick Access</h2>
-          <div className="grid gap-3 sm:grid-cols-4">
-            <Button onClick={() => navigate("/agent-profile-editor")}>
-              Edit Profile
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/agent-search")}>
-              Agent Search
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Button onClick={() => navigate("/add-listing")}>
+              New Listing
             </Button>
             <Button variant="outline" onClick={() => navigate("/hot-sheets")}>
               Manage Hot Sheets
@@ -172,6 +170,30 @@ const AgentDashboard = () => {
             <Button variant="outline" onClick={() => navigate("/favorites")}>
               Favorites
             </Button>
+          </div>
+        </div>
+
+        {/* Status Filter */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-3">Filter by Status</h2>
+          <div className="flex flex-wrap gap-2">
+            {["active", "draft", "pending", "sold", "withdrawn", "expired"].map((status) => (
+              <label key={status} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={statusFilters.includes(status)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setStatusFilters([...statusFilters, status]);
+                    } else {
+                      setStatusFilters(statusFilters.filter(s => s !== status));
+                    }
+                  }}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm capitalize">{status}</span>
+              </label>
+            ))}
           </div>
         </div>
 
@@ -201,11 +223,11 @@ const AgentDashboard = () => {
         {listings.length > 0 ? (
           <div className="space-y-8">
             {/* Draft Listings */}
-            {listings.filter(l => l.status === "draft").length > 0 && (
+            {listings.filter(l => l.status === "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold mb-6">Draft Listings</h2>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {listings.filter(l => l.status === "draft").map((listing) => (
+                  {listings.filter(l => l.status === "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).map((listing) => (
                     <ListingCard
                       key={listing.id}
                       listing={listing}
@@ -217,11 +239,11 @@ const AgentDashboard = () => {
             )}
             
             {/* Active Listings */}
-            {listings.filter(l => l.status !== "draft").length > 0 && (
+            {listings.filter(l => l.status !== "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold mb-6">Active Listings</h2>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {listings.filter(l => l.status !== "draft").map((listing) => (
+                  {listings.filter(l => l.status !== "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).map((listing) => (
                     <ListingCard
                       key={listing.id}
                       listing={listing}
