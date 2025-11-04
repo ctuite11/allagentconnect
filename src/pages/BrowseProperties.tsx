@@ -164,10 +164,12 @@ const BrowseProperties = () => {
     const towns: string[] = [];
     currentStateCities.forEach(city => {
       towns.push(`${city}, ${state}`);
-      const neighborhoods = getAreasForCity(city, state);
-      neighborhoods.forEach(neighborhood => {
-        towns.push(`${city}, ${state}-${neighborhood}`);
-      });
+      if (showAreas === "yes") {
+        const neighborhoods = getAreasForCity(city, state);
+        neighborhoods.forEach(neighborhood => {
+          towns.push(`${city}, ${state}-${neighborhood}`);
+        });
+      }
     });
     return towns;
   };
