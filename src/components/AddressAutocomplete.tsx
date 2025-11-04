@@ -34,16 +34,21 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
     };
 
     const initAutocomplete = () => {
+      console.log("=== [AddressAutocomplete] initAutocomplete called ===");
       const google = (window as any).google;
-      if (!google?.maps?.places) return;
+      if (!google?.maps?.places) {
+        console.error("[AddressAutocomplete] Google Maps Places not available");
+        return;
+      }
 
       const places = (google.maps.places as any);
+      console.log("[AddressAutocomplete] Places API loaded, checking for PlaceAutocompleteElement...");
 
       // Prefer the new Place Autocomplete Element when available
       if (places?.PlaceAutocompleteElement && containerRef.current) {
+        console.log("[AddressAutocomplete] PlaceAutocompleteElement available, using new API");
         setUseNewElement(true);
         try {
-          console.info("[AddressAutocomplete] Using PlaceAutocompleteElement");
           containerRef.current.innerHTML = "";
           const el = new places.PlaceAutocompleteElement({});
           // Try to restrict to US if supported
@@ -55,11 +60,14 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
           autocompleteRef.current = el;
 
           const handleSelect = async (event: any) => {
+            console.log("=== [AddressAutocomplete] gmp-select EVENT FIRED ===");
             try {
-              console.log("[AddressAutocomplete] PlaceAutocompleteElement gmp-select fired");
               const prediction = event?.placePrediction;
               console.log("[AddressAutocomplete] Prediction:", prediction);
-              if (!prediction) return;
+              if (!prediction) {
+                console.warn("[AddressAutocomplete] No prediction in event");
+                return;
+              }
               const place = await prediction.toPlace();
               await place.fetchFields({
                 fields: [
@@ -87,13 +95,23 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
               };
 
               console.log("[AddressAutocomplete] Mapped place data:", mapped);
-              onPlaceSelect?.(mapped);
+              console.log("[AddressAutocomplete] About to call onPlaceSelect callback");
+              console.log("[AddressAutocomplete] onPlaceSelect exists?", !!onPlaceSelect);
+              
+              if (onPlaceSelect) {
+                onPlaceSelect(mapped);
+                console.log("[AddressAutocomplete] onPlaceSelect called successfully");
+              } else {
+                console.error("[AddressAutocomplete] onPlaceSelect callback is missing!");
+              }
+              
               onChange?.(mapped.formatted_address || "");
             } catch (err) {
               console.error("[AddressAutocomplete] Error in handleSelect:", err);
             }
           };
 
+          console.log("[AddressAutocomplete] Adding gmp-select event listener");
           el.addEventListener("gmp-select", handleSelect);
           (el as any).__cleanup = () => el.removeEventListener("gmp-select", handleSelect);
 
@@ -101,34 +119,51 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
           if (value) {
             try { (el as any).value = value; } catch {}
           }
+          console.log("[AddressAutocomplete] PlaceAutocompleteElement setup complete");
           return;
         } catch (e) {
+          console.error("[AddressAutocomplete] Error setting up PlaceAutocompleteElement, falling back:", e);
           // Fallback to legacy Autocomplete below
           setUseNewElement(false);
         }
       }
 
       // Legacy Autocomplete (deprecated for new customers)
-      if (!inputRef.current) return;
+      console.log("[AddressAutocomplete] Using legacy Autocomplete");
+      if (!inputRef.current) {
+        console.error("[AddressAutocomplete] inputRef.current is null");
+        return;
+      }
+      
       autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
         types: ['address'],
         componentRestrictions: { country: 'us' },
         fields: ['formatted_address', 'address_components', 'geometry', 'name']
       });
 
+      console.log("[AddressAutocomplete] Legacy Autocomplete created, adding place_changed listener");
       autocompleteRef.current.addListener('place_changed', () => {
+        console.log("=== [AddressAutocomplete] place_changed EVENT FIRED ===");
         const place = autocompleteRef.current?.getPlace();
-        console.log("[AddressAutocomplete] Legacy place_changed fired");
         console.log("[AddressAutocomplete] Place data:", place);
         if (place) {
           console.log("[AddressAutocomplete] Calling onPlaceSelect with place data");
-          onPlaceSelect?.(place);
+          console.log("[AddressAutocomplete] onPlaceSelect exists?", !!onPlaceSelect);
+          
+          if (onPlaceSelect) {
+            onPlaceSelect(place);
+            console.log("[AddressAutocomplete] onPlaceSelect called successfully");
+          } else {
+            console.error("[AddressAutocomplete] onPlaceSelect callback is missing!");
+          }
+          
           const formatted = place.formatted_address || place.name || "";
           onChange?.(formatted);
         } else {
-          console.warn("[AddressAutocomplete] No place data received");
+          console.warn("[AddressAutocomplete] No place data received from autocomplete");
         }
       });
+      console.log("[AddressAutocomplete] Legacy Autocomplete setup complete");
     };
     loadGoogleMaps();
 
