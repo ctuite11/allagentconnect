@@ -398,7 +398,7 @@ const BrowseProperties = () => {
                             <SelectTrigger className="h-7 text-xs">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="z-50 bg-popover">
                               <SelectItem value="today-6months">TODAY - 6 MONTHS</SelectItem>
                               <SelectItem value="today-3months">TODAY - 3 MONTHS</SelectItem>
                               <SelectItem value="today-1month">TODAY - 1 MONTH</SelectItem>
@@ -519,7 +519,7 @@ const BrowseProperties = () => {
 
           <div className="grid md:grid-cols-[360px_1fr] lg:grid-cols-[420px_1fr] gap-6">
             {/* Left Sidebar - Search Filters */}
-            <div className="space-y-4">
+            <div className="space-y-4 md:sticky md:top-24">
               {/* LIST NUMBER(S) Section */}
               <Collapsible open={isListingEventsOpen} onOpenChange={setIsListingEventsOpen}>
                 <div className="bg-card rounded-lg shadow-sm border">
@@ -654,7 +654,7 @@ const BrowseProperties = () => {
                           <Label className="text-xs">State</Label>
                           <Select value={state} onValueChange={setState}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent className="max-h-[300px]">
+                            <SelectContent className="z-50 max-h-[300px]">
                               {US_STATES.map((s) => (
                                 <SelectItem key={s.code} value={s.code}>{s.code}</SelectItem>
                               ))}
@@ -665,7 +665,7 @@ const BrowseProperties = () => {
                           <Label className="text-xs">Coverage Areas</Label>
                           <Select value={county} onValueChange={setCounty} disabled={!hasCountyData}>
                             <SelectTrigger className={!hasCountyData ? "opacity-50 cursor-not-allowed" : ""}><SelectValue /></SelectTrigger>
-                            <SelectContent className="max-h-[300px]">
+                            <SelectContent className="z-50 max-h-[300px]">
                               <SelectItem value="all">All Counties/Areas</SelectItem>
                               {hasCountyData && currentStateCounties.map((c) => (
                                 <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -868,7 +868,7 @@ const BrowseProperties = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {listings.map((listing) => (
                     <PropertyCard key={listing.id} {...listing} />
                   ))}
