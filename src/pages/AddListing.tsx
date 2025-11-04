@@ -915,20 +915,20 @@ const AddListing = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="Select area" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {formData.state === 'MA' ? (
-                          getAllMANeighborhoods().map((area) => (
-                            <SelectItem key={area} value={area}>
-                              {area}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="none" disabled>Select state first</SelectItem>
-                        )}
+                      <SelectContent className="max-h-[300px]">
+                        {getAllMANeighborhoods().map((area) => (
+                          <SelectItem key={area} value={area}>
+                            {area}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+
+                {/* Hidden fields for state and zip (auto-populated from address) */}
+                <input type="hidden" name="state" value={formData.state} />
+                <input type="hidden" name="zip_code" value={formData.zip_code} />
 
                 {/* Property Details */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
