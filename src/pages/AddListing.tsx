@@ -2391,6 +2391,7 @@ const AddListing = () => {
                 setDialogEndTime('');
                 setDialogComments('');
                 toast.success(`Added ${newOpenHouses.length} open house(s)`);
+                navigate('/agent-dashboard');
               }}
               className="bg-green-600 hover:bg-green-700"
             >
