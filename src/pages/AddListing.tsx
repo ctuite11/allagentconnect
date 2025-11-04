@@ -911,21 +911,34 @@ const AddListing = () => {
                     <Select
                       value={formData.neighborhood}
                       onValueChange={(value) => setFormData({ ...formData, neighborhood: value })}
+                      disabled={!
+                        ((formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
+                         (formData.state === 'MA' && (formData.county ?? '').toLowerCase().includes('suffolk')))
+                      }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select area" />
+                        <SelectValue placeholder={
+                          ((formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
+                           (formData.state === 'MA' && (formData.county ?? '').toLowerCase().includes('suffolk')))
+                            ? 'Select area'
+                            : 'Enter address first'
+                        } />
                       </SelectTrigger>
-                      <SelectContent className="max-h-[300px]">
-                        {formData.city && formData.state ? (
-                          getAreasForCity(formData.city, formData.state).map((area) => (
+                      {(
+                        (formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
+                        (formData.state === 'MA' && (formData.county ?? '').toLowerCase().includes('suffolk'))
+                      ) && (
+                        <SelectContent className="max-h-[300px]">
+                          {(getAreasForCity(formData.city, formData.state).length > 0
+                            ? getAreasForCity(formData.city, formData.state)
+                            : getAreasForCity('Boston', 'MA')
+                          ).map((area) => (
                             <SelectItem key={area} value={area}>
                               {area}
                             </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="none" disabled>Enter address first</SelectItem>
-                        )}
-                      </SelectContent>
+                          ))}
+                        </SelectContent>
+                      )}
                     </Select>
                   </div>
                 </div>
