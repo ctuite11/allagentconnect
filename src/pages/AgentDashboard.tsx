@@ -39,6 +39,7 @@ const AgentDashboard = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [listingToDelete, setListingToDelete] = useState<string | null>(null);
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [tempStatusFilters, setTempStatusFilters] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
   useEffect(() => {
@@ -205,12 +206,12 @@ const AgentDashboard = () => {
               <label key={status} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={statusFilters.includes(status)}
+                  checked={tempStatusFilters.includes(status)}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      setStatusFilters([...statusFilters, status]);
+                      setTempStatusFilters([...tempStatusFilters, status]);
                     } else {
-                      setStatusFilters(statusFilters.filter(s => s !== status));
+                      setTempStatusFilters(tempStatusFilters.filter(s => s !== status));
                     }
                   }}
                   className="w-4 h-4"
@@ -219,6 +220,9 @@ const AgentDashboard = () => {
               </label>
             ))}
           </div>
+          <Button onClick={() => setStatusFilters(tempStatusFilters)}>
+            View Results
+          </Button>
         </div>
 
         {/* Listing Type Cards */}
