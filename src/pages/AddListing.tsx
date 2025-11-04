@@ -163,15 +163,20 @@ const AddListing = () => {
       return component?.long_name || "";
     };
 
+    const getComponentShort = (type: string) => {
+      const component = addressComponents.find((c: any) => c.types?.includes(type));
+      return component?.short_name || "";
+    };
+
     const formattedAddress = place.formatted_address || place.formattedAddress || place.name || "";
     const address = formattedAddress.split(",")[0] || "";
     const city = getComponent("locality") || getComponent("sublocality") || getComponent("postal_town");
-    const state = getComponent("administrative_area_level_1");
+    const stateShort = getComponentShort("administrative_area_level_1") || getComponent("administrative_area_level_1");
     const zip_code = getComponent("postal_code");
     const county = getComponent("administrative_area_level_2");
     const neighborhood = getComponent("neighborhood") || getComponent("sublocality_level_1");
     
-    console.log("[AddListing] Extracted data:", { address, city, state, zip_code, county, neighborhood });
+    console.log("[AddListing] Extracted data:", { address, city, state: stateShort, zip_code, county, neighborhood });
 
     // Normalize location
     let latitude: number | null = null;
@@ -193,7 +198,7 @@ const AddListing = () => {
       ...prev,
       address: address || formattedAddress,
       city,
-      state,
+      state: stateShort,
       zip_code,
       county,
       neighborhood,
@@ -202,7 +207,7 @@ const AddListing = () => {
     }));
 
     if (latitude && longitude) {
-      await fetchPropertyData(latitude, longitude, address || formattedAddress, city, state, zip_code);
+      await fetchPropertyData(latitude, longitude, address || formattedAddress, city, stateShort, zip_code);
     }
   }, []);
   const fetchPropertyData = async (lat: number, lng: number, address: string, city: string, state: string, zip: string) => {

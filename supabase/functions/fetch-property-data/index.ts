@@ -94,11 +94,18 @@ serve(async (req) => {
     };
 
     // Fetch Attom data
-    if (attomApiKey && address) {
+    if (attomApiKey && address && (city || state || zip_code)) {
       try {
+        const parts: string[] = [];
+        if (city) parts.push(city);
+        if (state && zip_code) parts.push(`${state} ${zip_code}`);
+        else if (state) parts.push(state);
+        else if (zip_code) parts.push(zip_code);
+        const address2 = parts.join(", ");
+
         const attomUrl = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address?address1=${encodeURIComponent(
           address
-        )}&address2=${encodeURIComponent(`${city}, ${state} ${zip_code}`)}`;
+        )}&address2=${encodeURIComponent(address2)}`;
 
         const attomResponse = await fetch(attomUrl, {
           headers: {
@@ -132,10 +139,15 @@ serve(async (req) => {
               };
             }
           }
+        } else {
+          const txt = await attomResponse.text();
+          console.error("Attom request failed:", attomResponse.status, txt);
         }
       } catch (error) {
         console.error("Error fetching Attom data:", error);
       }
+    } else {
+      console.warn("Skipping Attom fetch due to missing address/city/state/zip");
     }
 
     // Fetch Walk Score data
