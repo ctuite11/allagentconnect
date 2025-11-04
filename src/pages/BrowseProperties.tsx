@@ -305,58 +305,21 @@ const BrowseProperties = () => {
                 </div>
               </Collapsible>
 
-              {/* LISTING EVENTS & NUMBER Section */}
+              {/* LIST NUMBER(S) Section */}
               <Collapsible open={isListingEventsOpen} onOpenChange={setIsListingEventsOpen}>
                 <div className="bg-card rounded-lg shadow-sm border">
                   <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
-                    <h3 className="font-semibold text-lg">LISTING EVENTS & NUMBER</h3>
-                    {isListingEventsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                    <h3 className="font-semibold text-sm text-primary">LIST NUMBER(S)</h3>
+                    {isListingEventsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <div className="p-4 pt-0 space-y-4">
-                      <div>
-                        <Label className="text-xs mb-2 block">Listing Number</Label>
-                        <Input
-                          value={listingNumber}
-                          onChange={(e) => setListingNumber(e.target.value)}
-                          placeholder="Enter listing number (e.g., L-1000)"
-                        />
-                      </div>
-                      
-                      <Separator />
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="open-houses" 
-                            checked={openHouses}
-                            onCheckedChange={(checked) => setOpenHouses(checked as boolean)}
-                          />
-                          <Home className="h-4 w-4 text-red-500" />
-                          <label htmlFor="open-houses" className="text-sm cursor-pointer">Open Houses</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="broker-tours" 
-                            checked={brokerTours}
-                            onCheckedChange={(checked) => setBrokerTours(checked as boolean)}
-                          />
-                          <Home className="h-4 w-4 text-red-500" />
-                          <label htmlFor="broker-tours" className="text-sm cursor-pointer">Broker Tours</label>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-[auto,1fr] gap-2 items-center">
-                        <Label className="text-xs">For:</Label>
-                        <Select value={eventTimeframe} onValueChange={setEventTimeframe}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="next_3_days">Next 3 Days</SelectItem>
-                            <SelectItem value="next_7_days">Next 7 Days</SelectItem>
-                            <SelectItem value="next_14_days">Next 14 Days</SelectItem>
-                            <SelectItem value="next_30_days">Next 30 Days</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div className="p-4 pt-0">
+                      <Input
+                        value={listingNumber}
+                        onChange={(e) => setListingNumber(e.target.value)}
+                        placeholder=""
+                        className="w-full"
+                      />
                     </div>
                   </CollapsibleContent>
                 </div>
