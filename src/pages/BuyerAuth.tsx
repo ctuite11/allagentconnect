@@ -375,6 +375,11 @@ const BuyerAuth = () => {
                     setFormData({ ...formData, password: e.target.value })
                   }
                 />
+                {!isLogin && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Must be 8+ characters with uppercase, lowercase, and number
+                  </p>
+                )}
               </div>
             )}
 
