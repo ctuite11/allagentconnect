@@ -1,33 +1,87 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
-import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+import { getAreasForCity } from "@/data/usNeighborhoodsData";
+
+// Massachusetts counties
+const MA_COUNTIES = [
+  "Barnstable", "Berkshire", "Bristol", "Dukes", "Essex", "Franklin",
+  "Hampden", "Hampshire", "Middlesex", "Nantucket", "Norfolk", "Plymouth",
+  "Suffolk", "Worcester"
+];
 
 const BrowseProperties = () => {
-  const [searchParams] = useSearchParams();
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
-  const [priceRange, setPriceRange] = useState("all");
-  const [propertyType, setPropertyType] = useState("all");
-  const [listingType, setListingType] = useState("all");
-  const [status, setStatus] = useState("all");
-  const [bedrooms, setBedrooms] = useState("all");
-  const [bathrooms, setBathrooms] = useState("all");
+  
+  // Address filters
+  const [addressType, setAddressType] = useState("street");
+  const [streetNumber, setStreetNumber] = useState("");
+  const [streetName, setStreetName] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [radius, setRadius] = useState("");
+  
+  // Town filters
+  const [state, setState] = useState("MA");
+  const [county, setCounty] = useState("Suffolk County");
+  const [selectedTowns, setSelectedTowns] = useState<string[]>([]);
+  
+  // Property Type filters
+  const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
+  
+  // Status filters
+  const [statuses, setStatuses] = useState<string[]>(["active"]);
+  
+  // Price filters
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [showFilters, setShowFilters] = useState(true);
+  
+  // Standard criteria
+  const [bedrooms, setBedrooms] = useState("");
+  const [bathrooms, setBathrooms] = useState("");
+  const [rooms, setRooms] = useState("");
+  const [acres, setAcres] = useState("");
+  const [livingArea, setLivingArea] = useState("");
+  const [pricePerSqFt, setPricePerSqFt] = useState("");
+  const [yearBuilt, setYearBuilt] = useState("");
+  const [totalParkingSpaces, setTotalParkingSpaces] = useState("");
+  const [garageSpaces, setGarageSpaces] = useState("");
+  const [nonGarageSpaces, setNonGarageSpaces] = useState("");
+  
+  // Keywords
+  const [keywords, setKeywords] = useState("");
+  const [keywordMatch, setKeywordMatch] = useState("any");
+  const [keywordType, setKeywordType] = useState("include");
+  
+  // List numbers
+  const [listNumbers, setListNumbers] = useState("");
+  
+  // Collapsible sections
+  const [isAddressOpen, setIsAddressOpen] = useState(true);
+  const [isTownsOpen, setIsTownsOpen] = useState(true);
+  const [isPropertyTypeOpen, setIsPropertyTypeOpen] = useState(true);
+  const [isStatusOpen, setIsStatusOpen] = useState(true);
+  const [isPriceOpen, setIsPriceOpen] = useState(true);
+  const [isCriteriaOpen, setIsCriteriaOpen] = useState(true);
+  const [isKeywordsOpen, setIsKeywordsOpen] = useState(false);
+  const [isListNumbersOpen, setIsListNumbersOpen] = useState(false);
 
   useEffect(() => {
     fetchListings();
-  }, [searchQuery, priceRange, propertyType, listingType, status, bedrooms, bathrooms, minPrice, maxPrice]);
+  }, [statuses, propertyTypes, minPrice, maxPrice, bedrooms, bathrooms, county, selectedTowns, zipCode]);
 
   const fetchListings = async () => {
     try {
@@ -37,16 +91,14 @@ const BrowseProperties = () => {
         .select("*")
         .order("created_at", { ascending: false });
 
-      // Apply status filter (default to active only if not filtered)
-      if (status !== "all") {
-        query = query.eq("status", status);
-      } else {
-        query = query.eq("status", "active");
+      // Apply status filter
+      if (statuses.length > 0) {
+        query = query.in("status", statuses);
       }
 
-      // Apply search filter
-      if (searchQuery) {
-        query = query.or(`address.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,zip_code.ilike.%${searchQuery}%`);
+      // Apply property type filter
+      if (propertyTypes.length > 0) {
+        query = query.in("property_type", propertyTypes);
       }
 
       // Apply price filters
@@ -56,32 +108,20 @@ const BrowseProperties = () => {
       if (maxPrice) {
         query = query.lte("price", parseFloat(maxPrice));
       }
-      
-      // Legacy price range filter (fallback)
-      if (priceRange !== "all" && !minPrice && !maxPrice) {
-        const [min, max] = priceRange.split("-").map(Number);
-        query = query.gte("price", min);
-        if (max) query = query.lte("price", max);
-      }
-
-      // Apply property type filter
-      if (propertyType !== "all") {
-        query = query.eq("property_type", propertyType);
-      }
-
-      // Apply listing type filter
-      if (listingType !== "all") {
-        query = query.eq("listing_type", listingType);
-      }
 
       // Apply bedrooms filter
-      if (bedrooms !== "all") {
+      if (bedrooms) {
         query = query.gte("bedrooms", parseInt(bedrooms));
       }
 
       // Apply bathrooms filter
-      if (bathrooms !== "all") {
+      if (bathrooms) {
         query = query.gte("bathrooms", parseFloat(bathrooms));
+      }
+
+      // Apply zip code filter
+      if (zipCode) {
+        query = query.ilike("zip_code", `%${zipCode}%`);
       }
 
       const { data, error } = await query.limit(100);
@@ -96,30 +136,23 @@ const BrowseProperties = () => {
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = () => {
     fetchListings();
   };
 
-  const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
-    const addressComponents = place.address_components || [];
-    const getComponent = (type: string) => {
-      const component = addressComponents.find((c) => c.types.includes(type));
-      return component?.long_name || "";
-    };
-
-    const city = getComponent("locality") || getComponent("sublocality");
-    const state = getComponent("administrative_area_level_1");
-    const zip = getComponent("postal_code");
-    
-    // Build search query from selected location
-    const parts = [city, state, zip].filter(Boolean);
-    const query = parts.join(", ");
-    
-    if (query) {
-      setSearchQuery(query);
-    }
+  const handlePropertyTypeToggle = (type: string) => {
+    setPropertyTypes(prev =>
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
   };
+
+  const handleStatusToggle = (status: string) => {
+    setStatuses(prev =>
+      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+    );
+  };
+
+  const neighborhoods = getAreasForCity("Boston", "MA");
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -128,195 +161,369 @@ const BrowseProperties = () => {
       <main className="flex-1 bg-muted/30">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Search Listings</h1>
+          <div className="mb-6">
+            <h1 className="text-4xl font-bold mb-2">Property Search</h1>
             <p className="text-muted-foreground">
-              Advanced search with all available filters for agents
+              Advanced search with comprehensive filters
             </p>
           </div>
 
-          {/* Search and Filters */}
-          <div className="bg-card rounded-lg shadow-sm border p-6 mb-8">
-            <form onSubmit={handleSearch} className="space-y-4">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10" />
-                  <AddressAutocomplete
-                    onPlaceSelect={handlePlaceSelect}
-                    placeholder="Search by city, zip code, or address..."
-                    className="pl-10"
-                    value={searchQuery}
-                    onChange={setSearchQuery}
-                  />
+          <div className="grid lg:grid-cols-[400px_1fr] gap-6">
+            {/* Left Sidebar - Search Filters */}
+            <div className="space-y-4">
+              {/* ADDRESS Section */}
+              <Collapsible open={isAddressOpen} onOpenChange={setIsAddressOpen}>
+                <div className="bg-card rounded-lg shadow-sm border">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                    <h3 className="font-semibold text-lg">ADDRESS</h3>
+                    {isAddressOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="p-4 pt-0 space-y-4">
+                      <RadioGroup value={addressType} onValueChange={setAddressType}>
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="street" id="street" />
+                            <Label htmlFor="street">Street Address</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="location" id="location" />
+                            <Label htmlFor="location">My Location</Label>
+                          </div>
+                        </div>
+                      </RadioGroup>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">Street #</Label>
+                          <Input value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="123" />
+                        </div>
+                        <div className="col-span-1">
+                          <Label className="text-xs">Street Name</Label>
+                          <Input value={streetName} onChange={(e) => setStreetName(e.target.value)} placeholder="Main St" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">Zip Code</Label>
+                          <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="02129" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Radius (Miles)</Label>
+                          <Input value={radius} onChange={(e) => setRadius(e.target.value)} placeholder="5" type="number" />
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
                 </div>
-                <Button type="submit">Search</Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  Filters
-                </Button>
-              </div>
+              </Collapsible>
 
-              {showFilters && (
-                <div className="space-y-4 pt-4 border-t">
-                  {/* Row 1: Listing Type and Status */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Listing Type</label>
-                      <Select value={listingType} onValueChange={setListingType}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All listing types" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Listing Types</SelectItem>
-                          <SelectItem value="for_sale">For Sale</SelectItem>
-                          <SelectItem value="for_rent">For Rent</SelectItem>
-                        </SelectContent>
-                      </Select>
+              {/* TOWNS Section */}
+              <Collapsible open={isTownsOpen} onOpenChange={setIsTownsOpen}>
+                <div className="bg-card rounded-lg shadow-sm border">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                    <h3 className="font-semibold text-lg">TOWNS</h3>
+                    {isTownsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="p-4 pt-0 space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">State</Label>
+                          <Select value={state} onValueChange={setState}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="MA">MA</SelectItem></SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Coverage Areas</Label>
+                          <Select value={county} onValueChange={setCounty}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {MA_COUNTIES.map((c) => (
+                                <SelectItem key={c} value={c}>{c}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs mb-2 block">Select Towns/Areas</Label>
+                        <div className="max-h-40 overflow-y-auto border rounded p-2 space-y-1">
+                          {neighborhoods.map((area) => (
+                            <div key={area} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`town-${area}`}
+                                checked={selectedTowns.includes(area)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedTowns([...selectedTowns, area]);
+                                  } else {
+                                    setSelectedTowns(selectedTowns.filter(t => t !== area));
+                                  }
+                                }}
+                              />
+                              <label htmlFor={`town-${area}`} className="text-sm cursor-pointer">{area}</label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Status</label>
-                      <Select value={status} onValueChange={setStatus}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All statuses" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Statuses</SelectItem>
-                          <SelectItem value="active">New</SelectItem>
-                          <SelectItem value="coming_soon">Coming Soon</SelectItem>
-                          <SelectItem value="off_market">Off Market</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="sold">Sold</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
 
-                  {/* Row 2: Price Range */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Min Price</label>
-                      <input
-                        type="number"
-                        placeholder="$0"
-                        value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
-                        className="w-full h-10 px-3 rounded-md border border-input bg-background"
+              {/* LIST NUMBER(S) Section */}
+              <Collapsible open={isListNumbersOpen} onOpenChange={setIsListNumbersOpen}>
+                <div className="bg-card rounded-lg shadow-sm border">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                    <h3 className="font-semibold text-lg">LIST NUMBER(S)</h3>
+                    {isListNumbersOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="p-4 pt-0">
+                      <Input
+                        value={listNumbers}
+                        onChange={(e) => setListNumbers(e.target.value)}
+                        placeholder="Enter listing numbers separated by commas"
                       />
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Max Price</label>
-                      <input
-                        type="number"
-                        placeholder="No limit"
-                        value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
-                        className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              {/* PROPERTY TYPE Section */}
+              <Collapsible open={isPropertyTypeOpen} onOpenChange={setIsPropertyTypeOpen}>
+                <div className="bg-card rounded-lg shadow-sm border">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                    <h3 className="font-semibold text-lg">PROPERTY TYPE</h3>
+                    {isPropertyTypeOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="p-4 pt-0 space-y-2">
+                      {[
+                        "Single Family",
+                        "Condominium",
+                        "Multi Family",
+                        "Land",
+                        "Commercial",
+                        "Business Opp.",
+                        "Residential Rental",
+                        "Mobile Home"
+                      ].map((type) => (
+                        <div key={type} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`type-${type}`}
+                            checked={propertyTypes.includes(type)}
+                            onCheckedChange={() => handlePropertyTypeToggle(type)}
+                          />
+                          <label htmlFor={`type-${type}`} className="text-sm cursor-pointer">{type}</label>
+                        </div>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              {/* STATUS Section */}
+              <Collapsible open={isStatusOpen} onOpenChange={setIsStatusOpen}>
+                <div className="bg-card rounded-lg shadow-sm border">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                    <h3 className="font-semibold text-lg">STATUS</h3>
+                    {isStatusOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="p-4 pt-0 space-y-2">
+                      {[
+                        { value: "active", label: "New (NEW)" },
+                        { value: "active", label: "Active (ACT)" },
+                        { value: "coming_soon", label: "Coming Soon (CSO)" },
+                        { value: "off_market", label: "Off Market" },
+                        { value: "pending", label: "Pending" },
+                        { value: "sold", label: "Sold (SLD)" },
+                      ].map((status) => (
+                        <div key={status.value + status.label} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`status-${status.value}-${status.label}`}
+                            checked={statuses.includes(status.value)}
+                            onCheckedChange={() => handleStatusToggle(status.value)}
+                          />
+                          <label htmlFor={`status-${status.value}-${status.label}`} className="text-sm cursor-pointer">{status.label}</label>
+                        </div>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              {/* PRICE Section */}
+              <Collapsible open={isPriceOpen} onOpenChange={setIsPriceOpen}>
+                <div className="bg-card rounded-lg shadow-sm border">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                    <h3 className="font-semibold text-lg">PRICE</h3>
+                    {isPriceOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="p-4 pt-0 grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Low</Label>
+                        <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="$0" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">High</Label>
+                        <Input type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="No limit" />
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              {/* STANDARD SEARCH CRITERIA Section */}
+              <Collapsible open={isCriteriaOpen} onOpenChange={setIsCriteriaOpen}>
+                <div className="bg-card rounded-lg shadow-sm border">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                    <h3 className="font-semibold text-lg">STANDARD SEARCH CRITERIA</h3>
+                    {isCriteriaOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="p-4 pt-0 space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">Bedrooms</Label>
+                          <Input type="number" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Total Bathrooms</Label>
+                          <Input type="number" step="0.5" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">Rooms</Label>
+                          <Input type="number" value={rooms} onChange={(e) => setRooms(e.target.value)} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Acres</Label>
+                          <Input type="number" step="0.1" value={acres} onChange={(e) => setAcres(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">Living Area Total (SqFt)</Label>
+                          <Input type="number" value={livingArea} onChange={(e) => setLivingArea(e.target.value)} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Price per SqFt</Label>
+                          <Input type="number" value={pricePerSqFt} onChange={(e) => setPricePerSqFt(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">Year Built</Label>
+                          <Input type="number" value={yearBuilt} onChange={(e) => setYearBuilt(e.target.value)} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Total Parking Spaces</Label>
+                          <Input type="number" value={totalParkingSpaces} onChange={(e) => setTotalParkingSpaces(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">Garage Spaces</Label>
+                          <Input type="number" value={garageSpaces} onChange={(e) => setGarageSpaces(e.target.value)} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Parking Spaces (Non-Garage)</Label>
+                          <Input type="number" value={nonGarageSpaces} onChange={(e) => setNonGarageSpaces(e.target.value)} />
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              {/* KEYWORDS Section */}
+              <Collapsible open={isKeywordsOpen} onOpenChange={setIsKeywordsOpen}>
+                <div className="bg-card rounded-lg shadow-sm border">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                    <h3 className="font-semibold text-lg">KEYWORDS (Public Remarks only)</h3>
+                    {isKeywordsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="p-4 pt-0 space-y-3">
+                      <div className="flex gap-4">
+                        <RadioGroup value={keywordMatch} onValueChange={setKeywordMatch} className="flex gap-4">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="any" id="any" />
+                            <Label htmlFor="any" className="text-sm">Any</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="all" id="all" />
+                            <Label htmlFor="all" className="text-sm">All</Label>
+                          </div>
+                        </RadioGroup>
+                        <RadioGroup value={keywordType} onValueChange={setKeywordType} className="flex gap-4">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="include" id="include" />
+                            <Label htmlFor="include" className="text-sm">Include</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="exclude" id="exclude" />
+                            <Label htmlFor="exclude" className="text-sm">Exclude</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      <Textarea
+                        value={keywords}
+                        onChange={(e) => setKeywords(e.target.value)}
+                        placeholder="Enter keywords..."
+                        rows={4}
                       />
                     </div>
-                  </div>
-
-                  {/* Row 3: Property Type and Beds/Baths */}
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Property Type</label>
-                      <Select value={propertyType} onValueChange={setPropertyType}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All types" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Types</SelectItem>
-                          <SelectItem value="Single Family">Single Family</SelectItem>
-                          <SelectItem value="Condominium">Condominium</SelectItem>
-                          <SelectItem value="Townhouse">Townhouse</SelectItem>
-                          <SelectItem value="Multi Family">Multi Family</SelectItem>
-                          <SelectItem value="Land">Land</SelectItem>
-                          <SelectItem value="Commercial">Commercial</SelectItem>
-                          <SelectItem value="Business Opp.">Business Opp.</SelectItem>
-                          <SelectItem value="Residential Rental">Residential Rental</SelectItem>
-                          <SelectItem value="Mobile Home">Mobile Home</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Min Bedrooms</label>
-                      <Select value={bedrooms} onValueChange={setBedrooms}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Any" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Any</SelectItem>
-                          <SelectItem value="1">1+</SelectItem>
-                          <SelectItem value="2">2+</SelectItem>
-                          <SelectItem value="3">3+</SelectItem>
-                          <SelectItem value="4">4+</SelectItem>
-                          <SelectItem value="5">5+</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Min Bathrooms</label>
-                      <Select value={bathrooms} onValueChange={setBathrooms}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Any" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Any</SelectItem>
-                          <SelectItem value="1">1+</SelectItem>
-                          <SelectItem value="1.5">1.5+</SelectItem>
-                          <SelectItem value="2">2+</SelectItem>
-                          <SelectItem value="2.5">2.5+</SelectItem>
-                          <SelectItem value="3">3+</SelectItem>
-                          <SelectItem value="4">4+</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  </CollapsibleContent>
                 </div>
-              )}
-            </form>
-          </div>
+              </Collapsible>
 
-          {/* Results */}
-          {loading ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Loading properties...</p>
-            </div>
-          ) : listings.length === 0 ? (
-            <div className="text-center py-12 bg-card rounded-lg border">
-              <p className="text-muted-foreground mb-4">No properties found matching your criteria</p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearchQuery("");
-                  setPriceRange("all");
-                  setPropertyType("all");
-                  setListingType("all");
-                  setStatus("all");
-                  setBedrooms("all");
-                  setBathrooms("all");
-                  setMinPrice("");
-                  setMaxPrice("");
-                }}
-              >
-                Clear Filters
+              {/* Search Button */}
+              <Button onClick={handleSearch} className="w-full" size="lg">
+                <Search className="mr-2 h-5 w-5" />
+                Search Properties
               </Button>
             </div>
-          ) : (
-            <>
-              <div className="mb-4 text-sm text-muted-foreground">
-                Found {listings.length} {listings.length === 1 ? "property" : "properties"}
+
+            {/* Right Side - Results */}
+            <div>
+              <div className="bg-card rounded-lg shadow-sm border p-6 mb-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold">
+                    Search Results
+                  </h2>
+                  <div className="text-lg font-semibold text-primary">
+                    {loading ? "Loading..." : `${listings.length} Properties Found`}
+                  </div>
+                </div>
               </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {listings.map((listing) => (
-                  <PropertyCard key={listing.id} {...listing} />
-                ))}
-              </div>
-            </>
-          )}
+
+              {/* Results */}
+              {loading ? (
+                <div className="text-center py-12 bg-card rounded-lg border">
+                  <p className="text-muted-foreground">Loading properties...</p>
+                </div>
+              ) : listings.length === 0 ? (
+                <div className="text-center py-12 bg-card rounded-lg border">
+                  <p className="text-muted-foreground mb-4">No properties found matching your criteria</p>
+                  <Button variant="outline" onClick={() => window.location.reload()}>
+                    Clear All Filters
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {listings.map((listing) => (
+                    <PropertyCard key={listing.id} {...listing} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </main>
 
