@@ -15,13 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
-
-// Massachusetts counties
-const MA_COUNTIES = [
-  "Barnstable", "Berkshire", "Bristol", "Dukes", "Essex", "Franklin",
-  "Hampden", "Hampshire", "Middlesex", "Nantucket", "Norfolk", "Plymouth",
-  "Suffolk", "Worcester"
-];
+import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 
 const BrowseProperties = () => {
   const [listings, setListings] = useState<any[]>([]);
@@ -36,7 +30,7 @@ const BrowseProperties = () => {
   
   // Town filters
   const [state, setState] = useState("MA");
-  const [county, setCounty] = useState("Suffolk County");
+  const [county, setCounty] = useState("Suffolk");
   const [selectedTowns, setSelectedTowns] = useState<string[]>([]);
   
   // Property Type filters
@@ -153,6 +147,7 @@ const BrowseProperties = () => {
   };
 
   const neighborhoods = getAreasForCity("Boston", "MA");
+  const currentStateCounties = getCountiesForState(state);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -231,15 +226,19 @@ const BrowseProperties = () => {
                           <Label className="text-xs">State</Label>
                           <Select value={state} onValueChange={setState}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="MA">MA</SelectItem></SelectContent>
+                            <SelectContent className="max-h-[300px]">
+                              {US_STATES.map((s) => (
+                                <SelectItem key={s.code} value={s.code}>{s.name}</SelectItem>
+                              ))}
+                            </SelectContent>
                           </Select>
                         </div>
                         <div>
                           <Label className="text-xs">Coverage Areas</Label>
                           <Select value={county} onValueChange={setCounty}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {MA_COUNTIES.map((c) => (
+                            <SelectContent className="max-h-[300px]">
+                              {currentStateCounties.map((c) => (
                                 <SelectItem key={c} value={c}>{c}</SelectItem>
                               ))}
                             </SelectContent>
