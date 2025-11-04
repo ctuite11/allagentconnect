@@ -199,17 +199,38 @@ const AgentDashboard = () => {
 
         {/* Existing Listings */}
         {listings.length > 0 ? (
-          <div>
-            <h2 className="text-2xl font-bold mb-6">Your Listings</h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {listings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  onDelete={handleDeleteClick}
-                />
-              ))}
-            </div>
+          <div className="space-y-8">
+            {/* Draft Listings */}
+            {listings.filter(l => l.status === "draft").length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold mb-6">Draft Listings</h2>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {listings.filter(l => l.status === "draft").map((listing) => (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      onDelete={handleDeleteClick}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Active Listings */}
+            {listings.filter(l => l.status !== "draft").length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold mb-6">Active Listings</h2>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {listings.filter(l => l.status !== "draft").map((listing) => (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      onDelete={handleDeleteClick}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <Card>
