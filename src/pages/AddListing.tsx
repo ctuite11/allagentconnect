@@ -787,44 +787,10 @@ const AddListing = () => {
               <h2 className="text-2xl font-bold mb-6">Listing Details</h2>
               
               <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
-                {/* Row 1: Listing Type, Status, Property Type */}
+                {/* Row 1: Property Type, Status, Listing Type */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="listing_type">Listing Type *</Label>
-                    <Select
-                      value={formData.listing_type}
-                      onValueChange={(value) => setFormData({ ...formData, listing_type: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="for_sale">For Sale</SelectItem>
-                        <SelectItem value="coming_soon">Coming Soon</SelectItem>
-                        <SelectItem value="pre_market">Pre-Market</SelectItem>
-                        <SelectItem value="off_market">Off Market</SelectItem>
-                        <SelectItem value="for_rent">For Rent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value) => setFormData({ ...formData, status: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">New</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="sold">Sold</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="property_type">Property Type</Label>
+                    <Label htmlFor="property_type">Property Type *</Label>
                     <Select
                       value={formData.property_type}
                       onValueChange={(value) => setFormData({ ...formData, property_type: value })}
@@ -842,6 +808,37 @@ const AddListing = () => {
                         <SelectItem value="Business Opp.">Business Opp.</SelectItem>
                         <SelectItem value="Residential Rental">Residential Rental</SelectItem>
                         <SelectItem value="Mobile Home">Mobile Home</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status *</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => setFormData({ ...formData, status: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">New</SelectItem>
+                        <SelectItem value="coming_soon">Coming Soon</SelectItem>
+                        <SelectItem value="off_market">Off Market</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="listing_type">Listing Type *</Label>
+                    <Select
+                      value={formData.listing_type}
+                      onValueChange={(value) => setFormData({ ...formData, listing_type: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="for_sale">For Sale</SelectItem>
+                        <SelectItem value="for_rent">For Rent</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
