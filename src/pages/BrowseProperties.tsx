@@ -171,6 +171,7 @@ const BrowseProperties = () => {
 
   const currentStateCounties = getCountiesForState(state);
   const currentStateCities = usCitiesByState[state] || [];
+  const hasCountyData = state === "MA"; // Only MA has county-to-towns mapping
   
   // Generate town list with neighborhoods
   const getTownsList = () => {
@@ -328,11 +329,11 @@ const BrowseProperties = () => {
                         </div>
                         <div>
                           <Label className="text-xs">Coverage Areas</Label>
-                          <Select value={county} onValueChange={setCounty}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          <Select value={county} onValueChange={setCounty} disabled={!hasCountyData}>
+                            <SelectTrigger className={!hasCountyData ? "opacity-50 cursor-not-allowed" : ""}><SelectValue /></SelectTrigger>
                             <SelectContent className="max-h-[300px]">
                               <SelectItem value="all">All Towns</SelectItem>
-                              {currentStateCounties.map((c) => (
+                              {hasCountyData && currentStateCounties.map((c) => (
                                 <SelectItem key={c} value={c}>{c}</SelectItem>
                               ))}
                             </SelectContent>
