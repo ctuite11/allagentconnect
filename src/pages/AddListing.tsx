@@ -787,8 +787,23 @@ const AddListing = () => {
               <h2 className="text-2xl font-bold mb-6">Listing Details</h2>
               
               <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
-                {/* Row 1: Property Type, Status, Listing Type */}
+                {/* Row 1: Listing Type, Property Type, Status */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="listing_type">Listing Type *</Label>
+                    <Select
+                      value={formData.listing_type}
+                      onValueChange={(value) => setFormData({ ...formData, listing_type: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="for_sale">For Sale</SelectItem>
+                        <SelectItem value="for_rent">For Rent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="property_type">Property Type *</Label>
                     <Select
@@ -827,47 +842,19 @@ const AddListing = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="listing_type">Listing Type *</Label>
-                    <Select
-                      value={formData.listing_type}
-                      onValueChange={(value) => setFormData({ ...formData, listing_type: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="for_sale">For Sale</SelectItem>
-                        <SelectItem value="for_rent">For Rent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
 
-                {/* Row 2: List Date, Expiration Date */}
+                {/* Row 2: Enter Address, List Price */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="list_date">List Date</Label>
-                    <Input
-                      id="list_date"
-                      type="date"
-                      value={formData.list_date}
-                      onChange={(e) => setFormData({ ...formData, list_date: e.target.value })}
+                    <Label htmlFor="address">Enter Address *</Label>
+                    <AddressAutocomplete
+                      onPlaceSelect={handleAddressSelect}
+                      placeholder="Full property address"
+                      value={formData.address}
+                      onChange={(val) => setFormData({ ...formData, address: val })}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expiration_date">Expiration Date</Label>
-                    <Input
-                      id="expiration_date"
-                      type="date"
-                      value={formData.expiration_date}
-                      onChange={(e) => setFormData({ ...formData, expiration_date: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 2: List Price, Enter Address */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price">List Price *</Label>
                     <FormattedInput
@@ -877,15 +864,6 @@ const AddListing = () => {
                       value={formData.price}
                       onChange={(value) => setFormData({ ...formData, price: value })}
                       required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Enter Address *</Label>
-                    <AddressAutocomplete
-                      onPlaceSelect={handleAddressSelect}
-                      placeholder="Full property address"
-                      value={formData.address}
-                      onChange={(val) => setFormData({ ...formData, address: val })}
                     />
                   </div>
                 </div>
@@ -1001,6 +979,28 @@ const AddListing = () => {
                     value={formData.lot_size}
                     onChange={(value) => setFormData({ ...formData, lot_size: value })}
                   />
+                </div>
+
+                {/* List Date and Expiration Date */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="list_date">List Date</Label>
+                    <Input
+                      id="list_date"
+                      type="date"
+                      value={formData.list_date}
+                      onChange={(e) => setFormData({ ...formData, list_date: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expiration_date">Expiration Date</Label>
+                    <Input
+                      id="expiration_date"
+                      type="date"
+                      value={formData.expiration_date}
+                      onChange={(e) => setFormData({ ...formData, expiration_date: e.target.value })}
+                    />
+                  </div>
                 </div>
 
                 <Separator className="my-6" />
