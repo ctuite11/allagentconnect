@@ -436,14 +436,18 @@ const AddListing = () => {
       setAttomData(mapped as any);
       setFormData((prev: any) => ({
         ...prev,
-        bedrooms: mapped.bedrooms?.toString() || prev.bedrooms,
-        bathrooms: mapped.bathrooms?.toString() || prev.bathrooms,
-        square_feet: mapped.square_feet?.toString() || prev.square_feet,
-        lot_size: mapped.lot_size?.toString() || prev.lot_size,
-        year_built: mapped.year_built?.toString() || prev.year_built,
+        bedrooms: (mapped.bedrooms !== null && mapped.bedrooms !== undefined) ? String(mapped.bedrooms) : prev.bedrooms,
+        bathrooms: (mapped.bathrooms !== null && mapped.bathrooms !== undefined) ? String(mapped.bathrooms) : prev.bathrooms,
+        square_feet: (mapped.square_feet !== null && mapped.square_feet !== undefined) ? String(mapped.square_feet) : prev.square_feet,
+        lot_size: (mapped.lot_size !== null && mapped.lot_size !== undefined) ? String(mapped.lot_size) : prev.lot_size,
+        year_built: (mapped.year_built !== null && mapped.year_built !== undefined) ? String(mapped.year_built) : prev.year_built,
         property_type: mapped.property_type || prev.property_type,
       }));
-      toast.success("Property details loaded");
+      toast.success("Property details loaded - " + [
+        mapped.bedrooms && `${mapped.bedrooms} beds`,
+        mapped.bathrooms && `${mapped.bathrooms} baths`,
+        mapped.square_feet && `${mapped.square_feet} sqft`,
+      ].filter(Boolean).join(", "));
     } catch (e) {
       console.error("[AddListing] Manual fetch failed:", e);
       toast.error("Fetch failed, please fill fields manually");
