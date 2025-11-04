@@ -834,10 +834,14 @@ const AddListing = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Single Family">Single Family</SelectItem>
-                        <SelectItem value="Condo">Condo</SelectItem>
+                        <SelectItem value="Condominium">Condominium</SelectItem>
                         <SelectItem value="Townhouse">Townhouse</SelectItem>
-                        <SelectItem value="Multi-Family">Multi-Family</SelectItem>
+                        <SelectItem value="Multi Family">Multi Family</SelectItem>
                         <SelectItem value="Land">Land</SelectItem>
+                        <SelectItem value="Commercial">Commercial</SelectItem>
+                        <SelectItem value="Business Opp.">Business Opp.</SelectItem>
+                        <SelectItem value="Residential Rental">Residential Rental</SelectItem>
+                        <SelectItem value="Mobile Home">Mobile Home</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1066,9 +1070,17 @@ const AddListing = () => {
 
                   {/* Listing Agreement Types */}
                   <div className="space-y-3">
-                    <Label className="text-base font-medium">Listing Agreement Type</Label>
+                    <Label className="text-base font-medium">Type of Listing Agreement</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {["Exclusive Right to Sell", "Exclusive Right to Auction", "Exclusive Agency"].map((type) => (
+                      {[
+                        "A-Exclusive Right to Sell",
+                        "B-ER w/ Named Exclusion",
+                        "D-Exclusive Agency",
+                        "G-Facilitation/ER to Sell",
+                        "H-Facilitation/ER w/ Named Exclusion",
+                        "I-Facilitation/Exclusive",
+                        "L-Exclusive Right to Auction"
+                      ].map((type) => (
                         <div key={type} className="flex items-center space-x-2">
                           <Checkbox
                             id={`agreement-${type}`}
