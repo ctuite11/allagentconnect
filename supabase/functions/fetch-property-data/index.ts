@@ -107,6 +107,8 @@ serve(async (req) => {
           address
         )}&address2=${encodeURIComponent(address2)}`;
 
+        console.log("[fetch-property-data] Calling Attom API:", attomUrl);
+
         const attomResponse = await fetch(attomUrl, {
           headers: {
             accept: "application/json",
@@ -116,19 +118,27 @@ serve(async (req) => {
 
         if (attomResponse.ok) {
           const attomData = await attomResponse.json();
+          console.log("[fetch-property-data] Attom response status:", attomResponse.status);
+          
           if (attomData.property && attomData.property.length > 0) {
             const property = attomData.property[0];
             const building = property.building || {};
             const lot = property.lot || {};
+            const summary = property.summary || {};
 
             results.attom = {
               bedrooms: building.rooms?.beds || null,
-              bathrooms: building.rooms?.bathstotal || null,
-              square_feet: building.size?.bldgsize || null,
-              lot_size: lot.lotsize1 || null,
-              year_built: building.summary?.yearbuilt || null,
-              property_type: building.summary?.propertytype || null,
+              bathrooms: building.rooms?.bathstotal || building.rooms?.bathsfull || null,
+              square_feet: building.size?.bldgsize || building.size?.livingsize || null,
+              lot_size: lot.lotsize2 || lot.lotsize1 || null,
+              year_built: summary.yearbuilt || null,
+              property_type: summary.proptype || null,
+              zoning: lot.zoning || null,
+              parking_spaces: building.parking?.prkgSpaces || null,
+              stories: building.summary?.stories || null,
             };
+
+            console.log("[fetch-property-data] Extracted Attom data:", results.attom);
 
             // Value estimate from Attom
             if (property.assessment?.market) {
@@ -138,16 +148,18 @@ serve(async (req) => {
                 low: property.assessment.market.mktlowvalue || null,
               };
             }
+          } else {
+            console.warn("[fetch-property-data] No property data in Attom response");
           }
         } else {
           const txt = await attomResponse.text();
-          console.error("Attom request failed:", attomResponse.status, txt);
+          console.error("[fetch-property-data] Attom request failed:", attomResponse.status, txt);
         }
       } catch (error) {
-        console.error("Error fetching Attom data:", error);
+        console.error("[fetch-property-data] Error fetching Attom data:", error);
       }
     } else {
-      console.warn("Skipping Attom fetch due to missing address/city/state/zip");
+      console.warn("[fetch-property-data] Skipping Attom fetch due to missing address/city/state/zip");
     }
 
     // Fetch Walk Score data
