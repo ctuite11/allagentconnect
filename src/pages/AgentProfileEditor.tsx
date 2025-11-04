@@ -33,6 +33,7 @@ const AgentProfileEditor = () => {
   const [bio, setBio] = useState("");
   const [buyerIncentives, setBuyerIncentives] = useState("");
   const [sellerIncentives, setSellerIncentives] = useState("");
+  const [aacId, setAacId] = useState<string | null>(null);
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({
     linkedin: "",
     twitter: "",
@@ -67,7 +68,7 @@ const AgentProfileEditor = () => {
     try {
       const { data: profile, error: profileError } = await supabase
         .from("agent_profiles")
-        .select("bio, social_links, buyer_incentives, seller_incentives")
+        .select("bio, social_links, buyer_incentives, seller_incentives, aac_id")
         .eq("id", userId)
         .single();
 
@@ -77,6 +78,7 @@ const AgentProfileEditor = () => {
         setBio(profile.bio || "");
         setBuyerIncentives(profile.buyer_incentives || "");
         setSellerIncentives(profile.seller_incentives || "");
+        setAacId(profile.aac_id || null);
         const links = profile.social_links as unknown as SocialLinks;
         setSocialLinks(links || {
           linkedin: "",
@@ -198,7 +200,14 @@ const AgentProfileEditor = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold">Edit Your Profile</h1>
+            <div>
+              <h1 className="text-3xl font-bold">Edit Your Profile</h1>
+              {aacId && (
+                <p className="text-sm text-muted-foreground font-mono mt-1">
+                  {aacId}
+                </p>
+              )}
+            </div>
             <Button variant="outline" onClick={() => navigate("/agent-dashboard")}>
               Back to Dashboard
             </Button>

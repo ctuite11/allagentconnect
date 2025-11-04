@@ -22,6 +22,7 @@ interface ListingCardProps {
     open_houses?: any;
     listing_type?: string | null;
     created_at?: string;
+    listing_number?: string | null;
   };
   onDelete: (id: string) => void;
   viewMode?: 'grid' | 'list';
@@ -97,6 +98,11 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                 <MapPin className="w-3 h-3 mr-1" />
                 {listing.city}, {listing.state} {listing.zip_code}
               </div>
+              {listing.listing_number && (
+                <div className="text-xs text-muted-foreground mb-2">
+                  Listing #{listing.listing_number}
+                </div>
+              )}
               <div className="flex gap-3 text-sm text-muted-foreground">
                 {listing.bedrooms && (
                   <span><Bed className="w-3 h-3 inline mr-1" />{listing.bedrooms}</span>
@@ -203,6 +209,11 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
               <MapPin className="w-4 h-4 mr-1" />
               {listing.city}, {listing.state} {listing.zip_code}
             </div>
+            {listing.listing_number && (
+              <div className="text-xs text-muted-foreground">
+                Listing #{listing.listing_number}
+              </div>
+            )}
           </div>
           <Badge variant={listing.status === "active" ? "default" : "secondary"}>
             {listing.status}

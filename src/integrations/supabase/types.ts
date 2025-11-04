@@ -93,6 +93,7 @@ export type Database = {
       }
       agent_profiles: {
         Row: {
+          aac_id: string
           bio: string | null
           buyer_incentives: string | null
           company: string | null
@@ -108,6 +109,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          aac_id?: string
           bio?: string | null
           buyer_incentives?: string | null
           company?: string | null
@@ -123,6 +125,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          aac_id?: string
           bio?: string | null
           buyer_incentives?: string | null
           company?: string | null
@@ -546,6 +549,7 @@ export type Database = {
           latitude: number | null
           lender_owned: boolean | null
           listing_agreement_types: Json | null
+          listing_number: string
           listing_type: string | null
           lockbox_code: string | null
           longitude: number | null
@@ -611,6 +615,7 @@ export type Database = {
           latitude?: number | null
           lender_owned?: boolean | null
           listing_agreement_types?: Json | null
+          listing_number?: string
           listing_type?: string | null
           lockbox_code?: string | null
           longitude?: number | null
@@ -676,6 +681,7 @@ export type Database = {
           latitude?: number | null
           lender_owned?: boolean | null
           listing_agreement_types?: Json | null
+          listing_number?: string
           listing_type?: string | null
           lockbox_code?: string | null
           longitude?: number | null
@@ -857,6 +863,8 @@ export type Database = {
     }
     Functions: {
       auto_activate_listings: { Args: never; Returns: undefined }
+      generate_aac_id: { Args: never; Returns: string }
+      generate_listing_number: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

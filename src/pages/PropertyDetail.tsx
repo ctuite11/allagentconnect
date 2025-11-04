@@ -53,6 +53,7 @@ interface Listing {
   walk_score_data: any;
   schools_data: any;
   value_estimate: any;
+  listing_number?: string | null;
 }
 
 const PropertyDetail = () => {
@@ -274,6 +275,11 @@ const PropertyDetail = () => {
                 <p className="text-xl text-muted-foreground">
                   {listing.city}, {listing.state} {listing.zip_code}
                 </p>
+                {listing.listing_number && (
+                  <p className="text-sm text-muted-foreground font-mono mt-1">
+                    Listing #{listing.listing_number}
+                  </p>
+                )}
               </div>
             </div>
             <div className="text-right">

@@ -37,6 +37,7 @@ interface Listing {
   additional_notes: string | null;
   photos: any[] | null;
   floor_plans: any[] | null;
+  listing_number?: string | null;
 }
 
 const ConsumerPropertyDetail = () => {
@@ -255,6 +256,11 @@ const ConsumerPropertyDetail = () => {
                 <p className="text-xl text-muted-foreground">
                   {listing.city}, {listing.state} {listing.zip_code}
                 </p>
+                {listing.listing_number && (
+                  <p className="text-sm text-muted-foreground font-mono mt-1">
+                    Listing #{listing.listing_number}
+                  </p>
+                )}
               </div>
             </div>
             <div className="text-right">

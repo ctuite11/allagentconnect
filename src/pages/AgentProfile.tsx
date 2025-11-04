@@ -19,6 +19,7 @@ interface AgentProfile {
   phone: string | null;
   company: string | null;
   receive_buyer_alerts: boolean;
+  aac_id?: string | null;
   agent_county_preferences: {
     county_id: string;
     counties: {
@@ -136,6 +137,11 @@ const AgentProfile = () => {
                 <CardTitle className="text-center text-2xl">
                   {agent.first_name} {agent.last_name}
                 </CardTitle>
+                {agent.aac_id && (
+                  <div className="text-center text-sm text-muted-foreground font-mono">
+                    {agent.aac_id}
+                  </div>
+                )}
                 {agent.company && (
                   <div className="flex items-center justify-center gap-2 text-muted-foreground">
                     <Building2 className="h-4 w-4" />
