@@ -164,7 +164,8 @@ const BrowseProperties = () => {
     const towns: string[] = [];
     currentStateCities.forEach(city => {
       towns.push(`${city}, ${state}`);
-      if (showAreas === "yes") {
+      // Only include neighborhoods when explicitly requested AND not using "All Towns"
+      if (showAreas === "yes" && county !== "all") {
         const neighborhoods = getAreasForCity(city, state);
         neighborhoods.forEach(neighborhood => {
           towns.push(`${city}, ${state}-${neighborhood}`);
