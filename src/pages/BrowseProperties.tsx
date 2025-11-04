@@ -31,7 +31,7 @@ const BrowseProperties = () => {
   
   // Town filters
   const [state, setState] = useState("MA");
-  const [county, setCounty] = useState("");
+  const [county, setCounty] = useState("all");
   const [selectedTowns, setSelectedTowns] = useState<string[]>([]);
   const [showAreas, setShowAreas] = useState("yes");
   const [townSearch, setTownSearch] = useState("");
@@ -302,7 +302,7 @@ const BrowseProperties = () => {
                           <Select value={county} onValueChange={setCounty}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent className="max-h-[300px]">
-                              <SelectItem value="">All Towns</SelectItem>
+                              <SelectItem value="all">All Towns</SelectItem>
                               {currentStateCounties.map((c) => (
                                 <SelectItem key={c} value={c}>{c}</SelectItem>
                               ))}
