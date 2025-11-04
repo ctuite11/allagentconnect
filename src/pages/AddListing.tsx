@@ -38,7 +38,7 @@ const MA_COUNTIES = [
 const listingSchema = z.object({
   address: z.string().trim().min(1, "Address is required").max(500, "Address must be less than 500 characters"),
   city: z.string().optional(),
-  state: z.string().trim().length(2, "State must be 2 characters"),
+  state: z.string().optional(),
   zip_code: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code format"),
   price: z.number().min(1000, "Price must be at least $1,000").max(100000000, "Price must be less than $100,000,000"),
   property_type: z.string().optional(),
@@ -626,11 +626,17 @@ const AddListing = () => {
   };
 
   const handleSaveDraft = async () => {
-    toast.info("Draft saved locally");
+    try {
+      await handleSubmit(new Event('submit') as any, false);
+      navigate("/agent-dashboard");
+    } catch (error) {
+      // Error already handled in handleSubmit
+    }
   };
 
   const handlePreview = () => {
     toast.info("Preview functionality coming soon");
+    navigate("/agent-dashboard");
   };
 
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
