@@ -33,12 +33,21 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
       document.head.appendChild(script);
     };
 
-    const initAutocomplete = () => {
+    const initAutocomplete = async () => {
       console.log("=== [AddressAutocomplete] initAutocomplete called ===");
       const google = (window as any).google;
       if (!google?.maps?.places) {
         console.error("[AddressAutocomplete] Google Maps Places not available");
         return;
+      }
+
+      try {
+        if (google.maps.importLibrary) {
+          console.log("[AddressAutocomplete] Awaiting importLibrary('places')...");
+          await google.maps.importLibrary('places');
+        }
+      } catch (e) {
+        console.warn("[AddressAutocomplete] importLibrary failed, continuing with loaded script", e);
       }
 
       const places = (google.maps.places as any);

@@ -310,6 +310,59 @@ const AddListing = () => {
     }
   };
 
+  const handleManualFetch = async () => {
+    console.log("[AddListing] Manual fetch clicked");
+    const { address, city, state, zip_code, latitude, longitude } = formData as any;
+
+    try {
+      if (latitude && longitude && address) {
+        await fetchPropertyData(latitude, longitude, address, city, state, zip_code);
+        return;
+      }
+
+      if (!address) {
+        toast.error("Enter an address first");
+        return;
+      }
+
+      console.log("[AddListing] Manual fetch using test-attom with:", { address, city, state, zip_code });
+      const { data, error } = await supabase.functions.invoke("test-attom", {
+        body: { address, city, state, zip: zip_code },
+      });
+      if (error) throw error;
+      const prop = (data as any)?.json?.property?.[0];
+      if (!prop) {
+        toast.error("No data found for this address");
+        return;
+      }
+      const building = prop.building || {};
+      const lot = prop.lot || {};
+      const summary = prop.summary || {};
+      const mapped = {
+        bedrooms: building.rooms?.beds || null,
+        bathrooms: building.rooms?.bathstotal || building.rooms?.bathsfull || null,
+        square_feet: building.size?.bldgsize || building.size?.livingsize || null,
+        lot_size: lot.lotsize2 || lot.lotsize1 || null,
+        year_built: summary.yearbuilt || null,
+        property_type: summary.proptype || null,
+      };
+      setAttomData(mapped as any);
+      setFormData((prev: any) => ({
+        ...prev,
+        bedrooms: mapped.bedrooms?.toString() || prev.bedrooms,
+        bathrooms: mapped.bathrooms?.toString() || prev.bathrooms,
+        square_feet: mapped.square_feet?.toString() || prev.square_feet,
+        lot_size: mapped.lot_size?.toString() || prev.lot_size,
+        year_built: mapped.year_built?.toString() || prev.year_built,
+        property_type: mapped.property_type || prev.property_type,
+      }));
+      toast.success("Property details loaded");
+    } catch (e) {
+      console.error("[AddListing] Manual fetch failed:", e);
+      toast.error("Fetch failed, please fill fields manually");
+    }
+  };
+
   const handleFileSelect = (files: FileList | null, type: 'photos' | 'floorplans' | 'documents') => {
     if (!files) return;
 
@@ -690,6 +743,11 @@ const AddListing = () => {
                         {formData.neighborhood && <p>Neighborhood: {formData.neighborhood}</p>}
                       </div>
                     )}
+                    <div className="mt-2">
+                      <Button type="button" variant="secondary" size="sm" onClick={handleManualFetch}>
+                        Fetch Property Data
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
