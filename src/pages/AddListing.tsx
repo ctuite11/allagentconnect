@@ -862,8 +862,8 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Row 2: List Price, Enter Address, Zip Code */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Row 2: List Price, Enter Address */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price">List Price *</Label>
                     <FormattedInput
@@ -879,7 +879,7 @@ const AddListing = () => {
                     <Label htmlFor="address">Enter Address *</Label>
                     <AddressAutocomplete
                       onPlaceSelect={handleAddressSelect}
-                      placeholder="Listing Address"
+                      placeholder="Full property address"
                       value={formData.address}
                       onChange={(val) => setFormData({ ...formData, address: val })}
                     />
@@ -902,27 +902,8 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Row 3: State, Zip, County, Neighborhood */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="state">State *</Label>
-                    <Input
-                      id="state"
-                      value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
-                      maxLength={2}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="zip_code">Zip Code *</Label>
-                    <Input
-                      id="zip_code"
-                      value={formData.zip_code}
-                      onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
-                      required
-                    />
-                  </div>
+                {/* Row 3: County, Neighborhood */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="county">County</Label>
                     <Select
@@ -1008,11 +989,12 @@ const AddListing = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="lot_size">Lot Size (sq ft)</Label>
-                  <Input
+                  <FormattedInput
                     id="lot_size"
-                    type="number"
+                    format="number"
+                    decimals={0}
                     value={formData.lot_size}
-                    onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
+                    onChange={(value) => setFormData({ ...formData, lot_size: value })}
                   />
                 </div>
 
@@ -1028,6 +1010,7 @@ const AddListing = () => {
                       <FormattedInput
                         id="annual_property_tax"
                         format="currency"
+                        decimals={2}
                         value={formData.annual_property_tax}
                         onChange={(value) => setFormData({ ...formData, annual_property_tax: value })}
                         placeholder="$0.00"
@@ -1048,6 +1031,7 @@ const AddListing = () => {
                       <FormattedInput
                         id="tax_assessment_value"
                         format="currency"
+                        decimals={2}
                         value={formData.tax_assessment_value}
                         onChange={(value) => setFormData({ ...formData, tax_assessment_value: value })}
                         placeholder="$0.00"
