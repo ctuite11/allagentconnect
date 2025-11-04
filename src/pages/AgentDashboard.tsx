@@ -266,18 +266,18 @@ const AgentDashboard = () => {
         {showResults && statusFilters.length > 0 && (
           <div className="mb-4 p-4 bg-muted rounded-lg">
             <p className="text-sm font-medium">
-              Showing {listings.filter(l => statusFilters.includes(l.status)).length} listing(s) with status: {statusFilters.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(", ")}
+              Showing {listings.filter(l => statusFilters.includes((l.status || '').toLowerCase())).length} listing(s) with status: {statusFilters.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(", ")}
             </p>
           </div>
         )}
         {listings.length > 0 ? (
           <div className="space-y-8">
             {/* Draft Listings */}
-            {listings.filter(l => l.status === "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes(l.status))).length > 0 && (
+            {listings.filter(l => (l.status || '').toLowerCase() === "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes((l.status || '').toLowerCase()))).length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold mb-6">Draft Listings</h2>
                 <div className={viewMode === 'grid' ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
-                  {listings.filter(l => l.status === "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes(l.status))).map((listing) => (
+                  {listings.filter(l => (l.status || '').toLowerCase() === "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes((l.status || '').toLowerCase()))).map((listing) => (
                     <ListingCard
                       key={listing.id}
                       listing={listing}
@@ -290,11 +290,11 @@ const AgentDashboard = () => {
             )}
             
             {/* Active Listings */}
-            {listings.filter(l => l.status !== "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes(l.status))).length > 0 && (
+            {listings.filter(l => (l.status || '').toLowerCase() !== "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes((l.status || '').toLowerCase()))).length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold mb-6">Active Listings</h2>
                 <div className={viewMode === 'grid' ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
-                  {listings.filter(l => l.status !== "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes(l.status))).map((listing) => (
+                  {listings.filter(l => (l.status || '').toLowerCase() !== "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes((l.status || '').toLowerCase()))).map((listing) => (
                     <ListingCard
                       key={listing.id}
                       listing={listing}
