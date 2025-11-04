@@ -308,14 +308,14 @@ const BrowseProperties = () => {
                           <label htmlFor="type-select-all" className="text-xs cursor-pointer">Select All</label>
                         </div>
                         {[
-                          { value: "Single Family", label: "Single Family (SF)" },
-                          { value: "Condominium", label: "Condominium (CC)" },
-                          { value: "Multi Family", label: "Multi Family (MF)" },
-                          { value: "Land", label: "Land (LD)" },
-                          { value: "Commercial", label: "Commercial (CI)" },
-                          { value: "Business Opp.", label: "Business Opp. (BU)" },
-                          { value: "Residential Rental", label: "Residential Rental (RN)" },
-                          { value: "Mobile Home", label: "Mobile Home (MH)" }
+                          { value: "Single Family", label: "Single Family" },
+                          { value: "Condominium", label: "Condominium" },
+                          { value: "Multi Family", label: "Multi Family" },
+                          { value: "Land", label: "Land" },
+                          { value: "Commercial", label: "Commercial" },
+                          { value: "Business Opp.", label: "Business Opportunity" },
+                          { value: "Residential Rental", label: "Residential Rental" },
+                          { value: "Mobile Home", label: "Mobile Home" }
                         ].map((type) => (
                           <div key={type.value} className="flex items-center space-x-2">
                             <Checkbox
@@ -366,13 +366,13 @@ const BrowseProperties = () => {
                               <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
                             </div>
                             {[
-                              { value: "active", label: "New (NEW)" },
-                              { value: "active", label: "Active (ACT)" },
-                              { value: "coming_soon", label: "Price Changed (PCG)" },
-                              { value: "off_market", label: "Back on Market (BOM)" },
-                              { value: "pending", label: "Extended (EXT)" },
-                              { value: "sold", label: "Reactivated (RAC)" },
-                              { value: "sold", label: "Contingent (CTG)" },
+                              { value: "active", label: "New" },
+                              { value: "active", label: "Active" },
+                              { value: "coming_soon", label: "Price Changed" },
+                              { value: "off_market", label: "Back on Market" },
+                              { value: "pending", label: "Extended" },
+                              { value: "sold", label: "Reactivated" },
+                              { value: "sold", label: "Contingent" },
                             ].map((status, idx) => (
                               <div key={idx} className="flex items-center space-x-2">
                                 <Checkbox
@@ -386,13 +386,13 @@ const BrowseProperties = () => {
                           </div>
                           <div className="space-y-1">
                             {[
-                              { value: "pending", label: "Under Agreement (UAG)" },
-                              { value: "sold", label: "Sold (SLD)" },
-                              { value: "off_market", label: "Rented (RNT)" },
-                              { value: "off_market", label: "Temporarily Withdrawn (WDN)" },
-                              { value: "off_market", label: "Expired (EXP)" },
-                              { value: "off_market", label: "Canceled (CAN)" },
-                              { value: "coming_soon", label: "Coming Soon (CSO)" },
+                              { value: "pending", label: "Under Agreement" },
+                              { value: "sold", label: "Sold" },
+                              { value: "off_market", label: "Rented" },
+                              { value: "off_market", label: "Temporarily Withdrawn" },
+                              { value: "off_market", label: "Expired" },
+                              { value: "off_market", label: "Canceled" },
+                              { value: "coming_soon", label: "Coming Soon" },
                             ].map((status, idx) => (
                               <div key={`status-right-${idx}`} className="flex items-center space-x-2">
                                 <Checkbox
