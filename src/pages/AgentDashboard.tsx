@@ -177,7 +177,7 @@ const AgentDashboard = () => {
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-3">Filter by Status</h2>
           <div className="flex flex-wrap gap-2">
-            {["active", "draft", "pending", "sold", "rented", "withdrawn", "expired", "cancelled", "sale", "rental"].map((status) => (
+            {["sale", "rental", "active", "pending", "draft", "sold", "rented", "temporarily withdrawn", "cancelled", "expired"].map((status) => (
               <label key={status} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
