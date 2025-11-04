@@ -336,22 +336,32 @@ const AddListing = () => {
       let derivedZip = (zip_code || "").trim();
 
       if (!derivedCity || !derivedState) {
-        const parts = derivedAddress1.split(",");
-        if (parts.length >= 2) {
-          // last two chunks typically: City AND "ST ZIP"
-          const cityPart = parts[parts.length - 2].trim();
-          const stateZipPart = parts[parts.length - 1].trim();
+        // Remove "USA" if present at the end
+        let normalized = derivedAddress1.replace(/,\s*USA\s*$/i, "");
+        const parts = normalized.split(",").map(p => p.trim()).filter(Boolean);
+        
+        // Expected format: "Street, City, ST ZIP" or "Street, City, ST"
+        if (parts.length >= 3) {
+          derivedAddress1 = parts[0];
+          derivedCity = parts[1];
+          const stateZipPart = parts[2];
           const sz = stateZipPart.split(/\s+/);
-          if (!derivedCity && cityPart) derivedCity = cityPart;
-          if (!derivedState && sz[0] && sz[0].length === 2) derivedState = sz[0].toUpperCase();
-          if (!derivedZip && sz[1]) derivedZip = sz[1];
-          // Use street as address1 (everything before first comma)
-          derivedAddress1 = parts[0].trim();
+          derivedState = sz[0]?.toUpperCase() || "";
+          derivedZip = sz[1] || "";
+        } else if (parts.length === 2) {
+          // Maybe "Street, City ST ZIP"
+          derivedAddress1 = parts[0];
+          const cityStateZip = parts[1].split(/\s+/);
+          if (cityStateZip.length >= 3) {
+            derivedCity = cityStateZip.slice(0, -2).join(" ");
+            derivedState = cityStateZip[cityStateZip.length - 2].toUpperCase();
+            derivedZip = cityStateZip[cityStateZip.length - 1];
+          }
         }
       }
 
       if (!derivedCity || !derivedState) {
-        toast.error("Please select an address from suggestions, or enter 'Street, City, ST ZIP'.");
+        toast.error("Please select an address from suggestions first.");
         setDebugInfo({ hint: 'missing city/state', input: address, parsed: { derivedAddress1, derivedCity, derivedState, derivedZip } });
         return;
       }
