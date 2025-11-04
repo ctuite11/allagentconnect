@@ -103,6 +103,7 @@ const AddListing = () => {
   const [disclosures, setDisclosures] = useState<string[]>([]);
   const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
   const [amenities, setAmenities] = useState<string[]>([]);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   // Store fetched property data
   const [attomData, setAttomData] = useState<any>(null);
@@ -663,8 +664,23 @@ const AddListing = () => {
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
     e.preventDefault();
     setSubmitting(true);
+    setValidationErrors([]);
 
     try {
+      // Check required fields
+      const missingFields: string[] = [];
+      if (!formData.address.trim()) missingFields.push("Address");
+      if (!formData.price || parseFloat(formData.price) <= 0) missingFields.push("Price");
+      
+      if (missingFields.length > 0) {
+        setValidationErrors(missingFields);
+        toast.error(`Missing required fields: ${missingFields.join(", ")}`);
+        setSubmitting(false);
+        // Scroll to top to see the highlighted fields
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
       // Prepare data for validation
       const dataToValidate = {
         address: formData.address,
@@ -947,24 +963,43 @@ const AddListing = () => {
                 {/* Row 2: Enter Address, List Price */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="address">Enter Address *</Label>
-                    <AddressAutocomplete
-                      onPlaceSelect={handleAddressSelect}
-                      placeholder="Full property address"
-                      value={formData.address}
-                      onChange={(val) => setFormData({ ...formData, address: val })}
-                    />
+                    <Label htmlFor="address" className={validationErrors.includes("Address") ? "text-destructive" : ""}>
+                      Enter Address *
+                    </Label>
+                    <div className={validationErrors.includes("Address") ? "ring-2 ring-destructive rounded-md" : ""}>
+                      <AddressAutocomplete
+                        onPlaceSelect={handleAddressSelect}
+                        placeholder="Full property address"
+                        value={formData.address}
+                        onChange={(val) => {
+                          setFormData({ ...formData, address: val });
+                          setValidationErrors(errors => errors.filter(e => e !== "Address"));
+                        }}
+                      />
+                    </div>
+                    {validationErrors.includes("Address") && (
+                      <p className="text-sm text-destructive">Address is required</p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="price">List Price *</Label>
+                    <Label htmlFor="price" className={validationErrors.includes("Price") ? "text-destructive" : ""}>
+                      List Price *
+                    </Label>
                     <FormattedInput
                       id="price"
                       format="currency"
                       placeholder="500000"
                       value={formData.price}
-                      onChange={(value) => setFormData({ ...formData, price: value })}
+                      onChange={(value) => {
+                        setFormData({ ...formData, price: value });
+                        setValidationErrors(errors => errors.filter(e => e !== "Price"));
+                      }}
                       required
+                      className={validationErrors.includes("Price") ? "border-destructive ring-2 ring-destructive" : ""}
                     />
+                    {validationErrors.includes("Price") && (
+                      <p className="text-sm text-destructive">Price is required</p>
+                    )}
                   </div>
                 </div>
 

@@ -522,28 +522,44 @@ export type Database = {
           appointment_required: boolean | null
           attom_data: Json | null
           bathrooms: number | null
+          beach_nearby: boolean | null
           bedrooms: number | null
           city: string
           commission_notes: string | null
           commission_rate: number | null
           commission_type: string | null
+          construction_features: Json | null
+          cooling_types: Json | null
           created_at: string
           description: string | null
           disclosures: Json | null
           documents: Json | null
+          entry_only: boolean | null
+          exterior_features_list: Json | null
+          facing_direction: Json | null
           floor_plans: Json | null
+          garage_spaces: number | null
+          green_features: Json | null
+          has_basement: boolean | null
+          heating_types: Json | null
           id: string
           latitude: number | null
+          lender_owned: boolean | null
+          listing_agreement_types: Json | null
           listing_type: string | null
           lockbox_code: string | null
           longitude: number | null
           lot_size: number | null
+          num_fireplaces: number | null
           open_houses: Json | null
           photos: Json | null
           price: number
           property_features: Json | null
+          property_styles: Json | null
           property_type: string | null
+          roof_materials: Json | null
           schools_data: Json | null
+          short_sale: boolean | null
           showing_contact_name: string | null
           showing_contact_phone: string | null
           showing_instructions: string | null
@@ -552,9 +568,12 @@ export type Database = {
           status: string
           tax_assessment_value: number | null
           tax_year: number | null
+          total_parking_spaces: number | null
           updated_at: string
           value_estimate: Json | null
           walk_score_data: Json | null
+          water_view: boolean | null
+          waterfront: boolean | null
           year_built: number | null
           zip_code: string
         }
@@ -568,28 +587,44 @@ export type Database = {
           appointment_required?: boolean | null
           attom_data?: Json | null
           bathrooms?: number | null
+          beach_nearby?: boolean | null
           bedrooms?: number | null
           city: string
           commission_notes?: string | null
           commission_rate?: number | null
           commission_type?: string | null
+          construction_features?: Json | null
+          cooling_types?: Json | null
           created_at?: string
           description?: string | null
           disclosures?: Json | null
           documents?: Json | null
+          entry_only?: boolean | null
+          exterior_features_list?: Json | null
+          facing_direction?: Json | null
           floor_plans?: Json | null
+          garage_spaces?: number | null
+          green_features?: Json | null
+          has_basement?: boolean | null
+          heating_types?: Json | null
           id?: string
           latitude?: number | null
+          lender_owned?: boolean | null
+          listing_agreement_types?: Json | null
           listing_type?: string | null
           lockbox_code?: string | null
           longitude?: number | null
           lot_size?: number | null
+          num_fireplaces?: number | null
           open_houses?: Json | null
           photos?: Json | null
           price: number
           property_features?: Json | null
+          property_styles?: Json | null
           property_type?: string | null
+          roof_materials?: Json | null
           schools_data?: Json | null
+          short_sale?: boolean | null
           showing_contact_name?: string | null
           showing_contact_phone?: string | null
           showing_instructions?: string | null
@@ -598,9 +633,12 @@ export type Database = {
           status?: string
           tax_assessment_value?: number | null
           tax_year?: number | null
+          total_parking_spaces?: number | null
           updated_at?: string
           value_estimate?: Json | null
           walk_score_data?: Json | null
+          water_view?: boolean | null
+          waterfront?: boolean | null
           year_built?: number | null
           zip_code: string
         }
@@ -614,28 +652,44 @@ export type Database = {
           appointment_required?: boolean | null
           attom_data?: Json | null
           bathrooms?: number | null
+          beach_nearby?: boolean | null
           bedrooms?: number | null
           city?: string
           commission_notes?: string | null
           commission_rate?: number | null
           commission_type?: string | null
+          construction_features?: Json | null
+          cooling_types?: Json | null
           created_at?: string
           description?: string | null
           disclosures?: Json | null
           documents?: Json | null
+          entry_only?: boolean | null
+          exterior_features_list?: Json | null
+          facing_direction?: Json | null
           floor_plans?: Json | null
+          garage_spaces?: number | null
+          green_features?: Json | null
+          has_basement?: boolean | null
+          heating_types?: Json | null
           id?: string
           latitude?: number | null
+          lender_owned?: boolean | null
+          listing_agreement_types?: Json | null
           listing_type?: string | null
           lockbox_code?: string | null
           longitude?: number | null
           lot_size?: number | null
+          num_fireplaces?: number | null
           open_houses?: Json | null
           photos?: Json | null
           price?: number
           property_features?: Json | null
+          property_styles?: Json | null
           property_type?: string | null
+          roof_materials?: Json | null
           schools_data?: Json | null
+          short_sale?: boolean | null
           showing_contact_name?: string | null
           showing_contact_phone?: string | null
           showing_instructions?: string | null
@@ -644,9 +698,12 @@ export type Database = {
           status?: string
           tax_assessment_value?: number | null
           tax_year?: number | null
+          total_parking_spaces?: number | null
           updated_at?: string
           value_estimate?: Json | null
           walk_score_data?: Json | null
+          water_view?: boolean | null
+          waterfront?: boolean | null
           year_built?: number | null
           zip_code?: string
         }
