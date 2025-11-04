@@ -308,14 +308,14 @@ const BrowseProperties = () => {
                           <label htmlFor="type-select-all" className="text-xs cursor-pointer">Select All</label>
                         </div>
                         {[
-                          { value: "Single Family", label: "Single Family" },
-                          { value: "Condominium", label: "Condominium" },
-                          { value: "Multi Family", label: "Multi Family" },
-                          { value: "Land", label: "Land" },
-                          { value: "Commercial", label: "Commercial" },
-                          { value: "Business Opp.", label: "Business Opp." },
-                          { value: "Residential Rental", label: "Residential Rental" },
-                          { value: "Mobile Home", label: "Mobile Home" }
+                          { value: "Single Family", label: "Single Family (SF)" },
+                          { value: "Condominium", label: "Condominium (CC)" },
+                          { value: "Multi Family", label: "Multi Family (MF)" },
+                          { value: "Land", label: "Land (LD)" },
+                          { value: "Commercial", label: "Commercial (CI)" },
+                          { value: "Business Opp.", label: "Business Opp. (BU)" },
+                          { value: "Residential Rental", label: "Residential Rental (RN)" },
+                          { value: "Mobile Home", label: "Mobile Home (MH)" }
                         ].map((type) => (
                           <div key={type.value} className="flex items-center space-x-2">
                             <Checkbox
@@ -326,8 +326,11 @@ const BrowseProperties = () => {
                             <label htmlFor={`type-${type.value}`} className="text-xs cursor-pointer">{type.label}</label>
                           </div>
                         ))}
-                        <div className="pt-2">
-                          <Label className="text-xs block mb-1">TOWNS 🟢</Label>
+                        <div className="pt-2 border-t mt-2">
+                          <div className="flex items-center gap-2 mt-2">
+                            <Label className="text-xs block font-semibold">TOWNS</Label>
+                            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
+                          </div>
                         </div>
                       </div>
                     </CollapsibleContent>
@@ -345,46 +348,88 @@ const BrowseProperties = () => {
                       {isStatusOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className="p-3 pt-0 space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="status-select-all"
-                            checked={statuses.length >= 5}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setStatuses(["active", "coming_soon", "off_market", "pending", "sold"]);
-                              } else {
-                                setStatuses([]);
-                              }
-                            }}
-                          />
-                          <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
-                        </div>
-                        {[
-                          { value: "active", label: "New" },
-                          { value: "active", label: "Active" },
-                          { value: "coming_soon", label: "Price Changed" },
-                          { value: "off_market", label: "Back on Market" },
-                          { value: "pending", label: "Extended" },
-                          { value: "sold", label: "Reactivated" },
-                          { value: "sold", label: "Contingent" },
-                          { value: "pending", label: "Under Agreement" },
-                          { value: "sold", label: "Sold" },
-                          { value: "off_market", label: "Rented" },
-                          { value: "off_market", label: "Temporarily Withdrawn" },
-                          { value: "off_market", label: "Expired" },
-                          { value: "off_market", label: "Canceled" },
-                          { value: "coming_soon", label: "Coming Soon" },
-                        ].map((status, idx) => (
-                          <div key={idx} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`status-${idx}`}
-                              checked={statuses.includes(status.value)}
-                              onCheckedChange={() => handleStatusToggle(status.value)}
-                            />
-                            <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer">{status.label}</label>
+                      <div className="p-3 pt-0">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="status-select-all"
+                                checked={statuses.length >= 5}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setStatuses(["active", "coming_soon", "off_market", "pending", "sold"]);
+                                  } else {
+                                    setStatuses([]);
+                                  }
+                                }}
+                              />
+                              <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
+                            </div>
+                            {[
+                              { value: "active", label: "New (NEW)" },
+                              { value: "active", label: "Active (ACT)" },
+                              { value: "coming_soon", label: "Price Changed (PCG)" },
+                              { value: "off_market", label: "Back on Market (BOM)" },
+                              { value: "pending", label: "Extended (EXT)" },
+                              { value: "sold", label: "Reactivated (RAC)" },
+                              { value: "sold", label: "Contingent (CTG)" },
+                            ].map((status, idx) => (
+                              <div key={idx} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`status-${idx}`}
+                                  checked={statuses.includes(status.value)}
+                                  onCheckedChange={() => handleStatusToggle(status.value)}
+                                />
+                                <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer">{status.label}</label>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                          <div className="space-y-1">
+                            {[
+                              { value: "pending", label: "Under Agreement (UAG)" },
+                              { value: "sold", label: "Sold (SLD)" },
+                              { value: "off_market", label: "Rented (RNT)" },
+                              { value: "off_market", label: "Temporarily Withdrawn (WDN)" },
+                              { value: "off_market", label: "Expired (EXP)" },
+                              { value: "off_market", label: "Canceled (CAN)" },
+                              { value: "coming_soon", label: "Coming Soon (CSO)" },
+                            ].map((status, idx) => (
+                              <div key={`status-right-${idx}`} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`status-right-${idx}`}
+                                  checked={statuses.includes(status.value)}
+                                  onCheckedChange={() => handleStatusToggle(status.value)}
+                                />
+                                <label htmlFor={`status-right-${idx}`} className="text-xs cursor-pointer">{status.label}</label>
+                              </div>
+                            ))}
+                            
+                            <div className="pt-2 border-t mt-2">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Label className="text-xs font-semibold">List Date</Label>
+                                <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
+                              </div>
+                              <Input className="h-7 text-xs" />
+                            </div>
+                            
+                            <div className="pt-2">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Label className="text-xs font-semibold">Off-Market Timeframe</Label>
+                                <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
+                              </div>
+                              <Select defaultValue="today-6months">
+                                <SelectTrigger className="h-7 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="today-6months">TODAY - 6 MONTHS</SelectItem>
+                                  <SelectItem value="today-3months">TODAY - 3 MONTHS</SelectItem>
+                                  <SelectItem value="today-1month">TODAY - 1 MONTH</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </CollapsibleContent>
                   </div>
@@ -444,6 +489,15 @@ const BrowseProperties = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
+                            <Label className="text-xs">Total Parking Spaces</Label>
+                            <Input 
+                              type="number" 
+                              value={totalParkingSpaces} 
+                              readOnly 
+                              className="h-8 bg-muted" 
+                            />
+                          </div>
+                          <div>
                             <Label className="text-xs">Garage Spaces</Label>
                             <Input 
                               type="number" 
@@ -457,6 +511,8 @@ const BrowseProperties = () => {
                               className="h-8" 
                             />
                           </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
                           <div>
                             <Label className="text-xs">Parking Spaces (Non-Garage)</Label>
                             <Input 
@@ -472,15 +528,10 @@ const BrowseProperties = () => {
                             />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-xs">Total Parking Spaces</Label>
-                            <Input 
-                              type="number" 
-                              value={totalParkingSpaces} 
-                              readOnly 
-                              className="h-8 bg-muted" 
-                            />
+                        <div className="pt-2 border-t mt-2">
+                          <div className="flex items-center gap-2">
+                            <Label className="text-xs block font-semibold">ADDITIONAL CRITERIA</Label>
+                            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
                           </div>
                         </div>
                       </div>
@@ -501,6 +552,10 @@ const BrowseProperties = () => {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="p-3 pt-0 grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Low</Label>
+                        <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="" className="h-8" />
+                      </div>
                       <div>
                         <Label className="text-xs">High</Label>
                         <Input type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="" className="h-8" />
