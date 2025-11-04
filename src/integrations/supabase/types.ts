@@ -513,6 +513,7 @@ export type Database = {
       }
       listings: {
         Row: {
+          activation_date: string | null
           additional_notes: string | null
           address: string
           agent_id: string
@@ -557,6 +558,7 @@ export type Database = {
           zip_code: string
         }
         Insert: {
+          activation_date?: string | null
           additional_notes?: string | null
           address: string
           agent_id: string
@@ -601,6 +603,7 @@ export type Database = {
           zip_code: string
         }
         Update: {
+          activation_date?: string | null
           additional_notes?: string | null
           address?: string
           agent_id?: string
@@ -793,6 +796,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_activate_listings: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -13,11 +13,15 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon } from "lucide-react";
 import { z } from "zod";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface FileWithPreview {
   file: File;
@@ -79,6 +83,7 @@ const AddListing = () => {
     price: "",
     list_date: new Date().toISOString().split('T')[0],
     expiration_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    activation_date: "",
     description: "",
     commission_rate: "",
     commission_type: "percentage",
@@ -687,6 +692,7 @@ const AddListing = () => {
         year_built: validatedData.year_built || null,
         price: validatedData.price,
         description: validatedData.description || null,
+        activation_date: formData.status === "coming_soon" && formData.activation_date ? formData.activation_date : null,
         commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
         commission_type: formData.commission_type,
         commission_notes: formData.commission_notes || null,
@@ -849,6 +855,49 @@ const AddListing = () => {
                     </Select>
                   </div>
                 </div>
+
+                {/* Coming Soon Activation Date */}
+                {formData.status === "coming_soon" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="activation_date">Activation Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.activation_date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.activation_date ? (
+                            format(new Date(formData.activation_date), "PPP")
+                          ) : (
+                            <span>Pick a date when this listing will become active</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={formData.activation_date ? new Date(formData.activation_date) : undefined}
+                          onSelect={(date) => 
+                            setFormData({ 
+                              ...formData, 
+                              activation_date: date ? date.toISOString().split('T')[0] : "" 
+                            })
+                          }
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-sm text-muted-foreground">
+                      Select when this listing should automatically change to "Active" status
+                    </p>
+                  </div>
+                )}
 
                 {/* Row 2: Enter Address, List Price */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
