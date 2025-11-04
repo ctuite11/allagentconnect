@@ -2290,23 +2290,47 @@ const AddListing = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Start Time *</Label>
-                  <Input
-                    type="time"
-                    value={dialogStartTime}
-                    onChange={(e) => setDialogStartTime(e.target.value)}
-                    className="text-lg"
-                    required
-                  />
+                  <Select value={dialogStartTime} onValueChange={setDialogStartTime}>
+                    <SelectTrigger className="text-lg">
+                      <SelectValue placeholder="Select start time" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {Array.from({ length: 48 }, (_, i) => {
+                        const hour = Math.floor(i / 2);
+                        const minute = i % 2 === 0 ? '00' : '30';
+                        const time = `${hour.toString().padStart(2, '0')}:${minute}`;
+                        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                        const period = hour >= 12 ? 'PM' : 'AM';
+                        return (
+                          <SelectItem key={time} value={time}>
+                            {displayHour}:{minute} {period}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>End Time *</Label>
-                  <Input
-                    type="time"
-                    value={dialogEndTime}
-                    onChange={(e) => setDialogEndTime(e.target.value)}
-                    className="text-lg"
-                    required
-                  />
+                  <Select value={dialogEndTime} onValueChange={setDialogEndTime}>
+                    <SelectTrigger className="text-lg">
+                      <SelectValue placeholder="Select end time" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {Array.from({ length: 48 }, (_, i) => {
+                        const hour = Math.floor(i / 2);
+                        const minute = i % 2 === 0 ? '00' : '30';
+                        const time = `${hour.toString().padStart(2, '0')}:${minute}`;
+                        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                        const period = hour >= 12 ? 'PM' : 'AM';
+                        return (
+                          <SelectItem key={time} value={time}>
+                            {displayHour}:{minute} {period}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               {dialogStartTime && dialogEndTime && (
