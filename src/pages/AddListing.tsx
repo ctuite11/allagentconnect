@@ -2248,7 +2248,7 @@ const AddListing = () => {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Schedule {openHouseDialogType === 'public' ? 'Public' : 'Broker'} Open House
+              Schedule {openHouseDialogType === 'public' ? 'Public 🎈' : 'Broker 🚗'} Open House
             </DialogTitle>
             <DialogDescription>
               Select multiple dates and set the time for your {openHouseDialogType === 'public' ? 'public' : 'broker'} open house.
@@ -2258,7 +2258,7 @@ const AddListing = () => {
           <div className="space-y-6 py-4">
             {/* Date Selection */}
             <div className="space-y-2">
-              <Label>Select Dates (click multiple dates)</Label>
+              <Label className="text-base font-semibold">Select Dates (click multiple dates)</Label>
               <Calendar
                 mode="multiple"
                 selected={selectedDates}
@@ -2285,28 +2285,40 @@ const AddListing = () => {
             </div>
             
             {/* Time Selection */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Start Time</Label>
-                <Input
-                  type="time"
-                  value={dialogStartTime}
-                  onChange={(e) => setDialogStartTime(e.target.value)}
-                />
+            <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+              <Label className="text-base font-semibold">Set Time for All Selected Dates</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Start Time *</Label>
+                  <Input
+                    type="time"
+                    value={dialogStartTime}
+                    onChange={(e) => setDialogStartTime(e.target.value)}
+                    className="text-lg"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>End Time *</Label>
+                  <Input
+                    type="time"
+                    value={dialogEndTime}
+                    onChange={(e) => setDialogEndTime(e.target.value)}
+                    className="text-lg"
+                    required
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>End Time</Label>
-                <Input
-                  type="time"
-                  value={dialogEndTime}
-                  onChange={(e) => setDialogEndTime(e.target.value)}
-                />
-              </div>
+              {dialogStartTime && dialogEndTime && (
+                <p className="text-sm text-muted-foreground">
+                  Open house will be from {dialogStartTime} to {dialogEndTime}
+                </p>
+              )}
             </div>
             
             {/* Comments */}
             <div className="space-y-2">
-              <Label>Comments (Optional)</Label>
+              <Label className="text-base font-semibold">Comments (Optional)</Label>
               <Textarea
                 placeholder="Refreshments will be served. Park in the driveway..."
                 value={dialogComments}
@@ -2356,6 +2368,7 @@ const AddListing = () => {
                 setDialogComments('');
                 toast.success(`Added ${newOpenHouses.length} open house(s)`);
               }}
+              className="bg-green-600 hover:bg-green-700"
             >
               Add Open House(s)
             </Button>
