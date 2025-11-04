@@ -87,6 +87,11 @@ const BrowseProperties = () => {
     fetchListings();
   }, [statuses, propertyTypes, minPrice, maxPrice, bedrooms, bathrooms, county, selectedTowns, zipCode]);
 
+  // Reset selected towns when county changes
+  useEffect(() => {
+    setSelectedTowns([]);
+  }, [county]);
+
   const fetchListings = async () => {
     try {
       setLoading(true);
