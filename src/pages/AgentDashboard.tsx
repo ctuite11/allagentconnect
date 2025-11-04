@@ -41,6 +41,7 @@ const AgentDashboard = () => {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [tempStatusFilters, setTempStatusFilters] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
     document.title = "Agent Dashboard - Agent Connect";
@@ -220,9 +221,23 @@ const AgentDashboard = () => {
               </label>
             ))}
           </div>
-          <Button onClick={() => setStatusFilters(tempStatusFilters)}>
-            View Results
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => {
+              setStatusFilters(tempStatusFilters);
+              setShowResults(true);
+            }}>
+              View Results
+            </Button>
+            {showResults && (
+              <Button variant="outline" onClick={() => {
+                setStatusFilters([]);
+                setTempStatusFilters([]);
+                setShowResults(false);
+              }}>
+                Clear Filters
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Listing Type Cards */}
@@ -248,14 +263,21 @@ const AgentDashboard = () => {
         </div>
 
         {/* Existing Listings */}
+        {showResults && statusFilters.length > 0 && (
+          <div className="mb-4 p-4 bg-muted rounded-lg">
+            <p className="text-sm font-medium">
+              Showing {listings.filter(l => statusFilters.includes(l.status)).length} listing(s) with status: {statusFilters.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(", ")}
+            </p>
+          </div>
+        )}
         {listings.length > 0 ? (
           <div className="space-y-8">
             {/* Draft Listings */}
-            {listings.filter(l => l.status === "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).length > 0 && (
+            {listings.filter(l => l.status === "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes(l.status))).length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold mb-6">Draft Listings</h2>
                 <div className={viewMode === 'grid' ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
-                  {listings.filter(l => l.status === "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).map((listing) => (
+                  {listings.filter(l => l.status === "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes(l.status))).map((listing) => (
                     <ListingCard
                       key={listing.id}
                       listing={listing}
@@ -268,11 +290,11 @@ const AgentDashboard = () => {
             )}
             
             {/* Active Listings */}
-            {listings.filter(l => l.status !== "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).length > 0 && (
+            {listings.filter(l => l.status !== "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes(l.status))).length > 0 && (
               <div>
                 <h2 className="text-2xl font-bold mb-6">Active Listings</h2>
                 <div className={viewMode === 'grid' ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
-                  {listings.filter(l => l.status !== "draft" && (statusFilters.length === 0 || statusFilters.includes(l.status))).map((listing) => (
+                  {listings.filter(l => l.status !== "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes(l.status))).map((listing) => (
                     <ListingCard
                       key={listing.id}
                       listing={listing}
