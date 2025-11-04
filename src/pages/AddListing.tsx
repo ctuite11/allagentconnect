@@ -17,6 +17,7 @@ import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertic
 import { z } from "zod";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
+import { getAreasForCity } from "@/data/usNeighborhoodsData";
 
 interface FileWithPreview {
   file: File;
@@ -26,10 +27,17 @@ interface FileWithPreview {
   url?: string;
 }
 
+// Massachusetts counties
+const MA_COUNTIES = [
+  "Barnstable", "Berkshire", "Bristol", "Dukes", "Essex", "Franklin", 
+  "Hampden", "Hampshire", "Middlesex", "Nantucket", "Norfolk", "Plymouth", 
+  "Suffolk", "Worcester"
+];
+
 // Zod validation schema for listing data
 const listingSchema = z.object({
   address: z.string().trim().min(1, "Address is required").max(500, "Address must be less than 500 characters"),
-  city: z.string().trim().min(1, "City is required").max(200, "City must be less than 200 characters"),
+  city: z.string().optional(),
   state: z.string().trim().length(2, "State must be 2 characters"),
   zip_code: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code format"),
   price: z.number().min(1000, "Price must be at least $1,000").max(100000000, "Price must be less than $100,000,000"),
@@ -252,8 +260,8 @@ const AddListing = () => {
             square_feet: data.attom.square_feet?.toString() || prev.square_feet,
             lot_size: (data.attom.lot_size !== undefined && data.attom.lot_size !== null)
               ? (typeof data.attom.lot_size === "number"
-                  ? data.attom.lot_size.toFixed(2)
-                  : (!isNaN(Number(data.attom.lot_size)) ? Number(data.attom.lot_size).toFixed(2) : data.attom.lot_size?.toString()))
+                  ? Math.round(data.attom.lot_size).toString()
+                  : (!isNaN(Number(data.attom.lot_size)) ? Math.round(Number(data.attom.lot_size)).toString() : data.attom.lot_size?.toString()))
               : prev.lot_size,
             year_built: data.attom.year_built?.toString() || prev.year_built,
             property_type: data.attom.property_type || prev.property_type,
@@ -309,8 +317,8 @@ const AddListing = () => {
                   lot_size: prev.lot_size || (
                     mapped.lot_size !== null && mapped.lot_size !== undefined
                       ? (typeof mapped.lot_size === "number"
-                          ? mapped.lot_size.toFixed(2)
-                          : (!isNaN(Number(mapped.lot_size)) ? Number(mapped.lot_size).toFixed(2) : mapped.lot_size?.toString()))
+                          ? Math.round(mapped.lot_size).toString()
+                          : (!isNaN(Number(mapped.lot_size)) ? Math.round(Number(mapped.lot_size)).toString() : mapped.lot_size?.toString()))
                       : prev.lot_size
                   ),
                   year_built: prev.year_built || (mapped.year_built?.toString() ?? prev.year_built),
@@ -357,8 +365,8 @@ const AddListing = () => {
                 square_feet: mapped.square_feet?.toString() || prev.square_feet,
                 lot_size: (mapped.lot_size !== null && mapped.lot_size !== undefined)
                   ? (typeof mapped.lot_size === "number"
-                      ? mapped.lot_size.toFixed(2)
-                      : (!isNaN(Number(mapped.lot_size)) ? Number(mapped.lot_size).toFixed(2) : mapped.lot_size?.toString()))
+                      ? Math.round(mapped.lot_size).toString()
+                      : (!isNaN(Number(mapped.lot_size)) ? Math.round(Number(mapped.lot_size)).toString() : mapped.lot_size?.toString()))
                   : prev.lot_size,
                 year_built: mapped.year_built?.toString() || prev.year_built,
                 property_type: mapped.property_type || prev.property_type,
@@ -875,13 +883,6 @@ const AddListing = () => {
                       value={formData.address}
                       onChange={(val) => setFormData({ ...formData, address: val })}
                     />
-                    {formData.city && formData.state && formData.zip_code && (
-                      <div className="text-sm text-muted-foreground mt-1 space-y-0.5">
-                        <p>{formData.city}, {formData.state} {formData.zip_code}</p>
-                        {formData.county && <p>County: {formData.county}</p>}
-                        {formData.neighborhood && <p>Neighborhood: {formData.neighborhood}</p>}
-                      </div>
-                    )}
                     <div className="mt-2">
                       <Button 
                         type="button" 
@@ -901,43 +902,67 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Row 3: County, Neighborhood (only show if not auto-filled) */}
-                {(!formData.county || !formData.neighborhood) && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {!formData.county && (
-                      <div className="space-y-2">
-                        <Label htmlFor="county">County (Optional - Not found in address)</Label>
-                        <Input
-                          id="county"
-                          value={formData.county}
-                          onChange={(e) => setFormData({ ...formData, county: e.target.value })}
-                          placeholder="Enter county if known"
-                        />
-                      </div>
-                    )}
-                    {!formData.neighborhood && (
-                      <div className="space-y-2">
-                        <Label htmlFor="neighborhood">Neighborhood (Optional - Not found in address)</Label>
-                        <Input
-                          id="neighborhood"
-                          value={formData.neighborhood}
-                          onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                          placeholder="Enter neighborhood if known"
-                        />
-                      </div>
-                    )}
+                {/* Row 3: State, Zip, County, Neighborhood */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State *</Label>
+                    <Input
+                      id="state"
+                      value={formData.state}
+                      onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
+                      maxLength={2}
+                      required
+                    />
                   </div>
-                )}
-
-                {/* Row 4: City */}
-                <div className="space-y-2">
-                  <Label htmlFor="city">City *</Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    required
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="zip_code">Zip Code *</Label>
+                    <Input
+                      id="zip_code"
+                      value={formData.zip_code}
+                      onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="county">County</Label>
+                    <Select
+                      value={formData.county}
+                      onValueChange={(value) => setFormData({ ...formData, county: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select county" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MA_COUNTIES.map((county) => (
+                          <SelectItem key={county} value={county}>
+                            {county}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="neighborhood">Area/Neighborhood</Label>
+                    <Select
+                      value={formData.neighborhood}
+                      onValueChange={(value) => setFormData({ ...formData, neighborhood: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select area" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0 ? (
+                          getAreasForCity(formData.city, formData.state).map((area) => (
+                            <SelectItem key={area} value={area}>
+                              {area}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="none" disabled>No areas available</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Property Details */}
@@ -982,13 +1007,12 @@ const AddListing = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="lot_size">Lot Size (acres)</Label>
-                  <FormattedInput
+                  <Label htmlFor="lot_size">Lot Size (sq ft)</Label>
+                  <Input
                     id="lot_size"
-                    format="number"
-                    decimals={2}
+                    type="number"
                     value={formData.lot_size}
-                    onChange={(value) => setFormData({ ...formData, lot_size: value })}
+                    onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
                   />
                 </div>
 
