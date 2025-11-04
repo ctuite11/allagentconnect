@@ -12,10 +12,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, ArrowUp, X, Home, Calendar } from "lucide-react";
 import { toast } from "sonner";
-import { getAreasForCity } from "@/data/usNeighborhoodsData";
+import { getAreasForCity, usNeighborhoodsByCityState } from "@/data/usNeighborhoodsData";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
+import { usCitiesByState } from "@/data/usCitiesData";
 
 const BrowseProperties = () => {
   const [listings, setListings] = useState<any[]>([]);
@@ -32,6 +33,14 @@ const BrowseProperties = () => {
   const [state, setState] = useState("MA");
   const [county, setCounty] = useState("Suffolk");
   const [selectedTowns, setSelectedTowns] = useState<string[]>([]);
+  const [showAreas, setShowAreas] = useState("yes");
+  const [townSearch, setTownSearch] = useState("");
+  const [manualTowns, setManualTowns] = useState("");
+  
+  // Listing events
+  const [openHouses, setOpenHouses] = useState(false);
+  const [brokerTours, setBrokerTours] = useState(false);
+  const [eventTimeframe, setEventTimeframe] = useState("next_3_days");
   
   // Property Type filters
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
@@ -72,6 +81,7 @@ const BrowseProperties = () => {
   const [isCriteriaOpen, setIsCriteriaOpen] = useState(true);
   const [isKeywordsOpen, setIsKeywordsOpen] = useState(false);
   const [isListNumbersOpen, setIsListNumbersOpen] = useState(false);
+  const [isListingEventsOpen, setIsListingEventsOpen] = useState(false);
 
   useEffect(() => {
     fetchListings();
@@ -146,8 +156,48 @@ const BrowseProperties = () => {
     );
   };
 
-  const neighborhoods = getAreasForCity("Boston", "MA");
   const currentStateCounties = getCountiesForState(state);
+  const currentStateCities = usCitiesByState[state] || [];
+  
+  // Generate town list with neighborhoods
+  const getTownsList = () => {
+    const towns: string[] = [];
+    currentStateCities.forEach(city => {
+      towns.push(`${city}, ${state}`);
+      const neighborhoods = getAreasForCity(city, state);
+      neighborhoods.forEach(neighborhood => {
+        towns.push(`${city}, ${state}-${neighborhood}`);
+      });
+    });
+    return towns;
+  };
+  
+  const filteredTowns = getTownsList().filter(town => 
+    town.toLowerCase().includes(townSearch.toLowerCase())
+  );
+  
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  const addManualTowns = () => {
+    if (manualTowns.trim()) {
+      const newTowns = manualTowns.split(',').map(t => t.trim()).filter(t => t);
+      setSelectedTowns([...selectedTowns, ...newTowns]);
+      setManualTowns("");
+      toast.success("Towns added to selection");
+    }
+  };
+  
+  const removeAllTowns = () => {
+    setSelectedTowns([]);
+    toast.success("All towns removed");
+  };
+  
+  const addAllTowns = () => {
+    setSelectedTowns(getTownsList());
+    toast.success("All towns added");
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -216,19 +266,33 @@ const BrowseProperties = () => {
               <Collapsible open={isTownsOpen} onOpenChange={setIsTownsOpen}>
                 <div className="bg-card rounded-lg shadow-sm border">
                   <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
-                    <h3 className="font-semibold text-lg">TOWNS</h3>
-                    {isTownsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                    <div className="flex items-center justify-between w-full">
+                      <h3 className="font-semibold text-lg">TOWNS</h3>
+                      <div className="flex items-center gap-4">
+                        <Button 
+                          variant="link" 
+                          className="text-xs gap-1 h-auto p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            scrollToTop();
+                          }}
+                        >
+                          BACK TO TOP <ArrowUp className="h-3 w-3" />
+                        </Button>
+                        {isTownsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                      </div>
+                    </div>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="p-4 pt-0 space-y-3">
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-2 items-end">
                         <div>
                           <Label className="text-xs">State</Label>
                           <Select value={state} onValueChange={setState}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent className="max-h-[300px]">
                               {US_STATES.map((s) => (
-                                <SelectItem key={s.code} value={s.code}>{s.name}</SelectItem>
+                                <SelectItem key={s.code} value={s.code}>{s.code}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -244,27 +308,166 @@ const BrowseProperties = () => {
                             </SelectContent>
                           </Select>
                         </div>
-                      </div>
-                      <div>
-                        <Label className="text-xs mb-2 block">Select Towns/Areas</Label>
-                        <div className="max-h-40 overflow-y-auto border rounded p-2 space-y-1">
-                          {neighborhoods.map((area) => (
-                            <div key={area} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`town-${area}`}
-                                checked={selectedTowns.includes(area)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedTowns([...selectedTowns, area]);
-                                  } else {
-                                    setSelectedTowns(selectedTowns.filter(t => t !== area));
-                                  }
-                                }}
-                              />
-                              <label htmlFor={`town-${area}`} className="text-sm cursor-pointer">{area}</label>
+                        <div>
+                          <Label className="text-xs">Show Areas</Label>
+                          <RadioGroup value={showAreas} onValueChange={setShowAreas} className="flex gap-3">
+                            <div className="flex items-center space-x-1">
+                              <RadioGroupItem value="yes" id="show-yes" />
+                              <Label htmlFor="show-yes" className="text-sm cursor-pointer">Yes</Label>
                             </div>
-                          ))}
+                            <div className="flex items-center space-x-1">
+                              <RadioGroupItem value="no" id="show-no" />
+                              <Label htmlFor="show-no" className="text-sm cursor-pointer">No</Label>
+                            </div>
+                          </RadioGroup>
                         </div>
+                      </div>
+                      
+                      <div className="relative">
+                        <Input 
+                          value={townSearch} 
+                          onChange={(e) => setTownSearch(e.target.value)}
+                          placeholder="Type Full or Partial Name"
+                          className="pr-8"
+                        />
+                        {townSearch && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                            onClick={() => setTownSearch("")}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-[1fr,200px] gap-3">
+                        <div>
+                          <div className="max-h-60 overflow-y-auto border rounded bg-background">
+                            <div 
+                              className="p-2 hover:bg-muted cursor-pointer border-b font-semibold text-sm"
+                              onClick={addAllTowns}
+                            >
+                              - Add All Towns -
+                            </div>
+                            <div className="p-2 space-y-1">
+                              {filteredTowns.map((town) => (
+                                <div key={town} className="flex items-center space-x-2 py-0.5">
+                                  <Checkbox
+                                    id={`town-${town}`}
+                                    checked={selectedTowns.includes(town)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setSelectedTowns([...selectedTowns, town]);
+                                      } else {
+                                        setSelectedTowns(selectedTowns.filter(t => t !== town));
+                                      }
+                                    }}
+                                  />
+                                  <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">
+                                    {town}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3">
+                            <Label className="text-xs mb-1 block">Type Multiple Towns/Areas</Label>
+                            <div className="flex gap-2">
+                              <Textarea 
+                                value={manualTowns}
+                                onChange={(e) => setManualTowns(e.target.value)}
+                                placeholder="Type Towns/Areas"
+                                rows={2}
+                                className="flex-1"
+                              />
+                              <Button onClick={addManualTowns} size="sm">Add</Button>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Label className="text-xs font-semibold">Selected Towns</Label>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 text-xs"
+                              onClick={removeAllTowns}
+                            >
+                              Remove All
+                            </Button>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto border rounded bg-background p-2">
+                            {selectedTowns.length === 0 ? (
+                              <p className="text-xs text-muted-foreground text-center py-4">No towns selected</p>
+                            ) : (
+                              <div className="space-y-1">
+                                {selectedTowns.map((town) => (
+                                  <div key={town} className="text-xs p-1 bg-muted rounded flex items-center justify-between">
+                                    <span className="flex-1 truncate">{town}</span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-4 w-4 p-0"
+                                      onClick={() => setSelectedTowns(selectedTowns.filter(t => t !== town))}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              {/* LISTING EVENTS Section */}
+              <Collapsible open={isListingEventsOpen} onOpenChange={setIsListingEventsOpen}>
+                <div className="bg-card rounded-lg shadow-sm border">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
+                    <h3 className="font-semibold text-lg">LISTING EVENTS</h3>
+                    {isListingEventsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="p-4 pt-0 space-y-3">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="open-houses" 
+                            checked={openHouses}
+                            onCheckedChange={(checked) => setOpenHouses(checked as boolean)}
+                          />
+                          <Home className="h-4 w-4 text-red-500" />
+                          <label htmlFor="open-houses" className="text-sm cursor-pointer">Open Houses</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="broker-tours" 
+                            checked={brokerTours}
+                            onCheckedChange={(checked) => setBrokerTours(checked as boolean)}
+                          />
+                          <Home className="h-4 w-4 text-red-500" />
+                          <label htmlFor="broker-tours" className="text-sm cursor-pointer">Broker Tours</label>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-[auto,1fr] gap-2 items-center">
+                        <Label className="text-xs">For:</Label>
+                        <Select value={eventTimeframe} onValueChange={setEventTimeframe}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="next_3_days">Next 3 Days</SelectItem>
+                            <SelectItem value="next_7_days">Next 7 Days</SelectItem>
+                            <SelectItem value="next_14_days">Next 14 Days</SelectItem>
+                            <SelectItem value="next_30_days">Next 30 Days</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </CollapsibleContent>
