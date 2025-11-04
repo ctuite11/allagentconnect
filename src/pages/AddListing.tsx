@@ -250,9 +250,22 @@ const AddListing = () => {
             bedrooms: data.attom.bedrooms?.toString() || prev.bedrooms,
             bathrooms: data.attom.bathrooms?.toString() || prev.bathrooms,
             square_feet: data.attom.square_feet?.toString() || prev.square_feet,
-            lot_size: data.attom.lot_size?.toString() || prev.lot_size,
+            lot_size: (data.attom.lot_size !== undefined && data.attom.lot_size !== null)
+              ? (typeof data.attom.lot_size === "number"
+                  ? data.attom.lot_size.toFixed(2)
+                  : (!isNaN(Number(data.attom.lot_size)) ? Number(data.attom.lot_size).toFixed(2) : data.attom.lot_size?.toString()))
+              : prev.lot_size,
             year_built: data.attom.year_built?.toString() || prev.year_built,
             property_type: data.attom.property_type || prev.property_type,
+            annual_property_tax: (data.attom.annual_property_tax !== undefined && data.attom.annual_property_tax !== null)
+              ? data.attom.annual_property_tax.toString()
+              : prev.annual_property_tax,
+            tax_year: (data.attom.tax_year !== undefined && data.attom.tax_year !== null)
+              ? data.attom.tax_year.toString()
+              : prev.tax_year,
+            tax_assessment_value: (data.attom.tax_assessment_value !== undefined && data.attom.tax_assessment_value !== null)
+              ? data.attom.tax_assessment_value.toString()
+              : prev.tax_assessment_value,
           }));
 
           // If some key fields are missing, try a lightweight fallback call to enrich data
@@ -276,6 +289,7 @@ const AddListing = () => {
                 const building = prop.building || {};
                 const lot = prop.lot || {};
                 const summary = prop.summary || {};
+                const assessment = prop.assessment || {};
                 const mapped = {
                   bedrooms: building.rooms?.beds || null,
                   bathrooms: building.rooms?.bathsTotal || building.rooms?.bathsFull || null,
@@ -283,15 +297,27 @@ const AddListing = () => {
                   lot_size: lot.lotSize2 || lot.lotSize1 || null,
                   year_built: summary.yearBuilt || null,
                   property_type: summary.propType || null,
+                  annual_property_tax: assessment.tax?.taxAmt || null,
+                  tax_year: assessment.tax?.taxYear || null,
+                  tax_assessment_value: assessment.assessed?.assdTtlValue || null,
                 };
                 setFormData(prev => ({
                   ...prev,
                   bedrooms: prev.bedrooms || (mapped.bedrooms?.toString() ?? prev.bedrooms),
                   bathrooms: prev.bathrooms || (mapped.bathrooms?.toString() ?? prev.bathrooms),
                   square_feet: prev.square_feet || (mapped.square_feet?.toString() ?? prev.square_feet),
-                  lot_size: prev.lot_size || (mapped.lot_size?.toString() ?? prev.lot_size),
+                  lot_size: prev.lot_size || (
+                    mapped.lot_size !== null && mapped.lot_size !== undefined
+                      ? (typeof mapped.lot_size === "number"
+                          ? mapped.lot_size.toFixed(2)
+                          : (!isNaN(Number(mapped.lot_size)) ? Number(mapped.lot_size).toFixed(2) : mapped.lot_size?.toString()))
+                      : prev.lot_size
+                  ),
                   year_built: prev.year_built || (mapped.year_built?.toString() ?? prev.year_built),
                   property_type: prev.property_type || (mapped.property_type ?? prev.property_type),
+                  annual_property_tax: prev.annual_property_tax || ((mapped.annual_property_tax !== null && mapped.annual_property_tax !== undefined) ? String(mapped.annual_property_tax) : prev.annual_property_tax),
+                  tax_year: prev.tax_year || ((mapped.tax_year !== null && mapped.tax_year !== undefined) ? String(mapped.tax_year) : prev.tax_year),
+                  tax_assessment_value: prev.tax_assessment_value || ((mapped.tax_assessment_value !== null && mapped.tax_assessment_value !== undefined) ? String(mapped.tax_assessment_value) : prev.tax_assessment_value),
                 }));
                 setDebugInfo((d:any) => ({ ...(d||{}), supplemental: { used: true, mapped } }));
               }
@@ -311,6 +337,7 @@ const AddListing = () => {
               const building = prop.building || {};
               const lot = prop.lot || {};
               const summary = prop.summary || {};
+              const assessment = prop.assessment || {};
               const mapped = {
                 bedrooms: building.rooms?.beds || null,
                 bathrooms: building.rooms?.bathsTotal || building.rooms?.bathsFull || null,
@@ -318,6 +345,9 @@ const AddListing = () => {
                 lot_size: lot.lotSize2 || lot.lotSize1 || null,
                 year_built: summary.yearBuilt || null,
                 property_type: summary.propType || null,
+                annual_property_tax: assessment.tax?.taxAmt || null,
+                tax_year: assessment.tax?.taxYear || null,
+                tax_assessment_value: assessment.assessed?.assdTtlValue || null,
               };
               setAttomData(mapped as any);
               setFormData(prev => ({
@@ -325,9 +355,16 @@ const AddListing = () => {
                 bedrooms: mapped.bedrooms?.toString() || prev.bedrooms,
                 bathrooms: mapped.bathrooms?.toString() || prev.bathrooms,
                 square_feet: mapped.square_feet?.toString() || prev.square_feet,
-                lot_size: mapped.lot_size?.toString() || prev.lot_size,
+                lot_size: (mapped.lot_size !== null && mapped.lot_size !== undefined)
+                  ? (typeof mapped.lot_size === "number"
+                      ? mapped.lot_size.toFixed(2)
+                      : (!isNaN(Number(mapped.lot_size)) ? Number(mapped.lot_size).toFixed(2) : mapped.lot_size?.toString()))
+                  : prev.lot_size,
                 year_built: mapped.year_built?.toString() || prev.year_built,
                 property_type: mapped.property_type || prev.property_type,
+                annual_property_tax: (mapped.annual_property_tax !== null && mapped.annual_property_tax !== undefined) ? String(mapped.annual_property_tax) : prev.annual_property_tax,
+                tax_year: (mapped.tax_year !== null && mapped.tax_year !== undefined) ? String(mapped.tax_year) : prev.tax_year,
+                tax_assessment_value: (mapped.tax_assessment_value !== null && mapped.tax_assessment_value !== undefined) ? String(mapped.tax_assessment_value) : prev.tax_assessment_value,
               }));
               toast.success("Loaded property details from Attom (fallback)");
             }
@@ -425,6 +462,7 @@ const AddListing = () => {
       const building = prop.building || {};
       const lot = prop.lot || {};
       const summary = prop.summary || {};
+      const assessment = prop.assessment || {};
       const mapped = {
         bedrooms: building.rooms?.beds || null,
         bathrooms: building.rooms?.bathsTotal || building.rooms?.bathsFull || null,
@@ -432,6 +470,9 @@ const AddListing = () => {
         lot_size: lot.lotSize2 || lot.lotSize1 || null,
         year_built: summary.yearBuilt || null,
         property_type: summary.propType || null,
+        annual_property_tax: assessment.tax?.taxAmt || null,
+        tax_year: assessment.tax?.taxYear || null,
+        tax_assessment_value: assessment.assessed?.assdTtlValue || null,
       };
       setAttomData(mapped as any);
       setFormData((prev: any) => ({
@@ -439,9 +480,16 @@ const AddListing = () => {
         bedrooms: (mapped.bedrooms !== null && mapped.bedrooms !== undefined) ? String(mapped.bedrooms) : prev.bedrooms,
         bathrooms: (mapped.bathrooms !== null && mapped.bathrooms !== undefined) ? String(mapped.bathrooms) : prev.bathrooms,
         square_feet: (mapped.square_feet !== null && mapped.square_feet !== undefined) ? String(mapped.square_feet) : prev.square_feet,
-        lot_size: (mapped.lot_size !== null && mapped.lot_size !== undefined) ? String(mapped.lot_size) : prev.lot_size,
+        lot_size: (mapped.lot_size !== null && mapped.lot_size !== undefined)
+          ? (typeof mapped.lot_size === "number"
+              ? mapped.lot_size.toFixed(2)
+              : (!isNaN(Number(mapped.lot_size)) ? Number(mapped.lot_size).toFixed(2) : mapped.lot_size?.toString()))
+          : prev.lot_size,
         year_built: (mapped.year_built !== null && mapped.year_built !== undefined) ? String(mapped.year_built) : prev.year_built,
         property_type: mapped.property_type || prev.property_type,
+        annual_property_tax: (mapped.annual_property_tax !== null && mapped.annual_property_tax !== undefined) ? String(mapped.annual_property_tax) : prev.annual_property_tax,
+        tax_year: (mapped.tax_year !== null && mapped.tax_year !== undefined) ? String(mapped.tax_year) : prev.tax_year,
+        tax_assessment_value: (mapped.tax_assessment_value !== null && mapped.tax_assessment_value !== undefined) ? String(mapped.tax_assessment_value) : prev.tax_assessment_value,
       }));
       toast.success("Property details loaded - " + [
         mapped.bedrooms && `${mapped.bedrooms} beds`,
