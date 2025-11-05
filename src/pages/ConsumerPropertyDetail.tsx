@@ -183,6 +183,25 @@ const ConsumerPropertyDetail = () => {
                   </Badge>
                 )}
               </div>
+
+              {/* View More Photos Button */}
+              {listing.photos && listing.photos.length > 1 && (
+                <div className="absolute bottom-4 right-4">
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    onClick={() => {
+                      const photosTab = document.querySelector('[value="photos"]') as HTMLElement;
+                      photosTab?.click();
+                      photosTab?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }}
+                    className="gap-2"
+                  >
+                    <Home className="w-4 h-4" />
+                    View {listing.photos.length} Photos
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Media Tabs */}
