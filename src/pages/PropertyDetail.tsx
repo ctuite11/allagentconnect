@@ -27,6 +27,8 @@ interface Listing {
   city: string;
   state: string;
   zip_code: string;
+  latitude: number | null;
+  longitude: number | null;
   property_type: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -657,8 +659,8 @@ const PropertyDetail = () => {
                 <CardContent>
                   <PropertyMap 
                     address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`}
-                    latitude={listing.attom_data?.latitude}
-                    longitude={listing.attom_data?.longitude}
+                    latitude={listing.latitude}
+                    longitude={listing.longitude}
                   />
                 </CardContent>
               </Card>
@@ -701,24 +703,20 @@ const PropertyDetail = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 text-sm">
-                      {listing.attom_data.zoning && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Zoning:</span>
-                          <span className="font-medium">{listing.attom_data.zoning}</span>
-                        </div>
-                      )}
-                      {listing.attom_data.stories && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Stories:</span>
-                          <span className="font-medium">{listing.attom_data.stories}</span>
-                        </div>
-                      )}
-                      {listing.attom_data.parking_spaces && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Parking Spaces:</span>
-                          <span className="font-medium">{listing.attom_data.parking_spaces}</span>
-                        </div>
-                      )}
+                      {Object.entries(listing.attom_data)
+                        .filter(([_, v]) => v !== null && v !== '' && typeof v !== 'object')
+                        .map(([k, v]) => (
+                          <div key={k as string} className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              {(k as string)
+                                .split('_')
+                                .map((p) => (p ? p[0].toUpperCase() + p.slice(1) : ''))
+                                .join(' ')}
+                              :
+                            </span>
+                            <span className="font-medium">{String(v)}</span>
+                          </div>
+                        ))}
                     </div>
                   </CardContent>
                 </Card>
