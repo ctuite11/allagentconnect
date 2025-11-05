@@ -303,8 +303,8 @@ const PropertyDetail = () => {
               </Button>
             </div>
 
-            {/* Agent and Commission Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Agent, Commission Info, and Buyer Agent Matches */}
+            <div className={`grid grid-cols-1 gap-4 ${isAgent ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
               {/* Listing Agent Card */}
               {agentProfile && (
                 <Card>
@@ -380,6 +380,15 @@ const PropertyDetail = () => {
                     )}
                   </CardContent>
                 </Card>
+              )}
+
+              {/* Matching Buyer Agents */}
+              {isAgent && (
+                <MatchingBuyerAgents 
+                  listingCity={listing.city}
+                  listingState={listing.state}
+                  listingZipCode={listing.zip_code}
+                />
               )}
             </div>
           </div>
@@ -666,15 +675,15 @@ const PropertyDetail = () => {
               </Card>
 
               {/* Walk Score */}
-              {listing.walk_score_data && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Footprints className="h-5 w-5" />
-                      Walk Score
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Footprints className="h-5 w-5" />
+                    Walk Score
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {listing.walk_score_data ? (
                     <div className="space-y-3">
                       {listing.walk_score_data.walkscore && (
                         <div className="flex justify-between items-center">
@@ -688,20 +697,22 @@ const PropertyDetail = () => {
                         <p className="text-sm text-muted-foreground">{listing.walk_score_data.description}</p>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Walk score data not available for this property.</p>
+                  )}
+                </CardContent>
+              </Card>
 
               {/* Nearby Schools */}
-              {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <GraduationCap className="h-5 w-5" />
-                      Nearby Schools
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5" />
+                    Nearby Schools
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 ? (
                     <div className="space-y-3">
                       {listing.schools_data.schools.slice(0, 3).map((school: any, index: number) => (
                         <div key={index} className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0">
@@ -718,18 +729,12 @@ const PropertyDetail = () => {
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  ) : (
+                    <p className="text-sm text-muted-foreground">School data not available for this property.</p>
+                  )}
+                </CardContent>
+              </Card>
 
-              {/* Matching Buyer Agents */}
-              {isAgent && (
-                <MatchingBuyerAgents 
-                  listingCity={listing.city}
-                  listingState={listing.state}
-                  listingZipCode={listing.zip_code}
-                />
-              )}
             </div>
           </div>
         </div>
