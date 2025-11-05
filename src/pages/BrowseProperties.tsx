@@ -358,9 +358,9 @@ const BrowseProperties = () => {
           </div>
 
           {/* Quick Filters Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             {/* PROPERTY TYPE Section */}
-            <Collapsible open={isPropertyTypeOpen} onOpenChange={setIsPropertyTypeOpen}>
+            <Collapsible open={isPropertyTypeOpen} onOpenChange={setIsPropertyTypeOpen} className="lg:col-span-1">
               <div className="bg-card rounded-lg shadow-sm border">
                 <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
                   <div className="flex items-center gap-2">
@@ -416,7 +416,7 @@ const BrowseProperties = () => {
             </Collapsible>
 
             {/* STATUS Section - now spans 1 column */}
-            <Collapsible open={isStatusOpen} onOpenChange={setIsStatusOpen}>
+            <Collapsible open={isStatusOpen} onOpenChange={setIsStatusOpen} className="lg:col-span-2">
               <div className="bg-card rounded-lg shadow-sm border">
                 <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
                   <div className="flex items-center gap-2">
@@ -427,8 +427,9 @@ const BrowseProperties = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="p-3 pt-0">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1 col-span-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_16rem] gap-3">
+                      {/* Left column: Select All + left statuses */}
+                      <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="status-select-all"
@@ -443,27 +444,29 @@ const BrowseProperties = () => {
                           />
                           <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
                         </div>
+                        <div className="space-y-1">
+                          {[
+                            { value: "active", label: "New" },
+                            { value: "active", label: "Active" },
+                            { value: "coming_soon", label: "Price Changed" },
+                            { value: "off_market", label: "Back on Market" },
+                            { value: "pending", label: "Extended" },
+                            { value: "sold", label: "Reactivated" },
+                            { value: "sold", label: "Contingent" },
+                          ].map((status, idx) => (
+                            <div key={idx} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`status-${idx}`}
+                                checked={statuses.includes(status.value)}
+                                onCheckedChange={() => handleStatusToggle(status.value)}
+                              />
+                              <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer">{status.label}</label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        {[
-                          { value: "active", label: "New" },
-                          { value: "active", label: "Active" },
-                          { value: "coming_soon", label: "Price Changed" },
-                          { value: "off_market", label: "Back on Market" },
-                          { value: "pending", label: "Extended" },
-                          { value: "sold", label: "Reactivated" },
-                          { value: "sold", label: "Contingent" },
-                        ].map((status, idx) => (
-                          <div key={idx} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`status-${idx}`}
-                              checked={statuses.includes(status.value)}
-                              onCheckedChange={() => handleStatusToggle(status.value)}
-                            />
-                            <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer">{status.label}</label>
-                          </div>
-                        ))}
-                      </div>
+
+                      {/* Middle column: right statuses list */}
                       <div className="space-y-1">
                         {[
                           { value: "pending", label: "Under Agreement" },
@@ -484,7 +487,9 @@ const BrowseProperties = () => {
                           </div>
                         ))}
                       </div>
-                      <div className="col-span-2 space-y-2 pt-2 border-t">
+
+                      {/* Right column: List Date + Off-Market */}
+                      <div className="space-y-3 lg:pl-2">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <Label className="text-xs font-semibold">List Date</Label>
