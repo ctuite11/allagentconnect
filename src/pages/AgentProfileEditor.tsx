@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
 import { Trash2, Plus, Star, Upload, X } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -320,22 +321,22 @@ const AgentProfileEditor = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="office_phone">Office Phone</Label>
-                  <Input
+                  <FormattedInput
                     id="office_phone"
-                    type="tel"
-                    placeholder="(555) 123-4567"
+                    format="phone"
+                    placeholder="5551234567"
                     value={officePhone}
-                    onChange={(e) => setOfficePhone(e.target.value)}
+                    onChange={setOfficePhone}
                   />
                 </div>
                 <div>
                   <Label htmlFor="cell_phone">Cell Phone</Label>
-                  <Input
+                  <FormattedInput
                     id="cell_phone"
-                    type="tel"
-                    placeholder="(555) 987-6543"
+                    format="phone"
+                    placeholder="5559876543"
                     value={cellPhone}
-                    onChange={(e) => setCellPhone(e.target.value)}
+                    onChange={setCellPhone}
                   />
                 </div>
               </div>
