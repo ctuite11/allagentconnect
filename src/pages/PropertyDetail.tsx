@@ -692,36 +692,6 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
-              {/* ATTOM Property Data */}
-              {listing.attom_data && Object.keys(listing.attom_data).length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Home className="h-5 w-5" />
-                      ATTOM Property Data
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 text-sm">
-                      {Object.entries(listing.attom_data)
-                        .filter(([_, v]) => v !== null && v !== '' && typeof v !== 'object')
-                        .map(([k, v]) => (
-                          <div key={k as string} className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              {(k as string)
-                                .split('_')
-                                .map((p) => (p ? p[0].toUpperCase() + p.slice(1) : ''))
-                                .join(' ')}
-                              :
-                            </span>
-                            <span className="font-medium">{String(v)}</span>
-                          </div>
-                        ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
               {/* Nearby Schools */}
               {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 && (
                 <Card>
