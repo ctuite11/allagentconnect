@@ -130,6 +130,10 @@ const Navigation = () => {
                         <UserCog className="mr-2 h-4 w-4" />
                         Edit Profile
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/manage-team")}>
+                        <Users className="mr-2 h-4 w-4" />
+                        Manage Team
+                      </DropdownMenuItem>
                     </DropdownMenuGroup>
                   </>
                 )}

@@ -308,9 +308,14 @@ const AgentProfileEditor = () => {
                 </p>
               )}
             </div>
-            <Button variant="outline" onClick={() => navigate("/agent-dashboard")}>
-              Back to Dashboard
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate("/manage-team")}>
+                Manage Team
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/agent-dashboard")}>
+                Back to Dashboard
+              </Button>
+            </div>
           </div>
 
           {/* Contact Information */}
