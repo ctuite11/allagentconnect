@@ -6,13 +6,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, MapPin, Bed, Bath, Square, Calendar, ArrowLeft, Home, FileText, Video, Globe, AlertCircle } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Loader2, MapPin, Bed, Bath, Square, Calendar, ArrowLeft, Home, FileText, Video, Globe, AlertCircle, DollarSign, Phone, Mail, GraduationCap, Footprints } from "lucide-react";
 import { toast } from "sonner";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import FavoriteButton from "@/components/FavoriteButton";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
+import PropertyMap from "@/components/PropertyMap";
+
+interface AgentProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  cell_phone: string | null;
+  headshot_url: string | null;
+  company: string | null;
+  office_name: string | null;
+}
 
 interface Listing {
   id: string;
@@ -21,6 +35,8 @@ interface Listing {
   city: string;
   state: string;
   zip_code: string;
+  latitude: number | null;
+  longitude: number | null;
   property_type: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -31,12 +47,19 @@ interface Listing {
   description: string | null;
   status: string;
   listing_type: string;
+  commission_rate: number | null;
+  commission_type: string | null;
+  commission_notes: string | null;
   disclosures: string[] | null;
   property_features: string[] | null;
   amenities: string[] | null;
   additional_notes: string | null;
   photos: any[] | null;
   floor_plans: any[] | null;
+  attom_data: any;
+  walk_score_data: any;
+  schools_data: any;
+  value_estimate: any;
   listing_number?: string | null;
 }
 
@@ -44,49 +67,46 @@ const ConsumerPropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [listing, setListing] = useState<Listing | null>(null);
+  const [agent, setAgent] = useState<AgentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   useEffect(() => {
-    const fetchListing = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase
+        const { data: listingData, error: listingError } = await supabase
           .from("listings")
           .select("*")
           .eq("id", id)
           .maybeSingle();
 
-        if (error) throw error;
+        if (listingError) throw listingError;
         
-        // Cast the Json types to proper arrays
-        if (data) {
-          setListing({
-            id: data.id,
-            agent_id: data.agent_id,
-            address: data.address,
-            city: data.city,
-            state: data.state,
-            zip_code: data.zip_code,
-            property_type: data.property_type,
-            bedrooms: data.bedrooms,
-            bathrooms: data.bathrooms,
-            square_feet: data.square_feet,
-            lot_size: data.lot_size,
-            year_built: data.year_built,
-            price: data.price,
-            description: data.description,
-            status: data.status,
-            listing_type: data.listing_type,
-            disclosures: Array.isArray(data.disclosures) ? (data.disclosures as string[]) : [],
-            property_features: Array.isArray(data.property_features) ? (data.property_features as string[]) : [],
-            amenities: Array.isArray(data.amenities) ? (data.amenities as string[]) : [],
-            additional_notes: data.additional_notes,
-            photos: Array.isArray(data.photos) ? (data.photos as any[]) : [],
-            floor_plans: Array.isArray(data.floor_plans) ? (data.floor_plans as any[]) : [],
-          } as Listing);
+        if (listingData) {
+          const listing = {
+            ...listingData,
+            disclosures: Array.isArray(listingData.disclosures) ? (listingData.disclosures as string[]) : [],
+            property_features: Array.isArray(listingData.property_features) ? (listingData.property_features as string[]) : [],
+            amenities: Array.isArray(listingData.amenities) ? (listingData.amenities as string[]) : [],
+            photos: Array.isArray(listingData.photos) ? (listingData.photos as any[]) : [],
+            floor_plans: Array.isArray(listingData.floor_plans) ? (listingData.floor_plans as any[]) : [],
+          } as Listing;
+          
+          setListing(listing);
+
+          // Fetch agent profile
+          const { data: agentData, error: agentError } = await supabase
+            .from("agent_profiles")
+            .select("id, first_name, last_name, email, phone, cell_phone, headshot_url, company, office_name")
+            .eq("id", listingData.agent_id)
+            .maybeSingle();
+
+          if (!agentError && agentData) {
+            setAgent(agentData as AgentProfile);
+          }
         }
       } catch (error: any) {
-        console.error("Error fetching listing:", error);
+        console.error("Error fetching data:", error);
         toast.error("Failed to load property details");
       } finally {
         setLoading(false);
@@ -94,7 +114,7 @@ const ConsumerPropertyDetail = () => {
     };
 
     if (id) {
-      fetchListing();
+      fetchData();
     }
   }, [id]);
 
@@ -367,27 +387,170 @@ const ConsumerPropertyDetail = () => {
                   </CardContent>
                 </Card>
               )}
-            </div>
 
-            {/* Sidebar - Contact Information */}
-            <div className="space-y-6">
+              {/* Map */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Interested in this property?</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Location
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Contact an agent to schedule a viewing or learn more about this property.
-                  </p>
-                  <Button className="w-full" size="lg">
-                    Contact Agent
-                  </Button>
-                  <Button variant="outline" className="w-full" size="lg">
-                    Schedule Viewing
-                  </Button>
+                <CardContent>
+                  <PropertyMap 
+                    address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`}
+                    latitude={listing.latitude}
+                    longitude={listing.longitude}
+                  />
                 </CardContent>
               </Card>
 
+              {/* ATTOM Property Data */}
+              {listing.attom_data && Object.keys(listing.attom_data).length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Property Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {listing.attom_data.property_type && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Property Type:</span>
+                        <span className="font-semibold">{listing.attom_data.property_type}</span>
+                      </div>
+                    )}
+                    {listing.attom_data.stories && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Stories:</span>
+                        <span className="font-semibold">{listing.attom_data.stories}</span>
+                      </div>
+                    )}
+                    {listing.attom_data.parking_spaces && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Parking Spaces:</span>
+                        <span className="font-semibold">{listing.attom_data.parking_spaces}</span>
+                      </div>
+                    )}
+                    {listing.attom_data.zoning && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Zoning:</span>
+                        <span className="font-semibold">{listing.attom_data.zoning}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Schools */}
+              {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5" />
+                      Nearby Schools
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {listing.schools_data.schools.slice(0, 5).map((school: any, index: number) => (
+                      <div key={index} className="pb-3 border-b last:border-0 last:pb-0">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="font-semibold text-sm">{school.name}</h4>
+                          {school.rating && (
+                            <Badge variant="secondary">{school.rating}/10</Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {school.level} • {school.distance} mi
+                        </p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Listing Agent Card */}
+              {agent && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Listing Agent</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={agent.headshot_url || undefined} alt={`${agent.first_name} ${agent.last_name}`} />
+                        <AvatarFallback>{agent.first_name[0]}{agent.last_name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">{agent.first_name} {agent.last_name}</h3>
+                        {agent.company && (
+                          <p className="text-sm text-muted-foreground">{agent.company}</p>
+                        )}
+                        {agent.office_name && (
+                          <p className="text-xs text-muted-foreground">{agent.office_name}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {agent.cell_phone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <a href={`tel:${agent.cell_phone}`} className="hover:underline">
+                            {agent.cell_phone}
+                          </a>
+                        </div>
+                      )}
+                      {agent.email && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <a href={`mailto:${agent.email}`} className="hover:underline">
+                            {agent.email}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    <Button 
+                      className="w-full" 
+                      size="lg"
+                      onClick={() => navigate(`/agent/${agent.id}`)}
+                    >
+                      View Profile
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Commission Information */}
+              {listing.commission_rate && (
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Buyer Agent Compensation
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-2">
+                      <p className="text-3xl font-bold text-primary">
+                        {listing.commission_type === 'percentage' 
+                          ? `${listing.commission_rate}%` 
+                          : `$${listing.commission_rate.toLocaleString()}`}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Offered to buyer agents who bring the buyer
+                      </p>
+                      {listing.commission_notes && (
+                        <p className="text-xs text-muted-foreground mt-2 border-t pt-2">
+                          {listing.commission_notes}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Property Information */}
               <Card>
                 <CardHeader>
                   <CardTitle>Property Information</CardTitle>
@@ -411,6 +574,45 @@ const ConsumerPropertyDetail = () => {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Walk Score */}
+              {listing.walk_score_data && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Footprints className="h-5 w-5" />
+                      Walk Score
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {listing.walk_score_data.walkscore && (
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-sm">Walk Score</span>
+                          <span className="text-2xl font-bold text-primary">{listing.walk_score_data.walkscore}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{listing.walk_score_data.description}</p>
+                      </div>
+                    )}
+                    {listing.walk_score_data.transit && (
+                      <div className="pt-2 border-t">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Transit Score</span>
+                          <span className="text-xl font-bold">{listing.walk_score_data.transit.score}</span>
+                        </div>
+                      </div>
+                    )}
+                    {listing.walk_score_data.bike && (
+                      <div className="pt-2 border-t">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Bike Score</span>
+                          <span className="text-xl font-bold">{listing.walk_score_data.bike.score}</span>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
