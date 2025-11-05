@@ -366,7 +366,7 @@ const BrowseProperties = () => {
                 <h3 className="font-semibold text-sm text-primary">PROPERTY TYPE</h3>
                 <span className="text-yellow-600">⭐</span>
               </div>
-              <div className="p-2 space-y-0.5">
+              <div className="p-3 space-y-1.5">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="type-select-all"
@@ -400,12 +400,6 @@ const BrowseProperties = () => {
                     <label htmlFor={`type-${type.value}`} className="text-xs cursor-pointer">{type.label}</label>
                   </div>
                 ))}
-                <div className="pt-1.5 border-t mt-1.5">
-                  <div className="flex items-center gap-2 mt-1">
-                    <Label className="text-xs block font-semibold">TOWNS</Label>
-                    <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -415,9 +409,9 @@ const BrowseProperties = () => {
                 <h3 className="font-semibold text-sm text-primary">STATUS</h3>
                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
               </div>
-              <div className="p-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-0.5">
+              <div className="p-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
                     <div className="flex items-center space-x-2 mb-1">
                       <Checkbox
                         id="status-select-all"
@@ -432,7 +426,7 @@ const BrowseProperties = () => {
                       />
                       <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
                       {[
                         { value: "active", label: "New" },
                         { value: "active", label: "Active" },
@@ -506,7 +500,7 @@ const BrowseProperties = () => {
                 <h3 className="font-semibold text-sm text-primary">STANDARD SEARCH CRITERIA</h3>
                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
               </div>
-              <div className="p-2 space-y-1.5">
+              <div className="p-3 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label className="text-xs">Bedrooms</Label>
@@ -588,26 +582,20 @@ const BrowseProperties = () => {
                     />
                   </div>
                 </div>
-                <div className="pt-1.5 border-t mt-1">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs block font-semibold">ADDITIONAL CRITERIA</Label>
-                    <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
 
-          {/* Row 2: Listing Events, Price, Map */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-3">
+          {/* Row 2: Listing Events, Price, Map, Additional Criteria, Towns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-2">
             {/* LISTING EVENTS */}
             <div className="bg-card rounded-lg shadow-sm border">
               <div className="flex items-center gap-2 p-2 border-b">
                 <h3 className="font-semibold text-sm text-primary">LISTING EVENTS</h3>
                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
               </div>
-              <div className="p-2 space-y-2">
-                <div className="space-y-0.5">
+              <div className="p-3 space-y-2">
+                <div className="space-y-1.5">
                   <div className="flex items-center space-x-2">
                     <Checkbox id="open-houses" checked={openHouses} onCheckedChange={(v) => setOpenHouses(Boolean(v))} />
                     <Label htmlFor="open-houses" className="text-xs cursor-pointer">Open Houses</Label>
@@ -639,7 +627,7 @@ const BrowseProperties = () => {
                 <h3 className="font-semibold text-sm text-primary">PRICE</h3>
                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
               </div>
-              <div className="p-2 grid grid-cols-2 gap-2">
+              <div className="p-3 grid grid-cols-2 gap-2">
                 <div>
                   <Label className="text-xs">Low</Label>
                   <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-8" />
@@ -657,8 +645,21 @@ const BrowseProperties = () => {
                 <h3 className="font-semibold text-sm text-primary">MAP</h3>
                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
               </div>
-              <div className="p-2">
+              <div className="p-3">
                 <p className="text-xs text-muted-foreground">Map view coming soon</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 3: Additional Criteria full width */}
+          <div className="mb-2">
+            <div className="bg-card rounded-lg shadow-sm border">
+              <div className="flex items-center gap-2 p-2 border-b">
+                <h3 className="font-semibold text-sm text-primary">ADDITIONAL CRITERIA</h3>
+                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
+              </div>
+              <div className="p-3">
+                <p className="text-xs text-muted-foreground">Additional search criteria options</p>
               </div>
             </div>
           </div>
