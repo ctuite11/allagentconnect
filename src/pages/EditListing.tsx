@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
@@ -60,6 +61,7 @@ const EditListing = () => {
   const [disclosures, setDisclosures] = useState<string[]>([]);
   const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
   const [amenities, setAmenities] = useState<string[]>([]);
+  const [manualAddressDialogOpen, setManualAddressDialogOpen] = useState(false);
 
   useEffect(() => {
     const checkAuthAndLoadListing = async () => {
@@ -198,6 +200,83 @@ const EditListing = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
+      
+      {/* Manual Address Entry Dialog */}
+      <Dialog open={manualAddressDialogOpen} onOpenChange={setManualAddressDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enter Address Manually</DialogTitle>
+            <DialogDescription>
+              Fill in the address details manually if autocomplete doesn't find your property.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="manual-address">Street Address *</Label>
+              <Input
+                id="manual-address"
+                placeholder="123 Main Street"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="manual-city">City *</Label>
+                <Input
+                  id="manual-city"
+                  placeholder="Boston"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="manual-state">State *</Label>
+                <Input
+                  id="manual-state"
+                  placeholder="MA"
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  maxLength={2}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="manual-zip">ZIP Code *</Label>
+              <Input
+                id="manual-zip"
+                placeholder="02101"
+                value={formData.zip_code}
+                onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                maxLength={10}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setManualAddressDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                if (formData.address && formData.city && formData.state && formData.zip_code) {
+                  setManualAddressDialogOpen(false);
+                  toast.success("Address entered manually");
+                } else {
+                  toast.error("Please fill in all address fields");
+                }
+              }}
+            >
+              Save Address
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Card>
           <CardHeader>
@@ -223,11 +302,27 @@ const EditListing = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="address">Address</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setManualAddressDialogOpen(true)}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Enter manually
+                  </Button>
+                </div>
                 <AddressAutocomplete
                   onPlaceSelect={handleAddressSelect}
                   placeholder="Enter property address"
+                  value={formData.address}
+                  onChange={(val) => setFormData({ ...formData, address: val })}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Can't find your address? Click "Enter manually" above
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
