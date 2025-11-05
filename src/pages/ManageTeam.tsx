@@ -513,7 +513,7 @@ const ManageTeam = () => {
                       )}
                     </div>
                   )}
-                  {isOwner && (
+                  {(!team || isOwner) && (
                     <div>
                       <Input
                         type="file"
@@ -557,7 +557,7 @@ const ManageTeam = () => {
                       )}
                     </div>
                   )}
-                  {isOwner && (
+                  {(!team || isOwner) && (
                     <div>
                       <Input
                         type="file"
@@ -659,7 +659,7 @@ const ManageTeam = () => {
             </CardContent>
           </Card>
 
-          {/* Team Members */}
+          {/* Team Members - Show after team is created */}
           {team && (
             <Card className="mb-6">
               <CardHeader>
@@ -722,6 +722,17 @@ const ManageTeam = () => {
                     </DndContext>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Create Team First Notice */}
+          {!team && (
+            <Card className="mb-6 border-primary/50 bg-primary/5">
+              <CardContent className="py-6">
+                <p className="text-center text-muted-foreground">
+                  💡 Create your team profile first, then you'll be able to add team members!
+                </p>
               </CardContent>
             </Card>
           )}
