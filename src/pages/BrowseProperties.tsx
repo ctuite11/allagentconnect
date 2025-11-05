@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
@@ -12,9 +13,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ChevronDown, ChevronUp, ArrowUp, X, Home, Calendar } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, ArrowUp, X } from "lucide-react";
 import { toast } from "sonner";
-import { getAreasForCity, usNeighborhoodsByCityState } from "@/data/usNeighborhoodsData";
+import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
 import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
@@ -25,6 +26,7 @@ import { VT_COUNTY_TOWNS } from "@/data/vtCountyTowns";
 import { ME_COUNTY_TOWNS } from "@/data/meCountyTowns";
 
 const BrowseProperties = () => {
+  const navigate = useNavigate();
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -160,8 +162,76 @@ const BrowseProperties = () => {
     }
   };
 
-  const handleSearch = () => {
-    fetchListings();
+  const buildQueryParams = () => {
+    const params = new URLSearchParams();
+    if (statuses.length) params.set("status", statuses.join(","));
+    if (propertyTypes.length) params.set("type", propertyTypes.join(","));
+    if (minPrice) params.set("minPrice", minPrice);
+    if (maxPrice) params.set("maxPrice", maxPrice);
+    if (bedrooms) params.set("bedrooms", bedrooms);
+    if (bathrooms) params.set("bathrooms", bathrooms);
+    if (rooms) params.set("rooms", rooms);
+    if (acres) params.set("acres", acres);
+    if (livingArea) params.set("livingArea", livingArea);
+    if (pricePerSqFt) params.set("pricePerSqFt", pricePerSqFt);
+    if (yearBuilt) params.set("yearBuilt", yearBuilt);
+    if (zipCode) params.set("zip", zipCode);
+    if (streetName) params.set("streetName", streetName);
+    if (streetNumber) params.set("streetNumber", streetNumber);
+    if (radius) params.set("radius", radius);
+    if (state) params.set("state", state);
+    if (county) params.set("county", county);
+    if (selectedTowns.length) params.set("towns", selectedTowns.join("|"));
+    if (showAreas) params.set("showAreas", showAreas);
+    if (listingNumber) params.set("listingNumber", listingNumber);
+    if (openHouses) params.set("openHouses", String(openHouses));
+    if (brokerTours) params.set("brokerTours", String(brokerTours));
+    if (eventTimeframe) params.set("eventTimeframe", eventTimeframe);
+    if (keywords) params.set("keywords", keywords);
+    if (keywordMatch) params.set("keywordMatch", keywordMatch);
+    if (keywordType) params.set("keywordType", keywordType);
+    return params;
+  };
+
+  const handleViewResults = () => {
+    const params = buildQueryParams();
+    navigate(`/search-results?${params.toString()}`);
+  };
+
+  const handleClearAll = () => {
+    setAddressType("street");
+    setStreetNumber("");
+    setStreetName("");
+    setZipCode("");
+    setRadius("");
+    setState("MA");
+    setCounty("all");
+    setSelectedTowns([]);
+    setShowAreas("yes");
+    setTownSearch("");
+    setManualTowns("");
+    setOpenHouses(false);
+    setBrokerTours(false);
+    setEventTimeframe("next_3_days");
+    setListingNumber("");
+    setPropertyTypes([]);
+    setStatuses(["active"]);
+    setMinPrice("");
+    setMaxPrice("");
+    setBedrooms("");
+    setBathrooms("");
+    setRooms("");
+    setAcres("");
+    setLivingArea("");
+    setPricePerSqFt("");
+    setYearBuilt("");
+    setTotalParkingSpaces("");
+    setGarageSpaces("");
+    setNonGarageSpaces("");
+    setKeywords("");
+    setKeywordMatch("any");
+    setKeywordType("include");
+    toast.success("All filters cleared");
   };
 
   const handlePropertyTypeToggle = (type: string) => {
@@ -254,6 +324,37 @@ const BrowseProperties = () => {
             <p className="text-muted-foreground">
               Advanced search with comprehensive filters
             </p>
+          </div>
+
+          {/* Toolbar */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <Button onClick={handleViewResults}>View Results</Button>
+            <Button variant="outline">Save</Button>
+            <Button variant="outline">Load</Button>
+            <Button variant="outline">Attach</Button>
+            <Button variant="outline">Download</Button>
+            <Button variant="outline">Stats</Button>
+            <Button variant="outline" onClick={handleClearAll}>Clear</Button>
+            <Button variant="outline">Map</Button>
+            <Button variant="outline">Recent</Button>
+            <div className="ml-auto text-sm text-muted-foreground">Count: {loading ? "…" : `${listings.length} Results`}</div>
+          </div>
+
+          {/* LIST NUMBER(S) Full Width */}
+          <div className="mb-6">
+            <div className="bg-card rounded-lg shadow-sm border">
+              <div className="flex items-center justify-between w-full p-4">
+                <h3 className="font-semibold text-sm text-primary">LIST NUMBER(S)</h3>
+              </div>
+              <div className="p-4 pt-0">
+                <Input
+                  value={listingNumber}
+                  onChange={(e) => setListingNumber(e.target.value)}
+                  placeholder=""
+                  className="w-full"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Quick Filters Row */}
@@ -517,363 +618,275 @@ const BrowseProperties = () => {
             </Collapsible>
           </div>
 
-          <div className="grid md:grid-cols-[360px_1fr] lg:grid-cols-[420px_1fr] gap-6">
-            {/* Left Sidebar - Search Filters */}
-            <div className="space-y-4 md:sticky md:top-24">
-              {/* LIST NUMBER(S) Section */}
-              <Collapsible open={isListingEventsOpen} onOpenChange={setIsListingEventsOpen}>
-                <div className="bg-card rounded-lg shadow-sm border">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
-                    <h3 className="font-semibold text-sm text-primary">LIST NUMBER(S)</h3>
-                    {isListingEventsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="p-4 pt-0">
-                      <Input
-                        value={listingNumber}
-                        onChange={(e) => setListingNumber(e.target.value)}
-                        placeholder=""
-                        className="w-full"
-                      />
-                    </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-
-              {/* Three Column Layout moved to top of page */}
-
-              {/* PRICE Section */}
-              <Collapsible open={isPriceOpen} onOpenChange={setIsPriceOpen}>
-                <div className="bg-card rounded-lg shadow-sm border">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-sm text-primary">PRICE</h3>
-                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
-                    </div>
-                    {isPriceOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="p-3 pt-0 grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-xs">Low</Label>
-                        <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="" className="h-8" />
-                      </div>
-                      <div>
-                        <Label className="text-xs">High</Label>
-                        <Input type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="" className="h-8" />
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-
-              {/* MAP Section - Placeholder */}
+          {/* Extended Layout (no right-side results) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* PRICE - spans two columns */}
+            <div className="lg:col-span-2">
               <div className="bg-card rounded-lg shadow-sm border">
-                <div className="p-4">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-sm text-primary">MAP</h3>
-                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
+                <div className="flex items-center justify-between w-full p-3">
+                  <h3 className="font-semibold text-sm text-primary">PRICE</h3>
+                </div>
+                <div className="p-3 pt-0 grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">Low</Label>
+                    <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-8" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">High</Label>
+                    <Input type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-8" />
                   </div>
                 </div>
               </div>
-
-              {/* ADDRESS Section */}
-              <Collapsible open={isAddressOpen} onOpenChange={setIsAddressOpen}>
-                <div className="bg-card rounded-lg shadow-sm border">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-sm text-primary">ADDRESS</h3>
-                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
-                    </div>
-                    {isAddressOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="p-4 pt-0 space-y-4">
-                      <RadioGroup value={addressType} onValueChange={setAddressType}>
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="street" id="street" />
-                            <Label htmlFor="street">Street Address</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="location" id="location" />
-                            <Label htmlFor="location">My Location</Label>
-                          </div>
-                        </div>
-                      </RadioGroup>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label className="text-xs">Street #</Label>
-                          <Input value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="123" />
-                        </div>
-                        <div className="col-span-1">
-                          <Label className="text-xs">Street Name</Label>
-                          <Input value={streetName} onChange={(e) => setStreetName(e.target.value)} placeholder="Main St" />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label className="text-xs">Zip Code</Label>
-                          <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="02129" />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Radius (Miles)</Label>
-                          <Input value={radius} onChange={(e) => setRadius(e.target.value)} placeholder="5" type="number" />
-                        </div>
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-
-              {/* TOWNS Section */}
-              <Collapsible open={isTownsOpen} onOpenChange={setIsTownsOpen}>
-                <div className="bg-card rounded-lg shadow-sm border">
-                    <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
-                      <div className="flex items-center justify-between w-full">
-                        <h3 className="font-semibold text-lg">TOWNS</h3>
-                        <div className="flex items-center gap-4">
-                          <Button 
-                            variant="link" 
-                            className="text-xs gap-1 h-auto p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              scrollToTop();
-                            }}
-                          >
-                            BACK TO TOP <ArrowUp className="h-3 w-3" />
-                          </Button>
-                          {isTownsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                        </div>
-                      </div>
-                    </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="p-4 pt-0 space-y-3">
-                      <div className="grid grid-cols-3 gap-2 items-end">
-                        <div>
-                          <Label className="text-xs">State</Label>
-                          <Select value={state} onValueChange={setState}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent className="z-50 max-h-[300px]">
-                              {US_STATES.map((s) => (
-                                <SelectItem key={s.code} value={s.code}>{s.code}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="text-xs">Coverage Areas</Label>
-                          <Select value={county} onValueChange={setCounty} disabled={!hasCountyData}>
-                            <SelectTrigger className={!hasCountyData ? "opacity-50 cursor-not-allowed" : ""}><SelectValue /></SelectTrigger>
-                            <SelectContent className="z-50 max-h-[300px]">
-                              <SelectItem value="all">All Counties/Areas</SelectItem>
-                              {hasCountyData && currentStateCounties.map((c) => (
-                                <SelectItem key={c} value={c}>{c}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="text-xs">Show Areas</Label>
-                          <RadioGroup value={showAreas} onValueChange={setShowAreas} className="flex gap-3">
-                            <div className="flex items-center space-x-1">
-                              <RadioGroupItem value="yes" id="show-yes" />
-                              <Label htmlFor="show-yes" className="text-sm cursor-pointer">Yes</Label>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <RadioGroupItem value="no" id="show-no" />
-                              <Label htmlFor="show-no" className="text-sm cursor-pointer">No</Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-                      </div>
-                      
-                      <div className="relative">
-                        <Input 
-                          value={townSearch} 
-                          onChange={(e) => setTownSearch(e.target.value)}
-                          placeholder="Type Full or Partial Name"
-                          className="pr-8"
-                        />
-                        {townSearch && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                            onClick={() => setTownSearch("")}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <div className="max-h-60 overflow-y-auto border rounded bg-background">
-                            <div 
-                              className="p-2 hover:bg-muted cursor-pointer border-b font-semibold text-sm"
-                              onClick={addAllTowns}
-                            >
-                              - Add All Towns -
-                            </div>
-                            <div className="p-2 space-y-1">
-                              {filteredTowns.map((town) => (
-                                <div key={town} className="flex items-center space-x-2 py-0.5">
-                                  <Checkbox
-                                    id={`town-${town}`}
-                                    checked={selectedTowns.includes(town)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        setSelectedTowns([...selectedTowns, town]);
-                                      } else {
-                                        setSelectedTowns(selectedTowns.filter(t => t !== town));
-                                      }
-                                    }}
-                                  />
-                                  <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">
-                                    {town}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          <div className="mt-3">
-                            <Label className="text-xs mb-1 block">Type Multiple Towns/Areas</Label>
-                            <div className="flex gap-2">
-                              <Textarea 
-                                value={manualTowns}
-                                onChange={(e) => setManualTowns(e.target.value)}
-                                placeholder="Type Towns/Areas"
-                                rows={2}
-                                className="flex-1"
-                              />
-                              <Button onClick={addManualTowns} size="sm">Add</Button>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <Label className="text-xs font-semibold">Selected Towns</Label>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-6 text-xs"
-                              onClick={removeAllTowns}
-                            >
-                              Remove All
-                            </Button>
-                          </div>
-                          <div className="max-h-60 overflow-y-auto border rounded bg-background p-2">
-                            {selectedTowns.length === 0 ? (
-                              <p className="text-xs text-muted-foreground text-center py-4">No towns selected</p>
-                            ) : (
-                              <div className="space-y-1">
-                                {selectedTowns.map((town) => (
-                                  <div key={town} className="text-xs p-1 bg-muted rounded flex items-center justify-between">
-                                    <span className="flex-1 truncate">{town}</span>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-4 w-4 p-0"
-                                      onClick={() => setSelectedTowns(selectedTowns.filter(t => t !== town))}
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-
-              {/* KEYWORDS Section */}
-              <Collapsible open={isKeywordsOpen} onOpenChange={setIsKeywordsOpen}>
-                <div className="bg-card rounded-lg shadow-sm border">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50">
-                    <h3 className="font-semibold text-lg">KEYWORDS (Public Remarks only)</h3>
-                    {isKeywordsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="p-4 pt-0 space-y-3">
-                      <div className="flex gap-4">
-                        <RadioGroup value={keywordMatch} onValueChange={setKeywordMatch} className="flex gap-4">
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="any" id="any" />
-                            <Label htmlFor="any" className="text-sm">Any</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="all" id="all" />
-                            <Label htmlFor="all" className="text-sm">All</Label>
-                          </div>
-                        </RadioGroup>
-                        <RadioGroup value={keywordType} onValueChange={setKeywordType} className="flex gap-4">
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="include" id="include" />
-                            <Label htmlFor="include" className="text-sm">Include</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="exclude" id="exclude" />
-                            <Label htmlFor="exclude" className="text-sm">Exclude</Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-                      <Textarea
-                        value={keywords}
-                        onChange={(e) => setKeywords(e.target.value)}
-                        placeholder="Enter keywords..."
-                        rows={4}
-                      />
-                    </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-
-              {/* Search Button */}
-              <Button onClick={handleSearch} className="w-full" size="lg">
-                <Search className="mr-2 h-5 w-5" />
-                Search Properties
-              </Button>
             </div>
 
-            {/* Right Side - Results */}
+            {/* MAP */}
             <div>
-              <div className="bg-card rounded-lg shadow-sm border p-6 mb-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">
-                    Search Results
-                  </h2>
-                  <div className="text-lg font-semibold text-primary">
-                    {loading ? "Loading..." : `${listings.length} Properties Found`}
+              <div className="bg-card rounded-lg shadow-sm border p-4">
+                <h3 className="font-semibold text-sm text-primary">MAP</h3>
+              </div>
+            </div>
+
+            {/* ADDRESS - full width */}
+            <div className="lg:col-span-3">
+              <div className="bg-card rounded-lg shadow-sm border">
+                <div className="flex items-center justify-between w-full p-4">
+                  <h3 className="font-semibold text-sm text-primary">ADDRESS</h3>
+                </div>
+                <div className="p-4 pt-0 space-y-4">
+                  <RadioGroup value={addressType} onValueChange={setAddressType}>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="street" id="street" />
+                        <Label htmlFor="street">Street Address</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="location" id="location" />
+                        <Label htmlFor="location">My Location</Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Street #</Label>
+                      <Input value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Street Name</Label>
+                      <Input value={streetName} onChange={(e) => setStreetName(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Zip Code</Label>
+                      <Input value={zipCode} onChange={(e) => setZipCode(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Radius (Miles)</Label>
+                      <Input value={radius} onChange={(e) => setRadius(e.target.value)} type="number" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* TOWNS - spans two columns */}
+            <div className="lg:col-span-2">
+              <div className="bg-card rounded-lg shadow-sm border">
+                <div className="flex items-center justify-between w-full p-4">
+                  <h3 className="font-semibold text-sm text-primary">TOWNS</h3>
+                  <Button 
+                    variant="link"
+                    className="text-xs gap-1 h-auto p-0"
+                    onClick={scrollToTop}
+                  >
+                    BACK TO TOP <ArrowUp className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="p-4 pt-0 space-y-3">
+                  <div className="grid grid-cols-3 gap-2 items-end">
+                    <div>
+                      <Label className="text-xs">State</Label>
+                      <Select value={state} onValueChange={setState}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent className="z-50 max-h-[300px]">
+                          {US_STATES.map((s) => (
+                            <SelectItem key={s.code} value={s.code}>{s.code}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Coverage Areas</Label>
+                      <Select value={county} onValueChange={setCounty} disabled={!hasCountyData}>
+                        <SelectTrigger className={!hasCountyData ? "opacity-50 cursor-not-allowed" : ""}><SelectValue /></SelectTrigger>
+                        <SelectContent className="z-50 max-h-[300px]">
+                          <SelectItem value="all">All Counties/Areas</SelectItem>
+                          {hasCountyData && currentStateCounties.map((c) => (
+                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Show Areas</Label>
+                      <RadioGroup value={showAreas} onValueChange={setShowAreas} className="flex gap-3">
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="yes" id="show-yes" />
+                          <Label htmlFor="show-yes" className="text-sm cursor-pointer">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="no" id="show-no" />
+                          <Label htmlFor="show-no" className="text-sm cursor-pointer">No</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <Input value={townSearch} onChange={(e) => setTownSearch(e.target.value)} placeholder="Type Full or Partial Name" className="pr-8" />
+                    {townSearch && (
+                      <Button variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0" onClick={() => setTownSearch("")}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="max-h-60 overflow-y-auto border rounded bg-background">
+                        <div className="p-2 hover:bg-muted cursor-pointer border-b font-semibold text-sm" onClick={addAllTowns}>
+                          - Add All Towns -
+                        </div>
+                        <div className="p-2 space-y-1">
+                          {filteredTowns.map((town) => (
+                            <div key={town} className="flex items-center space-x-2 py-0.5">
+                              <Checkbox
+                                id={`town-${town}`}
+                                checked={selectedTowns.includes(town)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) setSelectedTowns([...selectedTowns, town]);
+                                  else setSelectedTowns(selectedTowns.filter(t => t !== town));
+                                }}
+                              />
+                              <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">{town}</label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mt-3">
+                        <Label className="text-xs mb-1 block">Type Multiple Towns/Areas</Label>
+                        <div className="flex gap-2">
+                          <Textarea value={manualTowns} onChange={(e) => setManualTowns(e.target.value)} rows={2} className="flex-1" />
+                          <Button onClick={addManualTowns} size="sm">Add</Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-xs font-semibold">Selected Towns</Label>
+                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={removeAllTowns}>Remove All</Button>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto border rounded bg-background p-2">
+                        {selectedTowns.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-4">No towns selected</p>
+                        ) : (
+                          <div className="space-y-1">
+                            {selectedTowns.map((town) => (
+                              <div key={town} className="text-xs p-1 bg-muted rounded flex items-center justify-between">
+                                <span className="flex-1 truncate">{town}</span>
+                                <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => setSelectedTowns(selectedTowns.filter(t => t !== town))}>
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column Stack */}
+            <div className="space-y-6">
+              {/* LISTING EVENTS */}
+              <div className="bg-card rounded-lg shadow-sm border">
+                <div className="flex items-center justify-between w-full p-4">
+                  <h3 className="font-semibold text-sm text-primary">LISTING EVENTS</h3>
+                </div>
+                <div className="p-4 pt-0 space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="open-houses" checked={openHouses} onCheckedChange={(v) => setOpenHouses(Boolean(v))} />
+                      <Label htmlFor="open-houses">Open Houses</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="broker-tours" checked={brokerTours} onCheckedChange={(v) => setBrokerTours(Boolean(v))} />
+                      <Label htmlFor="broker-tours">Broker Tours</Label>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">For:</Label>
+                    <Select value={eventTimeframe} onValueChange={setEventTimeframe}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="z-50">
+                        <SelectItem value="next_3_days">Next 3 Days</SelectItem>
+                        <SelectItem value="next_7_days">Next 7 Days</SelectItem>
+                        <SelectItem value="next_14_days">Next 14 Days</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
 
-              {/* Results */}
-              {loading ? (
-                <div className="text-center py-12 bg-card rounded-lg border">
-                  <p className="text-muted-foreground">Loading properties...</p>
+              {/* KEYWORDS */}
+              <div className="bg-card rounded-lg shadow-sm border">
+                <div className="flex items-center justify-between w-full p-4">
+                  <h3 className="font-semibold text-sm text-primary">KEYWORDS (Public Remarks only)</h3>
                 </div>
-              ) : listings.length === 0 ? (
-                <div className="text-center py-12 bg-card rounded-lg border">
-                  <p className="text-muted-foreground mb-4">No properties found matching your criteria</p>
-                  <Button variant="outline" onClick={() => window.location.reload()}>
-                    Clear All Filters
-                  </Button>
+                <div className="p-4 pt-0 space-y-3">
+                  <div className="flex gap-4">
+                    <RadioGroup value={keywordMatch} onValueChange={setKeywordMatch} className="flex gap-4">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="any" id="any2" />
+                        <Label htmlFor="any2" className="text-sm">Any</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="all" id="all2" />
+                        <Label htmlFor="all2" className="text-sm">All</Label>
+                      </div>
+                    </RadioGroup>
+                    <RadioGroup value={keywordType} onValueChange={setKeywordType} className="flex gap-4">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="include" id="include2" />
+                        <Label htmlFor="include2" className="text-sm">Include</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="exclude" id="exclude2" />
+                        <Label htmlFor="exclude2" className="text-sm">Exclude</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <Textarea value={keywords} onChange={(e) => setKeywords(e.target.value)} rows={4} />
                 </div>
-              ) : (
-                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {listings.map((listing) => (
-                    <PropertyCard key={listing.id} {...listing} />
-                  ))}
+              </div>
+            </div>
+
+            {/* ADDITIONAL CRITERIA - full width */}
+            <div className="lg:col-span-3">
+              <div className="bg-card rounded-lg shadow-sm border p-4 flex items-center justify-between">
+                <h3 className="font-semibold text-sm text-primary">ADDITIONAL CRITERIA</h3>
+                <div className="flex items-center gap-2">
+                  <Button variant="default" onClick={() => toast.message("Open additional criteria modal (coming soon)")}>Select</Button>
+                  <Button variant="outline" onClick={handleClearAll}>Remove All</Button>
                 </div>
-              )}
+              </div>
+              <div className="px-1 py-3 text-sm font-medium"><button onClick={scrollToTop} className="underline">Back to Top</button></div>
             </div>
           </div>
         </div>
