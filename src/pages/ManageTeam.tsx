@@ -68,6 +68,14 @@ const ManageTeam = () => {
   // Add member dialog
   const [addMemberOpen, setAddMemberOpen] = useState(false);
 
+  // Drag and drop sensors - must be at top level, not conditional
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   useEffect(() => {
     checkAuthAndLoadTeam();
   }, []);
@@ -352,13 +360,6 @@ const ManageTeam = () => {
   }
 
   const excludedAgentIds = members.map(member => member.agent_id);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
