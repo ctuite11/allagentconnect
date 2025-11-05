@@ -96,12 +96,18 @@ export type Database = {
           aac_id: string
           bio: string | null
           buyer_incentives: string | null
+          cell_phone: string | null
           company: string | null
           created_at: string | null
           email: string
           first_name: string
+          headshot_url: string | null
           id: string
           last_name: string
+          logo_url: string | null
+          office_address: string | null
+          office_name: string | null
+          office_phone: string | null
           phone: string | null
           receive_buyer_alerts: boolean | null
           seller_incentives: string | null
@@ -112,12 +118,18 @@ export type Database = {
           aac_id?: string
           bio?: string | null
           buyer_incentives?: string | null
+          cell_phone?: string | null
           company?: string | null
           created_at?: string | null
           email: string
           first_name: string
+          headshot_url?: string | null
           id: string
           last_name: string
+          logo_url?: string | null
+          office_address?: string | null
+          office_name?: string | null
+          office_phone?: string | null
           phone?: string | null
           receive_buyer_alerts?: boolean | null
           seller_incentives?: string | null
@@ -128,12 +140,18 @@ export type Database = {
           aac_id?: string
           bio?: string | null
           buyer_incentives?: string | null
+          cell_phone?: string | null
           company?: string | null
           created_at?: string | null
           email?: string
           first_name?: string
+          headshot_url?: string | null
           id?: string
           last_name?: string
+          logo_url?: string | null
+          office_address?: string | null
+          office_name?: string | null
+          office_phone?: string | null
           phone?: string | null
           receive_buyer_alerts?: boolean | null
           seller_incentives?: string | null

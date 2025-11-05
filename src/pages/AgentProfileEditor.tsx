@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Trash2, Plus, Star } from "lucide-react";
+import { Trash2, Plus, Star, Upload, X } from "lucide-react";
 import Navigation from "@/components/Navigation";
 
 interface SocialLinks {
@@ -34,6 +34,15 @@ const AgentProfileEditor = () => {
   const [buyerIncentives, setBuyerIncentives] = useState("");
   const [sellerIncentives, setSellerIncentives] = useState("");
   const [aacId, setAacId] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [officePhone, setOfficePhone] = useState("");
+  const [cellPhone, setCellPhone] = useState("");
+  const [officeName, setOfficeName] = useState("");
+  const [officeAddress, setOfficeAddress] = useState("");
+  const [headshotUrl, setHeadshotUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [uploadingHeadshot, setUploadingHeadshot] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({
     linkedin: "",
     twitter: "",
@@ -68,7 +77,7 @@ const AgentProfileEditor = () => {
     try {
       const { data: profile, error: profileError } = await supabase
         .from("agent_profiles")
-        .select("bio, social_links, buyer_incentives, seller_incentives, aac_id")
+        .select("*")
         .eq("id", userId)
         .single();
 
@@ -79,6 +88,13 @@ const AgentProfileEditor = () => {
         setBuyerIncentives(profile.buyer_incentives || "");
         setSellerIncentives(profile.seller_incentives || "");
         setAacId(profile.aac_id || null);
+        setEmail(profile.email || "");
+        setOfficePhone(profile.office_phone || "");
+        setCellPhone(profile.cell_phone || "");
+        setOfficeName(profile.office_name || "");
+        setOfficeAddress(profile.office_address || "");
+        setHeadshotUrl(profile.headshot_url || "");
+        setLogoUrl(profile.logo_url || "");
         const links = profile.social_links as unknown as SocialLinks;
         setSocialLinks(links || {
           linkedin: "",
@@ -118,6 +134,13 @@ const AgentProfileEditor = () => {
           buyer_incentives: buyerIncentives,
           seller_incentives: sellerIncentives,
           social_links: socialLinks as any,
+          email,
+          office_phone: officePhone,
+          cell_phone: cellPhone,
+          office_name: officeName,
+          office_address: officeAddress,
+          headshot_url: headshotUrl,
+          logo_url: logoUrl,
         })
         .eq("id", session.user.id);
 
@@ -128,6 +151,70 @@ const AgentProfileEditor = () => {
       toast.error("Failed to save profile");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleHeadshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingHeadshot(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}/headshot-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('agent-headshots')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('agent-headshots')
+        .getPublicUrl(fileName);
+
+      setHeadshotUrl(publicUrl);
+      toast.success("Headshot uploaded!");
+    } catch (error) {
+      console.error("Error uploading headshot:", error);
+      toast.error("Failed to upload headshot");
+    } finally {
+      setUploadingHeadshot(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}/logo-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('agent-logos')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('agent-logos')
+        .getPublicUrl(fileName);
+
+      setLogoUrl(publicUrl);
+      toast.success("Logo uploaded!");
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      toast.error("Failed to upload logo");
+    } finally {
+      setUploadingLogo(false);
     }
   };
 
@@ -212,6 +299,162 @@ const AgentProfileEditor = () => {
               Back to Dashboard
             </Button>
           </div>
+
+          {/* Contact Information */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Contact Information</CardTitle>
+              <CardDescription>Update your contact details and office information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="office_phone">Office Phone</Label>
+                  <Input
+                    id="office_phone"
+                    type="tel"
+                    placeholder="(555) 123-4567"
+                    value={officePhone}
+                    onChange={(e) => setOfficePhone(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="cell_phone">Cell Phone</Label>
+                  <Input
+                    id="cell_phone"
+                    type="tel"
+                    placeholder="(555) 987-6543"
+                    value={cellPhone}
+                    onChange={(e) => setCellPhone(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="office_name">Office Name</Label>
+                <Input
+                  id="office_name"
+                  placeholder="ABC Realty Group"
+                  value={officeName}
+                  onChange={(e) => setOfficeName(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="office_address">Office Address</Label>
+                <Input
+                  id="office_address"
+                  placeholder="123 Main St, Boston, MA 02101"
+                  value={officeAddress}
+                  onChange={(e) => setOfficeAddress(e.target.value)}
+                />
+              </div>
+              <Button onClick={handleSaveProfile} disabled={saving}>
+                {saving ? "Saving..." : "Save Contact Info"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Profile Images */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Profile Images</CardTitle>
+              <CardDescription>Upload your headshot and company logo</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label>Headshot</Label>
+                <div className="mt-2 space-y-4">
+                  {headshotUrl && (
+                    <div className="relative inline-block">
+                      <img
+                        src={headshotUrl}
+                        alt="Headshot"
+                        className="w-32 h-32 rounded-full object-cover border-2 border-border"
+                      />
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => setHeadshotUrl("")}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                  <div>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleHeadshotUpload}
+                      disabled={uploadingHeadshot}
+                      className="hidden"
+                      id="headshot-upload"
+                    />
+                    <Label
+                      htmlFor="headshot-upload"
+                      className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                    >
+                      <Upload className="h-4 w-4" />
+                      {uploadingHeadshot ? "Uploading..." : "Upload Headshot"}
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label>Company Logo</Label>
+                <div className="mt-2 space-y-4">
+                  {logoUrl && (
+                    <div className="relative inline-block">
+                      <img
+                        src={logoUrl}
+                        alt="Logo"
+                        className="w-48 h-32 rounded-lg object-contain border-2 border-border bg-muted p-2"
+                      />
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => setLogoUrl("")}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                  <div>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      disabled={uploadingLogo}
+                      className="hidden"
+                      id="logo-upload"
+                    />
+                    <Label
+                      htmlFor="logo-upload"
+                      className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                    >
+                      <Upload className="h-4 w-4" />
+                      {uploadingLogo ? "Uploading..." : "Upload Logo"}
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
+              <Button onClick={handleSaveProfile} disabled={saving}>
+                {saving ? "Saving..." : "Save Images"}
+              </Button>
+            </CardContent>
+          </Card>
 
           {/* Bio Section */}
           <Card className="mb-6">
