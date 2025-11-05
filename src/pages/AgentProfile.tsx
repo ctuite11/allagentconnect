@@ -8,9 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, Building2, MapPin, ArrowLeft, Loader2, Home, Star, Briefcase, Globe, Linkedin, Facebook, Twitter, Instagram, DollarSign } from "lucide-react";
+import { Mail, Phone, Building2, MapPin, ArrowLeft, Loader2, Home, Star, Briefcase, Globe, Linkedin, Facebook, Twitter, Instagram, DollarSign, Award } from "lucide-react";
 import { toast } from "sonner";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
+
+const formatPhoneNumber = (phone: string) => {
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length === 10) {
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+  }
+  return phone;
+};
 
 interface AgentProfile {
   id: string;
@@ -162,159 +170,177 @@ const AgentProfile = () => {
           Back
         </Button>
 
+        {/* Hero Section with Agent Info */}
+        <div className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 rounded-xl p-8 mb-8">
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            <Avatar className="w-40 h-40 border-4 border-background shadow-xl">
+              <AvatarImage src={agent.headshot_url || undefined} alt={`${agent.first_name} ${agent.last_name}`} />
+              <AvatarFallback className="bg-primary/10 text-primary text-5xl font-bold">
+                {agent.first_name[0]}{agent.last_name[0]}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h1 className="text-4xl font-bold mb-2">
+                    {agent.first_name} {agent.last_name}
+                  </h1>
+                  {agent.title && (
+                    <p className="text-xl text-muted-foreground mb-2">{agent.title}</p>
+                  )}
+                  {agent.aac_id && (
+                    <Badge variant="secondary" className="font-mono">
+                      <Award className="h-3 w-3 mr-1" />
+                      {agent.aac_id}
+                    </Badge>
+                  )}
+                </div>
+                {agent.logo_url && (
+                  <img src={agent.logo_url} alt="Company logo" className="h-16 object-contain" />
+                )}
+              </div>
+
+              {(agent.company || agent.office_name || agent.office_address) && (
+                <div className="bg-card/50 rounded-lg p-4 mb-4 space-y-2">
+                  {agent.company && (
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-primary" />
+                      <span className="font-semibold">{agent.company}</span>
+                    </div>
+                  )}
+                  {agent.office_name && agent.office_name !== agent.company && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Briefcase className="h-4 w-4 text-muted-foreground" />
+                      <span>{agent.office_name}</span>
+                    </div>
+                  )}
+                  {agent.office_address && (
+                    <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                      <span>{agent.office_address}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {agent.agent_county_preferences && agent.agent_county_preferences.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    Service Areas
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {agent.agent_county_preferences.map((pref: any) => (
+                      <Badge key={pref.county_id} variant="secondary">
+                        {pref.counties.name}, {pref.counties.state}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Agent Info Card */}
+          {/* Contact Card */}
           <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardHeader>
-                <Avatar className="w-32 h-32 mx-auto mb-4">
-                  <AvatarImage src={agent.headshot_url || undefined} alt={`${agent.first_name} ${agent.last_name}`} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-4xl font-bold">
-                    {agent.first_name[0]}{agent.last_name[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <CardTitle className="text-center text-2xl">
-                  {agent.first_name} {agent.last_name}
-                </CardTitle>
-                {agent.title && (
-                  <p className="text-center text-muted-foreground">{agent.title}</p>
-                )}
-                {agent.aac_id && (
-                  <div className="text-center text-sm text-muted-foreground font-mono">
-                    {agent.aac_id}
-                  </div>
-                )}
+                <CardTitle>Contact Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {(agent.company || agent.office_name) && (
-                  <>
-                    <Separator />
-                    <div className="space-y-2">
-                      {agent.logo_url && (
-                        <img src={agent.logo_url} alt="Company logo" className="h-12 mx-auto object-contain" />
-                      )}
-                      {agent.company && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className="font-medium">{agent.company}</span>
-                        </div>
-                      )}
-                      {agent.office_name && agent.office_name !== agent.company && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Briefcase className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span>{agent.office_name}</span>
-                        </div>
-                      )}
-                      {agent.office_address && (
-                        <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                          <span>{agent.office_address}</span>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <a href={`mailto:${agent.email}`} className="flex items-center gap-3 hover:text-primary transition-colors group">
-                    <Mail className="h-5 w-5 text-muted-foreground group-hover:text-primary flex-shrink-0" />
-                    <span className="break-all">{agent.email}</span>
-                  </a>
-
-                  {agent.cell_phone && (
-                    <a href={`tel:${agent.cell_phone}`} className="flex items-center gap-3 hover:text-primary transition-colors group">
-                      <Phone className="h-5 w-5 text-muted-foreground group-hover:text-primary flex-shrink-0" />
-                      <div>
-                        <span>{agent.cell_phone}</span>
-                        <span className="text-xs text-muted-foreground ml-2">(Cell)</span>
-                      </div>
-                    </a>
-                  )}
-
-                  {agent.phone && agent.phone !== agent.cell_phone && (
-                    <a href={`tel:${agent.phone}`} className="flex items-center gap-3 hover:text-primary transition-colors group">
-                      <Phone className="h-5 w-5 text-muted-foreground group-hover:text-primary flex-shrink-0" />
-                      <span>{agent.phone}</span>
-                    </a>
-                  )}
-
-                  {agent.office_phone && (
-                    <a href={`tel:${agent.office_phone}`} className="flex items-center gap-3 hover:text-primary transition-colors group">
-                      <Phone className="h-5 w-5 text-muted-foreground group-hover:text-primary flex-shrink-0" />
-                      <div>
-                        <span>{agent.office_phone}</span>
-                        <span className="text-xs text-muted-foreground ml-2">(Office)</span>
-                      </div>
-                    </a>
-                  )}
-                </div>
-
-                {agent.social_links && Object.values(agent.social_links).some(link => link) && (
-                  <>
-                    <Separator />
-                    <div className="flex gap-3 justify-center">
-                      {agent.social_links.website && (
-                        <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                          <Globe className="h-5 w-5" />
-                        </a>
-                      )}
-                      {agent.social_links.linkedin && (
-                        <a href={agent.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                          <Linkedin className="h-5 w-5" />
-                        </a>
-                      )}
-                      {agent.social_links.facebook && (
-                        <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                          <Facebook className="h-5 w-5" />
-                        </a>
-                      )}
-                      {agent.social_links.twitter && (
-                        <a href={agent.social_links.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                          <Twitter className="h-5 w-5" />
-                        </a>
-                      )}
-                      {agent.social_links.instagram && (
-                        <a href={agent.social_links.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                          <Instagram className="h-5 w-5" />
-                        </a>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                <Separator />
-
-                {agent.agent_county_preferences && agent.agent_county_preferences.length > 0 && (
-                  <div>
-                    <div className="flex items-start gap-2 mb-3">
-                      <MapPin className="h-5 w-5 flex-shrink-0 mt-0.5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="font-semibold mb-2">Service Areas</p>
-                        <div className="flex flex-wrap gap-2">
-                          {agent.agent_county_preferences.map((pref: any) => (
-                            <Badge key={pref.county_id} variant="secondary">
-                              {pref.counties.name}, {pref.counties.state}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                <a href={`mailto:${agent.email}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
+                  <Mail className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground mb-1">Email</p>
+                    <p className="text-sm font-medium break-all group-hover:text-primary">{agent.email}</p>
                   </div>
+                </a>
+
+                {agent.cell_phone && (
+                  <a href={`tel:${agent.cell_phone}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
+                    <Phone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground mb-1">Cell Phone</p>
+                      <p className="text-sm font-medium group-hover:text-primary">{formatPhoneNumber(agent.cell_phone)}</p>
+                    </div>
+                  </a>
                 )}
 
-                {agent.receive_buyer_alerts && (
-                  <Badge variant="outline" className="w-full justify-center">
-                    Accepting Buyer Inquiries
-                  </Badge>
+                {agent.phone && agent.phone !== agent.cell_phone && (
+                  <a href={`tel:${agent.phone}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
+                    <Phone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground mb-1">Phone</p>
+                      <p className="text-sm font-medium group-hover:text-primary">{formatPhoneNumber(agent.phone)}</p>
+                    </div>
+                  </a>
                 )}
+
+                {agent.office_phone && (
+                  <a href={`tel:${agent.office_phone}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
+                    <Phone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground mb-1">Office Phone</p>
+                      <p className="text-sm font-medium group-hover:text-primary">{formatPhoneNumber(agent.office_phone)}</p>
+                    </div>
+                  </a>
+                )}
+
+                <Separator />
 
                 <ContactAgentProfileDialog 
                   agentId={agent.id}
                   agentName={`${agent.first_name} ${agent.last_name}`}
                   agentEmail={agent.email}
                 />
+
+                {agent.social_links && Object.values(agent.social_links).some(link => link) && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-sm font-semibold mb-3">Connect Online</p>
+                      <div className="flex gap-3">
+                        {agent.social_links.website && (
+                          <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
+                            <Globe className="h-5 w-5" />
+                          </a>
+                        )}
+                        {agent.social_links.linkedin && (
+                          <a href={agent.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
+                            <Linkedin className="h-5 w-5" />
+                          </a>
+                        )}
+                        {agent.social_links.facebook && (
+                          <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
+                            <Facebook className="h-5 w-5" />
+                          </a>
+                        )}
+                        {agent.social_links.twitter && (
+                          <a href={agent.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
+                            <Twitter className="h-5 w-5" />
+                          </a>
+                        )}
+                        {agent.social_links.instagram && (
+                          <a href={agent.social_links.instagram} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
+                            <Instagram className="h-5 w-5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {agent.receive_buyer_alerts && (
+                  <>
+                    <Separator />
+                    <Badge variant="outline" className="w-full justify-center py-2">
+                      ✓ Accepting New Clients
+                    </Badge>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
