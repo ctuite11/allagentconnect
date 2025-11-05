@@ -358,7 +358,7 @@ const BrowseProperties = () => {
           </div>
 
           {/* Quick Filters Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
             {/* PROPERTY TYPE Section */}
             <Collapsible open={isPropertyTypeOpen} onOpenChange={setIsPropertyTypeOpen} className="lg:col-span-1">
               <div className="bg-card rounded-lg shadow-sm border">
@@ -416,7 +416,7 @@ const BrowseProperties = () => {
             </Collapsible>
 
             {/* STATUS Section - now spans 1 column */}
-            <Collapsible open={isStatusOpen} onOpenChange={setIsStatusOpen} className="lg:col-span-2">
+            <Collapsible open={isStatusOpen} onOpenChange={setIsStatusOpen} className="lg:col-span-1">
               <div className="bg-card rounded-lg shadow-sm border">
                 <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
                   <div className="flex items-center gap-2">
@@ -627,8 +627,37 @@ const BrowseProperties = () => {
 
           {/* Second Row: PRICE below STATUS + MAP */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-            <div></div> {/* Empty space under PROPERTY TYPE */}
-            
+            <div className="bg-card rounded-lg shadow-sm border">
+              <div className="flex items-center justify-between w-full p-4">
+                <h3 className="font-semibold text-sm text-primary">LISTING EVENTS</h3>
+              </div>
+              <div className="p-4 pt-0 space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="open-houses" checked={openHouses} onCheckedChange={(v) => setOpenHouses(Boolean(v))} />
+                    <Label htmlFor="open-houses">Open Houses</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="broker-tours" checked={brokerTours} onCheckedChange={(v) => setBrokerTours(Boolean(v))} />
+                    <Label htmlFor="broker-tours">Broker Tours</Label>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">For:</Label>
+                  <Select value={eventTimeframe} onValueChange={setEventTimeframe}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-50">
+                      <SelectItem value="next_3_days">Next 3 Days</SelectItem>
+                      <SelectItem value="next_7_days">Next 7 Days</SelectItem>
+                      <SelectItem value="next_14_days">Next 14 Days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
             {/* PRICE Section - under STATUS */}
             <Collapsible open={isPriceOpen} onOpenChange={setIsPriceOpen}>
               <div className="bg-card rounded-lg shadow-sm border">
@@ -834,37 +863,6 @@ const BrowseProperties = () => {
 
             {/* Right Column Stack */}
             <div className="space-y-6">
-              {/* LISTING EVENTS */}
-              <div className="bg-card rounded-lg shadow-sm border">
-                <div className="flex items-center justify-between w-full p-4">
-                  <h3 className="font-semibold text-sm text-primary">LISTING EVENTS</h3>
-                </div>
-                <div className="p-4 pt-0 space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="open-houses" checked={openHouses} onCheckedChange={(v) => setOpenHouses(Boolean(v))} />
-                      <Label htmlFor="open-houses">Open Houses</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="broker-tours" checked={brokerTours} onCheckedChange={(v) => setBrokerTours(Boolean(v))} />
-                      <Label htmlFor="broker-tours">Broker Tours</Label>
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">For:</Label>
-                    <Select value={eventTimeframe} onValueChange={setEventTimeframe}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="z-50">
-                        <SelectItem value="next_3_days">Next 3 Days</SelectItem>
-                        <SelectItem value="next_7_days">Next 7 Days</SelectItem>
-                        <SelectItem value="next_14_days">Next 14 Days</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
 
               {/* KEYWORDS */}
               <div className="bg-card rounded-lg shadow-sm border">
