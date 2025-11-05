@@ -18,6 +18,7 @@ import AgentProfile from "./pages/AgentProfile";
 import AgentProfileEditor from "./pages/AgentProfileEditor";
 import ManageCoverageAreas from "./pages/ManageCoverageAreas";
 import BrowseProperties from "./pages/BrowseProperties";
+import SearchResults from "./pages/SearchResults";
 import OurAgents from "./pages/OurAgents";
 import Favorites from "./pages/Favorites";
 import HotSheets from "./pages/HotSheets";
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/buyer-auth" element={<BuyerAuth />} />
           <Route path="/browse" element={<BrowseProperties />} />
+          <Route path="/search-results" element={<SearchResults />} />
           <Route path="/our-agents" element={<OurAgents />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/hot-sheets" element={<HotSheets />} />

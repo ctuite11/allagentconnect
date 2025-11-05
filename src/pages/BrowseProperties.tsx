@@ -415,7 +415,7 @@ const BrowseProperties = () => {
               </div>
             </Collapsible>
 
-            {/* STATUS Section */}
+            {/* STATUS Section - now spans 1 column */}
             <Collapsible open={isStatusOpen} onOpenChange={setIsStatusOpen}>
               <div className="bg-card rounded-lg shadow-sm border">
                 <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
@@ -428,7 +428,7 @@ const BrowseProperties = () => {
                 <CollapsibleContent>
                   <div className="p-3 pt-0">
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-2">
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="status-select-all"
@@ -443,6 +443,8 @@ const BrowseProperties = () => {
                           />
                           <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
                         </div>
+                      </div>
+                      <div className="space-y-1">
                         {[
                           { value: "active", label: "New" },
                           { value: "active", label: "Active" },
@@ -481,16 +483,16 @@ const BrowseProperties = () => {
                             <label htmlFor={`status-right-${idx}`} className="text-xs cursor-pointer">{status.label}</label>
                           </div>
                         ))}
-                        
-                        <div className="pt-2 border-t mt-2">
+                      </div>
+                      <div className="col-span-2 space-y-2 pt-2 border-t">
+                        <div>
                           <div className="flex items-center gap-2 mb-1">
                             <Label className="text-xs font-semibold">List Date</Label>
                             <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
                           </div>
                           <Input className="h-7 text-xs" />
                         </div>
-                        
-                        <div className="pt-2">
+                        <div>
                           <div className="flex items-center gap-2 mb-1">
                             <Label className="text-xs font-semibold">Off-Market Timeframe</Label>
                             <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
@@ -618,21 +620,54 @@ const BrowseProperties = () => {
             </Collapsible>
           </div>
 
-          {/* Extended Layout (no right-side results) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Second Row: PRICE below STATUS + MAP */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+            <div></div> {/* Empty space under PROPERTY TYPE */}
+            
+            {/* PRICE Section - under STATUS */}
+            <Collapsible open={isPriceOpen} onOpenChange={setIsPriceOpen}>
+              <div className="bg-card rounded-lg shadow-sm border">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm text-primary">PRICE</h3>
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
+                  </div>
+                  {isPriceOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="p-3 pt-0 grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Low</Label>
+                      <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-8" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">High</Label>
+                      <Input type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-8" />
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
 
-            {/* MAP */}
-            <div>
-              <div className="bg-card rounded-lg shadow-sm border p-4">
+            {/* MAP Section */}
+            <div className="bg-card rounded-lg shadow-sm border p-4">
+              <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-sm text-primary">MAP</h3>
+                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
               </div>
             </div>
+          </div>
 
+          {/* Extended Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* ADDRESS - full width */}
             <div className="lg:col-span-3">
               <div className="bg-card rounded-lg shadow-sm border">
                 <div className="flex items-center justify-between w-full p-4">
-                  <h3 className="font-semibold text-sm text-primary">ADDRESS</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm text-primary">ADDRESS</h3>
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
+                  </div>
                 </div>
                 <div className="p-4 pt-0 space-y-4">
                   <RadioGroup value={addressType} onValueChange={setAddressType}>
