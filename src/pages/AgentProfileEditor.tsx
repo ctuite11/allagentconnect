@@ -633,7 +633,7 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Testimonials Section */}
-          <Card>
+          <Card className="mb-6">
             <CardHeader>
               <CardTitle>Testimonials</CardTitle>
               <CardDescription>Add client testimonials to build trust</CardDescription>
@@ -722,6 +722,24 @@ const AgentProfileEditor = () => {
                   ))
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Publish Profile Section */}
+          <Card className="border-primary/50 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="text-2xl">Ready to Publish?</CardTitle>
+              <CardDescription>Your profile is complete! Click below to make it live and visible to potential clients.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                size="lg" 
+                onClick={handleSaveProfile} 
+                disabled={saving}
+                className="w-full md:w-auto"
+              >
+                {saving ? "Publishing..." : "Publish Profile"}
+              </Button>
             </CardContent>
           </Card>
         </div>
