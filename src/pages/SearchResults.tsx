@@ -10,13 +10,14 @@ const useQuery = () => new URLSearchParams(useLocation().search);
 
 const SearchResults = () => {
   const navigate = useNavigate();
-  const query = useQuery();
+  const search = useLocation().search;
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const filters = useMemo(() => {
-    const get = (k: string) => query.get(k) || undefined;
-    const getList = (k: string, sep = ",") => (query.get(k)?.split(sep).filter(Boolean) || undefined);
+    const params = new URLSearchParams(search);
+    const get = (k: string) => params.get(k) || undefined;
+    const getList = (k: string, sep = ",") => (params.get(k)?.split(sep).filter(Boolean) || undefined);
 
     return {
       statuses: getList("status"),
@@ -39,7 +40,7 @@ const SearchResults = () => {
       keywordMatch: get("keywordMatch"),
       keywordType: get("keywordType"),
     };
-  }, [query]);
+  }, [search]);
 
   useEffect(() => {
     const fetchResults = async () => {
