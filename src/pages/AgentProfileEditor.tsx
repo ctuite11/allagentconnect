@@ -443,15 +443,15 @@ const AgentProfileEditor = () => {
                       <img
                         src={headshotUrl}
                         alt="Headshot"
-                        className="w-32 h-32 rounded-full object-cover border-2 border-border"
+                        className="w-48 h-64 rounded-lg object-cover border-4 border-border"
                       />
                       <Button
                         size="icon"
                         variant="destructive"
-                        className="absolute -top-2 -right-2 h-6 w-6"
+                        className="absolute top-2 right-2 h-8 w-8"
                         onClick={() => setHeadshotUrl("")}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   )}
