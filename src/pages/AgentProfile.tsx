@@ -313,27 +313,27 @@ const AgentProfile = () => {
                       <p className="text-sm font-semibold mb-3">Connect Online</p>
                       <div className="flex gap-3">
                         {agent.social_links.website && (
-                          <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
+                          <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
                             <Globe className="h-5 w-5" />
                           </a>
                         )}
                         {agent.social_links.linkedin && (
-                          <a href={agent.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
+                          <a href={agent.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#0A66C2] hover:bg-[#004182] text-white transition-colors">
                             <Linkedin className="h-5 w-5" />
                           </a>
                         )}
                         {agent.social_links.facebook && (
-                          <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
+                          <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#1877F2] hover:bg-[#0C5DC7] text-white transition-colors">
                             <Facebook className="h-5 w-5" />
                           </a>
                         )}
                         {agent.social_links.twitter && (
-                          <a href={agent.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
+                          <a href={agent.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white transition-colors">
                             <Twitter className="h-5 w-5" />
                           </a>
                         )}
                         {agent.social_links.instagram && (
-                          <a href={agent.social_links.instagram} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground transition-colors">
+                          <a href={agent.social_links.instagram} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white transition-colors">
                             <Instagram className="h-5 w-5" />
                           </a>
                         )}
