@@ -37,6 +37,9 @@ const AgentProfileEditor = () => {
   const [buyerIncentives, setBuyerIncentives] = useState("");
   const [sellerIncentives, setSellerIncentives] = useState("");
   const [aacId, setAacId] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [title, setTitle] = useState("");
   const [email, setEmail] = useState("");
   const [officePhone, setOfficePhone] = useState("");
   const [cellPhone, setCellPhone] = useState("");
@@ -92,6 +95,9 @@ const AgentProfileEditor = () => {
         setBuyerIncentives(profile.buyer_incentives || "");
         setSellerIncentives(profile.seller_incentives || "");
         setAacId(profile.aac_id || null);
+        setFirstName(profile.first_name || "");
+        setLastName(profile.last_name || "");
+        setTitle(profile.title || "");
         setEmail(profile.email || "");
         setOfficePhone(profile.office_phone || "");
         setCellPhone(profile.cell_phone || "");
@@ -138,6 +144,9 @@ const AgentProfileEditor = () => {
           buyer_incentives: buyerIncentives,
           seller_incentives: sellerIncentives,
           social_links: socialLinks as any,
+          first_name: firstName,
+          last_name: lastName,
+          title,
           email,
           office_phone: officePhone,
           cell_phone: cellPhone,
@@ -311,6 +320,35 @@ const AgentProfileEditor = () => {
               <CardDescription>Update your contact details and office information</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="first_name">First Name</Label>
+                  <Input
+                    id="first_name"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="last_name">Last Name</Label>
+                  <Input
+                    id="last_name"
+                    placeholder="Smith"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  placeholder="Real Estate Agent, Broker, etc."
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
               <div>
                 <Label htmlFor="email">Email Address</Label>
                 <Input

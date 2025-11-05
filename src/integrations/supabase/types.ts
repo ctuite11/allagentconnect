@@ -112,6 +112,7 @@ export type Database = {
           receive_buyer_alerts: boolean | null
           seller_incentives: string | null
           social_links: Json | null
+          title: string | null
           updated_at: string | null
         }
         Insert: {
@@ -134,6 +135,7 @@ export type Database = {
           receive_buyer_alerts?: boolean | null
           seller_incentives?: string | null
           social_links?: Json | null
+          title?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -156,6 +158,7 @@ export type Database = {
           receive_buyer_alerts?: boolean | null
           seller_incentives?: string | null
           social_links?: Json | null
+          title?: string | null
           updated_at?: string | null
         }
         Relationships: []
