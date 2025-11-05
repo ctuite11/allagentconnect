@@ -20,13 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import AgentAutocomplete from "@/components/AgentAutocomplete";
 
 const ManageTeam = () => {
   const navigate = useNavigate();
@@ -56,7 +50,6 @@ const ManageTeam = () => {
   
   // Add member dialog
   const [addMemberOpen, setAddMemberOpen] = useState(false);
-  const [selectedAgentId, setSelectedAgentId] = useState("");
 
   useEffect(() => {
     checkAuthAndLoadTeam();
@@ -217,23 +210,22 @@ const ManageTeam = () => {
     }
   };
 
-  const handleAddMember = async () => {
-    if (!selectedAgentId || !team) return;
+  const handleAddMember = async (agent: any) => {
+    if (!agent || !team) return;
 
     try {
       const { error } = await supabase
         .from("team_members")
         .insert({
           team_id: team.id,
-          agent_id: selectedAgentId,
+          agent_id: agent.id,
           role: 'member',
         });
 
       if (error) throw error;
       
-      toast.success("Member added successfully!");
+      toast.success(`${agent.first_name} ${agent.last_name} added to team!`);
       setAddMemberOpen(false);
-      setSelectedAgentId("");
       await checkAuthAndLoadTeam();
     } catch (error: any) {
       console.error("Error adding member:", error);
@@ -335,9 +327,7 @@ const ManageTeam = () => {
     );
   }
 
-  const availableAgents = allAgents.filter(
-    agent => !members.some(member => member.agent_id === agent.id)
-  );
+  const excludedAgentIds = members.map(member => member.agent_id);
 
   return (
     <div className="min-h-screen bg-background">
@@ -620,25 +610,15 @@ const ManageTeam = () => {
                         <DialogHeader>
                           <DialogTitle>Add Team Member</DialogTitle>
                           <DialogDescription>
-                            Select an agent to add to your team
+                            Search and select an agent to add to your team. Their profile picture and contact information will be imported automatically.
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4">
-                          <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select an agent" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableAgents.map((agent) => (
-                                <SelectItem key={agent.id} value={agent.id}>
-                                  {agent.first_name} {agent.last_name} - {agent.email}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button onClick={handleAddMember} className="w-full" disabled={!selectedAgentId}>
-                            Add Member
-                          </Button>
+                        <div className="py-4">
+                          <AgentAutocomplete
+                            onAgentSelect={handleAddMember}
+                            excludeAgentIds={excludedAgentIds}
+                            placeholder="Search by name or email..."
+                          />
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -651,21 +631,31 @@ const ManageTeam = () => {
                     <p className="text-muted-foreground">No team members yet. Add your first member above!</p>
                   ) : (
                     members.map((member) => (
-                      <div key={member.id} className="flex items-center gap-3 p-3 rounded-lg border">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={member.agent_profiles?.headshot_url} />
-                          <AvatarFallback>
-                            {member.agent_profiles?.first_name?.[0]}{member.agent_profiles?.last_name?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">
-                            {member.agent_profiles?.first_name} {member.agent_profiles?.last_name}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {member.agent_profiles?.title || member.agent_profiles?.email}
-                          </p>
-                        </div>
+                      <div key={member.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors">
+                        <button
+                          onClick={() => navigate(`/agent/${member.agent_profiles?.id}`)}
+                          className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+                        >
+                          <Avatar className="h-12 w-12 cursor-pointer">
+                            <AvatarImage src={member.agent_profiles?.headshot_url} />
+                            <AvatarFallback>
+                              {member.agent_profiles?.first_name?.[0]}{member.agent_profiles?.last_name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">
+                              {member.agent_profiles?.first_name} {member.agent_profiles?.last_name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {member.agent_profiles?.title || member.agent_profiles?.email}
+                            </p>
+                            {member.agent_profiles?.email && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {member.agent_profiles.email}
+                              </p>
+                            )}
+                          </div>
+                        </button>
                         <div className="flex items-center gap-2">
                           {member.role === 'owner' && (
                             <Badge variant="secondary" className="text-xs">Owner</Badge>
