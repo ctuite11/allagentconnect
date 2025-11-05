@@ -248,24 +248,97 @@ const PropertyDetail = () => {
             </div>
           </div>
 
-          {/* Call to Action Buttons */}
-          <div className="flex flex-wrap gap-3 mb-6">
-            <ScheduleShowingDialog 
-              listingId={listing.id}
-              listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
-            />
-            <ContactAgentDialog 
-              listingId={listing.id}
-              agentId={listing.agent_id}
-              listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
-            />
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => navigate(`/agent/${listing.agent_id}`)}
-            >
-              View Agent Profile
-            </Button>
+          {/* Schedule Showing and Contact Section */}
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-3 mb-6">
+              <ScheduleShowingDialog 
+                listingId={listing.id}
+                listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+              />
+              <ContactAgentDialog 
+                listingId={listing.id}
+                agentId={listing.agent_id}
+                listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+              />
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={() => navigate(`/agent/${listing.agent_id}`)}
+              >
+                View Agent Profile
+              </Button>
+            </div>
+
+            {/* Agent and Commission Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Listing Agent Card */}
+              {agentProfile && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Listing Agent</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={agentProfile.profile_photo} alt={agentProfile.full_name} />
+                        <AvatarFallback>{agentProfile.full_name?.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold text-lg">{agentProfile.full_name}</h3>
+                        {agentProfile.brokerage_name && (
+                          <p className="text-sm text-muted-foreground">{agentProfile.brokerage_name}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {agentProfile.email && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline">
+                            {agentProfile.email}
+                          </a>
+                        </div>
+                      )}
+                      {agentProfile.phone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <a href={`tel:${agentProfile.phone}`} className="text-primary hover:underline">
+                            {agentProfile.phone}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Commission Information */}
+              {(listing.commission_rate || listing.commission_notes) && (
+                <Card className="border-primary/50">
+                  <CardHeader className="bg-primary/5">
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Buyer Agent Commission
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    {listing.commission_rate && (
+                      <div className="mb-2">
+                        <p className="text-2xl font-bold text-primary">
+                          {listing.commission_type === 'percentage' 
+                            ? `${listing.commission_rate}%` 
+                            : `$${listing.commission_rate.toLocaleString()}`}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Offered to buyer's agent</p>
+                      </div>
+                    )}
+                    {listing.commission_notes && (
+                      <p className="text-sm text-muted-foreground mt-2">{listing.commission_notes}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -405,74 +478,6 @@ const PropertyDetail = () => {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Listing Agent Card */}
-              {agentProfile && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Listing Agent</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={agentProfile.profile_photo} alt={agentProfile.full_name} />
-                        <AvatarFallback>{agentProfile.full_name?.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold text-lg">{agentProfile.full_name}</h3>
-                        {agentProfile.brokerage_name && (
-                          <p className="text-sm text-muted-foreground">{agentProfile.brokerage_name}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      {agentProfile.email && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline">
-                            {agentProfile.email}
-                          </a>
-                        </div>
-                      )}
-                      {agentProfile.phone && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <a href={`tel:${agentProfile.phone}`} className="text-primary hover:underline">
-                            {agentProfile.phone}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Commission Information - Visible to all */}
-              {(listing.commission_rate || listing.commission_notes) && (
-                <Card className="border-primary/50">
-                  <CardHeader className="bg-primary/5">
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Buyer Agent Commission
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    {listing.commission_rate && (
-                      <div className="mb-2">
-                        <p className="text-2xl font-bold text-primary">
-                          {listing.commission_type === 'percentage' 
-                            ? `${listing.commission_rate}%` 
-                            : `$${listing.commission_rate.toLocaleString()}`}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Offered to buyer's agent</p>
-                      </div>
-                    )}
-                    {listing.commission_notes && (
-                      <p className="text-sm text-muted-foreground mt-2">{listing.commission_notes}</p>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
               {/* AGENT ONLY INFORMATION */}
               {isAgent && (
                 <>
