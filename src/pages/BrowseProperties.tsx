@@ -328,8 +328,10 @@ const BrowseProperties = () => {
           </div>
 
           {/* Toolbar */}
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <Button onClick={handleViewResults}>View Results</Button>
+          <div className="sticky top-20 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-sm flex flex-wrap items-center gap-2 mb-4 p-3 -mx-4 px-4">
+            <Button onClick={handleViewResults}>
+              View Results {!loading && `(${listings.length})`}
+            </Button>
             <Button variant="outline">Save</Button>
             <Button variant="outline">Load</Button>
             <Button variant="outline">Attach</Button>
