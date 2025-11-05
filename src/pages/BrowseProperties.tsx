@@ -381,6 +381,7 @@ const BrowseProperties = () => {
                   />
                   <label htmlFor="type-select-all" className="text-xs cursor-pointer">Select All</label>
                 </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                 {[
                   { value: "Single Family", label: "Single Family" },
                   { value: "Condominium", label: "Condominium" },
@@ -400,6 +401,7 @@ const BrowseProperties = () => {
                     <label htmlFor={`type-${type.value}`} className="text-xs cursor-pointer">{type.label}</label>
                   </div>
                 ))}
+                </div>
               </div>
             </div>
 
@@ -410,8 +412,8 @@ const BrowseProperties = () => {
                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
               </div>
               <div className="p-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_12rem] gap-3 items-start">
+                    <div className="space-y-1.5 pr-2">
                     <div className="flex items-center space-x-2 mb-1">
                       <Checkbox
                         id="status-select-all"
@@ -426,7 +428,7 @@ const BrowseProperties = () => {
                       />
                       <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pr-2">
                       {[
                         { value: "active", label: "New" },
                         { value: "active", label: "Active" },
@@ -449,13 +451,13 @@ const BrowseProperties = () => {
                             checked={statuses.includes(status.value)}
                             onCheckedChange={() => handleStatusToggle(status.value)}
                           />
-                          <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer leading-tight">{status.label}</label>
+                          <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer leading-tight whitespace-normal break-words">{status.label}</label>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:min-w-[12rem]">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <Label className="text-xs font-semibold">Off-Market Timeframe</Label>
