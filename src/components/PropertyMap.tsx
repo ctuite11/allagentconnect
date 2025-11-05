@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { Loader } from "@googlemaps/js-api-loader";
 
 interface PropertyMapProps {
   address: string;
@@ -12,18 +11,29 @@ const PropertyMap = ({ address, latitude, longitude }: PropertyMapProps) => {
 
   useEffect(() => {
     const initMap = async () => {
+      if (!mapRef.current) return;
+
       try {
-        const loader = new Loader({
-          apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
-          version: "weekly",
-        });
+        // Load Google Maps script dynamically
+        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        if (!apiKey) {
+          console.error("Google Maps API key not configured");
+          return;
+        }
 
-        // @ts-ignore - Load the Google Maps API
-        await loader.loadCallback((e) => {
-          if (e) throw e;
-        });
-
-        if (!mapRef.current) return;
+        // Check if script is already loaded
+        if (!window.google?.maps) {
+          const script = document.createElement("script");
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+          script.async = true;
+          script.defer = true;
+          
+          await new Promise<void>((resolve, reject) => {
+            script.onload = () => resolve();
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
 
         // Use provided coordinates or geocode the address
         if (latitude && longitude) {
