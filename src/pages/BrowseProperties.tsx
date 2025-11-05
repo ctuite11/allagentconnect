@@ -427,10 +427,10 @@ const BrowseProperties = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="p-3 pt-0">
-                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_16rem] gap-3">
-                      {/* Left column: Select All + left statuses */}
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Left column: Select All + statuses */}
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2 mb-2">
                           <Checkbox
                             id="status-select-all"
                             checked={statuses.length >= 5}
@@ -444,7 +444,7 @@ const BrowseProperties = () => {
                           />
                           <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
                         </div>
-                        <div className="space-y-1">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                           {[
                             { value: "active", label: "New" },
                             { value: "active", label: "Active" },
@@ -453,6 +453,13 @@ const BrowseProperties = () => {
                             { value: "pending", label: "Extended" },
                             { value: "sold", label: "Reactivated" },
                             { value: "sold", label: "Contingent" },
+                            { value: "pending", label: "Under Agreement" },
+                            { value: "sold", label: "Sold" },
+                            { value: "off_market", label: "Rented" },
+                            { value: "off_market", label: "Temporarily Withdrawn" },
+                            { value: "off_market", label: "Expired" },
+                            { value: "off_market", label: "Canceled" },
+                            { value: "coming_soon", label: "Coming Soon" },
                           ].map((status, idx) => (
                             <div key={idx} className="flex items-center space-x-2">
                               <Checkbox
@@ -466,44 +473,41 @@ const BrowseProperties = () => {
                         </div>
                       </div>
 
-                      {/* Middle column: right statuses list */}
-                      <div className="space-y-1">
-                        {[
-                          { value: "pending", label: "Under Agreement" },
-                          { value: "sold", label: "Sold" },
-                          { value: "off_market", label: "Rented" },
-                          { value: "off_market", label: "Temporarily Withdrawn" },
-                          { value: "off_market", label: "Expired" },
-                          { value: "off_market", label: "Canceled" },
-                          { value: "coming_soon", label: "Coming Soon" },
-                        ].map((status, idx) => (
-                          <div key={`status-right-${idx}`} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`status-right-${idx}`}
-                              checked={statuses.includes(status.value)}
-                              onCheckedChange={() => handleStatusToggle(status.value)}
-                            />
-                            <label htmlFor={`status-right-${idx}`} className="text-xs cursor-pointer">{status.label}</label>
+                      {/* Right column: Off-Market Timeframe and List Date */}
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <Label className="text-xs font-semibold">Off-Market Timeframe</Label>
+                            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
                           </div>
-                        ))}
-                      </div>
-
-                      {/* Right column: Off-Market Timeframe */}
-                      <div className="lg:pl-2">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Label className="text-xs font-semibold">Off-Market Timeframe</Label>
-                          <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
+                          <Select defaultValue="today-6months">
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="z-50 bg-popover">
+                              <SelectItem value="today-6months">TODAY - 6 MONTHS</SelectItem>
+                              <SelectItem value="today-3months">TODAY - 3 MONTHS</SelectItem>
+                              <SelectItem value="today-1month">TODAY - 1 MONTH</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-                        <Select defaultValue="today-6months">
-                          <SelectTrigger className="h-7 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="z-50 bg-popover">
-                            <SelectItem value="today-6months">TODAY - 6 MONTHS</SelectItem>
-                            <SelectItem value="today-3months">TODAY - 3 MONTHS</SelectItem>
-                            <SelectItem value="today-1month">TODAY - 1 MONTH</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <Label className="text-xs font-semibold">List Date</Label>
+                            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
+                          </div>
+                          <Select defaultValue="any">
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="z-50 bg-popover">
+                              <SelectItem value="any">Any Time</SelectItem>
+                              <SelectItem value="24h">Last 24 Hours</SelectItem>
+                              <SelectItem value="7d">Last 7 Days</SelectItem>
+                              <SelectItem value="30d">Last 30 Days</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
                   </div>
