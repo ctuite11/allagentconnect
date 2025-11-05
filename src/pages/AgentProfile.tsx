@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, Building2, MapPin, ArrowLeft, Loader2, Home, Star, Briefcase, Globe, Linkedin, Facebook, Twitter, Instagram, DollarSign, Award } from "lucide-react";
+import { Mail, Phone, Building2, MapPin, ArrowLeft, Loader2, Home, Star, Briefcase, Globe, Linkedin, Facebook, Twitter, Instagram, DollarSign, Award, Download } from "lucide-react";
 import { toast } from "sonner";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 
@@ -18,6 +18,32 @@ const formatPhoneNumber = (phone: string) => {
     return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
   }
   return phone;
+};
+
+const generateVCard = (agent: AgentProfile) => {
+  const vcard = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `FN:${agent.first_name} ${agent.last_name}`,
+    `N:${agent.last_name};${agent.first_name};;;`,
+    `EMAIL:${agent.email}`,
+    agent.cell_phone ? `TEL;TYPE=CELL:${agent.cell_phone}` : '',
+    agent.office_phone ? `TEL;TYPE=WORK:${agent.office_phone}` : '',
+    agent.title ? `TITLE:${agent.title}` : '',
+    agent.company ? `ORG:${agent.company}` : '',
+    agent.office_address ? `ADR;TYPE=WORK:;;${agent.office_address};;;;` : '',
+    agent.social_links?.website ? `URL:${agent.social_links.website}` : '',
+    agent.social_links?.linkedin ? `X-SOCIALPROFILE;TYPE=linkedin:${agent.social_links.linkedin}` : '',
+    'END:VCARD'
+  ].filter(line => line).join('\n');
+  
+  const blob = new Blob([vcard], { type: 'text/vcard' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${agent.first_name}_${agent.last_name}.vcf`;
+  link.click();
+  window.URL.revokeObjectURL(url);
 };
 
 interface AgentProfile {
@@ -290,11 +316,22 @@ const AgentProfile = () => {
 
                 <Separator />
 
-                <ContactAgentProfileDialog 
-                  agentId={agent.id}
-                  agentName={`${agent.first_name} ${agent.last_name}`}
-                  agentEmail={agent.email}
-                />
+                <div className="space-y-3">
+                  <ContactAgentProfileDialog 
+                    agentId={agent.id}
+                    agentName={`${agent.first_name} ${agent.last_name}`}
+                    agentEmail={agent.email}
+                  />
+                  
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => generateVCard(agent)}
+                  >
+                    <Download className="h-4 w-4" />
+                    Save Contact
+                  </Button>
+                </div>
 
                 {agent.social_links && Object.values(agent.social_links).some(link => link) && (
                   <>
