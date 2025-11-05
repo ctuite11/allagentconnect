@@ -426,7 +426,7 @@ const BrowseProperties = () => {
                       />
                       <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
+                    <div className="space-y-1.5">
                       {[
                         { value: "active", label: "New" },
                         { value: "active", label: "Active" },
@@ -449,7 +449,7 @@ const BrowseProperties = () => {
                             checked={statuses.includes(status.value)}
                             onCheckedChange={() => handleStatusToggle(status.value)}
                           />
-                          <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer whitespace-nowrap">{status.label}</label>
+                          <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer leading-tight">{status.label}</label>
                         </div>
                       ))}
                     </div>
