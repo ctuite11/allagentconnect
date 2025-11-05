@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, MapPin, Bed, Bath, Square, Calendar, DollarSign, ArrowLeft, Home, FileText, Video, Globe, Lock, Phone, Mail, AlertCircle, GraduationCap, Footprints } from "lucide-react";
+import { Loader2, MapPin, Bed, Bath, Square, Calendar, DollarSign, ArrowLeft, Home, FileText, Video, Globe, Lock, Phone, Mail, AlertCircle, GraduationCap, Footprints, Image } from "lucide-react";
 import { toast } from "sonner";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -18,6 +18,7 @@ import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo";
 import PropertyMap from "@/components/PropertyMap";
+import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 
 interface Listing {
   id: string;
@@ -67,6 +68,9 @@ const PropertyDetail = () => {
   const [isAgent, setIsAgent] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [agentProfile, setAgentProfile] = useState<any>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryTab, setGalleryTab] = useState("photos");
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -218,8 +222,36 @@ const PropertyDetail = () => {
                   </Badge>
                 )}
               </div>
+
+              {/* View All Media Button */}
+              <div className="absolute bottom-4 right-4">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="gap-2"
+                  onClick={() => {
+                    setGalleryTab("photos");
+                    setGalleryIndex(currentPhotoIndex);
+                    setGalleryOpen(true);
+                  }}
+                >
+                  <Image className="w-4 h-4" />
+                  View All Photos & Media
+                </Button>
+              </div>
             </div>
 
+            {/* Photo Gallery Dialog */}
+            <PhotoGalleryDialog
+              open={galleryOpen}
+              onOpenChange={setGalleryOpen}
+              photos={listing.photos || []}
+              floorPlans={listing.floor_plans || []}
+              videos={[]}
+              virtualTours={[]}
+              initialTab={galleryTab}
+              initialIndex={galleryIndex}
+            />
           </div>
 
           {/* Address and Price */}
@@ -277,36 +309,43 @@ const PropertyDetail = () => {
                   <CardHeader>
                     <CardTitle>Listing Agent</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={agentProfile.profile_photo} alt={agentProfile.full_name} />
-                        <AvatarFallback>{agentProfile.full_name?.charAt(0)}</AvatarFallback>
+                  <CardContent className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      <Avatar className="h-32 w-24 rounded-lg">
+                        <AvatarImage 
+                          src={agentProfile.headshot_url} 
+                          alt={`${agentProfile.first_name} ${agentProfile.last_name}`}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="rounded-lg text-2xl">
+                          {agentProfile.first_name?.charAt(0)}{agentProfile.last_name?.charAt(0)}
+                        </AvatarFallback>
                       </Avatar>
+                    </div>
+                    <div className="flex-1 space-y-3">
                       <div>
-                        <h3 className="font-semibold text-lg">{agentProfile.full_name}</h3>
-                        {agentProfile.brokerage_name && (
-                          <p className="text-sm text-muted-foreground">{agentProfile.brokerage_name}</p>
+                        <h3 className="font-semibold text-lg">
+                          {agentProfile.first_name} {agentProfile.last_name}
+                        </h3>
+                      </div>
+                      <div className="space-y-2">
+                        {agentProfile.cell_phone && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <a href={`tel:${agentProfile.cell_phone}`} className="text-primary hover:underline">
+                              {agentProfile.cell_phone}
+                            </a>
+                          </div>
+                        )}
+                        {agentProfile.email && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline">
+                              {agentProfile.email}
+                            </a>
+                          </div>
                         )}
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      {agentProfile.email && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline">
-                            {agentProfile.email}
-                          </a>
-                        </div>
-                      )}
-                      {agentProfile.phone && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <a href={`tel:${agentProfile.phone}`} className="text-primary hover:underline">
-                            {agentProfile.phone}
-                          </a>
-                        </div>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -329,7 +368,9 @@ const PropertyDetail = () => {
                             ? `${listing.commission_rate}%` 
                             : `$${listing.commission_rate.toLocaleString()}`}
                         </p>
-                        <p className="text-sm text-muted-foreground">Offered to buyer's agent</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          The amount this seller has offered to pay a buyer's agent that sells this home.
+                        </p>
                       </div>
                     )}
                     {listing.commission_notes && (
