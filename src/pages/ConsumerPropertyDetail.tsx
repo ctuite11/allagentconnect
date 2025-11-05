@@ -204,66 +204,6 @@ const ConsumerPropertyDetail = () => {
               )}
             </div>
 
-            {/* Media Tabs */}
-            <Tabs defaultValue="photos" className="mt-4">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="photos" className="gap-2">
-                  <Home className="w-4 h-4" />
-                  Photos
-                </TabsTrigger>
-                <TabsTrigger value="floorplan" className="gap-2">
-                  <FileText className="w-4 h-4" />
-                  Floorplan
-                </TabsTrigger>
-                <TabsTrigger value="video" className="gap-2">
-                  <Video className="w-4 h-4" />
-                  Video
-                </TabsTrigger>
-                <TabsTrigger value="website" className="gap-2">
-                  <Globe className="w-4 h-4" />
-                  Website
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="photos" className="mt-4">
-                {listing.photos && listing.photos.length > 0 ? (
-                  <div className="grid grid-cols-4 gap-2">
-                    {listing.photos.map((photo: any, index: number) => (
-                      <img
-                        key={index}
-                        src={photo.url}
-                        alt={`Property ${index + 1}`}
-                        className="w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => setCurrentPhotoIndex(index)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">No photos available</p>
-                )}
-              </TabsContent>
-              <TabsContent value="floorplan" className="mt-4">
-                {listing.floor_plans && listing.floor_plans.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    {listing.floor_plans.map((plan: any, index: number) => (
-                      <img
-                        key={index}
-                        src={plan.url}
-                        alt={`Floor plan ${index + 1}`}
-                        className="w-full h-auto rounded"
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">No floor plans available</p>
-                )}
-              </TabsContent>
-              <TabsContent value="video">
-                <p className="text-muted-foreground text-center py-8">No video available</p>
-              </TabsContent>
-              <TabsContent value="website">
-                <p className="text-muted-foreground text-center py-8">No website link available</p>
-              </TabsContent>
-            </Tabs>
           </div>
 
           {/* Address and Price */}
