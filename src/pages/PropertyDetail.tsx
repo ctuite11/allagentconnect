@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, MapPin, Bed, Bath, Square, Calendar, DollarSign, ArrowLeft, Home, FileText, Video, Globe, Lock, Phone, Mail, AlertCircle } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Loader2, MapPin, Bed, Bath, Square, Calendar, DollarSign, ArrowLeft, Home, FileText, Video, Globe, Lock, Phone, Mail, AlertCircle, GraduationCap, Footprints } from "lucide-react";
 import { toast } from "sonner";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -16,6 +17,7 @@ import MatchingBuyerAgents from "@/components/MatchingBuyerAgents";
 import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo";
+import PropertyMap from "@/components/PropertyMap";
 
 interface Listing {
   id: string;
@@ -64,6 +66,7 @@ const PropertyDetail = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isAgent, setIsAgent] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [agentProfile, setAgentProfile] = useState<any>(null);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -103,6 +106,19 @@ const PropertyDetail = () => {
             floor_plans: Array.isArray(data.floor_plans) ? (data.floor_plans as any[]) : [],
             documents: Array.isArray(data.documents) ? (data.documents as any[]) : [],
           } as Listing);
+
+          // Fetch agent profile
+          if (data.agent_id) {
+            const { data: profile } = await supabase
+              .from("agent_profiles")
+              .select("*")
+              .eq("id", data.agent_id)
+              .maybeSingle();
+            
+            if (profile) {
+              setAgentProfile(profile);
+            }
+          }
         }
       } catch (error: any) {
         console.error("Error fetching listing:", error);
@@ -389,6 +405,74 @@ const PropertyDetail = () => {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Listing Agent Card */}
+              {agentProfile && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Listing Agent</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={agentProfile.profile_photo} alt={agentProfile.full_name} />
+                        <AvatarFallback>{agentProfile.full_name?.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold text-lg">{agentProfile.full_name}</h3>
+                        {agentProfile.brokerage_name && (
+                          <p className="text-sm text-muted-foreground">{agentProfile.brokerage_name}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {agentProfile.email && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline">
+                            {agentProfile.email}
+                          </a>
+                        </div>
+                      )}
+                      {agentProfile.phone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <a href={`tel:${agentProfile.phone}`} className="text-primary hover:underline">
+                            {agentProfile.phone}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Commission Information - Visible to all */}
+              {(listing.commission_rate || listing.commission_notes) && (
+                <Card className="border-primary/50">
+                  <CardHeader className="bg-primary/5">
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Buyer Agent Commission
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    {listing.commission_rate && (
+                      <div className="mb-2">
+                        <p className="text-2xl font-bold text-primary">
+                          {listing.commission_type === 'percentage' 
+                            ? `${listing.commission_rate}%` 
+                            : `$${listing.commission_rate.toLocaleString()}`}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Offered to buyer's agent</p>
+                      </div>
+                    )}
+                    {listing.commission_notes && (
+                      <p className="text-sm text-muted-foreground mt-2">{listing.commission_notes}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* AGENT ONLY INFORMATION */}
               {isAgent && (
                 <>
@@ -516,11 +600,31 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
+              {/* Map */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Location
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PropertyMap 
+                    address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`}
+                    latitude={listing.attom_data?.latitude}
+                    longitude={listing.attom_data?.longitude}
+                  />
+                </CardContent>
+              </Card>
+
               {/* Walk Score */}
               {listing.walk_score_data && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Walk Score</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <Footprints className="h-5 w-5" />
+                      Walk Score
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
@@ -540,11 +644,48 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
+              {/* ATTOM Property Data */}
+              {listing.attom_data && Object.keys(listing.attom_data).length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Home className="h-5 w-5" />
+                      ATTOM Property Data
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      {listing.attom_data.zoning && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Zoning:</span>
+                          <span className="font-medium">{listing.attom_data.zoning}</span>
+                        </div>
+                      )}
+                      {listing.attom_data.stories && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Stories:</span>
+                          <span className="font-medium">{listing.attom_data.stories}</span>
+                        </div>
+                      )}
+                      {listing.attom_data.parking_spaces && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Parking Spaces:</span>
+                          <span className="font-medium">{listing.attom_data.parking_spaces}</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Nearby Schools */}
               {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Nearby Schools</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5" />
+                      Nearby Schools
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
