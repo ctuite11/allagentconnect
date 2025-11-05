@@ -87,6 +87,7 @@ const BrowseProperties = () => {
   const [isPriceOpen, setIsPriceOpen] = useState(true);
   const [isCriteriaOpen, setIsCriteriaOpen] = useState(true);
   const [isKeywordsOpen, setIsKeywordsOpen] = useState(false);
+  const [isMapOpen, setIsMapOpen] = useState(true);
 
   useEffect(() => {
     fetchListings();
@@ -620,40 +621,49 @@ const BrowseProperties = () => {
             </Collapsible>
           </div>
 
-          {/* Second Row: PRICE below STATUS + MAP */}
+          {/* Second Row: Listing Events, Price, Map */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-            <div className="bg-card rounded-lg shadow-sm border">
-              <div className="flex items-center justify-between w-full p-4">
-                <h3 className="font-semibold text-sm text-primary">LISTING EVENTS</h3>
-              </div>
-              <div className="p-4 pt-0 space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="open-houses" checked={openHouses} onCheckedChange={(v) => setOpenHouses(Boolean(v))} />
-                    <Label htmlFor="open-houses">Open Houses</Label>
+            {/* LISTING EVENTS Section */}
+            <Collapsible open={isListingEventsOpen} onOpenChange={setIsListingEventsOpen}>
+              <div className="bg-card rounded-lg shadow-sm border">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm text-primary">LISTING EVENTS</h3>
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="broker-tours" checked={brokerTours} onCheckedChange={(v) => setBrokerTours(Boolean(v))} />
-                    <Label htmlFor="broker-tours">Broker Tours</Label>
+                  {isListingEventsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="p-3 pt-0 space-y-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="open-houses" checked={openHouses} onCheckedChange={(v) => setOpenHouses(Boolean(v))} />
+                        <Label htmlFor="open-houses" className="text-xs cursor-pointer">Open Houses</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="broker-tours" checked={brokerTours} onCheckedChange={(v) => setBrokerTours(Boolean(v))} />
+                        <Label htmlFor="broker-tours" className="text-xs cursor-pointer">Broker Tours</Label>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold mb-1.5 block">For:</Label>
+                      <Select value={eventTimeframe} onValueChange={setEventTimeframe}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="z-50 bg-popover">
+                          <SelectItem value="next_3_days">Next 3 Days</SelectItem>
+                          <SelectItem value="next_7_days">Next 7 Days</SelectItem>
+                          <SelectItem value="next_14_days">Next 14 Days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <Label className="text-xs">For:</Label>
-                  <Select value={eventTimeframe} onValueChange={setEventTimeframe}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-50">
-                      <SelectItem value="next_3_days">Next 3 Days</SelectItem>
-                      <SelectItem value="next_7_days">Next 7 Days</SelectItem>
-                      <SelectItem value="next_14_days">Next 14 Days</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                </CollapsibleContent>
               </div>
-            </div>
+            </Collapsible>
 
-            {/* PRICE Section - under STATUS */}
+            {/* PRICE Section */}
             <Collapsible open={isPriceOpen} onOpenChange={setIsPriceOpen}>
               <div className="bg-card rounded-lg shadow-sm border">
                 <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
@@ -679,12 +689,22 @@ const BrowseProperties = () => {
             </Collapsible>
 
             {/* MAP Section */}
-            <div className="bg-card rounded-lg shadow-sm border p-4">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm text-primary">MAP</h3>
-                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
+            <Collapsible open={isMapOpen} onOpenChange={setIsMapOpen}>
+              <div className="bg-card rounded-lg shadow-sm border">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm text-primary">MAP</h3>
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
+                  </div>
+                  {isMapOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="p-3 pt-0">
+                    <p className="text-xs text-muted-foreground">Map view coming soon</p>
+                  </div>
+                </CollapsibleContent>
               </div>
-            </div>
+            </Collapsible>
           </div>
 
           {/* Extended Layout */}
