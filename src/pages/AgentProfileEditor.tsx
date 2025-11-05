@@ -41,6 +41,7 @@ const AgentProfileEditor = () => {
   const [lastName, setLastName] = useState("");
   const [title, setTitle] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [officePhone, setOfficePhone] = useState("");
   const [cellPhone, setCellPhone] = useState("");
   const [officeName, setOfficeName] = useState("");
@@ -99,6 +100,7 @@ const AgentProfileEditor = () => {
         setLastName(profile.last_name || "");
         setTitle(profile.title || "");
         setEmail(profile.email || "");
+        setPhone(profile.phone || "");
         setOfficePhone(profile.office_phone || "");
         setCellPhone(profile.cell_phone || "");
         setOfficeName(profile.office_name || "");
@@ -148,6 +150,7 @@ const AgentProfileEditor = () => {
           last_name: lastName,
           title,
           email,
+          phone,
           office_phone: officePhone,
           cell_phone: cellPhone,
           office_name: officeName,
@@ -361,13 +364,13 @@ const AgentProfileEditor = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="office_phone">Office Phone</Label>
+                  <Label htmlFor="phone">Phone</Label>
                   <FormattedInput
-                    id="office_phone"
+                    id="phone"
                     format="phone"
-                    placeholder="5551234567"
-                    value={officePhone}
-                    onChange={setOfficePhone}
+                    placeholder="8571234567"
+                    value={phone}
+                    onChange={setPhone}
                   />
                 </div>
                 <div>
@@ -380,6 +383,16 @@ const AgentProfileEditor = () => {
                     onChange={setCellPhone}
                   />
                 </div>
+              </div>
+              <div>
+                <Label htmlFor="office_phone">Office Phone</Label>
+                <FormattedInput
+                  id="office_phone"
+                  format="phone"
+                  placeholder="5551234567"
+                  value={officePhone}
+                  onChange={setOfficePhone}
+                />
               </div>
               <div>
                 <Label htmlFor="office_name">Office Name</Label>
