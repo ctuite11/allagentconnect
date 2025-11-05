@@ -816,6 +816,71 @@ export type Database = {
           },
         ]
       }
+      team_members: {
+        Row: {
+          agent_id: string
+          id: string
+          joined_at: string
+          role: string
+          team_id: string
+        }
+        Insert: {
+          agent_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          team_id: string
+        }
+        Update: {
+          agent_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           agent_id: string
