@@ -278,16 +278,6 @@ const AgentProfile = () => {
                   </a>
                 )}
 
-                {agent.phone && agent.phone.trim() && agent.phone !== agent.cell_phone && (
-                  <a href={`tel:${agent.phone}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
-                    <Phone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground mb-1">Phone</p>
-                      <p className="text-sm font-medium group-hover:text-primary">{formatPhoneNumber(agent.phone)}</p>
-                    </div>
-                  </a>
-                )}
-
                 {agent.office_phone && agent.office_phone.trim() && (
                   <a href={`tel:${agent.office_phone}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
                     <Phone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
