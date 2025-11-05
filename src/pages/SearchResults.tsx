@@ -100,7 +100,22 @@ const SearchResults = () => {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {listings.map((listing) => (
-                <PropertyCard key={listing.id} {...listing} />
+                <div 
+                  key={listing.id} 
+                  onClick={() => navigate(`/property/${listing.id}`)}
+                  className="cursor-pointer"
+                >
+                  <PropertyCard
+                    image={listing.photos?.[0]?.url || "/placeholder.svg"}
+                    title={listing.property_type}
+                    price={`$${listing.price?.toLocaleString()}`}
+                    savings="N/A"
+                    address={listing.address}
+                    beds={listing.bedrooms}
+                    baths={listing.bathrooms}
+                    sqft={listing.square_feet?.toLocaleString() || "N/A"}
+                  />
+                </div>
               ))}
             </div>
           )}
