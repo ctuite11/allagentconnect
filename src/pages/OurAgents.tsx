@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Phone, Building2, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -106,14 +107,20 @@ const OurAgents = () => {
                   {filteredAgents.map((agent) => (
                     <Card key={agent.id} className="hover:shadow-lg transition-shadow">
                       <CardHeader>
-                        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
-                          <span className="text-3xl font-bold text-primary">
+                        <Avatar className="w-20 h-20 mx-auto mb-4">
+                          <AvatarImage src={agent.headshot_url} alt={`${agent.first_name} ${agent.last_name}`} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
                             {agent.first_name?.[0]}{agent.last_name?.[0]}
-                          </span>
-                        </div>
+                          </AvatarFallback>
+                        </Avatar>
                         <CardTitle className="text-center">
                           {agent.first_name} {agent.last_name}
                         </CardTitle>
+                        {agent.title && (
+                          <p className="text-sm text-muted-foreground text-center mt-1">
+                            {agent.title}
+                          </p>
+                        )}
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {agent.company && (
