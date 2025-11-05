@@ -427,7 +427,7 @@ const BrowseProperties = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="p-3 pt-0">
-                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_16rem] gap-3">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                       {/* Left column: Select All + left statuses */}
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
@@ -466,7 +466,7 @@ const BrowseProperties = () => {
                         </div>
                       </div>
 
-                      {/* Middle column: right statuses list */}
+                      {/* Right column: right statuses list */}
                       <div className="space-y-1">
                         {[
                           { value: "pending", label: "Under Agreement" },
@@ -487,33 +487,6 @@ const BrowseProperties = () => {
                           </div>
                         ))}
                       </div>
-
-                      {/* Right column: List Date + Off-Market */}
-                      <div className="space-y-3 lg:pl-2">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Label className="text-xs font-semibold">List Date</Label>
-                            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
-                          </div>
-                          <Input className="h-7 text-xs" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Label className="text-xs font-semibold">Off-Market Timeframe</Label>
-                            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
-                          </div>
-                          <Select defaultValue="today-6months">
-                            <SelectTrigger className="h-7 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="z-50 bg-popover">
-                              <SelectItem value="today-6months">TODAY - 6 MONTHS</SelectItem>
-                              <SelectItem value="today-3months">TODAY - 3 MONTHS</SelectItem>
-                              <SelectItem value="today-1month">TODAY - 1 MONTH</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </CollapsibleContent>
@@ -532,6 +505,22 @@ const BrowseProperties = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="p-3 pt-0 space-y-2">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Label className="text-xs font-semibold">Off-Market Timeframe</Label>
+                        <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-lime-500 text-white text-[8px] font-bold">?</span>
+                      </div>
+                      <Select defaultValue="today-6months">
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="z-50 bg-popover">
+                          <SelectItem value="today-6months">TODAY - 6 MONTHS</SelectItem>
+                          <SelectItem value="today-3months">TODAY - 3 MONTHS</SelectItem>
+                          <SelectItem value="today-1month">TODAY - 1 MONTH</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <Label className="text-xs">Bedrooms</Label>
