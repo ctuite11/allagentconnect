@@ -620,24 +620,6 @@ const BrowseProperties = () => {
 
           {/* Extended Layout (no right-side results) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* PRICE - spans two columns */}
-            <div className="lg:col-span-2">
-              <div className="bg-card rounded-lg shadow-sm border">
-                <div className="flex items-center justify-between w-full p-3">
-                  <h3 className="font-semibold text-sm text-primary">PRICE</h3>
-                </div>
-                <div className="p-3 pt-0 grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs">Low</Label>
-                    <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-8" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">High</Label>
-                    <Input type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-8" />
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* MAP */}
             <div>
