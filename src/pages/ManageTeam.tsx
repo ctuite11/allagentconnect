@@ -87,15 +87,16 @@ const ManageTeam = () => {
       if (membershipError && membershipError.code !== 'PGRST116') throw membershipError;
 
       if (membership) {
-        setTeam(membership.teams);
-        setTeamName(membership.teams.name);
-        setDescription(membership.teams.description || "");
-        setWebsite(membership.teams.website || "");
-        setLogoUrl(membership.teams.logo_url || "");
-        setTeamPhotoUrl(membership.teams.team_photo_url || "");
-        setContactEmail(membership.teams.contact_email || "");
-        setContactPhone(membership.teams.contact_phone || "");
-        setSocialLinks(membership.teams.social_links || {
+        const teamData = membership.teams as any;
+        setTeam(teamData);
+        setTeamName(teamData.name);
+        setDescription(teamData.description || "");
+        setWebsite(teamData.website || "");
+        setLogoUrl(teamData.logo_url || "");
+        setTeamPhotoUrl(teamData.team_photo_url || "");
+        setContactEmail(teamData.contact_email || "");
+        setContactPhone(teamData.contact_phone || "");
+        setSocialLinks(teamData.social_links || {
           linkedin: "",
           facebook: "",
           twitter: "",
