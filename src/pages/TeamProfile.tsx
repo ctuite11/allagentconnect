@@ -41,7 +41,7 @@ const TeamProfile = () => {
 
       setTeam(teamData);
 
-      // Fetch team members with their profiles
+      // Fetch team members with their profiles ordered by display_order
       const { data: membersData, error: membersError } = await supabase
         .from("team_members")
         .select(`
@@ -59,7 +59,7 @@ const TeamProfile = () => {
           )
         `)
         .eq("team_id", id)
-        .order("joined_at");
+        .order("display_order");
 
       if (membersError) throw membersError;
       setMembers(membersData || []);

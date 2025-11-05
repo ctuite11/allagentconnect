@@ -819,6 +819,7 @@ export type Database = {
       team_members: {
         Row: {
           agent_id: string
+          display_order: number | null
           id: string
           joined_at: string
           role: string
@@ -826,6 +827,7 @@ export type Database = {
         }
         Insert: {
           agent_id: string
+          display_order?: number | null
           id?: string
           joined_at?: string
           role?: string
@@ -833,6 +835,7 @@ export type Database = {
         }
         Update: {
           agent_id?: string
+          display_order?: number | null
           id?: string
           joined_at?: string
           role?: string

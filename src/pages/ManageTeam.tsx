@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Users, Plus, Trash2, Upload, X, ExternalLink } from "lucide-react";
+import { Users, Plus, Trash2, Upload, X, ExternalLink, GripVertical } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import AgentAutocomplete from "@/components/AgentAutocomplete";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const ManageTeam = () => {
   const navigate = useNavigate();
@@ -98,7 +115,7 @@ const ManageTeam = () => {
         });
         setIsOwner(membership.role === 'owner');
 
-        // Load team members
+        // Load team members ordered by display_order
         const { data: teamMembers, error: membersError } = await supabase
           .from("team_members")
           .select(`
@@ -112,7 +129,8 @@ const ManageTeam = () => {
               email
             )
           `)
-          .eq("team_id", teamData.id);
+          .eq("team_id", teamData.id)
+          .order("display_order");
 
         if (membersError) throw membersError;
         setMembers(teamMembers || []);
@@ -214,12 +232,18 @@ const ManageTeam = () => {
     if (!agent || !team) return;
 
     try {
+      // Get the highest display_order to add new member at the end
+      const maxOrder = members.length > 0 
+        ? Math.max(...members.map(m => m.display_order ?? 0))
+        : -1;
+
       const { error } = await supabase
         .from("team_members")
         .insert({
           team_id: team.id,
           agent_id: agent.id,
           role: 'member',
+          display_order: maxOrder + 1,
         });
 
       if (error) throw error;
@@ -328,6 +352,51 @@ const ManageTeam = () => {
   }
 
   const excludedAgentIds = members.map(member => member.agent_id);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = members.findIndex((m) => m.id === active.id);
+    const newIndex = members.findIndex((m) => m.id === over.id);
+
+    const reorderedMembers = arrayMove(members, oldIndex, newIndex);
+    
+    // Update local state immediately for smooth UX
+    setMembers(reorderedMembers);
+
+    // Update display_order in database
+    try {
+      const updates = reorderedMembers.map((member, index) => ({
+        id: member.id,
+        display_order: index,
+      }));
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from("team_members")
+          .update({ display_order: update.display_order })
+          .eq("id", update.id);
+
+        if (error) throw error;
+      }
+
+      toast.success("Member order updated!");
+    } catch (error: any) {
+      console.error("Error updating order:", error);
+      toast.error("Failed to update member order");
+      // Reload to get correct order from server
+      await checkAuthAndLoadTeam();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -630,49 +699,26 @@ const ManageTeam = () => {
                   {members.length === 0 ? (
                     <p className="text-muted-foreground">No team members yet. Add your first member above!</p>
                   ) : (
-                    members.map((member) => (
-                      <div key={member.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors">
-                        <button
-                          onClick={() => navigate(`/agent/${member.agent_profiles?.id}`)}
-                          className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
-                        >
-                          <Avatar className="h-12 w-12 cursor-pointer">
-                            <AvatarImage src={member.agent_profiles?.headshot_url} />
-                            <AvatarFallback>
-                              {member.agent_profiles?.first_name?.[0]}{member.agent_profiles?.last_name?.[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">
-                              {member.agent_profiles?.first_name} {member.agent_profiles?.last_name}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {member.agent_profiles?.title || member.agent_profiles?.email}
-                            </p>
-                            {member.agent_profiles?.email && (
-                              <p className="text-xs text-muted-foreground truncate">
-                                {member.agent_profiles.email}
-                              </p>
-                            )}
-                          </div>
-                        </button>
-                        <div className="flex items-center gap-2">
-                          {member.role === 'owner' && (
-                            <Badge variant="secondary" className="text-xs">Owner</Badge>
-                          )}
-                          {isOwner && member.role !== 'owner' && (
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8"
-                              onClick={() => handleRemoveMember(member.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={members.map(m => m.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {members.map((member) => (
+                          <SortableMemberItem
+                            key={member.id}
+                            member={member}
+                            isOwner={isOwner}
+                            onRemove={handleRemoveMember}
+                            onNavigate={() => navigate(`/agent/${member.agent_profiles?.id}`)}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
                   )}
                 </div>
               </CardContent>
@@ -701,6 +747,87 @@ const ManageTeam = () => {
             </CardContent>
           </Card>
         </div>
+      </div>
+    </div>
+  );
+};
+
+interface SortableMemberItemProps {
+  member: any;
+  isOwner: boolean;
+  onRemove: (id: string) => void;
+  onNavigate: () => void;
+}
+
+const SortableMemberItem = ({ member, isOwner, onRemove, onNavigate }: SortableMemberItemProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: member.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+    >
+      {isOwner && (
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing touch-none"
+        >
+          <GripVertical className="h-5 w-5 text-muted-foreground" />
+        </button>
+      )}
+      <button
+        onClick={onNavigate}
+        className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+      >
+        <Avatar className="h-12 w-12 cursor-pointer">
+          <AvatarImage src={member.agent_profiles?.headshot_url} />
+          <AvatarFallback>
+            {member.agent_profiles?.first_name?.[0]}{member.agent_profiles?.last_name?.[0]}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm truncate">
+            {member.agent_profiles?.first_name} {member.agent_profiles?.last_name}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">
+            {member.agent_profiles?.title || member.agent_profiles?.email}
+          </p>
+          {member.agent_profiles?.email && (
+            <p className="text-xs text-muted-foreground truncate">
+              {member.agent_profiles.email}
+            </p>
+          )}
+        </div>
+      </button>
+      <div className="flex items-center gap-2">
+        {member.role === 'owner' && (
+          <Badge variant="secondary" className="text-xs">Owner</Badge>
+        )}
+        {isOwner && member.role !== 'owner' && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+            onClick={() => onRemove(member.id)}
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        )}
       </div>
     </div>
   );
