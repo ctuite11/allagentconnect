@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { FormattedInput } from "@/components/ui/formatted-input";
+import { Switch } from "@/components/ui/switch";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
 import { Trash2, Plus, Star, Upload, X } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -44,6 +46,7 @@ const AgentProfileEditor = () => {
   const [logoUrl, setLogoUrl] = useState("");
   const [uploadingHeadshot, setUploadingHeadshot] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [useAddressAutocomplete, setUseAddressAutocomplete] = useState(true);
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({
     linkedin: "",
     twitter: "",
@@ -350,13 +353,36 @@ const AgentProfileEditor = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="office_address">Office Address</Label>
-                <Input
-                  id="office_address"
-                  placeholder="123 Main St, Boston, MA 02101"
-                  value={officeAddress}
-                  onChange={(e) => setOfficeAddress(e.target.value)}
-                />
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="office_address">Office Address</Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="address-toggle" className="text-sm text-muted-foreground cursor-pointer">
+                      {useAddressAutocomplete ? "Use autocomplete" : "Manual entry"}
+                    </Label>
+                    <Switch
+                      id="address-toggle"
+                      checked={useAddressAutocomplete}
+                      onCheckedChange={setUseAddressAutocomplete}
+                    />
+                  </div>
+                </div>
+                {useAddressAutocomplete ? (
+                  <AddressAutocomplete
+                    placeholder="Start typing an address..."
+                    value={officeAddress}
+                    onChange={setOfficeAddress}
+                    onPlaceSelect={(place) => {
+                      setOfficeAddress(place.formatted_address || place.name || "");
+                    }}
+                  />
+                ) : (
+                  <Input
+                    id="office_address"
+                    placeholder="123 Main St, Boston, MA 02101"
+                    value={officeAddress}
+                    onChange={(e) => setOfficeAddress(e.target.value)}
+                  />
+                )}
               </div>
               <Button onClick={handleSaveProfile} disabled={saving}>
                 {saving ? "Saving..." : "Save Contact Info"}
