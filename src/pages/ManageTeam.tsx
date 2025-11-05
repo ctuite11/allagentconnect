@@ -42,6 +42,16 @@ const ManageTeam = () => {
   const [website, setWebsite] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [teamPhotoUrl, setTeamPhotoUrl] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [socialLinks, setSocialLinks] = useState({
+    linkedin: "",
+    facebook: "",
+    twitter: "",
+    instagram: "",
+  });
   
   // Add member dialog
   const [addMemberOpen, setAddMemberOpen] = useState(false);
@@ -82,6 +92,15 @@ const ManageTeam = () => {
         setDescription(membership.teams.description || "");
         setWebsite(membership.teams.website || "");
         setLogoUrl(membership.teams.logo_url || "");
+        setTeamPhotoUrl(membership.teams.team_photo_url || "");
+        setContactEmail(membership.teams.contact_email || "");
+        setContactPhone(membership.teams.contact_phone || "");
+        setSocialLinks(membership.teams.social_links || {
+          linkedin: "",
+          facebook: "",
+          twitter: "",
+          instagram: "",
+        });
         setIsOwner(membership.role === 'owner');
 
         // Load team members
@@ -144,6 +163,10 @@ const ManageTeam = () => {
           description,
           website,
           logo_url: logoUrl,
+          team_photo_url: teamPhotoUrl,
+          contact_email: contactEmail,
+          contact_phone: contactPhone,
+          social_links: socialLinks,
           created_by: session.user.id,
         })
         .select()
@@ -184,6 +207,10 @@ const ManageTeam = () => {
           description,
           website,
           logo_url: logoUrl,
+          team_photo_url: teamPhotoUrl,
+          contact_email: contactEmail,
+          contact_phone: contactPhone,
+          social_links: socialLinks,
         })
         .eq("id", team.id);
 
@@ -269,6 +296,38 @@ const ManageTeam = () => {
       toast.error("Failed to upload logo");
     } finally {
       setUploadingLogo(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhoto(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}/team-photo-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('agent-headshots')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('agent-headshots')
+        .getPublicUrl(fileName);
+
+      setTeamPhotoUrl(publicUrl);
+      toast.success("Team photo uploaded!");
+    } catch (error: any) {
+      console.error("Error uploading photo:", error);
+      toast.error("Failed to upload photo");
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -394,6 +453,124 @@ const ManageTeam = () => {
                         </Label>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Team Photo</Label>
+                  <div className="mt-2 space-y-4">
+                    {teamPhotoUrl && (
+                      <div className="relative inline-block">
+                        <img
+                          src={teamPhotoUrl}
+                          alt="Team photo"
+                          className="w-48 h-64 object-cover border-2 border-border rounded-lg"
+                        />
+                        {isOwner && (
+                          <Button
+                            size="icon"
+                            variant="destructive"
+                            className="absolute top-0 right-0 h-6 w-6"
+                            onClick={() => setTeamPhotoUrl("")}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    {isOwner && (
+                      <div>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          disabled={uploadingPhoto}
+                          className="hidden"
+                          id="photo-upload"
+                        />
+                        <Label
+                          htmlFor="photo-upload"
+                          className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                        >
+                          <Upload className="h-4 w-4" />
+                          {uploadingPhoto ? "Uploading..." : "Upload Team Photo"}
+                        </Label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="contact_email">Contact Email</Label>
+                  <Input
+                    id="contact_email"
+                    type="email"
+                    placeholder="team@example.com"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    disabled={!isOwner && !!team}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="contact_phone">Contact Phone</Label>
+                  <Input
+                    id="contact_phone"
+                    type="tel"
+                    placeholder="(555) 123-4567"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    disabled={!isOwner && !!team}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <Label>Social Media Links</Label>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="linkedin" className="text-sm text-muted-foreground">LinkedIn</Label>
+                      <Input
+                        id="linkedin"
+                        type="url"
+                        placeholder="https://linkedin.com/company/..."
+                        value={socialLinks.linkedin}
+                        onChange={(e) => setSocialLinks({ ...socialLinks, linkedin: e.target.value })}
+                        disabled={!isOwner && !!team}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="facebook" className="text-sm text-muted-foreground">Facebook</Label>
+                      <Input
+                        id="facebook"
+                        type="url"
+                        placeholder="https://facebook.com/..."
+                        value={socialLinks.facebook}
+                        onChange={(e) => setSocialLinks({ ...socialLinks, facebook: e.target.value })}
+                        disabled={!isOwner && !!team}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="twitter" className="text-sm text-muted-foreground">Twitter</Label>
+                      <Input
+                        id="twitter"
+                        type="url"
+                        placeholder="https://twitter.com/..."
+                        value={socialLinks.twitter}
+                        onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
+                        disabled={!isOwner && !!team}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="instagram" className="text-sm text-muted-foreground">Instagram</Label>
+                      <Input
+                        id="instagram"
+                        type="url"
+                        placeholder="https://instagram.com/..."
+                        value={socialLinks.instagram}
+                        onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
+                        disabled={!isOwner && !!team}
+                      />
+                    </div>
                   </div>
                 </div>
 

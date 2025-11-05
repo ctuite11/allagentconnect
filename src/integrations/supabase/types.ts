@@ -850,32 +850,44 @@ export type Database = {
       }
       teams: {
         Row: {
+          contact_email: string | null
+          contact_phone: string | null
           created_at: string
           created_by: string
           description: string | null
           id: string
           logo_url: string | null
           name: string
+          social_links: Json | null
+          team_photo_url: string | null
           updated_at: string
           website: string | null
         }
         Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           created_by: string
           description?: string | null
           id?: string
           logo_url?: string | null
           name: string
+          social_links?: Json | null
+          team_photo_url?: string | null
           updated_at?: string
           website?: string | null
         }
         Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
           id?: string
           logo_url?: string | null
           name?: string
+          social_links?: Json | null
+          team_photo_url?: string | null
           updated_at?: string
           website?: string | null
         }
