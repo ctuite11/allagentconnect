@@ -368,7 +368,7 @@ const ManageTeam = () => {
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Team Information</CardTitle>
-              <CardDescription>Configure your team's basic details</CardDescription>
+              <CardDescription>Configure your team's basic details and contact information</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -394,6 +394,30 @@ const ManageTeam = () => {
                 />
               </div>
 
+              <div>
+                <Label htmlFor="contact_email">Contact Email</Label>
+                <Input
+                  id="contact_email"
+                  type="email"
+                  placeholder="team@example.com"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  disabled={!isOwner && !!team}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="contact_phone">Contact Phone</Label>
+                <FormattedInput
+                  id="contact_phone"
+                  format="phone"
+                  placeholder="5551234567"
+                  value={contactPhone}
+                  onChange={setContactPhone}
+                  disabled={!isOwner && !!team}
+                />
+              </div>
+
               <Button onClick={handleSaveTeam} disabled={saving || (!isOwner && !!team)}>
                 {saving ? "Saving..." : "Save Team Info"}
               </Button>
@@ -404,7 +428,7 @@ const ManageTeam = () => {
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Team Images</CardTitle>
-              <CardDescription>Upload your team photo and logo</CardDescription>
+              <CardDescription>Upload your team photo and company logo</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
@@ -518,43 +542,6 @@ const ManageTeam = () => {
               />
               <Button onClick={handleSaveTeam} disabled={saving || (!isOwner && !!team)}>
                 {saving ? "Saving..." : "Save Description"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Contact Information */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
-              <CardDescription>Team contact details for clients</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="contact_email">Contact Email</Label>
-                <Input
-                  id="contact_email"
-                  type="email"
-                  placeholder="team@example.com"
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  disabled={!isOwner && !!team}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="contact_phone">Contact Phone</Label>
-                <FormattedInput
-                  id="contact_phone"
-                  format="phone"
-                  placeholder="5551234567"
-                  value={contactPhone}
-                  onChange={setContactPhone}
-                  disabled={!isOwner && !!team}
-                />
-              </div>
-
-              <Button onClick={handleSaveTeam} disabled={saving || (!isOwner && !!team)}>
-                {saving ? "Saving..." : "Save Contact Info"}
               </Button>
             </CardContent>
           </Card>
