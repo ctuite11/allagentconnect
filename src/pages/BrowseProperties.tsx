@@ -332,15 +332,6 @@ const BrowseProperties = () => {
             <Button onClick={handleViewResults}>
               View Results {!loading && `(${listings.length})`}
             </Button>
-            <Button variant="outline">Save</Button>
-            <Button variant="outline">Load</Button>
-            <Button variant="outline">Attach</Button>
-            <Button variant="outline">Download</Button>
-            <Button variant="outline">Stats</Button>
-            <Button variant="outline" onClick={handleClearAll}>Clear</Button>
-            <Button variant="outline">Map</Button>
-            <Button variant="outline">Recent</Button>
-            <div className="ml-auto text-sm text-muted-foreground">Count: {loading ? "…" : `${listings.length} Results`}</div>
           </div>
 
           {/* LIST NUMBER(S) Full Width */}
