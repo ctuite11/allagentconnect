@@ -107,9 +107,9 @@ const OurAgents = () => {
                   {filteredAgents.map((agent) => (
                     <Card key={agent.id} className="hover:shadow-lg transition-shadow">
                       <CardHeader>
-                        <Avatar className="w-20 h-20 mx-auto mb-4">
+                        <Avatar className="w-32 h-32 mx-auto mb-4">
                           <AvatarImage src={agent.headshot_url} alt={`${agent.first_name} ${agent.last_name}`} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+                          <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
                             {agent.first_name?.[0]}{agent.last_name?.[0]}
                           </AvatarFallback>
                         </Avatar>
@@ -124,22 +124,28 @@ const OurAgents = () => {
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {agent.company && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Building2 className="h-4 w-4 flex-shrink-0" />
-                            <span className="truncate">{agent.company}</span>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Building2 className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                            <span className="truncate font-medium">{agent.company}</span>
                           </div>
                         )}
                         
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Mail className="h-4 w-4 flex-shrink-0" />
+                        <a 
+                          href={`mailto:${agent.email}`}
+                          className="flex items-center gap-2 text-sm hover:text-primary transition-colors group"
+                        >
+                          <Mail className="h-4 w-4 flex-shrink-0 text-muted-foreground group-hover:text-primary" />
                           <span className="truncate">{agent.email}</span>
-                        </div>
+                        </a>
                         
                         {agent.phone && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Phone className="h-4 w-4 flex-shrink-0" />
+                          <a 
+                            href={`tel:${agent.phone}`}
+                            className="flex items-center gap-2 text-sm hover:text-primary transition-colors group"
+                          >
+                            <Phone className="h-4 w-4 flex-shrink-0 text-muted-foreground group-hover:text-primary" />
                             <span>{agent.phone}</span>
-                          </div>
+                          </a>
                         )}
 
                         {agent.agent_county_preferences && agent.agent_county_preferences.length > 0 && (
