@@ -303,94 +303,94 @@ const PropertyDetail = () => {
               </Button>
             </div>
 
-            {/* Agent, Commission Info, and Buyer Agent Matches */}
-            <div className={`grid grid-cols-1 gap-4 ${isAgent ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+            {/* Agent and Commission Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Listing Agent Card */}
               {agentProfile && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Listing Agent</CardTitle>
                   </CardHeader>
-                  <CardContent className="flex gap-4">
-                    <div className="flex-shrink-0">
-                      <Avatar className="h-32 w-24 rounded-lg">
-                        <AvatarImage 
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      {agentProfile.headshot_url && (
+                        <img 
                           src={agentProfile.headshot_url} 
                           alt={`${agentProfile.first_name} ${agentProfile.last_name}`}
-                          className="object-cover"
+                          className="w-16 h-16 rounded-full object-cover"
                         />
-                        <AvatarFallback className="rounded-lg text-2xl">
-                          {agentProfile.first_name?.charAt(0)}{agentProfile.last_name?.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                    <div className="flex-1 space-y-3">
+                      )}
                       <div>
-                        <h3 className="font-semibold text-lg">
-                          {agentProfile.first_name} {agentProfile.last_name}
-                        </h3>
-                      </div>
-                      <div className="space-y-2">
-                        {agentProfile.cell_phone && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
-                            <a href={`tel:${agentProfile.cell_phone}`} className="text-primary hover:underline">
-                              {agentProfile.cell_phone}
-                            </a>
-                          </div>
-                        )}
-                        {agentProfile.email && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
-                            <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline">
-                              {agentProfile.email}
-                            </a>
-                          </div>
+                        <p className="font-semibold">{agentProfile.first_name} {agentProfile.last_name}</p>
+                        {agentProfile.company && (
+                          <p className="text-sm text-muted-foreground">{agentProfile.company}</p>
                         )}
                       </div>
                     </div>
+                    <div className="space-y-2 text-sm">
+                      {agentProfile.email && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline">
+                            {agentProfile.email}
+                          </a>
+                        </div>
+                      )}
+                      {agentProfile.phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4" />
+                          <a href={`tel:${agentProfile.phone}`} className="text-primary hover:underline">
+                            {agentProfile.phone}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => navigate(`/agent/${listing.agent_id}`)}
+                    >
+                      View Full Profile
+                    </Button>
                   </CardContent>
                 </Card>
               )}
 
-              {/* Commission Information */}
-              {(listing.commission_rate || listing.commission_notes) && (
-                <Card className="border-primary/50">
-                  <CardHeader className="bg-primary/5">
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Buyer Agent Commission
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    {listing.commission_rate && (
-                      <div className="mb-2">
-                        <p className="text-2xl font-bold text-primary">
-                          {listing.commission_type === 'percentage' 
-                            ? `${listing.commission_rate}%` 
-                            : `$${listing.commission_rate.toLocaleString()}`}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          The amount this seller has offered to pay a buyer's agent that sells this home.
-                        </p>
-                      </div>
-                    )}
-                    {listing.commission_notes && (
-                      <p className="text-sm text-muted-foreground mt-2">{listing.commission_notes}</p>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Matching Buyer Agents */}
+              {/* Buyer Agent Commission */}
               {isAgent && (
-                <MatchingBuyerAgents 
-                  listingCity={listing.city}
-                  listingState={listing.state}
-                  listingZipCode={listing.zip_code}
-                />
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Buyer Agent Commission</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {listing.commission_rate ? (
+                      <div className="space-y-2">
+                        <div className="text-2xl font-bold">
+                          {listing.commission_type === 'flat_fee' 
+                            ? `$${listing.commission_rate.toLocaleString()}`
+                            : `${listing.commission_rate}%`
+                          }
+                        </div>
+                        {listing.commission_notes && (
+                          <p className="text-sm text-muted-foreground">{listing.commission_notes}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Commission information not available</p>
+                    )}
+                  </CardContent>
+                </Card>
               )}
             </div>
+
+            {/* Matching Buyer Agents */}
+            {isAgent && (
+              <MatchingBuyerAgents 
+                listingCity={listing.city}
+                listingState={listing.state}
+                listingZipCode={listing.zip_code}
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
