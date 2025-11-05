@@ -173,12 +173,21 @@ const AgentProfile = () => {
         {/* Hero Section with Agent Info */}
         <div className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 rounded-xl p-8 mb-8">
           <div className="flex flex-col md:flex-row gap-8 items-start">
-            <Avatar className="w-40 h-40 border-4 border-background shadow-xl">
-              <AvatarImage src={agent.headshot_url || undefined} alt={`${agent.first_name} ${agent.last_name}`} />
-              <AvatarFallback className="bg-primary/10 text-primary text-5xl font-bold">
-                {agent.first_name[0]}{agent.last_name[0]}
-              </AvatarFallback>
-            </Avatar>
+            <div className="w-48 h-64 rounded-lg overflow-hidden border-4 border-background shadow-xl flex-shrink-0">
+              {agent.headshot_url ? (
+                <img 
+                  src={agent.headshot_url} 
+                  alt={`${agent.first_name} ${agent.last_name}`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-6xl font-bold text-primary">
+                    {agent.first_name[0]}{agent.last_name[0]}
+                  </span>
+                </div>
+              )}
+            </div>
             
             <div className="flex-1">
               <div className="flex items-start justify-between mb-4">
@@ -259,7 +268,7 @@ const AgentProfile = () => {
                   </div>
                 </a>
 
-                {agent.cell_phone && (
+                {agent.cell_phone && agent.cell_phone.trim() && (
                   <a href={`tel:${agent.cell_phone}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
                     <Phone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
@@ -269,7 +278,7 @@ const AgentProfile = () => {
                   </a>
                 )}
 
-                {agent.phone && agent.phone !== agent.cell_phone && (
+                {agent.phone && agent.phone.trim() && agent.phone !== agent.cell_phone && (
                   <a href={`tel:${agent.phone}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
                     <Phone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
@@ -279,7 +288,7 @@ const AgentProfile = () => {
                   </a>
                 )}
 
-                {agent.office_phone && (
+                {agent.office_phone && agent.office_phone.trim() && (
                   <a href={`tel:${agent.office_phone}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
                     <Phone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
