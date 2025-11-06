@@ -668,7 +668,7 @@ const AddRentalListing = () => {
                         <Input
                           id="showing_contact_phone"
                           type="tel"
-                          placeholder="(555) 123-4567"
+                          placeholder="5551234567"
                           value={formData.showing_contact_phone}
                           onChange={(e) => setFormData({ ...formData, showing_contact_phone: e.target.value })}
                         />

@@ -293,7 +293,7 @@ const MyClients = () => {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="(555) 555-5555"
+                      placeholder="5555555555"
                       maxLength={20}
                     />
                   </div>

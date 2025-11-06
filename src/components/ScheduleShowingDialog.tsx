@@ -166,7 +166,7 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
               type="tel"
               value={formData.requester_phone}
               onChange={(e) => setFormData({ ...formData, requester_phone: e.target.value })}
-              placeholder="(555) 555-5555"
+              placeholder="5555555555"
               maxLength={20}
             />
           </div>
