@@ -312,16 +312,16 @@ const PropertyDetail = () => {
                     <CardTitle>Listing Agent</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="flex items-center gap-3">
+                    <div className="space-y-3">
                       {agentProfile.headshot_url && (
                         <img 
                           src={agentProfile.headshot_url} 
                           alt={`${agentProfile.first_name} ${agentProfile.last_name}`}
-                          className="w-16 h-16 rounded-full object-cover"
+                          className="w-full h-48 rounded-lg object-cover"
                         />
                       )}
                       <div>
-                        <p className="font-semibold">{agentProfile.first_name} {agentProfile.last_name}</p>
+                        <p className="font-semibold text-lg">{agentProfile.first_name} {agentProfile.last_name}</p>
                         {agentProfile.company && (
                           <p className="text-sm text-muted-foreground">{agentProfile.company}</p>
                         )}

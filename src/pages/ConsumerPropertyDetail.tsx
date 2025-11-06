@@ -477,12 +477,15 @@ const ConsumerPropertyDetail = () => {
                     <CardTitle>Listing Agent</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={agent.headshot_url || undefined} alt={`${agent.first_name} ${agent.last_name}`} />
-                        <AvatarFallback>{agent.first_name[0]}{agent.last_name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
+                    <div className="space-y-3">
+                      {agent.headshot_url && (
+                        <img 
+                          src={agent.headshot_url} 
+                          alt={`${agent.first_name} ${agent.last_name}`}
+                          className="w-full h-48 rounded-lg object-cover"
+                        />
+                      )}
+                      <div>
                         <h3 className="font-semibold text-lg">{agent.first_name} {agent.last_name}</h3>
                         {agent.company && (
                           <p className="text-sm text-muted-foreground">{agent.company}</p>
