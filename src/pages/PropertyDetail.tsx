@@ -312,21 +312,21 @@ const PropertyDetail = () => {
                     <CardTitle>Listing Agent</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="space-y-3">
+                    <div className="flex gap-4">
                       {agentProfile.headshot_url && (
                         <img 
                           src={agentProfile.headshot_url} 
                           alt={`${agentProfile.first_name} ${agentProfile.last_name}`}
-                          className="w-full h-48 rounded-lg object-cover"
+                          className="w-32 h-40 rounded-lg object-cover flex-shrink-0"
                         />
                       )}
-                      <div>
-                        <p className="font-semibold text-lg">{agentProfile.first_name} {agentProfile.last_name}</p>
-                        {agentProfile.company && (
-                          <p className="text-sm text-muted-foreground">{agentProfile.company}</p>
-                        )}
-                      </div>
-                    </div>
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <p className="font-semibold text-lg">{agentProfile.first_name} {agentProfile.last_name}</p>
+                          {agentProfile.company && (
+                            <p className="text-sm text-muted-foreground">{agentProfile.company}</p>
+                          )}
+                        </div>
                     <div className="space-y-2 text-sm">
                       {agentProfile.email && (
                         <div className="flex items-center gap-2">
@@ -344,6 +344,8 @@ const PropertyDetail = () => {
                           </a>
                         </div>
                       )}
+                    </div>
+                      </div>
                     </div>
                     <Button 
                       variant="outline" 

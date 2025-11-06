@@ -477,16 +477,17 @@ const ConsumerPropertyDetail = () => {
                     <CardTitle>Listing Agent</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="space-y-3">
+                    <div className="flex gap-4">
                       {agent.headshot_url && (
                         <img 
                           src={agent.headshot_url} 
                           alt={`${agent.first_name} ${agent.last_name}`}
-                          className="w-full h-48 rounded-lg object-cover"
+                          className="w-32 h-40 rounded-lg object-cover flex-shrink-0"
                         />
                       )}
-                      <div>
-                        <h3 className="font-semibold text-lg">{agent.first_name} {agent.last_name}</h3>
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <h3 className="font-semibold text-lg">{agent.first_name} {agent.last_name}</h3>
                         {agent.company && (
                           <p className="text-sm text-muted-foreground">{agent.company}</p>
                         )}
@@ -494,7 +495,6 @@ const ConsumerPropertyDetail = () => {
                           <p className="text-xs text-muted-foreground">{agent.office_name}</p>
                         )}
                       </div>
-                    </div>
                     <div className="space-y-2">
                       {agent.cell_phone && (
                         <div className="flex items-center gap-2 text-sm">
@@ -512,6 +512,8 @@ const ConsumerPropertyDetail = () => {
                           </a>
                         </div>
                       )}
+                    </div>
+                      </div>
                     </div>
                     <Button 
                       className="w-full" 
