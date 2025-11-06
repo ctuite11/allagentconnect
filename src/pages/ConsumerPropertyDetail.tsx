@@ -542,20 +542,18 @@ const ConsumerPropertyDetail = () => {
                       Buyer Agent Compensation
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-2">
-                      <div className="flex items-center justify-center gap-2">
-                        <p className="text-3xl font-bold text-primary">
-                          {listing.commission_type === 'percentage' 
-                            ? `${listing.commission_rate}%` 
-                            : `$${listing.commission_rate.toLocaleString()}`}
-                        </p>
-                        <BuyerAgentCompensationInfo />
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Offered to buyer agents who bring the buyer
+                  <CardContent className="flex flex-col items-center">
+                    <div className="flex items-center justify-center gap-2 py-2">
+                      <p className="text-3xl font-bold text-primary">
+                        {listing.commission_type === 'percentage' 
+                          ? `${listing.commission_rate}%` 
+                          : `$${listing.commission_rate.toLocaleString()}`}
                       </p>
+                      <BuyerAgentCompensationInfo />
                     </div>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Offered to buyer agents who bring the buyer
+                    </p>
                   </CardContent>
                 </Card>
               )}

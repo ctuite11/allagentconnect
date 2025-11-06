@@ -372,21 +372,19 @@ const PropertyDetail = () => {
                       Buyer Agent Compensation
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-2">
-                      <div className="flex items-center justify-center gap-2">
-                        <p className="text-3xl font-bold text-primary">
-                          {listing.commission_type === 'flat_fee' 
-                            ? `$${listing.commission_rate.toLocaleString()}`
-                            : `${listing.commission_rate}%`
-                          }
-                        </p>
-                        <BuyerAgentCompensationInfo />
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Offered to cooperating buyer agents
+                  <CardContent className="flex flex-col items-center">
+                    <div className="flex items-center justify-center gap-2 py-2">
+                      <p className="text-3xl font-bold text-primary">
+                        {listing.commission_type === 'flat_fee' 
+                          ? `$${listing.commission_rate.toLocaleString()}`
+                          : `${listing.commission_rate}%`
+                        }
                       </p>
+                      <BuyerAgentCompensationInfo />
                     </div>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Offered to cooperating buyer agents
+                    </p>
                   </CardContent>
                 </Card>
               )}
