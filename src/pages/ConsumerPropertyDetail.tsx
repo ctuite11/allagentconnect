@@ -14,6 +14,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
+import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo";
 import PropertyMap from "@/components/PropertyMap";
 
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -537,17 +538,20 @@ const ConsumerPropertyDetail = () => {
                 <Card className="border-primary/30 bg-primary/5">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
+                      <DollarSign className="h-6 w-6" />
                       Buyer Agent Compensation
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-center py-2">
-                      <p className="text-3xl font-bold text-primary">
-                        {listing.commission_type === 'percentage' 
-                          ? `${listing.commission_rate}%` 
-                          : `$${listing.commission_rate.toLocaleString()}`}
-                      </p>
+                      <div className="flex items-center justify-center gap-2">
+                        <p className="text-3xl font-bold text-primary">
+                          {listing.commission_type === 'percentage' 
+                            ? `${listing.commission_rate}%` 
+                            : `$${listing.commission_rate.toLocaleString()}`}
+                        </p>
+                        <BuyerAgentCompensationInfo />
+                      </div>
                       <p className="text-sm text-muted-foreground mt-2">
                         Offered to buyer agents who bring the buyer
                       </p>
