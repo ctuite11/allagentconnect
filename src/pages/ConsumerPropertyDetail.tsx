@@ -548,11 +548,8 @@ const ConsumerPropertyDetail = () => {
                           ? `${listing.commission_rate}%` 
                           : `$${listing.commission_rate.toLocaleString()}`}
                       </p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Offered to buyer agents who bring the buyer
-                      </p>
                       {listing.commission_notes && (
-                        <p className="text-xs text-muted-foreground mt-2 border-t pt-2">
+                        <p className="text-xs text-muted-foreground mt-4 border-t pt-2">
                           {listing.commission_notes}
                         </p>
                       )}

@@ -383,11 +383,8 @@ const PropertyDetail = () => {
                           : `${listing.commission_rate}%`
                         }
                       </p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Offered to cooperating buyer agents
-                      </p>
                       {listing.commission_notes && (
-                        <p className="text-xs text-muted-foreground mt-2 border-t pt-2">
+                        <p className="text-xs text-muted-foreground mt-4 border-t pt-2">
                           {listing.commission_notes}
                         </p>
                       )}
