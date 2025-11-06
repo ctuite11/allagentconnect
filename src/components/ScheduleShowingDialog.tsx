@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { Clock, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -161,13 +162,12 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
 
           <div className="space-y-2">
             <Label htmlFor="requester_phone">Phone</Label>
-            <Input
+            <FormattedInput
               id="requester_phone"
-              type="tel"
+              format="phone"
               value={formData.requester_phone}
-              onChange={(e) => setFormData({ ...formData, requester_phone: e.target.value })}
-              placeholder="5555555555"
-              maxLength={20}
+              onChange={(value) => setFormData({ ...formData, requester_phone: value })}
+              placeholder="(555) 555-5555"
             />
           </div>
 

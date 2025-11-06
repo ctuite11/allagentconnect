@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -149,13 +150,12 @@ const ContactAgentDialog = ({ listingId, agentId, listingAddress }: ContactAgent
 
           <div className="space-y-2">
             <Label htmlFor="sender_phone">Phone</Label>
-            <Input
+            <FormattedInput
               id="sender_phone"
-              type="tel"
+              format="phone"
               value={formData.sender_phone}
-              onChange={(e) => setFormData({ ...formData, sender_phone: e.target.value })}
-              placeholder="5555555555"
-              maxLength={20}
+              onChange={(value) => setFormData({ ...formData, sender_phone: value })}
+              placeholder="(555) 555-5555"
             />
           </div>
 
