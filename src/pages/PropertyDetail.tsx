@@ -593,7 +593,7 @@ const PropertyDetail = () => {
                               </div>
                               {listing.showing_contact_phone && (
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                                  {listing.showing_contact_phone}
+                                  {formatPhoneNumber(listing.showing_contact_phone)}
                                 </div>
                               )}
                             </div>
