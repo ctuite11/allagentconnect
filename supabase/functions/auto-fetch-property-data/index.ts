@@ -38,13 +38,41 @@ serve(async (req) => {
       throw new Error("Listing not found");
     }
 
-    // Check if we have required data
-    if (!listing.address || !listing.city || !listing.state) {
-      console.log(`[auto-fetch-property-data] Skipping - missing address data for listing ${listing_id}`);
+    // Check if we have required data - address can contain full address from Google Places
+    if (!listing.address) {
+      console.log(`[auto-fetch-property-data] Skipping - no address for listing ${listing_id}`);
       return new Response(
-        JSON.stringify({ message: "Skipped - missing required address fields" }),
+        JSON.stringify({ message: "Skipped - no address provided" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Parse address if city/state/zip are empty but address contains full address
+    let city = listing.city;
+    let state = listing.state;
+    let zipCode = listing.zip_code;
+    
+    if (!city || !state || !zipCode) {
+      // Try to parse from full address (e.g., "9 Short St, Charlestown, MA 02129, USA")
+      const addressParts = listing.address.split(',').map((p: string) => p.trim());
+      
+      if (addressParts.length >= 3) {
+        // Second to last part usually contains "State ZIP"
+        const stateZipPart = addressParts[addressParts.length - 2];
+        const stateZipMatch = stateZipPart.match(/([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/);
+        
+        if (stateZipMatch) {
+          state = state || stateZipMatch[1];
+          zipCode = zipCode || stateZipMatch[2];
+        }
+        
+        // City is typically the second part in US addresses
+        if (addressParts.length >= 3) {
+          city = city || addressParts[addressParts.length - 3];
+        }
+      }
+      
+      console.log(`[auto-fetch-property-data] Parsed address: city=${city}, state=${state}, zip=${zipCode}`);
     }
 
     const attomApiKey = Deno.env.get("ATTOM_API_KEY");
@@ -56,13 +84,16 @@ serve(async (req) => {
     // Fetch ATTOM data
     if (attomApiKey) {
       try {
+        // Use parsed or existing city/state/zip
         const parts: string[] = [];
-        if (listing.city) parts.push(listing.city);
-        if (listing.state && listing.zip_code) parts.push(`${listing.state} ${listing.zip_code}`);
-        else if (listing.state) parts.push(listing.state);
-        else if (listing.zip_code) parts.push(listing.zip_code);
+        if (city) parts.push(city);
+        if (state && zipCode) parts.push(`${state} ${zipCode}`);
+        else if (state) parts.push(state);
+        else if (zipCode) parts.push(zipCode);
         const address2 = parts.join(", ");
-        const fullAddress = [listing.address, address2].filter(Boolean).join(", ");
+        
+        // If no parsed parts, use full address as-is
+        const fullAddress = address2 ? [listing.address.split(',')[0], address2].join(", ") : listing.address;
 
         console.log(`[auto-fetch-property-data] Fetching ATTOM data for: ${fullAddress}`);
 
@@ -103,6 +134,17 @@ serve(async (req) => {
             }
             if (!listing.longitude && property.location?.longitude) {
               updates.longitude = property.location.longitude;
+            }
+            
+            // Update parsed city/state/zip if they were empty
+            if (!listing.city && city) {
+              updates.city = city;
+            }
+            if (!listing.state && state) {
+              updates.state = state;
+            }
+            if (!listing.zip_code && zipCode) {
+              updates.zip_code = zipCode;
             }
 
             // Update value estimate
@@ -151,11 +193,15 @@ serve(async (req) => {
     }
 
     // Fetch GreatSchools data
-    if (greatSchoolsApiKey && listing.latitude && listing.longitude) {
+    if (greatSchoolsApiKey && (listing.latitude || updates.latitude) && (listing.longitude || updates.longitude)) {
       try {
         console.log(`[auto-fetch-property-data] Fetching Schools data`);
+        
+        const useLat = updates.latitude || listing.latitude;
+        const useLon = updates.longitude || listing.longitude;
+        const useState = state || listing.state;
 
-        const schoolsUrl = `https://api.greatschools.org/schools/nearby?state=${listing.state}&lat=${listing.latitude}&lon=${listing.longitude}&radius=5&limit=5`;
+        const schoolsUrl = `https://api.greatschools.org/schools/nearby?state=${useState}&lat=${useLat}&lon=${useLon}&radius=5&limit=5`;
 
         const schoolsResponse = await fetch(schoolsUrl, {
           headers: {
