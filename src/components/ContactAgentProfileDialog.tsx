@@ -13,7 +13,7 @@ const contactMessageSchema = z.object({
   sender_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
   sender_email: z.string().trim().email("Invalid email address").max(255),
   sender_phone: z.string().trim().max(20).optional(),
-  message: z.string().trim().min(10, "Message must be at least 10 characters").max(1000),
+  message: z.string().trim().max(1000).optional(),
   subject: z.string().trim().min(5, "Subject must be at least 5 characters").max(200),
 });
 
@@ -156,7 +156,7 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail }: ContactAg
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="message">Message *</Label>
+            <Label htmlFor="message">Message</Label>
             <Textarea
               id="message"
               value={formData.message}
