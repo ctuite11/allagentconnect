@@ -31,22 +31,27 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode }: Matc
     try {
       setLoading(true);
       
-      // First, find the county for this listing's city
-      const { data: countyData, error: countyError } = await supabase
+      // Get all counties for the listing state
+      const { data: stateCounties, error: countiesError } = await supabase
         .from("counties")
-        .select("id, name, state")
-        .eq("state", listingState)
-        .ilike("name", `%${listingCity.split(" ")[0]}%`);
+        .select("id, name")
+        .eq("state", listingState);
 
-      if (countyError) throw countyError;
+      if (countiesError) throw countiesError;
 
-      if (!countyData || countyData.length === 0) {
-        setAgents([]);
-        setLoading(false);
-        return;
+      // Try to infer county by naive city-name match first (best-effort)
+      const cityFirstWord = listingCity?.split(" ")[0] ?? "";
+      let targetCountyIds: string[] = [];
+      if (stateCounties && cityFirstWord) {
+        targetCountyIds = stateCounties
+          .filter(c => c.name.toLowerCase().includes(cityFirstWord.toLowerCase()))
+          .map(c => c.id);
       }
 
-      const countyIds = countyData.map(c => c.id);
+      // Fallback: if we couldn't infer a specific county, use ALL counties in the state
+      if (!targetCountyIds || targetCountyIds.length === 0) {
+        targetCountyIds = (stateCounties || []).map(c => c.id);
+      }
 
       // Find agents who have preferences for these counties (limit to 8)
       const { data: agentData, error: agentError } = await supabase
@@ -60,13 +65,39 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode }: Matc
             county_id
           )
         `)
-        .in("agent_county_preferences.county_id", countyIds)
+        .in("agent_county_preferences.county_id", targetCountyIds)
         .eq("receive_buyer_alerts", true)
         .limit(8);
 
       if (agentError) throw agentError;
 
-      setAgents(agentData || []);
+      const mappedAgents: Agent[] = ((agentData as any[]) || []).map((a) => ({
+        id: a.id,
+        first_name: a.first_name,
+        last_name: a.last_name,
+        headshot_url: a.headshot_url,
+      }));
+
+      let finalAgents: Agent[] = mappedAgents;
+
+      // Fallback: if no county-preference matches, show agents who opted into buyer alerts (state-agnostic)
+      if (!finalAgents || finalAgents.length === 0) {
+        const { data: fallbackAgents, error: fallbackError } = await supabase
+          .from("agent_profiles")
+          .select("id, first_name, last_name, headshot_url")
+          .eq("receive_buyer_alerts", true)
+          .limit(8);
+        if (fallbackError) throw fallbackError;
+        const mappedFallback: Agent[] = ((fallbackAgents as any[]) || []).map((a) => ({
+          id: a.id,
+          first_name: a.first_name,
+          last_name: a.last_name,
+          headshot_url: a.headshot_url,
+        }));
+        finalAgents = mappedFallback;
+      }
+
+      setAgents(finalAgents);
     } catch (error: any) {
       console.error("Error fetching matching agents:", error);
     } finally {
