@@ -364,27 +364,34 @@ const PropertyDetail = () => {
               )}
 
               {/* Buyer Agent Commission */}
-              {isAgent && (
-                <Card>
+              {isAgent && listing.commission_rate && (
+                <Card className="border-primary/30 bg-primary/5">
                   <CardHeader>
-                    <CardTitle>Buyer Agent Commission</CardTitle>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Buyer Agent Compensation
+                      </span>
+                      <BuyerAgentCompensationInfo />
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {listing.commission_rate ? (
-                      <div className="space-y-2">
-                        <div className="text-2xl font-bold">
-                          {listing.commission_type === 'flat_fee' 
-                            ? `$${listing.commission_rate.toLocaleString()}`
-                            : `${listing.commission_rate}%`
-                          }
-                        </div>
-                        {listing.commission_notes && (
-                          <p className="text-sm text-muted-foreground">{listing.commission_notes}</p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Commission information not available</p>
-                    )}
+                    <div className="text-center py-2">
+                      <p className="text-3xl font-bold text-primary">
+                        {listing.commission_type === 'flat_fee' 
+                          ? `$${listing.commission_rate.toLocaleString()}`
+                          : `${listing.commission_rate}%`
+                        }
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Offered to cooperating buyer agents
+                      </p>
+                      {listing.commission_notes && (
+                        <p className="text-xs text-muted-foreground mt-2 border-t pt-2">
+                          {listing.commission_notes}
+                        </p>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               )}
