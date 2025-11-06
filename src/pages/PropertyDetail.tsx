@@ -383,8 +383,8 @@ const PropertyDetail = () => {
               )}
             </div>
 
-            {/* Matching Buyer Agents */}
-            {isAgent && (
+            {/* Matching Buyer Agents - Visible to everyone */}
+            {listing.city && listing.state && (
               <MatchingBuyerAgents 
                 listingCity={listing.city}
                 listingState={listing.state}
@@ -682,25 +682,37 @@ const PropertyDetail = () => {
                     Walk Score
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  {listing.walk_score_data ? (
-                    <div className="space-y-3">
-                      {listing.walk_score_data.walkscore && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Score:</span>
-                          <Badge variant={listing.walk_score_data.walkscore >= 70 ? "default" : "secondary"}>
-                            {listing.walk_score_data.walkscore}
-                          </Badge>
-                        </div>
-                      )}
-                      {listing.walk_score_data.description && (
-                        <p className="text-sm text-muted-foreground">{listing.walk_score_data.description}</p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Walk score data not available for this property.</p>
-                  )}
-                </CardContent>
+                 <CardContent>
+                   {listing.walk_score_data ? (
+                     <div className="space-y-3">
+                       {listing.walk_score_data.walkscore && (
+                         <div className="flex justify-between items-center">
+                           <span className="text-sm text-muted-foreground">Score:</span>
+                           <Badge variant={listing.walk_score_data.walkscore >= 70 ? "default" : "secondary"}>
+                             {listing.walk_score_data.walkscore}
+                           </Badge>
+                         </div>
+                       )}
+                       {listing.walk_score_data.description && (
+                         <p className="text-sm text-muted-foreground">{listing.walk_score_data.description}</p>
+                       )}
+                     </div>
+                   ) : listing.attom_data?.walk_score ? (
+                     <div className="space-y-3">
+                       <div className="flex justify-between items-center">
+                         <span className="text-sm text-muted-foreground">Score:</span>
+                         <Badge variant={listing.attom_data.walk_score >= 70 ? "default" : "secondary"}>
+                           {listing.attom_data.walk_score}
+                         </Badge>
+                       </div>
+                       {listing.attom_data.walk_score_description && (
+                         <p className="text-sm text-muted-foreground">{listing.attom_data.walk_score_description}</p>
+                       )}
+                     </div>
+                   ) : (
+                     <p className="text-sm text-muted-foreground">Walk score data not available. ATTOM API needs to be called to fetch this data.</p>
+                   )}
+                 </CardContent>
               </Card>
 
               {/* Nearby Schools */}
@@ -711,28 +723,45 @@ const PropertyDetail = () => {
                     Nearby Schools
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 ? (
-                    <div className="space-y-3">
-                      {listing.schools_data.schools.slice(0, 3).map((school: any, index: number) => (
-                        <div key={index} className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-sm">{school.name}</h4>
-                            <p className="text-xs text-muted-foreground">{school.type}</p>
-                            {school.distance && (
-                              <p className="text-xs text-muted-foreground">{school.distance} mi</p>
-                            )}
-                          </div>
-                          {school.rating && (
-                            <Badge variant="default" className="text-xs">{school.rating}/10</Badge>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">School data not available for this property.</p>
-                  )}
-                </CardContent>
+                 <CardContent>
+                   {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 ? (
+                     <div className="space-y-3">
+                       {listing.schools_data.schools.slice(0, 3).map((school: any, index: number) => (
+                         <div key={index} className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0">
+                           <div className="flex-1">
+                             <h4 className="font-semibold text-sm">{school.name}</h4>
+                             <p className="text-xs text-muted-foreground">{school.type}</p>
+                             {school.distance && (
+                               <p className="text-xs text-muted-foreground">{school.distance} mi</p>
+                             )}
+                           </div>
+                           {school.rating && (
+                             <Badge variant="default" className="text-xs">{school.rating}/10</Badge>
+                           )}
+                         </div>
+                       ))}
+                     </div>
+                   ) : listing.attom_data?.schools && Array.isArray(listing.attom_data.schools) && listing.attom_data.schools.length > 0 ? (
+                     <div className="space-y-3">
+                       {listing.attom_data.schools.slice(0, 3).map((school: any, index: number) => (
+                         <div key={index} className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0">
+                           <div className="flex-1">
+                             <h4 className="font-semibold text-sm">{school.name}</h4>
+                             <p className="text-xs text-muted-foreground">{school.type || school.level}</p>
+                             {school.distance && (
+                               <p className="text-xs text-muted-foreground">{school.distance} mi</p>
+                             )}
+                           </div>
+                           {school.rating && (
+                             <Badge variant="default" className="text-xs">{school.rating}/10</Badge>
+                           )}
+                         </div>
+                       ))}
+                     </div>
+                   ) : (
+                     <p className="text-sm text-muted-foreground">School data not available. ATTOM API needs to be called to fetch this data.</p>
+                   )}
+                 </CardContent>
               </Card>
 
             </div>
