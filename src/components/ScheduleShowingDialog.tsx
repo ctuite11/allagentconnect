@@ -12,7 +12,7 @@ import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const showingRequestSchema = z.object({
-  requester_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
+  requester_name: z.string().trim().min(1, "Please enter your name").max(100),
   requester_email: z.string().trim().email("Invalid email address").max(255),
   requester_phone: z.string().trim().max(20).optional(),
   preferred_date: z.string().min(1, "Please select a date"),
@@ -136,7 +136,7 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="requester_name">Name *</Label>
+            <Label htmlFor="requester_name">Name</Label>
             <Input
               id="requester_name"
               value={formData.requester_name}
@@ -148,7 +148,7 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="requester_email">Email *</Label>
+            <Label htmlFor="requester_email">Email</Label>
             <Input
               id="requester_email"
               type="email"
@@ -173,7 +173,7 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="preferred_date">Preferred Date *</Label>
+              <Label htmlFor="preferred_date">Preferred Date</Label>
               <Input
                 id="preferred_date"
                 type="date"
@@ -185,7 +185,7 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="preferred_time">Preferred Time *</Label>
+              <Label htmlFor="preferred_time">Preferred Time</Label>
               <Select
                 value={formData.preferred_time}
                 onValueChange={(value) => setFormData({ ...formData, preferred_time: value })}

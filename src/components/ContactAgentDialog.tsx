@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 const contactMessageSchema = z.object({
-  sender_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
+  sender_name: z.string().trim().min(1, "Please enter your name").max(100),
   sender_email: z.string().trim().email("Invalid email address").max(255),
   sender_phone: z.string().trim().max(20).optional(),
   message: z.string().trim().max(1000).optional(),
@@ -124,7 +124,7 @@ const ContactAgentDialog = ({ listingId, agentId, listingAddress }: ContactAgent
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="sender_name">Name *</Label>
+            <Label htmlFor="sender_name">Name</Label>
             <Input
               id="sender_name"
               value={formData.sender_name}
@@ -136,7 +136,7 @@ const ContactAgentDialog = ({ listingId, agentId, listingAddress }: ContactAgent
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sender_email">Email *</Label>
+            <Label htmlFor="sender_email">Email</Label>
             <Input
               id="sender_email"
               type="email"
