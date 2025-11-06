@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "lucide-react";
+import { Clock, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const showingRequestSchema = z.object({
   requester_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
@@ -185,12 +186,39 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
 
             <div className="space-y-2">
               <Label htmlFor="preferred_time">Preferred Time *</Label>
-              <Input
-                id="preferred_time"
-                type="time"
+              <Select
                 value={formData.preferred_time}
-                onChange={(e) => setFormData({ ...formData, preferred_time: e.target.value })}
-              />
+                onValueChange={(value) => setFormData({ ...formData, preferred_time: value })}
+              >
+                <SelectTrigger id="preferred_time">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="08:00">8:00 AM</SelectItem>
+                  <SelectItem value="08:30">8:30 AM</SelectItem>
+                  <SelectItem value="09:00">9:00 AM</SelectItem>
+                  <SelectItem value="09:30">9:30 AM</SelectItem>
+                  <SelectItem value="10:00">10:00 AM</SelectItem>
+                  <SelectItem value="10:30">10:30 AM</SelectItem>
+                  <SelectItem value="11:00">11:00 AM</SelectItem>
+                  <SelectItem value="11:30">11:30 AM</SelectItem>
+                  <SelectItem value="12:00">12:00 PM</SelectItem>
+                  <SelectItem value="12:30">12:30 PM</SelectItem>
+                  <SelectItem value="13:00">1:00 PM</SelectItem>
+                  <SelectItem value="13:30">1:30 PM</SelectItem>
+                  <SelectItem value="14:00">2:00 PM</SelectItem>
+                  <SelectItem value="14:30">2:30 PM</SelectItem>
+                  <SelectItem value="15:00">3:00 PM</SelectItem>
+                  <SelectItem value="15:30">3:30 PM</SelectItem>
+                  <SelectItem value="16:00">4:00 PM</SelectItem>
+                  <SelectItem value="16:30">4:30 PM</SelectItem>
+                  <SelectItem value="17:00">5:00 PM</SelectItem>
+                  <SelectItem value="17:30">5:30 PM</SelectItem>
+                  <SelectItem value="18:00">6:00 PM</SelectItem>
+                  <SelectItem value="18:30">6:30 PM</SelectItem>
+                  <SelectItem value="19:00">7:00 PM</SelectItem>
+                </SelectContent>
+              </Select>
               {errors.preferred_time && <p className="text-sm text-destructive">{errors.preferred_time}</p>}
             </div>
           </div>

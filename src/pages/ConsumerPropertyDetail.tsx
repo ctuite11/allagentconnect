@@ -16,6 +16,8 @@ import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 import PropertyMap from "@/components/PropertyMap";
 
+import { formatPhoneNumber } from "@/lib/phoneFormat";
+
 interface AgentProfile {
   id: string;
   first_name: string;
@@ -500,7 +502,7 @@ const ConsumerPropertyDetail = () => {
                         <div className="flex items-center gap-2 text-sm">
                           <Phone className="h-4 w-4 text-muted-foreground" />
                           <a href={`tel:${agent.cell_phone}`} className="hover:underline">
-                            {agent.cell_phone}
+                            {formatPhoneNumber(agent.cell_phone)}
                           </a>
                         </div>
                       )}

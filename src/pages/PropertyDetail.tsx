@@ -20,6 +20,8 @@ import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo"
 import PropertyMap from "@/components/PropertyMap";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 
+import { formatPhoneNumber } from "@/lib/phoneFormat";
+
 interface Listing {
   id: string;
   agent_id: string;
@@ -340,7 +342,7 @@ const PropertyDetail = () => {
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4" />
                           <a href={`tel:${agentProfile.phone}`} className="text-primary hover:underline">
-                            {agentProfile.phone}
+                            {formatPhoneNumber(agentProfile.phone)}
                           </a>
                         </div>
                       )}

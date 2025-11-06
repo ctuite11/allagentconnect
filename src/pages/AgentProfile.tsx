@@ -12,7 +12,9 @@ import { Mail, Phone, Building2, MapPin, ArrowLeft, Loader2, Home, Star, Briefca
 import { toast } from "sonner";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 
-const formatPhoneNumber = (phone: string) => {
+import { formatPhoneNumber } from "@/lib/phoneFormat";
+
+const formatPhoneNumber_OLD = (phone: string) => {
   const cleaned = phone.replace(/\D/g, '');
   if (cleaned.length === 10) {
     return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;

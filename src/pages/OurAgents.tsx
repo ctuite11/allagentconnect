@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Mail, Phone, Building2, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
 
+import { formatPhoneNumber } from "@/lib/phoneFormat";
+
 const OurAgents = () => {
   const navigate = useNavigate();
   const [agents, setAgents] = useState<any[]>([]);
@@ -144,7 +146,7 @@ const OurAgents = () => {
                             className="flex items-center gap-2 text-sm hover:text-primary transition-colors group"
                           >
                             <Phone className="h-4 w-4 flex-shrink-0 text-muted-foreground group-hover:text-primary" />
-                            <span>{agent.phone}</span>
+                            <span>{formatPhoneNumber(agent.phone)}</span>
                           </a>
                         )}
 
