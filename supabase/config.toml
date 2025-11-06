@@ -2,3 +2,6 @@ project_id = "qocduqtfbsevnhlgsfka"
 
 [functions.test-attom]
 verify_jwt = false
+
+[functions.auto-fetch-property-data]
+verify_jwt = false
