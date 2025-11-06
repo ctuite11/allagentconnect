@@ -25,6 +25,7 @@ interface AgentProfile {
   email: string;
   phone: string | null;
   cell_phone: string | null;
+  title: string | null;
   headshot_url: string | null;
   company: string | null;
   office_name: string | null;
@@ -99,7 +100,7 @@ const ConsumerPropertyDetail = () => {
           // Fetch agent profile
           const { data: agentData, error: agentError } = await supabase
             .from("agent_profiles")
-            .select("id, first_name, last_name, email, phone, cell_phone, headshot_url, company, office_name")
+            .select("id, first_name, last_name, email, cell_phone, phone, title, company, office_name, headshot_url")
             .eq("id", listingData.agent_id)
             .maybeSingle();
 
@@ -488,33 +489,36 @@ const ConsumerPropertyDetail = () => {
                         />
                       )}
                       <div className="flex-1 space-y-3">
-                        <div>
+                        <div className="space-y-1">
                           <h3 className="font-semibold text-lg">{agent.first_name} {agent.last_name}</h3>
-                        {agent.company && (
-                          <p className="text-sm text-muted-foreground">{agent.company}</p>
-                        )}
-                        {agent.office_name && (
-                          <p className="text-xs text-muted-foreground">{agent.office_name}</p>
-                        )}
-                      </div>
-                    <div className="space-y-2">
-                      {agent.cell_phone && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <a href={`tel:${agent.cell_phone}`} className="hover:underline">
-                            {formatPhoneNumber(agent.cell_phone)}
-                          </a>
+                          {agent.title && (
+                            <p className="text-sm text-muted-foreground">{agent.title}</p>
+                          )}
+                          {agent.company && (
+                            <p className="text-sm text-muted-foreground">{agent.company}</p>
+                          )}
+                          {agent.office_name && (
+                            <p className="text-xs text-muted-foreground">{agent.office_name}</p>
+                          )}
                         </div>
-                      )}
-                      {agent.email && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <a href={`mailto:${agent.email}`} className="hover:underline">
-                            {agent.email}
-                          </a>
+                        <div className="space-y-2 text-sm">
+                          {(agent.cell_phone || agent.phone) && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <a href={`tel:${agent.cell_phone || agent.phone}`} className="hover:underline">
+                                {formatPhoneNumber(agent.cell_phone || agent.phone)}
+                              </a>
+                            </div>
+                          )}
+                          {agent.email && (
+                            <div className="flex items-center gap-2">
+                              <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <a href={`mailto:${agent.email}`} className="hover:underline break-all">
+                                {agent.email}
+                              </a>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
                       </div>
                     </div>
                     <Button 

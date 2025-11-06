@@ -119,7 +119,7 @@ const PropertyDetail = () => {
           if (data.agent_id) {
             const { data: profile } = await supabase
               .from("agent_profiles")
-              .select("*")
+              .select("id, first_name, last_name, email, cell_phone, phone, title, company")
               .eq("id", data.agent_id)
               .maybeSingle();
             
@@ -323,30 +323,33 @@ const PropertyDetail = () => {
                         />
                       )}
                       <div className="flex-1 space-y-3">
-                        <div>
+                        <div className="space-y-1">
                           <p className="font-semibold text-lg">{agentProfile.first_name} {agentProfile.last_name}</p>
+                          {agentProfile.title && (
+                            <p className="text-sm text-muted-foreground">{agentProfile.title}</p>
+                          )}
                           {agentProfile.company && (
                             <p className="text-sm text-muted-foreground">{agentProfile.company}</p>
                           )}
                         </div>
-                    <div className="space-y-2 text-sm">
-                      {agentProfile.email && (
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline">
-                            {agentProfile.email}
-                          </a>
+                        <div className="space-y-2 text-sm">
+                          {(agentProfile.cell_phone || agentProfile.phone) && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4 flex-shrink-0" />
+                              <a href={`tel:${agentProfile.cell_phone || agentProfile.phone}`} className="text-primary hover:underline">
+                                {formatPhoneNumber(agentProfile.cell_phone || agentProfile.phone)}
+                              </a>
+                            </div>
+                          )}
+                          {agentProfile.email && (
+                            <div className="flex items-center gap-2">
+                              <Mail className="h-4 w-4 flex-shrink-0" />
+                              <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline break-all">
+                                {agentProfile.email}
+                              </a>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {agentProfile.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4" />
-                          <a href={`tel:${agentProfile.phone}`} className="text-primary hover:underline">
-                            {formatPhoneNumber(agentProfile.phone)}
-                          </a>
-                        </div>
-                      )}
-                    </div>
                       </div>
                     </div>
                     <Button 
