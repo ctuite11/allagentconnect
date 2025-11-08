@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AgentDashboard from "./pages/AgentDashboard";
@@ -51,6 +51,7 @@ const App = () => (
           <Route path="/client-hot-sheet/:token" element={<ClientHotSheet />} />
           <Route path="/agent-search" element={<OurAgents />} />
           <Route path="/agent-dashboard" element={<AgentDashboard />} />
+          <Route path="/submit-buyer-need" element={<Navigate to="/submit-client-need" replace />} />
           <Route path="/submit-client-need" element={<SubmitClientNeed />} />
           <Route path="/add-listing" element={<AddListing />} />
           <Route path="/add-rental-listing" element={<AddRentalListing />} />
