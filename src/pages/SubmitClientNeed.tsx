@@ -76,7 +76,7 @@ const SubmitClientNeed = () => {
       // Validate input
       const validatedData = clientNeedSchema.parse(formData);
 
-      const { error: insertError } = await supabase.from("buyer_needs").insert({
+      const { error: insertError } = await supabase.from("client_needs").insert({
         submitted_by: user?.id,
         property_type: validatedData.propertyType as any,
         max_price: parseFloat(validatedData.maxPrice),

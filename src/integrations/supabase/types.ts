@@ -196,7 +196,7 @@ export type Database = {
         }
         Relationships: []
       }
-      buyer_needs: {
+      client_needs: {
         Row: {
           bathrooms: number | null
           bedrooms: number | null
