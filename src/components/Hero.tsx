@@ -78,14 +78,14 @@ const Hero = () => {
               <div className="grid grid-cols-2 gap-3">
                 <Input
                   type="number"
-                  placeholder="Min Price"
+                  placeholder="Min"
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
                   className="w-full"
                 />
                 <Input
                   type="number"
-                  placeholder="Max Price"
+                  placeholder="Max"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
                   className="w-full"
