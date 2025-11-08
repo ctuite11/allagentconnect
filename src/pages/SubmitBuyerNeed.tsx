@@ -188,7 +188,7 @@ const SubmitBuyerNeed = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="Additional details about the buyer's needs..."
+                  placeholder="Additional details about the client's needs..."
                   rows={4}
                 />
               </div>
