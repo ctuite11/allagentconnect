@@ -42,7 +42,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "AAC Worldwide <tuite.chris@gmail.com>",
+        from: "AAC Worldwide <onboarding@resend.dev>",
         to: [agentEmail],
         reply_to: senderEmail,
         subject: subject || `New message from ${senderName}`,
