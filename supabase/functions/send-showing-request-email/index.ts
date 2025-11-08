@@ -46,7 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Your Real Estate Platform <onboarding@resend.dev>",
+        from: "AAC Worldwide <tuite.chris@gmail.com>",
         to: [agentEmail],
         reply_to: requesterEmail,
         subject: `New showing request for ${listingAddress}`,

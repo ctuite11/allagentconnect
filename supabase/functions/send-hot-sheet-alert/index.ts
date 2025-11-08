@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Your Real Estate Platform <onboarding@resend.dev>",
+        from: "AAC Worldwide <tuite.chris@gmail.com>",
         to: [userEmail],
         subject: `🏠 New listings match your Hot Sheet: ${hotSheetName}`,
         html: `
