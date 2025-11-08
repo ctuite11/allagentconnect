@@ -62,6 +62,7 @@ interface Listing {
   schools_data: any;
   value_estimate: any;
   listing_number?: string | null;
+  created_at?: string;
 }
 
 const PropertyDetail = () => {
@@ -271,11 +272,29 @@ const PropertyDetail = () => {
                 <p className="text-xl text-muted-foreground">
                   {listing.city}, {listing.state} {listing.zip_code}
                 </p>
-                {listing.listing_number && (
-                  <p className="text-sm text-muted-foreground font-mono mt-1">
-                    Listing #{listing.listing_number}
-                  </p>
-                )}
+                <div className="flex items-center gap-2 mt-1">
+                  {listing.listing_number && (
+                    <p className="text-sm text-muted-foreground font-mono">
+                      Listing #{listing.listing_number}
+                    </p>
+                  )}
+                  {listing.created_at && (
+                    <>
+                      {listing.listing_number && (
+                        <span className="text-sm text-muted-foreground">•</span>
+                      )}
+                      <Badge variant="outline" className="text-xs">
+                        {(() => {
+                          const createdDate = new Date(listing.created_at);
+                          const today = new Date();
+                          const diffTime = Math.abs(today.getTime() - createdDate.getTime());
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                          return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} on market`;
+                        })()}
+                      </Badge>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
             <div className="text-right">

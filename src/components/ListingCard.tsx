@@ -154,6 +154,17 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
 
   const matchButtonStyle = getMatchButtonStyle();
 
+  const calculateDaysOnMarket = () => {
+    if (!listing.created_at) return 0;
+    const createdDate = new Date(listing.created_at);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - createdDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const daysOnMarket = calculateDaysOnMarket();
+
   if (viewMode === 'list') {
     return (
       <Card className="overflow-hidden hover:shadow-md transition-shadow">
@@ -185,11 +196,19 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                 <MapPin className="w-3 h-3 mr-1" />
                 {listing.city}, {listing.state} {listing.zip_code}
               </div>
-              {listing.listing_number && (
-                <div className="text-xs text-muted-foreground mb-2">
-                  Listing #{listing.listing_number}
-                </div>
-              )}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                {listing.listing_number && (
+                  <span>Listing #{listing.listing_number}</span>
+                )}
+                {listing.listing_number && daysOnMarket > 0 && (
+                  <span>•</span>
+                )}
+                {daysOnMarket > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'} on market
+                  </Badge>
+                )}
+              </div>
               <div className="flex gap-3 text-sm text-muted-foreground">
                 {listing.bedrooms && (
                   <span><Bed className="w-3 h-3 inline mr-1" />{listing.bedrooms}</span>
@@ -344,11 +363,19 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
               <MapPin className="w-4 h-4 mr-1" />
               {listing.city}, {listing.state} {listing.zip_code}
             </div>
-            {listing.listing_number && (
-              <div className="text-xs text-muted-foreground">
-                Listing #{listing.listing_number}
-              </div>
-            )}
+            <div className="flex flex-col gap-1">
+              {listing.listing_number && (
+                <div className="text-xs text-muted-foreground">
+                  Listing #{listing.listing_number}
+                </div>
+              )}
+              {daysOnMarket > 0 && (
+                <Badge variant="outline" className="text-xs flex items-center gap-1 w-fit">
+                  <Calendar className="w-3 h-3" />
+                  {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'}
+                </Badge>
+              )}
+            </div>
           </div>
           <Badge variant={listing.status === "active" ? "default" : "secondary"}>
             {listing.status}
