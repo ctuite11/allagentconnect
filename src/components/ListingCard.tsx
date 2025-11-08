@@ -1,9 +1,12 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar } from "lucide-react";
+import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { ReverseProspectDialog } from "./ReverseProspectDialog";
 
 interface ListingCardProps {
   listing: {
@@ -30,6 +33,54 @@ interface ListingCardProps {
 
 const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps) => {
   const navigate = useNavigate();
+  const [matchCount, setMatchCount] = useState<number>(0);
+  const [loadingMatches, setLoadingMatches] = useState(false);
+  const [prospectDialogOpen, setProspectDialogOpen] = useState(false);
+
+  useEffect(() => {
+    loadMatchCount();
+  }, [listing.id]);
+
+  const loadMatchCount = async () => {
+    try {
+      setLoadingMatches(true);
+      let query = supabase
+        .from("client_needs")
+        .select("id", { count: "exact", head: true });
+
+      // Match by state
+      if (listing.state) {
+        query = query.eq("state", listing.state);
+      }
+
+      // Match by city
+      if (listing.city) {
+        query = query.ilike("city", `%${listing.city}%`);
+      }
+
+      // Match by property type
+      if (listing.property_type) {
+        query = query.eq("property_type", listing.property_type as any);
+      }
+
+      // Match by price (listing price should be at or below max_price)
+      if (listing.price) {
+        query = query.gte("max_price", listing.price);
+      }
+
+      // Match by bedrooms
+      if (listing.bedrooms) {
+        query = query.lte("bedrooms", listing.bedrooms);
+      }
+
+      const { count } = await query;
+      setMatchCount(count || 0);
+    } catch (error) {
+      console.error("Error loading match count:", error);
+    } finally {
+      setLoadingMatches(false);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -158,6 +209,26 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
+              {listing.status === 'active' && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setProspectDialogOpen(true)}
+                  className="w-full relative"
+                  disabled={matchCount === 0}
+                >
+                  <Mail className="w-3 h-3 mr-1" />
+                  Prospect
+                  {matchCount > 0 && (
+                    <Badge 
+                      variant="secondary" 
+                      className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center text-xs px-1"
+                    >
+                      {matchCount}
+                    </Badge>
+                  )}
+                </Button>
+              )}
               <Button
                 variant="destructive"
                 size="sm"
@@ -177,6 +248,20 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             {nextOpenHouse.type && <span className="ml-2 text-green-600">({nextOpenHouse.type === 'public' ? 'Public' : 'Broker'})</span>}
           </div>
         )}
+        {listing.status === 'active' && matchCount > 0 && (
+          <div className="bg-primary/10 border-t border-primary/20 px-4 py-2 text-sm flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-primary" />
+              <span className="font-semibold text-primary">{matchCount} Potential Buyers</span>
+            </div>
+          </div>
+        )}
+        <ReverseProspectDialog
+          open={prospectDialogOpen}
+          onOpenChange={setProspectDialogOpen}
+          listing={listing}
+          matchCount={matchCount}
+        />
       </Card>
     );
   }
@@ -251,6 +336,13 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
           </Badge>
         )}
 
+        {listing.status === 'active' && matchCount > 0 && (
+          <div className="flex items-center gap-2 mb-3 p-3 bg-primary/10 rounded-md border border-primary/20">
+            <Users className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">{matchCount} Matching Buyers</span>
+          </div>
+        )}
+
         <div className="flex gap-2 mt-4">
           <Button
             variant="outline"
@@ -278,7 +370,26 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
+        
+        {listing.status === 'active' && (
+          <Button
+            variant="default"
+            size="sm"
+            className="w-full mt-2"
+            onClick={() => setProspectDialogOpen(true)}
+            disabled={matchCount === 0}
+          >
+            <Mail className="w-4 h-4 mr-2" />
+            Reverse Prospect {matchCount > 0 && `(${matchCount})`}
+          </Button>
+        )}
       </CardContent>
+      <ReverseProspectDialog
+        open={prospectDialogOpen}
+        onOpenChange={setProspectDialogOpen}
+        listing={listing}
+        matchCount={matchCount}
+      />
     </Card>
   );
 };
