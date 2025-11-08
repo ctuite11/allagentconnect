@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp, Eye, Heart, Mail, Calendar, Users, BarChart3, Clock } from "lucide-react";
+import { ArrowLeft, TrendingUp, Eye, Heart, Mail, Calendar, Users, BarChart3, Clock, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { format, subDays, startOfDay, eachDayOfInterval } from "date-fns";
@@ -30,6 +30,8 @@ interface Listing {
   price: number;
   status: string;
   created_at: string;
+  is_relisting?: boolean;
+  original_listing_id?: string | null;
   listing_stats?: ListingStats;
 }
 
@@ -583,6 +585,24 @@ const ListingAnalytics = () => {
               </TabsContent>
 
               <TabsContent value="lifecycle" className="space-y-6">
+                {/* Relisting Information Alert */}
+                {selectedListingData && (selectedListingData as any).is_relisting && (
+                  <Card className="border-blue-200 bg-blue-50/50">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-3">
+                        <RefreshCw className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-semibold text-blue-900 mb-1">Relisted Property</h4>
+                          <p className="text-sm text-blue-700">
+                            This listing was relisted within 30 days by the same agent. 
+                            Days on market and status history have been preserved from the previous listing.
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Status History Timeline */}
                 <Card>
                   <CardHeader>

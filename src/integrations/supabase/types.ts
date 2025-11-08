@@ -690,6 +690,7 @@ export type Database = {
           bathrooms: number | null
           beach_nearby: boolean | null
           bedrooms: number | null
+          cancelled_at: string | null
           city: string
           commission_notes: string | null
           commission_rate: number | null
@@ -709,6 +710,7 @@ export type Database = {
           has_basement: boolean | null
           heating_types: Json | null
           id: string
+          is_relisting: boolean | null
           latitude: number | null
           lender_owned: boolean | null
           listing_agreement_types: Json | null
@@ -719,6 +721,7 @@ export type Database = {
           lot_size: number | null
           num_fireplaces: number | null
           open_houses: Json | null
+          original_listing_id: string | null
           photos: Json | null
           price: number
           property_features: Json | null
@@ -757,6 +760,7 @@ export type Database = {
           bathrooms?: number | null
           beach_nearby?: boolean | null
           bedrooms?: number | null
+          cancelled_at?: string | null
           city: string
           commission_notes?: string | null
           commission_rate?: number | null
@@ -776,6 +780,7 @@ export type Database = {
           has_basement?: boolean | null
           heating_types?: Json | null
           id?: string
+          is_relisting?: boolean | null
           latitude?: number | null
           lender_owned?: boolean | null
           listing_agreement_types?: Json | null
@@ -786,6 +791,7 @@ export type Database = {
           lot_size?: number | null
           num_fireplaces?: number | null
           open_houses?: Json | null
+          original_listing_id?: string | null
           photos?: Json | null
           price: number
           property_features?: Json | null
@@ -824,6 +830,7 @@ export type Database = {
           bathrooms?: number | null
           beach_nearby?: boolean | null
           bedrooms?: number | null
+          cancelled_at?: string | null
           city?: string
           commission_notes?: string | null
           commission_rate?: number | null
@@ -843,6 +850,7 @@ export type Database = {
           has_basement?: boolean | null
           heating_types?: Json | null
           id?: string
+          is_relisting?: boolean | null
           latitude?: number | null
           lender_owned?: boolean | null
           listing_agreement_types?: Json | null
@@ -853,6 +861,7 @@ export type Database = {
           lot_size?: number | null
           num_fireplaces?: number | null
           open_houses?: Json | null
+          original_listing_id?: string | null
           photos?: Json | null
           price?: number
           property_features?: Json | null
@@ -878,7 +887,15 @@ export type Database = {
           year_built?: number | null
           zip_code?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "listings_original_listing_id_fkey"
+            columns: ["original_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

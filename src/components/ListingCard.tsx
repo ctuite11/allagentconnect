@@ -27,6 +27,8 @@ interface ListingCardProps {
     created_at?: string;
     active_date?: string | null;
     listing_number?: string | null;
+    is_relisting?: boolean;
+    original_listing_id?: string | null;
     listing_stats?: {
       view_count: number;
       save_count: number;
@@ -145,32 +147,36 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
   const getStatusChangeBanner = () => {
     if (statusHistory.length === 0) return null;
 
-    // Check if listing is new (active within last 7 days)
-    const mostRecentActive = statusHistory.find(h => h.new_status === 'active');
-    if (mostRecentActive) {
-      const activeDate = new Date(mostRecentActive.changed_at);
-      const daysSinceActive = Math.ceil((Date.now() - activeDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (daysSinceActive <= 7 && statusHistory[0]?.new_status === 'active') {
-        return { text: "NEW LISTING", color: "bg-blue-600", iconType: "sparkles" as const };
+    const currentStatus = statusHistory[0]?.new_status;
+    
+    // Check if listing is new (not a relisting and active within last 7 days)
+    // NEW shows if: first time active OR relisted after 30 days OR relisted with different agent
+    const allActiveStatuses = statusHistory.filter(h => h.new_status === 'active');
+    
+    if (currentStatus === 'active' && !listing.is_relisting) {
+      // This is either a brand new listing or relisted after 30+ days or with different agent
+      if (allActiveStatuses.length >= 1) {
+        const mostRecentActiveDate = new Date(allActiveStatuses[0].changed_at);
+        const daysSinceActive = Math.ceil((Date.now() - mostRecentActiveDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysSinceActive <= 7) {
+          return { text: "NEW LISTING", color: "bg-blue-600", iconType: "sparkles" as const };
+        }
       }
     }
 
-    // Check for price reduction (would need price history - placeholder for now)
-    // This would require a price_history table to implement fully
-    
-    // Check if back on market (was pending/sold and now active again)
-    if (statusHistory.length >= 2) {
-      const currentStatus = statusHistory[0]?.new_status;
+    // Check if back on market (was pending, under_contract, withdrawn, or cancelled and now active again)
+    // This applies when status changes within the same listing (not creating a new listing)
+    if (statusHistory.length >= 2 && currentStatus === 'active') {
       const previousStatus = statusHistory[1]?.new_status;
+      const changeDate = new Date(statusHistory[0].changed_at);
+      const daysSinceChange = Math.ceil((Date.now() - changeDate.getTime()) / (1000 * 60 * 60 * 24));
       
-      if (currentStatus === 'active' && (previousStatus === 'pending' || previousStatus === 'under_contract')) {
-        const changeDate = new Date(statusHistory[0].changed_at);
-        const daysSinceChange = Math.ceil((Date.now() - changeDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (daysSinceChange <= 14) {
-          return { text: "BACK ON MARKET", color: "bg-orange-600", iconType: "refresh" as const };
-        }
+      // List of statuses that when followed by active should show "BACK ON MARKET"
+      const offMarketStatuses = ['pending', 'under_contract', 'withdrawn', 'cancelled', 'temporarily_withdrawn'];
+      
+      if (offMarketStatuses.includes(previousStatus) && daysSinceChange <= 14) {
+        return { text: "BACK ON MARKET", color: "bg-orange-600", iconType: "refresh" as const };
       }
     }
 
@@ -289,6 +295,14 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 {listing.listing_number && (
                   <span>Listing #{listing.listing_number}</span>
+                )}
+                {listing.is_relisting && (
+                  <>
+                    {listing.listing_number && <span>•</span>}
+                    <Badge variant="secondary" className="text-xs">
+                      Relisted
+                    </Badge>
+                  </>
                 )}
                 {listing.listing_number && daysOnMarket > 0 && (
                   <span>•</span>
@@ -487,6 +501,11 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                 </div>
               )}
               <div className="flex flex-wrap items-center gap-1">
+                {listing.is_relisting && (
+                  <Badge variant="secondary" className="text-xs">
+                    Relisted - History Preserved
+                  </Badge>
+                )}
                 {daysOnMarket > 0 && (
                   <Badge variant="outline" className="text-xs flex items-center gap-1">
                     <Calendar className="w-3 h-3" />

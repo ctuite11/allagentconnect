@@ -31,6 +31,8 @@ interface Listing {
   listing_type: string | null;
   created_at: string;
   active_date?: string | null;
+  is_relisting?: boolean;
+  original_listing_id?: string | null;
   listing_stats?: {
     view_count: number;
     save_count: number;
