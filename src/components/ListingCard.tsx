@@ -122,7 +122,7 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
     return (
       <Card className="overflow-hidden hover:shadow-md transition-shadow">
         <div className="flex gap-4 p-4">
-          {/* Photo with Open House Banner and Match Count */}
+          {/* Photo with Open House Banner */}
           <div className="relative w-32 h-32 flex-shrink-0">
             {photoUrl ? (
               <img src={photoUrl} alt={listing.address} className="w-full h-full object-cover rounded" />
@@ -139,18 +139,6 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
               {listing.photos?.length || 0} Photos
             </div>
-            {listing.status === 'active' && (
-              <Button
-                size="sm"
-                variant="default"
-                onClick={() => setProspectDialogOpen(true)}
-                disabled={matchCount === 0 || loadingMatches}
-                className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs h-6 px-2"
-              >
-                <Users className="w-3 h-3 mr-1" />
-                {loadingMatches ? "..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
-              </Button>
-            )}
           </div>
 
           {/* Listing Info */}
@@ -177,6 +165,18 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                   <span><Home className="w-3 h-3 inline mr-1" />{listing.square_feet.toLocaleString()} sqft</span>
                 )}
               </div>
+              {listing.status === 'active' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setProspectDialogOpen(true)}
+                  disabled={matchCount === 0 || loadingMatches}
+                  className="mt-2 text-xs h-7"
+                >
+                  <Users className="w-3 h-3 mr-1" />
+                  {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
+                </Button>
+              )}
             </div>
 
             <div className="col-span-2">
@@ -269,18 +269,6 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
         <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
           {listing.photos?.length || 0} Photos
         </div>
-        {listing.status === 'active' && (
-          <Button
-            size="sm"
-            variant="default"
-            onClick={() => setProspectDialogOpen(true)}
-            disabled={matchCount === 0 || loadingMatches}
-            className="absolute bottom-2 left-2 text-xs h-7 px-3"
-          >
-            <Users className="w-3 h-3 mr-1" />
-            {loadingMatches ? "..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
-          </Button>
-        )}
       </div>
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-4">
@@ -325,6 +313,19 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             </div>
           )}
         </div>
+
+        {listing.status === 'active' && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setProspectDialogOpen(true)}
+            disabled={matchCount === 0 || loadingMatches}
+            className="mb-4 w-full text-xs h-8"
+          >
+            <Users className="w-3 h-3 mr-2" />
+            {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
+          </Button>
+        )}
 
         {listing.property_type && (
           <Badge variant="outline" className="mb-4">
