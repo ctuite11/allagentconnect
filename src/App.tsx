@@ -37,6 +37,7 @@ import VendorDirectory from "./pages/VendorDirectory";
 import ConsumerHome from "./pages/ConsumerHome";
 import ConsumerDashboard from "./pages/ConsumerDashboard";
 import ConsumerAuth from "./pages/ConsumerAuth";
+import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -83,6 +84,7 @@ const App = () => (
           <Route path="/vendor/packages" element={<VendorPackages />} />
           <Route path="/vendor/directory" element={<VendorDirectory />} />
           <Route path="/consumer/auth" element={<ConsumerAuth />} />
+          <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/consumer/dashboard" element={<ConsumerDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
