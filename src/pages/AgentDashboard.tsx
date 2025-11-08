@@ -12,6 +12,7 @@ import privateSaleImg from "@/assets/listing-private-sale.jpg";
 import forRentImg from "@/assets/listing-for-rent.jpg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { LayoutGrid, List } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Listing {
   id: string;
@@ -42,6 +43,7 @@ const AgentDashboard = () => {
   const [tempStatusFilters, setTempStatusFilters] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showResults, setShowResults] = useState(false);
+  const [sortBy, setSortBy] = useState<'date' | 'price' | 'status' | 'matches'>('date');
 
   useEffect(() => {
     document.title = "Agent Dashboard - Agent Connect";
@@ -85,6 +87,24 @@ const AgentDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const sortListings = (listingsToSort: Listing[]) => {
+    return [...listingsToSort].sort((a, b) => {
+      switch (sortBy) {
+        case 'date':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'price':
+          return (b.price || 0) - (a.price || 0);
+        case 'status':
+          return (a.status || '').localeCompare(b.status || '');
+        case 'matches':
+          // This will sort by match count once we have that data
+          return 0;
+        default:
+          return 0;
+      }
+    });
   };
 
   const handleDeleteClick = (listingId: string) => {
@@ -294,7 +314,18 @@ const AgentDashboard = () => {
                 )}
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold">Active Listings</h2>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Sort by..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="date">Sort by Date</SelectItem>
+                        <SelectItem value="price">Sort by Price</SelectItem>
+                        <SelectItem value="status">Sort by Status</SelectItem>
+                        <SelectItem value="matches">Sort by Matches</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button
                       variant={viewMode === 'list' ? 'default' : 'outline'}
                       size="sm"
@@ -312,7 +343,7 @@ const AgentDashboard = () => {
                   </div>
                 </div>
                 <div className={viewMode === 'grid' ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
-                  {listings.filter(l => (l.status || '').toLowerCase() !== "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes((l.status || '').toLowerCase()))).map((listing) => (
+                  {sortListings(listings.filter(l => (l.status || '').toLowerCase() !== "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes((l.status || '').toLowerCase())))).map((listing) => (
                     <ListingCard
                       key={listing.id}
                       listing={listing}
