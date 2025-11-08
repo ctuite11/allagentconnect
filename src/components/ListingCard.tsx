@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3 } from "lucide-react";
+import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,10 +44,29 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
   const [matchCount, setMatchCount] = useState<number>(0);
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [prospectDialogOpen, setProspectDialogOpen] = useState(false);
+  const [statusHistory, setStatusHistory] = useState<any[]>([]);
 
   useEffect(() => {
     loadMatchCount();
+    loadStatusHistory();
   }, [listing.id]);
+
+  const loadStatusHistory = async () => {
+    try {
+      const { data } = await supabase
+        .from("listing_status_history")
+        .select("*")
+        .eq("listing_id", listing.id)
+        .order("changed_at", { ascending: false })
+        .limit(5);
+      
+      if (data) {
+        setStatusHistory(data);
+      }
+    } catch (error) {
+      console.error("Error loading status history:", error);
+    }
+  };
 
   const loadMatchCount = async () => {
     try {
@@ -123,8 +142,59 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
     return upcoming[0] || null;
   };
 
+  const getStatusChangeBanner = () => {
+    if (statusHistory.length === 0) return null;
+
+    // Check if listing is new (active within last 7 days)
+    const mostRecentActive = statusHistory.find(h => h.new_status === 'active');
+    if (mostRecentActive) {
+      const activeDate = new Date(mostRecentActive.changed_at);
+      const daysSinceActive = Math.ceil((Date.now() - activeDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysSinceActive <= 7 && statusHistory[0]?.new_status === 'active') {
+        return { text: "NEW LISTING", color: "bg-blue-600", iconType: "sparkles" as const };
+      }
+    }
+
+    // Check for price reduction (would need price history - placeholder for now)
+    // This would require a price_history table to implement fully
+    
+    // Check if back on market (was pending/sold and now active again)
+    if (statusHistory.length >= 2) {
+      const currentStatus = statusHistory[0]?.new_status;
+      const previousStatus = statusHistory[1]?.new_status;
+      
+      if (currentStatus === 'active' && (previousStatus === 'pending' || previousStatus === 'under_contract')) {
+        const changeDate = new Date(statusHistory[0].changed_at);
+        const daysSinceChange = Math.ceil((Date.now() - changeDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysSinceChange <= 14) {
+          return { text: "BACK ON MARKET", color: "bg-orange-600", iconType: "refresh" as const };
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const getOpenHouseBanner = () => {
+    const nextOH = getNextOpenHouse();
+    if (!nextOH) return null;
+
+    const isBrokerOnly = nextOH.type === 'broker';
+    return {
+      text: isBrokerOnly ? "BROKER OPEN HOUSE" : "OPEN HOUSE",
+      date: format(new Date(nextOH.date), "MMM d"),
+      time: `${nextOH.start_time} - ${nextOH.end_time}`,
+      color: isBrokerOnly ? "bg-purple-600" : "bg-green-600",
+      isBroker: isBrokerOnly
+    };
+  };
+
   const photoUrl = getFirstPhoto();
   const nextOpenHouse = getNextOpenHouse();
+  const statusBanner = getStatusChangeBanner();
+  const openHouseBanner = getOpenHouseBanner();
 
   // Color coding for match count
   const getMatchButtonStyle = () => {
@@ -173,7 +243,7 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
     return (
       <Card className="overflow-hidden hover:shadow-md transition-shadow">
         <div className="flex gap-4 p-4">
-          {/* Photo with Open House Banner */}
+          {/* Photo with Banners */}
           <div className="relative w-32 h-32 flex-shrink-0">
             {photoUrl ? (
               <img src={photoUrl} alt={listing.address} className="w-full h-full object-cover rounded" />
@@ -182,11 +252,27 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                 <Home className="w-8 h-8 text-muted-foreground" />
               </div>
             )}
-            {nextOpenHouse && (
-              <div className="absolute top-0 left-0 right-0 bg-green-600 text-white text-xs font-bold px-2 py-1 text-center">
-                🎈 OPEN HOUSE
+            
+            {/* Status Change Banner (top priority) */}
+            {statusBanner && (
+              <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+                {statusBanner.iconType === 'sparkles' ? (
+                  <Sparkles className="w-3 h-3" />
+                ) : (
+                  <RefreshCw className="w-3 h-3" />
+                )}
+                {statusBanner.text}
               </div>
             )}
+            
+            {/* Open House Banner (secondary priority) */}
+            {openHouseBanner && !statusBanner && (
+              <div className={`absolute top-0 left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}>
+                {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text}
+              </div>
+            )}
+            
+            {/* Photo count badge */}
             <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
               {listing.photos?.length || 0} Photos
             </div>
@@ -329,12 +415,13 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             </div>
           </div>
         </div>
-        {nextOpenHouse && (
-          <div className="bg-green-50 border-t border-green-200 px-4 py-2 text-sm">
-            <Calendar className="w-4 h-4 inline mr-2 text-green-600" />
-            <span className="font-semibold text-green-700">Next Open House:</span>{" "}
-            {format(new Date(nextOpenHouse.date), "EEEE, MMMM d, yyyy")} • {nextOpenHouse.start_time} - {nextOpenHouse.end_time}
-            {nextOpenHouse.type && <span className="ml-2 text-green-600">({nextOpenHouse.type === 'public' ? 'Public' : 'Broker'})</span>}
+        {openHouseBanner && (
+          <div className={`${openHouseBanner.isBroker ? 'bg-purple-50 border-t border-purple-200' : 'bg-green-50 border-t border-green-200'} px-4 py-2 text-sm`}>
+            <Calendar className={`w-4 h-4 inline mr-2 ${openHouseBanner.isBroker ? 'text-purple-600' : 'text-green-600'}`} />
+            <span className={`font-semibold ${openHouseBanner.isBroker ? 'text-purple-700' : 'text-green-700'}`}>
+              {openHouseBanner.isBroker ? 'Broker Open House:' : 'Open House:'}
+            </span>{" "}
+            {format(new Date(nextOpenHouse.date), "EEEE, MMMM d, yyyy")} • {openHouseBanner.time}
           </div>
         )}
         <ReverseProspectDialog
@@ -358,11 +445,29 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             <Home className="w-12 h-12 text-muted-foreground" />
           </div>
         )}
-        {nextOpenHouse && (
-          <div className="absolute top-0 left-0 right-0 bg-green-600 text-white text-sm font-bold px-3 py-2 text-center">
-            🎈 OPEN HOUSE - {format(new Date(nextOpenHouse.date), "MMM d")}
+        
+        {/* Status Change Banner (top priority) */}
+        {statusBanner && (
+          <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-sm font-bold px-3 py-2 text-center flex items-center justify-center gap-2`}>
+            {statusBanner.iconType === 'sparkles' ? (
+              <Sparkles className="w-4 h-4" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+            {statusBanner.text}
           </div>
         )}
+        
+        {/* Open House Banner (secondary priority, positioned below status banner if both exist) */}
+        {openHouseBanner && (
+          <div 
+            className={`absolute ${statusBanner ? 'top-10' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-sm font-bold px-3 py-2 text-center`}
+          >
+            {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text} - {openHouseBanner.date}
+          </div>
+        )}
+        
+        {/* Photo count badge */}
         <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
           {listing.photos?.length || 0} Photos
         </div>
