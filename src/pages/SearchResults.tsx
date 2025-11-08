@@ -48,7 +48,12 @@ const SearchResults = () => {
         setLoading(true);
         let q = supabase.from("listings").select("*").order("created_at", { ascending: false });
 
-        if (filters.statuses && filters.statuses.length) q = q.in("status", filters.statuses);
+        // Default to only showing active and coming_soon if no status filter specified
+        if (filters.statuses && filters.statuses.length) {
+          q = q.in("status", filters.statuses);
+        } else {
+          q = q.in("status", ["active", "coming_soon"]);
+        }
         if (filters.types && filters.types.length) q = q.in("property_type", filters.types);
         if (filters.minPrice) q = q.gte("price", parseFloat(filters.minPrice));
         if (filters.maxPrice) q = q.lte("price", parseFloat(filters.maxPrice));

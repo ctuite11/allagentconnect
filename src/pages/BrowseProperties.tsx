@@ -54,8 +54,8 @@ const BrowseProperties = () => {
   // Property Type filters
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   
-  // Status filters
-  const [statuses, setStatuses] = useState<string[]>(["active"]);
+  // Status filters - default to only showing active and coming_soon listings
+  const [statuses, setStatuses] = useState<string[]>(["active", "coming_soon"]);
   
   // Price filters
   const [minPrice, setMinPrice] = useState("");
@@ -216,7 +216,7 @@ const BrowseProperties = () => {
     setEventTimeframe("next_3_days");
     setListingNumber("");
     setPropertyTypes([]);
-    setStatuses(["active"]);
+    setStatuses(["active", "coming_soon"]);
     setMinPrice("");
     setMaxPrice("");
     setBedrooms("");
