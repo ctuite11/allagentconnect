@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import CountyPreferencesManager from "@/components/CountyPreferencesManager";
+import StatePreferencesManager from "@/components/StatePreferencesManager";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
@@ -64,7 +65,10 @@ const ManageCoverageAreas = () => {
             </Button>
           </div>
 
-          <CountyPreferencesManager agentId={userId} />
+          <div className="space-y-6">
+            <StatePreferencesManager agentId={userId} />
+            <CountyPreferencesManager agentId={userId} />
+          </div>
         </div>
       </div>
     </div>

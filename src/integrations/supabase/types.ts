@@ -163,6 +163,27 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_state_preferences: {
+        Row: {
+          agent_id: string
+          created_at: string | null
+          id: string
+          state: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string | null
+          id?: string
+          state: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string | null
+          id?: string
+          state?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
