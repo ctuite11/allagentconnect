@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail } from "lucide-react";
+import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,12 @@ interface ListingCardProps {
     listing_type?: string | null;
     created_at?: string;
     listing_number?: string | null;
+    listing_stats?: {
+      view_count: number;
+      save_count: number;
+      contact_count: number;
+      showing_request_count: number;
+    };
   };
   onDelete: (id: string) => void;
   viewMode?: 'grid' | 'list';
@@ -207,6 +213,27 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                   {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
                 </Button>
               )}
+              {/* Listing Stats */}
+              {listing.listing_stats && (
+                <div className="flex gap-3 mt-3 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1" title="Total views">
+                    <Eye className="w-3 h-3" />
+                    {listing.listing_stats.view_count}
+                  </div>
+                  <div className="flex items-center gap-1" title="Saved/favorited">
+                    <Heart className="w-3 h-3" />
+                    {listing.listing_stats.save_count}
+                  </div>
+                  <div className="flex items-center gap-1" title="Contact inquiries">
+                    <Mail className="w-3 h-3" />
+                    {listing.listing_stats.contact_count}
+                  </div>
+                  <div className="flex items-center gap-1" title="Showing requests">
+                    <Calendar className="w-3 h-3" />
+                    {listing.listing_stats.showing_request_count}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="col-span-2">
@@ -355,6 +382,28 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             <Users className="w-3 h-3 mr-2" />
             {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
           </Button>
+        )}
+
+        {/* Listing Stats */}
+        {listing.listing_stats && (
+          <div className="grid grid-cols-2 gap-2 mb-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1 p-2 rounded bg-muted/50">
+              <Eye className="w-3 h-3" />
+              <span>{listing.listing_stats.view_count} views</span>
+            </div>
+            <div className="flex items-center gap-1 p-2 rounded bg-muted/50">
+              <Heart className="w-3 h-3" />
+              <span>{listing.listing_stats.save_count} saves</span>
+            </div>
+            <div className="flex items-center gap-1 p-2 rounded bg-muted/50">
+              <Mail className="w-3 h-3" />
+              <span>{listing.listing_stats.contact_count} contacts</span>
+            </div>
+            <div className="flex items-center gap-1 p-2 rounded bg-muted/50">
+              <Calendar className="w-3 h-3" />
+              <span>{listing.listing_stats.showing_request_count} showings</span>
+            </div>
+          </div>
         )}
 
         {listing.property_type && (

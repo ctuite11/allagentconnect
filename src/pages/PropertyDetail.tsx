@@ -21,6 +21,7 @@ import PropertyMap from "@/components/PropertyMap";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { useListingView } from "@/hooks/useListingView";
 
 interface Listing {
   id: string;
@@ -75,6 +76,9 @@ const PropertyDetail = () => {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryTab, setGalleryTab] = useState("photos");
   const [galleryIndex, setGalleryIndex] = useState(0);
+
+  // Track listing view
+  useListingView(id);
 
   useEffect(() => {
     const checkUser = async () => {

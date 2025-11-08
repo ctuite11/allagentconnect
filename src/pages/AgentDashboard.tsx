@@ -30,6 +30,12 @@ interface Listing {
   open_houses: any;
   listing_type: string | null;
   created_at: string;
+  listing_stats?: {
+    view_count: number;
+    save_count: number;
+    contact_count: number;
+    showing_request_count: number;
+  };
 }
 
 const AgentDashboard = () => {
@@ -79,15 +85,35 @@ const AgentDashboard = () => {
 
   const loadData = async (userId: string) => {
     try {
-      // Load listings
+      // Load listings with stats
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select(`
+          *,
+          listing_stats (
+            view_count,
+            save_count,
+            contact_count,
+            showing_request_count
+          )
+        `)
         .eq("agent_id", userId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      if (data) setListings(data);
+      if (data) {
+        // Transform the data to match our interface
+        const transformedData = data.map(listing => ({
+          ...listing,
+          listing_stats: listing.listing_stats?.[0] || {
+            view_count: 0,
+            save_count: 0,
+            contact_count: 0,
+            showing_request_count: 0
+          }
+        }));
+        setListings(transformedData);
+      }
 
       // Load hot sheets count
       const { count: hotSheetsCount } = await supabase

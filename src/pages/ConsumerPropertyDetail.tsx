@@ -18,6 +18,7 @@ import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo"
 import PropertyMap from "@/components/PropertyMap";
 
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { useListingView } from "@/hooks/useListingView";
 
 interface AgentProfile {
   id: string;
@@ -74,6 +75,9 @@ const ConsumerPropertyDetail = () => {
   const [agent, setAgent] = useState<AgentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
+  // Track listing view
+  useListingView(id);
 
   useEffect(() => {
     const fetchData = async () => {

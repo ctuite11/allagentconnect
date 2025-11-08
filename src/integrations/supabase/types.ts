@@ -562,6 +562,79 @@ export type Database = {
           },
         ]
       }
+      listing_stats: {
+        Row: {
+          contact_count: number
+          created_at: string
+          id: string
+          listing_id: string
+          save_count: number
+          showing_request_count: number
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          contact_count?: number
+          created_at?: string
+          id?: string
+          listing_id: string
+          save_count?: number
+          showing_request_count?: number
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          contact_count?: number
+          created_at?: string
+          id?: string
+          listing_id?: string
+          save_count?: number
+          showing_request_count?: number
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_stats_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_views: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          viewer_id: string | null
+          viewer_ip: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          viewer_id?: string | null
+          viewer_ip?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          viewer_id?: string | null
+          viewer_ip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_views_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           activation_date: string | null
