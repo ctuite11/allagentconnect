@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.auto-fetch-property-data]
 verify_jwt = false
+
+[functions.fetch-attom-market-data]
+verify_jwt = false

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { ReverseProspectDialog } from "./ReverseProspectDialog";
+import MarketInsightsDialog from "./MarketInsightsDialog";
 
 interface ListingCardProps {
   listing: {
@@ -46,6 +47,7 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
   const [matchCount, setMatchCount] = useState<number>(0);
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [prospectDialogOpen, setProspectDialogOpen] = useState(false);
+  const [marketInsightsOpen, setMarketInsightsOpen] = useState(false);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
 
   useEffect(() => {
@@ -415,6 +417,18 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
               <Button
                 variant="outline"
                 size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMarketInsightsOpen(true);
+                }}
+                className="w-full"
+              >
+                <TrendingDown className="w-3 h-3 mr-1" />
+                Market
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => navigate(`/edit-listing/${listing.id}`)}
                 className="w-full"
               >
@@ -446,6 +460,18 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
           onOpenChange={setProspectDialogOpen}
           listing={listing}
           matchCount={matchCount}
+        />
+        <MarketInsightsDialog
+          open={marketInsightsOpen}
+          onOpenChange={setMarketInsightsOpen}
+          listing={{
+            address: listing.address,
+            city: listing.city,
+            state: listing.state,
+            zip_code: listing.zip_code,
+            price: listing.price,
+            property_type: listing.property_type,
+          }}
         />
       </Card>
     );
@@ -614,6 +640,18 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             Stats
           </Button>
           <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMarketInsightsOpen(true);
+            }}
+          >
+            <TrendingDown className="w-4 h-4 mr-2" />
+            Market
+          </Button>
+          <Button
             variant="default"
             size="sm"
             className="flex-1"
@@ -636,6 +674,18 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
         onOpenChange={setProspectDialogOpen}
         listing={listing}
         matchCount={matchCount}
+      />
+      <MarketInsightsDialog
+        open={marketInsightsOpen}
+        onOpenChange={setMarketInsightsOpen}
+        listing={{
+          address: listing.address,
+          city: listing.city,
+          state: listing.state,
+          zip_code: listing.zip_code,
+          price: listing.price,
+          property_type: listing.property_type,
+        }}
       />
     </Card>
   );
