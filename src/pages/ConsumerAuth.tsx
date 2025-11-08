@@ -177,6 +177,21 @@ const ConsumerAuth = () => {
 
       if (data.user) {
         toast.success("Account created successfully! You can now log in.");
+        
+        // Send welcome email
+        try {
+          await supabase.functions.invoke('send-welcome-email', {
+            body: {
+              email: validated.email,
+              firstName: validated.firstName,
+              lastName: validated.lastName,
+            },
+          });
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+          // Don't block signup if email fails
+        }
+        
         setActiveTab("login");
         setLoginEmail(validated.email);
       }
