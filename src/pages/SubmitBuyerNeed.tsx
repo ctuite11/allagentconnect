@@ -13,10 +13,9 @@ import Navigation from "@/components/Navigation";
 import { z } from "zod";
 
 const buyerNeedSchema = z.object({
-  propertyType: z.enum(["single_family", "condo", "townhouse", "multi_family", "land", "commercial"], {
+  propertyType: z.enum(["single_family", "condo", "townhouse", "multi_family", "land", "commercial", "residential_rental", "commercial_rental"], {
     errorMap: () => ({ message: "Please select a valid property type" }),
   }),
-  countyId: z.string().uuid("Please select a valid county"),
   maxPrice: z.string()
     .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number")
     .refine((val) => parseFloat(val) > 0 && parseFloat(val) < 100000000, {
@@ -35,20 +34,12 @@ const buyerNeedSchema = z.object({
     .optional(),
 });
 
-interface County {
-  id: string;
-  name: string;
-  state: string;
-}
-
 const SubmitBuyerNeed = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
-  const [counties, setCounties] = useState<County[]>([]);
   const [formData, setFormData] = useState({
     propertyType: "",
-    countyId: "",
     maxPrice: "",
     bedrooms: "",
     bathrooms: "",
@@ -61,7 +52,6 @@ const SubmitBuyerNeed = () => {
         navigate("/auth");
       } else {
         setUser(session.user);
-        loadCounties();
       }
     });
 
@@ -78,11 +68,6 @@ const SubmitBuyerNeed = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const loadCounties = async () => {
-    const { data } = await supabase.from("counties").select("*").order("name");
-    if (data) setCounties(data);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -94,7 +79,6 @@ const SubmitBuyerNeed = () => {
       const { error: insertError } = await supabase.from("buyer_needs").insert({
         submitted_by: user?.id,
         property_type: validatedData.propertyType as any,
-        county_id: validatedData.countyId,
         max_price: parseFloat(validatedData.maxPrice),
         bedrooms: validatedData.bedrooms ? parseInt(validatedData.bedrooms) : null,
         bathrooms: validatedData.bathrooms ? parseFloat(validatedData.bathrooms) : null,
@@ -103,24 +87,7 @@ const SubmitBuyerNeed = () => {
 
       if (insertError) throw insertError;
 
-      // Call edge function to send emails
-      const { error: emailError } = await supabase.functions.invoke("notify-agents", {
-        body: {
-          countyId: validatedData.countyId,
-          propertyType: validatedData.propertyType,
-          maxPrice: validatedData.maxPrice,
-          bedrooms: validatedData.bedrooms,
-          bathrooms: validatedData.bathrooms,
-          description: validatedData.description,
-        },
-      });
-
-      if (emailError) {
-        console.error("Email notification error:", emailError);
-        toast.warning("Buyer need submitted, but email notifications may have failed");
-      } else {
-        toast.success("Buyer need submitted and agents notified!");
-      }
+      toast.success("Client need submitted successfully!");
 
       navigate("/agent-dashboard");
     } catch (error: any) {
@@ -140,9 +107,9 @@ const SubmitBuyerNeed = () => {
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle>Submit Buyer Need</CardTitle>
+            <CardTitle>Submit Client Need</CardTitle>
             <CardDescription>
-              Fill out the details and notify matching agents
+              Fill out the details for your client's real estate needs
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -165,27 +132,8 @@ const SubmitBuyerNeed = () => {
                     <SelectItem value="multi_family">Multi-Family</SelectItem>
                     <SelectItem value="land">Land</SelectItem>
                     <SelectItem value="commercial">Commercial</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="county">County</Label>
-                <Select
-                  value={formData.countyId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, countyId: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select county" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {counties.map((county) => (
-                      <SelectItem key={county.id} value={county.id}>
-                        {county.name}, {county.state}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="residential_rental">Residential Rental</SelectItem>
+                    <SelectItem value="commercial_rental">Commercial Rental</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -247,7 +195,7 @@ const SubmitBuyerNeed = () => {
 
               <div className="flex gap-4">
                 <Button type="submit" disabled={loading}>
-                  {loading ? "Submitting..." : "Submit & Notify Agents"}
+                  {loading ? "Submitting..." : "Submit Client Need"}
                 </Button>
                 <Button
                   type="button"

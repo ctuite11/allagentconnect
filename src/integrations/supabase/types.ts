@@ -200,7 +200,7 @@ export type Database = {
         Row: {
           bathrooms: number | null
           bedrooms: number | null
-          county_id: string
+          county_id: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -211,7 +211,7 @@ export type Database = {
         Insert: {
           bathrooms?: number | null
           bedrooms?: number | null
-          county_id: string
+          county_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -222,7 +222,7 @@ export type Database = {
         Update: {
           bathrooms?: number | null
           bedrooms?: number | null
-          county_id?: string
+          county_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -983,6 +983,8 @@ export type Database = {
         | "multi_family"
         | "land"
         | "commercial"
+        | "residential_rental"
+        | "commercial_rental"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1118,6 +1120,8 @@ export const Constants = {
         "multi_family",
         "land",
         "commercial",
+        "residential_rental",
+        "commercial_rental",
       ],
     },
   },
