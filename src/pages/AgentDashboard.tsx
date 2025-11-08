@@ -184,80 +184,6 @@ const AgentDashboard = () => {
           </div>
         </div>
 
-        {/* Status Filter and View Toggle */}
-        <div className="mb-8 space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Filter by Status</h2>
-            <div className="flex gap-2">
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <label className="flex items-center gap-2 cursor-pointer font-semibold">
-              <input
-                type="checkbox"
-                checked={tempStatusFilters.length === 8}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setTempStatusFilters(["active", "pending", "draft", "sold", "rented", "temporarily withdrawn", "cancelled", "expired"]);
-                  } else {
-                    setTempStatusFilters([]);
-                  }
-                }}
-                className="w-4 h-4"
-              />
-              <span className="text-sm">All</span>
-            </label>
-            {["active", "pending", "draft", "sold", "rented", "temporarily withdrawn", "cancelled", "expired"].map((status) => (
-              <label key={status} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={tempStatusFilters.includes(status)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setTempStatusFilters([...tempStatusFilters, status]);
-                    } else {
-                      setTempStatusFilters(tempStatusFilters.filter(s => s !== status));
-                    }
-                  }}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm capitalize">{status}</span>
-              </label>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => {
-              setStatusFilters(tempStatusFilters);
-              setShowResults(true);
-            }}>
-              View Results
-            </Button>
-            {showResults && (
-              <Button variant="outline" onClick={() => {
-                setStatusFilters([]);
-                setTempStatusFilters([]);
-                setShowResults(false);
-              }}>
-                Clear Filters
-              </Button>
-            )}
-          </div>
-        </div>
-
         {/* Listing Type Cards */}
         <div className="grid gap-6 md:grid-cols-3 mb-12">
           {listingTypes.map((type) => (
@@ -303,6 +229,80 @@ const AgentDashboard = () => {
             {/* Active Listings */}
             {listings.filter(l => (l.status || '').toLowerCase() !== "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes((l.status || '').toLowerCase()))).length > 0 && (
               <div>
+                {/* Status Filter and View Toggle - Moved above Active Listings */}
+                <div className="mb-6 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold">Filter by Status</h2>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={viewMode === 'list' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setViewMode('list')}
+                      >
+                        <List className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant={viewMode === 'grid' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setViewMode('grid')}
+                      >
+                        <LayoutGrid className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer font-semibold">
+                      <input
+                        type="checkbox"
+                        checked={tempStatusFilters.length === 8}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setTempStatusFilters(["active", "pending", "draft", "sold", "rented", "temporarily withdrawn", "cancelled", "expired"]);
+                          } else {
+                            setTempStatusFilters([]);
+                          }
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">All</span>
+                    </label>
+                    {["active", "pending", "draft", "sold", "rented", "temporarily withdrawn", "cancelled", "expired"].map((status) => (
+                      <label key={status} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={tempStatusFilters.includes(status)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setTempStatusFilters([...tempStatusFilters, status]);
+                            } else {
+                              setTempStatusFilters(tempStatusFilters.filter(s => s !== status));
+                            }
+                          }}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm capitalize">{status}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={() => {
+                      setStatusFilters(tempStatusFilters);
+                      setShowResults(true);
+                    }}>
+                      View Results
+                    </Button>
+                    {showResults && (
+                      <Button variant="outline" onClick={() => {
+                        setStatusFilters([]);
+                        setTempStatusFilters([]);
+                        setShowResults(false);
+                      }}>
+                        Clear Filters
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
                 {showResults && statusFilters.length > 0 && (
                   <div className="mb-4 p-4 bg-muted rounded-lg">
                     <p className="text-sm font-medium">
