@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
@@ -16,7 +16,8 @@ const ConsumerHome = () => {
   const navigate = useNavigate();
   const [searchType, setSearchType] = useState<"buy" | "rent">("buy");
   const [location, setLocation] = useState("");
-  const [priceRange, setPriceRange] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -29,30 +30,15 @@ const ConsumerHome = () => {
     if (location) {
       params.append("location", location);
     }
-    if (priceRange) {
-      params.append("price", priceRange);
+    if (minPrice) {
+      params.append("minPrice", minPrice);
+    }
+    if (maxPrice) {
+      params.append("maxPrice", maxPrice);
     }
     navigate(`/search-results?${params.toString()}`);
   };
 
-  const priceRanges = {
-    buy: [
-      { value: "0-200000", label: "$0 - $200k" },
-      { value: "200000-400000", label: "$200k - $400k" },
-      { value: "400000-600000", label: "$400k - $600k" },
-      { value: "600000-800000", label: "$600k - $800k" },
-      { value: "800000-1000000", label: "$800k - $1M" },
-      { value: "1000000+", label: "$1M+" },
-    ],
-    rent: [
-      { value: "0-1000", label: "$0 - $1,000/mo" },
-      { value: "1000-1500", label: "$1k - $1.5k/mo" },
-      { value: "1500-2000", label: "$1.5k - $2k/mo" },
-      { value: "2000-2500", label: "$2k - $2.5k/mo" },
-      { value: "2500-3000", label: "$2.5k - $3k/mo" },
-      { value: "3000+", label: "$3k+/mo" },
-    ],
-  };
 
   const quickLinks = [
     { label: "Homes for sale", type: "buy", icon: Home },
@@ -115,28 +101,32 @@ const ConsumerHome = () => {
                 </TabsList>
               </Tabs>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
+              <div className="space-y-4">
+                <Input
+                  placeholder="Enter city, neighborhood, or ZIP code"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="h-12 text-lg"
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                />
+                <div className="grid grid-cols-2 gap-4">
                   <Input
-                    placeholder="Enter city, neighborhood, or ZIP code"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    type="number"
+                    placeholder="Min"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="h-12 text-lg"
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Max"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
                     className="h-12 text-lg"
                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
                 </div>
-                <Select value={priceRange} onValueChange={setPriceRange}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Price Range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {priceRanges[searchType].map((range) => (
-                      <SelectItem key={range.value} value={range.value}>
-                        {range.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               <Button 
