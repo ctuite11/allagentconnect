@@ -103,14 +103,6 @@ const Navigation = () => {
                       Hot Sheets
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => navigate("/submit-client-need")}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Submit Client Need
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/client-needs")}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    View Client Needs
-                  </DropdownMenuItem>
                 </DropdownMenuGroup>
                 
                 {user && (
@@ -178,21 +170,21 @@ const Navigation = () => {
           <div className="hidden md:flex items-center gap-4">
             {user ? (
               <>
-                <Button variant="outline" size="sm" onClick={() => navigate("/consumer/dashboard")}>
+                <Button variant="outline" onClick={() => navigate("/consumer/dashboard")}>
                   <UserCircle className="w-4 h-4 mr-2" />
                   My Account
                 </Button>
-                <Button variant="default" size="sm" onClick={() => navigate("/agent-dashboard")}>
+                <Button variant="default" onClick={() => navigate("/agent-dashboard")}>
                   <LayoutDashboard className="w-4 h-4 mr-2" />
                   Agent Tools
                 </Button>
               </>
             ) : (
               <>
-                <Button variant="outline" size="sm" onClick={() => navigate("/consumer/auth")}>
+                <Button variant="outline" size="lg" onClick={() => navigate("/consumer/auth")}>
                   Sign In
                 </Button>
-                <Button size="sm" onClick={() => navigate("/auth")}>
+                <Button size="lg" onClick={() => navigate("/auth")}>
                   Agent Login
                 </Button>
               </>
@@ -276,16 +268,6 @@ const Navigation = () => {
               </>
             )}
             <div className="pt-4 border-t border-border mt-4 space-y-2">
-              <Button 
-                className="w-full" 
-                variant="outline"
-                onClick={() => {
-                  navigate("/submit-client-need");
-                  setIsMenuOpen(false);
-                }}
-              >
-                Submit Need
-              </Button>
               {user ? (
                 <>
                   <Button 
@@ -304,6 +286,7 @@ const Navigation = () => {
                   <Button 
                     className="w-full"
                     variant="outline"
+                    size="lg"
                     onClick={() => {
                       navigate("/consumer/auth");
                       setIsMenuOpen(false);
@@ -312,7 +295,8 @@ const Navigation = () => {
                     Sign In
                   </Button>
                   <Button 
-                    className="w-full" 
+                    className="w-full"
+                    size="lg"
                     onClick={() => {
                       navigate("/auth");
                       setIsMenuOpen(false);
