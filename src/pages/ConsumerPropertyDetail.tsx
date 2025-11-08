@@ -16,6 +16,7 @@ import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo";
 import PropertyMap from "@/components/PropertyMap";
+import AdBanner from "@/components/AdBanner";
 
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useListingView } from "@/hooks/useListingView";
@@ -646,6 +647,9 @@ const ConsumerPropertyDetail = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Vendor Advertisement */}
+              <AdBanner placementZone="listing_sidebar" className="mt-4" />
             </div>
           </div>
         </div>

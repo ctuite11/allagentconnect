@@ -176,17 +176,17 @@ const Navigation = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="outline" size="sm" onClick={() => navigate("/submit-client-need")}>
-              Submit Need
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/agent-search")}>
-              Agent Search
-            </Button>
             {user ? (
-              <Button variant="default" size="sm" onClick={() => navigate("/agent-dashboard")}>
-                <LayoutDashboard className="w-4 h-4 mr-2" />
-                Dashboard
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={() => navigate("/consumer/dashboard")}>
+                  <UserCircle className="w-4 h-4 mr-2" />
+                  My Account
+                </Button>
+                <Button variant="default" size="sm" onClick={() => navigate("/agent-dashboard")}>
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Agent Tools
+                </Button>
+              </>
             ) : (
               <>
                 <Button variant="outline" size="sm" onClick={() => navigate("/buyer-auth")}>

@@ -34,6 +34,8 @@ import VendorDashboard from "./pages/VendorDashboard";
 import VendorSetup from "./pages/VendorSetup";
 import VendorPackages from "./pages/VendorPackages";
 import VendorDirectory from "./pages/VendorDirectory";
+import ConsumerHome from "./pages/ConsumerHome";
+import ConsumerDashboard from "./pages/ConsumerDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,7 +47,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<ConsumerHome />} />
+          <Route path="/agent-home" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/buyer-auth" element={<BuyerAuth />} />
           <Route path="/browse" element={<BrowseProperties />} />
@@ -78,6 +81,7 @@ const App = () => (
           <Route path="/vendor/setup" element={<VendorSetup />} />
           <Route path="/vendor/packages" element={<VendorPackages />} />
           <Route path="/vendor/directory" element={<VendorDirectory />} />
+          <Route path="/consumer/dashboard" element={<ConsumerDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
