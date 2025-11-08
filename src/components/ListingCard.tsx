@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star } from "lucide-react";
+import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -272,6 +272,15 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => navigate(`/analytics/${listing.id}`)}
+                className="w-full"
+              >
+                <BarChart3 className="w-3 h-3 mr-1" />
+                Stats
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => navigate(`/edit-listing/${listing.id}`)}
                 className="w-full"
               >
@@ -421,6 +430,15 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
           >
             <Eye className="w-4 h-4 mr-2" />
             View
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => navigate(`/analytics/${listing.id}`)}
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Stats
           </Button>
           <Button
             variant="default"

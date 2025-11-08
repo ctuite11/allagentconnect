@@ -28,6 +28,7 @@ import HotSheets from "./pages/HotSheets";
 import HotSheetReview from "./pages/HotSheetReview";
 import MyClients from "./pages/MyClients";
 import ClientHotSheet from "./pages/ClientHotSheet";
+import ListingAnalytics from "./pages/ListingAnalytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,8 @@ const App = () => (
           <Route path="/manage-team" element={<ManageTeam />} />
           <Route path="/team/:id" element={<TeamProfile />} />
           <Route path="/manage-coverage-areas" element={<ManageCoverageAreas />} />
+          <Route path="/analytics" element={<ListingAnalytics />} />
+          <Route path="/analytics/:id" element={<ListingAnalytics />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

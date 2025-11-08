@@ -354,6 +354,13 @@ const AgentDashboard = () => {
               <p className="text-xs text-muted-foreground">
                 {listings.filter(l => l.status === 'active').length} active
               </p>
+              <Button 
+                variant="link" 
+                className="p-0 h-auto text-xs mt-1" 
+                onClick={(e) => { e.stopPropagation(); navigate("/analytics"); }}
+              >
+                View Analytics →
+              </Button>
             </CardContent>
           </Card>
 
