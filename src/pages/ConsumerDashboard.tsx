@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Heart, Bell, User, MapPin, Home, Search, Calendar } from "lucide-react";
+import { Loader2, Heart, Bell, User, MapPin, Home, Search, Calendar, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import NotificationSettings from "@/components/NotificationSettings";
 
@@ -95,18 +95,31 @@ const ConsumerDashboard = () => {
       <div className="container mx-auto px-4 py-24">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Avatar className="w-16 h-16">
-              <AvatarFallback>
-                <User className="w-8 h-8" />
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="text-3xl font-bold">
-                Welcome back{profile?.first_name ? `, ${profile.first_name}` : ''}!
-              </h1>
-              <p className="text-muted-foreground">{user.email}</p>
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-4">
+              <Avatar className="w-16 h-16">
+                <AvatarFallback>
+                  <User className="w-8 h-8" />
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-3xl font-bold">
+                  Welcome back{profile?.first_name ? `, ${profile.first_name}` : ''}!
+                </h1>
+                <p className="text-muted-foreground">{user.email}</p>
+              </div>
             </div>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                toast.success('Logged out successfully');
+                navigate('/');
+              }}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
         </div>
 
