@@ -8,7 +8,7 @@ import Auth from "./pages/Auth";
 import AgentDashboard from "./pages/AgentDashboard";
 import BuyerAuth from "./pages/BuyerAuth";
 // import removed: AgentSearch (redirect to OurAgents)
-import SubmitBuyerNeed from "./pages/SubmitBuyerNeed";
+import SubmitClientNeed from "./pages/SubmitClientNeed";
 import AddListing from "./pages/AddListing";
 import AddRentalListing from "./pages/AddRentalListing";
 import EditListing from "./pages/EditListing";
@@ -51,7 +51,7 @@ const App = () => (
           <Route path="/client-hot-sheet/:token" element={<ClientHotSheet />} />
           <Route path="/agent-search" element={<OurAgents />} />
           <Route path="/agent-dashboard" element={<AgentDashboard />} />
-          <Route path="/submit-buyer-need" element={<SubmitBuyerNeed />} />
+          <Route path="/submit-client-need" element={<SubmitClientNeed />} />
           <Route path="/add-listing" element={<AddListing />} />
           <Route path="/add-rental-listing" element={<AddRentalListing />} />
           <Route path="/edit-listing/:id" element={<EditListing />} />

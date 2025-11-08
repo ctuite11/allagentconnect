@@ -12,7 +12,7 @@ import { User } from "@supabase/supabase-js";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
 
-const buyerNeedSchema = z.object({
+const clientNeedSchema = z.object({
   propertyType: z.enum(["single_family", "condo", "townhouse", "multi_family", "land", "commercial", "residential_rental", "commercial_rental"], {
     errorMap: () => ({ message: "Please select a valid property type" }),
   }),
@@ -34,7 +34,7 @@ const buyerNeedSchema = z.object({
     .optional(),
 });
 
-const SubmitBuyerNeed = () => {
+const SubmitClientNeed = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,7 +74,7 @@ const SubmitBuyerNeed = () => {
 
     try {
       // Validate input
-      const validatedData = buyerNeedSchema.parse(formData);
+      const validatedData = clientNeedSchema.parse(formData);
 
       const { error: insertError } = await supabase.from("buyer_needs").insert({
         submitted_by: user?.id,
@@ -94,7 +94,7 @@ const SubmitBuyerNeed = () => {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        toast.error("Error submitting buyer need: " + error.message);
+        toast.error("Error submitting client need: " + error.message);
       }
     } finally {
       setLoading(false);
@@ -213,4 +213,4 @@ const SubmitBuyerNeed = () => {
   );
 };
 
-export default SubmitBuyerNeed;
+export default SubmitClientNeed;

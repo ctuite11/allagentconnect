@@ -99,9 +99,9 @@ const Navigation = () => {
                       Hot Sheets
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => navigate("/submit-buyer-need")}>
+                  <DropdownMenuItem onClick={() => navigate("/submit-client-need")}>
                     <FileText className="mr-2 h-4 w-4" />
-                    Submit Buyer Need
+                    Submit Client Need
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 
@@ -143,7 +143,7 @@ const Navigation = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="outline" size="sm" onClick={() => navigate("/submit-buyer-need")}>
+            <Button variant="outline" size="sm" onClick={() => navigate("/submit-client-need")}>
               Submit Need
             </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/agent-search")}>
@@ -247,7 +247,7 @@ const Navigation = () => {
                 className="w-full" 
                 variant="outline"
                 onClick={() => {
-                  navigate("/submit-buyer-need");
+                  navigate("/submit-client-need");
                   setIsMenuOpen(false);
                 }}
               >
