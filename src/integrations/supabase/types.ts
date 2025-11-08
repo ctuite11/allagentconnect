@@ -14,6 +14,194 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_clicks: {
+        Row: {
+          ad_id: string
+          created_at: string
+          id: string
+          impression_id: string | null
+          page_url: string | null
+          viewer_id: string | null
+          viewer_ip: string | null
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          id?: string
+          impression_id?: string | null
+          page_url?: string | null
+          viewer_id?: string | null
+          viewer_ip?: string | null
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          id?: string
+          impression_id?: string | null
+          page_url?: string | null
+          viewer_id?: string | null
+          viewer_ip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_clicks_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "advertisements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_clicks_impression_id_fkey"
+            columns: ["impression_id"]
+            isOneToOne: false
+            referencedRelation: "ad_impressions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_impressions: {
+        Row: {
+          ad_id: string
+          created_at: string
+          id: string
+          page_url: string | null
+          viewer_id: string | null
+          viewer_ip: string | null
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          id?: string
+          page_url?: string | null
+          viewer_id?: string | null
+          viewer_ip?: string | null
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          id?: string
+          page_url?: string | null
+          viewer_id?: string | null
+          viewer_ip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_impressions_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "advertisements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_packages: {
+        Row: {
+          ad_type: string
+          created_at: string
+          description: string | null
+          display_order: number | null
+          duration_days: number
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          max_impressions: number | null
+          name: string
+          price: number
+        }
+        Insert: {
+          ad_type: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          duration_days: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          max_impressions?: number | null
+          name: string
+          price: number
+        }
+        Update: {
+          ad_type?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          duration_days?: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          max_impressions?: number | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      advertisements: {
+        Row: {
+          ad_type: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          link_url: string
+          placement_zone: string | null
+          priority: number | null
+          subscription_id: string
+          target_locations: Json | null
+          title: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          ad_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url: string
+          placement_zone?: string | null
+          priority?: number | null
+          subscription_id: string
+          target_locations?: Json | null
+          title: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          ad_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url?: string
+          placement_zone?: string | null
+          priority?: number | null
+          subscription_id?: string
+          target_locations?: Json | null
+          title?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertisements_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advertisements_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_county_preferences: {
         Row: {
           agent_id: string
@@ -1118,6 +1306,117 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vendor_profiles: {
+        Row: {
+          business_type: string
+          company_name: string
+          contact_name: string
+          created_at: string
+          description: string | null
+          email: string
+          id: string
+          is_active: boolean | null
+          is_approved: boolean | null
+          logo_url: string | null
+          phone: string | null
+          service_areas: Json | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          business_type: string
+          company_name: string
+          contact_name: string
+          created_at?: string
+          description?: string | null
+          email: string
+          id?: string
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          logo_url?: string | null
+          phone?: string | null
+          service_areas?: Json | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          business_type?: string
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          description?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          logo_url?: string | null
+          phone?: string | null
+          service_areas?: Json | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      vendor_subscriptions: {
+        Row: {
+          auto_renew: boolean | null
+          created_at: string
+          end_date: string
+          id: string
+          package_id: string
+          start_date: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          auto_renew?: boolean | null
+          created_at?: string
+          end_date: string
+          id?: string
+          package_id: string
+          start_date?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          auto_renew?: boolean | null
+          created_at?: string
+          end_date?: string
+          id?: string
+          package_id?: string
+          start_date?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_subscriptions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "ad_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_subscriptions_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

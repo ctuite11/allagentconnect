@@ -30,6 +30,10 @@ import MyClients from "./pages/MyClients";
 import ClientHotSheet from "./pages/ClientHotSheet";
 import ListingAnalytics from "./pages/ListingAnalytics";
 import MarketInsights from "./pages/MarketInsights";
+import VendorDashboard from "./pages/VendorDashboard";
+import VendorSetup from "./pages/VendorSetup";
+import VendorPackages from "./pages/VendorPackages";
+import VendorDirectory from "./pages/VendorDirectory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +74,10 @@ const App = () => (
           <Route path="/analytics" element={<ListingAnalytics />} />
           <Route path="/analytics/:id" element={<ListingAnalytics />} />
           <Route path="/market-insights" element={<MarketInsights />} />
+          <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+          <Route path="/vendor/setup" element={<VendorSetup />} />
+          <Route path="/vendor/packages" element={<VendorPackages />} />
+          <Route path="/vendor/directory" element={<VendorDirectory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

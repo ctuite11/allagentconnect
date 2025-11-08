@@ -149,6 +149,27 @@ const Navigation = () => {
                     </DropdownMenuGroup>
                   </>
                 )}
+
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Vendors</DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => navigate("/vendor/directory")}>
+                    <Building2 className="mr-2 h-4 w-4" />
+                    Vendor Directory
+                  </DropdownMenuItem>
+                  {user && (
+                    <>
+                      <DropdownMenuItem onClick={() => navigate("/vendor/packages")}>
+                        <List className="mr-2 h-4 w-4" />
+                        Ad Packages
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/vendor/dashboard")}>
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Vendor Dashboard
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
