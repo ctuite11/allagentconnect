@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import PropertySearchHero from "@/components/PropertySearchHero";
 import FeaturedPropertyShowcase from "@/components/FeaturedPropertyShowcase";
+import RecentlySold from "@/components/RecentlySold";
 import CommissionTransparency from "@/components/CommissionTransparency";
 import AgentIdentificationSection from "@/components/AgentIdentificationSection";
 import RealtimeListingUpdates from "@/components/RealtimeListingUpdates";
@@ -31,6 +32,7 @@ const Index = () => {
       <Navigation />
       <PropertySearchHero />
       <FeaturedPropertyShowcase />
+      <RecentlySold />
       <CommissionTransparency />
       <AgentIdentificationSection />
       <RealtimeListingUpdates />
