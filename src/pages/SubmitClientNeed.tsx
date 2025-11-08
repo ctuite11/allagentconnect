@@ -16,6 +16,8 @@ const clientNeedSchema = z.object({
   propertyType: z.enum(["single_family", "condo", "townhouse", "multi_family", "land", "commercial", "residential_rental", "commercial_rental"], {
     errorMap: () => ({ message: "Please select a valid property type" }),
   }),
+  city: z.string().trim().min(1, "City is required").max(100, "City must be less than 100 characters"),
+  state: z.string().trim().min(2, "State is required").max(2, "State must be 2 characters"),
   maxPrice: z.string()
     .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number")
     .refine((val) => parseFloat(val) > 0 && parseFloat(val) < 100000000, {
@@ -40,6 +42,8 @@ const SubmitClientNeed = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     propertyType: "",
+    city: "",
+    state: "",
     maxPrice: "",
     bedrooms: "",
     bathrooms: "",
@@ -79,6 +83,8 @@ const SubmitClientNeed = () => {
       const { error: insertError } = await supabase.from("client_needs").insert({
         submitted_by: user?.id,
         property_type: validatedData.propertyType as any,
+        city: validatedData.city,
+        state: validatedData.state.toUpperCase(),
         max_price: parseFloat(validatedData.maxPrice),
         bedrooms: validatedData.bedrooms ? parseInt(validatedData.bedrooms) : null,
         bathrooms: validatedData.bathrooms ? parseFloat(validatedData.bathrooms) : null,
@@ -136,6 +142,38 @@ const SubmitClientNeed = () => {
                     <SelectItem value="commercial_rental">Commercial Rental</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    type="text"
+                    required
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value })
+                    }
+                    placeholder="Boston"
+                    maxLength={100}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state">State</Label>
+                  <Input
+                    id="state"
+                    type="text"
+                    required
+                    value={formData.state}
+                    onChange={(e) =>
+                      setFormData({ ...formData, state: e.target.value.toUpperCase() })
+                    }
+                    placeholder="MA"
+                    maxLength={2}
+                    style={{ textTransform: 'uppercase' }}
+                  />
+                </div>
               </div>
 
               <div>

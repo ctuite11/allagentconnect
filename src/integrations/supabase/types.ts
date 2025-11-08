@@ -200,34 +200,40 @@ export type Database = {
         Row: {
           bathrooms: number | null
           bedrooms: number | null
+          city: string | null
           county_id: string | null
           created_at: string | null
           description: string | null
           id: string
           max_price: number
           property_type: Database["public"]["Enums"]["property_type"]
+          state: string | null
           submitted_by: string
         }
         Insert: {
           bathrooms?: number | null
           bedrooms?: number | null
+          city?: string | null
           county_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           max_price: number
           property_type: Database["public"]["Enums"]["property_type"]
+          state?: string | null
           submitted_by: string
         }
         Update: {
           bathrooms?: number | null
           bedrooms?: number | null
+          city?: string | null
           county_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           max_price?: number
           property_type?: Database["public"]["Enums"]["property_type"]
+          state?: string | null
           submitted_by?: string
         }
         Relationships: [
