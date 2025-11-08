@@ -336,12 +336,27 @@ const ClientNeedsDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Results */}
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {clientNeeds.length} {clientNeeds.length === 1 ? 'client need' : 'client needs'} found
-          </p>
-        </div>
+        {/* Results - Prominent Count */}
+        <Card className="mb-6 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+          <CardContent className="py-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold mb-1">Potential Buyer Pool</h3>
+                <p className="text-sm text-muted-foreground">
+                  Active client needs matching your filters
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-5xl font-bold text-primary">
+                  {clientNeeds.length}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {clientNeeds.length === 1 ? 'buyer' : 'buyers'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {clientNeeds.length === 0 ? (
           <Card>
