@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Home, Users, BarChart3, MapPin, Loader2 } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Home, Users, BarChart3, MapPin, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
 
 interface MarketInsightsDialogProps {
   open: boolean;
@@ -64,6 +65,172 @@ const MarketInsightsDialog = ({ open, onOpenChange, listing }: MarketInsightsDia
 
   const formatPercent = (value: number) => {
     return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
+  };
+
+  const exportToPDF = () => {
+    if (!marketData) {
+      toast.error('No market data to export');
+      return;
+    }
+
+    try {
+      const pdf = new jsPDF();
+      let yPosition = 20;
+      const lineHeight = 7;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 20;
+
+      // Title
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Market Insights Report', margin, yPosition);
+      yPosition += lineHeight * 2;
+
+      // Property Information
+      pdf.setFontSize(14);
+      pdf.text('Property Information', margin, yPosition);
+      yPosition += lineHeight;
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Address: ${listing.address}`, margin, yPosition);
+      yPosition += lineHeight;
+      pdf.text(`City: ${listing.city}, ${listing.state} ${listing.zip_code}`, margin, yPosition);
+      yPosition += lineHeight;
+      pdf.text(`List Price: ${formatCurrency(listing.price)}`, margin, yPosition);
+      yPosition += lineHeight;
+      pdf.text(`Property Type: ${listing.property_type || 'N/A'}`, margin, yPosition);
+      yPosition += lineHeight * 2;
+
+      // AVM Data
+      if (marketData.avm?.property?.[0]?.avm) {
+        const avm = marketData.avm.property[0].avm;
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Automated Valuation', margin, yPosition);
+        yPosition += lineHeight;
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Estimated Value: ${formatCurrency(avm.amount.value)}`, margin, yPosition);
+        yPosition += lineHeight;
+        pdf.text(`Value Range: ${formatCurrency(avm.amount.valueLow)} - ${formatCurrency(avm.amount.valueHigh)}`, margin, yPosition);
+        yPosition += lineHeight;
+        pdf.text(`Confidence Score: ${avm.fsd || 'N/A'}`, margin, yPosition);
+        yPosition += lineHeight;
+        const priceDiff = ((listing.price - avm.amount.value) / avm.amount.value) * 100;
+        pdf.text(`List Price vs AVM: ${formatPercent(priceDiff)}`, margin, yPosition);
+        yPosition += lineHeight * 2;
+      }
+
+      // Sales Trends
+      if (marketData.salesTrends?.result) {
+        const trends = marketData.salesTrends.result;
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`Sales Trends - ${listing.zip_code}`, margin, yPosition);
+        yPosition += lineHeight;
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        if (trends.medianSalePrice) {
+          pdf.text(`Median Sale Price: ${formatCurrency(trends.medianSalePrice)}`, margin, yPosition);
+          yPosition += lineHeight;
+        }
+        if (trends.averageSalePrice) {
+          pdf.text(`Average Sale Price: ${formatCurrency(trends.averageSalePrice)}`, margin, yPosition);
+          yPosition += lineHeight;
+        }
+        if (trends.avgDaysOnMarket) {
+          pdf.text(`Average Days on Market: ${Math.round(trends.avgDaysOnMarket)} days`, margin, yPosition);
+          yPosition += lineHeight;
+        }
+        if (trends.numberOfSales) {
+          pdf.text(`Number of Sales: ${trends.numberOfSales}`, margin, yPosition);
+          yPosition += lineHeight * 2;
+        }
+      }
+
+      // Check if we need a new page
+      if (yPosition > 250) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+
+      // Demographics
+      if (marketData.demographics?.demographics) {
+        const demo = marketData.demographics.demographics;
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Area Demographics', margin, yPosition);
+        yPosition += lineHeight;
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        if (demo.population) {
+          pdf.text(`Population: ${demo.population.toLocaleString()}`, margin, yPosition);
+          yPosition += lineHeight;
+        }
+        if (demo.medianHouseholdIncome) {
+          pdf.text(`Median Household Income: ${formatCurrency(demo.medianHouseholdIncome)}`, margin, yPosition);
+          yPosition += lineHeight;
+        }
+        if (demo.medianHomeValue) {
+          pdf.text(`Median Home Value: ${formatCurrency(demo.medianHomeValue)}`, margin, yPosition);
+          yPosition += lineHeight;
+        }
+        if (demo.ownerOccupiedPercent) {
+          pdf.text(`Owner Occupied: ${demo.ownerOccupiedPercent}%`, margin, yPosition);
+          yPosition += lineHeight * 2;
+        }
+      }
+
+      // Recent Comparable Sales
+      if (marketData.comparables?.property?.length > 0) {
+        if (yPosition > 200) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Recent Comparable Sales', margin, yPosition);
+        yPosition += lineHeight;
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'normal');
+        
+        marketData.comparables.property.slice(0, 5).forEach((comp: any, idx: number) => {
+          if (yPosition > 270) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          const address = comp.address?.oneLine || 'Address unavailable';
+          const date = comp.sale?.saleTransDate ? new Date(comp.sale.saleTransDate).toLocaleDateString() : 'Date N/A';
+          const price = comp.sale?.amount?.saleAmt ? formatCurrency(comp.sale.amount.saleAmt) : 'N/A';
+          pdf.text(`${idx + 1}. ${address}`, margin, yPosition);
+          yPosition += lineHeight - 1;
+          pdf.text(`   Sale Date: ${date} | Price: ${price}`, margin, yPosition);
+          yPosition += lineHeight;
+        });
+      }
+
+      // Footer
+      const pageCount = pdf.getNumberOfPages();
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'italic');
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.text(
+          `Generated on ${new Date().toLocaleDateString()} | Page ${i} of ${pageCount}`,
+          margin,
+          pdf.internal.pageSize.getHeight() - 10
+        );
+        pdf.text('Data provided by ATTOM Data Solutions', pageWidth - margin - 60, pdf.internal.pageSize.getHeight() - 10);
+      }
+
+      // Save the PDF
+      const fileName = `Market_Insights_${listing.address.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+      toast.success('PDF report downloaded successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF report');
+    }
   };
 
   return (
@@ -379,6 +546,15 @@ const MarketInsightsDialog = ({ open, onOpenChange, listing }: MarketInsightsDia
         )}
 
         <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button 
+            variant="outline" 
+            onClick={exportToPDF}
+            disabled={!marketData || loading}
+            className="gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export PDF
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
