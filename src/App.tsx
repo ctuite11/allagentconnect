@@ -36,6 +36,7 @@ import VendorPackages from "./pages/VendorPackages";
 import VendorDirectory from "./pages/VendorDirectory";
 import ConsumerHome from "./pages/ConsumerHome";
 import ConsumerDashboard from "./pages/ConsumerDashboard";
+import ConsumerAuth from "./pages/ConsumerAuth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,6 +82,7 @@ const App = () => (
           <Route path="/vendor/setup" element={<VendorSetup />} />
           <Route path="/vendor/packages" element={<VendorPackages />} />
           <Route path="/vendor/directory" element={<VendorDirectory />} />
+          <Route path="/consumer/auth" element={<ConsumerAuth />} />
           <Route path="/consumer/dashboard" element={<ConsumerDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

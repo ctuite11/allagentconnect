@@ -405,6 +405,54 @@ export type Database = {
         }
         Relationships: []
       }
+      buyer_credentials: {
+        Row: {
+          approval_amount: number | null
+          created_at: string
+          credential_type: string
+          document_url: string
+          expires_at: string | null
+          id: string
+          lender_name: string | null
+          notes: string | null
+          updated_at: string
+          user_id: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          approval_amount?: number | null
+          created_at?: string
+          credential_type: string
+          document_url: string
+          expires_at?: string | null
+          id?: string
+          lender_name?: string | null
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          approval_amount?: number | null
+          created_at?: string
+          credential_type?: string
+          document_url?: string
+          expires_at?: string | null
+          id?: string
+          lender_name?: string | null
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
       client_needs: {
         Row: {
           bathrooms: number | null
