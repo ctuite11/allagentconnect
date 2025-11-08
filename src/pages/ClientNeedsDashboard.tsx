@@ -8,10 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin, DollarSign, Home, Calendar, User } from "lucide-react";
+import { Loader2, MapPin, DollarSign, Home, Calendar, User, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { US_STATES } from "@/data/usStatesCountiesData";
 import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 interface ClientNeed {
   id: string;
@@ -38,6 +41,8 @@ const ClientNeedsDashboard = () => {
   const [propertyTypeFilter, setPropertyTypeFilter] = useState("");
   const [minPriceFilter, setMinPriceFilter] = useState("");
   const [maxPriceFilter, setMaxPriceFilter] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     checkAuth();
@@ -47,7 +52,7 @@ const ClientNeedsDashboard = () => {
     if (user) {
       fetchClientNeeds();
     }
-  }, [user, stateFilter, cityFilter, propertyTypeFilter, minPriceFilter, maxPriceFilter]);
+  }, [user, stateFilter, cityFilter, propertyTypeFilter, minPriceFilter, maxPriceFilter, startDate, endDate]);
 
   useEffect(() => {
     if (!user) return;
@@ -108,6 +113,15 @@ const ClientNeedsDashboard = () => {
       if (maxPriceFilter) {
         query = query.lte("max_price", parseFloat(maxPriceFilter));
       }
+      if (startDate) {
+        query = query.gte("created_at", startDate.toISOString());
+      }
+      if (endDate) {
+        // Set end of day for endDate
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        query = query.lte("created_at", endOfDay.toISOString());
+      }
 
       const { data, error } = await query;
 
@@ -127,6 +141,8 @@ const ClientNeedsDashboard = () => {
     setPropertyTypeFilter("");
     setMinPriceFilter("");
     setMaxPriceFilter("");
+    setStartDate(undefined);
+    setEndDate(undefined);
   };
 
   const formatPropertyType = (type: string) => {
@@ -251,6 +267,63 @@ const ClientNeedsDashboard = () => {
                   value={maxPriceFilter}
                   onChange={(e) => setMaxPriceFilter(e.target.value)}
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label>Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : <span>Pick start date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div>
+                <Label>End Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP") : <span>Pick end date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                      disabled={(date) => startDate ? date < startDate : false}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
