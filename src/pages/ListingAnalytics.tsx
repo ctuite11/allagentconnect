@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp, Eye, Heart, Mail, Calendar, Users, BarChart3 } from "lucide-react";
+import { ArrowLeft, TrendingUp, Eye, Heart, Mail, Calendar, Users, BarChart3, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { format, subDays, startOfDay, eachDayOfInterval } from "date-fns";
@@ -37,6 +37,14 @@ interface ViewData {
   count: number;
 }
 
+interface StatusHistory {
+  id: string;
+  old_status: string | null;
+  new_status: string;
+  changed_at: string;
+  notes: string | null;
+}
+
 const ListingAnalytics = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -46,6 +54,7 @@ const ListingAnalytics = () => {
   const [timeRange, setTimeRange] = useState<"7" | "30" | "90">("30");
   const [viewsOverTime, setViewsOverTime] = useState<ViewData[]>([]);
   const [currentStats, setCurrentStats] = useState<ListingStats | null>(null);
+  const [statusHistory, setStatusHistory] = useState<StatusHistory[]>([]);
 
   useEffect(() => {
     document.title = "Listing Analytics - Agent Connect";
@@ -161,6 +170,17 @@ const ListingAnalytics = () => {
         }));
 
         setViewsOverTime(chartData);
+      }
+
+      // Load status history
+      const { data: historyData } = await supabase
+        .from("listing_status_history")
+        .select("*")
+        .eq("listing_id", selectedListing)
+        .order("changed_at", { ascending: false });
+
+      if (historyData) {
+        setStatusHistory(historyData);
       }
     } catch (error: any) {
       console.error("Error loading analytics:", error);
@@ -336,6 +356,7 @@ const ListingAnalytics = () => {
                 <TabsTrigger value="trends">Trends</TabsTrigger>
                 <TabsTrigger value="engagement">Engagement</TabsTrigger>
                 <TabsTrigger value="conversions">Conversions</TabsTrigger>
+                <TabsTrigger value="lifecycle">Lifecycle</TabsTrigger>
               </TabsList>
 
               <TabsContent value="trends" className="space-y-6">
@@ -521,6 +542,95 @@ const ListingAnalytics = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="lifecycle" className="space-y-6">
+                {/* Status History Timeline */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="h-5 w-5" />
+                      Listing Status History
+                    </CardTitle>
+                    <CardDescription>
+                      Complete timeline of all status changes for this listing
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {statusHistory.length > 0 ? (
+                      <div className="space-y-4">
+                        {statusHistory.map((history, index) => (
+                          <div key={history.id} className="relative pl-8 pb-6 border-l-2 border-muted last:border-0">
+                            <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-primary border-4 border-background" />
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-1">
+                                  {history.old_status && (
+                                    <>
+                                      <Badge variant="outline" className="capitalize">
+                                        {history.old_status.replace(/_/g, ' ')}
+                                      </Badge>
+                                      <span className="text-muted-foreground">→</span>
+                                    </>
+                                  )}
+                                  <Badge 
+                                    variant={history.new_status === 'active' ? 'default' : 'secondary'}
+                                    className="capitalize"
+                                  >
+                                    {history.new_status.replace(/_/g, ' ')}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {format(new Date(history.changed_at), "MMMM d, yyyy 'at' h:mm a")}
+                                </p>
+                                {history.notes && (
+                                  <p className="text-sm mt-2">{history.notes}</p>
+                                )}
+                              </div>
+                              {index === 0 && (
+                                <Badge variant="outline" className="text-xs">Current</Badge>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No status changes recorded yet
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Days on Market Summary */}
+                {selectedListingData && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Days on Market</CardTitle>
+                      <CardDescription>
+                        Time elapsed since listing became active
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-6">
+                        <div className="text-5xl font-bold text-primary mb-2">
+                          {(() => {
+                            const activeHistory = statusHistory.find(h => h.new_status === 'active');
+                            if (activeHistory) {
+                              const activeDate = new Date(activeHistory.changed_at);
+                              const today = new Date();
+                              const diffTime = Math.abs(today.getTime() - activeDate.getTime());
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              return diffDays;
+                            }
+                            return 0;
+                          })()}
+                        </div>
+                        <p className="text-muted-foreground">Days on Market</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
             </Tabs>
           </>
