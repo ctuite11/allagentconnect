@@ -12,6 +12,7 @@ import { User } from "@supabase/supabase-js";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
 import { US_STATES } from "@/data/usStatesCountiesData";
+import { usCitiesByState } from "@/data/usCitiesData";
 
 const clientNeedSchema = z.object({
   propertyType: z.enum(["single_family", "condo", "townhouse", "multi_family", "land", "commercial", "residential_rental", "commercial_rental"], {
@@ -50,6 +51,19 @@ const SubmitClientNeed = () => {
     bathrooms: "",
     description: "",
   });
+
+  // Get cities for selected state
+  const availableCities = formData.state ? (usCitiesByState[formData.state] || []) : [];
+
+  // Reset city when state changes
+  useEffect(() => {
+    if (formData.state && formData.city) {
+      const citiesForState = usCitiesByState[formData.state] || [];
+      if (!citiesForState.includes(formData.city)) {
+        setFormData(prev => ({ ...prev, city: "" }));
+      }
+    }
+  }, [formData.state]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -147,20 +161,6 @@ const SubmitClientNeed = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    type="text"
-                    required
-                    value={formData.city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, city: e.target.value })
-                    }
-                    placeholder="Boston"
-                    maxLength={100}
-                  />
-                </div>
-                <div>
                   <Label htmlFor="state">State</Label>
                   <Select
                     value={formData.state}
@@ -175,6 +175,27 @@ const SubmitClientNeed = () => {
                       {US_STATES.map((s) => (
                         <SelectItem key={s.code} value={s.code}>
                           {s.code} - {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="city">City</Label>
+                  <Select
+                    value={formData.city}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, city: value })
+                    }
+                    disabled={!formData.state}
+                  >
+                    <SelectTrigger className={!formData.state ? "opacity-50 cursor-not-allowed" : ""}>
+                      <SelectValue placeholder={formData.state ? "Select city" : "Select state first"} />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 max-h-[300px]">
+                      {availableCities.map((city) => (
+                        <SelectItem key={city} value={city}>
+                          {city}
                         </SelectItem>
                       ))}
                     </SelectContent>
