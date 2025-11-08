@@ -78,6 +78,11 @@ const FavoriteButton = ({ listingId, size = "lg", variant = "secondary", classNa
     }
   };
 
+  const getButtonText = () => {
+    if (!userId) return "Sign In to Save";
+    return isFavorite ? "Saved" : "Save";
+  };
+
   return (
     <Button
       variant={variant}
@@ -85,9 +90,10 @@ const FavoriteButton = ({ listingId, size = "lg", variant = "secondary", classNa
       onClick={handleToggleFavorite}
       disabled={loading}
       className={`gap-2 ${className}`}
+      title={!userId ? "Sign in to save this property to your favorites" : undefined}
     >
       <Heart className={`w-4 h-4 ${isFavorite ? "fill-current text-red-500" : ""}`} />
-      {isFavorite ? "Saved" : "Save"}
+      {getButtonText()}
     </Button>
   );
 };
