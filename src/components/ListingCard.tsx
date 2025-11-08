@@ -23,8 +23,9 @@ interface ListingCardProps {
     status: string;
     photos?: any;
     open_houses?: any;
-    listing_type?: string | null;
+  listing_type?: string | null;
     created_at?: string;
+    active_date?: string | null;
     listing_number?: string | null;
     listing_stats?: {
       view_count: number;
@@ -155,10 +156,12 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
   const matchButtonStyle = getMatchButtonStyle();
 
   const calculateDaysOnMarket = () => {
-    if (!listing.created_at) return 0;
-    const createdDate = new Date(listing.created_at);
+    // Use active_date (MLS date) if available, otherwise fall back to created_at
+    const marketDate = listing.active_date || listing.created_at;
+    if (!marketDate) return 0;
+    const activeDate = new Date(marketDate);
     const today = new Date();
-    const diffTime = Math.abs(today.getTime() - createdDate.getTime());
+    const diffTime = Math.abs(today.getTime() - activeDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };

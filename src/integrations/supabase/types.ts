@@ -638,6 +638,7 @@ export type Database = {
       listings: {
         Row: {
           activation_date: string | null
+          active_date: string | null
           additional_notes: string | null
           address: string
           agent_id: string
@@ -704,6 +705,7 @@ export type Database = {
         }
         Insert: {
           activation_date?: string | null
+          active_date?: string | null
           additional_notes?: string | null
           address: string
           agent_id: string
@@ -770,6 +772,7 @@ export type Database = {
         }
         Update: {
           activation_date?: string | null
+          active_date?: string | null
           additional_notes?: string | null
           address?: string
           agent_id?: string

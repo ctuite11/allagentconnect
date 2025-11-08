@@ -30,6 +30,7 @@ interface Listing {
   open_houses: any;
   listing_type: string | null;
   created_at: string;
+  active_date?: string | null;
   listing_stats?: {
     view_count: number;
     save_count: number;

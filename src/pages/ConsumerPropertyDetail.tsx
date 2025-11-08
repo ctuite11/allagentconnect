@@ -67,6 +67,7 @@ interface Listing {
   value_estimate: any;
   listing_number?: string | null;
   created_at?: string;
+  active_date?: string | null;
 }
 
 const ConsumerPropertyDetail = () => {
@@ -232,16 +233,17 @@ const ConsumerPropertyDetail = () => {
                       Listing #{listing.listing_number}
                     </p>
                   )}
-                  {listing.created_at && (
+                  {(listing.active_date || listing.created_at) && (
                     <>
                       {listing.listing_number && (
                         <span className="text-sm text-muted-foreground">•</span>
                       )}
                       <Badge variant="outline" className="text-xs">
                         {(() => {
-                          const createdDate = new Date(listing.created_at);
+                          const marketDate = listing.active_date || listing.created_at;
+                          const activeDate = new Date(marketDate!);
                           const today = new Date();
-                          const diffTime = Math.abs(today.getTime() - createdDate.getTime());
+                          const diffTime = Math.abs(today.getTime() - activeDate.getTime());
                           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                           return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} on market`;
                         })()}
