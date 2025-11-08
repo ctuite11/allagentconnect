@@ -231,25 +231,7 @@ const AgentDashboard = () => {
               <div>
                 {/* Status Filter and View Toggle - Moved above Active Listings */}
                 <div className="mb-6 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold">Filter by Status</h2>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={viewMode === 'list' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setViewMode('list')}
-                      >
-                        <List className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant={viewMode === 'grid' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setViewMode('grid')}
-                      >
-                        <LayoutGrid className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
+                  <h2 className="text-xl font-semibold">Filter by Status</h2>
                   <div className="flex flex-wrap gap-2">
                     <label className="flex items-center gap-2 cursor-pointer font-semibold">
                       <input
@@ -310,7 +292,25 @@ const AgentDashboard = () => {
                     </p>
                   </div>
                 )}
-                <h2 className="text-2xl font-bold mb-6">Active Listings</h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold">Active Listings</h2>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={viewMode === 'list' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('list')}
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('grid')}
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
                 <div className={viewMode === 'grid' ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
                   {listings.filter(l => (l.status || '').toLowerCase() !== "draft" && (!showResults || statusFilters.length === 0 || statusFilters.includes((l.status || '').toLowerCase()))).map((listing) => (
                     <ListingCard
