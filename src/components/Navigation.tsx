@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle } from "lucide-react";
+import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import {
@@ -68,6 +68,10 @@ const Navigation = () => {
                 <DropdownMenuItem onClick={() => navigate("/browse")}>
                     <Search className="mr-2 h-4 w-4" />
                     Search
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/market-insights")}>
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Market Insights
                   </DropdownMenuItem>
                   {user && (
                     <DropdownMenuItem onClick={() => navigate("/favorites")}>
