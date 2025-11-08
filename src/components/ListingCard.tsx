@@ -130,8 +130,8 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
     if (!listing.open_houses || !Array.isArray(listing.open_houses)) return false;
     const now = new Date();
     return listing.open_houses.some((oh: any) => {
-      const ohDate = new Date(oh.date);
-      return ohDate >= now;
+      const ohEndDateTime = new Date(`${oh.date}T${oh.end_time}`);
+      return ohEndDateTime > now;
     });
   };
 
@@ -139,7 +139,10 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
     if (!listing.open_houses || !Array.isArray(listing.open_houses)) return null;
     const now = new Date();
     const upcoming = listing.open_houses
-      .filter((oh: any) => new Date(oh.date) >= now)
+      .filter((oh: any) => {
+        const ohEndDateTime = new Date(`${oh.date}T${oh.end_time}`);
+        return ohEndDateTime > now;
+      })
       .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
     return upcoming[0] || null;
   };
