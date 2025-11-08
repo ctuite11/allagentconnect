@@ -189,7 +189,7 @@ const Navigation = () => {
               </>
             ) : (
               <>
-                <Button variant="outline" size="sm" onClick={() => navigate("/buyer-auth")}>
+                <Button variant="outline" size="sm" onClick={() => navigate("/consumer/auth")}>
                   Sign In
                 </Button>
                 <Button size="sm" onClick={() => navigate("/auth")}>
@@ -305,7 +305,7 @@ const Navigation = () => {
                     className="w-full"
                     variant="outline"
                     onClick={() => {
-                      navigate("/buyer-auth");
+                      navigate("/consumer/auth");
                       setIsMenuOpen(false);
                     }}
                   >
