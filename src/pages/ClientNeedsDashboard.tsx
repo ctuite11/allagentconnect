@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin, DollarSign, Home, Calendar, User, CalendarIcon } from "lucide-react";
+import { Loader2, MapPin, DollarSign, Home, Calendar, User, CalendarIcon, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { US_STATES } from "@/data/usStatesCountiesData";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { ContactMatchesDialog } from "@/components/ContactMatchesDialog";
 
 interface ClientNeed {
   id: string;
@@ -43,6 +44,7 @@ const ClientNeedsDashboard = () => {
   const [maxPriceFilter, setMaxPriceFilter] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -339,20 +341,32 @@ const ClientNeedsDashboard = () => {
         {/* Results - Prominent Count */}
         <Card className="mb-6 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
           <CardContent className="py-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-semibold mb-1">Potential Buyer Pool</h3>
                 <p className="text-sm text-muted-foreground">
                   Active client needs matching your filters
                 </p>
               </div>
-              <div className="text-right">
-                <div className="text-5xl font-bold text-primary">
-                  {clientNeeds.length}
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <div className="text-5xl font-bold text-primary">
+                    {clientNeeds.length}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {clientNeeds.length === 1 ? 'buyer' : 'buyers'}
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {clientNeeds.length === 1 ? 'buyer' : 'buyers'}
-                </p>
+                {clientNeeds.length > 0 && (
+                  <Button 
+                    onClick={() => setContactDialogOpen(true)}
+                    size="lg"
+                    className="gap-2"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Contact All Matches
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
@@ -415,6 +429,21 @@ const ClientNeedsDashboard = () => {
             ))}
           </div>
         )}
+
+        <ContactMatchesDialog
+          open={contactDialogOpen}
+          onOpenChange={setContactDialogOpen}
+          matchCount={clientNeeds.length}
+          filters={{
+            stateFilter,
+            cityFilter,
+            propertyTypeFilter,
+            minPriceFilter,
+            maxPriceFilter,
+            startDate,
+            endDate,
+          }}
+        />
       </div>
     </div>
   );
