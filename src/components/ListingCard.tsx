@@ -122,7 +122,7 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
     return (
       <Card className="overflow-hidden hover:shadow-md transition-shadow">
         <div className="flex gap-4 p-4">
-          {/* Photo with Open House Banner */}
+          {/* Photo with Open House Banner and Match Count */}
           <div className="relative w-32 h-32 flex-shrink-0">
             {photoUrl ? (
               <img src={photoUrl} alt={listing.address} className="w-full h-full object-cover rounded" />
@@ -139,6 +139,18 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
               {listing.photos?.length || 0} Photos
             </div>
+            {listing.status === 'active' && (
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => setProspectDialogOpen(true)}
+                disabled={matchCount === 0 || loadingMatches}
+                className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs h-6 px-2"
+              >
+                <Users className="w-3 h-3 mr-1" />
+                {loadingMatches ? "..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
+              </Button>
+            )}
           </div>
 
           {/* Listing Info */}
@@ -209,26 +221,6 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
-              {listing.status === 'active' && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => setProspectDialogOpen(true)}
-                  className="w-full relative"
-                  disabled={matchCount === 0}
-                >
-                  <Mail className="w-3 h-3 mr-1" />
-                  Prospect
-                  {matchCount > 0 && (
-                    <Badge 
-                      variant="secondary" 
-                      className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center text-xs px-1"
-                    >
-                      {matchCount}
-                    </Badge>
-                  )}
-                </Button>
-              )}
               <Button
                 variant="destructive"
                 size="sm"
@@ -246,14 +238,6 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             <span className="font-semibold text-green-700">Next Open House:</span>{" "}
             {format(new Date(nextOpenHouse.date), "EEEE, MMMM d, yyyy")} • {nextOpenHouse.start_time} - {nextOpenHouse.end_time}
             {nextOpenHouse.type && <span className="ml-2 text-green-600">({nextOpenHouse.type === 'public' ? 'Public' : 'Broker'})</span>}
-          </div>
-        )}
-        {listing.status === 'active' && matchCount > 0 && (
-          <div className="bg-primary/10 border-t border-primary/20 px-4 py-2 text-sm flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary" />
-              <span className="font-semibold text-primary">{matchCount} Potential Buyers</span>
-            </div>
           </div>
         )}
         <ReverseProspectDialog
@@ -285,6 +269,18 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
         <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
           {listing.photos?.length || 0} Photos
         </div>
+        {listing.status === 'active' && (
+          <Button
+            size="sm"
+            variant="default"
+            onClick={() => setProspectDialogOpen(true)}
+            disabled={matchCount === 0 || loadingMatches}
+            className="absolute bottom-2 left-2 text-xs h-7 px-3"
+          >
+            <Users className="w-3 h-3 mr-1" />
+            {loadingMatches ? "..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
+          </Button>
+        )}
       </div>
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-4">
@@ -336,13 +332,6 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
           </Badge>
         )}
 
-        {listing.status === 'active' && matchCount > 0 && (
-          <div className="flex items-center gap-2 mb-3 p-3 bg-primary/10 rounded-md border border-primary/20">
-            <Users className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary">{matchCount} Matching Buyers</span>
-          </div>
-        )}
-
         <div className="flex gap-2 mt-4">
           <Button
             variant="outline"
@@ -370,19 +359,6 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
-        
-        {listing.status === 'active' && (
-          <Button
-            variant="default"
-            size="sm"
-            className="w-full mt-2"
-            onClick={() => setProspectDialogOpen(true)}
-            disabled={matchCount === 0}
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Reverse Prospect {matchCount > 0 && `(${matchCount})`}
-          </Button>
-        )}
       </CardContent>
       <ReverseProspectDialog
         open={prospectDialogOpen}
