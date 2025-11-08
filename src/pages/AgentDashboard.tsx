@@ -48,6 +48,7 @@ const AgentDashboard = () => {
   const [favoritesCount, setFavoritesCount] = useState(0);
   const [clientsCount, setClientsCount] = useState(0);
   const [messagesCount, setMessagesCount] = useState(0);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   useEffect(() => {
     document.title = "Agent Dashboard - Agent Connect";
@@ -115,6 +116,74 @@ const AgentDashboard = () => {
         .select("*", { count: "exact", head: true })
         .eq("agent_id", userId);
       if (messagesCount) setMessagesCount(messagesCount);
+
+      // Load recent activity
+      const activity: any[] = [];
+
+      // Recent listings (last 5)
+      const { data: recentListings } = await supabase
+        .from("listings")
+        .select("id, address, city, state, created_at, status")
+        .eq("agent_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      
+      if (recentListings) {
+        recentListings.forEach(listing => {
+          activity.push({
+            type: 'listing',
+            icon: 'Home',
+            title: 'New listing added',
+            description: `${listing.address}, ${listing.city}, ${listing.state}`,
+            timestamp: listing.created_at,
+            status: listing.status
+          });
+        });
+      }
+
+      // Recent messages (last 5)
+      const { data: recentMessages } = await supabase
+        .from("agent_messages")
+        .select("id, sender_name, message, created_at, listing_id")
+        .eq("agent_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      
+      if (recentMessages) {
+        recentMessages.forEach(msg => {
+          activity.push({
+            type: 'message',
+            icon: 'Mail',
+            title: `Message from ${msg.sender_name}`,
+            description: msg.message.substring(0, 100) + (msg.message.length > 100 ? '...' : ''),
+            timestamp: msg.created_at
+          });
+        });
+      }
+
+      // Recent clients (last 5)
+      const { data: recentClients } = await supabase
+        .from("clients")
+        .select("id, first_name, last_name, created_at, email")
+        .eq("agent_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      
+      if (recentClients) {
+        recentClients.forEach(client => {
+          activity.push({
+            type: 'client',
+            icon: 'Users',
+            title: 'New client added',
+            description: `${client.first_name} ${client.last_name} - ${client.email}`,
+            timestamp: client.created_at
+          });
+        });
+      }
+
+      // Sort all activity by timestamp
+      activity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setRecentActivity(activity.slice(0, 10)); // Keep only 10 most recent
     } catch (error: any) {
       toast.error("Error loading data: " + error.message);
     } finally {
@@ -199,6 +268,34 @@ const AgentDashboard = () => {
       action: () => navigate("/add-listing?type=rent"),
     },
   ];
+
+  const getActivityIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'Home':
+        return <Home className="h-4 w-4" />;
+      case 'Mail':
+        return <Mail className="h-4 w-4" />;
+      case 'Users':
+        return <Users className="h-4 w-4" />;
+      default:
+        return <Home className="h-4 w-4" />;
+    }
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -292,6 +389,39 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Recent Activity Feed */}
+        {recentActivity.length > 0 && (
+          <Card className="mb-12">
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Your latest listings, messages, and client interactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-start gap-4 pb-4 border-b last:border-0 last:pb-0">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted">
+                      {getActivityIcon(activity.icon)}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium">{activity.title}</p>
+                        <span className="text-xs text-muted-foreground">{formatTimestamp(activity.timestamp)}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{activity.description}</p>
+                      {activity.status && (
+                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary capitalize">
+                          {activity.status}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Listing Type Cards */}
         <div className="grid gap-6 md:grid-cols-3 mb-12">
