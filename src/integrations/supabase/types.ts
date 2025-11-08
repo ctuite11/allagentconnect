@@ -566,6 +566,7 @@ export type Database = {
         Row: {
           contact_count: number
           created_at: string
+          cumulative_active_days: number
           id: string
           listing_id: string
           save_count: number
@@ -576,6 +577,7 @@ export type Database = {
         Insert: {
           contact_count?: number
           created_at?: string
+          cumulative_active_days?: number
           id?: string
           listing_id: string
           save_count?: number
@@ -586,6 +588,7 @@ export type Database = {
         Update: {
           contact_count?: number
           created_at?: string
+          cumulative_active_days?: number
           id?: string
           listing_id?: string
           save_count?: number

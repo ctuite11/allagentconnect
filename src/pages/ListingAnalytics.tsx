@@ -19,6 +19,7 @@ interface ListingStats {
   contact_count: number;
   showing_request_count: number;
   updated_at: string;
+  cumulative_active_days: number;
 }
 
 interface Listing {
@@ -191,6 +192,43 @@ const ListingAnalytics = () => {
   const calculateConversionRate = (numerator: number, denominator: number): string => {
     if (denominator === 0) return "0%";
     return ((numerator / denominator) * 100).toFixed(1) + "%";
+  };
+
+  const calculateCumulativeActiveDays = (): number => {
+    if (statusHistory.length === 0) return 0;
+
+    let totalActiveDays = 0;
+    let currentActiveStart: Date | null = null;
+
+    // Sort history by date ascending (oldest first)
+    const sortedHistory = [...statusHistory].sort(
+      (a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime()
+    );
+
+    sortedHistory.forEach((history) => {
+      const changeDate = new Date(history.changed_at);
+
+      if (history.new_status === 'active' && !currentActiveStart) {
+        // Start of an active period
+        currentActiveStart = changeDate;
+      } else if (history.new_status !== 'active' && currentActiveStart) {
+        // End of an active period
+        const diffTime = changeDate.getTime() - currentActiveStart.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        totalActiveDays += diffDays;
+        currentActiveStart = null;
+      }
+    });
+
+    // If currently active, add days from last active start to now
+    if (currentActiveStart) {
+      const now = new Date();
+      const diffTime = now.getTime() - currentActiveStart.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      totalActiveDays += diffDays;
+    }
+
+    return totalActiveDays;
   };
 
   const getEngagementData = () => {
@@ -604,32 +642,77 @@ const ListingAnalytics = () => {
 
                 {/* Days on Market Summary */}
                 {selectedListingData && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Days on Market</CardTitle>
-                      <CardDescription>
-                        Time elapsed since listing became active
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-center py-6">
-                        <div className="text-5xl font-bold text-primary mb-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Current Days on Market */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Current Period</CardTitle>
+                        <CardDescription>
+                          Days since listing last became active
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-6">
+                          <div className="text-5xl font-bold text-primary mb-2">
+                            {(() => {
+                              // Find the most recent transition to active status
+                              const sortedHistory = [...statusHistory].sort(
+                                (a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime()
+                              );
+                              const activeHistory = sortedHistory.find(h => h.new_status === 'active');
+                              if (activeHistory) {
+                                const activeDate = new Date(activeHistory.changed_at);
+                                const today = new Date();
+                                const diffTime = Math.abs(today.getTime() - activeDate.getTime());
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                return diffDays;
+                              }
+                              return 0;
+                            })()}
+                          </div>
+                          <p className="text-muted-foreground">Days in Current Active Period</p>
+                          {selectedListingData.status !== 'active' && (
+                            <Badge variant="secondary" className="mt-2">Not Currently Active</Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Cumulative Active Days */}
+                    <Card className="border-primary/50">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5" />
+                          Cumulative Active Days
+                        </CardTitle>
+                        <CardDescription>
+                          Total days active across all periods
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-6">
+                          <div className="text-5xl font-bold text-primary mb-2">
+                            {currentStats?.cumulative_active_days || calculateCumulativeActiveDays()}
+                          </div>
+                          <p className="text-muted-foreground">Total Active Days on Market</p>
                           {(() => {
-                            const activeHistory = statusHistory.find(h => h.new_status === 'active');
-                            if (activeHistory) {
-                              const activeDate = new Date(activeHistory.changed_at);
-                              const today = new Date();
-                              const diffTime = Math.abs(today.getTime() - activeDate.getTime());
-                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                              return diffDays;
+                            const sortedHistory = [...statusHistory].sort(
+                              (a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime()
+                            );
+                            const activePeriods = sortedHistory.filter(h => h.new_status === 'active').length;
+                            if (activePeriods > 1) {
+                              return (
+                                <Badge variant="outline" className="mt-2">
+                                  {activePeriods} Active Periods
+                                </Badge>
+                              );
                             }
-                            return 0;
+                            return null;
                           })()}
                         </div>
-                        <p className="text-muted-foreground">Days on Market</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </div>
                 )}
               </TabsContent>
             </Tabs>

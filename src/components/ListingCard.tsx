@@ -32,6 +32,7 @@ interface ListingCardProps {
       save_count: number;
       contact_count: number;
       showing_request_count: number;
+      cumulative_active_days: number;
     };
   };
   onDelete: (id: string) => void;
@@ -211,6 +212,14 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                     {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'} on market
                   </Badge>
                 )}
+                {listing.listing_stats?.cumulative_active_days && listing.listing_stats.cumulative_active_days > daysOnMarket && (
+                  <>
+                    <span>•</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {listing.listing_stats.cumulative_active_days} total active
+                    </Badge>
+                  </>
+                )}
               </div>
               <div className="flex gap-3 text-sm text-muted-foreground">
                 {listing.bedrooms && (
@@ -372,12 +381,19 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                   Listing #{listing.listing_number}
                 </div>
               )}
-              {daysOnMarket > 0 && (
-                <Badge variant="outline" className="text-xs flex items-center gap-1 w-fit">
-                  <Calendar className="w-3 h-3" />
-                  {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'}
-                </Badge>
-              )}
+              <div className="flex flex-wrap items-center gap-1">
+                {daysOnMarket > 0 && (
+                  <Badge variant="outline" className="text-xs flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'}
+                  </Badge>
+                )}
+                {listing.listing_stats?.cumulative_active_days && listing.listing_stats.cumulative_active_days > daysOnMarket && (
+                  <Badge variant="secondary" className="text-xs">
+                    {listing.listing_stats.cumulative_active_days} total
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
           <Badge variant={listing.status === "active" ? "default" : "secondary"}>

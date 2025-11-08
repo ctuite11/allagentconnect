@@ -36,6 +36,7 @@ interface Listing {
     save_count: number;
     contact_count: number;
     showing_request_count: number;
+    cumulative_active_days: number;
   };
 }
 
