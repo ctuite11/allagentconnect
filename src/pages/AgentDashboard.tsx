@@ -11,7 +11,7 @@ import forSaleImg from "@/assets/listing-for-sale.jpg";
 import privateSaleImg from "@/assets/listing-private-sale.jpg";
 import forRentImg from "@/assets/listing-for-rent.jpg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, Home, Flame, Heart, Users, Mail } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Listing {
@@ -44,6 +44,10 @@ const AgentDashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showResults, setShowResults] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'price' | 'status' | 'matches'>('date');
+  const [hotSheetsCount, setHotSheetsCount] = useState(0);
+  const [favoritesCount, setFavoritesCount] = useState(0);
+  const [clientsCount, setClientsCount] = useState(0);
+  const [messagesCount, setMessagesCount] = useState(0);
 
   useEffect(() => {
     document.title = "Agent Dashboard - Agent Connect";
@@ -74,6 +78,7 @@ const AgentDashboard = () => {
 
   const loadData = async (userId: string) => {
     try {
+      // Load listings
       const { data, error } = await supabase
         .from("listings")
         .select("*")
@@ -82,8 +87,36 @@ const AgentDashboard = () => {
 
       if (error) throw error;
       if (data) setListings(data);
+
+      // Load hot sheets count
+      const { count: hotSheetsCount } = await supabase
+        .from("hot_sheets")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId);
+      if (hotSheetsCount) setHotSheetsCount(hotSheetsCount);
+
+      // Load favorites count
+      const { count: favoritesCount } = await supabase
+        .from("favorites")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId);
+      if (favoritesCount) setFavoritesCount(favoritesCount);
+
+      // Load clients count
+      const { count: clientsCount } = await supabase
+        .from("clients")
+        .select("*", { count: "exact", head: true })
+        .eq("agent_id", userId);
+      if (clientsCount) setClientsCount(clientsCount);
+
+      // Load messages count
+      const { count: messagesCount } = await supabase
+        .from("agent_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("agent_id", userId);
+      if (messagesCount) setMessagesCount(messagesCount);
     } catch (error: any) {
-      toast.error("Error loading listings: " + error.message);
+      toast.error("Error loading data: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -185,23 +218,79 @@ const AgentDashboard = () => {
             Sign Out
           </Button>
         </div>
-        {/* Quick Access to new pages */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-3">Quick Access</h2>
-          <div className="grid gap-3 sm:grid-cols-4">
-            <Button onClick={() => navigate("/add-listing")}>
-              New Listing
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/hot-sheets")}>
-              Manage Hot Sheets
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/favorites")}>
-              Favorites
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/manage-coverage-areas")}>
-              Coverage Areas
-            </Button>
-          </div>
+
+        {/* Dashboard Overview Cards */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/agent-dashboard")}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">My Listings</CardTitle>
+              <Home className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{listings.length}</div>
+              <p className="text-xs text-muted-foreground">
+                {listings.filter(l => l.status === 'active').length} active
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/hot-sheets")}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">My Hot Sheets</CardTitle>
+              <Flame className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{hotSheetsCount}</div>
+              <p className="text-xs text-muted-foreground">Active searches</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/favorites")}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">My Favorites</CardTitle>
+              <Heart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{favoritesCount}</div>
+              <p className="text-xs text-muted-foreground">Saved properties</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/my-clients")}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">My Contacts</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{clientsCount}</div>
+              <p className="text-xs text-muted-foreground">Total clients</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">My Communications</CardTitle>
+              <Mail className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{messagesCount}</div>
+              <p className="text-xs text-muted-foreground">Total messages</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/add-listing")}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full mb-2" onClick={(e) => { e.stopPropagation(); navigate("/add-listing"); }}>
+                New Listing
+              </Button>
+              <Button variant="outline" className="w-full" onClick={(e) => { e.stopPropagation(); navigate("/manage-coverage-areas"); }}>
+                Coverage Areas
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Listing Type Cards */}
