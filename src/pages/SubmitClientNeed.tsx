@@ -11,13 +11,14 @@ import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
+import { US_STATES } from "@/data/usStatesCountiesData";
 
 const clientNeedSchema = z.object({
   propertyType: z.enum(["single_family", "condo", "townhouse", "multi_family", "land", "commercial", "residential_rental", "commercial_rental"], {
     errorMap: () => ({ message: "Please select a valid property type" }),
   }),
   city: z.string().trim().min(1, "City is required").max(100, "City must be less than 100 characters"),
-  state: z.string().trim().min(2, "State is required").max(2, "State must be 2 characters"),
+  state: z.string().trim().length(2, "State must be 2 characters"),
   maxPrice: z.string()
     .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number")
     .refine((val) => parseFloat(val) > 0 && parseFloat(val) < 100000000, {
@@ -84,7 +85,7 @@ const SubmitClientNeed = () => {
         submitted_by: user?.id,
         property_type: validatedData.propertyType as any,
         city: validatedData.city,
-        state: validatedData.state.toUpperCase(),
+        state: validatedData.state,
         max_price: parseFloat(validatedData.maxPrice),
         bedrooms: validatedData.bedrooms ? parseInt(validatedData.bedrooms) : null,
         bathrooms: validatedData.bathrooms ? parseFloat(validatedData.bathrooms) : null,
@@ -161,18 +162,23 @@ const SubmitClientNeed = () => {
                 </div>
                 <div>
                   <Label htmlFor="state">State</Label>
-                  <Input
-                    id="state"
-                    type="text"
-                    required
+                  <Select
                     value={formData.state}
-                    onChange={(e) =>
-                      setFormData({ ...formData, state: e.target.value.toUpperCase() })
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, state: value })
                     }
-                    placeholder="MA"
-                    maxLength={2}
-                    style={{ textTransform: 'uppercase' }}
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 max-h-[300px]">
+                      {US_STATES.map((s) => (
+                        <SelectItem key={s.code} value={s.code}>
+                          {s.code} - {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
