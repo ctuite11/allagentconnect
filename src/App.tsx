@@ -9,6 +9,7 @@ import AgentDashboard from "./pages/AgentDashboard";
 import BuyerAuth from "./pages/BuyerAuth";
 // import removed: AgentSearch (redirect to OurAgents)
 import SubmitClientNeed from "./pages/SubmitClientNeed";
+import ClientNeedsDashboard from "./pages/ClientNeedsDashboard";
 import AddListing from "./pages/AddListing";
 import AddRentalListing from "./pages/AddRentalListing";
 import EditListing from "./pages/EditListing";
@@ -53,6 +54,7 @@ const App = () => (
           <Route path="/agent-dashboard" element={<AgentDashboard />} />
           <Route path="/submit-buyer-need" element={<Navigate to="/submit-client-need" replace />} />
           <Route path="/submit-client-need" element={<SubmitClientNeed />} />
+          <Route path="/client-needs" element={<ClientNeedsDashboard />} />
           <Route path="/add-listing" element={<AddListing />} />
           <Route path="/add-rental-listing" element={<AddRentalListing />} />
           <Route path="/edit-listing/:id" element={<EditListing />} />

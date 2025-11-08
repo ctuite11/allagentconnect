@@ -103,6 +103,10 @@ const Navigation = () => {
                     <FileText className="mr-2 h-4 w-4" />
                     Submit Client Need
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/client-needs")}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    View Client Needs
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
                 
                 {user && (
@@ -117,6 +121,10 @@ const Navigation = () => {
                       <DropdownMenuItem onClick={() => navigate("/my-clients")}>
                         <UserCircle className="mr-2 h-4 w-4" />
                         My Clients
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/client-needs")}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Client Needs
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/add-listing")}>
                         <Plus className="mr-2 h-4 w-4" />
