@@ -519,6 +519,54 @@ export type Database = {
         }
         Relationships: []
       }
+      favorite_price_history: {
+        Row: {
+          changed_at: string
+          favorite_id: string
+          id: string
+          listing_id: string
+          new_price: number
+          notification_sent: boolean | null
+          notification_sent_at: string | null
+          old_price: number
+        }
+        Insert: {
+          changed_at?: string
+          favorite_id: string
+          id?: string
+          listing_id: string
+          new_price: number
+          notification_sent?: boolean | null
+          notification_sent_at?: string | null
+          old_price: number
+        }
+        Update: {
+          changed_at?: string
+          favorite_id?: string
+          id?: string
+          listing_id?: string
+          new_price?: number
+          notification_sent?: boolean | null
+          notification_sent_at?: string | null
+          old_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_price_history_favorite_id_fkey"
+            columns: ["favorite_id"]
+            isOneToOne: false
+            referencedRelation: "favorites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorite_price_history_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string
@@ -619,6 +667,51 @@ export type Database = {
           },
           {
             foreignKeyName: "hot_sheet_favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hot_sheet_notifications: {
+        Row: {
+          created_at: string
+          hot_sheet_id: string
+          id: string
+          listing_id: string
+          notification_sent: boolean | null
+          notification_sent_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hot_sheet_id: string
+          id?: string
+          listing_id: string
+          notification_sent?: boolean | null
+          notification_sent_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hot_sheet_id?: string
+          id?: string
+          listing_id?: string
+          notification_sent?: boolean | null
+          notification_sent_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_notifications_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_notifications_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
@@ -1085,6 +1178,36 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          frequency: string
+          id: string
+          new_matches_enabled: boolean | null
+          price_changes_enabled: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          frequency?: string
+          id?: string
+          new_matches_enabled?: boolean | null
+          price_changes_enabled?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          frequency?: string
+          id?: string
+          new_matches_enabled?: boolean | null
+          price_changes_enabled?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -1424,6 +1547,12 @@ export type Database = {
     }
     Functions: {
       auto_activate_listings: { Args: never; Returns: undefined }
+      check_hot_sheet_matches: {
+        Args: { p_hot_sheet_id: string }
+        Returns: {
+          listing_id: string
+        }[]
+      }
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }
       has_role: {

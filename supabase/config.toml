@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.fetch-attom-market-data]
 verify_jwt = false
+
+[functions.fetch-property-data]
+verify_jwt = false
+
+[functions.send-price-change-notification]
+verify_jwt = false
+
+[functions.send-new-match-notification]
+verify_jwt = false

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Heart, Bell, User, MapPin, Home, Search, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import NotificationSettings from "@/components/NotificationSettings";
 
 const ConsumerDashboard = () => {
   const navigate = useNavigate();
@@ -153,6 +154,7 @@ const ConsumerDashboard = () => {
           <TabsList>
             <TabsTrigger value="favorites">Saved Homes</TabsTrigger>
             <TabsTrigger value="searches">Saved Searches</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="profile">My Profile</TabsTrigger>
           </TabsList>
 
@@ -270,6 +272,11 @@ const ConsumerDashboard = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-4">
+            <h2 className="text-2xl font-bold mb-4">Notification Settings</h2>
+            <NotificationSettings />
           </TabsContent>
 
           <TabsContent value="profile" className="space-y-4">
