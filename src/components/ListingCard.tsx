@@ -118,6 +118,36 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
   const photoUrl = getFirstPhoto();
   const nextOpenHouse = getNextOpenHouse();
 
+  // Color coding for match count
+  const getMatchButtonStyle = () => {
+    if (matchCount === 0) {
+      return {
+        variant: "outline" as const,
+        className: "border-muted-foreground/20 text-muted-foreground hover:bg-muted",
+      };
+    } else if (matchCount >= 10) {
+      // High demand - green
+      return {
+        variant: "default" as const,
+        className: "bg-green-600 hover:bg-green-700 text-white border-green-600",
+      };
+    } else if (matchCount >= 5) {
+      // Medium demand - yellow/amber
+      return {
+        variant: "default" as const,
+        className: "bg-amber-500 hover:bg-amber-600 text-white border-amber-500",
+      };
+    } else {
+      // Low demand - blue/default
+      return {
+        variant: "outline" as const,
+        className: "border-primary/50 text-primary hover:bg-primary/10",
+      };
+    }
+  };
+
+  const matchButtonStyle = getMatchButtonStyle();
+
   if (viewMode === 'list') {
     return (
       <Card className="overflow-hidden hover:shadow-md transition-shadow">
@@ -168,10 +198,10 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
               {listing.status === 'active' && (
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant={matchButtonStyle.variant}
                   onClick={() => setProspectDialogOpen(true)}
                   disabled={matchCount === 0 || loadingMatches}
-                  className="mt-2 text-xs h-7"
+                  className={`mt-2 text-xs h-7 ${matchButtonStyle.className}`}
                 >
                   <Users className="w-3 h-3 mr-1" />
                   {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
@@ -317,10 +347,10 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
         {listing.status === 'active' && (
           <Button
             size="sm"
-            variant="outline"
+            variant={matchButtonStyle.variant}
             onClick={() => setProspectDialogOpen(true)}
             disabled={matchCount === 0 || loadingMatches}
-            className="mb-4 w-full text-xs h-8"
+            className={`mb-4 w-full text-xs h-8 ${matchButtonStyle.className}`}
           >
             <Users className="w-3 h-3 mr-2" />
             {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
