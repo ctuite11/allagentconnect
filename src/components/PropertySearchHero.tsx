@@ -2,17 +2,22 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Search, MapPin } from "lucide-react";
 
 const PropertySearchHero = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/browse?search=${encodeURIComponent(searchQuery)}`);
-    }
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set("search", searchQuery);
+    if (minPrice) params.set("minPrice", minPrice);
+    if (maxPrice) params.set("maxPrice", maxPrice);
+    navigate(`/browse?${params.toString()}`);
   };
 
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
@@ -32,7 +37,6 @@ const PropertySearchHero = () => {
     
     if (query) {
       setSearchQuery(query);
-      navigate(`/browse?search=${encodeURIComponent(query)}`);
     }
   };
 
@@ -60,19 +64,35 @@ const PropertySearchHero = () => {
             <p className="text-lg font-semibold mb-4 text-center">
               Let's help you find your dream home.
             </p>
-            <form onSubmit={handleSearch} className="flex gap-3">
-              <div className="relative flex-1">
+            <form onSubmit={handleSearch} className="space-y-3">
+              <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10" />
                 <AddressAutocomplete
                   onPlaceSelect={handlePlaceSelect}
                   placeholder="City, State, Zip or Neighborhood"
-                  className="pl-12 h-14 text-lg"
+                  className="pl-12 h-14 text-lg w-full"
                   value={searchQuery}
                   onChange={setSearchQuery}
                 />
               </div>
-              <Button type="submit" size="lg" className="h-14 px-8 text-lg">
-                Search
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  type="number"
+                  placeholder="Min Price"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="h-14 text-lg"
+                />
+                <Input
+                  type="number"
+                  placeholder="Max Price"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="h-14 text-lg"
+                />
+              </div>
+              <Button type="submit" size="lg" className="h-14 px-8 text-lg w-full">
+                Search Properties
               </Button>
             </form>
             <p className="text-sm text-muted-foreground text-center mt-4">
