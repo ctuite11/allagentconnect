@@ -90,8 +90,13 @@ const HotSheetReview = () => {
       if (criteria.maxSqft) {
         query = query.lte("square_feet", criteria.maxSqft);
       }
-      if (criteria.city) {
-        query = query.ilike("city", `%${criteria.city}%`);
+      if (criteria.cities?.length > 0) {
+        // Extract just the city names from the formatted strings (e.g., "Boston, MA" -> "Boston")
+        const cityNames = criteria.cities.map((cityStr: string) => {
+          const parts = cityStr.split(',');
+          return parts[0].trim();
+        });
+        query = query.in("city", cityNames);
       }
       if (criteria.state) {
         query = query.eq("state", criteria.state);
@@ -195,8 +200,8 @@ const HotSheetReview = () => {
     if (criteria.bathrooms) {
       parts.push(`${criteria.bathrooms}+ baths`);
     }
-    if (criteria.city) {
-      parts.push(`City: ${criteria.city}`);
+    if (criteria.cities?.length > 0) {
+      parts.push(`Cities: ${criteria.cities.join(", ")}`);
     }
     if (criteria.state) {
       parts.push(`State: ${criteria.state}`);

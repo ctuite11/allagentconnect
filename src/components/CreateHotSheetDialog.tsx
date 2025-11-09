@@ -18,6 +18,12 @@ import { usCitiesByState } from "@/data/usCitiesData";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { z } from "zod";
+import { CT_COUNTY_TOWNS } from "@/data/ctCountyTowns";
+import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
+import { NH_COUNTY_TOWNS } from "@/data/nhCountyTowns";
+import { RI_COUNTY_TOWNS } from "@/data/riCountyTowns";
+import { VT_COUNTY_TOWNS } from "@/data/vtCountyTowns";
+import { ME_COUNTY_TOWNS } from "@/data/meCountyTowns";
 
 interface CreateHotSheetDialogProps {
   open: boolean;
@@ -246,6 +252,24 @@ export function CreateHotSheetDialog({
     );
   };
 
+  // Helper function to get towns for a county
+  const getCountyTowns = (countyName: string, stateCode: string): string[] => {
+    const countyTownMappings: Record<string, Record<string, string[]>> = {
+      CT: CT_COUNTY_TOWNS,
+      MA: MA_COUNTY_TOWNS,
+      NH: NH_COUNTY_TOWNS,
+      RI: RI_COUNTY_TOWNS,
+      VT: VT_COUNTY_TOWNS,
+      ME: ME_COUNTY_TOWNS,
+    };
+
+    const stateMappings = countyTownMappings[stateCode];
+    if (!stateMappings) return [];
+
+    const towns = stateMappings[countyName];
+    return towns || [];
+  };
+
   const usStates = [
     { code: "AL", name: "Alabama" },
     { code: "AK", name: "Alaska" },
@@ -308,14 +332,26 @@ export function CreateHotSheetDialog({
     city.toLowerCase().includes(citySearch.toLowerCase())
   );
 
-  // Load cities when state changes
+  // Load cities when state or county changes
   useEffect(() => {
     if (!state) {
       setAvailableCities([]);
       return;
     }
 
-    // Get cities from US geographical data
+    // If a specific county is selected, load towns from that county
+    if (selectedCountyId && selectedCountyId !== "all") {
+      const selectedCounty = counties.find(c => c.id === selectedCountyId);
+      if (selectedCounty) {
+        const countyTowns = getCountyTowns(selectedCounty.name, state);
+        if (countyTowns.length > 0) {
+          setAvailableCities(countyTowns);
+          return;
+        }
+      }
+    }
+
+    // Otherwise, get all cities from US geographical data
     const citiesForState = usCitiesByState[state] || [];
     
     // Expand cities with neighborhoods
@@ -336,8 +372,7 @@ export function CreateHotSheetDialog({
     });
     
     setAvailableCities(expandedCities);
-    setSelectedCities([]);
-  }, [state]);
+  }, [state, selectedCountyId, counties]);
 
   // Fetch matching listings count
   useEffect(() => {
@@ -460,6 +495,7 @@ export function CreateHotSheetDialog({
         zipCode: zipCode || null,
         cities: selectedCities.length > 0 ? selectedCities : null,
         state: state || null,
+        selectedCountyId: selectedCountyId && selectedCountyId !== "all" ? selectedCountyId : null,
         // Agent criteria
         preferredCounties: preferredCounties.length > 0 ? preferredCounties : null,
         requiresBuyerIncentives: requiresBuyerIncentives || null,
