@@ -17,6 +17,7 @@ import ContactAgentDialog from "@/components/ContactAgentDialog";
 import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo";
 import PropertyMap from "@/components/PropertyMap";
 import AdBanner from "@/components/AdBanner";
+import { ShareListingDialog } from "@/components/ShareListingDialog";
 
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useListingView } from "@/hooks/useListingView";
@@ -78,6 +79,7 @@ const ConsumerPropertyDetail = () => {
   const [agent, setAgent] = useState<AgentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [isAgent, setIsAgent] = useState(false);
 
   // Track listing view
   useListingView(id);
@@ -85,6 +87,18 @@ const ConsumerPropertyDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Check if current user is an agent
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: agentProfile } = await supabase
+            .from("agent_profiles")
+            .select("id")
+            .eq("id", session.user.id)
+            .maybeSingle();
+          
+          setIsAgent(!!agentProfile);
+        }
+
         const { data: listingData, error: listingError } = await supabase
           .from("listings")
           .select("*")
@@ -275,6 +289,12 @@ const ConsumerPropertyDetail = () => {
               agentId={listing.agent_id}
               listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
             />
+            {isAgent && (
+              <ShareListingDialog 
+                listingId={listing.id}
+                listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+              />
+            )}
             <Button 
               variant="outline" 
               size="lg"
