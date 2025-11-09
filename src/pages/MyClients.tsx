@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown } from "lucide-react";
+import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -213,6 +213,50 @@ const MyClients = () => {
     fetchClients(user.id);
   };
 
+  const handleExportCSV = () => {
+    try {
+      // Prepare CSV data
+      const headers = ["First Name", "Last Name", "Email", "Phone", "Notes", "Date Added", "Last Updated"];
+      const csvData = sortedClients.map(client => [
+        client.first_name,
+        client.last_name,
+        client.email,
+        formatPhoneNumber(client.phone) || "",
+        client.notes || "",
+        new Date(client.created_at).toLocaleDateString(),
+        new Date(client.updated_at).toLocaleDateString()
+      ]);
+
+      // Convert to CSV string
+      const csvContent = [
+        headers.join(","),
+        ...csvData.map(row => 
+          row.map(cell => {
+            // Escape quotes and wrap in quotes if contains comma or newline
+            const cellStr = String(cell).replace(/"/g, '""');
+            return cellStr.includes(',') || cellStr.includes('\n') ? `"${cellStr}"` : cellStr;
+          }).join(",")
+        )
+      ].join("\n");
+
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `clients_export_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`Exported ${sortedClients.length} clients to CSV`);
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+      toast.error("Failed to export clients");
+    }
+  };
+
   const filteredClients = clients.filter((client) => {
     const fullName = `${client.first_name} ${client.last_name}`.toLowerCase();
     const email = client.email.toLowerCase();
@@ -267,16 +311,23 @@ const MyClients = () => {
                 Manage your clients and create personalized hot sheets for them
               </p>
             </div>
-            <Dialog open={addDialogOpen} onOpenChange={(open) => {
-              setAddDialogOpen(open);
-              if (!open) resetForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button onClick={handleAddClient}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Client
+            <div className="flex gap-2">
+              {clients.length > 0 && (
+                <Button variant="outline" onClick={handleExportCSV}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
                 </Button>
-              </DialogTrigger>
+              )}
+              <Dialog open={addDialogOpen} onOpenChange={(open) => {
+                setAddDialogOpen(open);
+                if (!open) resetForm();
+              }}>
+                <DialogTrigger asChild>
+                  <Button onClick={handleAddClient}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Client
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle>{editingClient ? "Edit Client" : "Add New Client"}</DialogTitle>
@@ -358,6 +409,7 @@ const MyClients = () => {
                 </form>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
 
           {clients.length === 0 ? (
