@@ -153,6 +153,23 @@ const AddListing = () => {
   const [multiFamilySeparateUtilities, setMultiFamilySeparateUtilities] = useState<string[]>([]);
   const [multiFamilyParkingPerUnit, setMultiFamilyParkingPerUnit] = useState("");
 
+  // Commercial property specific fields
+  const [commercialSpaceType, setCommercialSpaceType] = useState("");
+  const [commercialLeaseType, setCommercialLeaseType] = useState("");
+  const [commercialLeaseRate, setCommercialLeaseRate] = useState("");
+  const [commercialLeaseRatePer, setCommercialLeaseRatePer] = useState("sqft_year");
+  const [commercialLeaseTermMin, setCommercialLeaseTermMin] = useState("");
+  const [commercialLeaseTermMax, setCommercialLeaseTermMax] = useState("");
+  const [commercialZoning, setCommercialZoning] = useState("");
+  const [commercialBusinessTypes, setCommercialBusinessTypes] = useState<string[]>([]);
+  const [commercialTenantResponsibilities, setCommercialTenantResponsibilities] = useState<string[]>([]);
+  const [commercialCurrentTenant, setCommercialCurrentTenant] = useState("");
+  const [commercialLeaseExpiration, setCommercialLeaseExpiration] = useState("");
+  const [commercialCeilingHeight, setCommercialCeilingHeight] = useState("");
+  const [commercialLoadingDocks, setCommercialLoadingDocks] = useState("");
+  const [commercialPowerAvailable, setCommercialPowerAvailable] = useState("");
+  const [commercialAdditionalFeatures, setCommercialAdditionalFeatures] = useState<string[]>([]);
+
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
@@ -812,6 +829,24 @@ const AddListing = () => {
           separate_utilities: multiFamilySeparateUtilities.length > 0 ? multiFamilySeparateUtilities : null,
           parking_per_unit: multiFamilyParkingPerUnit ? parseFloat(multiFamilyParkingPerUnit) : null,
         } : null,
+        // Commercial property specific details
+        commercial_details: formData.property_type === "Commercial" ? {
+          space_type: commercialSpaceType || null,
+          lease_type: commercialLeaseType || null,
+          lease_rate: commercialLeaseRate ? parseFloat(commercialLeaseRate) : null,
+          lease_rate_per: commercialLeaseRatePer || null,
+          lease_term_min: commercialLeaseTermMin ? parseInt(commercialLeaseTermMin) : null,
+          lease_term_max: commercialLeaseTermMax ? parseInt(commercialLeaseTermMax) : null,
+          zoning: commercialZoning || null,
+          allowed_business_types: commercialBusinessTypes.length > 0 ? commercialBusinessTypes : null,
+          tenant_responsibilities: commercialTenantResponsibilities.length > 0 ? commercialTenantResponsibilities : null,
+          current_tenant: commercialCurrentTenant || null,
+          lease_expiration: commercialLeaseExpiration || null,
+          ceiling_height: commercialCeilingHeight ? parseFloat(commercialCeilingHeight) : null,
+          loading_docks: commercialLoadingDocks ? parseInt(commercialLoadingDocks) : null,
+          power_available: commercialPowerAvailable || null,
+          additional_features: commercialAdditionalFeatures.length > 0 ? commercialAdditionalFeatures : null,
+        } : null,
       });
 
       if (error) throw error;
@@ -1411,6 +1446,269 @@ const AddListing = () => {
                                 className="text-sm font-normal cursor-pointer"
                               >
                                 {utility}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Commercial Property Specific Fields */}
+                {formData.property_type === "Commercial" && (
+                  <>
+                    <Separator className="my-6" />
+                    <div className="space-y-6">
+                      <Label className="text-xl font-semibold">Commercial Property Information</Label>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="commercial_space_type">Space Type</Label>
+                          <Select
+                            value={commercialSpaceType}
+                            onValueChange={(value) => setCommercialSpaceType(value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select space type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="office">Office</SelectItem>
+                              <SelectItem value="retail">Retail</SelectItem>
+                              <SelectItem value="warehouse">Warehouse</SelectItem>
+                              <SelectItem value="industrial">Industrial</SelectItem>
+                              <SelectItem value="restaurant">Restaurant</SelectItem>
+                              <SelectItem value="mixed_use">Mixed Use</SelectItem>
+                              <SelectItem value="medical">Medical</SelectItem>
+                              <SelectItem value="flex">Flex Space</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="commercial_lease_type">Lease Type</Label>
+                          <Select
+                            value={commercialLeaseType}
+                            onValueChange={(value) => setCommercialLeaseType(value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select lease type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="gross">Gross Lease</SelectItem>
+                              <SelectItem value="net">Net Lease</SelectItem>
+                              <SelectItem value="triple_net">Triple Net (NNN)</SelectItem>
+                              <SelectItem value="modified_gross">Modified Gross</SelectItem>
+                              <SelectItem value="percentage">Percentage Lease</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="commercial_lease_rate">Lease Rate</Label>
+                          <div className="flex gap-2">
+                            <FormattedInput
+                              id="commercial_lease_rate"
+                              format="currency"
+                              decimals={2}
+                              value={commercialLeaseRate}
+                              onChange={(value) => setCommercialLeaseRate(value)}
+                              placeholder="$0.00"
+                            />
+                            <Select
+                              value={commercialLeaseRatePer}
+                              onValueChange={(value) => setCommercialLeaseRatePer(value)}
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="sqft_year">per sq ft/year</SelectItem>
+                                <SelectItem value="sqft_month">per sq ft/month</SelectItem>
+                                <SelectItem value="month">per month</SelectItem>
+                                <SelectItem value="year">per year</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Lease Term (Months)</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              type="number"
+                              placeholder="Min"
+                              value={commercialLeaseTermMin}
+                              onChange={(e) => setCommercialLeaseTermMin(e.target.value)}
+                            />
+                            <span className="flex items-center">to</span>
+                            <Input
+                              type="number"
+                              placeholder="Max"
+                              value={commercialLeaseTermMax}
+                              onChange={(e) => setCommercialLeaseTermMax(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="commercial_zoning">Zoning</Label>
+                          <Input
+                            id="commercial_zoning"
+                            value={commercialZoning}
+                            onChange={(e) => setCommercialZoning(e.target.value)}
+                            placeholder="e.g., C-1, I-2, B-3"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="commercial_current_tenant">Current Tenant</Label>
+                          <Input
+                            id="commercial_current_tenant"
+                            value={commercialCurrentTenant}
+                            onChange={(e) => setCommercialCurrentTenant(e.target.value)}
+                            placeholder="Leave blank if vacant"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Allowed Business Types</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {[
+                            "Retail", "Restaurant", "Office", "Medical", 
+                            "Fitness", "Salon/Spa", "Professional Services",
+                            "Manufacturing", "Distribution", "Storage"
+                          ].map((type) => (
+                            <div key={type} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`business-${type}`}
+                                checked={commercialBusinessTypes.includes(type)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setCommercialBusinessTypes([...commercialBusinessTypes, type]);
+                                  } else {
+                                    setCommercialBusinessTypes(commercialBusinessTypes.filter(t => t !== type));
+                                  }
+                                }}
+                              />
+                              <Label 
+                                htmlFor={`business-${type}`}
+                                className="text-sm font-normal cursor-pointer"
+                              >
+                                {type}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Tenant Responsibilities</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {[
+                            "Property Taxes", "Insurance", "Maintenance",
+                            "Repairs", "Utilities", "Common Area Maintenance (CAM)"
+                          ].map((responsibility) => (
+                            <div key={responsibility} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`responsibility-${responsibility}`}
+                                checked={commercialTenantResponsibilities.includes(responsibility)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setCommercialTenantResponsibilities([...commercialTenantResponsibilities, responsibility]);
+                                  } else {
+                                    setCommercialTenantResponsibilities(commercialTenantResponsibilities.filter(r => r !== responsibility));
+                                  }
+                                }}
+                              />
+                              <Label 
+                                htmlFor={`responsibility-${responsibility}`}
+                                className="text-sm font-normal cursor-pointer"
+                              >
+                                {responsibility}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="commercial_lease_expiration">Current Lease Expiration</Label>
+                          <Input
+                            id="commercial_lease_expiration"
+                            type="date"
+                            value={commercialLeaseExpiration}
+                            onChange={(e) => setCommercialLeaseExpiration(e.target.value)}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="commercial_ceiling_height">Ceiling Height (ft)</Label>
+                          <Input
+                            id="commercial_ceiling_height"
+                            type="number"
+                            step="0.1"
+                            value={commercialCeilingHeight}
+                            onChange={(e) => setCommercialCeilingHeight(e.target.value)}
+                            placeholder="e.g., 12"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="commercial_loading_docks">Number of Loading Docks</Label>
+                          <Input
+                            id="commercial_loading_docks"
+                            type="number"
+                            value={commercialLoadingDocks}
+                            onChange={(e) => setCommercialLoadingDocks(e.target.value)}
+                            placeholder="0"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="commercial_power_available">Power Available</Label>
+                          <Input
+                            id="commercial_power_available"
+                            value={commercialPowerAvailable}
+                            onChange={(e) => setCommercialPowerAvailable(e.target.value)}
+                            placeholder="e.g., 200 amp, 3-phase"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Additional Features</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {[
+                            "Drive-Through", "High Ceilings", "HVAC", 
+                            "Loading Dock", "Sprinkler System", "Security System",
+                            "Fiber Optic", "Backup Generator", "Outdoor Signage"
+                          ].map((feature) => (
+                            <div key={feature} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`commercial-feature-${feature}`}
+                                checked={commercialAdditionalFeatures.includes(feature)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setCommercialAdditionalFeatures([...commercialAdditionalFeatures, feature]);
+                                  } else {
+                                    setCommercialAdditionalFeatures(commercialAdditionalFeatures.filter(f => f !== feature));
+                                  }
+                                }}
+                              />
+                              <Label 
+                                htmlFor={`commercial-feature-${feature}`}
+                                className="text-sm font-normal cursor-pointer"
+                              >
+                                {feature}
                               </Label>
                             </div>
                           ))}

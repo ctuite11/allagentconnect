@@ -1021,6 +1021,7 @@ export type Database = {
           bedrooms: number | null
           cancelled_at: string | null
           city: string
+          commercial_details: Json | null
           commission_notes: string | null
           commission_rate: number | null
           commission_type: string | null
@@ -1093,6 +1094,7 @@ export type Database = {
           bedrooms?: number | null
           cancelled_at?: string | null
           city: string
+          commercial_details?: Json | null
           commission_notes?: string | null
           commission_rate?: number | null
           commission_type?: string | null
@@ -1165,6 +1167,7 @@ export type Database = {
           bedrooms?: number | null
           cancelled_at?: string | null
           city?: string
+          commercial_details?: Json | null
           commission_notes?: string | null
           commission_rate?: number | null
           commission_type?: string | null
