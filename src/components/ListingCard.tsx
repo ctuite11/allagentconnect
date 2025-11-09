@@ -24,12 +24,13 @@ interface ListingCardProps {
     status: string;
     photos?: any;
     open_houses?: any;
-  listing_type?: string | null;
+    listing_type?: string | null;
     created_at?: string;
     active_date?: string | null;
     listing_number?: string | null;
     is_relisting?: boolean;
     original_listing_id?: string | null;
+    condo_details?: any;
     listing_stats?: {
       view_count: number;
       save_count: number;
@@ -237,6 +238,20 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
 
   const matchButtonStyle = getMatchButtonStyle();
 
+  const getUnitNumber = () => {
+    if (!listing.condo_details) return null;
+    try {
+      const details = typeof listing.condo_details === 'string' 
+        ? JSON.parse(listing.condo_details) 
+        : listing.condo_details;
+      return details?.unit_number || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const unitNumber = getUnitNumber();
+
   const calculateDaysOnMarket = () => {
     // Use active_date (MLS date) if available, otherwise fall back to created_at
     const marketDate = listing.active_date || listing.created_at;
@@ -292,7 +307,14 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
           {/* Listing Info */}
           <div className="flex-1 grid grid-cols-12 gap-4">
             <div className="col-span-6">
-              <h3 className="font-semibold mb-1">{listing.address}</h3>
+              <h3 className="font-semibold mb-1">
+                {listing.address}
+                {unitNumber && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    Unit {unitNumber}
+                  </Badge>
+                )}
+              </h3>
               <div className="flex items-center text-muted-foreground text-sm mb-2">
                 <MapPin className="w-3 h-3 mr-1" />
                 {listing.city}, {listing.state} {listing.zip_code}
@@ -518,7 +540,14 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
-            <h3 className="text-xl font-semibold mb-2">{listing.address}</h3>
+            <h3 className="text-xl font-semibold mb-2">
+              {listing.address}
+              {unitNumber && (
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  Unit {unitNumber}
+                </Badge>
+              )}
+            </h3>
             <div className="flex items-center text-muted-foreground text-sm mb-3">
               <MapPin className="w-4 h-4 mr-1" />
               {listing.city}, {listing.state} {listing.zip_code}

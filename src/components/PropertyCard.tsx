@@ -11,9 +11,10 @@ interface PropertyCardProps {
   beds: number;
   baths: number;
   sqft: string;
+  unitNumber?: string;
 }
 
-const PropertyCard = ({ image, title, price, savings, address, beds, baths, sqft }: PropertyCardProps) => {
+const PropertyCard = ({ image, title, price, savings, address, beds, baths, sqft, unitNumber }: PropertyCardProps) => {
   return (
     <Card className="overflow-hidden hover:shadow-custom-hover transition-all duration-300 group">
       <div className="relative overflow-hidden">
@@ -32,9 +33,16 @@ const PropertyCard = ({ image, title, price, savings, address, beds, baths, sqft
           <h3 className="text-2xl font-bold text-primary">{price}</h3>
         </div>
         
-        <div className="flex items-center gap-2 text-muted-foreground mb-4">
-          <MapPin className="w-4 h-4" />
-          <p className="text-sm">{address}</p>
+        <div className="flex flex-col gap-2 mb-4">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <MapPin className="w-4 h-4" />
+            <p className="text-sm">{address}</p>
+          </div>
+          {unitNumber && (
+            <Badge variant="secondary" className="w-fit text-xs">
+              Unit {unitNumber}
+            </Badge>
+          )}
         </div>
         
         <div className="flex items-center gap-6 text-sm text-muted-foreground">
