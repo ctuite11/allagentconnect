@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usCitiesByState } from "@/data/usCitiesData";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 interface CreateHotSheetDialogProps {
   open: boolean;
@@ -414,7 +415,7 @@ export function CreateHotSheetDialog({
         clientFirstName: clientFirstName || null,
         clientLastName: clientLastName || null,
         clientEmail: clientEmail || null,
-        clientPhone: clientPhone || null,
+        clientPhone: clientPhone ? formatPhoneNumber(clientPhone) : null,
         // Sale listing criteria
         listingAgreementTypes: listingAgreementTypes.length > 0 ? listingAgreementTypes : null,
         entryOnly,
@@ -614,38 +615,14 @@ export function CreateHotSheetDialog({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="client-phone">Phone (Optional)</Label>
-                <Input
+                <FormattedInput
                   id="client-phone"
-                  type="tel"
-                  placeholder="5551234567"
+                  format="phone"
+                  placeholder="(555) 123-4567"
                   value={clientPhone}
-                  onChange={(e) => setClientPhone(e.target.value)}
+                  onChange={setClientPhone}
                 />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Search Criteria */}
-          <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
-            <Card>
-              <CollapsibleTrigger className="w-full">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-base">Search Criteria</CardTitle>
-                  {criteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="space-y-6">
-                  {/* Listing Numbers */}
-                  <div className="space-y-2">
-                    <Label htmlFor="listing-numbers" className="text-sm font-semibold uppercase">List Number(s)</Label>
-                    <Input
-                      id="listing-numbers"
-                      placeholder="Enter listing number(s)"
-                      value={listingNumbers}
-                      onChange={(e) => setListingNumbers(e.target.value)}
-                    />
-                  </div>
 
                   {/* Address Section */}
                   <div className="space-y-4 border-t pt-4">
