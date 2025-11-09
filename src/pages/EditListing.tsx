@@ -56,12 +56,40 @@ const EditListing = () => {
     showing_contact_name: "",
     showing_contact_phone: "",
     additional_notes: "",
+    annual_property_tax: "",
+    tax_assessment_value: "",
+    tax_year: "",
+    lot_size: "",
+    year_built: "",
+    num_fireplaces: "",
   });
 
   const [disclosures, setDisclosures] = useState<string[]>([]);
   const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
   const [amenities, setAmenities] = useState<string[]>([]);
   const [manualAddressDialogOpen, setManualAddressDialogOpen] = useState(false);
+  
+  // New comprehensive fields
+  const [assessedValue, setAssessedValue] = useState("");
+  const [fiscalYear, setFiscalYear] = useState("");
+  const [residentialExemption, setResidentialExemption] = useState("");
+  const [floors, setFloors] = useState("");
+  const [basementType, setBasementType] = useState("");
+  const [basementFeatures, setBasementFeatures] = useState<string[]>([]);
+  const [basementFloorType, setBasementFloorType] = useState<string[]>([]);
+  const [leadPaint, setLeadPaint] = useState("");
+  const [handicapAccess, setHandicapAccess] = useState("");
+  const [foundation, setFoundation] = useState<string[]>([]);
+  const [parkingComments, setParkingComments] = useState("");
+  const [parkingFeatures, setParkingFeatures] = useState<string[]>([]);
+  const [garageComments, setGarageComments] = useState("");
+  const [garageFeatures, setGarageFeatures] = useState<string[]>([]);
+  const [lotSizeSource, setLotSizeSource] = useState("");
+  const [lotDescription, setLotDescription] = useState<string[]>([]);
+  const [sellerDisclosure, setSellerDisclosure] = useState("");
+  const [disclosuresText, setDisclosuresText] = useState("");
+  const [exclusions, setExclusions] = useState("");
+  const [brokerComments, setBrokerComments] = useState("");
 
   useEffect(() => {
     const checkAuthAndLoadListing = async () => {
@@ -114,10 +142,44 @@ const EditListing = () => {
           showing_contact_name: data.showing_contact_name || "",
           showing_contact_phone: data.showing_contact_phone || "",
           additional_notes: data.additional_notes || "",
+          annual_property_tax: data.annual_property_tax?.toString() || "",
+          tax_assessment_value: data.tax_assessment_value?.toString() || "",
+          tax_year: data.tax_year?.toString() || "",
+          lot_size: data.lot_size?.toString() || "",
+          year_built: data.year_built?.toString() || "",
+          num_fireplaces: data.num_fireplaces?.toString() || "",
         });
         setDisclosures(Array.isArray(data.disclosures) ? data.disclosures as string[] : []);
         setPropertyFeatures(Array.isArray(data.property_features) ? data.property_features as string[] : []);
         setAmenities(Array.isArray(data.amenities) ? data.amenities as string[] : []);
+        
+        // Parse comprehensive fields from disclosures array
+        const disclosuresArray = Array.isArray(data.disclosures) ? data.disclosures as string[] : [];
+        disclosuresArray.forEach((d: string) => {
+          if (d.startsWith('Residential Exemption:')) setResidentialExemption(d.replace('Residential Exemption: ', ''));
+          if (d.startsWith('Floors:')) setFloors(d.replace('Floors: ', ''));
+          if (d.startsWith('Basement Type:')) setBasementType(d.replace('Basement Type: ', ''));
+          if (d.startsWith('Basement Features:')) setBasementFeatures(d.replace('Basement Features: ', '').split(', '));
+          if (d.startsWith('Basement Floor Type:')) setBasementFloorType(d.replace('Basement Floor Type: ', '').split(', '));
+          if (d.startsWith('Lead Paint:')) setLeadPaint(d.replace('Lead Paint: ', ''));
+          if (d.startsWith('Handicap Access:')) setHandicapAccess(d.replace('Handicap Access: ', ''));
+          if (d.startsWith('Foundation:')) setFoundation(d.replace('Foundation: ', '').split(', '));
+          if (d.startsWith('Parking Comments:')) setParkingComments(d.replace('Parking Comments: ', ''));
+          if (d.startsWith('Parking Features:')) setParkingFeatures(d.replace('Parking Features: ', '').split(', '));
+          if (d.startsWith('Garage Comments:')) setGarageComments(d.replace('Garage Comments: ', ''));
+          if (d.startsWith('Garage Features:')) setGarageFeatures(d.replace('Garage Features: ', '').split(', '));
+          if (d.startsWith('Lot Size Source:')) setLotSizeSource(d.replace('Lot Size Source: ', ''));
+          if (d.startsWith('Lot Description:')) setLotDescription(d.replace('Lot Description: ', '').split(', '));
+          if (d.startsWith('Seller Disclosure:')) setSellerDisclosure(d.replace('Seller Disclosure: ', ''));
+          if (d.startsWith('Disclosures:')) setDisclosuresText(d.replace('Disclosures: ', ''));
+          if (d.startsWith('Exclusions:')) setExclusions(d.replace('Exclusions: ', ''));
+        });
+        
+        // Parse broker comments from additional_notes
+        if (data.additional_notes?.includes('Broker Comments:')) {
+          const parts = data.additional_notes.split('Broker Comments:');
+          setBrokerComments(parts[1]?.trim() || '');
+        }
       }
     } catch (error: any) {
       toast.error("Error loading listing: " + error.message);
@@ -153,6 +215,33 @@ const EditListing = () => {
     setSubmitting(true);
 
     try {
+      // Build updated disclosures array
+      const updatedDisclosures = [...disclosures];
+      
+      if (residentialExemption) updatedDisclosures.push(`Residential Exemption: ${residentialExemption}`);
+      if (floors) updatedDisclosures.push(`Floors: ${floors}`);
+      if (basementType) updatedDisclosures.push(`Basement Type: ${basementType}`);
+      if (basementFeatures.length > 0) updatedDisclosures.push(`Basement Features: ${basementFeatures.join(', ')}`);
+      if (basementFloorType.length > 0) updatedDisclosures.push(`Basement Floor Type: ${basementFloorType.join(', ')}`);
+      if (leadPaint) updatedDisclosures.push(`Lead Paint: ${leadPaint}`);
+      if (handicapAccess) updatedDisclosures.push(`Handicap Access: ${handicapAccess}`);
+      if (foundation.length > 0) updatedDisclosures.push(`Foundation: ${foundation.join(', ')}`);
+      if (parkingComments) updatedDisclosures.push(`Parking Comments: ${parkingComments}`);
+      if (parkingFeatures.length > 0) updatedDisclosures.push(`Parking Features: ${parkingFeatures.join(', ')}`);
+      if (garageComments) updatedDisclosures.push(`Garage Comments: ${garageComments}`);
+      if (garageFeatures.length > 0) updatedDisclosures.push(`Garage Features: ${garageFeatures.join(', ')}`);
+      if (lotSizeSource) updatedDisclosures.push(`Lot Size Source: ${lotSizeSource}`);
+      if (lotDescription.length > 0) updatedDisclosures.push(`Lot Description: ${lotDescription.join(', ')}`);
+      if (sellerDisclosure) updatedDisclosures.push(`Seller Disclosure: ${sellerDisclosure}`);
+      if (disclosuresText) updatedDisclosures.push(`Disclosures: ${disclosuresText}`);
+      if (exclusions) updatedDisclosures.push(`Exclusions: ${exclusions}`);
+
+      // Build additional notes with broker comments
+      let additionalNotes = formData.additional_notes;
+      if (brokerComments) {
+        additionalNotes += `\n\nBroker Comments: ${brokerComments}`;
+      }
+
       const dataToUpdate = {
         address: formData.address,
         city: formData.city,
@@ -163,8 +252,26 @@ const EditListing = () => {
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
         square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
+        lot_size: formData.lot_size ? parseFloat(formData.lot_size) : null,
+        year_built: formData.year_built ? parseInt(formData.year_built) : null,
         description: formData.description || null,
         status: formData.status,
+        commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
+        commission_type: formData.commission_type,
+        commission_notes: formData.commission_notes || null,
+        showing_instructions: formData.showing_instructions || null,
+        lockbox_code: formData.lockbox_code || null,
+        appointment_required: formData.appointment_required,
+        showing_contact_name: formData.showing_contact_name || null,
+        showing_contact_phone: formData.showing_contact_phone || null,
+        disclosures: updatedDisclosures,
+        property_features: propertyFeatures,
+        amenities: amenities,
+        additional_notes: additionalNotes || null,
+        annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
+        tax_assessment_value: formData.tax_assessment_value ? parseFloat(formData.tax_assessment_value) : null,
+        tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
+        num_fireplaces: formData.num_fireplaces ? parseInt(formData.num_fireplaces) : null,
       };
 
       const validated = listingSchema.parse(dataToUpdate);
@@ -434,6 +541,380 @@ const EditListing = () => {
                 />
               </div>
 
+              {/* Property Tax & Building Information */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-semibold">Property Tax & Building Information</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="annual_property_tax">Annual Property Tax</Label>
+                    <FormattedInput
+                      id="annual_property_tax"
+                      format="currency"
+                      value={formData.annual_property_tax}
+                      onChange={(value) => setFormData({ ...formData, annual_property_tax: value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tax_assessment_value">Assessed Value</Label>
+                    <FormattedInput
+                      id="tax_assessment_value"
+                      format="currency"
+                      value={formData.tax_assessment_value}
+                      onChange={(value) => setFormData({ ...formData, tax_assessment_value: value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tax_year">Fiscal Year</Label>
+                    <Input
+                      id="tax_year"
+                      type="number"
+                      value={formData.tax_year}
+                      onChange={(e) => setFormData({ ...formData, tax_year: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="residentialExemption">Residential Exemption</Label>
+                    <Select value={residentialExemption} onValueChange={setResidentialExemption}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="floors">Number of Floors</Label>
+                    <Input
+                      id="floors"
+                      value={floors}
+                      onChange={(e) => setFloors(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="num_fireplaces">Fireplaces</Label>
+                    <Input
+                      id="num_fireplaces"
+                      type="number"
+                      value={formData.num_fireplaces}
+                      onChange={(e) => setFormData({ ...formData, num_fireplaces: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="lot_size">Lot Size (acres)</Label>
+                    <Input
+                      id="lot_size"
+                      type="number"
+                      step="0.01"
+                      value={formData.lot_size}
+                      onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="year_built">Year Built</Label>
+                    <Input
+                      id="year_built"
+                      type="number"
+                      value={formData.year_built}
+                      onChange={(e) => setFormData({ ...formData, year_built: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Basement Details */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-semibold">Basement Information</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="basementType">Basement Type</Label>
+                  <Select value={basementType} onValueChange={setBasementType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select basement type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Full">Full</SelectItem>
+                      <SelectItem value="Partial">Partial</SelectItem>
+                      <SelectItem value="Crawl Space">Crawl Space</SelectItem>
+                      <SelectItem value="None">None</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Basement Features</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['Finished', 'Unfinished', 'Partially Finished', 'Walk-Out', 'Interior Access', 'Exterior Access'].map((feature) => (
+                      <div key={feature} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`basement-${feature}`}
+                          checked={basementFeatures.includes(feature)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setBasementFeatures([...basementFeatures, feature]);
+                            } else {
+                              setBasementFeatures(basementFeatures.filter(f => f !== feature));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <Label htmlFor={`basement-${feature}`} className="font-normal cursor-pointer text-sm">
+                          {feature}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Basement Floor Type</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['Concrete', 'Tile', 'Carpet', 'Wood', 'Other'].map((type) => (
+                      <div key={type} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`floor-${type}`}
+                          checked={basementFloorType.includes(type)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setBasementFloorType([...basementFloorType, type]);
+                            } else {
+                              setBasementFloorType(basementFloorType.filter(t => t !== type));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <Label htmlFor={`floor-${type}`} className="font-normal cursor-pointer text-sm">
+                          {type}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Foundation & Building Details */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-semibold">Foundation & Building Details</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="leadPaint">Lead Paint</Label>
+                    <Select value={leadPaint} onValueChange={setLeadPaint}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Unknown">Unknown</SelectItem>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                        <SelectItem value="Not Applicable">Not Applicable</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="handicapAccess">Handicap Access</Label>
+                    <Select value={handicapAccess} onValueChange={setHandicapAccess}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                        <SelectItem value="Partial">Partial</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Foundation</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['Poured Concrete', 'Block', 'Stone', 'Brick', 'Wood', 'Other'].map((type) => (
+                      <div key={type} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`foundation-${type}`}
+                          checked={foundation.includes(type)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFoundation([...foundation, type]);
+                            } else {
+                              setFoundation(foundation.filter(f => f !== type));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <Label htmlFor={`foundation-${type}`} className="font-normal cursor-pointer text-sm">
+                          {type}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Parking & Garage */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-semibold">Parking & Garage</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="parkingComments">Parking Comments</Label>
+                  <Input
+                    id="parkingComments"
+                    value={parkingComments}
+                    onChange={(e) => setParkingComments(e.target.value)}
+                    placeholder="Additional parking information..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Parking Features</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['Driveway', 'Off-Street', 'On-Street', 'Assigned', 'Covered', 'Uncovered', 'Garage Attached', 'Garage Detached'].map((feature) => (
+                      <div key={feature} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`parking-${feature}`}
+                          checked={parkingFeatures.includes(feature)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setParkingFeatures([...parkingFeatures, feature]);
+                            } else {
+                              setParkingFeatures(parkingFeatures.filter(f => f !== feature));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <Label htmlFor={`parking-${feature}`} className="font-normal cursor-pointer text-sm">
+                          {feature}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="garageComments">Garage Comments</Label>
+                  <Input
+                    id="garageComments"
+                    value={garageComments}
+                    onChange={(e) => setGarageComments(e.target.value)}
+                    placeholder="Additional garage information..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Garage Features</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['Heated', 'Electric Door Opener', 'Workshop', 'Finished Interior', 'Storage', 'Insulated'].map((feature) => (
+                      <div key={feature} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`garage-${feature}`}
+                          checked={garageFeatures.includes(feature)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setGarageFeatures([...garageFeatures, feature]);
+                            } else {
+                              setGarageFeatures(garageFeatures.filter(f => f !== feature));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <Label htmlFor={`garage-${feature}`} className="font-normal cursor-pointer text-sm">
+                          {feature}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Lot Information */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-semibold">Lot Information</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="lotSizeSource">Lot Size Source</Label>
+                  <Input
+                    id="lotSizeSource"
+                    value={lotSizeSource}
+                    onChange={(e) => setLotSizeSource(e.target.value)}
+                    placeholder="e.g., Assessor, Survey, Public Records"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Lot Description</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['Corner Lot', 'Cul-de-sac', 'Level', 'Sloped', 'Wooded', 'Cleared', 'Fenced', 'Landscaped'].map((desc) => (
+                      <div key={desc} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`lot-${desc}`}
+                          checked={lotDescription.includes(desc)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setLotDescription([...lotDescription, desc]);
+                            } else {
+                              setLotDescription(lotDescription.filter(d => d !== desc));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <Label htmlFor={`lot-${desc}`} className="font-normal cursor-pointer text-sm">
+                          {desc}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Disclosures & Legal */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-semibold">Disclosures & Legal Information</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="sellerDisclosure">Seller Disclosure</Label>
+                  <Select value={sellerDisclosure} onValueChange={setSellerDisclosure}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Available">Available</SelectItem>
+                      <SelectItem value="Not Available">Not Available</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="disclosuresText">Additional Disclosures</Label>
+                  <Textarea
+                    id="disclosuresText"
+                    value={disclosuresText}
+                    onChange={(e) => setDisclosuresText(e.target.value)}
+                    rows={3}
+                    placeholder="Any additional disclosures about the property..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="exclusions">Exclusions</Label>
+                  <Textarea
+                    id="exclusions"
+                    value={exclusions}
+                    onChange={(e) => setExclusions(e.target.value)}
+                    rows={3}
+                    placeholder="Items not included in the sale..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="brokerComments">Broker Comments</Label>
+                  <Textarea
+                    id="brokerComments"
+                    value={brokerComments}
+                    onChange={(e) => setBrokerComments(e.target.value)}
+                    rows={3}
+                    placeholder="Comments for other agents..."
+                  />
+                </div>
+              </div>
+
               {/* Commission Section */}
               <div className="space-y-4 border-t pt-4">
                 <h3 className="font-semibold">Commission Information</h3>
@@ -530,286 +1011,6 @@ const EditListing = () => {
                     />
                   </div>
                 </div>
-              </div>
-
-              {/* Disclosures */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Disclosures</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {['Lead-based paint', 'Asbestos', 'Radon', 'Flood zone', 'HOA restrictions', 'Previous damage/repairs'].map((disclosure) => (
-                    <div key={disclosure} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={disclosure}
-                        checked={disclosures.includes(disclosure)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setDisclosures([...disclosures, disclosure]);
-                          } else {
-                            setDisclosures(disclosures.filter(d => d !== disclosure));
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <Label htmlFor={disclosure} className="font-normal cursor-pointer text-sm">
-                        {disclosure}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Property Features */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Property Features</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {['Hardwood floors', 'Granite countertops', 'Fireplace', 'Updated kitchen', 'Basement', 'Garage'].map((feature) => (
-                    <div key={feature} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={feature}
-                        checked={propertyFeatures.includes(feature)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setPropertyFeatures([...propertyFeatures, feature]);
-                          } else {
-                            setPropertyFeatures(propertyFeatures.filter(f => f !== feature));
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <Label htmlFor={feature} className="font-normal cursor-pointer text-sm">
-                        {feature}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Amenities */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Amenities</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {['Pool', 'Gym', 'Pet friendly', 'Gated community', 'Security system', 'Parking'].map((amenity) => (
-                    <div key={amenity} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={amenity}
-                        checked={amenities.includes(amenity)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setAmenities([...amenities, amenity]);
-                          } else {
-                            setAmenities(amenities.filter(a => a !== amenity));
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <Label htmlFor={amenity} className="font-normal cursor-pointer text-sm">
-                        {amenity}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Additional Notes */}
-              <div className="space-y-2 border-t pt-4">
-                <Label htmlFor="additional_notes">Additional Notes</Label>
-                <Textarea
-                  id="additional_notes"
-                  value={formData.additional_notes}
-                  onChange={(e) => setFormData({ ...formData, additional_notes: e.target.value })}
-                  rows={3}
-                />
-              </div>
-
-              {/* Commission Section */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Commission Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="commission_type">Commission Type</Label>
-                    <Select
-                      value={formData.commission_type}
-                      onValueChange={(value) => setFormData({ ...formData, commission_type: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="percentage">Percentage</SelectItem>
-                        <SelectItem value="flat_fee">Flat Fee</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="commission_rate">Rate/Amount</Label>
-                    <Input
-                      id="commission_rate"
-                      type="number"
-                      step="0.01"
-                      value={formData.commission_rate}
-                      onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="commission_notes">Commission Notes</Label>
-                  <Input
-                    id="commission_notes"
-                    value={formData.commission_notes}
-                    onChange={(e) => setFormData({ ...formData, commission_notes: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Showing Instructions */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Showing Instructions</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="showing_instructions">Instructions</Label>
-                  <Textarea
-                    id="showing_instructions"
-                    value={formData.showing_instructions}
-                    onChange={(e) => setFormData({ ...formData, showing_instructions: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="lockbox_code">Lockbox Code</Label>
-                    <Input
-                      id="lockbox_code"
-                      type="password"
-                      value={formData.lockbox_code}
-                      onChange={(e) => setFormData({ ...formData, lockbox_code: e.target.value })}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2 pt-8">
-                    <input
-                      type="checkbox"
-                      id="appointment_required"
-                      checked={formData.appointment_required}
-                      onChange={(e) => setFormData({ ...formData, appointment_required: e.target.checked })}
-                      className="rounded"
-                    />
-                    <Label htmlFor="appointment_required" className="font-normal cursor-pointer">
-                      Appointment required
-                    </Label>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="showing_contact_name">Contact Name</Label>
-                    <Input
-                      id="showing_contact_name"
-                      value={formData.showing_contact_name}
-                      onChange={(e) => setFormData({ ...formData, showing_contact_name: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="showing_contact_phone">Contact Phone</Label>
-                    <Input
-                      id="showing_contact_phone"
-                      type="tel"
-                      value={formData.showing_contact_phone}
-                      onChange={(e) => setFormData({ ...formData, showing_contact_phone: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Disclosures */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Disclosures</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {['Lead-based paint', 'Asbestos', 'Radon', 'Flood zone', 'HOA restrictions', 'Previous damage/repairs'].map((disclosure) => (
-                    <div key={disclosure} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={disclosure}
-                        checked={disclosures.includes(disclosure)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setDisclosures([...disclosures, disclosure]);
-                          } else {
-                            setDisclosures(disclosures.filter(d => d !== disclosure));
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <Label htmlFor={disclosure} className="font-normal cursor-pointer text-sm">
-                        {disclosure}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Property Features */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Property Features</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {['Hardwood floors', 'Granite countertops', 'Fireplace', 'Updated kitchen', 'Basement', 'Garage'].map((feature) => (
-                    <div key={feature} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={feature}
-                        checked={propertyFeatures.includes(feature)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setPropertyFeatures([...propertyFeatures, feature]);
-                          } else {
-                            setPropertyFeatures(propertyFeatures.filter(f => f !== feature));
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <Label htmlFor={feature} className="font-normal cursor-pointer text-sm">
-                        {feature}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Amenities */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Amenities</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {['Pool', 'Gym', 'Pet friendly', 'Gated community', 'Security system', 'Parking'].map((amenity) => (
-                    <div key={amenity} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={amenity}
-                        checked={amenities.includes(amenity)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setAmenities([...amenities, amenity]);
-                          } else {
-                            setAmenities(amenities.filter(a => a !== amenity));
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <Label htmlFor={amenity} className="font-normal cursor-pointer text-sm">
-                        {amenity}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Additional Notes */}
-              <div className="space-y-2 border-t pt-4">
-                <Label htmlFor="additional_notes">Additional Notes</Label>
-                <Textarea
-                  id="additional_notes"
-                  value={formData.additional_notes}
-                  onChange={(e) => setFormData({ ...formData, additional_notes: e.target.value })}
-                  rows={3}
-                />
               </div>
 
               <div className="flex gap-4">
