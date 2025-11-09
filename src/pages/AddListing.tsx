@@ -133,6 +133,16 @@ const AddListing = () => {
   const [coolingTypes, setCoolingTypes] = useState<string[]>([]);
   const [greenFeatures, setGreenFeatures] = useState<string[]>([]);
 
+  // Condominium-specific fields
+  const [condoUnitNumber, setCondoUnitNumber] = useState("");
+  const [condoFloorLevel, setCondoFloorLevel] = useState("");
+  const [condoHoaFee, setCondoHoaFee] = useState("");
+  const [condoHoaFeeFrequency, setCondoHoaFeeFrequency] = useState("monthly");
+  const [condoBuildingAmenities, setCondoBuildingAmenities] = useState<string[]>([]);
+  const [condoPetPolicy, setCondoPetPolicy] = useState("");
+  const [condoTotalUnits, setCondoTotalUnits] = useState("");
+  const [condoYearBuilt, setCondoYearBuilt] = useState("");
+
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
@@ -771,6 +781,16 @@ const AddListing = () => {
         heating_types: heatingTypes.length > 0 ? heatingTypes : null,
         cooling_types: coolingTypes.length > 0 ? coolingTypes : null,
         green_features: greenFeatures.length > 0 ? greenFeatures : null,
+        // Condominium-specific details
+        condo_details: formData.property_type === "Condominium" ? {
+          unit_number: condoUnitNumber || null,
+          floor_level: condoFloorLevel ? parseInt(condoFloorLevel) : null,
+          hoa_fee: condoHoaFee ? parseFloat(condoHoaFee) : null,
+          hoa_fee_frequency: condoHoaFeeFrequency,
+          building_amenities: condoBuildingAmenities.length > 0 ? condoBuildingAmenities : null,
+          pet_policy: condoPetPolicy || null,
+          total_units: condoTotalUnits ? parseInt(condoTotalUnits) : null,
+        } : null,
       });
 
       if (error) throw error;
@@ -1119,6 +1139,129 @@ const AddListing = () => {
                     />
                   </div>
                 </div>
+
+                {/* Condominium-Specific Fields */}
+                {formData.property_type === "Condominium" && (
+                  <>
+                    <Separator className="my-6" />
+                    <div className="space-y-6">
+                      <Label className="text-xl font-semibold">Condominium Information</Label>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="condo_unit_number">Unit Number</Label>
+                          <Input
+                            id="condo_unit_number"
+                            value={condoUnitNumber}
+                            onChange={(e) => setCondoUnitNumber(e.target.value)}
+                            placeholder="e.g., 3B, 205"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="condo_floor_level">Floor Level</Label>
+                          <Input
+                            id="condo_floor_level"
+                            type="number"
+                            value={condoFloorLevel}
+                            onChange={(e) => setCondoFloorLevel(e.target.value)}
+                            placeholder="e.g., 3"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="condo_total_units">Total Units in Building</Label>
+                          <Input
+                            id="condo_total_units"
+                            type="number"
+                            value={condoTotalUnits}
+                            onChange={(e) => setCondoTotalUnits(e.target.value)}
+                            placeholder="e.g., 48"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="condo_hoa_fee">HOA/Condo Fee</Label>
+                          <FormattedInput
+                            id="condo_hoa_fee"
+                            format="currency"
+                            decimals={2}
+                            value={condoHoaFee}
+                            onChange={(value) => setCondoHoaFee(value)}
+                            placeholder="$0.00"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="condo_hoa_fee_frequency">Fee Frequency</Label>
+                          <Select
+                            value={condoHoaFeeFrequency}
+                            onValueChange={(value) => setCondoHoaFeeFrequency(value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="quarterly">Quarterly</SelectItem>
+                              <SelectItem value="annually">Annually</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="condo_pet_policy">Pet Policy</Label>
+                        <Select
+                          value={condoPetPolicy}
+                          onValueChange={(value) => setCondoPetPolicy(value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select pet policy" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="allowed">Pets Allowed</SelectItem>
+                            <SelectItem value="not_allowed">No Pets</SelectItem>
+                            <SelectItem value="cats_only">Cats Only</SelectItem>
+                            <SelectItem value="small_pets">Small Pets Only</SelectItem>
+                            <SelectItem value="restrictions">Restrictions Apply</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Building Amenities</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {[
+                            "Elevator", "Fitness Center", "Pool", "Concierge", 
+                            "Doorman", "Storage", "Garage Parking", "Guest Parking",
+                            "Bike Room", "Common Roof Deck", "Laundry in Building", 
+                            "Package Room", "Business Center", "Party Room"
+                          ].map((amenity) => (
+                            <div key={amenity} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`condo-amenity-${amenity}`}
+                                checked={condoBuildingAmenities.includes(amenity)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setCondoBuildingAmenities([...condoBuildingAmenities, amenity]);
+                                  } else {
+                                    setCondoBuildingAmenities(condoBuildingAmenities.filter(a => a !== amenity));
+                                  }
+                                }}
+                              />
+                              <Label 
+                                htmlFor={`condo-amenity-${amenity}`}
+                                className="text-sm font-normal cursor-pointer"
+                              >
+                                {amenity}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="lot_size">Lot Size (sq ft)</Label>

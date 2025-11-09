@@ -1024,6 +1024,7 @@ export type Database = {
           commission_notes: string | null
           commission_rate: number | null
           commission_type: string | null
+          condo_details: Json | null
           construction_features: Json | null
           cooling_types: Json | null
           created_at: string
@@ -1094,6 +1095,7 @@ export type Database = {
           commission_notes?: string | null
           commission_rate?: number | null
           commission_type?: string | null
+          condo_details?: Json | null
           construction_features?: Json | null
           cooling_types?: Json | null
           created_at?: string
@@ -1164,6 +1166,7 @@ export type Database = {
           commission_notes?: string | null
           commission_rate?: number | null
           commission_type?: string | null
+          condo_details?: Json | null
           construction_features?: Json | null
           cooling_types?: Json | null
           created_at?: string
