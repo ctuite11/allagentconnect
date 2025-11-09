@@ -1049,6 +1049,7 @@ export type Database = {
           lockbox_code: string | null
           longitude: number | null
           lot_size: number | null
+          multi_family_details: Json | null
           num_fireplaces: number | null
           open_houses: Json | null
           original_listing_id: string | null
@@ -1120,6 +1121,7 @@ export type Database = {
           lockbox_code?: string | null
           longitude?: number | null
           lot_size?: number | null
+          multi_family_details?: Json | null
           num_fireplaces?: number | null
           open_houses?: Json | null
           original_listing_id?: string | null
@@ -1191,6 +1193,7 @@ export type Database = {
           lockbox_code?: string | null
           longitude?: number | null
           lot_size?: number | null
+          multi_family_details?: Json | null
           num_fireplaces?: number | null
           open_houses?: Json | null
           original_listing_id?: string | null

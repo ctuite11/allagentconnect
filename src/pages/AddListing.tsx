@@ -143,6 +143,16 @@ const AddListing = () => {
   const [condoTotalUnits, setCondoTotalUnits] = useState("");
   const [condoYearBuilt, setCondoYearBuilt] = useState("");
 
+  // Multi-family specific fields
+  const [multiFamilyUnits, setMultiFamilyUnits] = useState("");
+  const [multiFamilyUnitBreakdown, setMultiFamilyUnitBreakdown] = useState("");
+  const [multiFamilyCurrentIncome, setMultiFamilyCurrentIncome] = useState("");
+  const [multiFamilyPotentialIncome, setMultiFamilyPotentialIncome] = useState("");
+  const [multiFamilyOccupancyStatus, setMultiFamilyOccupancyStatus] = useState("");
+  const [multiFamilyLaundryType, setMultiFamilyLaundryType] = useState("");
+  const [multiFamilySeparateUtilities, setMultiFamilySeparateUtilities] = useState<string[]>([]);
+  const [multiFamilyParkingPerUnit, setMultiFamilyParkingPerUnit] = useState("");
+
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
@@ -791,6 +801,17 @@ const AddListing = () => {
           pet_policy: condoPetPolicy || null,
           total_units: condoTotalUnits ? parseInt(condoTotalUnits) : null,
         } : null,
+        // Multi-family specific details
+        multi_family_details: formData.property_type === "Multi-Family" ? {
+          number_of_units: multiFamilyUnits ? parseInt(multiFamilyUnits) : null,
+          unit_breakdown: multiFamilyUnitBreakdown || null,
+          current_monthly_income: multiFamilyCurrentIncome ? parseFloat(multiFamilyCurrentIncome) : null,
+          potential_monthly_income: multiFamilyPotentialIncome ? parseFloat(multiFamilyPotentialIncome) : null,
+          occupancy_status: multiFamilyOccupancyStatus || null,
+          laundry_type: multiFamilyLaundryType || null,
+          separate_utilities: multiFamilySeparateUtilities.length > 0 ? multiFamilySeparateUtilities : null,
+          parking_per_unit: multiFamilyParkingPerUnit ? parseFloat(multiFamilyParkingPerUnit) : null,
+        } : null,
       });
 
       if (error) throw error;
@@ -1254,6 +1275,142 @@ const AddListing = () => {
                                 className="text-sm font-normal cursor-pointer"
                               >
                                 {amenity}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Multi-Family Specific Fields */}
+                {formData.property_type === "Multi-Family" && (
+                  <>
+                    <Separator className="my-6" />
+                    <div className="space-y-6">
+                      <Label className="text-xl font-semibold">Multi-Family Information</Label>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="multifamily_units">Number of Units</Label>
+                          <Input
+                            id="multifamily_units"
+                            type="number"
+                            value={multiFamilyUnits}
+                            onChange={(e) => setMultiFamilyUnits(e.target.value)}
+                            placeholder="e.g., 4"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="multifamily_parking_per_unit">Parking Spaces Per Unit</Label>
+                          <Input
+                            id="multifamily_parking_per_unit"
+                            type="number"
+                            value={multiFamilyParkingPerUnit}
+                            onChange={(e) => setMultiFamilyParkingPerUnit(e.target.value)}
+                            placeholder="e.g., 2"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="multifamily_unit_breakdown">Unit Breakdown</Label>
+                        <Textarea
+                          id="multifamily_unit_breakdown"
+                          value={multiFamilyUnitBreakdown}
+                          onChange={(e) => setMultiFamilyUnitBreakdown(e.target.value)}
+                          placeholder="e.g., 2 units: 3BR/2BA, 2 units: 2BR/1BA"
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="multifamily_current_income">Current Monthly Income</Label>
+                          <FormattedInput
+                            id="multifamily_current_income"
+                            format="currency"
+                            decimals={2}
+                            value={multiFamilyCurrentIncome}
+                            onChange={(value) => setMultiFamilyCurrentIncome(value)}
+                            placeholder="$0.00"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="multifamily_potential_income">Potential Monthly Income</Label>
+                          <FormattedInput
+                            id="multifamily_potential_income"
+                            format="currency"
+                            decimals={2}
+                            value={multiFamilyPotentialIncome}
+                            onChange={(value) => setMultiFamilyPotentialIncome(value)}
+                            placeholder="$0.00"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="multifamily_occupancy_status">Occupancy Status</Label>
+                          <Select
+                            value={multiFamilyOccupancyStatus}
+                            onValueChange={(value) => setMultiFamilyOccupancyStatus(value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select occupancy status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="fully_occupied">Fully Occupied</SelectItem>
+                              <SelectItem value="partially_occupied">Partially Occupied</SelectItem>
+                              <SelectItem value="vacant">Vacant</SelectItem>
+                              <SelectItem value="owner_occupied">Owner Occupied</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="multifamily_laundry_type">Laundry</Label>
+                          <Select
+                            value={multiFamilyLaundryType}
+                            onValueChange={(value) => setMultiFamilyLaundryType(value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select laundry type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="in_unit">In-Unit</SelectItem>
+                              <SelectItem value="shared">Shared/Common Area</SelectItem>
+                              <SelectItem value="hookups">Hookups Only</SelectItem>
+                              <SelectItem value="none">None</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Separate Utilities</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {["Electric", "Gas", "Water", "Heat", "Hot Water", "Sewer"].map((utility) => (
+                            <div key={utility} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`utility-${utility}`}
+                                checked={multiFamilySeparateUtilities.includes(utility)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setMultiFamilySeparateUtilities([...multiFamilySeparateUtilities, utility]);
+                                  } else {
+                                    setMultiFamilySeparateUtilities(multiFamilySeparateUtilities.filter(u => u !== utility));
+                                  }
+                                }}
+                              />
+                              <Label 
+                                htmlFor={`utility-${utility}`}
+                                className="text-sm font-normal cursor-pointer"
+                              >
+                                {utility}
                               </Label>
                             </div>
                           ))}
