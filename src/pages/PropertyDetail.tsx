@@ -69,6 +69,12 @@ interface Listing {
   condo_details?: any;
   multi_family_details?: any;
   commercial_details?: any;
+  annual_property_tax?: number | null;
+  tax_year?: number | null;
+  tax_assessment_value?: number | null;
+  num_fireplaces?: number | null;
+  garage_spaces?: number | null;
+  total_parking_spaces?: number | null;
 }
 
 const PropertyDetail = () => {
@@ -536,6 +542,229 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
+              {/* Property Tax & Building Information */}
+              {(listing.annual_property_tax || listing.tax_year || listing.tax_assessment_value) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tax & Building Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {listing.annual_property_tax && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Annual Property Tax</p>
+                          <p className="font-semibold">${parseFloat(listing.annual_property_tax.toString()).toLocaleString()}</p>
+                        </div>
+                      )}
+                      {listing.tax_assessment_value && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Assessed Value</p>
+                          <p className="font-semibold">${parseFloat(listing.tax_assessment_value.toString()).toLocaleString()}</p>
+                        </div>
+                      )}
+                      {listing.tax_year && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Fiscal Year</p>
+                          <p className="font-semibold">{listing.tax_year}</p>
+                        </div>
+                      )}
+                      {listing.disclosures?.find((d: string) => d.startsWith('Residential Exemption:')) && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Residential Exemption</p>
+                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Residential Exemption:'))?.replace('Residential Exemption: ', '')}</p>
+                        </div>
+                      )}
+                      {listing.disclosures?.find((d: string) => d.startsWith('Floors:')) && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Number of Floors</p>
+                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Floors:'))?.replace('Floors: ', '')}</p>
+                        </div>
+                      )}
+                      {listing.num_fireplaces !== null && listing.num_fireplaces !== undefined && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Fireplaces</p>
+                          <p className="font-semibold">{listing.num_fireplaces}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Basement Details */}
+              {listing.disclosures?.some((d: string) => d.startsWith('Basement Type:') || d.startsWith('Basement Features:') || d.startsWith('Basement Floor Type:')) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Basement Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {listing.disclosures.find((d: string) => d.startsWith('Basement Type:')) && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">Basement Type</p>
+                        <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Basement Type:'))?.replace('Basement Type: ', '')}</p>
+                      </div>
+                    )}
+                    {listing.disclosures.find((d: string) => d.startsWith('Basement Features:')) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Basement Features</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {listing.disclosures.find((d: string) => d.startsWith('Basement Features:'))?.replace('Basement Features: ', '').split(', ').map((feature: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <span className="text-sm">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {listing.disclosures.find((d: string) => d.startsWith('Basement Floor Type:')) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Floor Type</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {listing.disclosures.find((d: string) => d.startsWith('Basement Floor Type:'))?.replace('Basement Floor Type: ', '').split(', ').map((type: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <span className="text-sm">{type}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Foundation & Building Details */}
+              {listing.disclosures?.some((d: string) => d.startsWith('Lead Paint:') || d.startsWith('Handicap Access:') || d.startsWith('Foundation:')) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Foundation & Building Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {listing.disclosures.find((d: string) => d.startsWith('Lead Paint:')) && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Lead Paint</p>
+                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Lead Paint:'))?.replace('Lead Paint: ', '')}</p>
+                        </div>
+                      )}
+                      {listing.disclosures.find((d: string) => d.startsWith('Handicap Access:')) && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Handicap Access</p>
+                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Handicap Access:'))?.replace('Handicap Access: ', '')}</p>
+                        </div>
+                      )}
+                    </div>
+                    {listing.disclosures.find((d: string) => d.startsWith('Foundation:')) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Foundation</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {listing.disclosures.find((d: string) => d.startsWith('Foundation:'))?.replace('Foundation: ', '').split(', ').map((type: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <span className="text-sm">{type}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Parking & Garage Information */}
+              {(listing.garage_spaces || listing.total_parking_spaces || listing.disclosures?.some((d: string) => d.startsWith('Parking Features:') || d.startsWith('Parking Comments:') || d.startsWith('Garage Features:') || d.startsWith('Garage Comments:'))) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Parking & Garage</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {listing.total_parking_spaces && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Total Parking Spaces</p>
+                          <p className="font-semibold">{listing.total_parking_spaces}</p>
+                        </div>
+                      )}
+                      {listing.garage_spaces && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Garage Spaces</p>
+                          <p className="font-semibold">{listing.garage_spaces}</p>
+                        </div>
+                      )}
+                    </div>
+                    {listing.disclosures?.find((d: string) => d.startsWith('Parking Comments:')) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-2">Parking Comments</p>
+                        <p className="text-sm">{listing.disclosures.find((d: string) => d.startsWith('Parking Comments:'))?.replace('Parking Comments: ', '')}</p>
+                      </div>
+                    )}
+                    {listing.disclosures?.find((d: string) => d.startsWith('Parking Features:')) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Parking Features</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {listing.disclosures.find((d: string) => d.startsWith('Parking Features:'))?.replace('Parking Features: ', '').split(', ').map((feature: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <span className="text-sm">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {listing.disclosures?.find((d: string) => d.startsWith('Garage Comments:')) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-2">Garage Comments</p>
+                        <p className="text-sm">{listing.disclosures.find((d: string) => d.startsWith('Garage Comments:'))?.replace('Garage Comments: ', '')}</p>
+                      </div>
+                    )}
+                    {listing.disclosures?.find((d: string) => d.startsWith('Garage Features:')) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Garage Features</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {listing.disclosures.find((d: string) => d.startsWith('Garage Features:'))?.replace('Garage Features: ', '').split(', ').map((feature: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <span className="text-sm">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Lot Information */}
+              {listing.disclosures?.some((d: string) => d.startsWith('Lot Size Source:') || d.startsWith('Lot Description:')) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Lot Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {listing.disclosures.find((d: string) => d.startsWith('Lot Size Source:')) && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">Lot Size Source</p>
+                        <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Lot Size Source:'))?.replace('Lot Size Source: ', '')}</p>
+                      </div>
+                    )}
+                    {listing.disclosures?.find((d: string) => d.startsWith('Lot Description:')) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Lot Description</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {listing.disclosures.find((d: string) => d.startsWith('Lot Description:'))?.replace('Lot Description: ', '').split(', ').map((desc: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <span className="text-sm">{desc}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Condominium Details */}
               {listing.property_type === "Condominium" && listing.condo_details && (
                 <Card>
@@ -809,24 +1038,89 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Disclosures */}
-              {listing.disclosures && listing.disclosures.length > 0 && (
+              {/* Disclosures & Legal Information */}
+              {(listing.disclosures?.some((d: string) => d.startsWith('Seller Disclosure:') || d.startsWith('Disclosures:') || d.startsWith('Exclusions:')) || listing.additional_notes) && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <AlertCircle className="w-5 h-5" />
-                      Disclosures
+                      Disclosures & Important Information
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {listing.disclosures.map((disclosure, index) => (
-                        <div key={index} className="flex items-center gap-2 text-sm">
-                          <AlertCircle className="w-4 h-4 text-amber-500" />
-                          <span>{disclosure}</span>
+                  <CardContent className="space-y-4">
+                    {listing.disclosures?.find((d: string) => d.startsWith('Seller Disclosure:')) && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">Seller Disclosure</p>
+                        <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Seller Disclosure:'))?.replace('Seller Disclosure: ', '')}</p>
+                      </div>
+                    )}
+                    {listing.disclosures?.find((d: string) => d.startsWith('Disclosures:')) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-2">Additional Disclosures</p>
+                        <p className="text-sm whitespace-pre-wrap">{listing.disclosures.find((d: string) => d.startsWith('Disclosures:'))?.replace('Disclosures: ', '')}</p>
+                      </div>
+                    )}
+                    {listing.disclosures?.find((d: string) => d.startsWith('Exclusions:')) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-2">Exclusions</p>
+                        <p className="text-sm whitespace-pre-wrap">{listing.disclosures.find((d: string) => d.startsWith('Exclusions:'))?.replace('Exclusions: ', '')}</p>
+                      </div>
+                    )}
+                    {listing.additional_notes?.includes('Broker Comments:') && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-2">Broker Comments</p>
+                        <p className="text-sm whitespace-pre-wrap">{listing.additional_notes.split('Broker Comments:')[1]?.trim()}</p>
+                      </div>
+                    )}
+                    {listing.disclosures && listing.disclosures.filter((d: string) => 
+                      !d.startsWith('Seller Disclosure:') && 
+                      !d.startsWith('Disclosures:') && 
+                      !d.startsWith('Exclusions:') &&
+                      !d.startsWith('Residential Exemption:') &&
+                      !d.startsWith('Floors:') &&
+                      !d.startsWith('Basement Type:') &&
+                      !d.startsWith('Basement Features:') &&
+                      !d.startsWith('Basement Floor Type:') &&
+                      !d.startsWith('Lead Paint:') &&
+                      !d.startsWith('Handicap Access:') &&
+                      !d.startsWith('Foundation:') &&
+                      !d.startsWith('Parking Features:') &&
+                      !d.startsWith('Parking Comments:') &&
+                      !d.startsWith('Garage Features:') &&
+                      !d.startsWith('Garage Comments:') &&
+                      !d.startsWith('Lot Size Source:') &&
+                      !d.startsWith('Lot Description:')
+                    ).length > 0 && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Other Disclosures</p>
+                        <div className="space-y-2">
+                          {listing.disclosures.filter((d: string) => 
+                            !d.startsWith('Seller Disclosure:') && 
+                            !d.startsWith('Disclosures:') && 
+                            !d.startsWith('Exclusions:') &&
+                            !d.startsWith('Residential Exemption:') &&
+                            !d.startsWith('Floors:') &&
+                            !d.startsWith('Basement Type:') &&
+                            !d.startsWith('Basement Features:') &&
+                            !d.startsWith('Basement Floor Type:') &&
+                            !d.startsWith('Lead Paint:') &&
+                            !d.startsWith('Handicap Access:') &&
+                            !d.startsWith('Foundation:') &&
+                            !d.startsWith('Parking Features:') &&
+                            !d.startsWith('Parking Comments:') &&
+                            !d.startsWith('Garage Features:') &&
+                            !d.startsWith('Garage Comments:') &&
+                            !d.startsWith('Lot Size Source:') &&
+                            !d.startsWith('Lot Description:')
+                          ).map((disclosure, index) => (
+                            <div key={index} className="flex items-start gap-2 text-sm">
+                              <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                              <span>{disclosure}</span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
