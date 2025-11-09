@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.send-new-match-notification]
 verify_jwt = false
+
+[functions.send-listing-share]
+verify_jwt = false
