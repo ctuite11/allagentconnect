@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,6 +15,7 @@ import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 const clientSchema = z.object({
   first_name: z.string().trim().min(2, "First name must be at least 2 characters").max(100),
@@ -288,13 +290,12 @@ const MyClients = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone</Label>
-                    <Input
+                    <FormattedInput
                       id="phone"
-                      type="tel"
+                      format="phone"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, phone: value })}
                       placeholder="5555555555"
-                      maxLength={20}
                     />
                   </div>
 
@@ -364,7 +365,7 @@ const MyClients = () => {
                           {client.phone && (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Phone className="h-3 w-3" />
-                              {client.phone}
+                              {formatPhoneNumber(client.phone)}
                             </div>
                           )}
                         </div>
