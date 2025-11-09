@@ -486,7 +486,7 @@ export function CreateHotSheetDialog({
       resetForm();
     } catch (error: any) {
       console.error("Error creating hot sheet:", error);
-      toast.error("Failed to create hot sheet");
+      toast.error(error?.message ? `Failed to create hot sheet: ${error.message}` : "Failed to create hot sheet");
     } finally {
       setSaving(false);
     }
@@ -623,6 +623,30 @@ export function CreateHotSheetDialog({
                   onChange={setClientPhone}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Search Criteria */}
+          <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
+                  <CardTitle className="text-base">Search Criteria</CardTitle>
+                  {criteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-6">
+                  {/* Listing Numbers */}
+                  <div className="space-y-2">
+                    <Label htmlFor="listing-numbers" className="text-sm font-semibold uppercase">List Number(s)</Label>
+                    <Input
+                      id="listing-numbers"
+                      placeholder="Enter listing number(s)"
+                      value={listingNumbers}
+                      onChange={(e) => setListingNumbers(e.target.value)}
+                    />
+                  </div>
 
                   {/* Address Section */}
                   <div className="space-y-4 border-t pt-4">
