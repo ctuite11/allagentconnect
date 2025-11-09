@@ -1,3 +1,4 @@
+// Rebuild trigger: refresh modern homepage UI
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
