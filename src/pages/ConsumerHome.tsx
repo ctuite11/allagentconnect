@@ -28,6 +28,9 @@ const benefits = [
 const ConsumerHome = () => {
   const navigate = useNavigate();
 
+  // Debug marker to verify this route is rendering
+  console.info("[ConsumerHome] Rendered at", new Date().toISOString());
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
