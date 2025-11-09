@@ -70,6 +70,9 @@ interface Listing {
   listing_number?: string | null;
   created_at?: string;
   active_date?: string | null;
+  condo_details?: any;
+  multi_family_details?: any;
+  commercial_details?: any;
 }
 
 const ConsumerPropertyDetail = () => {
@@ -400,6 +403,279 @@ const ConsumerPropertyDetail = () => {
                         </div>
                       ))}
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Condominium Details */}
+              {listing.property_type === "Condominium" && listing.condo_details && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Condominium Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {listing.condo_details.unit_number && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Unit Number</p>
+                          <p className="font-semibold">{listing.condo_details.unit_number}</p>
+                        </div>
+                      )}
+                      {listing.condo_details.floor_level && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Floor Level</p>
+                          <p className="font-semibold">{listing.condo_details.floor_level}</p>
+                        </div>
+                      )}
+                      {listing.condo_details.total_units && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Total Units</p>
+                          <p className="font-semibold">{listing.condo_details.total_units}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {listing.condo_details.hoa_fee && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground">HOA Fee</p>
+                        <p className="font-semibold">
+                          ${parseFloat(listing.condo_details.hoa_fee).toLocaleString()}/{listing.condo_details.hoa_fee_frequency || 'month'}
+                        </p>
+                      </div>
+                    )}
+
+                    {listing.condo_details.pet_policy && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground">Pet Policy</p>
+                        <p className="font-semibold capitalize">{listing.condo_details.pet_policy.replace('_', ' ')}</p>
+                      </div>
+                    )}
+
+                    {listing.condo_details.building_amenities && listing.condo_details.building_amenities.length > 0 && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Building Amenities</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {listing.condo_details.building_amenities.map((amenity: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <span className="text-sm">{amenity}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Multi-Family Details */}
+              {listing.property_type === "Multi-Family" && listing.multi_family_details && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Multi-Family Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {listing.multi_family_details.number_of_units && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Number of Units</p>
+                          <p className="font-semibold">{listing.multi_family_details.number_of_units}</p>
+                        </div>
+                      )}
+                      {listing.multi_family_details.parking_per_unit && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Parking Per Unit</p>
+                          <p className="font-semibold">{listing.multi_family_details.parking_per_unit}</p>
+                        </div>
+                      )}
+                      {listing.multi_family_details.occupancy_status && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Occupancy Status</p>
+                          <p className="font-semibold capitalize">{listing.multi_family_details.occupancy_status.replace('_', ' ')}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {listing.multi_family_details.unit_breakdown && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-2">Unit Breakdown</p>
+                        <p className="text-sm whitespace-pre-wrap">{listing.multi_family_details.unit_breakdown}</p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                      {listing.multi_family_details.current_monthly_income && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Current Monthly Income</p>
+                          <p className="font-semibold text-green-600">
+                            ${parseFloat(listing.multi_family_details.current_monthly_income).toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                      {listing.multi_family_details.potential_monthly_income && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Potential Monthly Income</p>
+                          <p className="font-semibold text-blue-600">
+                            ${parseFloat(listing.multi_family_details.potential_monthly_income).toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {listing.multi_family_details.laundry_type && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground">Laundry</p>
+                        <p className="font-semibold capitalize">{listing.multi_family_details.laundry_type.replace('_', ' ')}</p>
+                      </div>
+                    )}
+
+                    {listing.multi_family_details.separate_utilities && listing.multi_family_details.separate_utilities.length > 0 && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Separate Utilities</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {listing.multi_family_details.separate_utilities.map((utility: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <span className="text-sm">{utility}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Commercial Details */}
+              {listing.property_type === "Commercial" && listing.commercial_details && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Commercial Property Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {listing.commercial_details.space_type && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Space Type</p>
+                          <p className="font-semibold capitalize">{listing.commercial_details.space_type.replace('_', ' ')}</p>
+                        </div>
+                      )}
+                      {listing.commercial_details.lease_type && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Lease Type</p>
+                          <p className="font-semibold capitalize">{listing.commercial_details.lease_type.replace('_', ' ')}</p>
+                        </div>
+                      )}
+                      {listing.commercial_details.zoning && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Zoning</p>
+                          <p className="font-semibold">{listing.commercial_details.zoning}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {listing.commercial_details.lease_rate && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground">Lease Rate</p>
+                        <p className="font-semibold text-lg text-primary">
+                          ${parseFloat(listing.commercial_details.lease_rate).toLocaleString()} 
+                          {listing.commercial_details.lease_rate_per && 
+                            ` ${listing.commercial_details.lease_rate_per.replace('_', ' ')}`}
+                        </p>
+                      </div>
+                    )}
+
+                    {(listing.commercial_details.lease_term_min || listing.commercial_details.lease_term_max) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground">Lease Term</p>
+                        <p className="font-semibold">
+                          {listing.commercial_details.lease_term_min && listing.commercial_details.lease_term_max 
+                            ? `${listing.commercial_details.lease_term_min} - ${listing.commercial_details.lease_term_max} months`
+                            : listing.commercial_details.lease_term_min 
+                            ? `${listing.commercial_details.lease_term_min}+ months`
+                            : `Up to ${listing.commercial_details.lease_term_max} months`}
+                        </p>
+                      </div>
+                    )}
+
+                    {listing.commercial_details.current_tenant && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground">Current Tenant</p>
+                        <p className="font-semibold">{listing.commercial_details.current_tenant}</p>
+                      </div>
+                    )}
+
+                    {listing.commercial_details.lease_expiration && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground">Lease Expiration</p>
+                        <p className="font-semibold">
+                          {new Date(listing.commercial_details.lease_expiration).toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t">
+                      {listing.commercial_details.ceiling_height && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Ceiling Height</p>
+                          <p className="font-semibold">{listing.commercial_details.ceiling_height} ft</p>
+                        </div>
+                      )}
+                      {listing.commercial_details.loading_docks !== null && listing.commercial_details.loading_docks !== undefined && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Loading Docks</p>
+                          <p className="font-semibold">{listing.commercial_details.loading_docks}</p>
+                        </div>
+                      )}
+                      {listing.commercial_details.power_available && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Power Available</p>
+                          <p className="font-semibold">{listing.commercial_details.power_available}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {listing.commercial_details.allowed_business_types && listing.commercial_details.allowed_business_types.length > 0 && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Allowed Business Types</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {listing.commercial_details.allowed_business_types.map((type: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <span className="text-sm">{type}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {listing.commercial_details.tenant_responsibilities && listing.commercial_details.tenant_responsibilities.length > 0 && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Tenant Responsibilities</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {listing.commercial_details.tenant_responsibilities.map((resp: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <span className="text-sm">{resp}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {listing.commercial_details.additional_features && listing.commercial_details.additional_features.length > 0 && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">Additional Features</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {listing.commercial_details.additional_features.map((feature: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                              <span className="text-sm">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
