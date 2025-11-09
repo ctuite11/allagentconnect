@@ -9,44 +9,49 @@ All colors MUST be HSL.
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 216 24% 16%;
+    --foreground: 216 28% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 216 24% 16%;
+    --card-foreground: 216 28% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 216 24% 16%;
+    --popover-foreground: 216 28% 12%;
 
-    --primary: 215 100% 50%;
+    --primary: 215 95% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 12% 96%;
-    --secondary-foreground: 216 24% 16%;
+    --secondary: 210 15% 97%;
+    --secondary-foreground: 216 28% 12%;
 
-    --muted: 210 12% 96%;
-    --muted-foreground: 216 12% 45%;
+    --muted: 210 15% 97%;
+    --muted-foreground: 216 16% 50%;
 
-    --accent: 145 70% 45%;
+    --accent: 145 75% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 14% 89%;
-    --input: 210 14% 89%;
-    --ring: 215 100% 50%;
+    --border: 210 20% 92%;
+    --input: 210 20% 92%;
+    --ring: 215 95% 55%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Custom tokens */
-    --hero-gradient-start: 215 100% 50%;
-    --hero-gradient-end: 215 85% 35%;
+    /* Modern gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(215 95% 55%) 0%, hsl(250 95% 65%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(215 95% 98%) 50%, hsl(250 95% 98%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100% / 0.8) 0%, hsl(215 95% 98% / 0.9) 100%);
     
-    --success: 145 70% 45%;
+    --success: 145 75% 50%;
     --success-foreground: 0 0% 100%;
     
-    --shadow-lg: 0 10px 40px -10px hsl(215 100% 50% / 0.2);
-    --shadow-hover: 0 20px 50px -10px hsl(215 100% 50% / 0.3);
+    /* Modern shadows */
+    --shadow-sm: 0 2px 8px hsl(215 25% 60% / 0.08);
+    --shadow-md: 0 4px 16px hsl(215 25% 60% / 0.1);
+    --shadow-lg: 0 12px 48px hsl(215 95% 55% / 0.12);
+    --shadow-xl: 0 20px 64px hsl(215 95% 55% / 0.16);
+    --shadow-glow: 0 0 48px hsl(215 95% 55% / 0.25);
   }
 
   .dark {
@@ -90,5 +95,13 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 700;
   }
 }
