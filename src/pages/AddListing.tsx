@@ -1153,6 +1153,75 @@ const AddListing = () => {
                   </div>
                 </div>
 
+                {/* Unit Number - for properties with units - place immediately after address */}
+                {(formData.property_type === "Condominium" || 
+                  formData.property_type === "Townhouse" || 
+                  formData.property_type === "Multi Family" || 
+                  formData.property_type === "Residential Rental" ||
+                  formData.listing_type === "for_rent") && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="unit_number">
+                        Unit/Apartment Number
+                        {(formData.property_type === "Condominium" || formData.property_type === "Townhouse") && (
+                          <span className="text-destructive ml-1">*</span>
+                        )}
+                      </Label>
+                      {formData.address && formData.latitude && formData.longitude && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (formData.latitude && formData.longitude) {
+                              fetchPropertyData(
+                                formData.latitude, 
+                                formData.longitude, 
+                                formData.address, 
+                                formData.city, 
+                                formData.state, 
+                                formData.zip_code, 
+                                unitNumber,
+                                formData.property_type
+                              );
+                            }
+                          }}
+                          className="text-xs text-primary hover:text-primary/80"
+                        >
+                          Refetch with Unit #
+                        </Button>
+                      )}
+                    </div>
+                    <Input
+                      id="unit_number"
+                      value={unitNumber}
+                      onChange={(e) => setUnitNumber(e.target.value)}
+                      onBlur={() => {
+                        // Auto-refetch when unit number is entered
+                        if (unitNumber && formData.address && formData.latitude && formData.longitude) {
+                          fetchPropertyData(
+                            formData.latitude, 
+                            formData.longitude, 
+                            formData.address, 
+                            formData.city, 
+                            formData.state, 
+                            formData.zip_code, 
+                            unitNumber,
+                            formData.property_type
+                          );
+                        }
+                      }}
+                      placeholder="e.g., 3B, 205, Apt 4"
+                      required={formData.property_type === "Condominium" || formData.property_type === "Townhouse"}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {(formData.property_type === "Condominium" || formData.property_type === "Townhouse") 
+                        ? "Required - Enter unit number and property data will be fetched automatically"
+                        : "Enter unit number for accurate property data lookup"}
+                    </p>
+                  </div>
+                )}
+
                 {/* Row 3: County, Neighborhood */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -1213,34 +1282,6 @@ const AddListing = () => {
                 {/* Hidden fields for state and zip (auto-populated from address) */}
                 <input type="hidden" name="state" value={formData.state} />
                 <input type="hidden" name="zip_code" value={formData.zip_code} />
-
-                {/* Unit Number - for properties with units */}
-                {(formData.property_type === "Condominium" || 
-                  formData.property_type === "Townhouse" || 
-                  formData.property_type === "Multi Family" || 
-                  formData.property_type === "Residential Rental" ||
-                  formData.listing_type === "for_rent") && (
-                  <div className="space-y-2">
-                    <Label htmlFor="unit_number">
-                      Unit/Apartment Number
-                      {(formData.property_type === "Condominium" || formData.property_type === "Townhouse") && (
-                        <span className="text-destructive ml-1">*</span>
-                      )}
-                    </Label>
-                    <Input
-                      id="unit_number"
-                      value={unitNumber}
-                      onChange={(e) => setUnitNumber(e.target.value)}
-                      placeholder="e.g., 3B, 205, Apt 4"
-                      required={formData.property_type === "Condominium" || formData.property_type === "Townhouse"}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {(formData.property_type === "Condominium" || formData.property_type === "Townhouse") 
-                        ? "Required - Helps identify the specific unit and fetch accurate property data"
-                        : "Helps identify the specific unit and fetch accurate property data"}
-                    </p>
-                  </div>
-                )}
 
                 {/* Property Details */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
