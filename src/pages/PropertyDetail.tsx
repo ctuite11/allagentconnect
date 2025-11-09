@@ -20,6 +20,7 @@ import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo"
 import PropertyMap from "@/components/PropertyMap";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import AdBanner from "@/components/AdBanner";
+import { ShareListingDialog } from "@/components/ShareListingDialog";
 
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useListingView } from "@/hooks/useListingView";
@@ -322,6 +323,12 @@ const PropertyDetail = () => {
                 agentId={listing.agent_id}
                 listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
               />
+              {isAgent && (
+                <ShareListingDialog 
+                  listingId={listing.id}
+                  listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                />
+              )}
               <Button 
                 variant="outline" 
                 size="lg"
