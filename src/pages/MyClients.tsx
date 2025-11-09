@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User } from "lucide-react";
+import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -33,6 +34,7 @@ interface Client {
   phone: string | null;
   notes: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 const MyClients = () => {
@@ -54,6 +56,7 @@ const MyClients = () => {
   const [hotSheetClientId, setHotSheetClientId] = useState<string | null>(null);
   const [hotSheetClientName, setHotSheetClientName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "created_at" | "updated_at">("name");
 
   useEffect(() => {
     checkAuth();
@@ -223,6 +226,21 @@ const MyClients = () => {
     );
   });
 
+  const sortedClients = [...filteredClients].sort((a, b) => {
+    switch (sortBy) {
+      case "name":
+        const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+        const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+      case "created_at":
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case "updated_at":
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      default:
+        return 0;
+    }
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -358,14 +376,27 @@ const MyClients = () => {
             <>
               <Card className="mb-4">
                 <CardContent className="pt-6">
-                  <div className="relative">
-                    <Input
-                      placeholder="Search clients by name, email, phone, or notes..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <div className="flex gap-4">
+                    <div className="relative flex-1">
+                      <Input
+                        placeholder="Search clients by name, email, phone, or notes..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                      <SelectTrigger className="w-[200px]">
+                        <ArrowUpDown className="h-4 w-4 mr-2" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name">Sort by Name</SelectItem>
+                        <SelectItem value="created_at">Sort by Date Added</SelectItem>
+                        <SelectItem value="updated_at">Sort by Last Updated</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   {searchTerm && (
                     <p className="text-sm text-muted-foreground mt-2">
@@ -400,7 +431,7 @@ const MyClients = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredClients.map((client) => (
+                      {sortedClients.map((client) => (
                     <TableRow key={client.id}>
                       <TableCell className="font-medium">
                         {client.first_name} {client.last_name}
