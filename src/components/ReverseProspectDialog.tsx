@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -285,12 +286,12 @@ export function ReverseProspectDialog({
 
           <div>
             <Label htmlFor="agentPhone">Your Phone (Optional)</Label>
-            <Input
+            <FormattedInput
               id="agentPhone"
-              type="tel"
-              placeholder="(555) 123-4567"
+              format="phone"
+              placeholder="5555555555"
               value={agentPhone}
-              onChange={(e) => setAgentPhone(e.target.value)}
+              onChange={(value) => setAgentPhone(value)}
             />
           </div>
 

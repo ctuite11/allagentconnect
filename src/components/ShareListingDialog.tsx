@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Share2 } from "lucide-react";
@@ -146,11 +147,12 @@ export const ShareListingDialog = ({ listingId, listingAddress }: ShareListingDi
 
             <div className="space-y-2 mt-3">
               <Label htmlFor="agentPhone">Your Phone</Label>
-              <Input
+              <FormattedInput
                 id="agentPhone"
+                format="phone"
                 value={agentPhone}
-                onChange={(e) => setAgentPhone(e.target.value)}
-                placeholder="(555) 123-4567"
+                onChange={(value) => setAgentPhone(value)}
+                placeholder="5555555555"
               />
             </div>
           </div>
