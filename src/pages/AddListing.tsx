@@ -996,6 +996,10 @@ const AddListing = () => {
               <h2 className="text-2xl font-bold mb-6">Listing Details</h2>
               
               <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
+                {/* ========================================
+                    SECTION 1: LISTING BASICS
+                    ======================================== */}
+                
                 {/* Row 1: Listing Type, Property Type, Status */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
@@ -1095,6 +1099,10 @@ const AddListing = () => {
                     </p>
                   </div>
                 )}
+
+                {/* ========================================
+                    SECTION 2: PROPERTY LOCATION  
+                    ======================================== */}
 
                 {/* Row 2: Enter Address, List Price */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1283,6 +1291,10 @@ const AddListing = () => {
                 <input type="hidden" name="state" value={formData.state} />
                 <input type="hidden" name="zip_code" value={formData.zip_code} />
 
+                {/* ========================================
+                    SECTION 3: CORE PROPERTY DETAILS
+                    ======================================== */}
+
                 {/* Property Details */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
@@ -1323,6 +1335,21 @@ const AddListing = () => {
                     />
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lot_size">Lot Size (acres)</Label>
+                  <Input
+                    id="lot_size"
+                    type="number"
+                    step="0.01"
+                    value={formData.lot_size}
+                    onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
+                  />
+                </div>
+
+                {/* ========================================
+                    SECTION 4: PROPERTY TYPE-SPECIFIC DETAILS
+                    ======================================== */}
 
                 {/* Condominium-Specific Fields */}
                 {formData.property_type === "Condominium" && (
@@ -1945,6 +1972,10 @@ const AddListing = () => {
 
                 <Separator className="my-6" />
 
+                {/* ========================================
+                    SECTION 11: ADDITIONAL BUILDING DETAILS
+                    ======================================== */}
+
                 {/* Property Tax Information */}
                 <div className="space-y-6">
                   <Label className="text-xl font-semibold">Property Tax Information</Label>
@@ -2044,6 +2075,10 @@ const AddListing = () => {
 
                 <Separator className="my-6" />
 
+                {/* ========================================
+                    SECTION 6: PROPERTY DESCRIPTION  
+                    ======================================== */}
+
                 {/* Property Description */}
                 <div className="space-y-2">
                   <Label htmlFor="description">Property Description</Label>
@@ -2057,6 +2092,10 @@ const AddListing = () => {
                 </div>
 
                 <Separator className="my-6" />
+
+                {/* ========================================
+                    SECTION 7: SALE CRITERIA & FEATURES
+                    ======================================== */}
 
                 {/* Sale Listing Criteria Section */}
                 <div className="space-y-6 border-t pt-6">
@@ -2722,6 +2761,10 @@ const AddListing = () => {
 
                 <Separator className="my-6" />
 
+                {/* ========================================
+                    SECTION 9: FINANCIAL INFORMATION  
+                    ======================================== */}
+
                 {/* Commission Information Section */}
                 <div className="space-y-4 border-t pt-6">
                   <Label className="text-xl font-semibold">Commission Information</Label>
@@ -2765,6 +2808,10 @@ const AddListing = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* ========================================
+                    SECTION 10: SHOWING & ACCESS  
+                    ======================================== */}
 
                 {/* Showing Instructions Section */}
                 <div className="space-y-4 border-t pt-6">
@@ -2825,6 +2872,10 @@ const AddListing = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* ========================================
+                    SECTION 12: OPEN HOUSES
+                    ======================================== */}
 
                 {/* Open House Scheduling Section */}
                 <div className="space-y-4 border-t pt-6">
@@ -3066,6 +3117,10 @@ const AddListing = () => {
                   )}
                 </div>
 
+                {/* ========================================
+                    SECTION 13: DISCLOSURES & LEGAL
+                    ======================================== */}
+
                 {/* Disclosures Section */}
                 <div className="space-y-4 border-t pt-6">
                   <Label className="text-xl font-semibold">Disclosures</Label>
@@ -3116,6 +3171,10 @@ const AddListing = () => {
                     />
                   </div>
                 </div>
+
+                {/* ========================================
+                    SECTION 8: PROPERTY FEATURES & AMENITIES
+                    ======================================== */}
 
                 {/* Property Features Section */}
                 <div className="space-y-4 border-t pt-6">
@@ -3251,6 +3310,10 @@ const AddListing = () => {
                     rows={4}
                   />
                 </div>
+
+                {/* ========================================
+                    SECTION 5: PHOTOS & MEDIA
+                    ======================================== */}
 
                 {/* Property Photos Section */}
                 <div className="space-y-4 border-t pt-6">
