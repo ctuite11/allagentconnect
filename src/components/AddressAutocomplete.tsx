@@ -18,6 +18,13 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
   useEffect(() => {
     if (!inputRef.current) return;
 
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+    // If no API key, keep a plain input (graceful fallback)
+    if (!apiKey) {
+      console.warn("[AddressAutocomplete] Missing VITE_GOOGLE_MAPS_API_KEY — using plain input fallback");
+      return;
+    }
+
     // Load Google Maps script
     const loadGoogleMaps = () => {
       if (typeof window !== 'undefined' && (window as any).google?.maps?.places) {
@@ -25,12 +32,20 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
         return;
       }
 
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places&v=weekly`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => initAutocomplete();
-      document.head.appendChild(script);
+      const scriptId = 'google-maps-places-script';
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => initAutocomplete();
+        script.onerror = () => console.warn('[AddressAutocomplete] Failed to load Google Maps script — staying in plain input mode');
+        document.head.appendChild(script);
+      } else {
+        // Script already present
+        initAutocomplete();
+      }
     };
 
     const initAutocomplete = async () => {
