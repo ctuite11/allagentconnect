@@ -229,6 +229,13 @@ const EditListing = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate unit number for Condominium and Townhouse
+    if ((formData.property_type === "Condominium" || formData.property_type === "Townhouse") && !unitNumber.trim()) {
+      toast.error("Unit number is required for condominium and townhouse properties");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -521,16 +528,21 @@ const EditListing = () => {
                 <div className="space-y-2">
                   <Label htmlFor="unit_number">
                     Unit/Apartment Number
-                    {formData.property_type?.includes("Condo") && " *"}
+                    {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")) && (
+                      <span className="text-destructive ml-1">*</span>
+                    )}
                   </Label>
                   <Input
                     id="unit_number"
                     value={unitNumber}
                     onChange={(e) => setUnitNumber(e.target.value)}
                     placeholder="e.g., 3B, 205, Apt 4"
+                    required={formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Helps identify the specific unit and fetch accurate property data
+                    {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse"))
+                      ? "Required - Helps identify the specific unit and fetch accurate property data"
+                      : "Helps identify the specific unit and fetch accurate property data"}
                   </p>
                 </div>
               )}
