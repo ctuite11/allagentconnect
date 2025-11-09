@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usCitiesByState } from "@/data/usCitiesData";
@@ -41,6 +42,8 @@ export function CreateHotSheetDialog({
 }: CreateHotSheetDialogProps) {
   const [hotSheetName, setHotSheetName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   
   // Client information
   const [clientFirstName, setClientFirstName] = useState("");
@@ -407,7 +410,7 @@ export function CreateHotSheetDialog({
       }, "Invalid phone number (must be 10 digits)")
   });
 
-  const handleCreate = async () => {
+  const handleValidateAndShowConfirmation = async () => {
     // Clear previous errors
     setErrors({});
     
@@ -429,6 +432,13 @@ export function CreateHotSheetDialog({
       toast.error("Please fix the validation errors");
       return;
     }
+
+    // Show confirmation dialog
+    setShowConfirmDialog(true);
+  };
+
+  const handleCreate = async () => {
+    setShowConfirmDialog(false);
 
     try {
       setSaving(true);
@@ -500,7 +510,13 @@ export function CreateHotSheetDialog({
         if (error) throw error;
 
         toast.success("Hot sheet updated");
-        onSuccess(hotSheetId);
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          onSuccess(hotSheetId);
+          onOpenChange(false);
+          resetForm();
+        }, 1500);
       } else {
         // Create new hot sheet
         const { data: createdHotSheet, error } = await supabase
@@ -520,12 +536,15 @@ export function CreateHotSheetDialog({
 
         if (error) throw error;
 
-        toast.success("Hot sheet created");
-        onSuccess(createdHotSheet.id);
+        toast.success("Hot sheet created successfully!");
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          onSuccess(createdHotSheet.id);
+          onOpenChange(false);
+          resetForm();
+        }, 1500);
       }
-      
-      onOpenChange(false);
-      resetForm();
     } catch (error: any) {
       console.error("Error creating hot sheet:", error);
       toast.error(error?.message ? `Failed to create hot sheet: ${error.message}` : "Failed to create hot sheet");
@@ -541,6 +560,8 @@ export function CreateHotSheetDialog({
     setClientEmail("");
     setClientPhone("");
     setErrors({});
+    setShowConfirmDialog(false);
+    setShowSuccess(false);
     setListingNumbers("");
     setAddress("");
     setPropertyTypes([]);
@@ -1270,15 +1291,117 @@ export function CreateHotSheetDialog({
                 onOpenChange(false);
                 resetForm();
               }}
+              disabled={saving}
             >
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={saving}>
-              {saving ? "Creating..." : "Create Hot Sheet"}
+            <Button 
+              onClick={handleValidateAndShowConfirmation} 
+              disabled={saving}
+              className="relative min-w-[180px]"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : showSuccess ? (
+                <>
+                  <Check className="mr-2 h-4 w-4 animate-scale-in" />
+                  Created!
+                </>
+              ) : (
+                editMode ? "Update Hot Sheet" : "Create Hot Sheet"
+              )}
             </Button>
           </div>
         </div>
       </DialogContent>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Review Hot Sheet Details</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please review the criteria below before creating your hot sheet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="space-y-4 my-4">
+            {/* Hot Sheet Name */}
+            <div className="border-b pb-3">
+              <p className="text-sm font-semibold text-foreground">Hot Sheet Name</p>
+              <p className="text-sm text-muted-foreground">{hotSheetName}</p>
+            </div>
+
+            {/* Client Information */}
+            <div className="border-b pb-3">
+              <p className="text-sm font-semibold text-foreground mb-2">Client Information</p>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <p><span className="font-medium">Name:</span> {clientFirstName} {clientLastName}</p>
+                <p><span className="font-medium">Email:</span> {clientEmail}</p>
+                {clientPhone && <p><span className="font-medium">Phone:</span> {clientPhone}</p>}
+              </div>
+            </div>
+
+            {/* Search Criteria */}
+            {(propertyTypes.length > 0 || statuses.length > 0 || state || selectedCities.length > 0 || minPrice || maxPrice || bedrooms || bathrooms) && (
+              <div className="border-b pb-3">
+                <p className="text-sm font-semibold text-foreground mb-2">Search Criteria</p>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  {propertyTypes.length > 0 && (
+                    <p><span className="font-medium">Property Types:</span> {propertyTypes.map(pt => 
+                      propertyTypeOptions.find(opt => opt.value === pt)?.label
+                    ).join(", ")}</p>
+                  )}
+                  {statuses.length > 0 && (
+                    <p><span className="font-medium">Status:</span> {statuses.map(st => 
+                      statusOptions.find(opt => opt.value === st)?.label
+                    ).join(", ")}</p>
+                  )}
+                  {state && <p><span className="font-medium">State:</span> {state}</p>}
+                  {selectedCities.length > 0 && (
+                    <p><span className="font-medium">Cities:</span> {selectedCities.slice(0, 5).join(", ")}
+                    {selectedCities.length > 5 && ` (+${selectedCities.length - 5} more)`}</p>
+                  )}
+                  {minPrice && <p><span className="font-medium">Min Price:</span> ${parseFloat(minPrice).toLocaleString()}</p>}
+                  {maxPrice && <p><span className="font-medium">Max Price:</span> ${parseFloat(maxPrice).toLocaleString()}</p>}
+                  {bedrooms && <p><span className="font-medium">Bedrooms:</span> {bedrooms}+</p>}
+                  {bathrooms && <p><span className="font-medium">Bathrooms:</span> {bathrooms}+</p>}
+                  {minSqft && <p><span className="font-medium">Min Sq Ft:</span> {parseFloat(minSqft).toLocaleString()}</p>}
+                  {maxSqft && <p><span className="font-medium">Max Sq Ft:</span> {parseFloat(maxSqft).toLocaleString()}</p>}
+                </div>
+              </div>
+            )}
+
+            {/* Notification Settings */}
+            <div className="pb-3">
+              <p className="text-sm font-semibold text-foreground mb-2">Notifications</p>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <p><span className="font-medium">Agent:</span> {notifyAgent ? "Enabled" : "Disabled"}</p>
+                {clientId && <p><span className="font-medium">Client:</span> {notifyClient ? "Enabled" : "Disabled"}</p>}
+                <p><span className="font-medium">Schedule:</span> {notificationSchedule === "immediately" ? "Immediately" : notificationSchedule === "daily" ? "Daily" : "Weekly"}</p>
+              </div>
+            </div>
+
+            {matchingListingsCount > 0 && (
+              <div className="bg-primary/10 p-3 rounded-md">
+                <p className="text-sm font-medium text-primary">
+                  {matchingListingsCount} {matchingListingsCount === 1 ? "property currently matches" : "properties currently match"} these criteria
+                </p>
+              </div>
+            )}
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCreate}>
+              Confirm & Create
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
