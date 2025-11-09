@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usCitiesByState } from "@/data/usCitiesData";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { z } from "zod";
 
 interface CreateHotSheetDialogProps {
   open: boolean;
@@ -46,6 +47,13 @@ export function CreateHotSheetDialog({
   const [clientLastName, setClientLastName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  
+  // Validation errors
+  const [errors, setErrors] = useState<{
+    hotSheetName?: string;
+    clientEmail?: string;
+    clientPhone?: string;
+  }>({});
   
   // Search criteria
   const [listingNumbers, setListingNumbers] = useState("");
@@ -172,7 +180,7 @@ export function CreateHotSheetDialog({
       setClientFirstName(criteria.clientFirstName || "");
       setClientLastName(criteria.clientLastName || "");
       setClientEmail(criteria.clientEmail || "");
-      setClientPhone(criteria.clientPhone || "");
+      setClientPhone(criteria.clientPhone ? formatPhoneNumber(criteria.clientPhone) : "");
       setPreferredCounties(criteria.preferredCounties || []);
       setRequiresBuyerIncentives(criteria.requiresBuyerIncentives || false);
       setNotifyClient(data.notify_client_email);
@@ -377,14 +385,48 @@ export function CreateHotSheetDialog({
     fetchMatchingCount();
   }, [open, propertyTypes, state, selectedCities, minPrice, maxPrice, bedrooms, bathrooms, minSqft, maxSqft]);
 
+  // Validation schema
+  const hotSheetSchema = z.object({
+    hotSheetName: z.string()
+      .trim()
+      .min(1, "Hot sheet name is required")
+      .max(100, "Hot sheet name must be less than 100 characters"),
+    clientEmail: z.string()
+      .trim()
+      .min(1, "Client email is required")
+      .email("Invalid email address")
+      .max(255, "Email must be less than 255 characters"),
+    clientPhone: z.string()
+      .trim()
+      .optional()
+      .refine((val) => {
+        if (!val || val.length === 0) return true;
+        // Remove formatting and check if it's a valid 10-digit US phone
+        const digitsOnly = val.replace(/\D/g, '');
+        return digitsOnly.length === 10 || digitsOnly.length === 11;
+      }, "Invalid phone number (must be 10 digits)")
+  });
+
   const handleCreate = async () => {
-    if (!hotSheetName.trim()) {
-      toast.error("Please enter a hot sheet name");
-      return;
-    }
+    // Clear previous errors
+    setErrors({});
     
-    if (!clientEmail.trim()) {
-      toast.error("Please enter client email");
+    // Validate form
+    const validation = hotSheetSchema.safeParse({
+      hotSheetName,
+      clientEmail,
+      clientPhone
+    });
+    
+    if (!validation.success) {
+      const fieldErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error("Please fix the validation errors");
       return;
     }
 
@@ -498,6 +540,7 @@ export function CreateHotSheetDialog({
     setClientLastName("");
     setClientEmail("");
     setClientPhone("");
+    setErrors({});
     setListingNumbers("");
     setAddress("");
     setPropertyTypes([]);
@@ -572,9 +615,18 @@ export function CreateHotSheetDialog({
               id="name"
               placeholder="e.g., Downtown Condos under $500k"
               value={hotSheetName}
-              onChange={(e) => setHotSheetName(e.target.value)}
+              onChange={(e) => {
+                setHotSheetName(e.target.value);
+                if (errors.hotSheetName) {
+                  setErrors(prev => ({ ...prev, hotSheetName: undefined }));
+                }
+              }}
               maxLength={100}
+              className={errors.hotSheetName ? "border-destructive" : ""}
             />
+            {errors.hotSheetName && (
+              <p className="text-sm text-destructive">{errors.hotSheetName}</p>
+            )}
           </div>
 
           {/* Client Information */}
@@ -610,8 +662,17 @@ export function CreateHotSheetDialog({
                   type="email"
                   placeholder="john@example.com"
                   value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
+                  onChange={(e) => {
+                    setClientEmail(e.target.value);
+                    if (errors.clientEmail) {
+                      setErrors(prev => ({ ...prev, clientEmail: undefined }));
+                    }
+                  }}
+                  className={errors.clientEmail ? "border-destructive" : ""}
                 />
+                {errors.clientEmail && (
+                  <p className="text-sm text-destructive">{errors.clientEmail}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="client-phone">Phone (Optional)</Label>
@@ -620,8 +681,17 @@ export function CreateHotSheetDialog({
                   format="phone"
                   placeholder="(555) 123-4567"
                   value={clientPhone}
-                  onChange={setClientPhone}
+                  onChange={(value) => {
+                    setClientPhone(value);
+                    if (errors.clientPhone) {
+                      setErrors(prev => ({ ...prev, clientPhone: undefined }));
+                    }
+                  }}
+                  className={errors.clientPhone ? "border-destructive" : ""}
                 />
+                {errors.clientPhone && (
+                  <p className="text-sm text-destructive">{errors.clientPhone}</p>
+                )}
               </div>
             </CardContent>
           </Card>
