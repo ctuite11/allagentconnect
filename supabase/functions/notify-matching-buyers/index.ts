@@ -197,7 +197,7 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${SUPABASE_URL.replace('https://qocduqtfbsevnhlgsfka.supabase.co', window.location.origin || 'https://your-domain.com')}/property/${listing.listing_id}" 
+                <a href="${SUPABASE_URL.replace('.supabase.co', '.lovable.app')}/property/${listing.listing_id}" 
                    style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
                   View Full Listing Details
                 </a>
