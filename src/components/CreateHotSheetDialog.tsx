@@ -95,6 +95,7 @@ export function CreateHotSheetDialog({
 
   // Live results counter
   const [matchingListingsCount, setMatchingListingsCount] = useState<number>(0);
+  const [loadingCount, setLoadingCount] = useState(false);
   
   // Agent criteria
   const [preferredCounties, setPreferredCounties] = useState<string[]>([]);
@@ -384,27 +385,42 @@ export function CreateHotSheetDialog({
     const fetchMatchingCount = async () => {
       if (!open) return;
       
+      setLoadingCount(true);
       try {
         let query = supabase
           .from("listings")
           .select("id", { count: "exact", head: true })
           .eq("status", "active");
 
+        // Property types
         if (propertyTypes.length > 0) {
           query = query.in("property_type", propertyTypes);
         }
+        
+        // Location filters
         if (state) {
           query = query.eq("state", state);
         }
         if (selectedCities.length > 0) {
-          query = query.in("city", selectedCities);
+          const cityNames = selectedCities.map((cityStr: string) => {
+            const parts = cityStr.split(',');
+            return parts[0].trim();
+          });
+          query = query.in("city", cityNames);
         }
+        if (zipCode) {
+          query = query.eq("zip_code", zipCode);
+        }
+        
+        // Price filters
         if (minPrice) {
           query = query.gte("price", parseFloat(minPrice));
         }
         if (maxPrice) {
           query = query.lte("price", parseFloat(maxPrice));
         }
+        
+        // Size filters
         if (bedrooms) {
           query = query.gte("bedrooms", parseInt(bedrooms));
         }
@@ -417,16 +433,88 @@ export function CreateHotSheetDialog({
         if (maxSqft) {
           query = query.lte("square_feet", parseInt(maxSqft));
         }
+        
+        // Lot size
+        if (minLotSize) {
+          query = query.gte("lot_size", parseFloat(minLotSize));
+        }
+        if (maxLotSize) {
+          query = query.lte("lot_size", parseFloat(maxLotSize));
+        }
+        
+        // Year built
+        if (minYearBuilt) {
+          query = query.gte("year_built", parseInt(minYearBuilt));
+        }
+        if (maxYearBuilt) {
+          query = query.lte("year_built", parseInt(maxYearBuilt));
+        }
+        
+        // Waterfront features
+        if (waterfront !== null) {
+          query = query.eq("waterfront", waterfront);
+        }
+        if (waterView !== null) {
+          query = query.eq("water_view", waterView);
+        }
+        if (beachNearby !== null) {
+          query = query.eq("beach_nearby", beachNearby);
+        }
+        
+        // Garage and parking
+        if (minGarageSpaces) {
+          query = query.gte("garage_spaces", parseInt(minGarageSpaces));
+        }
+        if (minParkingSpaces) {
+          query = query.gte("total_parking_spaces", parseInt(minParkingSpaces));
+        }
+        
+        // Basement
+        if (basement !== null) {
+          query = query.eq("has_basement", basement);
+        }
+        
+        // Fireplaces
+        if (minFireplaces) {
+          query = query.gte("num_fireplaces", parseInt(minFireplaces));
+        }
 
         const { count } = await query;
         setMatchingListingsCount(count || 0);
       } catch (error) {
         console.error("Error fetching matching count:", error);
+      } finally {
+        setLoadingCount(false);
       }
     };
 
-    fetchMatchingCount();
-  }, [open, propertyTypes, state, selectedCities, minPrice, maxPrice, bedrooms, bathrooms, minSqft, maxSqft]);
+    // Debounce the fetch to avoid too many requests
+    const timeoutId = setTimeout(fetchMatchingCount, 300);
+    return () => clearTimeout(timeoutId);
+  }, [
+    open, 
+    propertyTypes, 
+    state, 
+    selectedCities, 
+    zipCode,
+    minPrice, 
+    maxPrice, 
+    bedrooms, 
+    bathrooms, 
+    minSqft, 
+    maxSqft,
+    minLotSize,
+    maxLotSize,
+    minYearBuilt,
+    maxYearBuilt,
+    waterfront,
+    waterView,
+    beachNearby,
+    minGarageSpaces,
+    minParkingSpaces,
+    basement,
+    minFireplaces
+  ]);
 
   // Validation schema
   const hotSheetSchema = z.object({
@@ -660,13 +748,21 @@ export function CreateHotSheetDialog({
           <DialogDescription>
             Set up search criteria and notification preferences for automatic listing alerts
           </DialogDescription>
-          {matchingListingsCount > 0 && (
-            <div className="mt-2 p-3 bg-primary/10 rounded-md">
-              <p className="text-sm font-medium text-primary">
-                {matchingListingsCount} {matchingListingsCount === 1 ? "property" : "properties"} match your current criteria
-              </p>
+          <div className="mt-2 p-3 bg-primary/10 rounded-md">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">Matching Listings:</span>
+              {loadingCount ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">Searching...</span>
+                </div>
+              ) : (
+                <span className="text-lg font-bold text-primary">
+                  {matchingListingsCount} {matchingListingsCount === 1 ? "property" : "properties"}
+                </span>
+              )}
             </div>
-          )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
