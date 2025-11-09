@@ -170,6 +170,29 @@ const AddListing = () => {
   const [commercialPowerAvailable, setCommercialPowerAvailable] = useState("");
   const [commercialAdditionalFeatures, setCommercialAdditionalFeatures] = useState<string[]>([]);
 
+  // Additional property detail fields
+  const [assessedValue, setAssessedValue] = useState("");
+  const [fiscalYear, setFiscalYear] = useState("");
+  const [residentialExemption, setResidentialExemption] = useState("Unknown");
+  const [floors, setFloors] = useState("");
+  const [basementType, setBasementType] = useState<string[]>([]);
+  const [basementFeatures, setBasementFeatures] = useState<string[]>([]);
+  const [basementFloorType, setBasementFloorType] = useState<string[]>([]);
+  const [leadPaint, setLeadPaint] = useState("Unknown");
+  const [handicapAccess, setHandicapAccess] = useState("Unknown");
+  const [foundation, setFoundation] = useState<string[]>([]);
+  const [parkingComments, setParkingComments] = useState("");
+  const [parkingFeatures, setParkingFeatures] = useState<string[]>([]);
+  const [garageComments, setGarageComments] = useState("");
+  const [garageFeatures, setGarageFeatures] = useState<string[]>([]);
+  const [garageAdditionalFeatures, setGarageAdditionalFeatures] = useState<string[]>([]);
+  const [lotSizeSource, setLotSizeSource] = useState<string[]>([]);
+  const [lotDescription, setLotDescription] = useState<string[]>([]);
+  const [sellerDisclosure, setSellerDisclosure] = useState("No");
+  const [disclosuresText, setDisclosuresText] = useState("");
+  const [exclusions, setExclusions] = useState("");
+  const [brokerComments, setBrokerComments] = useState("");
+
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
@@ -771,10 +794,34 @@ const AddListing = () => {
         appointment_required: formData.appointment_required,
         showing_contact_name: formData.showing_contact_name || null,
         showing_contact_phone: formData.showing_contact_phone || null,
-        disclosures: disclosures,
+        disclosures: [
+          ...(sellerDisclosure === "Yes" ? ["Seller Disclosure"] : []),
+          ...(disclosuresText ? [`Custom: ${disclosuresText}`] : []),
+          ...(exclusions ? [`Exclusions: ${exclusions}`] : []),
+          ...(brokerComments ? [`Broker Comments: ${brokerComments}`] : [])
+        ],
         property_features: propertyFeatures,
         amenities: amenities,
-        additional_notes: formData.additional_notes || null,
+        additional_notes: [
+          formData.additional_notes || "",
+          assessedValue ? `Assessed Value: ${assessedValue}` : "",
+          fiscalYear ? `Fiscal Year: ${fiscalYear}` : "",
+          residentialExemption !== "Unknown" ? `Residential Exemption: ${residentialExemption}` : "",
+          floors ? `Floors: ${floors}` : "",
+          leadPaint !== "Unknown" ? `Lead Paint: ${leadPaint}` : "",
+          handicapAccess !== "Unknown" ? `Handicap Access: ${handicapAccess}` : "",
+          foundation.length > 0 ? `Foundation: ${foundation.join(", ")}` : "",
+          basementType.length > 0 ? `Basement Type: ${basementType.join(", ")}` : "",
+          basementFeatures.length > 0 ? `Basement Features: ${basementFeatures.join(", ")}` : "",
+          basementFloorType.length > 0 ? `Basement Floor: ${basementFloorType.join(", ")}` : "",
+          parkingComments ? `Parking Comments: ${parkingComments}` : "",
+          parkingFeatures.length > 0 ? `Parking Features: ${parkingFeatures.join(", ")}` : "",
+          garageComments ? `Garage Comments: ${garageComments}` : "",
+          garageFeatures.length > 0 ? `Garage Features: ${garageFeatures.join(", ")}` : "",
+          garageAdditionalFeatures.length > 0 ? `Garage Additional: ${garageAdditionalFeatures.join(", ")}` : "",
+          lotSizeSource.length > 0 ? `Lot Source: ${lotSizeSource.join(", ")}` : "",
+          lotDescription.length > 0 ? `Lot Description: ${lotDescription.join(", ")}` : "",
+        ].filter(Boolean).join("\n"),
         photos: uploadedFiles.photos,
         floor_plans: uploadedFiles.floorPlans,
         documents: uploadedFiles.documents,
@@ -1718,15 +1765,88 @@ const AddListing = () => {
                   </>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="lot_size">Lot Size (sq ft)</Label>
-                  <FormattedInput
-                    id="lot_size"
-                    format="number"
-                    decimals={0}
-                    value={formData.lot_size}
-                    onChange={(value) => setFormData({ ...formData, lot_size: value })}
-                  />
+                {/* Lot Size and Description */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Lot Information</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="lot_size">Lot Size - ft²</Label>
+                      <FormattedInput
+                        id="lot_size"
+                        format="number"
+                        decimals={0}
+                        value={formData.lot_size}
+                        onChange={(value) => setFormData({ ...formData, lot_size: value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Source</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {["Measured", "Owner", "Public Record", "Appraiser"].map((source) => (
+                          <div key={source} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`lot-source-${source}`}
+                              checked={lotSizeSource.includes(source)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setLotSizeSource([...lotSizeSource, source]);
+                                } else {
+                                  setLotSizeSource(lotSizeSource.filter((s) => s !== source));
+                                }
+                              }}
+                            />
+                            <label htmlFor={`lot-source-${source}`} className="text-sm cursor-pointer">
+                              {source}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Lot description</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {["Corner", "Wooded", "Underground Storage Tank", "Easements", "On Golf Course", "Additional Land Avail.", "Zero Lot Line"].map((desc) => (
+                        <div key={desc} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`lot-desc-${desc}`}
+                            checked={lotDescription.includes(desc)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setLotDescription([...lotDescription, desc]);
+                              } else {
+                                setLotDescription(lotDescription.filter((d) => d !== desc));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`lot-desc-${desc}`} className="text-sm cursor-pointer">
+                            {desc}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                      {["Flood Plain", "Shared Driveway", "Cleared", "Fence/Enclosed", "Sloping", "Level", "Marsh"].map((desc) => (
+                        <div key={desc} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`lot-desc2-${desc}`}
+                            checked={lotDescription.includes(desc)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setLotDescription([...lotDescription, desc]);
+                              } else {
+                                setLotDescription(lotDescription.filter((d) => d !== desc));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`lot-desc2-${desc}`} className="text-sm cursor-pointer">
+                            {desc}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* List Date and Expiration Date */}
@@ -1757,9 +1877,30 @@ const AddListing = () => {
                 <div className="space-y-6">
                   <Label className="text-xl font-semibold">Property Tax Information</Label>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="annual_property_tax">Annual Property Tax</Label>
+                      <Label htmlFor="assessed_value">Assessed Value</Label>
+                      <FormattedInput
+                        id="assessed_value"
+                        format="currency"
+                        decimals={2}
+                        value={assessedValue}
+                        onChange={(value) => setAssessedValue(value)}
+                        placeholder="$0.00"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fiscal_year">Fiscal Year</Label>
+                      <Input
+                        id="fiscal_year"
+                        type="number"
+                        value={fiscalYear}
+                        onChange={(e) => setFiscalYear(e.target.value)}
+                        placeholder={new Date().getFullYear().toString()}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="annual_property_tax">Taxes-Yearly</Label>
                       <FormattedInput
                         id="annual_property_tax"
                         format="currency"
@@ -1770,13 +1911,49 @@ const AddListing = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="tax_year">Tax Year</Label>
+                      <Label htmlFor="residential_exemption">Residential Exemption</Label>
+                      <Select value={residentialExemption} onValueChange={setResidentialExemption}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Unknown">Unknown</SelectItem>
+                          <SelectItem value="Yes">Yes</SelectItem>
+                          <SelectItem value="No">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fireplace">Fireplace</Label>
                       <Input
-                        id="tax_year"
+                        id="fireplace"
                         type="number"
-                        value={formData.tax_year}
-                        onChange={(e) => setFormData({ ...formData, tax_year: e.target.value })}
-                        placeholder={new Date().getFullYear().toString()}
+                        value={minFireplaces}
+                        onChange={(e) => setMinFireplaces(e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="floors">Floors</Label>
+                      <Input
+                        id="floors"
+                        type="number"
+                        value={floors}
+                        onChange={(e) => setFloors(e.target.value)}
+                        placeholder="e.g., 2"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="year_built">Year Built</Label>
+                      <Input
+                        id="year_built"
+                        type="number"
+                        value={formData.year_built}
+                        onChange={(e) => setFormData({ ...formData, year_built: e.target.value })}
+                        placeholder="e.g., 1990"
                       />
                     </div>
                     <div className="space-y-2">
@@ -2036,69 +2213,268 @@ const AddListing = () => {
                     </div>
                   </div>
 
-                  {/* Interior Features & Parking */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <Label className="text-base font-medium">Interior Features</Label>
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <Label htmlFor="minFireplaces">Number of Fireplaces</Label>
-                          <Input
-                            id="minFireplaces"
-                            type="number"
-                            value={minFireplaces}
-                            onChange={(e) => setMinFireplaces(e.target.value)}
-                            placeholder="e.g., 1"
+                  {/* Basement Details */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Basement</Label>
+                    <div className="flex items-center justify-between p-3 border rounded-lg mb-3">
+                      <label className="text-sm font-medium">Has Basement</label>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={basement === true ? "default" : "outline"}
+                          onClick={() => setBasement(basement === true ? null : true)}
+                        >
+                          Yes
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={basement === false ? "default" : "outline"}
+                          onClick={() => setBasement(basement === false ? null : false)}
+                        >
+                          No
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {["Full", "Partial", "Finished", "Partially Finished", "Unfinished", "Walkout", "Bulkhead", "Plumbed"].map((type) => (
+                        <div key={type} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`basement-type-${type}`}
+                            checked={basementType.includes(type)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setBasementType([...basementType, type]);
+                              } else {
+                                setBasementType(basementType.filter((t) => t !== type));
+                              }
+                            }}
                           />
+                          <label htmlFor={`basement-type-${type}`} className="text-sm cursor-pointer">
+                            {type}
+                          </label>
                         </div>
-                        <div className="flex items-center justify-between p-3 border rounded-lg">
-                          <label className="text-sm font-medium">Basement</label>
-                          <div className="flex gap-2">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant={basement === true ? "default" : "outline"}
-                              onClick={() => setBasement(basement === true ? null : true)}
-                            >
-                              Yes
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant={basement === false ? "default" : "outline"}
-                              onClick={() => setBasement(basement === false ? null : false)}
-                            >
-                              No
-                            </Button>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+                      {["Sump Pump", "French Drain", "Workshop", "Crawl Space", "Radon Remediation", "Interior Access"].map((feat) => (
+                        <div key={feat} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`basement-feature-${feat}`}
+                            checked={basementFeatures.includes(feat)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setBasementFeatures([...basementFeatures, feat]);
+                              } else {
+                                setBasementFeatures(basementFeatures.filter((f) => f !== feat));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`basement-feature-${feat}`} className="text-sm cursor-pointer">
+                            {feat}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+                      {["Garage Access", "Exterior Access", "Dirt Floor", "Concrete Floor", "Slab"].map((floor) => (
+                        <div key={floor} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`basement-floor-${floor}`}
+                            checked={basementFloorType.includes(floor)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setBasementFloorType([...basementFloorType, floor]);
+                              } else {
+                                setBasementFloorType(basementFloorType.filter((f) => f !== floor));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`basement-floor-${floor}`} className="text-sm cursor-pointer">
+                            {floor}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Lead Paint, Handicap Access, Foundation */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="lead_paint">Lead Paint</Label>
+                      <Select value={leadPaint} onValueChange={setLeadPaint}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Unknown">Unknown</SelectItem>
+                          <SelectItem value="Yes">Yes</SelectItem>
+                          <SelectItem value="No">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="handicap_access">Handicap Access</Label>
+                      <Select value={handicapAccess} onValueChange={setHandicapAccess}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Unknown">Unknown</SelectItem>
+                          <SelectItem value="Yes">Yes</SelectItem>
+                          <SelectItem value="No">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Foundation</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {["Poured Concrete", "Concrete Block", "Fieldstone", "Brick", "Granite", "Slab"].map((type) => (
+                          <div key={type} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`foundation-${type}`}
+                              checked={foundation.includes(type)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setFoundation([...foundation, type]);
+                                } else {
+                                  setFoundation(foundation.filter((f) => f !== type));
+                                }
+                              }}
+                            />
+                            <label htmlFor={`foundation-${type}`} className="text-sm cursor-pointer">
+                              {type}
+                            </label>
                           </div>
-                        </div>
+                        ))}
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <Label className="text-base font-medium">Parking</Label>
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <Label htmlFor="garageSpaces">Garage Spaces</Label>
-                          <Input
-                            id="garageSpaces"
-                            type="number"
-                            value={garageSpaces}
-                            onChange={(e) => setGarageSpaces(e.target.value)}
-                            placeholder="e.g., 2"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="parkingSpaces">Total Parking Spaces</Label>
-                          <Input
-                            id="parkingSpaces"
-                            type="number"
-                            value={parkingSpaces}
-                            onChange={(e) => setParkingSpaces(e.target.value)}
-                            placeholder="e.g., 3"
-                          />
-                        </div>
+                  </div>
+
+                  {/* Parking Details */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Parking #</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Input
+                          id="parkingSpaces"
+                          type="number"
+                          value={parkingSpaces}
+                          onChange={(e) => setParkingSpaces(e.target.value)}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="parking_comments">Comments and Remarks for Parking</Label>
+                        <Textarea
+                          id="parking_comments"
+                          value={parkingComments}
+                          onChange={(e) => setParkingComments(e.target.value)}
+                          placeholder="Additional parking details..."
+                        />
                       </div>
                     </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {["Included", "Deeded", "Assigned", "Off Street", "Paved", "Shared Driveway", "For Rent", "Street Permit", "For Sale"].map((feat) => (
+                        <div key={feat} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`parking-${feat}`}
+                            checked={parkingFeatures.includes(feat)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setParkingFeatures([...parkingFeatures, feat]);
+                              } else {
+                                setParkingFeatures(parkingFeatures.filter((f) => f !== feat));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`parking-${feat}`} className="text-sm cursor-pointer">
+                            {feat}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Garage Details */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Garage #</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Input
+                          id="garageSpaces"
+                          type="number"
+                          value={garageSpaces}
+                          onChange={(e) => setGarageSpaces(e.target.value)}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="garage_comments">Comments and Remarks for Garage</Label>
+                        <Textarea
+                          id="garage_comments"
+                          value={garageComments}
+                          onChange={(e) => setGarageComments(e.target.value)}
+                          placeholder="Additional garage details..."
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {["Included", "Deeded", "Assigned", "Attached", "Detached", "Under", "Heated", "Carport", "Charging Station", "Wash Station"].map((feat) => (
+                        <div key={feat} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`garage-${feat}`}
+                            checked={garageFeatures.includes(feat)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setGarageFeatures([...garageFeatures, feat]);
+                              } else {
+                                setGarageFeatures(garageFeatures.filter((f) => f !== feat));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`garage-${feat}`} className="text-sm cursor-pointer">
+                            {feat}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                      {["Available to Purchase", "Valet", "For Rent", "Tandem"].map((feat) => (
+                        <div key={feat} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`garage-additional-${feat}`}
+                            checked={garageAdditionalFeatures.includes(feat)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setGarageAdditionalFeatures([...garageAdditionalFeatures, feat]);
+                              } else {
+                                setGarageAdditionalFeatures(garageAdditionalFeatures.filter((f) => f !== feat));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`garage-additional-${feat}`} className="text-sm cursor-pointer">
+                            {feat}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Total Parking */}
+                  <div className="space-y-2">
+                    <Label htmlFor="total_parking">Total Parking</Label>
+                    <Input
+                      id="total_parking"
+                      type="number"
+                      value={parkingSpaces}
+                      onChange={(e) => setParkingSpaces(e.target.value)}
+                      placeholder="0"
+                    />
                   </div>
 
                   {/* Construction Features */}
@@ -2155,7 +2531,7 @@ const AddListing = () => {
                   <div className="space-y-3">
                     <Label className="text-base font-medium">Exterior Features</Label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {["Deck", "Patio", "Pool", "Professional Landscaping", "Irrigation", "Solar Powered Area Lighting", "Drought Tolerant Landscaping", "Cistern Water Storage"].map((feat) => (
+                      {["Pool, Inground", "Pool, Above Ground", "Cabana", "Sports Court", "Hot Tub", "Shed", "Paddock", "Sprinkler System"].map((feat) => (
                         <div key={feat} className="flex items-center space-x-2">
                           <Checkbox
                             id={`exterior-${feat}`}
@@ -2169,6 +2545,26 @@ const AddListing = () => {
                             }}
                           />
                           <label htmlFor={`exterior-${feat}`} className="text-sm cursor-pointer">
+                            {feat}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                      {["Decorative Lighting", "Fenced Yard", "Gazebo", "Guest House", "Outdoor Shower"].map((feat) => (
+                        <div key={feat} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`exterior2-${feat}`}
+                            checked={exteriorFeatures.includes(feat)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setExteriorFeatures([...exteriorFeatures, feat]);
+                              } else {
+                                setExteriorFeatures(exteriorFeatures.filter((f) => f !== feat));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`exterior2-${feat}`} className="text-sm cursor-pointer">
                             {feat}
                           </label>
                         </div>
@@ -2601,38 +2997,51 @@ const AddListing = () => {
                 {/* Disclosures Section */}
                 <div className="space-y-4 border-t pt-6">
                   <Label className="text-xl font-semibold">Disclosures</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {[
-                      'Lead-based paint',
-                      'Asbestos',
-                      'Radon',
-                      'Flood zone',
-                      'HOA restrictions',
-                      'Previous damage/repairs',
-                      'Environmental hazards',
-                      'Easements',
-                      'Pending litigation',
-                      'Property liens'
-                    ].map((disclosure) => (
-                      <div key={disclosure} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={disclosure}
-                          checked={disclosures.includes(disclosure)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setDisclosures([...disclosures, disclosure]);
-                            } else {
-                              setDisclosures(disclosures.filter(d => d !== disclosure));
-                            }
-                          }}
-                          className="rounded border-gray-300"
-                        />
-                        <Label htmlFor={disclosure} className="font-normal cursor-pointer">
-                          {disclosure}
-                        </Label>
-                      </div>
-                    ))}
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="seller_disclosure">Seller Disclosure</Label>
+                    <Select value={sellerDisclosure} onValueChange={setSellerDisclosure}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="No">No</SelectItem>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="disclosures_text">Disclosures</Label>
+                    <Textarea
+                      id="disclosures_text"
+                      value={disclosuresText}
+                      onChange={(e) => setDisclosuresText(e.target.value)}
+                      placeholder="Enter any property disclosures..."
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="exclusions">Exclusions</Label>
+                    <Textarea
+                      id="exclusions"
+                      value={exclusions}
+                      onChange={(e) => setExclusions(e.target.value)}
+                      placeholder="Items excluded from the sale..."
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="broker_comments">Broker Comments</Label>
+                    <Textarea
+                      id="broker_comments"
+                      value={brokerComments}
+                      onChange={(e) => setBrokerComments(e.target.value)}
+                      placeholder="Additional broker comments..."
+                      rows={4}
+                    />
                   </div>
                 </div>
 
@@ -2681,44 +3090,81 @@ const AddListing = () => {
 
                 {/* Amenities Section */}
                 <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Amenities</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {[
-                      'Pool',
-                      'Hot tub',
-                      'Tennis court',
-                      'Gym/Fitness center',
-                      'Playground',
-                      'Clubhouse',
-                      'Pet friendly',
-                      'Gated community',
-                      'Security system',
-                      'Concierge',
-                      'Elevator',
-                      'Storage units',
-                      'Bike storage',
-                      'EV charging',
-                      'Package room'
-                    ].map((amenity) => (
-                      <div key={amenity} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={amenity}
-                          checked={amenities.includes(amenity)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setAmenities([...amenities, amenity]);
-                            } else {
-                              setAmenities(amenities.filter(a => a !== amenity));
-                            }
-                          }}
-                          className="rounded border-gray-300"
-                        />
-                        <Label htmlFor={amenity} className="font-normal cursor-pointer">
-                          {amenity}
-                        </Label>
-                      </div>
-                    ))}
+                  <Label className="text-xl font-semibold">Area Amenities</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {["Public Transportation", "Shopping", "Marina", "Tennis Court", "Public School", "Private School", "University", "Hospital"].map(
+                      (amenity) => (
+                        <div key={amenity} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`amenity-${amenity}`}
+                            checked={amenities.includes(amenity)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setAmenities([...amenities, amenity]);
+                              } else {
+                                setAmenities(amenities.filter((a) => a !== amenity));
+                              }
+                            }}
+                          />
+                          <Label
+                            htmlFor={`amenity-${amenity}`}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {amenity}
+                          </Label>
+                        </div>
+                      )
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {["Laundry/Dry Cleaning", "House of Worship", "Highway Access", "Swimming Pool", "Park", "Walk/Jog Trails", "Bike Path"].map(
+                      (amenity) => (
+                        <div key={amenity} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`amenity2-${amenity}`}
+                            checked={amenities.includes(amenity)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setAmenities([...amenities, amenity]);
+                              } else {
+                                setAmenities(amenities.filter((a) => a !== amenity));
+                              }
+                            }}
+                          />
+                          <Label
+                            htmlFor={`amenity2-${amenity}`}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {amenity}
+                          </Label>
+                        </div>
+                      )
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {["Golf Course", "Beach"].map(
+                      (amenity) => (
+                        <div key={amenity} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`amenity3-${amenity}`}
+                            checked={amenities.includes(amenity)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setAmenities([...amenities, amenity]);
+                              } else {
+                                setAmenities(amenities.filter((a) => a !== amenity));
+                              }
+                            }}
+                          />
+                          <Label
+                            htmlFor={`amenity3-${amenity}`}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {amenity}
+                          </Label>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
 
