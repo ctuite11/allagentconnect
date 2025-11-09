@@ -328,23 +328,22 @@ const HotSheets = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12"></TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Property Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Beds</TableHead>
-                    <TableHead>Baths</TableHead>
-                    <TableHead>Rooms</TableHead>
-                    <TableHead>Acres</TableHead>
-                    <TableHead>Min Sqft</TableHead>
-                    <TableHead>Min Price</TableHead>
-                    <TableHead>Max Price</TableHead>
+                    <TableHead>Hot Sheet Name</TableHead>
+                    <TableHead>Client Name</TableHead>
+                    <TableHead>Contact Info</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {hotSheets.map((sheet) => {
                     const criteria = sheet.criteria as any;
+                    const clientName = [criteria.clientFirstName, criteria.clientLastName]
+                      .filter(Boolean)
+                      .join(" ") || "—";
+                    const contactInfo = [criteria.clientEmail, criteria.clientPhone]
+                      .filter(Boolean)
+                      .join(" | ") || "—";
+                    
                     return (
                       <TableRow key={sheet.id}>
                         <TableCell>
@@ -354,52 +353,8 @@ const HotSheets = () => {
                           />
                         </TableCell>
                         <TableCell className="font-medium">{sheet.name}</TableCell>
-                        <TableCell className="text-sm">
-                          {criteria.propertyTypes?.length > 0 
-                            ? criteria.propertyTypes.map((t: string) => 
-                                t.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
-                              ).join(", ")
-                            : "All"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {criteria.statuses?.length > 0
-                            ? criteria.statuses.map((s: string) => 
-                                s.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
-                              ).join(", ")
-                            : "All"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {criteria.cities?.length > 0
-                            ? criteria.cities.join(", ")
-                            : [criteria.state, criteria.zipCode]
-                                .filter(Boolean)
-                                .join(", ") || "All"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {criteria.bedrooms || "Any"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {criteria.bathrooms || "Any"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {criteria.rooms || "Any"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {criteria.acres || "Any"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {criteria.minSqft ? criteria.minSqft.toLocaleString() : "Any"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {criteria.minPrice 
-                            ? `$${criteria.minPrice.toLocaleString()}` 
-                            : "No Min Price"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {criteria.maxPrice 
-                            ? `$${criteria.maxPrice.toLocaleString()}` 
-                            : "No Max Price"}
-                        </TableCell>
+                        <TableCell className="text-sm">{clientName}</TableCell>
+                        <TableCell className="text-sm">{contactInfo}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button
