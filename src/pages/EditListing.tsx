@@ -69,6 +69,9 @@ const EditListing = () => {
   const [amenities, setAmenities] = useState<string[]>([]);
   const [manualAddressDialogOpen, setManualAddressDialogOpen] = useState(false);
   
+  // Unit number for condos, townhouses, rentals
+  const [unitNumber, setUnitNumber] = useState("");
+  
   // New comprehensive fields
   const [assessedValue, setAssessedValue] = useState("");
   const [fiscalYear, setFiscalYear] = useState("");
@@ -152,6 +155,20 @@ const EditListing = () => {
         setDisclosures(Array.isArray(data.disclosures) ? data.disclosures as string[] : []);
         setPropertyFeatures(Array.isArray(data.property_features) ? data.property_features as string[] : []);
         setAmenities(Array.isArray(data.amenities) ? data.amenities as string[] : []);
+        
+        // Extract unit number from condo_details if available
+        if (data.property_type === "Condominium" && data.condo_details) {
+          try {
+            const condoDetails = typeof data.condo_details === 'string' 
+              ? JSON.parse(data.condo_details) 
+              : data.condo_details;
+            if (condoDetails?.unit_number) {
+              setUnitNumber(condoDetails.unit_number);
+            }
+          } catch (e) {
+            console.error("Error parsing condo_details:", e);
+          }
+        }
         
         // Parse comprehensive fields from disclosures array
         const disclosuresArray = Array.isArray(data.disclosures) ? data.disclosures as string[] : [];
@@ -242,7 +259,7 @@ const EditListing = () => {
         additionalNotes += `\n\nBroker Comments: ${brokerComments}`;
       }
 
-      const dataToUpdate = {
+      const dataToUpdate: any = {
         address: formData.address,
         city: formData.city,
         state: formData.state,
@@ -273,6 +290,27 @@ const EditListing = () => {
         tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
         num_fireplaces: formData.num_fireplaces ? parseInt(formData.num_fireplaces) : null,
       };
+
+      // Update condo_details if it's a condominium
+      if (formData.property_type?.includes("Condo") && unitNumber) {
+        // Fetch existing condo_details first
+        const { data: existingData } = await supabase
+          .from("listings")
+          .select("condo_details")
+          .eq("id", id)
+          .single();
+        
+        const existingCondoDetails = existingData?.condo_details 
+          ? (typeof existingData.condo_details === 'string' 
+            ? JSON.parse(existingData.condo_details) 
+            : existingData.condo_details)
+          : {};
+        
+        dataToUpdate.condo_details = {
+          ...existingCondoDetails,
+          unit_number: unitNumber,
+        };
+      }
 
       const validated = listingSchema.parse(dataToUpdate);
 
@@ -473,6 +511,29 @@ const EditListing = () => {
                   />
                 </div>
               </div>
+
+              {/* Unit Number - for properties with units */}
+              {(formData.property_type?.includes("Condo") || 
+                formData.property_type?.includes("Townhouse") || 
+                formData.property_type?.includes("Multi") || 
+                formData.property_type?.includes("Rental") ||
+                formData.listing_type === "for_rent") && (
+                <div className="space-y-2">
+                  <Label htmlFor="unit_number">
+                    Unit/Apartment Number
+                    {formData.property_type?.includes("Condo") && " *"}
+                  </Label>
+                  <Input
+                    id="unit_number"
+                    value={unitNumber}
+                    onChange={(e) => setUnitNumber(e.target.value)}
+                    placeholder="e.g., 3B, 205, Apt 4"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Helps identify the specific unit and fetch accurate property data
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="price">Price</Label>

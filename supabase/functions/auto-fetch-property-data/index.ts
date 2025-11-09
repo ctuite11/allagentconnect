@@ -29,7 +29,7 @@ serve(async (req) => {
     // Fetch the listing data
     const { data: listing, error: fetchError } = await supabase
       .from("listings")
-      .select("id, address, city, state, zip_code, latitude, longitude")
+      .select("id, address, city, state, zip_code, latitude, longitude, property_type, condo_details")
       .eq("id", listing_id)
       .single();
 
@@ -45,6 +45,13 @@ serve(async (req) => {
         JSON.stringify({ message: "Skipped - no address provided" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Extract unit number for condominiums
+    let unitNumber = null;
+    if (listing.property_type === "Condominium" && listing.condo_details) {
+      unitNumber = listing.condo_details.unit_number;
+      console.log(`[auto-fetch-property-data] Detected condo unit number: ${unitNumber}`);
     }
 
     // Parse address if city/state/zip are empty but address contains full address
@@ -92,8 +99,15 @@ serve(async (req) => {
         else if (zipCode) parts.push(zipCode);
         const address2 = parts.join(", ");
         
+        // Construct the street address with unit number if available
+        let streetAddress = listing.address.split(',')[0];
+        if (unitNumber) {
+          streetAddress = `${streetAddress} Unit ${unitNumber}`;
+          console.log(`[auto-fetch-property-data] Added unit number to address: ${streetAddress}`);
+        }
+        
         // If no parsed parts, use full address as-is
-        const fullAddress = address2 ? [listing.address.split(',')[0], address2].join(", ") : listing.address;
+        const fullAddress = address2 ? [streetAddress, address2].join(", ") : streetAddress;
 
         console.log(`[auto-fetch-property-data] Fetching ATTOM data for: ${fullAddress}`);
 
@@ -115,7 +129,7 @@ serve(async (req) => {
             const lot = property.lot || {};
             const summary = property.summary || {};
 
-            // Update ATTOM data
+            // Update ATTOM data with condo-specific information
             updates.attom_data = {
               bedrooms: building.rooms?.beds || null,
               bathrooms: building.rooms?.bathstotal || building.rooms?.bathsfull || null,
@@ -126,37 +140,10 @@ serve(async (req) => {
               zoning: lot.zoning || null,
               parking_spaces: building.parking?.prkgSpaces || null,
               stories: building.summary?.stories || null,
+              unit_number: unitNumber || null,
             };
 
-            // Update basic listing fields if empty
-            if (!listing.latitude && property.location?.latitude) {
-              updates.latitude = property.location.latitude;
-            }
-            if (!listing.longitude && property.location?.longitude) {
-              updates.longitude = property.location.longitude;
-            }
-            
-            // Update parsed city/state/zip if they were empty
-            if (!listing.city && city) {
-              updates.city = city;
-            }
-            if (!listing.state && state) {
-              updates.state = state;
-            }
-            if (!listing.zip_code && zipCode) {
-              updates.zip_code = zipCode;
-            }
-
-            // Update value estimate
-            if (property.assessment?.market) {
-              updates.value_estimate = {
-                estimate: property.assessment.market.mktttlvalue || null,
-                high: property.assessment.market.mkthighvalue || null,
-                low: property.assessment.market.mktlowvalue || null,
-              };
-            }
-
-            console.log(`[auto-fetch-property-data] ATTOM data fetched successfully`);
+            console.log(`[auto-fetch-property-data] ATTOM data fetched successfully for ${unitNumber ? 'condo unit ' + unitNumber : 'property'}`);
           } else {
             console.warn(`[auto-fetch-property-data] No property data returned from ATTOM`);
           }

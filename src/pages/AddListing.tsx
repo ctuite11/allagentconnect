@@ -133,6 +133,9 @@ const AddListing = () => {
   const [coolingTypes, setCoolingTypes] = useState<string[]>([]);
   const [greenFeatures, setGreenFeatures] = useState<string[]>([]);
 
+  // Unit number - for Condominiums, Townhouses, Multi-Family, and Rentals
+  const [unitNumber, setUnitNumber] = useState("");
+  
   // Condominium-specific fields
   const [condoUnitNumber, setCondoUnitNumber] = useState("");
   const [condoFloorLevel, setCondoFloorLevel] = useState("");
@@ -308,27 +311,29 @@ const AddListing = () => {
       address: formattedAddress,
       city,
       state: stateShort,
-      zip: zip_code
+      zip: zip_code,
+      unit: unitNumber
     });
 
     if (latitude && longitude) {
-      await fetchPropertyData(latitude, longitude, formattedAddress, city, stateShort, zip_code);
+      await fetchPropertyData(latitude, longitude, formattedAddress, city, stateShort, zip_code, unitNumber, formData.property_type);
     } else {
       console.warn("[AddListing] Skipping fetchPropertyData - missing coordinates");
       toast.error("Could not extract coordinates from address. Please try again.");
     }
-  }, []);
-  const fetchPropertyData = async (lat: number, lng: number, address: string, city: string, state: string, zip: string) => {
-    console.log("[AddListing] fetchPropertyData called with:", { lat, lng, address, city, state, zip });
+  }, [unitNumber, formData.property_type]);
+  
+  const fetchPropertyData = async (lat: number, lng: number, address: string, city: string, state: string, zip: string, unit_number?: string, property_type?: string) => {
+    console.log("[AddListing] fetchPropertyData called with:", { lat, lng, address, city, state, zip, unit_number, property_type });
     setSubmitting(true);
     try {
       console.log("[AddListing] Invoking fetch-property-data edge function...");
       const { data, error } = await supabase.functions.invoke("fetch-property-data", {
-        body: { latitude: lat, longitude: lng, address, city, state, zip_code: zip },
+        body: { latitude: lat, longitude: lng, address, city, state, zip_code: zip, unit_number, property_type },
       });
 
       console.log("[AddListing] Edge function response:", { data, error });
-      setDebugInfo({ source: 'fetch-property-data', payload: { lat, lng, address, city, state, zip }, data, error });
+      setDebugInfo({ source: 'fetch-property-data', payload: { lat, lng, address, city, state, zip, unit_number, property_type }, data, error });
 
       if (error) throw error;
 
@@ -492,7 +497,7 @@ const AddListing = () => {
 
     try {
       if (latitude && longitude && address) {
-        await fetchPropertyData(latitude, longitude, address, city, state, zip_code);
+        await fetchPropertyData(latitude, longitude, address, city, state, zip_code, unitNumber, formData.property_type);
         return;
       }
 
@@ -857,7 +862,7 @@ const AddListing = () => {
         green_features: greenFeatures.length > 0 ? greenFeatures : null,
         // Condominium-specific details
         condo_details: formData.property_type === "Condominium" ? {
-          unit_number: condoUnitNumber || null,
+          unit_number: unitNumber || condoUnitNumber || null,
           floor_level: condoFloorLevel ? parseInt(condoFloorLevel) : null,
           hoa_fee: condoHoaFee ? parseFloat(condoHoaFee) : null,
           hoa_fee_frequency: condoHoaFeeFrequency,
@@ -1202,6 +1207,29 @@ const AddListing = () => {
                 <input type="hidden" name="state" value={formData.state} />
                 <input type="hidden" name="zip_code" value={formData.zip_code} />
 
+                {/* Unit Number - for properties with units */}
+                {(formData.property_type === "Condominium" || 
+                  formData.property_type === "Townhouse" || 
+                  formData.property_type === "Multi Family" || 
+                  formData.property_type === "Residential Rental" ||
+                  formData.listing_type === "for_rent") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="unit_number">
+                      Unit/Apartment Number
+                      {(formData.property_type === "Condominium" || formData.property_type === "Townhouse") && " *"}
+                    </Label>
+                    <Input
+                      id="unit_number"
+                      value={unitNumber}
+                      onChange={(e) => setUnitNumber(e.target.value)}
+                      placeholder="e.g., 3B, 205, Apt 4"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Helps identify the specific unit and fetch accurate property data
+                    </p>
+                  </div>
+                )}
+
                 {/* Property Details */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
@@ -1250,16 +1278,7 @@ const AddListing = () => {
                     <div className="space-y-6">
                       <Label className="text-xl font-semibold">Condominium Information</Label>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="condo_unit_number">Unit Number</Label>
-                          <Input
-                            id="condo_unit_number"
-                            value={condoUnitNumber}
-                            onChange={(e) => setCondoUnitNumber(e.target.value)}
-                            placeholder="e.g., 3B, 205"
-                          />
-                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="condo_floor_level">Floor Level</Label>
                           <Input

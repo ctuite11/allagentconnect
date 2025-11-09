@@ -60,7 +60,7 @@ serve(async (req) => {
       );
     }
 
-    const { latitude, longitude, address, city, state, zip_code } = await req.json();
+    const { latitude, longitude, address, city, state, zip_code, unit_number, property_type } = await req.json();
 
     // Validate inputs
     if (latitude !== undefined && (typeof latitude !== "number" || latitude < -90 || latitude > 90)) {
@@ -80,6 +80,9 @@ serve(async (req) => {
     }
     if (zip_code && (typeof zip_code !== "string" || !/^\d{5}(-\d{4})?$/.test(zip_code))) {
       throw new Error("Invalid ZIP code");
+    }
+    if (unit_number && (typeof unit_number !== "string" || unit_number.length > 50)) {
+      throw new Error("Invalid unit number");
     }
 
     const attomApiKey = Deno.env.get("ATTOM_API_KEY");
@@ -102,11 +105,19 @@ serve(async (req) => {
         else if (state) parts.push(state);
         else if (zip_code) parts.push(zip_code);
         const address2 = parts.join(", ");
-        const fullAddress = [address, address2].filter(Boolean).join(", ");
+        
+        // Construct street address with unit number for condominiums
+        let streetAddress = address;
+        if (unit_number && (property_type === "Condominium" || property_type === "Townhouse" || property_type === "Residential Rental")) {
+          streetAddress = `${address} Unit ${unit_number}`;
+          console.log("[fetch-property-data] Added unit number to address:", streetAddress);
+        }
+        
+        const fullAddress = [streetAddress, address2].filter(Boolean).join(", ");
 
         // Try basicprofile first (more tolerant), then fallback to address endpoint
         const attomUrlBasic = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/basicprofile?address=${encodeURIComponent(fullAddress)}&debug=true`;
-        const attomUrlAddr = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address?address1=${encodeURIComponent(address)}&address2=${encodeURIComponent(address2)}`;
+        const attomUrlAddr = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address?address1=${encodeURIComponent(streetAddress)}&address2=${encodeURIComponent(address2)}`;
 
         console.log("[fetch-property-data] Calling Attom basicprofile:", attomUrlBasic);
 
@@ -156,6 +167,7 @@ serve(async (req) => {
             zoning: lot.zoning || null,
             parking_spaces: building.parking?.prkgSpaces || null,
             stories: building.summary?.stories || null,
+            unit_number: unit_number || null,
           };
 
           if (property.assessment?.market) {
@@ -165,8 +177,10 @@ serve(async (req) => {
               low: property.assessment.market.mktlowvalue || null,
             };
           }
+          
+          console.log(`[fetch-property-data] ATTOM data fetched successfully for ${unit_number ? 'unit ' + unit_number : 'property'}`);
         } else {
-          console.warn("[fetch-property-data] Attom returned no properties for:", { fullAddress, address, address2 });
+          console.warn("[fetch-property-data] Attom returned no properties for:", { fullAddress, streetAddress, address2 });
         }
       } catch (error) {
         console.error("[fetch-property-data] Error fetching Attom data:", error);
