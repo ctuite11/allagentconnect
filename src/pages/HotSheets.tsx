@@ -14,6 +14,7 @@ import { Share2, Plus, Trash2, Users, MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 interface HotSheet {
   id: string;
@@ -340,7 +341,10 @@ const HotSheets = () => {
                     const clientName = [criteria.clientFirstName, criteria.clientLastName]
                       .filter(Boolean)
                       .join(" ") || "—";
-                    const contactInfo = [criteria.clientEmail, criteria.clientPhone]
+                    const contactInfo = [
+                      criteria.clientEmail,
+                      criteria.clientPhone ? formatPhoneNumber(criteria.clientPhone) : null
+                    ]
                       .filter(Boolean)
                       .join(" | ") || "—";
                     
