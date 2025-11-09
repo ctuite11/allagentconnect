@@ -252,6 +252,11 @@ export function CreateHotSheetDialog({
     );
   };
 
+  const selectAllTowns = () => {
+    setSelectedCities(availableCities);
+    toast.success(`Selected all ${availableCities.length} towns`);
+  };
+
   // Helper function to get towns for a county
   const getCountyTowns = (countyName: string, stateCode: string): string[] => {
     const countyTownMappings: Record<string, Record<string, string[]>> = {
@@ -936,6 +941,17 @@ export function CreateHotSheetDialog({
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
+                        {selectedCountyId && selectedCountyId !== "all" && availableCities.length > 0 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={selectAllTowns}
+                            className="w-full mb-2 text-sm"
+                          >
+                            Select All Towns in County ({availableCities.length})
+                          </Button>
+                        )}
                         <Input
                           placeholder="Type Full or Partial Name"
                           value={citySearch}
