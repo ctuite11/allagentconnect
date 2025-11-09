@@ -53,6 +53,7 @@ const MyClients = () => {
   const [saving, setSaving] = useState(false);
   const [hotSheetClientId, setHotSheetClientId] = useState<string | null>(null);
   const [hotSheetClientName, setHotSheetClientName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     checkAuth();
@@ -208,6 +209,20 @@ const MyClients = () => {
     fetchClients(user.id);
   };
 
+  const filteredClients = clients.filter((client) => {
+    const fullName = `${client.first_name} ${client.last_name}`.toLowerCase();
+    const email = client.email.toLowerCase();
+    const phone = client.phone?.toLowerCase() || "";
+    const search = searchTerm.toLowerCase();
+    
+    return (
+      fullName.includes(search) ||
+      email.includes(search) ||
+      phone.includes(search) ||
+      client.notes?.toLowerCase().includes(search)
+    );
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -340,18 +355,52 @@ const MyClients = () => {
               </div>
             </Card>
           ) : (
-            <Card>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Notes</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {clients.map((client) => (
+            <>
+              <Card className="mb-4">
+                <CardContent className="pt-6">
+                  <div className="relative">
+                    <Input
+                      placeholder="Search clients by name, email, phone, or notes..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
+                  {searchTerm && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Found {filteredClients.length} of {clients.length} clients
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {filteredClients.length === 0 ? (
+                <Card className="p-12">
+                  <div className="text-center">
+                    <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-xl font-semibold mb-2">No clients found</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Try adjusting your search criteria
+                    </p>
+                    <Button variant="outline" onClick={() => setSearchTerm("")}>
+                      Clear Search
+                    </Button>
+                  </div>
+                </Card>
+              ) : (
+                <Card>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Notes</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredClients.map((client) => (
                     <TableRow key={client.id}>
                       <TableCell className="font-medium">
                         {client.first_name} {client.last_name}
@@ -408,6 +457,8 @@ const MyClients = () => {
                 </TableBody>
               </Table>
             </Card>
+              )}
+            </>
           )}
         </div>
       </main>
