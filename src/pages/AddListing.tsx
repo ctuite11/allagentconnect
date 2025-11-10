@@ -4152,7 +4152,7 @@ const AddListing = () => {
               Cancel
             </Button>
             <Button
-              onClick={() => {
+              onClick={async () => {
                 if (!formData.address.trim()) {
                   toast.error("Street address is required");
                   return;
@@ -4160,6 +4160,47 @@ const AddListing = () => {
                 setValidationErrors(errors => errors.filter(e => e !== "Address"));
                 setManualAddressDialogOpen(false);
                 toast.success("Address details saved");
+                
+                // Trigger property data fetch even for manual addresses
+                if (formData.city && formData.state && formData.zip_code) {
+                  try {
+                    // Try to geocode the manual address to get coordinates
+                    const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zip_code}`;
+                    const geocoder = new google.maps.Geocoder();
+                    
+                    geocoder.geocode({ address: fullAddress }, async (results, status) => {
+                      if (status === 'OK' && results && results[0]) {
+                        const location = results[0].geometry.location;
+                        const lat = location.lat();
+                        const lng = location.lng();
+                        
+                        // Update form data with coordinates
+                        setFormData(prev => ({
+                          ...prev,
+                          latitude: lat,
+                          longitude: lng
+                        }));
+                        
+                        // Fetch property data
+                        await fetchPropertyData(
+                          lat,
+                          lng,
+                          formData.address,
+                          formData.city,
+                          formData.state,
+                          formData.zip_code,
+                          unitNumber,
+                          formData.property_type
+                        );
+                      } else {
+                        console.warn("Geocoding failed:", status);
+                        toast.info("Address saved, but property data could not be fetched automatically");
+                      }
+                    });
+                  } catch (error) {
+                    console.error("Error geocoding address:", error);
+                  }
+                }
               }}
             >
               Save Address
