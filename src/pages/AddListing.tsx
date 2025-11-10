@@ -13,7 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
@@ -215,6 +216,114 @@ const AddListing = () => {
   const [dialogStartTime, setDialogStartTime] = useState('');
   const [dialogEndTime, setDialogEndTime] = useState('');
   const [dialogComments, setDialogComments] = useState('');
+
+  // Progress tracking
+  const calculateSectionProgress = () => {
+    const sections = {
+      listingBasics: {
+        name: 'Listing Basics',
+        fields: [formData.listing_type, formData.property_type, formData.status],
+        completed: 0,
+        total: 3
+      },
+      propertyLocation: {
+        name: 'Property Location',
+        fields: [formData.address, formData.city, formData.state, formData.zip_code, formData.price],
+        completed: 0,
+        total: 5
+      },
+      coreDetails: {
+        name: 'Core Property Details',
+        fields: [formData.bedrooms, formData.bathrooms, formData.square_feet, formData.year_built],
+        completed: 0,
+        total: 4
+      },
+      typeSpecific: {
+        name: 'Property Type Details',
+        fields: formData.property_type === 'Condominium' 
+          ? [condoHoaFee, condoBuildingAmenities.length > 0]
+          : formData.property_type === 'Multi Family'
+          ? [multiFamilyUnits, multiFamilyUnitBreakdown]
+          : formData.property_type === 'Commercial'
+          ? [commercialSpaceType, commercialLeaseType]
+          : [true],
+        completed: 0,
+        total: formData.property_type === 'Condominium' || formData.property_type === 'Multi Family' || formData.property_type === 'Commercial' ? 2 : 1
+      },
+      photosMedia: {
+        name: 'Photos & Media',
+        fields: [photos.length > 0],
+        completed: 0,
+        total: 1
+      },
+      description: {
+        name: 'Property Description',
+        fields: [formData.description],
+        completed: 0,
+        total: 1
+      },
+      saleCriteria: {
+        name: 'Sale Criteria & Features',
+        fields: [listingAgreementTypes.length > 0, propertyStyles.length > 0],
+        completed: 0,
+        total: 2
+      },
+      features: {
+        name: 'Features & Amenities',
+        fields: [propertyFeatures.length > 0, amenities.length > 0],
+        completed: 0,
+        total: 2
+      },
+      financial: {
+        name: 'Financial Information',
+        fields: [formData.commission_rate, formData.commission_type],
+        completed: 0,
+        total: 2
+      },
+      showing: {
+        name: 'Showing & Access',
+        fields: [formData.showing_instructions, formData.showing_contact_name],
+        completed: 0,
+        total: 2
+      },
+      buildingDetails: {
+        name: 'Building Details',
+        fields: [formData.annual_property_tax, formData.tax_year],
+        completed: 0,
+        total: 2
+      },
+      openHouses: {
+        name: 'Open Houses',
+        fields: [openHouses.length > 0],
+        completed: 0,
+        total: 1
+      },
+      disclosures: {
+        name: 'Disclosures & Legal',
+        fields: [disclosures.length > 0, sellerDisclosure],
+        completed: 0,
+        total: 2
+      }
+    };
+
+    // Calculate completion for each section
+    Object.keys(sections).forEach((key) => {
+      const section = sections[key as keyof typeof sections];
+      section.completed = section.fields.filter((field) => {
+        if (typeof field === 'boolean') return field;
+        if (typeof field === 'string') return field.trim().length > 0;
+        if (typeof field === 'number') return field > 0;
+        return false;
+      }).length;
+    });
+
+    return sections;
+  };
+
+  const sectionProgress = calculateSectionProgress();
+  const totalCompleted = Object.values(sectionProgress).reduce((sum, section) => sum + section.completed, 0);
+  const totalFields = Object.values(sectionProgress).reduce((sum, section) => sum + section.total, 0);
+  const overallProgress = Math.round((totalCompleted / totalFields) * 100);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -993,7 +1102,34 @@ const AddListing = () => {
           {/* Form Card */}
           <Card>
             <CardContent className="pt-6">
-              <h2 className="text-2xl font-bold mb-6">Listing Details</h2>
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-2xl font-bold">Listing Details</h2>
+                  <span className="text-sm font-medium text-muted-foreground">{overallProgress}% Complete</span>
+                </div>
+                <Progress value={overallProgress} className="h-2" />
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mt-4">
+                  {Object.entries(sectionProgress).map(([key, section]) => {
+                    const isComplete = section.completed === section.total;
+                    const percentage = Math.round((section.completed / section.total) * 100);
+                    return (
+                      <div 
+                        key={key}
+                        className={cn(
+                          "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border transition-colors",
+                          isComplete 
+                            ? "bg-primary/10 border-primary/20 text-primary" 
+                            : "bg-muted/50 border-border text-muted-foreground"
+                        )}
+                      >
+                        {isComplete && <CheckCircle2 className="h-3 w-3 flex-shrink-0" />}
+                        <span className="truncate">{section.name}</span>
+                        <span className="ml-auto font-medium">{percentage}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
               
               <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
                 {/* ========================================
