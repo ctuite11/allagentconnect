@@ -274,8 +274,9 @@ const ListingAnalytics = () => {
       <Navigation />
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/agent-dashboard")}>
-            <ArrowLeft className="h-5 w-5" />
+          <Button variant="outline" onClick={() => navigate("/agent-dashboard")} className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
           </Button>
           <div className="flex-1">
             <h1 className="text-4xl font-bold flex items-center gap-2">
