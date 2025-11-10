@@ -13,11 +13,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download } from "lucide-react";
+import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
+import { BulkEmailDialog } from "@/components/BulkEmailDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const clientSchema = z.object({
   first_name: z.string().trim().min(2, "First name must be at least 2 characters").max(100),
@@ -58,6 +60,8 @@ const MyClients = () => {
   const [hotSheetClientName, setHotSheetClientName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "created_at" | "updated_at">("name");
+  const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
+  const [bulkEmailDialogOpen, setBulkEmailDialogOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -213,6 +217,41 @@ const MyClients = () => {
     fetchClients(user.id);
   };
 
+  const toggleSelectClient = (clientId: string) => {
+    const newSelected = new Set(selectedClients);
+    if (newSelected.has(clientId)) {
+      newSelected.delete(clientId);
+    } else {
+      newSelected.add(clientId);
+    }
+    setSelectedClients(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedClients.size === sortedClients.length) {
+      setSelectedClients(new Set());
+    } else {
+      setSelectedClients(new Set(sortedClients.map(c => c.id)));
+    }
+  };
+
+  const handleBulkEmail = () => {
+    if (selectedClients.size === 0) {
+      toast.error("Please select at least one client");
+      return;
+    }
+    setBulkEmailDialogOpen(true);
+  };
+
+  const getSelectedClientsForEmail = () => {
+    return sortedClients
+      .filter(client => selectedClients.has(client.id))
+      .map(client => ({
+        email: client.email,
+        name: `${client.first_name} ${client.last_name}`
+      }));
+  };
+
   const handleExportCSV = () => {
     try {
       // Prepare CSV data
@@ -312,6 +351,12 @@ const MyClients = () => {
               </p>
             </div>
             <div className="flex gap-2">
+              {selectedClients.size > 0 && (
+                <Button variant="default" onClick={handleBulkEmail}>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Email ({selectedClients.size})
+                </Button>
+              )}
               {clients.length > 0 && (
                 <Button variant="outline" onClick={handleExportCSV}>
                   <Download className="h-4 w-4 mr-2" />
@@ -478,6 +523,12 @@ const MyClients = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={selectedClients.size === sortedClients.length && sortedClients.length > 0}
+                            onCheckedChange={toggleSelectAll}
+                          />
+                        </TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Contact</TableHead>
                         <TableHead>Notes</TableHead>
@@ -487,6 +538,12 @@ const MyClients = () => {
                     <TableBody>
                       {sortedClients.map((client) => (
                     <TableRow key={client.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedClients.has(client.id)}
+                          onCheckedChange={() => toggleSelectClient(client.id)}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">
                         {client.first_name} {client.last_name}
                       </TableCell>
@@ -581,6 +638,18 @@ const MyClients = () => {
         clientName={hotSheetClientName}
         userId={user?.id}
         onSuccess={handleHotSheetSuccess}
+      />
+
+      {/* Bulk Email Dialog */}
+      <BulkEmailDialog
+        open={bulkEmailDialogOpen}
+        onOpenChange={(open) => {
+          setBulkEmailDialogOpen(open);
+          if (!open) {
+            setSelectedClients(new Set());
+          }
+        }}
+        recipients={getSelectedClientsForEmail()}
       />
 
       <Footer />
