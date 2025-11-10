@@ -2393,10 +2393,10 @@ const AddListing = () => {
                       <FormattedInput
                         id="assessed_value"
                         format="currency"
-                        decimals={2}
+                        decimals={0}
                         value={assessedValue}
                         onChange={(value) => setAssessedValue(value)}
-                        placeholder="$0.00"
+                        placeholder="0"
                       />
                     </div>
                     <div className="space-y-2">
@@ -2414,10 +2414,10 @@ const AddListing = () => {
                       <FormattedInput
                         id="annual_property_tax"
                         format="currency"
-                        decimals={2}
+                        decimals={0}
                         value={formData.annual_property_tax}
                         onChange={(value) => setFormData({ ...formData, annual_property_tax: value })}
-                        placeholder="$0.00"
+                        placeholder="0"
                       />
                     </div>
                     <div className="space-y-2">
@@ -2471,10 +2471,10 @@ const AddListing = () => {
                       <FormattedInput
                         id="tax_assessment_value"
                         format="currency"
-                        decimals={2}
+                        decimals={0}
                         value={formData.tax_assessment_value}
                         onChange={(value) => setFormData({ ...formData, tax_assessment_value: value })}
-                        placeholder="$0.00"
+                        placeholder="0"
                       />
                     </div>
                   </div>
