@@ -1730,7 +1730,7 @@ const AddListing = () => {
                     ======================================== */}
 
                 {/* Property Details */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="bedrooms">Bedrooms</Label>
                     <Input
@@ -1757,15 +1757,6 @@ const AddListing = () => {
                       type="number"
                       value={formData.square_feet}
                       onChange={(e) => setFormData({ ...formData, square_feet: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="year_built">Year Built</Label>
-                    <Input
-                      id="year_built"
-                      type="number"
-                      value={formData.year_built}
-                      onChange={(e) => setFormData({ ...formData, year_built: e.target.value })}
                     />
                   </div>
                 </div>
