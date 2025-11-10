@@ -567,6 +567,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          agent_id: string
+          body: string
+          category: string
+          created_at: string
+          id: string
+          is_default: boolean | null
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          body: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          body?: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorite_price_history: {
         Row: {
           changed_at: string
