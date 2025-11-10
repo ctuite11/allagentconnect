@@ -1799,10 +1799,10 @@ const AddListing = () => {
                           <FormattedInput
                             id="condo_hoa_fee"
                             format="currency"
-                            decimals={2}
+                            decimals={0}
                             value={condoHoaFee}
                             onChange={(value) => setCondoHoaFee(value)}
-                            placeholder="$0.00"
+                            placeholder="$0"
                           />
                         </div>
                         <div className="space-y-2">
