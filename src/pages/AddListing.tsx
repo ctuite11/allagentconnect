@@ -2853,31 +2853,6 @@ const AddListing = () => {
                     />
                   </div>
 
-                  {/* Roof Material */}
-                  <div className="space-y-3">
-                    <Label className="text-base font-medium">Roof Material</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {["Asphalt/Composition Shingles", "Wood Shingles", "Tile", "Slate", "Metal", "Solar Shingles", "Reflective Roofing"].map((mat) => (
-                        <div key={mat} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`roof-${mat}`}
-                            checked={roofMaterials.includes(mat)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setRoofMaterials([...roofMaterials, mat]);
-                              } else {
-                                setRoofMaterials(roofMaterials.filter((m) => m !== mat));
-                              }
-                            }}
-                          />
-                          <label htmlFor={`roof-${mat}`} className="text-sm cursor-pointer">
-                            {mat}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Exterior Features */}
                   <div className="space-y-3">
                     <Label className="text-base font-medium">Exterior Features</Label>
