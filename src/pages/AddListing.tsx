@@ -1802,7 +1802,7 @@ const AddListing = () => {
                             decimals={0}
                             value={condoHoaFee}
                             onChange={(value) => setCondoHoaFee(value)}
-                            placeholder="$0"
+                            placeholder="3000"
                           />
                         </div>
                         <div className="space-y-2">
