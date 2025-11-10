@@ -1,7 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +17,7 @@ interface BulkEmailRequest {
   recipients: Array<{ email: string; name: string }>;
   subject: string;
   message: string;
+  agentId: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -22,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { recipients, subject, message }: BulkEmailRequest = await req.json();
+    const { recipients, subject, message, agentId }: BulkEmailRequest = await req.json();
 
     console.log(`Sending bulk email to ${recipients.length} recipients`);
 
@@ -34,9 +39,57 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Subject and message are required");
     }
 
+    if (!agentId) {
+      throw new Error("Agent ID is required");
+    }
+
+    // Create email campaign
+    const { data: campaign, error: campaignError } = await supabase
+      .from("email_campaigns")
+      .insert({
+        agent_id: agentId,
+        subject,
+        message,
+        recipient_count: recipients.length,
+      })
+      .select()
+      .single();
+
+    if (campaignError) {
+      console.error("Error creating campaign:", campaignError);
+      throw new Error("Failed to create campaign");
+    }
+
+    console.log("Created campaign:", campaign.id);
+
     // Send emails individually to avoid spam filters and personalize
     const results = await Promise.allSettled(
       recipients.map(async (recipient) => {
+        // Create email send record first
+        const { data: emailSend, error: sendError } = await supabase
+          .from("email_sends")
+          .insert({
+            campaign_id: campaign.id,
+            recipient_email: recipient.email,
+            recipient_name: recipient.name,
+          })
+          .select()
+          .single();
+
+        if (sendError) {
+          console.error("Error creating email send record:", sendError);
+          throw sendError;
+        }
+
+        // Create tracking pixel URL
+        const trackingPixelUrl = `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`;
+        
+        // Replace URLs in message with tracked links
+        const trackedMessage = message.replace(
+          /(https?:\/\/[^\s<>"]+)/g,
+          `${supabaseUrl}/functions/v1/track-email-click?id=${emailSend.id}&url=$1`
+        );
+
         const emailResponse = await resend.emails.send({
           from: "Agent Connect <onboarding@resend.dev>",
           to: [recipient.email],
@@ -81,18 +134,30 @@ const handler = async (req: Request): Promise<Response> => {
                 
                 <div class="content">
                   <p>Hello ${recipient.name},</p>
-                  <p>${message.replace(/\n/g, '<br>')}</p>
+                  <p>${trackedMessage.replace(/\n/g, '<br>')}</p>
                 </div>
                 
                 <div class="footer">
                   <p>This email was sent from Agent Connect</p>
                 </div>
+                
+                <!-- Tracking pixel -->
+                <img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />
               </body>
             </html>
           `,
         });
 
         console.log(`Email sent to ${recipient.email}:`, emailResponse);
+        
+        // Update status if failed
+        if (emailResponse.error) {
+          await supabase
+            .from("email_sends")
+            .update({ status: "failed" })
+            .eq("id", emailSend.id);
+        }
+
         return emailResponse;
       })
     );

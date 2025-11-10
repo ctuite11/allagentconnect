@@ -567,6 +567,147 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaigns: {
+        Row: {
+          agent_id: string
+          created_at: string | null
+          id: string
+          message: string
+          recipient_count: number | null
+          sent_at: string | null
+          subject: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string | null
+          id?: string
+          message: string
+          recipient_count?: number | null
+          sent_at?: string | null
+          subject: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          recipient_count?: number | null
+          sent_at?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
+      email_clicks: {
+        Row: {
+          clicked_at: string | null
+          created_at: string | null
+          email_send_id: string
+          id: string
+          ip_address: string | null
+          url: string
+          user_agent: string | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          created_at?: string | null
+          email_send_id: string
+          id?: string
+          ip_address?: string | null
+          url: string
+          user_agent?: string | null
+        }
+        Update: {
+          clicked_at?: string | null
+          created_at?: string | null
+          email_send_id?: string
+          id?: string
+          ip_address?: string | null
+          url?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_clicks_email_send_id_fkey"
+            columns: ["email_send_id"]
+            isOneToOne: false
+            referencedRelation: "email_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_opens: {
+        Row: {
+          created_at: string | null
+          email_send_id: string
+          id: string
+          ip_address: string | null
+          opened_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_send_id: string
+          id?: string
+          ip_address?: string | null
+          opened_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_send_id?: string
+          id?: string
+          ip_address?: string | null
+          opened_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_opens_email_send_id_fkey"
+            columns: ["email_send_id"]
+            isOneToOne: false
+            referencedRelation: "email_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_sends: {
+        Row: {
+          campaign_id: string
+          created_at: string | null
+          id: string
+          recipient_email: string
+          recipient_name: string
+          sent_at: string | null
+          status: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string | null
+          id?: string
+          recipient_email: string
+          recipient_name: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string | null
+          id?: string
+          recipient_email?: string
+          recipient_name?: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_templates: {
         Row: {
           agent_id: string

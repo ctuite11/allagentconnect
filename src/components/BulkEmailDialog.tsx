@@ -73,24 +73,33 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
 
     setSending(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to send emails");
+        return;
+      }
+
       // Replace variables for each recipient
       const personalizedRecipients = recipients.map(recipient => ({
-        ...recipient,
-        personalizedSubject: replaceVariables(subject, recipient.name),
-        personalizedMessage: replaceVariables(message, recipient.name),
+        email: recipient.email,
+        name: replaceVariables(recipient.name, recipient.name),
       }));
+
+      const personalizedSubject = subject;
+      const personalizedMessage = message;
 
       const { data, error } = await supabase.functions.invoke('send-bulk-email', {
         body: {
           recipients: personalizedRecipients,
-          subject: subject,
-          message: message,
+          subject: personalizedSubject,
+          message: personalizedMessage,
+          agentId: user.id,
         },
       });
 
       if (error) throw error;
 
-      toast.success(`Email sent to ${recipients.length} recipient${recipients.length > 1 ? 's' : ''}`);
+      toast.success(`Email sent to ${recipients.length} recipient${recipients.length > 1 ? 's' : ''}. Check analytics to track opens and clicks.`);
       setSubject("");
       setMessage("");
       onOpenChange(false);

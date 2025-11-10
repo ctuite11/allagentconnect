@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { BulkEmailDialog } from "@/components/BulkEmailDialog";
+import { EmailAnalyticsDialog } from "@/components/EmailAnalyticsDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -62,6 +63,7 @@ const MyClients = () => {
   const [sortBy, setSortBy] = useState<"name" | "created_at" | "updated_at">("name");
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
   const [bulkEmailDialogOpen, setBulkEmailDialogOpen] = useState(false);
+  const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -357,6 +359,10 @@ const MyClients = () => {
                   Send Email ({selectedClients.size})
                 </Button>
               )}
+              <Button variant="outline" onClick={() => setAnalyticsDialogOpen(true)}>
+                <Mail className="h-4 w-4 mr-2" />
+                Email Analytics
+              </Button>
               {clients.length > 0 && (
                 <Button variant="outline" onClick={handleExportCSV}>
                   <Download className="h-4 w-4 mr-2" />
@@ -650,6 +656,12 @@ const MyClients = () => {
           }
         }}
         recipients={getSelectedClientsForEmail()}
+      />
+
+      {/* Email Analytics Dialog */}
+      <EmailAnalyticsDialog
+        open={analyticsDialogOpen}
+        onOpenChange={setAnalyticsDialogOpen}
       />
 
       <Footer />
