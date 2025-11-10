@@ -2445,7 +2445,7 @@ const AddListing = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="floors">Floors</Label>
                       <Input
@@ -2464,17 +2464,6 @@ const AddListing = () => {
                         value={formData.year_built}
                         onChange={(e) => setFormData({ ...formData, year_built: e.target.value })}
                         placeholder="e.g., 1990"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="tax_assessment_value">Tax Assessment Value</Label>
-                      <FormattedInput
-                        id="tax_assessment_value"
-                        format="currency"
-                        decimals={0}
-                        value={formData.tax_assessment_value}
-                        onChange={(value) => setFormData({ ...formData, tax_assessment_value: value })}
-                        placeholder="0"
                       />
                     </div>
                   </div>
