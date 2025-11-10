@@ -16,10 +16,10 @@ import { toast } from "sonner";
 import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import { z } from "zod";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
-import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -4115,23 +4115,28 @@ const AddListing = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="manual-town">Town/City</Label>
-              <Input
-                id="manual-town"
-                placeholder="Town name"
-                value={formData.town}
-                onChange={(e) => setFormData({ ...formData, town: e.target.value })}
-              />
-            </div>
-            
-            <div className="space-y-2">
               <Label htmlFor="manual-neighborhood">Neighborhood (Optional)</Label>
-              <Input
-                id="manual-neighborhood"
-                placeholder="Neighborhood name"
+              <Select
                 value={formData.neighborhood}
-                onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-              />
+                onValueChange={(value) => setFormData({ ...formData, neighborhood: value })}
+              >
+                <SelectTrigger id="manual-neighborhood">
+                  <SelectValue placeholder="Select neighborhood" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getAreasForCity(formData.city, formData.state).length > 0 ? (
+                    getAreasForCity(formData.city, formData.state).map((neighborhood) => (
+                      <SelectItem key={neighborhood} value={neighborhood}>
+                        {neighborhood}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>
+                      No neighborhoods available for this city
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
