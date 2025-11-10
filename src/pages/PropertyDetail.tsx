@@ -686,19 +686,14 @@ const PropertyDetail = () => {
                           <p className="font-semibold">{listing.total_parking_spaces}</p>
                         </div>
                       )}
-                      {listing.garage_spaces && (
+                      {listing.garage_spaces !== undefined && listing.garage_spaces !== null && (
                         <div>
                           <p className="text-sm text-muted-foreground">Garage Spaces</p>
                           <p className="font-semibold">{listing.garage_spaces}</p>
                         </div>
                       )}
                     </div>
-                    {listing.disclosures?.find((d: string) => d.startsWith('Parking Comments:')) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Parking Comments</p>
-                        <p className="text-sm">{listing.disclosures.find((d: string) => d.startsWith('Parking Comments:'))?.replace('Parking Comments: ', '')}</p>
-                      </div>
-                    )}
+                    
                     {listing.disclosures?.find((d: string) => d.startsWith('Parking Features:')) && (
                       <div className="pt-4 border-t">
                         <p className="text-sm text-muted-foreground mb-3">Parking Features</p>
@@ -712,12 +707,14 @@ const PropertyDetail = () => {
                         </div>
                       </div>
                     )}
-                    {listing.disclosures?.find((d: string) => d.startsWith('Garage Comments:')) && (
+                    
+                    {listing.disclosures?.find((d: string) => d.startsWith('Parking Comments:')) && (
                       <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Garage Comments</p>
-                        <p className="text-sm">{listing.disclosures.find((d: string) => d.startsWith('Garage Comments:'))?.replace('Garage Comments: ', '')}</p>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Parking Comments</p>
+                        <p className="text-sm">{listing.disclosures.find((d: string) => d.startsWith('Parking Comments:'))?.replace('Parking Comments: ', '')}</p>
                       </div>
                     )}
+                    
                     {listing.disclosures?.find((d: string) => d.startsWith('Garage Features:')) && (
                       <div className="pt-4 border-t">
                         <p className="text-sm text-muted-foreground mb-3">Garage Features</p>
@@ -729,6 +726,13 @@ const PropertyDetail = () => {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+                    
+                    {listing.disclosures?.find((d: string) => d.startsWith('Garage Comments:')) && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Garage Comments</p>
+                        <p className="text-sm">{listing.disclosures.find((d: string) => d.startsWith('Garage Comments:'))?.replace('Garage Comments: ', '')}</p>
                       </div>
                     )}
                   </CardContent>
