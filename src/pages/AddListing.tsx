@@ -1748,16 +1748,18 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="lot_size">Lot Size (acres)</Label>
-                  <Input
-                    id="lot_size"
-                    type="number"
-                    step="0.01"
-                    value={formData.lot_size}
-                    onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
-                  />
-                </div>
+                {formData.property_type !== "Condominium" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="lot_size">Lot Size (acres)</Label>
+                    <Input
+                      id="lot_size"
+                      type="number"
+                      step="0.01"
+                      value={formData.lot_size}
+                      onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
+                    />
+                  </div>
+                )}
 
                 {/* ========================================
                     SECTION 4: PROPERTY TYPE-SPECIFIC DETAILS
@@ -2277,88 +2279,90 @@ const AddListing = () => {
                 )}
 
                 {/* Lot Size and Description */}
-                <div className="space-y-3">
-                  <Label className="text-base font-medium">Lot Information</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="lot_size">Lot Size - ft²</Label>
-                      <FormattedInput
-                        id="lot_size"
-                        format="number"
-                        decimals={0}
-                        value={formData.lot_size}
-                        onChange={(value) => setFormData({ ...formData, lot_size: value })}
-                      />
+                {formData.property_type !== "Condominium" && (
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Lot Information</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="lot_size">Lot Size - ft²</Label>
+                        <FormattedInput
+                          id="lot_size"
+                          format="number"
+                          decimals={0}
+                          value={formData.lot_size}
+                          onChange={(value) => setFormData({ ...formData, lot_size: value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Source</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {["Measured", "Owner", "Public Record", "Appraiser"].map((source) => (
+                            <div key={source} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`lot-source-${source}`}
+                                checked={lotSizeSource.includes(source)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setLotSizeSource([...lotSizeSource, source]);
+                                  } else {
+                                    setLotSizeSource(lotSizeSource.filter((s) => s !== source));
+                                  }
+                                }}
+                              />
+                              <label htmlFor={`lot-source-${source}`} className="text-sm cursor-pointer">
+                                {source}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
+
                     <div className="space-y-2">
-                      <Label>Source</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {["Measured", "Owner", "Public Record", "Appraiser"].map((source) => (
-                          <div key={source} className="flex items-center space-x-2">
+                      <Label>Lot description</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {["Corner", "Wooded", "Underground Storage Tank", "Easements", "On Golf Course", "Additional Land Avail.", "Zero Lot Line"].map((desc) => (
+                          <div key={desc} className="flex items-center space-x-2">
                             <Checkbox
-                              id={`lot-source-${source}`}
-                              checked={lotSizeSource.includes(source)}
+                              id={`lot-desc-${desc}`}
+                              checked={lotDescription.includes(desc)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setLotSizeSource([...lotSizeSource, source]);
+                                  setLotDescription([...lotDescription, desc]);
                                 } else {
-                                  setLotSizeSource(lotSizeSource.filter((s) => s !== source));
+                                  setLotDescription(lotDescription.filter((d) => d !== desc));
                                 }
                               }}
                             />
-                            <label htmlFor={`lot-source-${source}`} className="text-sm cursor-pointer">
-                              {source}
+                            <label htmlFor={`lot-desc-${desc}`} className="text-sm cursor-pointer">
+                              {desc}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                        {["Flood Plain", "Shared Driveway", "Cleared", "Fence/Enclosed", "Sloping", "Level", "Marsh"].map((desc) => (
+                          <div key={desc} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`lot-desc2-${desc}`}
+                              checked={lotDescription.includes(desc)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setLotDescription([...lotDescription, desc]);
+                                } else {
+                                  setLotDescription(lotDescription.filter((d) => d !== desc));
+                                }
+                              }}
+                            />
+                            <label htmlFor={`lot-desc2-${desc}`} className="text-sm cursor-pointer">
+                              {desc}
                             </label>
                           </div>
                         ))}
                       </div>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label>Lot description</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {["Corner", "Wooded", "Underground Storage Tank", "Easements", "On Golf Course", "Additional Land Avail.", "Zero Lot Line"].map((desc) => (
-                        <div key={desc} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`lot-desc-${desc}`}
-                            checked={lotDescription.includes(desc)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setLotDescription([...lotDescription, desc]);
-                              } else {
-                                setLotDescription(lotDescription.filter((d) => d !== desc));
-                              }
-                            }}
-                          />
-                          <label htmlFor={`lot-desc-${desc}`} className="text-sm cursor-pointer">
-                            {desc}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-                      {["Flood Plain", "Shared Driveway", "Cleared", "Fence/Enclosed", "Sloping", "Level", "Marsh"].map((desc) => (
-                        <div key={desc} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`lot-desc2-${desc}`}
-                            checked={lotDescription.includes(desc)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setLotDescription([...lotDescription, desc]);
-                              } else {
-                                setLotDescription(lotDescription.filter((d) => d !== desc));
-                              }
-                            }}
-                          />
-                          <label htmlFor={`lot-desc2-${desc}`} className="text-sm cursor-pointer">
-                            {desc}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 {/* List Date and Expiration Date */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
