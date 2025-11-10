@@ -336,7 +336,7 @@ const AgentDashboard = () => {
             <p className="text-sm text-muted-foreground mb-2">
               Hello. Bonjour. Hola. 你好. Ciao
             </p>
-            <h1 className="text-4xl font-bold">My Listings</h1>
+            <h1 className="text-4xl font-bold">My Dashboard</h1>
             <p className="text-muted-foreground mt-2">
               A convenient way to add for sale and for rent listings, update listing status, easily edit property details and track all of your listings.
             </p>
@@ -347,7 +347,7 @@ const AgentDashboard = () => {
         </div>
 
         {/* Dashboard Overview Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/agent-dashboard")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Listings</CardTitle>
@@ -409,6 +409,30 @@ const AgentDashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">{messagesCount}</div>
               <p className="text-xs text-muted-foreground">Total messages</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/agent-profile-editor")}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">My Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground mb-3">Manage your profile information</p>
+              <Button variant="outline" className="w-full" onClick={(e) => { e.stopPropagation(); navigate("/agent-profile-editor"); }}>
+                Edit Profile
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/manage-team")}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">My Team</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground mb-3">Manage team members</p>
+              <Button variant="outline" className="w-full" onClick={(e) => { e.stopPropagation(); navigate("/manage-team"); }}>
+                View Team
+              </Button>
             </CardContent>
           </Card>
 
