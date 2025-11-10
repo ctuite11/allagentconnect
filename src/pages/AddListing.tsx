@@ -1512,6 +1512,28 @@ const AddListing = () => {
                   </div>
                 )}
 
+                {/* List Date and Expiration Date */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="list_date">List Date</Label>
+                    <Input
+                      id="list_date"
+                      type="date"
+                      value={formData.list_date}
+                      onChange={(e) => setFormData({ ...formData, list_date: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expiration_date">Expiration Date</Label>
+                    <Input
+                      id="expiration_date"
+                      type="date"
+                      value={formData.expiration_date}
+                      onChange={(e) => setFormData({ ...formData, expiration_date: e.target.value })}
+                    />
+                  </div>
+                </div>
+
                 {/* ========================================
                     SECTION 2: PROPERTY LOCATION  
                     ======================================== */}
@@ -2363,28 +2385,6 @@ const AddListing = () => {
                     </div>
                   </div>
                 )}
-
-                {/* List Date and Expiration Date */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="list_date">List Date</Label>
-                    <Input
-                      id="list_date"
-                      type="date"
-                      value={formData.list_date}
-                      onChange={(e) => setFormData({ ...formData, list_date: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expiration_date">Expiration Date</Label>
-                    <Input
-                      id="expiration_date"
-                      type="date"
-                      value={formData.expiration_date}
-                      onChange={(e) => setFormData({ ...formData, expiration_date: e.target.value })}
-                    />
-                  </div>
-                </div>
 
                 <Separator className="my-6" />
 
