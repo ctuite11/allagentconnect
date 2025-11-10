@@ -2744,15 +2744,6 @@ const AddListing = () => {
                           placeholder="0"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="parking_comments">Comments and Remarks for Parking</Label>
-                        <Textarea
-                          id="parking_comments"
-                          value={parkingComments}
-                          onChange={(e) => setParkingComments(e.target.value)}
-                          placeholder="Additional parking details..."
-                        />
-                      </div>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {["Included", "Deeded", "Assigned", "Off Street", "Paved", "Shared Driveway", "For Rent", "Street Permit", "For Sale"].map((feat) => (
@@ -2774,6 +2765,15 @@ const AddListing = () => {
                         </div>
                       ))}
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="parking_comments">Comments and Remarks for Parking</Label>
+                      <Textarea
+                        id="parking_comments"
+                        value={parkingComments}
+                        onChange={(e) => setParkingComments(e.target.value)}
+                        placeholder="Additional parking details..."
+                      />
+                    </div>
                   </div>
 
                   {/* Garage Details */}
@@ -2787,15 +2787,6 @@ const AddListing = () => {
                           value={garageSpaces}
                           onChange={(e) => setGarageSpaces(e.target.value)}
                           placeholder="0"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="garage_comments">Comments and Remarks for Garage</Label>
-                        <Textarea
-                          id="garage_comments"
-                          value={garageComments}
-                          onChange={(e) => setGarageComments(e.target.value)}
-                          placeholder="Additional garage details..."
                         />
                       </div>
                     </div>
@@ -2838,6 +2829,15 @@ const AddListing = () => {
                           </label>
                         </div>
                       ))}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="garage_comments">Comments and Remarks for Garage</Label>
+                      <Textarea
+                        id="garage_comments"
+                        value={garageComments}
+                        onChange={(e) => setGarageComments(e.target.value)}
+                        placeholder="Additional garage details..."
+                      />
                     </div>
                   </div>
 
