@@ -2493,138 +2493,7 @@ const AddListing = () => {
                     SECTION 7: SALE CRITERIA & FEATURES
                     ======================================== */}
 
-                {/* Sale Listing Criteria Section */}
-                <div className="space-y-6 border-t pt-6">
-                  <Label className="text-2xl font-semibold">Sale Listing Criteria</Label>
-
-                  {/* Listing Agreement Types */}
-                  <div className="space-y-3">
-                    <Label className="text-base font-medium">Type of Listing Agreement</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {[
-                        "A-Exclusive Right to Sell",
-                        "B-ER w/ Named Exclusion",
-                        "D-Exclusive Agency",
-                        "G-Facilitation/ER to Sell",
-                        "H-Facilitation/ER w/ Named Exclusion",
-                        "I-Facilitation/Exclusive",
-                        "L-Exclusive Right to Auction"
-                      ].map((type) => (
-                        <div key={type} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`agreement-${type}`}
-                            checked={listingAgreementTypes.includes(type)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setListingAgreementTypes([...listingAgreementTypes, type]);
-                              } else {
-                                setListingAgreementTypes(listingAgreementTypes.filter((t) => t !== type));
-                              }
-                            }}
-                          />
-                          <label htmlFor={`agreement-${type}`} className="text-sm cursor-pointer">
-                            {type}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Special Conditions */}
-                  <div className="space-y-3">
-                    <Label className="text-base font-medium">Special Conditions</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center justify-between p-3 border rounded-lg">
-                        <label className="text-sm font-medium">Entry Only Listing</label>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={entryOnly === true ? "default" : "outline"}
-                            onClick={() => setEntryOnly(entryOnly === true ? null : true)}
-                          >
-                            Yes
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={entryOnly === false ? "default" : "outline"}
-                            onClick={() => setEntryOnly(entryOnly === false ? null : false)}
-                          >
-                            No
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between p-3 border rounded-lg">
-                        <label className="text-sm font-medium">Lender Owned</label>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={lenderOwned === true ? "default" : "outline"}
-                            onClick={() => setLenderOwned(lenderOwned === true ? null : true)}
-                          >
-                            Yes
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={lenderOwned === false ? "default" : "outline"}
-                            onClick={() => setLenderOwned(lenderOwned === false ? null : false)}
-                          >
-                            No
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between p-3 border rounded-lg">
-                        <label className="text-sm font-medium">Short Sale</label>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={shortSale === true ? "default" : "outline"}
-                            onClick={() => setShortSale(shortSale === true ? null : true)}
-                          >
-                            Yes
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={shortSale === false ? "default" : "outline"}
-                            onClick={() => setShortSale(shortSale === false ? null : false)}
-                          >
-                            No
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Property Style */}
-                  <div className="space-y-3">
-                    <Label className="text-base font-medium">Property Style</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {["Colonial", "Contemporary", "Cape", "Ranch", "Victorian", "Farmhouse", "Cottage", "Split Entry"].map((style) => (
-                        <div key={style} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`style-${style}`}
-                            checked={propertyStyles.includes(style)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setPropertyStyles([...propertyStyles, style]);
-                              } else {
-                                setPropertyStyles(propertyStyles.filter((s) => s !== style));
-                              }
-                            }}
-                          />
-                          <label htmlFor={`style-${style}`} className="text-sm cursor-pointer">
-                            {style}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
+                <div className="space-y-6">
                   {/* Area Features */}
                   <div className="space-y-3">
                     <Label className="text-base font-medium">Area Features</Label>
@@ -3205,8 +3074,143 @@ const AddListing = () => {
                   </div>
                 </div>
 
+                <Separator className="my-6" />
+
+                {/* Sale Listing Criteria Section */}
+                <div className="space-y-6">
+                  <Label className="text-2xl font-semibold">Sale Listing Criteria</Label>
+
+                  {/* Listing Agreement Types */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Type of Listing Agreement</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {[
+                        "A-Exclusive Right to Sell",
+                        "B-ER w/ Named Exclusion",
+                        "D-Exclusive Agency",
+                        "G-Facilitation/ER to Sell",
+                        "H-Facilitation/ER w/ Named Exclusion",
+                        "I-Facilitation/Exclusive",
+                        "L-Exclusive Right to Auction"
+                      ].map((type) => (
+                        <div key={type} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`agreement-${type}`}
+                            checked={listingAgreementTypes.includes(type)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setListingAgreementTypes([...listingAgreementTypes, type]);
+                              } else {
+                                setListingAgreementTypes(listingAgreementTypes.filter((t) => t !== type));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`agreement-${type}`} className="text-sm cursor-pointer">
+                            {type}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Special Conditions */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Special Conditions</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <label className="text-sm font-medium">Entry Only Listing</label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={entryOnly === true ? "default" : "outline"}
+                            onClick={() => setEntryOnly(entryOnly === true ? null : true)}
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={entryOnly === false ? "default" : "outline"}
+                            onClick={() => setEntryOnly(entryOnly === false ? null : false)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <label className="text-sm font-medium">Lender Owned</label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={lenderOwned === true ? "default" : "outline"}
+                            onClick={() => setLenderOwned(lenderOwned === true ? null : true)}
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={lenderOwned === false ? "default" : "outline"}
+                            onClick={() => setLenderOwned(lenderOwned === false ? null : false)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <label className="text-sm font-medium">Short Sale</label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={shortSale === true ? "default" : "outline"}
+                            onClick={() => setShortSale(shortSale === true ? null : true)}
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={shortSale === false ? "default" : "outline"}
+                            onClick={() => setShortSale(shortSale === false ? null : false)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Property Style */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Property Style</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {["Colonial", "Contemporary", "Cape", "Ranch", "Victorian", "Farmhouse", "Cottage", "Split Entry"].map((style) => (
+                        <div key={style} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`style-${style}`}
+                            checked={propertyStyles.includes(style)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setPropertyStyles([...propertyStyles, style]);
+                              } else {
+                                setPropertyStyles(propertyStyles.filter((s) => s !== style));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`style-${style}`} className="text-sm cursor-pointer">
+                            {style}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 {/* ========================================
-                    SECTION 10: SHOWING & ACCESS  
+                    SECTION 10: SHOWING & ACCESS
                     ======================================== */}
 
                 {/* Showing Instructions Section */}
