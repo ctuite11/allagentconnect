@@ -220,9 +220,18 @@ const AgentProfile = () => {
               </div>
               {agent.aac_id && (
                 <div className="mt-3 text-center">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mb-2">
                     <span className="font-semibold">Agent Id:</span> {agent.aac_id}
                   </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 w-full"
+                    onClick={() => generateVCard(agent)}
+                  >
+                    <Download className="h-4 w-4" />
+                    Save Contact
+                  </Button>
                 </div>
               )}
             </div>
@@ -252,7 +261,7 @@ const AgentProfile = () => {
               
               {agent.office_address && (
                 <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">Address:</span> {agent.office_address}
+                  <span className="font-semibold">Office Address:</span> {agent.office_address}
                 </p>
               )}
               
@@ -274,7 +283,7 @@ const AgentProfile = () => {
 
               {agent.social_links?.website && (
                 <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">Website:</span>{' '}
+                  <span className="font-semibold">My Website:</span>{' '}
                   <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                     {agent.social_links.website}
                   </a>
@@ -287,16 +296,6 @@ const AgentProfile = () => {
                   agentName={`${agent.first_name} ${agent.last_name}`}
                   agentEmail={agent.email}
                 />
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => generateVCard(agent)}
-                >
-                  <Download className="h-4 w-4" />
-                  Save Contact
-                </Button>
               </div>
 
               {agent.social_links && Object.values(agent.social_links).some(link => link) && (
