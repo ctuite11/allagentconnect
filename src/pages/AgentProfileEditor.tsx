@@ -82,13 +82,31 @@ const AgentProfileEditor = () => {
 
   const loadProfile = async (userId: string) => {
     try {
-      const { data: profile, error: profileError } = await supabase
+      let { data: profile, error: profileError } = await supabase
         .from("agent_profiles")
         .select("*")
         .eq("id", userId)
         .single();
 
-      if (profileError) throw profileError;
+      // If profile doesn't exist, create it
+      if (profileError && profileError.code === 'PGRST116') {
+        const { data: { session } } = await supabase.auth.getSession();
+        const { data: newProfile, error: insertError } = await supabase
+          .from("agent_profiles")
+          .insert({
+            id: userId,
+            email: session?.user?.email || "",
+            first_name: "",
+            last_name: "",
+          })
+          .select()
+          .single();
+        
+        if (insertError) throw insertError;
+        profile = newProfile;
+      } else if (profileError) {
+        throw profileError;
+      }
 
       if (profile) {
         setBio(profile.bio || "");
