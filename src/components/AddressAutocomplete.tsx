@@ -206,7 +206,7 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
         }
       }
     };
-  }, [onPlaceSelect, placeholder]);
+  }, [onPlaceSelect, placeholder, types]);
 
   // Sync controlled value to new element when it changes
   useEffect(() => {

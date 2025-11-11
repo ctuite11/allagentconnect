@@ -976,7 +976,7 @@ const AgentProfileEditor = () => {
                             <AddressAutocomplete
                               placeholder={`Zip code ${index + 1}`}
                               value={zip}
-                              types={['postal_code', '(regions)']}
+                              types={['(regions)']}
                               onChange={(value) => {
                                 const zipMatch = value.match(/\b\d{5}\b/);
                                 const extractedZip = zipMatch ? zipMatch[0] : value.replace(/\D/g, '').slice(0, 5);
@@ -985,12 +985,17 @@ const AgentProfileEditor = () => {
                                 setNewCoverageZips(newZips);
                               }}
                               onPlaceSelect={(place) => {
-                                const zipComponent = place.address_components?.find((c: any) =>
-                                  c.types.includes('postal_code')
-                                );
-                                if (zipComponent) {
+                                const comps = (place as any).address_components || (place as any).addressComponents || [];
+                                const zipComponent = comps.find((c: any) => c.types?.includes('postal_code'));
+                                let extracted = zipComponent?.short_name || zipComponent?.long_name || "";
+                                if (!extracted) {
+                                  const text = (place as any).formatted_address || (place as any).formattedAddress || (place as any).name || "";
+                                  const match = String(text).match(/\b\d{5}\b/);
+                                  extracted = match ? match[0] : "";
+                                }
+                                if (extracted) {
                                   const newZips = [...newCoverageZips];
-                                  newZips[index] = zipComponent.short_name;
+                                  newZips[index] = extracted;
                                   setNewCoverageZips(newZips);
                                 }
                               }}
