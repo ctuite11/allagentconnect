@@ -281,14 +281,16 @@ const AgentProfile = () => {
                 </a>
               </p>
 
-              {agent.social_links?.website && (
-                <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">My website:</span>{' '}
+              <p className="text-lg text-muted-foreground">
+                <span className="font-semibold">My website:</span>{' '}
+                {agent.social_links?.website ? (
                   <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                     {agent.social_links.website}
                   </a>
-                </p>
-              )}
+                ) : (
+                  <span className="text-muted-foreground/70">—</span>
+                )}
+              </p>
 
               <div className="flex flex-wrap gap-3 pt-4">
                 <ContactAgentProfileDialog 
