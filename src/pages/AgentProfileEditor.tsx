@@ -950,7 +950,7 @@ const AgentProfileEditor = () => {
                                 type="button"
                                 variant={isInCurrentSelection ? "default" : "outline"}
                                 size="sm"
-                                disabled={isAlreadyAdded || (!isInCurrentSelection && !canAdd)}
+                                disabled={isAlreadyAdded}
                                 onClick={() => {
                                   if (isAlreadyAdded) {
                                     toast.error("This zip code is already in your coverage areas");
