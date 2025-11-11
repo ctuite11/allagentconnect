@@ -19,7 +19,7 @@ import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
 import { Trash2, Plus, Star, Upload, X, MapPin } from "lucide-react";
 import Navigation from "@/components/Navigation";
-import { US_STATES } from "@/data/usStatesCountiesData";
+import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
 
 interface SocialLinks {
@@ -82,6 +82,7 @@ const AgentProfileEditor = () => {
   });
   const [coverageAreas, setCoverageAreas] = useState<CoverageArea[]>([]);
   const [newCoverageState, setNewCoverageState] = useState("");
+  const [newCoverageCounty, setNewCoverageCounty] = useState("");
   const [newCoverageCity, setNewCoverageCity] = useState("");
   const [newCoverageZip, setNewCoverageZip] = useState("");
 
@@ -374,6 +375,7 @@ const AgentProfileEditor = () => {
       
       setCoverageAreas([...coverageAreas, data]);
       setNewCoverageState("");
+      setNewCoverageCounty("");
       setNewCoverageCity("");
       setNewCoverageZip("");
       toast.success("Coverage area added!");
@@ -779,6 +781,7 @@ const AgentProfileEditor = () => {
                       <Label>State</Label>
                       <Select value={newCoverageState} onValueChange={(value) => {
                         setNewCoverageState(value);
+                        setNewCoverageCounty(""); // Reset county when state changes
                         setNewCoverageCity(""); // Reset city when state changes
                       }}>
                         <SelectTrigger className="h-12 bg-background">
@@ -793,6 +796,28 @@ const AgentProfileEditor = () => {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* County Dropdown */}
+                    {newCoverageState && COUNTIES_BY_STATE[newCoverageState] && (
+                      <div>
+                        <Label>County / Area (Optional)</Label>
+                        <Select 
+                          value={newCoverageCounty} 
+                          onValueChange={setNewCoverageCounty}
+                        >
+                          <SelectTrigger className="h-12 bg-background">
+                            <SelectValue placeholder="Select county or area" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background z-50 max-h-[300px]">
+                            {COUNTIES_BY_STATE[newCoverageState].map((county) => (
+                              <SelectItem key={county} value={county}>
+                                {county}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
 
                     {/* City Dropdown */}
                     <div>
@@ -841,7 +866,7 @@ const AgentProfileEditor = () => {
                     </Button>
 
                     <p className="text-sm text-muted-foreground">
-                      Select a state, city, and zip code. You'll appear as a verified buyer agent for listings in these areas.
+                      Select a state, optionally narrow by county, then choose city and zip code. You'll appear as a verified buyer agent for listings in these areas.
                     </p>
                   </div>
                 </div>
