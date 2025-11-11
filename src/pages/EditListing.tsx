@@ -71,6 +71,8 @@ const EditListing = () => {
   
   // Unit number for condos, townhouses, rentals
   const [unitNumber, setUnitNumber] = useState("");
+  const [hoaFee, setHoaFee] = useState("");
+  const [hoaFeeFrequency, setHoaFeeFrequency] = useState("monthly");
   
   // New comprehensive fields
   const [assessedValue, setAssessedValue] = useState("");
@@ -165,11 +167,17 @@ const EditListing = () => {
             if (condoDetails?.unit_number) {
               setUnitNumber(condoDetails.unit_number);
             }
+            if (condoDetails?.hoa_fee) {
+              setHoaFee(condoDetails.hoa_fee.toString());
+            }
+            if (condoDetails?.hoa_fee_frequency) {
+              setHoaFeeFrequency(condoDetails.hoa_fee_frequency);
+            }
           } catch (e) {
             console.error("Error parsing condo_details:", e);
           }
         }
-        
+
         // Parse comprehensive fields from disclosures array
         const disclosuresArray = Array.isArray(data.disclosures) ? data.disclosures as string[] : [];
         disclosuresArray.forEach((d: string) => {
@@ -316,6 +324,8 @@ const EditListing = () => {
         dataToUpdate.condo_details = {
           ...existingCondoDetails,
           unit_number: unitNumber,
+          hoa_fee: hoaFee ? parseFloat(hoaFee) : null,
+          hoa_fee_frequency: hoaFeeFrequency,
         };
       }
 
@@ -573,6 +583,36 @@ const EditListing = () => {
                       ? "Required - Helps identify the specific unit and fetch accurate property data"
                       : "Helps identify the specific unit and fetch accurate property data"}
                   </p>
+                </div>
+              )}
+
+              {/* HOA/Condo Fee - for condos and townhouses */}
+              {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")) && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="hoa_fee">HOA/Condo Fee</Label>
+                    <FormattedInput
+                      id="hoa_fee"
+                      format="currency"
+                      decimals={0}
+                      value={hoaFee}
+                      onChange={(value) => setHoaFee(value)}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hoa_fee_frequency">Fee Frequency</Label>
+                    <Select value={hoaFeeFrequency} onValueChange={setHoaFeeFrequency}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                        <SelectItem value="annually">Annually</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
 
