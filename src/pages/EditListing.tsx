@@ -437,6 +437,17 @@ const EditListing = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Property Type */}
+              <div className="space-y-2">
+                <Label htmlFor="property_type">Property Type</Label>
+                <Input
+                  id="property_type"
+                  value={formData.property_type}
+                  onChange={(e) => setFormData({ ...formData, property_type: e.target.value })}
+                  placeholder="e.g., Single Family, Condo"
+                />
+              </div>
+
               {/* Listing Type */}
               <div className="space-y-2">
                 <Label htmlFor="listing_type">Listing Type</Label>
@@ -514,25 +525,14 @@ const EditListing = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="zip_code">Zip Code</Label>
-                  <Input
-                    id="zip_code"
-                    value={formData.zip_code}
-                    onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="property_type">Property Type</Label>
-                  <Input
-                    id="property_type"
-                    value={formData.property_type}
-                    onChange={(e) => setFormData({ ...formData, property_type: e.target.value })}
-                    placeholder="e.g., Single Family, Condo"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="zip_code">Zip Code</Label>
+                <Input
+                  id="zip_code"
+                  value={formData.zip_code}
+                  onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                  required
+                />
               </div>
 
               {/* Unit Number - for properties with units */}
