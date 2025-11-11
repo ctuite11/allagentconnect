@@ -198,7 +198,7 @@ const AgentProfile = () => {
           Back
         </Button>
 
-        {/* Hero Section with Agent Info */}
+        {/* Hero Section with Agent Contact Information */}
         <div className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 rounded-xl p-8 mb-8">
           <div className="flex flex-col md:flex-row gap-8 items-start mb-8">
             {/* Headshot and Agent ID */}
