@@ -10,7 +10,7 @@ interface AddressAutocompleteProps {
   types?: string[];
 }
 
-const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onChange, types = ['address'] }: AddressAutocompleteProps) => {
+const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onChange, types = ['geocode'] }: AddressAutocompleteProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autocompleteRef = useRef<any>(null);
