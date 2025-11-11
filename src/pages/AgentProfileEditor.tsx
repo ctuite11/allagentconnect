@@ -21,7 +21,7 @@ import { Trash2, Plus, Star, Upload, X, MapPin } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
-import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
+
 import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 
 interface SocialLinks {
@@ -90,6 +90,7 @@ const AgentProfileEditor = () => {
   const [newCoverageCity, setNewCoverageCity] = useState("");
   const [newCoverageZips, setNewCoverageZips] = useState<string[]>(["", "", ""]);
   const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
+  const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
 
   useEffect(() => {
     checkAuthAndLoadProfile();
@@ -865,13 +866,23 @@ const AgentProfileEditor = () => {
                       <Label>City</Label>
                       <Select 
                         value={newCoverageCity} 
-                        onValueChange={(value) => {
+                        onValueChange={async (value) => {
                           setNewCoverageCity(value);
-                          // Load suggested zip codes for this city
-                          if (newCoverageState && hasZipCodeData(value, newCoverageState)) {
-                            setSuggestedZips(getZipCodesForCity(value, newCoverageState));
-                          } else {
+                          setSuggestedZips([]);
+                          if (!newCoverageState) return;
+                          try {
+                            setSuggestedZipsLoading(true);
+                            const { data, error } = await supabase.functions.invoke('get-city-zips', {
+                              body: { state: newCoverageState, city: value }
+                            });
+                            if (error) throw error;
+                            const zips: string[] = data?.zips || [];
+                            setSuggestedZips(zips);
+                          } catch (err) {
+                            console.error('[AgentProfileEditor] ZIP lookup failed', err);
                             setSuggestedZips([]);
+                          } finally {
+                            setSuggestedZipsLoading(false);
                           }
                         }}
                         disabled={!newCoverageState}
@@ -913,56 +924,62 @@ const AgentProfileEditor = () => {
                     </div>
 
                     {/* Suggested Zip Codes */}
-                    {suggestedZips.length > 0 && (
+                    {(suggestedZipsLoading || suggestedZips.length > 0) && (
                       <div className="border-2 border-primary/20 rounded-xl p-4 bg-primary/5">
                         <Label className="mb-2 flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-primary" />
                           Suggested Zip Codes for {newCoverageCity}
                         </Label>
-                        <p className="text-xs text-muted-foreground mb-3">
-                          Click to add zip codes (up to {3 - coverageAreas.length} more)
-                        </p>
-                        <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
-                          {suggestedZips.map((zipCode) => {
-                            const isAlreadyAdded = coverageAreas.some(area => area.zip_code === zipCode);
-                            const isInCurrentSelection = newCoverageZips.includes(zipCode);
-                            const canAdd = newCoverageZips.filter(z => z.trim()).length < 3 && 
-                                          coverageAreas.length + newCoverageZips.filter(z => z.trim()).length < 3;
-                            
-                            return (
-                              <Button
-                                key={zipCode}
-                                type="button"
-                                variant={isInCurrentSelection ? "default" : "outline"}
-                                size="sm"
-                                disabled={isAlreadyAdded || (!isInCurrentSelection && !canAdd)}
-                                onClick={() => {
-                                  if (isInCurrentSelection) {
-                                    // Remove from selection
-                                    const newZips = [...newCoverageZips];
-                                    const indexToRemove = newZips.indexOf(zipCode);
-                                    if (indexToRemove !== -1) {
-                                      newZips[indexToRemove] = "";
-                                      setNewCoverageZips(newZips);
-                                    }
-                                  } else {
-                                    // Add to first empty slot
-                                    const newZips = [...newCoverageZips];
-                                    const emptyIndex = newZips.findIndex(z => z.trim() === "");
-                                    if (emptyIndex !== -1) {
-                                      newZips[emptyIndex] = zipCode;
-                                      setNewCoverageZips(newZips);
-                                    }
-                                  }
-                                }}
-                                className="font-mono"
-                              >
-                                {zipCode}
-                                {isAlreadyAdded && " ✓"}
-                              </Button>
-                            );
-                          })}
-                        </div>
+                        {suggestedZipsLoading ? (
+                          <p className="text-sm text-muted-foreground">Loading suggested zip codes…</p>
+                        ) : (
+                          <>
+                            <p className="text-xs text-muted-foreground mb-3">
+                              Click to add zip codes (up to {3 - coverageAreas.length} more)
+                            </p>
+                            <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
+                              {suggestedZips.map((zipCode) => {
+                                const isAlreadyAdded = coverageAreas.some(area => area.zip_code === zipCode);
+                                const isInCurrentSelection = newCoverageZips.includes(zipCode);
+                                const canAdd = newCoverageZips.filter(z => z.trim()).length < 3 && 
+                                              coverageAreas.length + newCoverageZips.filter(z => z.trim()).length < 3;
+                                
+                                return (
+                                  <Button
+                                    key={zipCode}
+                                    type="button"
+                                    variant={isInCurrentSelection ? "default" : "outline"}
+                                    size="sm"
+                                    disabled={isAlreadyAdded || (!isInCurrentSelection && !canAdd)}
+                                    onClick={() => {
+                                      if (isInCurrentSelection) {
+                                        // Remove from selection
+                                        const newZips = [...newCoverageZips];
+                                        const indexToRemove = newZips.indexOf(zipCode);
+                                        if (indexToRemove !== -1) {
+                                          newZips[indexToRemove] = "";
+                                          setNewCoverageZips(newZips);
+                                        }
+                                      } else {
+                                        // Add to first empty slot
+                                        const newZips = [...newCoverageZips];
+                                        const emptyIndex = newZips.findIndex(z => z.trim() === "");
+                                        if (emptyIndex !== -1) {
+                                          newZips[emptyIndex] = zipCode;
+                                          setNewCoverageZips(newZips);
+                                        }
+                                      }
+                                    }}
+                                    className="font-mono"
+                                  >
+                                    {zipCode}
+                                    {isAlreadyAdded && " ✓"}
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
 
