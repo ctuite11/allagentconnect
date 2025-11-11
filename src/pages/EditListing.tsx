@@ -457,12 +457,24 @@ const EditListing = () => {
               {/* Property Type */}
               <div className="space-y-2">
                 <Label htmlFor="property_type">Property Type</Label>
-                <Input
-                  id="property_type"
+                <Select
                   value={formData.property_type}
-                  onChange={(e) => setFormData({ ...formData, property_type: e.target.value })}
-                  placeholder="e.g., Single Family, Condo"
-                />
+                  onValueChange={(value) => setFormData({ ...formData, property_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select property type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Single Family">Single Family</SelectItem>
+                    <SelectItem value="Condominium">Condominium</SelectItem>
+                    <SelectItem value="Townhouse">Townhouse</SelectItem>
+                    <SelectItem value="Multi-Family">Multi-Family</SelectItem>
+                    <SelectItem value="Land">Land</SelectItem>
+                    <SelectItem value="Commercial">Commercial</SelectItem>
+                    <SelectItem value="Mobile Home">Mobile Home</SelectItem>
+                    <SelectItem value="Co-op">Co-op</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Status */}
