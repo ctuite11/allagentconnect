@@ -53,6 +53,7 @@ const AgentProfileEditor = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [bio, setBio] = useState("");
   const [buyerIncentives, setBuyerIncentives] = useState("");
   const [sellerIncentives, setSellerIncentives] = useState("");
@@ -215,6 +216,9 @@ const AgentProfileEditor = () => {
       if (error) throw error;
       toast.success("Profile updated successfully!");
       
+      // Show redirecting state
+      setRedirecting(true);
+      
       // Small delay to ensure DB has processed the update
       setTimeout(() => {
         navigate(`/agent/${session.user.id}`);
@@ -222,6 +226,7 @@ const AgentProfileEditor = () => {
     } catch (error) {
       console.error("Error saving profile:", error);
       toast.error("Failed to save profile");
+      setRedirecting(false);
     } finally {
       setSaving(false);
     }
@@ -1209,10 +1214,10 @@ const AgentProfileEditor = () => {
               <Button 
                 size="lg" 
                 onClick={handleSaveProfile} 
-                disabled={saving}
+                disabled={saving || redirecting}
                 className="w-full md:w-auto"
               >
-                {saving ? "Publishing..." : "Publish Profile"}
+                {redirecting ? "Redirecting to profile..." : saving ? "Publishing..." : "Publish Profile"}
               </Button>
             </CardContent>
           </Card>
