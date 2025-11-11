@@ -765,12 +765,12 @@ const AgentProfileEditor = () => {
                   </h3>
                   <div className="space-y-4">
                     <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300" />
-                      <MapPin className="absolute left-5 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10 group-hover:text-primary transition-colors" />
+                      <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300 pointer-events-none" />
+                      <MapPin className="absolute left-5 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10 group-hover:text-primary transition-colors pointer-events-none" />
                       <AddressAutocomplete
                         onPlaceSelect={handleAddCoverageArea}
                         placeholder="Search by City, State, or Zip Code"
-                        className="pl-14 h-14 text-base w-full rounded-2xl border-2 border-border hover:border-primary/50 focus:border-primary transition-colors bg-background"
+                        className="pl-14 h-14 text-base w-full rounded-2xl border-2 border-border hover:border-primary/50 focus:border-primary transition-colors bg-background relative z-10"
                         value={newZipCode}
                         onChange={setNewZipCode}
                       />
