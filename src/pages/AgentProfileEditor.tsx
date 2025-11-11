@@ -935,7 +935,7 @@ const AgentProfileEditor = () => {
                         ) : (
                           <>
                             <p className="text-xs text-muted-foreground mb-3">
-                              Click to add zip codes (up to {3 - coverageAreas.length} more)
+                              Click to add zip codes (up to {3 - coverageAreas.length} more) • Not seeing your ZIP? Type it manually below.
                             </p>
                             <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
                               {suggestedZips.map((zipCode) => {
@@ -1046,7 +1046,7 @@ const AgentProfileEditor = () => {
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">
                         {suggestedZips.length > 0 
-                          ? "Click suggested zip codes above or manually enter them here"
+                          ? "Click suggested zip codes above or manually enter any ZIP below (including ones not shown)"
                           : `Enter zip codes for ${newCoverageCity || "selected city"}`}
                       </p>
                     </div>
