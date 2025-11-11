@@ -22,6 +22,7 @@ import Navigation from "@/components/Navigation";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
 import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
+import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 
 interface SocialLinks {
   linkedin: string;
@@ -836,7 +837,11 @@ const AgentProfileEditor = () => {
                         <Label>County / Area (Optional)</Label>
                         <Select 
                           value={newCoverageCounty} 
-                          onValueChange={setNewCoverageCounty}
+                          onValueChange={(value) => {
+                            setNewCoverageCounty(value);
+                            setNewCoverageCity(""); // Reset city when county changes
+                            setSuggestedZips([]); // Reset suggested zips
+                          }}
                         >
                           <SelectTrigger className="h-12 bg-background">
                             <SelectValue placeholder="Select county or area" />
@@ -849,6 +854,9 @@ const AgentProfileEditor = () => {
                             ))}
                           </SelectContent>
                         </Select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Selecting a county will filter available cities
+                        </p>
                       </div>
                     )}
 
@@ -869,16 +877,41 @@ const AgentProfileEditor = () => {
                         disabled={!newCoverageState}
                       >
                         <SelectTrigger className="h-12 bg-background">
-                          <SelectValue placeholder={newCoverageState ? "Select city" : "Select state first"} />
+                          <SelectValue placeholder={
+                            !newCoverageState 
+                              ? "Select state first" 
+                              : newCoverageCounty
+                                ? "Select city in county"
+                                : "Select city"
+                          } />
                         </SelectTrigger>
                         <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-[300px]">
-                          {newCoverageState && usCitiesByState[newCoverageState]?.map((city) => (
-                            <SelectItem key={city} value={city}>
-                              {city}
-                            </SelectItem>
-                          ))}
+                          {newCoverageState && (() => {
+                            // If county is selected and has mapping, show only cities in that county
+                            if (newCoverageCounty && hasCountyCityMapping(newCoverageState)) {
+                              const countyCities = getCitiesForCounty(newCoverageState, newCoverageCounty);
+                              if (countyCities.length > 0) {
+                                return countyCities.map((city) => (
+                                  <SelectItem key={city} value={city}>
+                                    {city}
+                                  </SelectItem>
+                                ));
+                              }
+                            }
+                            // Otherwise show all cities for the state
+                            return usCitiesByState[newCoverageState]?.map((city) => (
+                              <SelectItem key={city} value={city}>
+                                {city}
+                              </SelectItem>
+                            ));
+                          })()}
                         </SelectContent>
                       </Select>
+                      {newCoverageCounty && hasCountyCityMapping(newCoverageState) && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Showing cities in {newCoverageCounty} County
+                        </p>
+                      )}
                     </div>
 
                     {/* Suggested Zip Codes */}
