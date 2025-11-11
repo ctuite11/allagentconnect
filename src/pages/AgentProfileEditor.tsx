@@ -21,6 +21,7 @@ import { Trash2, Plus, Star, Upload, X, MapPin } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
+import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 
 interface SocialLinks {
   linkedin: string;
@@ -84,6 +85,7 @@ const AgentProfileEditor = () => {
   const [newCoverageState, setNewCoverageState] = useState("");
   const [newCoverageCounty, setNewCoverageCounty] = useState("");
   const [newCoverageCity, setNewCoverageCity] = useState("");
+  const [newCoverageNeighborhood, setNewCoverageNeighborhood] = useState("");
   const [newCoverageZip, setNewCoverageZip] = useState("");
 
   useEffect(() => {
@@ -377,6 +379,7 @@ const AgentProfileEditor = () => {
       setNewCoverageState("");
       setNewCoverageCounty("");
       setNewCoverageCity("");
+      setNewCoverageNeighborhood("");
       setNewCoverageZip("");
       toast.success("Coverage area added!");
     } catch (error) {
@@ -783,11 +786,12 @@ const AgentProfileEditor = () => {
                         setNewCoverageState(value);
                         setNewCoverageCounty(""); // Reset county when state changes
                         setNewCoverageCity(""); // Reset city when state changes
+                        setNewCoverageNeighborhood(""); // Reset neighborhood when state changes
                       }}>
                         <SelectTrigger className="h-12 bg-background">
                           <SelectValue placeholder="Select state" />
                         </SelectTrigger>
-                        <SelectContent className="bg-background z-50">
+                        <SelectContent className="bg-background border border-border shadow-lg z-[100]">
                           {US_STATES.map((state) => (
                             <SelectItem key={state.code} value={state.code}>
                               {state.name}
@@ -808,7 +812,7 @@ const AgentProfileEditor = () => {
                           <SelectTrigger className="h-12 bg-background">
                             <SelectValue placeholder="Select county or area" />
                           </SelectTrigger>
-                          <SelectContent className="bg-background z-50 max-h-[300px]">
+                          <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-[300px]">
                             {COUNTIES_BY_STATE[newCoverageState].map((county) => (
                               <SelectItem key={county} value={county}>
                                 {county}
@@ -824,13 +828,16 @@ const AgentProfileEditor = () => {
                       <Label>City</Label>
                       <Select 
                         value={newCoverageCity} 
-                        onValueChange={setNewCoverageCity}
+                        onValueChange={(value) => {
+                          setNewCoverageCity(value);
+                          setNewCoverageNeighborhood(""); // Reset neighborhood when city changes
+                        }}
                         disabled={!newCoverageState}
                       >
                         <SelectTrigger className="h-12 bg-background">
                           <SelectValue placeholder={newCoverageState ? "Select city" : "Select state first"} />
                         </SelectTrigger>
-                        <SelectContent className="bg-background z-50 max-h-[300px]">
+                        <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-[300px]">
                           {newCoverageState && usCitiesByState[newCoverageState]?.map((city) => (
                             <SelectItem key={city} value={city}>
                               {city}
@@ -839,6 +846,31 @@ const AgentProfileEditor = () => {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* Neighborhood Dropdown - Only show for cities with neighborhood data */}
+                    {newCoverageCity && newCoverageState && hasNeighborhoodData(newCoverageCity, newCoverageState) && (
+                      <div>
+                        <Label>Neighborhood / District (Optional)</Label>
+                        <Select 
+                          value={newCoverageNeighborhood} 
+                          onValueChange={setNewCoverageNeighborhood}
+                        >
+                          <SelectTrigger className="h-12 bg-background">
+                            <SelectValue placeholder="Select neighborhood" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-[300px]">
+                            {getAreasForCity(newCoverageCity, newCoverageState).map((neighborhood) => (
+                              <SelectItem key={neighborhood} value={neighborhood}>
+                                {neighborhood}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Target specific neighborhoods in {newCoverageCity}
+                        </p>
+                      </div>
+                    )}
 
                     {/* Zip Code Input */}
                     <div>
@@ -866,7 +898,7 @@ const AgentProfileEditor = () => {
                     </Button>
 
                     <p className="text-sm text-muted-foreground">
-                      Select a state, optionally narrow by county, then choose city and zip code. You'll appear as a verified buyer agent for listings in these areas.
+                      Select a state, optionally narrow by county/neighborhood, then choose city and zip code. For major metro areas, you can target specific neighborhoods to receive highly relevant leads.
                     </p>
                   </div>
                 </div>
