@@ -243,7 +243,7 @@ const AgentProfile = () => {
                   {agent.first_name} {agent.last_name}
                 </h1>
                 {agent.logo_url && (
-                  <img src={agent.logo_url} alt="Company logo" className="h-24 object-contain" />
+                  <img src={agent.logo_url} alt="Company logo" className="h-28 object-contain" />
                 )}
               </div>
               
@@ -253,15 +253,15 @@ const AgentProfile = () => {
                 </p>
               )}
               
-              {(agent.office_name || agent.company) && (
+              {agent.office_name && (
                 <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">Office:</span> {agent.office_name || agent.company}
+                  <span className="font-semibold">Office:</span> {agent.office_name}
                 </p>
               )}
               
               {agent.office_address && (
                 <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">Office Address:</span> {agent.office_address}
+                  <span className="font-semibold">Address:</span> {agent.office_address}
                 </p>
               )}
               
@@ -283,7 +283,7 @@ const AgentProfile = () => {
 
               {agent.social_links?.website && (
                 <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">My Website:</span>{' '}
+                  <span className="font-semibold">My website:</span>{' '}
                   <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                     {agent.social_links.website}
                   </a>
