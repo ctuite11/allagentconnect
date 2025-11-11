@@ -218,105 +218,96 @@ const AgentProfile = () => {
               )}
             </div>
             
-            {/* Contact Information */}
-            <Card className="flex-shrink-0 w-full md:w-80">
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <a href={`mailto:${agent.email}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
-                  <Mail className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground mb-1">Email</p>
-                    <p className="text-sm font-medium break-all group-hover:text-primary">{agent.email}</p>
-                  </div>
+            {/* Contact Information - Simple Text Layout */}
+            <div className="flex-1 space-y-2">
+              <h1 className="text-3xl font-bold mb-1">
+                {agent.first_name} {agent.last_name}
+              </h1>
+              
+              {agent.title && (
+                <p className="text-lg text-muted-foreground">
+                  <span className="font-semibold">Title:</span> {agent.title}
+                </p>
+              )}
+              
+              {(agent.office_name || agent.company) && (
+                <p className="text-lg text-muted-foreground">
+                  <span className="font-semibold">Office:</span> {agent.office_name || agent.company}
+                </p>
+              )}
+              
+              {agent.office_address && (
+                <p className="text-lg text-muted-foreground">
+                  <span className="font-semibold">Address:</span> {agent.office_address}
+                </p>
+              )}
+              
+              {agent.cell_phone && agent.cell_phone.trim() && (
+                <p className="text-lg text-muted-foreground">
+                  <span className="font-semibold">Cell:</span>{' '}
+                  <a href={`tel:${agent.cell_phone}`} className="hover:text-primary transition-colors">
+                    {formatPhoneNumber(agent.cell_phone)}
+                  </a>
+                </p>
+              )}
+              
+              <p className="text-lg text-muted-foreground">
+                <span className="font-semibold">Email:</span>{' '}
+                <a href={`mailto:${agent.email}`} className="hover:text-primary transition-colors">
+                  {agent.email}
                 </a>
+              </p>
 
-                {agent.cell_phone && agent.cell_phone.trim() && (
-                  <a href={`tel:${agent.cell_phone}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
-                    <Phone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground mb-1">Cell Phone</p>
-                      <p className="text-sm font-medium group-hover:text-primary">{formatPhoneNumber(agent.cell_phone)}</p>
-                    </div>
-                  </a>
-                )}
+              <div className="flex flex-wrap gap-3 pt-4">
+                <ContactAgentProfileDialog 
+                  agentId={agent.id}
+                  agentName={`${agent.first_name} ${agent.last_name}`}
+                  agentEmail={agent.email}
+                />
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => generateVCard(agent)}
+                >
+                  <Download className="h-4 w-4" />
+                  Save Contact
+                </Button>
+              </div>
 
-                {agent.office_phone && agent.office_phone.trim() && (
-                  <a href={`tel:${agent.office_phone}`} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group">
-                    <Phone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground mb-1">Office Phone</p>
-                      <p className="text-sm font-medium group-hover:text-primary">{formatPhoneNumber(agent.office_phone)}</p>
-                    </div>
-                  </a>
-                )}
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <ContactAgentProfileDialog 
-                    agentId={agent.id}
-                    agentName={`${agent.first_name} ${agent.last_name}`}
-                    agentEmail={agent.email}
-                  />
-                  
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2"
-                    onClick={() => generateVCard(agent)}
-                  >
-                    <Download className="h-4 w-4" />
-                    Save Contact
-                  </Button>
+              {agent.social_links && Object.values(agent.social_links).some(link => link) && (
+                <div className="pt-2">
+                  <div className="flex gap-3">
+                    {agent.social_links.website && (
+                      <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+                        <Globe className="h-5 w-5" />
+                      </a>
+                    )}
+                    {agent.social_links.linkedin && (
+                      <a href={agent.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#0A66C2] hover:bg-[#004182] text-white transition-colors">
+                        <Linkedin className="h-5 w-5" />
+                      </a>
+                    )}
+                    {agent.social_links.facebook && (
+                      <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#1877F2] hover:bg-[#166FE5] text-white transition-colors">
+                        <Facebook className="h-5 w-5" />
+                      </a>
+                    )}
+                    {agent.social_links.twitter && (
+                      <a href={agent.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white transition-colors">
+                        <Twitter className="h-5 w-5" />
+                      </a>
+                    )}
+                    {agent.social_links.instagram && (
+                      <a href={agent.social_links.instagram} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white transition-colors">
+                        <Instagram className="h-5 w-5" />
+                      </a>
+                    )}
+                  </div>
                 </div>
-
-                {agent.social_links && Object.values(agent.social_links).some(link => link) && (
-                  <>
-                    <Separator />
-                    <div>
-                      <p className="text-sm font-semibold mb-3">Connect Online</p>
-                      <div className="flex gap-3">
-                        {agent.social_links.website && (
-                          <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
-                            <Globe className="h-5 w-5" />
-                          </a>
-                        )}
-                        {agent.social_links.linkedin && (
-                          <a href={agent.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#0A66C2] hover:bg-[#004182] text-white transition-colors">
-                            <Linkedin className="h-5 w-5" />
-                          </a>
-                        )}
-                        {agent.social_links.facebook && (
-                          <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#1877F2] hover:bg-[#166FE5] text-white transition-colors">
-                            <Facebook className="h-5 w-5" />
-                          </a>
-                        )}
-                        {agent.social_links.twitter && (
-                          <a href={agent.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white transition-colors">
-                            <Twitter className="h-5 w-5" />
-                          </a>
-                        )}
-                        {agent.social_links.instagram && (
-                          <a href={agent.social_links.instagram} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white transition-colors">
-                            <Instagram className="h-5 w-5" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {agent.receive_buyer_alerts && (
-                  <>
-                    <Separator />
-                    <Badge variant="outline" className="w-full justify-center py-2">
-                      ✓ Accepting New Clients
-                    </Badge>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+              )}
+            </div>
           </div>
 
           {/* Agent Details Section */}
