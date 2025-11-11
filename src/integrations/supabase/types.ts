@@ -335,8 +335,11 @@ export type Database = {
           last_name: string
           logo_url: string | null
           office_address: string | null
+          office_city: string | null
           office_name: string | null
           office_phone: string | null
+          office_state: string | null
+          office_zip: string | null
           phone: string | null
           receive_buyer_alerts: boolean | null
           seller_incentives: string | null
@@ -358,8 +361,11 @@ export type Database = {
           last_name: string
           logo_url?: string | null
           office_address?: string | null
+          office_city?: string | null
           office_name?: string | null
           office_phone?: string | null
+          office_state?: string | null
+          office_zip?: string | null
           phone?: string | null
           receive_buyer_alerts?: boolean | null
           seller_incentives?: string | null
@@ -381,8 +387,11 @@ export type Database = {
           last_name?: string
           logo_url?: string | null
           office_address?: string | null
+          office_city?: string | null
           office_name?: string | null
           office_phone?: string | null
+          office_state?: string | null
+          office_zip?: string | null
           phone?: string | null
           receive_buyer_alerts?: boolean | null
           seller_incentives?: string | null

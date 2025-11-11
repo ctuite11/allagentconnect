@@ -60,6 +60,9 @@ interface AgentProfile {
   company: string | null;
   office_name: string | null;
   office_address: string | null;
+  office_city: string | null;
+  office_state: string | null;
+  office_zip: string | null;
   bio: string | null;
   buyer_incentives: string | null;
   seller_incentives: string | null;
@@ -262,6 +265,9 @@ const AgentProfile = () => {
               {agent.office_address && (
                 <p className="text-lg text-muted-foreground">
                   <span className="font-semibold">Address:</span> {agent.office_address}
+                  {agent.office_city && agent.office_state && (
+                    <>, {agent.office_city}, {agent.office_state} {agent.office_zip}</>
+                  )}
                 </p>
               )}
               
