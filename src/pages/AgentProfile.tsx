@@ -200,7 +200,8 @@ const AgentProfile = () => {
 
         {/* Hero Section with Agent Info */}
         <div className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 rounded-xl p-8 mb-8">
-          <div className="flex flex-col md:flex-row gap-8 items-start">
+          <div className="flex flex-col md:flex-row gap-8 items-start mb-8">
+            {/* Headshot */}
             <div className="w-48 h-64 rounded-lg overflow-hidden border-4 border-background shadow-xl flex-shrink-0">
               {agent.headshot_url ? (
                 <img 
@@ -217,73 +218,8 @@ const AgentProfile = () => {
               )}
             </div>
             
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-4xl font-bold mb-2">
-                    {agent.first_name} {agent.last_name}
-                  </h1>
-                  {agent.title && (
-                    <p className="text-xl text-muted-foreground mb-2">{agent.title}</p>
-                  )}
-                  {agent.aac_id && (
-                    <Badge variant="secondary" className="font-mono">
-                      <Award className="h-3 w-3 mr-1" />
-                      {agent.aac_id}
-                    </Badge>
-                  )}
-                </div>
-                {agent.logo_url && (
-                  <img src={agent.logo_url} alt="Company logo" className="h-16 object-contain" />
-                )}
-              </div>
-
-              {(agent.company || agent.office_name || agent.office_address) && (
-                <div className="bg-card/50 rounded-lg p-4 mb-4 space-y-2">
-                  {agent.company && (
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-primary" />
-                      <span className="font-semibold">{agent.company}</span>
-                    </div>
-                  )}
-                  {agent.office_name && agent.office_name !== agent.company && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Briefcase className="h-4 w-4 text-muted-foreground" />
-                      <span>{agent.office_name}</span>
-                    </div>
-                  )}
-                  {agent.office_address && (
-                    <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                      <span>{agent.office_address}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {agent.agent_county_preferences && agent.agent_county_preferences.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-sm font-semibold mb-2 flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    Service Areas
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {agent.agent_county_preferences.map((pref: any) => (
-                      <Badge key={pref.county_id} variant="secondary">
-                        {pref.counties.name}, {pref.counties.state}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Contact Card */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card>
+            {/* Contact Information */}
+            <Card className="flex-shrink-0 w-full md:w-80">
               <CardHeader>
                 <CardTitle>Contact Information</CardTitle>
               </CardHeader>
@@ -352,7 +288,7 @@ const AgentProfile = () => {
                           </a>
                         )}
                         {agent.social_links.facebook && (
-                          <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#1877F2] hover:bg-[#0C5DC7] text-white transition-colors">
+                          <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#1877F2] hover:bg-[#166FE5] text-white transition-colors">
                             <Facebook className="h-5 w-5" />
                           </a>
                         )}
@@ -383,149 +319,211 @@ const AgentProfile = () => {
             </Card>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Bio Section */}
-            {agent.bio && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>About Me</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground whitespace-pre-wrap">{agent.bio}</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Incentives Section */}
-            {(agent.buyer_incentives || agent.seller_incentives) && (
-              <div className="grid md:grid-cols-2 gap-6">
-                {agent.buyer_incentives && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <DollarSign className="h-5 w-5 text-accent" />
-                        Buyer Incentives
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{agent.buyer_incentives}</p>
-                    </CardContent>
-                  </Card>
+          {/* Agent Details Section */}
+          <div>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h1 className="text-4xl font-bold mb-2">
+                  {agent.first_name} {agent.last_name}
+                </h1>
+                {agent.title && (
+                  <p className="text-xl text-muted-foreground mb-2">{agent.title}</p>
                 )}
-                {agent.seller_incentives && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <DollarSign className="h-5 w-5 text-accent" />
-                        Seller Incentives
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{agent.seller_incentives}</p>
-                    </CardContent>
-                  </Card>
+                {agent.aac_id && (
+                  <Badge variant="secondary" className="font-mono">
+                    <Award className="h-3 w-3 mr-1" />
+                    {agent.aac_id}
+                  </Badge>
+                )}
+              </div>
+              {agent.logo_url && (
+                <img src={agent.logo_url} alt="Company logo" className="h-16 object-contain" />
+              )}
+            </div>
+
+            {(agent.company || agent.office_name || agent.office_address) && (
+              <div className="bg-card/50 rounded-lg p-4 mb-4 space-y-2">
+                {agent.company && (
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-primary" />
+                    <span className="font-semibold">{agent.company}</span>
+                  </div>
+                )}
+                {agent.office_name && agent.office_name !== agent.company && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Briefcase className="h-4 w-4 text-muted-foreground" />
+                    <span>{agent.office_name}</span>
+                  </div>
+                )}
+                {agent.office_address && (
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                    <span>{agent.office_address}</span>
+                  </div>
                 )}
               </div>
             )}
 
-            {/* Testimonials Section */}
-            {testimonials.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                    Client Testimonials
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {testimonials.map((testimonial) => (
-                      <Card key={testimonial.id} className="border-l-4 border-l-primary/50">
-                        <CardContent className="pt-6">
-                          {testimonial.rating && (
-                            <div className="flex gap-1 mb-2">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-4 w-4 ${
-                                    i < testimonial.rating!
-                                      ? "text-yellow-500 fill-yellow-500"
-                                      : "text-gray-300"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          )}
-                          <p className="text-muted-foreground italic mb-3">"{testimonial.testimonial_text}"</p>
-                          <div className="text-sm">
-                            <p className="font-semibold">{testimonial.client_name}</p>
-                            {testimonial.client_title && (
-                              <p className="text-muted-foreground">{testimonial.client_title}</p>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+            {agent.agent_county_preferences && agent.agent_county_preferences.length > 0 && (
+              <div className="mb-4">
+                <p className="text-sm font-semibold mb-2 flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  Service Areas
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {agent.agent_county_preferences.map((pref: any) => (
+                    <Badge key={pref.county_id} variant="secondary">
+                      {pref.counties.name}, {pref.counties.state}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             )}
+          </div>
+        </div>
 
-            {/* Listings Section */}
+        {/* Main Content */}
+        <div className="space-y-6">
+          {/* Bio Section */}
+          {agent.bio && (
+            <Card>
+              <CardHeader>
+                <CardTitle>About Me</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground whitespace-pre-wrap">{agent.bio}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Incentives Section */}
+          {(agent.buyer_incentives || agent.seller_incentives) && (
+            <div className="grid md:grid-cols-2 gap-6">
+              {agent.buyer_incentives && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <DollarSign className="h-5 w-5 text-accent" />
+                      Buyer Incentives
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{agent.buyer_incentives}</p>
+                  </CardContent>
+                </Card>
+              )}
+              {agent.seller_incentives && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <DollarSign className="h-5 w-5 text-accent" />
+                      Seller Incentives
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{agent.seller_incentives}</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* Testimonials Section */}
+          {testimonials.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Home className="h-5 w-5" />
-                  Active Listings ({listings.length})
+                  <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                  Client Testimonials
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {listings.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    No active listings at this time
-                  </p>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {listings.map((listing) => (
-                      <Card key={listing.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate(`/property/${listing.id}`)}>
-                        <div className="relative h-48 overflow-hidden rounded-t-lg">
-                          <img
-                            src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '/placeholder.svg'}
-                            alt={listing.address}
-                            className="w-full h-full object-cover"
-                          />
-                          <Badge className="absolute top-2 right-2 bg-accent">
-                            {listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'}
-                          </Badge>
-                        </div>
-                        <CardContent className="pt-4">
-                          <p className="text-2xl font-bold text-primary mb-2">
-                            ${listing.price.toLocaleString()}
-                          </p>
-                          <p className="font-semibold text-sm mb-1">{listing.address}</p>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            {listing.city}, {listing.state} {listing.zip_code}
-                          </p>
-                          <div className="flex gap-4 text-sm text-muted-foreground">
-                            {listing.bedrooms && (
-                              <span>{listing.bedrooms} bed</span>
-                            )}
-                            {listing.bathrooms && (
-                              <span>{listing.bathrooms} bath</span>
-                            )}
-                            {listing.square_feet && (
-                              <span>{listing.square_feet.toLocaleString()} sqft</span>
-                            )}
+                <div className="space-y-4">
+                  {testimonials.map((testimonial) => (
+                    <Card key={testimonial.id} className="border-l-4 border-l-primary/50">
+                      <CardContent className="pt-6">
+                        {testimonial.rating && (
+                          <div className="flex gap-1 mb-2">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < testimonial.rating!
+                                    ? "text-yellow-500 fill-yellow-500"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                        )}
+                        <p className="text-muted-foreground italic mb-3">"{testimonial.testimonial_text}"</p>
+                        <div className="text-sm">
+                          <p className="font-semibold">{testimonial.client_name}</p>
+                          {testimonial.client_title && (
+                            <p className="text-muted-foreground">{testimonial.client_title}</p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </CardContent>
             </Card>
-          </div>
+          )}
+
+          {/* Listings Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Home className="h-5 w-5" />
+                Active Listings ({listings.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {listings.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No active listings at this time
+                </p>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {listings.map((listing) => (
+                    <Card key={listing.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate(`/property/${listing.id}`)}>
+                      <div className="relative h-48 overflow-hidden rounded-t-lg">
+                        <img
+                          src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '/placeholder.svg'}
+                          alt={listing.address}
+                          className="w-full h-full object-cover"
+                        />
+                        <Badge className="absolute top-2 right-2 bg-accent">
+                          {listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'}
+                        </Badge>
+                      </div>
+                      <CardContent className="pt-4">
+                        <p className="text-2xl font-bold text-primary mb-2">
+                          ${listing.price.toLocaleString()}
+                        </p>
+                        <p className="font-semibold text-sm mb-1">{listing.address}</p>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {listing.city}, {listing.state} {listing.zip_code}
+                        </p>
+                        <div className="flex gap-4 text-sm text-muted-foreground">
+                          {listing.bedrooms && (
+                            <span>{listing.bedrooms} bed</span>
+                          )}
+                          {listing.bathrooms && (
+                            <span>{listing.bathrooms} bath</span>
+                          )}
+                          {listing.square_feet && (
+                            <span>{listing.square_feet.toLocaleString()} sqft</span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
       <Footer />
