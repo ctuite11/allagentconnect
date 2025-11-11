@@ -201,28 +201,42 @@ const AgentProfile = () => {
         {/* Hero Section with Agent Info */}
         <div className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 rounded-xl p-8 mb-8">
           <div className="flex flex-col md:flex-row gap-8 items-start mb-8">
-            {/* Headshot */}
-            <div className="w-48 h-64 rounded-lg overflow-hidden border-4 border-background shadow-xl flex-shrink-0">
-              {agent.headshot_url ? (
-                <img 
-                  src={agent.headshot_url} 
-                  alt={`${agent.first_name} ${agent.last_name}`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-6xl font-bold text-primary">
-                    {agent.first_name[0]}{agent.last_name[0]}
-                  </span>
+            {/* Headshot and Agent ID */}
+            <div className="flex-shrink-0">
+              <div className="w-48 h-64 rounded-lg overflow-hidden border-4 border-background shadow-xl">
+                {agent.headshot_url ? (
+                  <img 
+                    src={agent.headshot_url} 
+                    alt={`${agent.first_name} ${agent.last_name}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-6xl font-bold text-primary">
+                      {agent.first_name[0]}{agent.last_name[0]}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {agent.aac_id && (
+                <div className="mt-3 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-semibold">Agent Id:</span> {agent.aac_id}
+                  </p>
                 </div>
               )}
             </div>
             
             {/* Contact Information - Simple Text Layout */}
             <div className="flex-1 space-y-2">
-              <h1 className="text-3xl font-bold mb-1">
-                {agent.first_name} {agent.last_name}
-              </h1>
+              <div className="flex items-start justify-between mb-4">
+                <h1 className="text-3xl font-bold">
+                  {agent.first_name} {agent.last_name}
+                </h1>
+                {agent.logo_url && (
+                  <img src={agent.logo_url} alt="Company logo" className="h-24 object-contain" />
+                )}
+              </div>
               
               {agent.title && (
                 <p className="text-lg text-muted-foreground">
@@ -257,6 +271,15 @@ const AgentProfile = () => {
                   {agent.email}
                 </a>
               </p>
+
+              {agent.social_links?.website && (
+                <p className="text-lg text-muted-foreground">
+                  <span className="font-semibold">Website:</span>{' '}
+                  <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                    {agent.social_links.website}
+                  </a>
+                </p>
+              )}
 
               <div className="flex flex-wrap gap-3 pt-4">
                 <ContactAgentProfileDialog 
