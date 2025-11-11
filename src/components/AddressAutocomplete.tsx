@@ -7,9 +7,10 @@ interface AddressAutocompleteProps {
   className?: string;
   value?: string;
   onChange?: (value: string) => void;
+  types?: string[];
 }
 
-const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onChange }: AddressAutocompleteProps) => {
+const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onChange, types = ['address'] }: AddressAutocompleteProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autocompleteRef = useRef<any>(null);
@@ -77,6 +78,8 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
           const el = new places.PlaceAutocompleteElement({});
           // Try to restrict to US if supported
           try { (el as any).componentRestrictions = { country: ["us"] }; } catch {}
+          // Set types if supported
+          try { (el as any).types = types; } catch {}
           if (placeholder) {
             try { (el as any).placeholder = placeholder; } catch { el.setAttribute('placeholder', placeholder); }
           }
@@ -160,7 +163,7 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
       }
       
       autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-        types: ['address'],
+        types: types,
         componentRestrictions: { country: 'us' },
         fields: ['formatted_address', 'address_components', 'geometry', 'name']
       });

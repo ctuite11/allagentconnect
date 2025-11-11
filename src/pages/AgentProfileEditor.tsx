@@ -976,6 +976,7 @@ const AgentProfileEditor = () => {
                             <AddressAutocomplete
                               placeholder={`Zip code ${index + 1}`}
                               value={zip}
+                              types={['postal_code', '(regions)']}
                               onChange={(value) => {
                                 const zipMatch = value.match(/\b\d{5}\b/);
                                 const extractedZip = zipMatch ? zipMatch[0] : value.replace(/\D/g, '').slice(0, 5);
