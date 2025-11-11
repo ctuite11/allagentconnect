@@ -257,15 +257,15 @@ const AgentProfile = () => {
               )}
               
               
-              {agent.office_address && (
+              
+              {agent.office_phone && agent.office_phone.trim() && (
                 <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">Address:</span> {agent.office_address}
-                  {agent.office_city && agent.office_state && (
-                    <>, {agent.office_city}, {agent.office_state} {agent.office_zip}</>
-                  )}
+                  <span className="font-semibold">Office:</span>{' '}
+                  <a href={`tel:${agent.office_phone}`} className="hover:text-primary transition-colors">
+                    {formatPhoneNumber(agent.office_phone)}
+                  </a>
                 </p>
               )}
-              
               {agent.cell_phone && agent.cell_phone.trim() && (
                 <p className="text-lg text-muted-foreground">
                   <span className="font-semibold">Cell:</span>{' '}
