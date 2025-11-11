@@ -1761,7 +1761,7 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {formData.property_type !== "Condominium" && (
+                {!(formData.property_type?.toLowerCase().includes("condo")) && (
                   <div className="space-y-2">
                     <Label htmlFor="lot_size">Lot Size (acres)</Label>
                     <Input
@@ -2292,7 +2292,7 @@ const AddListing = () => {
                 )}
 
                 {/* Lot Size and Description */}
-                {formData.property_type !== "Condominium" && (
+                {!(formData.property_type?.toLowerCase().includes("condo")) && (
                   <div className="space-y-3">
                     <Label className="text-base font-medium">Lot Information</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

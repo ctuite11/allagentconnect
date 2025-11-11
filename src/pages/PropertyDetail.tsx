@@ -544,7 +544,7 @@ const PropertyDetail = () => {
                       </div>
                     )}
                   </div>
-                  {listing.lot_size && (
+                  {listing.lot_size && !(listing.property_type?.toLowerCase().includes("condo")) && (
                     <div className="mt-4 pt-4 border-t">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Lot Size:</span>
@@ -803,7 +803,7 @@ const PropertyDetail = () => {
               )}
 
               {/* Lot Information */}
-              {listing.disclosures?.some((d: string) => d.startsWith('Lot Size Source:') || d.startsWith('Lot Description:')) && (
+              {!(listing.property_type?.toLowerCase().includes("condo")) && listing.disclosures?.some((d: string) => d.startsWith('Lot Size Source:') || d.startsWith('Lot Description:')) && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Lot Information</CardTitle>

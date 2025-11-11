@@ -678,16 +678,18 @@ const EditListing = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="lot_size">Lot Size (acres)</Label>
-                    <Input
-                      id="lot_size"
-                      type="number"
-                      step="0.01"
-                      value={formData.lot_size}
-                      onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
-                    />
-                  </div>
+                  {!(formData.property_type?.toLowerCase().includes("condo")) && (
+                    <div className="space-y-2">
+                      <Label htmlFor="lot_size">Lot Size (acres)</Label>
+                      <Input
+                        id="lot_size"
+                        type="number"
+                        step="0.01"
+                        value={formData.lot_size}
+                        onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
+                      />
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="year_built">Year Built</Label>
                     <Input
