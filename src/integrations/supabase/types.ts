@@ -202,6 +202,41 @@ export type Database = {
           },
         ]
       }
+      agent_buyer_coverage_areas: {
+        Row: {
+          agent_id: string
+          city: string | null
+          created_at: string | null
+          id: string
+          state: string | null
+          zip_code: string
+        }
+        Insert: {
+          agent_id: string
+          city?: string | null
+          created_at?: string | null
+          id?: string
+          state?: string | null
+          zip_code: string
+        }
+        Update: {
+          agent_id?: string
+          city?: string | null
+          created_at?: string | null
+          id?: string
+          state?: string | null
+          zip_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_buyer_coverage_areas_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_county_preferences: {
         Row: {
           agent_id: string

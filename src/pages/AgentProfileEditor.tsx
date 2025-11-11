@@ -10,7 +10,7 @@ import { FormattedInput } from "@/components/ui/formatted-input";
 import { Switch } from "@/components/ui/switch";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
-import { Trash2, Plus, Star, Upload, X } from "lucide-react";
+import { Trash2, Plus, Star, Upload, X, MapPin } from "lucide-react";
 import Navigation from "@/components/Navigation";
 
 interface SocialLinks {
@@ -27,6 +27,13 @@ interface Testimonial {
   client_title: string;
   testimonial_text: string;
   rating: number;
+}
+
+interface CoverageArea {
+  id: string;
+  zip_code: string;
+  city: string | null;
+  state: string | null;
 }
 
 const AgentProfileEditor = () => {
@@ -64,6 +71,8 @@ const AgentProfileEditor = () => {
     testimonial_text: "",
     rating: 5,
   });
+  const [coverageAreas, setCoverageAreas] = useState<CoverageArea[]>([]);
+  const [newZipCode, setNewZipCode] = useState("");
 
   useEffect(() => {
     checkAuthAndLoadProfile();
@@ -141,6 +150,16 @@ const AgentProfileEditor = () => {
 
       if (testimonialError) throw testimonialError;
       setTestimonials(testimonialData || []);
+
+      // Load coverage areas
+      const { data: coverageData, error: coverageError } = await supabase
+        .from("agent_buyer_coverage_areas")
+        .select("*")
+        .eq("agent_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (coverageError) throw coverageError;
+      setCoverageAreas(coverageData || []);
     } catch (error) {
       console.error("Error loading profile:", error);
       toast.error("Failed to load profile");
@@ -298,6 +317,76 @@ const AgentProfileEditor = () => {
     } catch (error) {
       console.error("Error deleting testimonial:", error);
       toast.error("Failed to delete testimonial");
+    }
+  };
+
+  const handleAddCoverageArea = async (place: google.maps.places.PlaceResult) => {
+    if (coverageAreas.length >= 3) {
+      toast.error("Maximum 3 zip codes allowed");
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const addressComponents = place.address_components || [];
+      const getComponent = (type: string) => {
+        const component = addressComponents.find((c) => c.types.includes(type));
+        return component?.long_name || "";
+      };
+
+      const zipCode = getComponent("postal_code");
+      const city = getComponent("locality") || getComponent("sublocality");
+      const state = getComponent("administrative_area_level_1");
+
+      if (!zipCode) {
+        toast.error("Please select a location with a valid zip code");
+        return;
+      }
+
+      // Check if zip code already exists
+      if (coverageAreas.some(area => area.zip_code === zipCode)) {
+        toast.error("This zip code is already added");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("agent_buyer_coverage_areas")
+        .insert({
+          agent_id: session.user.id,
+          zip_code: zipCode,
+          city: city || null,
+          state: state || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setCoverageAreas([...coverageAreas, data]);
+      setNewZipCode("");
+      toast.success("Coverage area added!");
+    } catch (error) {
+      console.error("Error adding coverage area:", error);
+      toast.error("Failed to add coverage area");
+    }
+  };
+
+  const handleDeleteCoverageArea = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("agent_buyer_coverage_areas")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      
+      setCoverageAreas(coverageAreas.filter((area) => area.id !== id));
+      toast.success("Coverage area removed");
+    } catch (error) {
+      console.error("Error deleting coverage area:", error);
+      toast.error("Failed to remove coverage area");
     }
   };
 
@@ -652,6 +741,95 @@ const AgentProfileEditor = () => {
               <Button onClick={handleSaveProfile} disabled={saving}>
                 {saving ? "Saving..." : "Save Social Links"}
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Buyer Agent Lead Opt-In Section */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Buyer Agent Lead Program
+              </CardTitle>
+              <CardDescription>
+                Opt in to receive buyer agent leads for specific zip codes. Choose up to 3 zip codes where you want to appear as a verified buyer agent.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Add New Coverage Area */}
+                <div className="border-2 border-dashed border-border rounded-2xl p-6 bg-muted/30 hover:border-primary/50 transition-colors">
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Coverage Zip Code ({coverageAreas.length}/3)
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300" />
+                      <MapPin className="absolute left-5 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10 group-hover:text-primary transition-colors" />
+                      <AddressAutocomplete
+                        onPlaceSelect={handleAddCoverageArea}
+                        placeholder="Search by City, State, or Zip Code"
+                        className="pl-14 h-14 text-base w-full rounded-2xl border-2 border-border hover:border-primary/50 focus:border-primary transition-colors bg-background"
+                        value={newZipCode}
+                        onChange={setNewZipCode}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Select a location and we'll extract the zip code. You'll appear as a verified buyer agent for listings in these areas.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Existing Coverage Areas */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Your Coverage Areas</h3>
+                  {coverageAreas.length === 0 ? (
+                    <div className="text-center py-8 border-2 border-dashed rounded-2xl">
+                      <MapPin className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-2">No coverage areas added yet</p>
+                      <p className="text-sm text-muted-foreground">Add up to 3 zip codes to start receiving buyer agent leads</p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-3">
+                      {coverageAreas.map((area) => (
+                        <div 
+                          key={area.id} 
+                          className="flex items-center justify-between p-4 border-2 rounded-2xl bg-gradient-card hover:border-primary/50 transition-colors group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                              <MapPin className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-lg">{area.zip_code}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {[area.city, area.state].filter(Boolean).join(", ") || "Location"}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteCoverageArea(area.id)}
+                            className="hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {coverageAreas.length > 0 && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4">
+                    <p className="text-sm text-foreground">
+                      ✓ You're now receiving buyer agent leads for {coverageAreas.length} zip code{coverageAreas.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
