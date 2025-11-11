@@ -923,73 +923,12 @@ const AgentProfileEditor = () => {
                       )}
                     </div>
 
-                    {/* Suggested Zip Codes */}
-                    {(suggestedZipsLoading || suggestedZips.length > 0) && (
+                    {/* Suggested Zip Codes - Disabled for now */}
+                    {/* {(suggestedZipsLoading || suggestedZips.length > 0) && (
                       <div className="border-2 border-primary/20 rounded-xl p-4 bg-primary/5">
-                        <Label className="mb-2 flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-primary" />
-                          Suggested Zip Codes for {newCoverageCity}
-                        </Label>
-                        {suggestedZipsLoading ? (
-                          <p className="text-sm text-muted-foreground">Loading suggested zip codes…</p>
-                        ) : (
-                          <>
-                            <p className="text-xs text-muted-foreground mb-3">
-                              Click to add zip codes (up to {3 - coverageAreas.length} more) • Not seeing your ZIP? Type it manually below.
-                            </p>
-                            <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
-                              {suggestedZips.map((zipCode) => {
-                                const isAlreadyAdded = coverageAreas.some(area => area.zip_code === zipCode);
-                                const isInCurrentSelection = newCoverageZips.includes(zipCode);
-                                const canAdd = newCoverageZips.filter(z => z.trim()).length < 3 && 
-                                              coverageAreas.length + newCoverageZips.filter(z => z.trim()).length < 3;
-                                
-                                return (
-                              <Button
-                                key={zipCode}
-                                type="button"
-                                variant={isInCurrentSelection ? "default" : "outline"}
-                                size="sm"
-                                disabled={isAlreadyAdded}
-                                onClick={() => {
-                                  if (isAlreadyAdded) {
-                                    toast.error("This zip code is already in your coverage areas");
-                                    return;
-                                  }
-                                  if (!isInCurrentSelection && !canAdd) {
-                                    toast.error("To select an additional zip code you must delete a previously selected zip");
-                                    return;
-                                  }
-                                  if (isInCurrentSelection) {
-                                    // Remove from selection
-                                    const newZips = [...newCoverageZips];
-                                    const indexToRemove = newZips.indexOf(zipCode);
-                                    if (indexToRemove !== -1) {
-                                      newZips[indexToRemove] = "";
-                                      setNewCoverageZips(newZips);
-                                    }
-                                  } else {
-                                    // Add to first empty slot
-                                    const newZips = [...newCoverageZips];
-                                    const emptyIndex = newZips.findIndex(z => z.trim() === "");
-                                    if (emptyIndex !== -1) {
-                                      newZips[emptyIndex] = zipCode;
-                                      setNewCoverageZips(newZips);
-                                    }
-                                  }
-                                }}
-                                className="font-mono"
-                              >
-                                {zipCode}
-                                {isAlreadyAdded && " ✓"}
-                              </Button>
-                                );
-                              })}
-                            </div>
-                          </>
-                        )}
+                        ...
                       </div>
-                    )}
+                    )} */}
 
                     {/* Zip Codes Input - Multiple */}
                     <div>
@@ -1045,9 +984,7 @@ const AgentProfileEditor = () => {
                         ))}
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">
-                        {suggestedZips.length > 0 
-                          ? "Click suggested zip codes above or manually enter any ZIP below (including ones not shown)"
-                          : `Enter zip codes for ${newCoverageCity || "selected city"}`}
+                        Enter zip codes for {newCoverageCity || "selected city"}
                       </p>
                     </div>
 
