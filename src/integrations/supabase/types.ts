@@ -206,24 +206,30 @@ export type Database = {
         Row: {
           agent_id: string
           city: string | null
+          county: string | null
           created_at: string | null
           id: string
+          neighborhood: string | null
           state: string | null
           zip_code: string
         }
         Insert: {
           agent_id: string
           city?: string | null
+          county?: string | null
           created_at?: string | null
           id?: string
+          neighborhood?: string | null
           state?: string | null
           zip_code: string
         }
         Update: {
           agent_id?: string
           city?: string | null
+          county?: string | null
           created_at?: string | null
           id?: string
+          neighborhood?: string | null
           state?: string | null
           zip_code?: string
         }

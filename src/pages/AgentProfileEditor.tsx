@@ -44,6 +44,8 @@ interface CoverageArea {
   zip_code: string;
   city: string | null;
   state: string | null;
+  neighborhood: string | null;
+  county: string | null;
 }
 
 const AgentProfileEditor = () => {
@@ -383,6 +385,8 @@ const AgentProfileEditor = () => {
             zip_code: zip,
             city: newCoverageCity,
             state: newCoverageState,
+            neighborhood: newCoverageNeighborhood || null,
+            county: newCoverageCounty || null,
           })
           .select()
           .single()
@@ -974,31 +978,73 @@ const AgentProfileEditor = () => {
                       <p className="text-sm text-muted-foreground">Add up to 3 zip codes to start receiving buyer agent leads</p>
                     </div>
                   ) : (
-                    <div className="grid gap-3">
-                      {coverageAreas.map((area) => (
+                    <div className="grid gap-4">
+                      {/* Group by neighborhood/city */}
+                      {Object.entries(
+                        coverageAreas.reduce((acc, area) => {
+                          // Create a key for grouping (neighborhood + city or just city)
+                          const groupKey = area.neighborhood 
+                            ? `${area.neighborhood}, ${area.city}, ${area.state}`
+                            : `${area.city}, ${area.state}`;
+                          
+                          if (!acc[groupKey]) {
+                            acc[groupKey] = {
+                              neighborhood: area.neighborhood,
+                              county: area.county,
+                              city: area.city,
+                              state: area.state,
+                              areas: []
+                            };
+                          }
+                          acc[groupKey].areas.push(area);
+                          return acc;
+                        }, {} as Record<string, { neighborhood: string | null; county: string | null; city: string | null; state: string | null; areas: CoverageArea[] }>)
+                      ).map(([groupKey, group]) => (
                         <div 
-                          key={area.id} 
-                          className="flex items-center justify-between p-4 border-2 rounded-2xl bg-gradient-card hover:border-primary/50 transition-colors group"
+                          key={groupKey} 
+                          className="border-2 rounded-2xl p-4 bg-gradient-card hover:border-primary/50 transition-colors"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                              <MapPin className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-lg">{area.zip_code}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {[area.city, area.state].filter(Boolean).join(", ") || "Location"}
-                              </p>
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                <MapPin className="h-5 w-5 text-primary" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-semibold text-lg">
+                                  {group.neighborhood || group.city}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {group.neighborhood ? `${group.city}, ` : ''}{group.state}
+                                  {group.county && ` • ${group.county} County`}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteCoverageArea(area.id)}
-                            className="hover:bg-destructive/10 hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          
+                          {/* Zip codes for this neighborhood/city */}
+                          <div className="ml-13 space-y-2">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                              Zip Codes ({group.areas.length})
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {group.areas.map((area) => (
+                                <div 
+                                  key={area.id}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-background border border-border rounded-lg group/zip hover:border-destructive/50 transition-colors"
+                                >
+                                  <span className="font-mono font-medium">{area.zip_code}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDeleteCoverageArea(area.id)}
+                                    className="h-5 w-5 hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover/zip:opacity-100 transition-opacity"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
