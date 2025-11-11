@@ -33,6 +33,7 @@ serve(async (req) => {
     // Initialize Supabase client with service role key for full access
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const googleMapsApiKey = Deno.env.get("VITE_GOOGLE_MAPS_API_KEY");
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -94,6 +95,47 @@ serve(async (req) => {
 
     const attomApiKey = Deno.env.get("ATTOM_API_KEY");
     const updates: any = {};
+
+    // Geocode if coordinates are missing
+    let latitude = listing.latitude;
+    let longitude = listing.longitude;
+
+    if ((!latitude || !longitude) && googleMapsApiKey) {
+      try {
+        // Use parsed or existing city/state/zip for geocoding
+        const parts: string[] = [];
+        if (city) parts.push(city);
+        if (state && zipCode) parts.push(`${state} ${zipCode}`);
+        else if (state) parts.push(state);
+        else if (zipCode) parts.push(zipCode);
+        const address2 = parts.join(", ");
+        
+        const fullAddress = address2 ? [listing.address.split(',')[0], address2].join(", ") : listing.address;
+        console.log(`[auto-fetch-property-data] Geocoding address: ${fullAddress}`);
+
+        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${googleMapsApiKey}`;
+        const geocodeResponse = await fetch(geocodeUrl);
+
+        if (geocodeResponse.ok) {
+          const geocodeData = await geocodeResponse.json();
+          if (geocodeData.results?.[0]?.geometry?.location) {
+            latitude = geocodeData.results[0].geometry.location.lat;
+            longitude = geocodeData.results[0].geometry.location.lng;
+            console.log(`[auto-fetch-property-data] Geocoded coordinates: ${latitude}, ${longitude}`);
+          }
+        } else {
+          console.error(`[auto-fetch-property-data] Geocoding API error: ${geocodeResponse.status}`);
+        }
+      } catch (error) {
+        console.error(`[auto-fetch-property-data] Error geocoding:`, error);
+      }
+    }
+
+    // Store geocoded coordinates
+    if (latitude && longitude && (!listing.latitude || !listing.longitude)) {
+      updates.latitude = latitude;
+      updates.longitude = longitude;
+    }
 
     // Fetch ATTOM data
     if (attomApiKey) {
@@ -162,11 +204,11 @@ serve(async (req) => {
       }
 
       // Fetch ATTOM Schools data
-      if (listing.latitude && listing.longitude && state) {
+      if (latitude && longitude && state) {
         try {
           console.log(`[auto-fetch-property-data] Fetching ATTOM Schools data`);
 
-          const schoolsUrl = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/school/snapshot?latitude=${listing.latitude}&longitude=${listing.longitude}&radius=5`;
+          const schoolsUrl = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/school/snapshot?latitude=${latitude}&longitude=${longitude}&radius=5`;
 
           const schoolsResponse = await fetch(schoolsUrl, {
             headers: {
@@ -200,11 +242,11 @@ serve(async (req) => {
       }
 
       // Fetch ATTOM Neighborhood/Walk Score data
-      if (listing.latitude && listing.longitude) {
+      if (latitude && longitude) {
         try {
           console.log(`[auto-fetch-property-data] Fetching ATTOM Neighborhood data`);
 
-          const neighborhoodUrl = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/area/full?latitude=${listing.latitude}&longitude=${listing.longitude}`;
+          const neighborhoodUrl = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/area/full?latitude=${latitude}&longitude=${longitude}`;
 
           const neighborhoodResponse = await fetch(neighborhoodUrl, {
             headers: {

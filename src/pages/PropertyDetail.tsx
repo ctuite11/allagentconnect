@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, MapPin, Bed, Bath, Square, Calendar, DollarSign, ArrowLeft, Home, FileText, Video, Globe, Lock, Phone, Mail, AlertCircle, GraduationCap, Footprints, Image } from "lucide-react";
+import { Loader2, MapPin, Bed, Bath, Square, Calendar, DollarSign, ArrowLeft, Home, FileText, Video, Globe, Lock, Phone, Mail, AlertCircle, GraduationCap, Footprints, Image, Cloud } from "lucide-react";
 import { toast } from "sonner";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -89,6 +89,7 @@ const PropertyDetail = () => {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryTab, setGalleryTab] = useState("photos");
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Track listing view
   useListingView(id);
@@ -157,6 +158,47 @@ const PropertyDetail = () => {
       fetchListing();
     }
   }, [id]);
+
+  const handleRefreshData = async () => {
+    if (!id) return;
+    
+    setRefreshing(true);
+    try {
+      const { error } = await supabase.functions.invoke('auto-fetch-property-data', {
+        body: { listing_id: id }
+      });
+
+      if (error) throw error;
+
+      toast.success("Property data refreshed successfully");
+      
+      // Refetch the listing to show updated data
+      const { data, error: fetchError } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      
+      if (data) {
+        setListing({
+          ...data,
+          disclosures: Array.isArray(data.disclosures) ? (data.disclosures as string[]) : [],
+          property_features: Array.isArray(data.property_features) ? (data.property_features as string[]) : [],
+          amenities: Array.isArray(data.amenities) ? (data.amenities as string[]) : [],
+          photos: Array.isArray(data.photos) ? (data.photos as any[]) : [],
+          floor_plans: Array.isArray(data.floor_plans) ? (data.floor_plans as any[]) : [],
+          documents: Array.isArray(data.documents) ? (data.documents as any[]) : [],
+        } as Listing);
+      }
+    } catch (error: any) {
+      console.error("Error refreshing property data:", error);
+      toast.error("Failed to refresh property data");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
 
   if (loading) {
@@ -345,6 +387,27 @@ const PropertyDetail = () => {
               >
                 View Agent Profile
               </Button>
+              {currentUser?.id === listing.agent_id && (
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={handleRefreshData}
+                  disabled={refreshing}
+                  className="gap-2"
+                >
+                  {refreshing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <Cloud className="w-4 h-4" />
+                      Refresh Data
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
 
             {/* Agent and Commission Info */}
