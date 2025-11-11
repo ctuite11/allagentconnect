@@ -240,7 +240,7 @@ const AgentProfile = () => {
             </div>
             
             {/* Contact Information - Simple Text Layout */}
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-0">
               <div className="flex items-start justify-between mb-1">
                 <h1 className="text-3xl font-bold">
                   {agent.first_name} {agent.last_name}
@@ -256,11 +256,6 @@ const AgentProfile = () => {
                 </p>
               )}
               
-              {agent.office_name && (
-                <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">Office:</span> {agent.office_name}
-                </p>
-              )}
               
               {agent.office_address && (
                 <p className="text-lg text-muted-foreground">
@@ -287,16 +282,14 @@ const AgentProfile = () => {
                 </a>
               </p>
 
-              <p className="text-lg text-muted-foreground">
-                <span className="font-semibold">My website:</span>{' '}
-                {agent.social_links?.website ? (
+              {agent.social_links?.website && (
+                <p className="text-lg text-muted-foreground">
+                  <span className="font-semibold">My website:</span>{' '}
                   <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                     {agent.social_links.website}
                   </a>
-                ) : (
-                  <span className="text-muted-foreground/70">—</span>
-                )}
-              </p>
+                </p>
+              )}
 
               <div className="flex flex-wrap gap-3 pt-4">
                 <ContactAgentProfileDialog 
