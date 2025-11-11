@@ -880,9 +880,7 @@ const AgentProfileEditor = () => {
                           <SelectValue placeholder={
                             !newCoverageState 
                               ? "Select state first" 
-                              : newCoverageCounty
-                                ? "Select city in county"
-                                : "Select city"
+                              : "Select city"
                           } />
                         </SelectTrigger>
                         <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-[300px]">
