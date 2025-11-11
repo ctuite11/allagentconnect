@@ -333,67 +333,6 @@ const AgentProfile = () => {
             </div>
           </div>
 
-          {/* Agent Details Section */}
-          <div>
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-4xl font-bold mb-2">
-                  {agent.first_name} {agent.last_name}
-                </h1>
-                {agent.title && (
-                  <p className="text-xl text-muted-foreground mb-2">{agent.title}</p>
-                )}
-                {agent.aac_id && (
-                  <Badge variant="secondary" className="font-mono">
-                    <Award className="h-3 w-3 mr-1" />
-                    {agent.aac_id}
-                  </Badge>
-                )}
-              </div>
-              {agent.logo_url && (
-                <img src={agent.logo_url} alt="Company logo" className="h-16 object-contain" />
-              )}
-            </div>
-
-            {(agent.company || agent.office_name || agent.office_address) && (
-              <div className="bg-card/50 rounded-lg p-4 mb-4 space-y-2">
-                {agent.company && (
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-primary" />
-                    <span className="font-semibold">{agent.company}</span>
-                  </div>
-                )}
-                {agent.office_name && agent.office_name !== agent.company && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Briefcase className="h-4 w-4 text-muted-foreground" />
-                    <span>{agent.office_name}</span>
-                  </div>
-                )}
-                {agent.office_address && (
-                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                    <span>{agent.office_address}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {agent.agent_county_preferences && agent.agent_county_preferences.length > 0 && (
-              <div className="mb-4">
-                <p className="text-sm font-semibold mb-2 flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  Service Areas
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {agent.agent_county_preferences.map((pref: any) => (
-                    <Badge key={pref.county_id} variant="secondary">
-                      {pref.counties.name}, {pref.counties.state}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Main Content */}
