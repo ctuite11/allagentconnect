@@ -22,6 +22,7 @@ import Navigation from "@/components/Navigation";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
+import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
 
 interface SocialLinks {
   linkedin: string;
@@ -89,6 +90,7 @@ const AgentProfileEditor = () => {
   const [newCoverageCity, setNewCoverageCity] = useState("");
   const [newCoverageNeighborhood, setNewCoverageNeighborhood] = useState("");
   const [newCoverageZips, setNewCoverageZips] = useState<string[]>(["", "", ""]);
+  const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
 
   useEffect(() => {
     checkAuthAndLoadProfile();
@@ -861,6 +863,12 @@ const AgentProfileEditor = () => {
                         onValueChange={(value) => {
                           setNewCoverageCity(value);
                           setNewCoverageNeighborhood(""); // Reset neighborhood when city changes
+                          // Load suggested zip codes for this city
+                          if (newCoverageState && hasZipCodeData(value, newCoverageState)) {
+                            setSuggestedZips(getZipCodesForCity(value, newCoverageState));
+                          } else {
+                            setSuggestedZips([]);
+                          }
                         }}
                         disabled={!newCoverageState}
                       >
@@ -902,9 +910,63 @@ const AgentProfileEditor = () => {
                       </div>
                     )}
 
+                    {/* Suggested Zip Codes */}
+                    {suggestedZips.length > 0 && (
+                      <div className="border-2 border-primary/20 rounded-xl p-4 bg-primary/5">
+                        <Label className="mb-2 flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          Suggested Zip Codes for {newCoverageCity}
+                        </Label>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Click to add zip codes (up to {3 - coverageAreas.length} more)
+                        </p>
+                        <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
+                          {suggestedZips.map((zipCode) => {
+                            const isAlreadyAdded = coverageAreas.some(area => area.zip_code === zipCode);
+                            const isInCurrentSelection = newCoverageZips.includes(zipCode);
+                            const canAdd = newCoverageZips.filter(z => z.trim()).length < 3 && 
+                                          coverageAreas.length + newCoverageZips.filter(z => z.trim()).length < 3;
+                            
+                            return (
+                              <Button
+                                key={zipCode}
+                                type="button"
+                                variant={isInCurrentSelection ? "default" : "outline"}
+                                size="sm"
+                                disabled={isAlreadyAdded || (!isInCurrentSelection && !canAdd)}
+                                onClick={() => {
+                                  if (isInCurrentSelection) {
+                                    // Remove from selection
+                                    const newZips = [...newCoverageZips];
+                                    const indexToRemove = newZips.indexOf(zipCode);
+                                    if (indexToRemove !== -1) {
+                                      newZips[indexToRemove] = "";
+                                      setNewCoverageZips(newZips);
+                                    }
+                                  } else {
+                                    // Add to first empty slot
+                                    const newZips = [...newCoverageZips];
+                                    const emptyIndex = newZips.findIndex(z => z.trim() === "");
+                                    if (emptyIndex !== -1) {
+                                      newZips[emptyIndex] = zipCode;
+                                      setNewCoverageZips(newZips);
+                                    }
+                                  }
+                                }}
+                                className="font-mono"
+                              >
+                                {zipCode}
+                                {isAlreadyAdded && " ✓"}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Zip Codes Input - Multiple */}
                     <div>
-                      <Label>Zip Codes (Add up to {3 - coverageAreas.length} more)</Label>
+                      <Label>Selected Zip Codes ({newCoverageZips.filter(z => z.trim()).length}/3)</Label>
                       <div className="space-y-2">
                         {newCoverageZips.map((zip, index) => (
                           <div key={index} className="flex items-center gap-2">
@@ -920,7 +982,7 @@ const AgentProfileEditor = () => {
                                 setNewCoverageZips(newZips);
                               }}
                               maxLength={5}
-                              className="h-12"
+                              className="h-12 font-mono"
                               disabled={coverageAreas.length + index >= 3}
                             />
                             {zip && (
@@ -942,9 +1004,11 @@ const AgentProfileEditor = () => {
                         ))}
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">
-                        {newCoverageNeighborhood 
-                          ? `Enter zip codes for ${newCoverageNeighborhood}, ${newCoverageCity}`
-                          : `Enter zip codes for ${newCoverageCity || "selected city"}`}
+                        {suggestedZips.length > 0 
+                          ? "Click suggested zip codes above or manually enter them here"
+                          : newCoverageNeighborhood 
+                            ? `Enter zip codes for ${newCoverageNeighborhood}, ${newCoverageCity}`
+                            : `Enter zip codes for ${newCoverageCity || "selected city"}`}
                       </p>
                     </div>
 
