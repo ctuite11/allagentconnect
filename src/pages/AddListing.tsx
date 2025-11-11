@@ -2387,7 +2387,7 @@ const AddListing = () => {
                 <div className="space-y-6">
                   <Label className="text-xl font-semibold">Property Tax Information</Label>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="assessed_value">Assessed Value</Label>
                       <FormattedInput
@@ -2433,19 +2433,16 @@ const AddListing = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="fireplace">Fireplace</Label>
-                      <Input
-                        id="fireplace"
-                        type="number"
-                        value={minFireplaces}
-                        onChange={(e) => setMinFireplaces(e.target.value)}
-                        placeholder="0"
-                      />
-                    </div>
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Separator className="my-6" />
+
+                {/* Unit Features */}
+                <div className="space-y-6">
+                  <Label className="text-xl font-semibold">Unit Features</Label>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="floors">Floors</Label>
                       <Input
@@ -2454,6 +2451,16 @@ const AddListing = () => {
                         value={floors}
                         onChange={(e) => setFloors(e.target.value)}
                         placeholder="e.g., 2"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fireplace">Fireplace</Label>
+                      <Input
+                        id="fireplace"
+                        type="number"
+                        value={minFireplaces}
+                        onChange={(e) => setMinFireplaces(e.target.value)}
+                        placeholder="0"
                       />
                     </div>
                     <div className="space-y-2">

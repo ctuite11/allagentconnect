@@ -605,11 +605,36 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Property Tax & Building Information */}
+              {/* Unit Features */}
+              {(listing.disclosures?.find((d: string) => d.startsWith('Floors:')) || (listing.num_fireplaces !== null && listing.num_fireplaces !== undefined)) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Unit Features</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {listing.disclosures?.find((d: string) => d.startsWith('Floors:')) && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Number of Floors</p>
+                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Floors:'))?.replace('Floors: ', '')}</p>
+                        </div>
+                      )}
+                      {listing.num_fireplaces !== null && listing.num_fireplaces !== undefined && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Fireplaces</p>
+                          <p className="font-semibold">{listing.num_fireplaces}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Property Tax */}
               {(listing.annual_property_tax || listing.tax_year || listing.tax_assessment_value) && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Tax & Building Information</CardTitle>
+                    <CardTitle>Property Tax</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -635,18 +660,6 @@ const PropertyDetail = () => {
                         <div>
                           <p className="text-sm text-muted-foreground">Residential Exemption</p>
                           <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Residential Exemption:'))?.replace('Residential Exemption: ', '')}</p>
-                        </div>
-                      )}
-                      {listing.disclosures?.find((d: string) => d.startsWith('Floors:')) && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Number of Floors</p>
-                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Floors:'))?.replace('Floors: ', '')}</p>
-                        </div>
-                      )}
-                      {listing.num_fireplaces !== null && listing.num_fireplaces !== undefined && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Fireplaces</p>
-                          <p className="font-semibold">{listing.num_fireplaces}</p>
                         </div>
                       )}
                     </div>

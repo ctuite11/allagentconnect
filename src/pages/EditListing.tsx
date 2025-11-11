@@ -614,9 +614,33 @@ const EditListing = () => {
                 />
               </div>
 
-              {/* Property Tax & Building Information */}
+              {/* Unit Features */}
               <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Property Tax & Building Information</h3>
+                <h3 className="font-semibold">Unit Features</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="floors">Number of Floors</Label>
+                    <Input
+                      id="floors"
+                      value={floors}
+                      onChange={(e) => setFloors(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="num_fireplaces">Fireplaces</Label>
+                    <Input
+                      id="num_fireplaces"
+                      type="number"
+                      value={formData.num_fireplaces}
+                      onChange={(e) => setFormData({ ...formData, num_fireplaces: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Property Tax */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-semibold">Property Tax</h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="annual_property_tax">Annual Property Tax</Label>
@@ -646,37 +670,18 @@ const EditListing = () => {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="residentialExemption">Residential Exemption</Label>
-                    <Select value={residentialExemption} onValueChange={setResidentialExemption}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Unknown">Unknown</SelectItem>
-                        <SelectItem value="Yes">Yes</SelectItem>
-                        <SelectItem value="No">No</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="floors">Number of Floors</Label>
-                    <Input
-                      id="floors"
-                      value={floors}
-                      onChange={(e) => setFloors(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="num_fireplaces">Fireplaces</Label>
-                    <Input
-                      id="num_fireplaces"
-                      type="number"
-                      value={formData.num_fireplaces}
-                      onChange={(e) => setFormData({ ...formData, num_fireplaces: e.target.value })}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="residentialExemption">Residential Exemption</Label>
+                  <Select value={residentialExemption} onValueChange={setResidentialExemption}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Unknown">Unknown</SelectItem>
+                      <SelectItem value="Yes">Yes</SelectItem>
+                      <SelectItem value="No">No</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   {!(formData.property_type?.toLowerCase().includes("condo")) && (
