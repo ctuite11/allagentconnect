@@ -8,10 +8,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
 import { Trash2, Plus, Star, Upload, X, MapPin } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import { US_STATES } from "@/data/usStatesCountiesData";
+import { usCitiesByState } from "@/data/usCitiesData";
 
 interface SocialLinks {
   linkedin: string;
@@ -72,7 +81,9 @@ const AgentProfileEditor = () => {
     rating: 5,
   });
   const [coverageAreas, setCoverageAreas] = useState<CoverageArea[]>([]);
-  const [newZipCode, setNewZipCode] = useState("");
+  const [newCoverageState, setNewCoverageState] = useState("");
+  const [newCoverageCity, setNewCoverageCity] = useState("");
+  const [newCoverageZip, setNewCoverageZip] = useState("");
 
   useEffect(() => {
     checkAuthAndLoadProfile();
@@ -320,9 +331,21 @@ const AgentProfileEditor = () => {
     }
   };
 
-  const handleAddCoverageArea = async (place: google.maps.places.PlaceResult) => {
+  const handleAddCoverageArea = async () => {
     if (coverageAreas.length >= 3) {
       toast.error("Maximum 3 zip codes allowed");
+      return;
+    }
+
+    if (!newCoverageState || !newCoverageCity || !newCoverageZip) {
+      toast.error("Please select state, city, and enter zip code");
+      return;
+    }
+
+    // Basic zip code validation (5 digits)
+    const zipRegex = /^\d{5}$/;
+    if (!zipRegex.test(newCoverageZip)) {
+      toast.error("Please enter a valid 5-digit zip code");
       return;
     }
 
@@ -330,23 +353,8 @@ const AgentProfileEditor = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const addressComponents = place.address_components || [];
-      const getComponent = (type: string) => {
-        const component = addressComponents.find((c) => c.types.includes(type));
-        return component?.long_name || "";
-      };
-
-      const zipCode = getComponent("postal_code");
-      const city = getComponent("locality") || getComponent("sublocality");
-      const state = getComponent("administrative_area_level_1");
-
-      if (!zipCode) {
-        toast.error("Please select a location with a valid zip code");
-        return;
-      }
-
       // Check if zip code already exists
-      if (coverageAreas.some(area => area.zip_code === zipCode)) {
+      if (coverageAreas.some(area => area.zip_code === newCoverageZip)) {
         toast.error("This zip code is already added");
         return;
       }
@@ -355,9 +363,9 @@ const AgentProfileEditor = () => {
         .from("agent_buyer_coverage_areas")
         .insert({
           agent_id: session.user.id,
-          zip_code: zipCode,
-          city: city || null,
-          state: state || null,
+          zip_code: newCoverageZip,
+          city: newCoverageCity,
+          state: newCoverageState,
         })
         .select()
         .single();
@@ -365,7 +373,9 @@ const AgentProfileEditor = () => {
       if (error) throw error;
       
       setCoverageAreas([...coverageAreas, data]);
-      setNewZipCode("");
+      setNewCoverageState("");
+      setNewCoverageCity("");
+      setNewCoverageZip("");
       toast.success("Coverage area added!");
     } catch (error) {
       console.error("Error adding coverage area:", error);
@@ -764,19 +774,74 @@ const AgentProfileEditor = () => {
                     Add Coverage Zip Code ({coverageAreas.length}/3)
                   </h3>
                   <div className="space-y-4">
-                    <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300 pointer-events-none" />
-                      <MapPin className="absolute left-5 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10 group-hover:text-primary transition-colors pointer-events-none" />
-                      <AddressAutocomplete
-                        onPlaceSelect={handleAddCoverageArea}
-                        placeholder="Search by City, State, or Zip Code"
-                        className="pl-14 h-14 text-base w-full rounded-2xl border-2 border-border hover:border-primary/50 focus:border-primary transition-colors bg-background relative z-10"
-                        value={newZipCode}
-                        onChange={setNewZipCode}
+                    {/* State Dropdown */}
+                    <div>
+                      <Label>State</Label>
+                      <Select value={newCoverageState} onValueChange={(value) => {
+                        setNewCoverageState(value);
+                        setNewCoverageCity(""); // Reset city when state changes
+                      }}>
+                        <SelectTrigger className="h-12 bg-background">
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background z-50">
+                          {US_STATES.map((state) => (
+                            <SelectItem key={state.code} value={state.code}>
+                              {state.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* City Dropdown */}
+                    <div>
+                      <Label>City</Label>
+                      <Select 
+                        value={newCoverageCity} 
+                        onValueChange={setNewCoverageCity}
+                        disabled={!newCoverageState}
+                      >
+                        <SelectTrigger className="h-12 bg-background">
+                          <SelectValue placeholder={newCoverageState ? "Select city" : "Select state first"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background z-50 max-h-[300px]">
+                          {newCoverageState && usCitiesByState[newCoverageState]?.map((city) => (
+                            <SelectItem key={city} value={city}>
+                              {city}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Zip Code Input */}
+                    <div>
+                      <Label>Zip Code</Label>
+                      <Input
+                        type="text"
+                        placeholder="Enter 5-digit zip code"
+                        value={newCoverageZip}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 5);
+                          setNewCoverageZip(value);
+                        }}
+                        maxLength={5}
+                        className="h-12"
                       />
                     </div>
+
+                    <Button 
+                      onClick={handleAddCoverageArea}
+                      disabled={!newCoverageState || !newCoverageCity || !newCoverageZip || coverageAreas.length >= 3}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Coverage Area
+                    </Button>
+
                     <p className="text-sm text-muted-foreground">
-                      Select a location and we'll extract the zip code. You'll appear as a verified buyer agent for listings in these areas.
+                      Select a state, city, and zip code. You'll appear as a verified buyer agent for listings in these areas.
                     </p>
                   </div>
                 </div>
