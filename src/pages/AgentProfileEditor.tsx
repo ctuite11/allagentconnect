@@ -945,36 +945,44 @@ const AgentProfileEditor = () => {
                                               coverageAreas.length + newCoverageZips.filter(z => z.trim()).length < 3;
                                 
                                 return (
-                                  <Button
-                                    key={zipCode}
-                                    type="button"
-                                    variant={isInCurrentSelection ? "default" : "outline"}
-                                    size="sm"
-                                    disabled={isAlreadyAdded || (!isInCurrentSelection && !canAdd)}
-                                    onClick={() => {
-                                      if (isInCurrentSelection) {
-                                        // Remove from selection
-                                        const newZips = [...newCoverageZips];
-                                        const indexToRemove = newZips.indexOf(zipCode);
-                                        if (indexToRemove !== -1) {
-                                          newZips[indexToRemove] = "";
-                                          setNewCoverageZips(newZips);
-                                        }
-                                      } else {
-                                        // Add to first empty slot
-                                        const newZips = [...newCoverageZips];
-                                        const emptyIndex = newZips.findIndex(z => z.trim() === "");
-                                        if (emptyIndex !== -1) {
-                                          newZips[emptyIndex] = zipCode;
-                                          setNewCoverageZips(newZips);
-                                        }
-                                      }
-                                    }}
-                                    className="font-mono"
-                                  >
-                                    {zipCode}
-                                    {isAlreadyAdded && " ✓"}
-                                  </Button>
+                              <Button
+                                key={zipCode}
+                                type="button"
+                                variant={isInCurrentSelection ? "default" : "outline"}
+                                size="sm"
+                                disabled={isAlreadyAdded || (!isInCurrentSelection && !canAdd)}
+                                onClick={() => {
+                                  if (isAlreadyAdded) {
+                                    toast.error("This zip code is already in your coverage areas");
+                                    return;
+                                  }
+                                  if (!isInCurrentSelection && !canAdd) {
+                                    toast.error("To select an additional zip code you must delete a previously selected zip");
+                                    return;
+                                  }
+                                  if (isInCurrentSelection) {
+                                    // Remove from selection
+                                    const newZips = [...newCoverageZips];
+                                    const indexToRemove = newZips.indexOf(zipCode);
+                                    if (indexToRemove !== -1) {
+                                      newZips[indexToRemove] = "";
+                                      setNewCoverageZips(newZips);
+                                    }
+                                  } else {
+                                    // Add to first empty slot
+                                    const newZips = [...newCoverageZips];
+                                    const emptyIndex = newZips.findIndex(z => z.trim() === "");
+                                    if (emptyIndex !== -1) {
+                                      newZips[emptyIndex] = zipCode;
+                                      setNewCoverageZips(newZips);
+                                    }
+                                  }
+                                }}
+                                className="font-mono"
+                              >
+                                {zipCode}
+                                {isAlreadyAdded && " ✓"}
+                              </Button>
                                 );
                               })}
                             </div>
