@@ -975,19 +975,27 @@ const AgentProfileEditor = () => {
                         {newCoverageZips.map((zip, index) => (
                           <div key={index} className="flex items-center gap-2">
                             <span className="text-sm text-muted-foreground w-6">{index + 1}.</span>
-                            <Input
-                              type="text"
+                            <AddressAutocomplete
                               placeholder={`Zip code ${index + 1}`}
                               value={zip}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, '').slice(0, 5);
+                              onChange={(value) => {
+                                const zipMatch = value.match(/\b\d{5}\b/);
+                                const extractedZip = zipMatch ? zipMatch[0] : value.replace(/\D/g, '').slice(0, 5);
                                 const newZips = [...newCoverageZips];
-                                newZips[index] = value;
+                                newZips[index] = extractedZip;
                                 setNewCoverageZips(newZips);
                               }}
-                              maxLength={5}
+                              onPlaceSelect={(place) => {
+                                const zipComponent = place.address_components?.find((c: any) =>
+                                  c.types.includes('postal_code')
+                                );
+                                if (zipComponent) {
+                                  const newZips = [...newCoverageZips];
+                                  newZips[index] = zipComponent.short_name;
+                                  setNewCoverageZips(newZips);
+                                }
+                              }}
                               className="h-12 font-mono"
-                              disabled={coverageAreas.length + index >= 3}
                             />
                             {zip && (
                               <Button
