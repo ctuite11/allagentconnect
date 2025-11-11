@@ -6,6 +6,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper function to get walk score description
+function getWalkScoreDescription(score: number | null): string {
+  if (!score) return "Walk Score not available";
+  if (score >= 90) return "Walker's Paradise - Daily errands do not require a car";
+  if (score >= 70) return "Very Walkable - Most errands can be accomplished on foot";
+  if (score >= 50) return "Somewhat Walkable - Some errands can be accomplished on foot";
+  if (score >= 25) return "Car-Dependent - Most errands require a car";
+  return "Very Car-Dependent - Almost all errands require a car";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -83,9 +93,6 @@ serve(async (req) => {
     }
 
     const attomApiKey = Deno.env.get("ATTOM_API_KEY");
-    const walkScoreApiKey = Deno.env.get("WALKSCORE_API_KEY");
-    const greatSchoolsApiKey = Deno.env.get("GREATSCHOOLS_API_KEY");
-
     const updates: any = {};
 
     // Fetch ATTOM data
@@ -153,65 +160,80 @@ serve(async (req) => {
       } catch (error) {
         console.error(`[auto-fetch-property-data] Error fetching ATTOM data:`, error);
       }
-    }
 
-    // Fetch Walk Score data
-    if (walkScoreApiKey && listing.latitude && listing.longitude && listing.address) {
-      try {
-        console.log(`[auto-fetch-property-data] Fetching Walk Score data`);
+      // Fetch ATTOM Schools data
+      if (listing.latitude && listing.longitude && state) {
+        try {
+          console.log(`[auto-fetch-property-data] Fetching ATTOM Schools data`);
 
-        const walkScoreUrl = `https://api.walkscore.com/score?format=json&address=${encodeURIComponent(
-          listing.address
-        )}&lat=${listing.latitude}&lon=${listing.longitude}&wsapikey=${walkScoreApiKey}`;
+          const schoolsUrl = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/school/snapshot?latitude=${listing.latitude}&longitude=${listing.longitude}&radius=5`;
 
-        const walkScoreResponse = await fetch(walkScoreUrl);
+          const schoolsResponse = await fetch(schoolsUrl, {
+            headers: {
+              accept: "application/json",
+              apikey: attomApiKey,
+            },
+          });
 
-        if (walkScoreResponse.ok) {
-          const walkScoreData = await walkScoreResponse.json();
-          updates.walk_score_data = {
-            walkscore: walkScoreData.walkscore || null,
-            description: walkScoreData.description || null,
-          };
-          console.log(`[auto-fetch-property-data] Walk Score data fetched successfully`);
-        }
-      } catch (error) {
-        console.error(`[auto-fetch-property-data] Error fetching Walk Score:`, error);
-      }
-    }
-
-    // Fetch GreatSchools data
-    if (greatSchoolsApiKey && (listing.latitude || updates.latitude) && (listing.longitude || updates.longitude)) {
-      try {
-        console.log(`[auto-fetch-property-data] Fetching Schools data`);
-        
-        const useLat = updates.latitude || listing.latitude;
-        const useLon = updates.longitude || listing.longitude;
-        const useState = state || listing.state;
-
-        const schoolsUrl = `https://api.greatschools.org/schools/nearby?state=${useState}&lat=${useLat}&lon=${useLon}&radius=5&limit=5`;
-
-        const schoolsResponse = await fetch(schoolsUrl, {
-          headers: {
-            "X-API-Key": greatSchoolsApiKey,
-          },
-        });
-
-        if (schoolsResponse.ok) {
-          const schoolsData = await schoolsResponse.json();
-          if (schoolsData.schools) {
-            updates.schools_data = {
-              schools: schoolsData.schools.map((school: any) => ({
-                name: school.name,
-                type: school.type,
-                rating: school.rating,
-                distance: school.distance,
-              })),
-            };
-            console.log(`[auto-fetch-property-data] Schools data fetched successfully`);
+          if (schoolsResponse.ok) {
+            const schoolsData = await schoolsResponse.json();
+            if (schoolsData?.school?.length) {
+              updates.schools_data = {
+                schools: schoolsData.school.slice(0, 10).map((school: any) => ({
+                  name: school.filedAs || school.institutionName || 'Unknown School',
+                  type: school.educationLevels?.join(', ') || school.gradeLevel || 'Not specified',
+                  rating: school.greatSchoolsRating || null,
+                  distance: school.distance?.value || null,
+                  address: school.address?.oneLine || null,
+                  phone: school.phone || null,
+                  website: school.website || null,
+                })),
+              };
+              console.log(`[auto-fetch-property-data] ATTOM Schools data fetched: ${schoolsData.school.length} schools found`);
+            }
+          } else {
+            console.error(`[auto-fetch-property-data] ATTOM Schools API error: ${schoolsResponse.status}`);
           }
+        } catch (error) {
+          console.error(`[auto-fetch-property-data] Error fetching ATTOM Schools:`, error);
         }
-      } catch (error) {
-        console.error(`[auto-fetch-property-data] Error fetching Schools:`, error);
+      }
+
+      // Fetch ATTOM Neighborhood/Walk Score data
+      if (listing.latitude && listing.longitude) {
+        try {
+          console.log(`[auto-fetch-property-data] Fetching ATTOM Neighborhood data`);
+
+          const neighborhoodUrl = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/area/full?latitude=${listing.latitude}&longitude=${listing.longitude}`;
+
+          const neighborhoodResponse = await fetch(neighborhoodUrl, {
+            headers: {
+              accept: "application/json",
+              apikey: attomApiKey,
+            },
+          });
+
+          if (neighborhoodResponse.ok) {
+            const neighborhoodData = await neighborhoodResponse.json();
+            
+            // Extract walkability and transit data from ATTOM neighborhood data
+            const walkabilityScore = neighborhoodData?.area?.[0]?.vintage?.[0]?.area1?.[0]?.walkScore || null;
+            const transitScore = neighborhoodData?.area?.[0]?.vintage?.[0]?.area1?.[0]?.transitScore || null;
+            
+            if (walkabilityScore || transitScore) {
+              updates.walk_score_data = {
+                walkscore: walkabilityScore,
+                description: getWalkScoreDescription(walkabilityScore),
+                transit: transitScore ? { score: transitScore } : null,
+              };
+              console.log(`[auto-fetch-property-data] ATTOM Neighborhood data fetched: Walk Score ${walkabilityScore || 'N/A'}`);
+            }
+          } else {
+            console.error(`[auto-fetch-property-data] ATTOM Neighborhood API error: ${neighborhoodResponse.status}`);
+          }
+        } catch (error) {
+          console.error(`[auto-fetch-property-data] Error fetching ATTOM Neighborhood data:`, error);
+        }
       }
     }
 
