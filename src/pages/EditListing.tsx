@@ -473,6 +473,7 @@ const EditListing = () => {
                     <SelectItem value="Commercial">Commercial</SelectItem>
                     <SelectItem value="Mobile Home">Mobile Home</SelectItem>
                     <SelectItem value="Co-op">Co-op</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
