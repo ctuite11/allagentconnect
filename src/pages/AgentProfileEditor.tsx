@@ -86,7 +86,7 @@ const AgentProfileEditor = () => {
   const [newCoverageCounty, setNewCoverageCounty] = useState("");
   const [newCoverageCity, setNewCoverageCity] = useState("");
   const [newCoverageNeighborhood, setNewCoverageNeighborhood] = useState("");
-  const [newCoverageZip, setNewCoverageZip] = useState("");
+  const [newCoverageZips, setNewCoverageZips] = useState<string[]>(["", "", ""]);
 
   useEffect(() => {
     checkAuthAndLoadProfile();
@@ -335,20 +335,30 @@ const AgentProfileEditor = () => {
   };
 
   const handleAddCoverageArea = async () => {
-    if (coverageAreas.length >= 3) {
-      toast.error("Maximum 3 zip codes allowed");
+    // Filter out empty zip codes
+    const validZips = newCoverageZips.filter(zip => zip.trim() !== "");
+    
+    if (validZips.length === 0) {
+      toast.error("Please enter at least one zip code");
       return;
     }
 
-    if (!newCoverageState || !newCoverageCity || !newCoverageZip) {
-      toast.error("Please select state, city, and enter zip code");
+    if (!newCoverageState || !newCoverageCity) {
+      toast.error("Please select state and city");
+      return;
+    }
+
+    // Check if adding these would exceed the limit
+    if (coverageAreas.length + validZips.length > 3) {
+      toast.error(`You can only add ${3 - coverageAreas.length} more zip code(s). Maximum 3 total.`);
       return;
     }
 
     // Basic zip code validation (5 digits)
     const zipRegex = /^\d{5}$/;
-    if (!zipRegex.test(newCoverageZip)) {
-      toast.error("Please enter a valid 5-digit zip code");
+    const invalidZips = validZips.filter(zip => !zipRegex.test(zip));
+    if (invalidZips.length > 0) {
+      toast.error("All zip codes must be valid 5-digit numbers");
       return;
     }
 
@@ -356,32 +366,48 @@ const AgentProfileEditor = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Check if zip code already exists
-      if (coverageAreas.some(area => area.zip_code === newCoverageZip)) {
-        toast.error("This zip code is already added");
+      // Check for duplicate zip codes
+      const existingZips = coverageAreas.map(area => area.zip_code);
+      const duplicates = validZips.filter(zip => existingZips.includes(zip));
+      if (duplicates.length > 0) {
+        toast.error(`Zip code(s) already added: ${duplicates.join(", ")}`);
         return;
       }
 
-      const { data, error } = await supabase
-        .from("agent_buyer_coverage_areas")
-        .insert({
-          agent_id: session.user.id,
-          zip_code: newCoverageZip,
-          city: newCoverageCity,
-          state: newCoverageState,
-        })
-        .select()
-        .single();
+      // Insert all valid zip codes
+      const insertPromises = validZips.map(zip => 
+        supabase
+          .from("agent_buyer_coverage_areas")
+          .insert({
+            agent_id: session.user.id,
+            zip_code: zip,
+            city: newCoverageCity,
+            state: newCoverageState,
+          })
+          .select()
+          .single()
+      );
 
-      if (error) throw error;
+      const results = await Promise.all(insertPromises);
       
-      setCoverageAreas([...coverageAreas, data]);
+      // Check for errors
+      const errors = results.filter(r => r.error);
+      if (errors.length > 0) {
+        throw errors[0].error;
+      }
+
+      // Add all new coverage areas
+      const newAreas = results.map(r => r.data).filter(Boolean);
+      setCoverageAreas([...coverageAreas, ...newAreas]);
+      
+      // Reset form
       setNewCoverageState("");
       setNewCoverageCounty("");
       setNewCoverageCity("");
       setNewCoverageNeighborhood("");
-      setNewCoverageZip("");
-      toast.success("Coverage area added!");
+      setNewCoverageZips(["", "", ""]);
+      
+      toast.success(`${validZips.length} coverage area(s) added!`);
     } catch (error) {
       console.error("Error adding coverage area:", error);
       toast.error("Failed to add coverage area");
@@ -872,33 +898,68 @@ const AgentProfileEditor = () => {
                       </div>
                     )}
 
-                    {/* Zip Code Input */}
+                    {/* Zip Codes Input - Multiple */}
                     <div>
-                      <Label>Zip Code</Label>
-                      <Input
-                        type="text"
-                        placeholder="Enter 5-digit zip code"
-                        value={newCoverageZip}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '').slice(0, 5);
-                          setNewCoverageZip(value);
-                        }}
-                        maxLength={5}
-                        className="h-12"
-                      />
+                      <Label>Zip Codes (Add up to {3 - coverageAreas.length} more)</Label>
+                      <div className="space-y-2">
+                        {newCoverageZips.map((zip, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground w-6">{index + 1}.</span>
+                            <Input
+                              type="text"
+                              placeholder={`Zip code ${index + 1}`}
+                              value={zip}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '').slice(0, 5);
+                                const newZips = [...newCoverageZips];
+                                newZips[index] = value;
+                                setNewCoverageZips(newZips);
+                              }}
+                              maxLength={5}
+                              className="h-12"
+                              disabled={coverageAreas.length + index >= 3}
+                            />
+                            {zip && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  const newZips = [...newCoverageZips];
+                                  newZips[index] = "";
+                                  setNewCoverageZips(newZips);
+                                }}
+                                className="h-12 w-12"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {newCoverageNeighborhood 
+                          ? `Enter zip codes for ${newCoverageNeighborhood}, ${newCoverageCity}`
+                          : `Enter zip codes for ${newCoverageCity || "selected city"}`}
+                      </p>
                     </div>
 
                     <Button 
                       onClick={handleAddCoverageArea}
-                      disabled={!newCoverageState || !newCoverageCity || !newCoverageZip || coverageAreas.length >= 3}
+                      disabled={
+                        !newCoverageState || 
+                        !newCoverageCity || 
+                        newCoverageZips.every(zip => zip.trim() === "") ||
+                        coverageAreas.length >= 3
+                      }
                       className="w-full"
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Add Coverage Area
+                      Add Coverage Area{newCoverageZips.filter(z => z.trim()).length > 1 ? 's' : ''}
                     </Button>
 
                     <p className="text-sm text-muted-foreground">
-                      Select a state, optionally narrow by county/neighborhood, then choose city and zip code. For major metro areas, you can target specific neighborhoods to receive highly relevant leads.
+                      Select a state, optionally narrow by county/neighborhood, then choose city and enter up to 3 zip codes at once. For major metro areas, you can target specific neighborhoods to receive highly relevant leads in those exact zip codes.
                     </p>
                   </div>
                 </div>
