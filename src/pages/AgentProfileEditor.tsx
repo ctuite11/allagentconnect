@@ -1045,17 +1045,16 @@ const AgentProfileEditor = () => {
                     </div>
                   ) : (
                     <div className="grid gap-4">
-                      {/* Group by neighborhood/city */}
+                      {/* Group by city/county */}
                       {Object.entries(
                         coverageAreas.reduce((acc, area) => {
-                          // Create a key for grouping (neighborhood + city or just city)
-                          const groupKey = area.neighborhood 
-                            ? `${area.neighborhood}, ${area.city}, ${area.state}`
+                          // Create a key for grouping by county + city or just city
+                          const groupKey = area.county
+                            ? `${area.county}, ${area.city}, ${area.state}`
                             : `${area.city}, ${area.state}`;
                           
                           if (!acc[groupKey]) {
                             acc[groupKey] = {
-                              neighborhood: area.neighborhood,
                               county: area.county,
                               city: area.city,
                               state: area.state,
@@ -1064,7 +1063,7 @@ const AgentProfileEditor = () => {
                           }
                           acc[groupKey].areas.push(area);
                           return acc;
-                        }, {} as Record<string, { neighborhood: string | null; county: string | null; city: string | null; state: string | null; areas: CoverageArea[] }>)
+                        }, {} as Record<string, { county: string | null; city: string | null; state: string | null; areas: CoverageArea[] }>)
                       ).map(([groupKey, group]) => (
                         <div 
                           key={groupKey} 
@@ -1077,17 +1076,17 @@ const AgentProfileEditor = () => {
                               </div>
                               <div className="flex-1">
                                 <p className="font-semibold text-lg">
-                                  {group.neighborhood || group.city}
+                                  {group.city}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                  {group.neighborhood ? `${group.city}, ` : ''}{group.state}
+                                  {group.state}
                                   {group.county && ` • ${group.county} County`}
                                 </p>
                               </div>
                             </div>
                           </div>
                           
-                          {/* Zip codes for this neighborhood/city */}
+                          {/* Zip codes for this city */}
                           <div className="ml-13 space-y-2">
                             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
                               Zip Codes ({group.areas.length})
