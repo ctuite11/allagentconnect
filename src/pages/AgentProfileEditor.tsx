@@ -214,6 +214,7 @@ const AgentProfileEditor = () => {
 
       if (error) throw error;
       toast.success("Profile updated successfully!");
+      navigate(`/agent/${session.user.id}`);
     } catch (error) {
       console.error("Error saving profile:", error);
       toast.error("Failed to save profile");
