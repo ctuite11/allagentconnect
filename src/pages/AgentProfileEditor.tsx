@@ -21,7 +21,6 @@ import { Trash2, Plus, Star, Upload, X, MapPin } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
-import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
 
 interface SocialLinks {
@@ -88,7 +87,6 @@ const AgentProfileEditor = () => {
   const [newCoverageState, setNewCoverageState] = useState("");
   const [newCoverageCounty, setNewCoverageCounty] = useState("");
   const [newCoverageCity, setNewCoverageCity] = useState("");
-  const [newCoverageNeighborhood, setNewCoverageNeighborhood] = useState("");
   const [newCoverageZips, setNewCoverageZips] = useState<string[]>(["", "", ""]);
   const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
 
@@ -387,7 +385,6 @@ const AgentProfileEditor = () => {
             zip_code: zip,
             city: newCoverageCity,
             state: newCoverageState,
-            neighborhood: newCoverageNeighborhood || null,
             county: newCoverageCounty || null,
           })
           .select()
@@ -410,8 +407,8 @@ const AgentProfileEditor = () => {
       setNewCoverageState("");
       setNewCoverageCounty("");
       setNewCoverageCity("");
-      setNewCoverageNeighborhood("");
       setNewCoverageZips(["", "", ""]);
+      setSuggestedZips([]);
       
       toast.success(`${validZips.length} coverage area(s) added!`);
     } catch (error) {
@@ -818,7 +815,7 @@ const AgentProfileEditor = () => {
                         setNewCoverageState(value);
                         setNewCoverageCounty(""); // Reset county when state changes
                         setNewCoverageCity(""); // Reset city when state changes
-                        setNewCoverageNeighborhood(""); // Reset neighborhood when state changes
+                        setSuggestedZips([]); // Reset suggested zips
                       }}>
                         <SelectTrigger className="h-12 bg-background">
                           <SelectValue placeholder="Select state" />
@@ -862,7 +859,6 @@ const AgentProfileEditor = () => {
                         value={newCoverageCity} 
                         onValueChange={(value) => {
                           setNewCoverageCity(value);
-                          setNewCoverageNeighborhood(""); // Reset neighborhood when city changes
                           // Load suggested zip codes for this city
                           if (newCoverageState && hasZipCodeData(value, newCoverageState)) {
                             setSuggestedZips(getZipCodesForCity(value, newCoverageState));
@@ -884,31 +880,6 @@ const AgentProfileEditor = () => {
                         </SelectContent>
                       </Select>
                     </div>
-
-                    {/* Neighborhood Dropdown - Only show for cities with neighborhood data */}
-                    {newCoverageCity && newCoverageState && hasNeighborhoodData(newCoverageCity, newCoverageState) && (
-                      <div>
-                        <Label>Neighborhood / District (Optional)</Label>
-                        <Select 
-                          value={newCoverageNeighborhood} 
-                          onValueChange={setNewCoverageNeighborhood}
-                        >
-                          <SelectTrigger className="h-12 bg-background">
-                            <SelectValue placeholder="Select neighborhood" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-[300px]">
-                            {getAreasForCity(newCoverageCity, newCoverageState).map((neighborhood) => (
-                              <SelectItem key={neighborhood} value={neighborhood}>
-                                {neighborhood}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Target specific neighborhoods in {newCoverageCity}
-                        </p>
-                      </div>
-                    )}
 
                     {/* Suggested Zip Codes */}
                     {suggestedZips.length > 0 && (
@@ -1006,9 +977,7 @@ const AgentProfileEditor = () => {
                       <p className="text-xs text-muted-foreground mt-2">
                         {suggestedZips.length > 0 
                           ? "Click suggested zip codes above or manually enter them here"
-                          : newCoverageNeighborhood 
-                            ? `Enter zip codes for ${newCoverageNeighborhood}, ${newCoverageCity}`
-                            : `Enter zip codes for ${newCoverageCity || "selected city"}`}
+                          : `Enter zip codes for ${newCoverageCity || "selected city"}`}
                       </p>
                     </div>
 
@@ -1027,7 +996,7 @@ const AgentProfileEditor = () => {
                     </Button>
 
                     <p className="text-sm text-muted-foreground">
-                      Select a state, optionally narrow by county/neighborhood, then choose city and enter up to 3 zip codes at once. For major metro areas, you can target specific neighborhoods to receive highly relevant leads in those exact zip codes.
+                      Select a state, optionally narrow by county, then choose city and enter up to 3 zip codes at once. Major cities will show suggested zip codes that you can click to add.
                     </p>
                   </div>
                 </div>
