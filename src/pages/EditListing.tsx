@@ -437,17 +437,6 @@ const EditListing = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Property Type */}
-              <div className="space-y-2">
-                <Label htmlFor="property_type">Property Type</Label>
-                <Input
-                  id="property_type"
-                  value={formData.property_type}
-                  onChange={(e) => setFormData({ ...formData, property_type: e.target.value })}
-                  placeholder="e.g., Single Family, Condo"
-                />
-              </div>
-
               {/* Listing Type */}
               <div className="space-y-2">
                 <Label htmlFor="listing_type">Listing Type</Label>
@@ -463,6 +452,17 @@ const EditListing = () => {
                     <SelectItem value="for_rent">For Rent</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Property Type */}
+              <div className="space-y-2">
+                <Label htmlFor="property_type">Property Type</Label>
+                <Input
+                  id="property_type"
+                  value={formData.property_type}
+                  onChange={(e) => setFormData({ ...formData, property_type: e.target.value })}
+                  placeholder="e.g., Single Family, Condo"
+                />
               </div>
 
               {/* Status */}
