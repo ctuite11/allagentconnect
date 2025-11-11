@@ -50,7 +50,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "AAC Worldwide <onboarding@resend.dev>",
+        from: "AAC Worldwide <noreply@allagentconnect.com>",
         to: [recipientEmail],
         subject: `${senderName} shared favorite properties with you`,
         html: `

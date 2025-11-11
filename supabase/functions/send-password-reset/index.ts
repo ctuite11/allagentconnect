@@ -33,7 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Agent Connect <onboarding@resend.dev>",
+        from: "Agent Connect <noreply@allagentconnect.com>",
         to: [email],
         subject: "Reset Your Password - Agent Connect",
         html: `

@@ -202,7 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "PropertyMatch <onboarding@resend.dev>",
+            from: "PropertyMatch <noreply@allagentconnect.com>",
             to: recipients,
             subject: `${newListings.length} New Properties Match Your Search - ${hotSheet.name}`,
             html: `
