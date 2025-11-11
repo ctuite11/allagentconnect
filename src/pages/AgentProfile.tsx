@@ -241,7 +241,7 @@ const AgentProfile = () => {
             
             {/* Contact Information - Simple Text Layout */}
             <div className="flex-1 space-y-2">
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-1">
                 <h1 className="text-3xl font-bold">
                   {agent.first_name} {agent.last_name}
                 </h1>
