@@ -654,6 +654,7 @@ const EditListing = () => {
                         <SelectValue placeholder="Select..." />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="Unknown">Unknown</SelectItem>
                         <SelectItem value="Yes">Yes</SelectItem>
                         <SelectItem value="No">No</SelectItem>
                       </SelectContent>
