@@ -236,9 +236,15 @@ const EditListing = () => {
         .select("*")
         .eq("id", listingId)
         .eq("agent_id", userId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+
+      if (!data) {
+        toast.error("Listing not found or you don't have permission to edit it");
+        navigate("/agent-dashboard");
+        return;
+      }
 
       if (data) {
         setFormData({
