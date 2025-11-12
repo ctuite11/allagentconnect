@@ -85,8 +85,10 @@ const EditListing = () => {
   const [leadPaint, setLeadPaint] = useState("");
   const [handicapAccess, setHandicapAccess] = useState("");
   const [foundation, setFoundation] = useState<string[]>([]);
+  const [parkingSpaces, setParkingSpaces] = useState("");
   const [parkingComments, setParkingComments] = useState("");
   const [parkingFeatures, setParkingFeatures] = useState<string[]>([]);
+  const [garageSpaces, setGarageSpaces] = useState("");
   const [garageComments, setGarageComments] = useState("");
   const [garageFeatures, setGarageFeatures] = useState<string[]>([]);
   const [lotSizeSource, setLotSizeSource] = useState("");
@@ -200,6 +202,14 @@ const EditListing = () => {
           if (d.startsWith('Exclusions:')) setExclusions(d.replace('Exclusions: ', ''));
         });
         
+        // Load parking and garage spaces from total_parking_spaces and garage_spaces
+        if (data.total_parking_spaces) {
+          setParkingSpaces(data.total_parking_spaces.toString());
+        }
+        if (data.garage_spaces) {
+          setGarageSpaces(data.garage_spaces.toString());
+        }
+        
         // Parse broker comments from additional_notes
         if (data.additional_notes?.includes('Broker Comments:')) {
           const parts = data.additional_notes.split('Broker Comments:');
@@ -304,6 +314,8 @@ const EditListing = () => {
         tax_assessment_value: formData.tax_assessment_value ? parseFloat(formData.tax_assessment_value) : null,
         tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
         num_fireplaces: formData.num_fireplaces ? parseInt(formData.num_fireplaces) : null,
+        total_parking_spaces: parkingSpaces ? parseInt(parkingSpaces) : null,
+        garage_spaces: garageSpaces ? parseInt(garageSpaces) : null,
       };
 
       // Update condo_details if it's a condominium
@@ -896,12 +908,13 @@ const EditListing = () => {
               <div className="space-y-4 border-t pt-4">
                 <h3 className="font-semibold">Parking & Garage</h3>
                 <div className="space-y-2">
-                  <Label htmlFor="parkingComments">Parking Comments</Label>
+                  <Label htmlFor="parkingSpaces">Parking #</Label>
                   <Input
-                    id="parkingComments"
-                    value={parkingComments}
-                    onChange={(e) => setParkingComments(e.target.value)}
-                    placeholder="Additional parking information..."
+                    id="parkingSpaces"
+                    type="number"
+                    value={parkingSpaces}
+                    onChange={(e) => setParkingSpaces(e.target.value)}
+                    placeholder="Number of parking spaces"
                   />
                 </div>
                 <div className="space-y-2">
@@ -930,12 +943,13 @@ const EditListing = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="garageComments">Garage Comments</Label>
+                  <Label htmlFor="garageSpaces">Garage #</Label>
                   <Input
-                    id="garageComments"
-                    value={garageComments}
-                    onChange={(e) => setGarageComments(e.target.value)}
-                    placeholder="Additional garage information..."
+                    id="garageSpaces"
+                    type="number"
+                    value={garageSpaces}
+                    onChange={(e) => setGarageSpaces(e.target.value)}
+                    placeholder="Number of garage spaces"
                   />
                 </div>
                 <div className="space-y-2">
@@ -962,6 +976,24 @@ const EditListing = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="parkingComments">Parking Comments</Label>
+                  <Input
+                    id="parkingComments"
+                    value={parkingComments}
+                    onChange={(e) => setParkingComments(e.target.value)}
+                    placeholder="Additional parking information..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="garageComments">Garage Comments</Label>
+                  <Input
+                    id="garageComments"
+                    value={garageComments}
+                    onChange={(e) => setGarageComments(e.target.value)}
+                    placeholder="Additional garage information..."
+                  />
                 </div>
               </div>
 
