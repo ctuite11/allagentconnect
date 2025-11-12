@@ -70,6 +70,7 @@ serve(async (req) => {
     const xfHost = req.headers.get("x-forwarded-host") || req.headers.get("x-original-host") || "allagentconnect.com";
     const xfProto = req.headers.get("x-forwarded-proto") || "https";
     const pageUrl = `${xfProto}://${xfHost}/property/${listingId}`;
+    const fbAppId = Deno.env.get("FACEBOOK_APP_ID") || Deno.env.get("FB_APP_ID") || "";
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -91,6 +92,7 @@ serve(async (req) => {
   <meta property="og:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
   <meta property="og:site_name" content="Agent Connect" />
   <meta property="og:locale" content="en_US" />
+  ${fbAppId ? `<meta property=\"fb:app_id\" content=\"${escapeHtml(fbAppId)}\" />` : ""}
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="${pageUrl}" />
