@@ -15,7 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
-import { Loader2, Cloud } from "lucide-react";
+import { Loader2, Cloud, Upload, FileText, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
@@ -1551,31 +1551,92 @@ const EditListing = () => {
               {/* Floor Plans & Documents */}
               <div className="space-y-4 border-t pt-4">
                 <h3 className="font-semibold">Floor Plans & Documents</h3>
-                <div className="space-y-4">
-                  <div className="space-y-2">
+                
+                {/* Floor Plans Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
                     <Label>Floor Plans ({floorPlans.length})</Label>
-                    <Input
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById('floor-plans-input')?.click()}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Floor Plans
+                    </Button>
+                    <input
+                      id="floor-plans-input"
                       type="file"
                       accept="image/*,.pdf"
                       multiple
+                      className="hidden"
                       onChange={(e) => {
                         const files = e.target.files;
                         if (!files) return;
                         const newFiles: FileWithPreview[] = Array.from(files).map(file => ({
                           file,
-                          preview: URL.createObjectURL(file),
+                          preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
                           id: Math.random().toString(36).slice(2),
                         }));
                         setFloorPlans(prev => [...prev, ...newFiles]);
+                        setIsDirty(true);
+                        toast.success(`${files.length} floor plan(s) added`);
                       }}
                     />
                   </div>
-                  <div className="space-y-2">
+                  
+                  {floorPlans.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                      {floorPlans.map((plan) => (
+                        <div key={plan.id} className="relative border rounded-lg p-2 group">
+                          {plan.preview ? (
+                            <img src={plan.preview} alt="Floor plan" className="w-full h-24 object-cover rounded" />
+                          ) : (
+                            <div className="w-full h-24 bg-muted rounded flex items-center justify-center">
+                              <FileText className="w-8 h-8 text-muted-foreground" />
+                            </div>
+                          )}
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              setFloorPlans(prev => prev.filter(p => p.id !== plan.id));
+                              setIsDirty(true);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <p className="text-xs text-muted-foreground truncate mt-1">
+                            {plan.file?.name || 'Existing file'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Documents Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
                     <Label>Documents ({documents.length})</Label>
-                    <Input
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById('documents-input')?.click()}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Documents
+                    </Button>
+                    <input
+                      id="documents-input"
                       type="file"
                       accept=".pdf,.doc,.docx"
                       multiple
+                      className="hidden"
                       onChange={(e) => {
                         const files = e.target.files;
                         if (!files) return;
@@ -1585,9 +1646,38 @@ const EditListing = () => {
                           id: Math.random().toString(36).slice(2),
                         }));
                         setDocuments(prev => [...prev, ...newFiles]);
+                        setIsDirty(true);
+                        toast.success(`${files.length} document(s) added`);
                       }}
                     />
                   </div>
+                  
+                  {documents.length > 0 && (
+                    <div className="space-y-2 mt-2">
+                      {documents.map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between border rounded-lg p-3 group hover:bg-muted/50">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-muted-foreground" />
+                            <span className="text-sm truncate max-w-[200px]">
+                              {doc.file?.name || 'Existing document'}
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              setDocuments(prev => prev.filter(d => d.id !== doc.id));
+                              setIsDirty(true);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
