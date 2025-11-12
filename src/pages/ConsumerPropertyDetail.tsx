@@ -31,6 +31,7 @@ interface AgentProfile {
   cell_phone: string | null;
   title: string | null;
   headshot_url: string | null;
+  logo_url: string | null;
   company: string | null;
   office_name: string | null;
 }
@@ -131,7 +132,7 @@ const ConsumerPropertyDetail = () => {
           // Fetch agent profile
           const { data: agentData, error: agentError } = await supabase
             .from("agent_profiles")
-            .select("id, first_name, last_name, email, cell_phone, phone, title, company, office_name, headshot_url")
+            .select("id, first_name, last_name, email, cell_phone, phone, title, company, office_name, headshot_url, logo_url")
             .eq("id", listingData.agent_id)
             .maybeSingle();
 
@@ -1160,6 +1161,13 @@ const ConsumerPropertyDetail = () => {
                           )}
                         </div>
                       </div>
+                      {agent.logo_url && (
+                        <img 
+                          src={agent.logo_url} 
+                          alt={`${agent.company || 'Company'} logo`}
+                          className="w-20 h-20 object-contain flex-shrink-0"
+                        />
+                      )}
                     </div>
                     <Button 
                       className="w-full" 

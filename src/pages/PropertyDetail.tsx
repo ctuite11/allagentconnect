@@ -137,7 +137,7 @@ const PropertyDetail = () => {
           if (data.agent_id) {
             const { data: profile } = await supabase
               .from("agent_profiles")
-              .select("id, first_name, last_name, email, cell_phone, phone, title, company, headshot_url")
+              .select("id, first_name, last_name, email, cell_phone, phone, title, company, headshot_url, logo_url")
               .eq("id", data.agent_id)
               .maybeSingle();
             
@@ -456,6 +456,13 @@ const PropertyDetail = () => {
                           )}
                         </div>
                       </div>
+                      {agentProfile.logo_url && (
+                        <img 
+                          src={agentProfile.logo_url} 
+                          alt={`${agentProfile.company || 'Company'} logo`}
+                          className="w-20 h-20 object-contain flex-shrink-0"
+                        />
+                      )}
                     </div>
                     <Button 
                       variant="outline" 
