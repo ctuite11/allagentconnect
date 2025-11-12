@@ -1125,14 +1125,18 @@ const EditListing = () => {
                         <span className="text-muted-foreground">%</span>
                       </div>
                     ) : (
-                      <FormattedInput
-                        id="commission_rate"
-                        format="currency"
-                        decimals={2}
-                        value={formData.commission_rate}
-                        onChange={(value) => setFormData({ ...formData, commission_rate: value })}
-                        placeholder="$5,000"
-                      />
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                        <Input
+                          id="commission_rate"
+                          type="number"
+                          step="0.01"
+                          value={formData.commission_rate}
+                          onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                          placeholder="5000"
+                          className="pl-6"
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
