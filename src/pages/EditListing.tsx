@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useBlocker } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
@@ -47,6 +48,8 @@ const EditListing = () => {
   const [submitting, setSubmitting] = useState(false);
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [showNavigationWarning, setShowNavigationWarning] = useState(false);
   const [formData, setFormData] = useState({
     listing_type: "for_sale",
     address: "",
@@ -116,6 +119,19 @@ const EditListing = () => {
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
 
+  // Block navigation when there are unsaved changes
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      isDirty && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  // Show warning dialog when navigation is blocked
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      setShowNavigationWarning(true);
+    }
+  }, [blocker.state]);
+
   // Auto-save draft function using localStorage
   const saveDraft = useCallback(() => {
     if (!id) return;
@@ -155,6 +171,7 @@ const EditListing = () => {
 
       localStorage.setItem(`listing_draft_${id}`, JSON.stringify(draftData));
       setLastAutoSave(new Date());
+      setIsDirty(false); // Reset dirty state after autosave
     } catch (error) {
       console.error('Error saving draft:', error);
     }
@@ -374,6 +391,13 @@ const EditListing = () => {
       state,
       zip_code,
     });
+    setIsDirty(true);
+  };
+
+  // Helper to update form data and mark as dirty
+  const updateFormData = (updates: Partial<typeof formData>) => {
+    setFormData({ ...formData, ...updates });
+    setIsDirty(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -554,6 +578,7 @@ const EditListing = () => {
         localStorage.removeItem(`listing_draft_${id}`);
       }
 
+      setIsDirty(false); // Reset dirty state after successful save
       toast.success("Listing updated successfully!");
       navigate("/agent-dashboard");
     } catch (error: any) {
@@ -579,6 +604,37 @@ const EditListing = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
+      {/* Navigation warning dialog */}
+      <AlertDialog open={showNavigationWarning} onOpenChange={setShowNavigationWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Are you sure you want to leave? Your changes will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowNavigationWarning(false);
+              if (blocker.state === "blocked") {
+                blocker.reset();
+              }
+            }}>
+              Stay on Page
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setIsDirty(false);
+              setShowNavigationWarning(false);
+              if (blocker.state === "blocked") {
+                blocker.proceed();
+              }
+            }}>
+              Leave Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
       {/* Auto-save indicator */}
       {lastAutoSave && (
         <div className="fixed bottom-4 right-4 z-50 bg-muted/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border border-border flex items-center gap-2 text-sm text-muted-foreground">
@@ -603,7 +659,7 @@ const EditListing = () => {
                   id="manual-address"
                   placeholder="123 Main Street"
                   value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  onChange={(e) => updateFormData({ address: e.target.value })}
                   onBlur={handleBlur}
                 />
             </div>
@@ -614,7 +670,7 @@ const EditListing = () => {
                   id="manual-city"
                   placeholder="Boston"
                   value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  onChange={(e) => updateFormData({ city: e.target.value })}
                   onBlur={handleBlur}
                 />
               </div>
@@ -624,7 +680,7 @@ const EditListing = () => {
                   id="manual-state"
                   placeholder="MA"
                   value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  onChange={(e) => updateFormData({ state: e.target.value })}
                   onBlur={handleBlur}
                   maxLength={2}
                 />
@@ -636,7 +692,7 @@ const EditListing = () => {
                 id="manual-zip"
                 placeholder="02101"
                 value={formData.zip_code}
-                onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                onChange={(e) => updateFormData({ zip_code: e.target.value })}
                 onBlur={handleBlur}
                 maxLength={10}
               />
@@ -680,7 +736,7 @@ const EditListing = () => {
                 <Label htmlFor="listing_type">Listing Type</Label>
                 <Select
                   value={formData.listing_type}
-                  onValueChange={(value) => setFormData({ ...formData, listing_type: value })}
+                  onValueChange={(value) => updateFormData({ listing_type: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -697,7 +753,7 @@ const EditListing = () => {
                 <Label htmlFor="property_type">Property Type</Label>
                 <Select
                   value={formData.property_type}
-                  onValueChange={(value) => setFormData({ ...formData, property_type: value })}
+                  onValueChange={(value) => updateFormData({ property_type: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select property type" />
@@ -719,7 +775,7 @@ const EditListing = () => {
               {/* Status */}
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                <Select value={formData.status} onValueChange={(value) => updateFormData({ status: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -748,7 +804,7 @@ const EditListing = () => {
                   onPlaceSelect={handleAddressSelect}
                   placeholder="Enter property address"
                   value={formData.address}
-                  onChange={(val) => setFormData({ ...formData, address: val })}
+                  onChange={(val) => updateFormData({ address: val })}
                 />
                 <p className="text-xs text-muted-foreground">
                   Can't find your address? Click "Enter manually" above
@@ -761,7 +817,7 @@ const EditListing = () => {
                   <Input
                     id="city"
                     value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    onChange={(e) => updateFormData({ city: e.target.value })}
                     onBlur={handleBlur}
                     required
                   />
@@ -771,7 +827,7 @@ const EditListing = () => {
                   <Input
                     id="state"
                     value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    onChange={(e) => updateFormData({ state: e.target.value })}
                     onBlur={handleBlur}
                     required
                   />
@@ -783,7 +839,7 @@ const EditListing = () => {
                 <Input
                   id="zip_code"
                   value={formData.zip_code}
-                  onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                  onChange={(e) => updateFormData({ zip_code: e.target.value })}
                   onBlur={handleBlur}
                   required
                 />
@@ -805,21 +861,21 @@ const EditListing = () => {
                   <Input
                     id="unit_number"
                     value={unitNumber}
-                    onChange={(e) => setUnitNumber(e.target.value)}
-                    placeholder="e.g., 3B, 205, Apt 4"
-                    required={formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse"))
-                      ? "Required - Helps identify the specific unit and fetch accurate property data"
-                      : "Helps identify the specific unit and fetch accurate property data"}
-                  </p>
-                </div>
-              )}
+                    onChange={(e) => { setUnitNumber(e.target.value); setIsDirty(true); }}
+                  placeholder="e.g., 3B, 205, Apt 4"
+                  required={formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse"))
+                    ? "Required - Helps identify the specific unit and fetch accurate property data"
+                    : "Helps identify the specific unit and fetch accurate property data"}
+                </p>
+              </div>
+            )}
 
-              {/* HOA/Condo Fee - for condos and townhouses */}
-              {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")) && (
-                <div className="grid grid-cols-2 gap-4">
+            {/* HOA/Condo Fee - for condos and townhouses */}
+            {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")) && (
+              <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="hoa_fee">HOA/Condo Fee</Label>
                     <FormattedInput
@@ -827,13 +883,13 @@ const EditListing = () => {
                       format="currency"
                       decimals={0}
                       value={hoaFee}
-                      onChange={(value) => setHoaFee(value)}
+                      onChange={(value) => { setHoaFee(value); setIsDirty(true); }}
                       placeholder="0"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="hoa_fee_frequency">Fee Frequency</Label>
-                    <Select value={hoaFeeFrequency} onValueChange={setHoaFeeFrequency}>
+                    <Select value={hoaFeeFrequency} onValueChange={(val) => { setHoaFeeFrequency(val); setIsDirty(true); }}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
