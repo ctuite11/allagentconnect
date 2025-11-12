@@ -1008,19 +1008,15 @@ const AgentProfileEditor = () => {
                       </p>
                     </div>
 
-                    <Button 
-                      onClick={handleAddCoverageArea}
-                      disabled={
-                        !newCoverageState || 
-                        !newCoverageCity || 
-                        newCoverageZips.every(zip => zip.trim() === "") ||
-                        coverageAreas.length >= 3
-                      }
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Coverage Area{newCoverageZips.filter(z => z.trim()).length > 1 ? 's' : ''}
-                    </Button>
+{(newCoverageState && newCoverageCity && newCoverageZips.some(z => z.trim() !== "") && coverageAreas.length < 3) && (
+  <Button 
+    onClick={handleAddCoverageArea}
+    className="w-full"
+  >
+    <Plus className="h-4 w-4 mr-2" />
+    Add Coverage Area{newCoverageZips.filter(z => z.trim()).length > 1 ? 's' : ''}
+  </Button>
+)}
 
                     <p className="text-sm text-muted-foreground">
                       Select a state, optionally narrow by county, then choose city and enter up to 3 zip codes at once. Major cities will show suggested zip codes that you can click to add.
