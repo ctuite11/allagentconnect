@@ -606,7 +606,9 @@ const PropertyDetail = () => {
               )}
 
               {/* Unit Features */}
-              {(listing.disclosures?.find((d: string) => d.startsWith('Floors:')) || (listing.num_fireplaces !== null && listing.num_fireplaces !== undefined)) && (
+              {(listing.disclosures?.find((d: string) => d.startsWith('Floors:')) || 
+                (listing.num_fireplaces !== null && listing.num_fireplaces !== undefined) ||
+                (listing.condo_details?.hoa_fee)) && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Unit Features</CardTitle>
@@ -623,6 +625,14 @@ const PropertyDetail = () => {
                         <div>
                           <p className="text-sm text-muted-foreground">Fireplaces</p>
                           <p className="font-semibold">{listing.num_fireplaces}</p>
+                        </div>
+                      )}
+                      {listing.condo_details?.hoa_fee && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">HOA/Condo Fee</p>
+                          <p className="font-semibold">
+                            ${parseFloat(listing.condo_details.hoa_fee).toLocaleString()}/{listing.condo_details.hoa_fee_frequency || 'monthly'}
+                          </p>
                         </div>
                       )}
                     </div>
