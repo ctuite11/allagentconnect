@@ -1194,6 +1194,33 @@ export function CreateHotSheetDialog({
                     </div>
                   </div>
 
+                  {/* Price Range */}
+                  <div className="space-y-4 border-t pt-4">
+                    <Label className="text-sm font-semibold">Price Range</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="min-price">Min Price</Label>
+                        <FormattedInput
+                          id="min-price"
+                          format="currency"
+                          placeholder="0"
+                          value={minPrice}
+                          onChange={(value) => setMinPrice(value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="max-price">Max Price</Label>
+                        <FormattedInput
+                          id="max-price"
+                          format="currency"
+                          placeholder="Any"
+                          value={maxPrice}
+                          onChange={(value) => setMaxPrice(value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Standard Search Criteria */}
                   <div className="space-y-4 border-t pt-4">
                     <Label className="text-sm font-semibold uppercase">Standard Search Criteria</Label>
@@ -1266,33 +1293,6 @@ export function CreateHotSheetDialog({
                           placeholder="Any"
                           value={pricePerSqft}
                           onChange={(value) => setPricePerSqft(value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Price Range */}
-                  <div className="space-y-4 border-t pt-4">
-                    <Label className="text-sm font-semibold">Price Range</Label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="min-price">Min Price</Label>
-                        <FormattedInput
-                          id="min-price"
-                          format="currency"
-                          placeholder="0"
-                          value={minPrice}
-                          onChange={(value) => setMinPrice(value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="max-price">Max Price</Label>
-                        <FormattedInput
-                          id="max-price"
-                          format="currency"
-                          placeholder="Any"
-                          value={maxPrice}
-                          onChange={(value) => setMaxPrice(value)}
                         />
                       </div>
                     </div>
