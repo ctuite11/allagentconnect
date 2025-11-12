@@ -1,6 +1,6 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -54,16 +54,13 @@ const PhotoGalleryDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl h-[90vh] p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b">
+          <div className="p-4 border-b">
             <TabsList>
               {hasPhotos && <TabsTrigger value="photos">Photos ({photos.length})</TabsTrigger>}
               {hasFloorPlans && <TabsTrigger value="floorplans">Floor Plans ({floorPlans.length})</TabsTrigger>}
               {hasVideos && <TabsTrigger value="videos">Videos ({videos.length})</TabsTrigger>}
               {hasVirtualTours && <TabsTrigger value="tours">Virtual Tours ({virtualTours.length})</TabsTrigger>}
             </TabsList>
-            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
-              <X className="h-4 w-4" />
-            </Button>
           </div>
 
           <div className="flex-1 overflow-hidden">
