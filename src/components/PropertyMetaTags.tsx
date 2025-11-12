@@ -39,16 +39,20 @@ export const PropertyMetaTags = ({
     <Helmet>
       <title>{title}</title>
       <meta name="description" content={metaDescription} />
+      <link rel="canonical" href={url} />
       
       {/* Open Graph / Facebook */}
-      <meta property="og:type" content="article" />
+      <meta property="og:type" content="website" />
       <meta property="og:url" content={url} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={metaDescription} />
       <meta property="og:image" content={imageUrl} />
+      <meta property="og:image:secure_url" content={imageUrl} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={`Photo of ${address}`} />
       <meta property="og:site_name" content="Agent Connect" />
+      <meta property="og:locale" content="en_US" />
       
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -56,10 +60,7 @@ export const PropertyMetaTags = ({
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={metaDescription} />
       <meta name="twitter:image" content={imageUrl} />
-      
-      {/* Additional property meta */}
-      <meta property="og:locale" content="en_US" />
-      <meta property="article:author" content="Agent Connect" />
+      <meta name="twitter:image:alt" content={`Photo of ${address}`} />
     </Helmet>
   );
 };
