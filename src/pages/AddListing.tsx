@@ -149,6 +149,7 @@ const AddListing = () => {
   const [condoHoaFeeFrequency, setCondoHoaFeeFrequency] = useState("monthly");
   const [condoBuildingAmenities, setCondoBuildingAmenities] = useState<string[]>([]);
   const [condoPetPolicy, setCondoPetPolicy] = useState("");
+  const [condoPetPolicyComments, setCondoPetPolicyComments] = useState("");
   const [condoTotalUnits, setCondoTotalUnits] = useState("");
   const [condoYearBuilt, setCondoYearBuilt] = useState("");
 
@@ -366,6 +367,7 @@ const AddListing = () => {
         condoHoaFeeFrequency,
         condoBuildingAmenities,
         condoPetPolicy,
+        condoPetPolicyComments,
         condoTotalUnits,
         condoYearBuilt,
         multiFamilyUnits,
@@ -439,7 +441,7 @@ const AddListing = () => {
     } catch (error) {
       console.error('Error saving draft:', error);
     }
-  }, [user, formData, disclosures, propertyFeatures, amenities, listingAgreementTypes, entryOnly, lenderOwned, shortSale, propertyStyles, waterfront, waterView, beachNearby, facingDirection, minFireplaces, basement, garageSpaces, parkingSpaces, constructionFeatures, roofMaterials, exteriorFeatures, heatingTypes, coolingTypes, greenFeatures, unitNumber, condoUnitNumber, condoFloorLevel, condoHoaFee, condoHoaFeeFrequency, condoBuildingAmenities, condoPetPolicy, condoTotalUnits, condoYearBuilt, multiFamilyUnits, multiFamilyUnitBreakdown, multiFamilyCurrentIncome, multiFamilyPotentialIncome, multiFamilyOccupancyStatus, multiFamilyLaundryType, multiFamilySeparateUtilities, multiFamilyParkingPerUnit, commercialSpaceType, commercialLeaseType, commercialLeaseRate, commercialLeaseRatePer, commercialLeaseTermMin, commercialLeaseTermMax, commercialZoning, commercialBusinessTypes, commercialTenantResponsibilities, commercialCurrentTenant, commercialLeaseExpiration, commercialCeilingHeight, commercialLoadingDocks, commercialPowerAvailable, commercialAdditionalFeatures, assessedValue, fiscalYear, residentialExemption, floors, basementType, basementFeatures, basementFloorType, leadPaint, handicapAccess, foundation, parkingComments, parkingFeatures, garageComments, garageFeatures, garageAdditionalFeatures, lotSizeSource, lotDescription, sellerDisclosure, disclosuresText, exclusions, brokerComments, openHouses]);
+  }, [user, formData, disclosures, propertyFeatures, amenities, listingAgreementTypes, entryOnly, lenderOwned, shortSale, propertyStyles, waterfront, waterView, beachNearby, facingDirection, minFireplaces, basement, garageSpaces, parkingSpaces, constructionFeatures, roofMaterials, exteriorFeatures, heatingTypes, coolingTypes, greenFeatures, unitNumber, condoUnitNumber, condoFloorLevel, condoHoaFee, condoHoaFeeFrequency, condoBuildingAmenities, condoPetPolicy, condoPetPolicyComments, condoTotalUnits, condoYearBuilt, multiFamilyUnits, multiFamilyUnitBreakdown, multiFamilyCurrentIncome, multiFamilyPotentialIncome, multiFamilyOccupancyStatus, multiFamilyLaundryType, multiFamilySeparateUtilities, multiFamilyParkingPerUnit, commercialSpaceType, commercialLeaseType, commercialLeaseRate, commercialLeaseRatePer, commercialLeaseTermMin, commercialLeaseTermMax, commercialZoning, commercialBusinessTypes, commercialTenantResponsibilities, commercialCurrentTenant, commercialLeaseExpiration, commercialCeilingHeight, commercialLoadingDocks, commercialPowerAvailable, commercialAdditionalFeatures, assessedValue, fiscalYear, residentialExemption, floors, basementType, basementFeatures, basementFloorType, leadPaint, handicapAccess, foundation, parkingComments, parkingFeatures, garageComments, garageFeatures, garageAdditionalFeatures, lotSizeSource, lotDescription, sellerDisclosure, disclosuresText, exclusions, brokerComments, openHouses]);
 
   // Load draft on mount
   const loadDraft = useCallback(async () => {
@@ -495,6 +497,7 @@ const AddListing = () => {
     setCondoHoaFeeFrequency(draftToRestore.condoHoaFeeFrequency || "monthly");
     setCondoBuildingAmenities(draftToRestore.condoBuildingAmenities || []);
     setCondoPetPolicy(draftToRestore.condoPetPolicy || "");
+    setCondoPetPolicyComments(draftToRestore.condoPetPolicyComments || "");
     setCondoTotalUnits(draftToRestore.condoTotalUnits || "");
     setCondoYearBuilt(draftToRestore.condoYearBuilt || "");
     setMultiFamilyUnits(draftToRestore.multiFamilyUnits || "");
@@ -1249,6 +1252,7 @@ const AddListing = () => {
           hoa_fee_frequency: condoHoaFeeFrequency,
           building_amenities: condoBuildingAmenities.length > 0 ? condoBuildingAmenities : null,
           pet_policy: condoPetPolicy || null,
+          pet_policy_comments: condoPetPolicyComments || null,
           total_units: condoTotalUnits ? parseInt(condoTotalUnits) : null,
         } : null,
         // Multi-family specific details
@@ -1857,6 +1861,19 @@ const AddListing = () => {
                           </SelectContent>
                         </Select>
                       </div>
+
+                      {condoPetPolicy && (
+                        <div className="space-y-2">
+                          <Label htmlFor="condo_pet_policy_comments">Pet Policy Comments</Label>
+                          <Textarea
+                            id="condo_pet_policy_comments"
+                            value={condoPetPolicyComments}
+                            onChange={(e) => setCondoPetPolicyComments(e.target.value)}
+                            placeholder="Additional details about pet policy (e.g., size limits, deposits, fees, breed restrictions)"
+                            rows={3}
+                          />
+                        </div>
+                      )}
 
                       <div className="space-y-2">
                         <Label>Building Amenities</Label>
