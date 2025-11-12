@@ -1321,59 +1321,58 @@ const AddListing = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="container mx-auto px-4 py-8 mt-20">
-        <div className="max-w-5xl mx-auto">
-          {/* Header Section */}
-          <div className="flex items-center gap-4 mb-8">
-            <h1 className="text-4xl font-bold">Create a new listing for sale.</h1>
-            <img src={listingIcon} alt="Listing creation" className="w-16 h-16" />
-          </div>
+        {/* Header Section */}
+        <div className="flex items-center gap-4 mb-8">
+          <h1 className="text-4xl font-bold">Create a new listing for sale.</h1>
+          <img src={listingIcon} alt="Listing creation" className="w-16 h-16" />
+        </div>
 
-          {/* Action Buttons */}
-          <div className="space-y-4 mb-8">
-            <div className="flex flex-wrap gap-4">
-              <Button variant="default" size="lg" onClick={handleSaveDraft} type="button" className="gap-2">
-                <Save className="w-5 h-5" />
-                Save as Draft
-              </Button>
-              <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
-                <Eye className="w-5 h-5" />
-                Preview Listing
-              </Button>
-              <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
-                <Upload className="w-5 h-5" />
-                {submitting ? "Publishing..." : "Publish Listing"}
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-4">
-              <Button 
-                variant="outline" 
-                size="lg" 
-                onClick={() => {
-                  setOpenHouseDialogType('public');
-                  setOpenHouseDialogOpen(true);
-                }} 
-                className="gap-2 border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
-              >
-                <span className="text-2xl">🎈</span>
-                Schedule Open House
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                onClick={() => {
-                  setOpenHouseDialogType('broker');
-                  setOpenHouseDialogOpen(true);
-                }} 
-                className="gap-2 border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
-              >
-                <span className="text-2xl">🚗</span>
-                Schedule Broker Open House
-              </Button>
-            </div>
+        {/* Action Buttons */}
+        <div className="space-y-4 mb-8">
+          <div className="flex flex-wrap gap-4">
+            <Button variant="default" size="lg" onClick={handleSaveDraft} type="button" className="gap-2">
+              <Save className="w-5 h-5" />
+              Save as Draft
+            </Button>
+            <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
+              <Eye className="w-5 h-5" />
+              Preview Listing
+            </Button>
+            <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
+              <Upload className="w-5 h-5" />
+              {submitting ? "Publishing..." : "Publish Listing"}
+            </Button>
           </div>
+          <div className="flex flex-wrap gap-4">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={() => {
+                setOpenHouseDialogType('public');
+                setOpenHouseDialogOpen(true);
+              }} 
+              className="gap-2 border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
+            >
+              <span className="text-2xl">🎈</span>
+              Schedule Open House
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={() => {
+                setOpenHouseDialogType('broker');
+                setOpenHouseDialogOpen(true);
+              }} 
+              className="gap-2 border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
+            >
+              <span className="text-2xl">🚗</span>
+              Schedule Broker Open House
+            </Button>
+          </div>
+        </div>
 
-          {/* Form Card */}
-          <Card>
+        {/* Form Card */}
+        <Card>
             <CardContent className="pt-6">
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-2">
@@ -3623,7 +3622,6 @@ const AddListing = () => {
               </form>
             </CardContent>
           </Card>
-        </div>
       </div>
       
       {/* Open House Scheduling Dialog */}
