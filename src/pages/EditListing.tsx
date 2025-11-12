@@ -350,8 +350,9 @@ const EditListing = () => {
             preview: plan.url,
             id: `existing-fp-${index}`,
             uploaded: true,
-            url: plan.url
-          }));
+            url: plan.url,
+            name: plan.name || plan.url.split('/').pop() || 'floor-plan'
+          } as any));
           setFloorPlans(existingFloorPlans);
         }
         
@@ -361,8 +362,9 @@ const EditListing = () => {
             preview: '',
             id: `existing-doc-${index}`,
             uploaded: true,
-            url: doc.url
-          }));
+            url: doc.url,
+            name: doc.name || doc.url.split('/').pop() || 'document'
+          } as any));
           setDocuments(existingDocuments);
         }
         
@@ -460,7 +462,9 @@ const EditListing = () => {
             uploadedFloorPlans.push({ url: publicUrl, name: plan.file.name });
           }
         } else if (plan.uploaded && plan.url) {
-          uploadedFloorPlans.push({ url: plan.url, name: '' });
+          // Keep existing floor plans with their names
+          const fileName = (plan as any).name || plan.url.split('/').pop() || 'floor-plan';
+          uploadedFloorPlans.push({ url: plan.url, name: fileName });
         }
       }
       
@@ -479,7 +483,9 @@ const EditListing = () => {
             uploadedDocuments.push({ url: publicUrl, name: doc.file.name });
           }
         } else if (doc.uploaded && doc.url) {
-          uploadedDocuments.push({ url: doc.url, name: '' });
+          // Keep existing documents with their names
+          const fileName = (doc as any).name || doc.url.split('/').pop() || 'document';
+          uploadedDocuments.push({ url: doc.url, name: fileName });
         }
       }
 
@@ -1610,7 +1616,7 @@ const EditListing = () => {
                             <X className="h-4 w-4" />
                           </Button>
                           <p className="text-xs text-muted-foreground truncate mt-1">
-                            {plan.file?.name || 'Existing file'}
+                            {plan.file?.name || (plan as any).name || 'Existing file'}
                           </p>
                         </div>
                       ))}
@@ -1659,7 +1665,7 @@ const EditListing = () => {
                           <div className="flex items-center gap-2">
                             <FileText className="w-5 h-5 text-muted-foreground" />
                             <span className="text-sm truncate max-w-[200px]">
-                              {doc.file?.name || 'Existing document'}
+                              {doc.file?.name || (doc as any).name || 'Existing document'}
                             </span>
                           </div>
                           <Button
