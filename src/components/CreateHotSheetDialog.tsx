@@ -254,8 +254,22 @@ export function CreateHotSheetDialog({
   };
 
   const selectAllTowns = () => {
-    setSelectedCities(availableCities);
-    toast.success(`Selected all ${availableCities.length} towns`);
+    if (selectedCountyId === "all") {
+      // When "All Counties" is selected, get all towns from all selected counties
+      const allTowns: string[] = [];
+      counties
+        .filter(c => state ? c.state === state : true)
+        .forEach(county => {
+          const countyTowns = getCountyTowns(county.name, county.state);
+          allTowns.push(...countyTowns);
+        });
+      const uniqueTowns = Array.from(new Set(allTowns));
+      setSelectedCities(uniqueTowns);
+      toast.success(`Selected all ${uniqueTowns.length} towns from all counties`);
+    } else {
+      setSelectedCities(availableCities);
+      toast.success(`Selected all ${availableCities.length} towns`);
+    }
   };
 
   // Helper function to get towns for a county
@@ -1037,7 +1051,7 @@ export function CreateHotSheetDialog({
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        {selectedCountyId && selectedCountyId !== "all" && availableCities.length > 0 && (
+                        {selectedCountyId && availableCities.length > 0 && (
                           <Button
                             type="button"
                             variant="outline"
@@ -1045,7 +1059,9 @@ export function CreateHotSheetDialog({
                             onClick={selectAllTowns}
                             className="w-full mb-2 text-sm"
                           >
-                            Select All Towns in County ({availableCities.length})
+                            {selectedCountyId === "all" 
+                              ? `Add All Towns from All Counties` 
+                              : `Add All Towns in County (${availableCities.length})`}
                           </Button>
                         )}
                         <Input
