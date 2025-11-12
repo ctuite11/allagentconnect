@@ -8,6 +8,7 @@ import { FormattedInput } from "@/components/ui/formatted-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -600,8 +601,82 @@ const EditListing = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-72" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Listing Type & Property Type */}
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+
+              {/* Address Section */}
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-12" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-12" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+
+              {/* Price & Details */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-24 w-full" />
+              </div>
+
+              {/* Additional Sections */}
+              <div className="border-t pt-4 space-y-4">
+                <Skeleton className="h-6 w-40" />
+                <div className="grid grid-cols-2 gap-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-4">
+                <Skeleton className="h-10 flex-1" />
+                <Skeleton className="h-10 w-24" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
