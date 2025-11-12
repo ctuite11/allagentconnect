@@ -1131,7 +1131,7 @@ const EditListing = () => {
                         decimals={2}
                         value={formData.commission_rate}
                         onChange={(value) => setFormData({ ...formData, commission_rate: value })}
-                        placeholder="$"
+                        placeholder="$5,000"
                       />
                     )}
                   </div>
