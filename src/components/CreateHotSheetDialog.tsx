@@ -97,9 +97,6 @@ export function CreateHotSheetDialog({
   const [matchingListingsCount, setMatchingListingsCount] = useState<number>(0);
   const [loadingCount, setLoadingCount] = useState(false);
   
-  // Agent criteria
-  const [preferredCounties, setPreferredCounties] = useState<string[]>([]);
-  const [requiresBuyerIncentives, setRequiresBuyerIncentives] = useState(false);
   const [counties, setCounties] = useState<Array<{ id: string; name: string; state: string }>>([]);
   
   // Sale listing criteria
@@ -136,7 +133,6 @@ export function CreateHotSheetDialog({
 
   // Collapsible sections - All open by default for better visibility
   const [criteriaOpen, setCriteriaOpen] = useState(true);
-  const [agentCriteriaOpen, setAgentCriteriaOpen] = useState(true);
   const [notificationsOpen, setNotificationsOpen] = useState(true);
 
   // Fetch counties and hot sheet data on mount
@@ -191,8 +187,6 @@ export function CreateHotSheetDialog({
       setClientLastName(criteria.clientLastName || "");
       setClientEmail(criteria.clientEmail || "");
       setClientPhone(criteria.clientPhone ? formatPhoneNumber(criteria.clientPhone) : "");
-      setPreferredCounties(criteria.preferredCounties || []);
-      setRequiresBuyerIncentives(criteria.requiresBuyerIncentives || false);
       setNotifyClient(data.notify_client_email);
       setNotifyAgent(data.notify_agent_email);
       setNotificationSchedule(data.notification_schedule);
@@ -238,12 +232,6 @@ export function CreateHotSheetDialog({
   const toggleStatus = (value: string) => {
     setStatuses(prev =>
       prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value]
-    );
-  };
-
-  const toggleCounty = (countyId: string) => {
-    setPreferredCounties(prev =>
-      prev.includes(countyId) ? prev.filter(c => c !== countyId) : [...prev, countyId]
     );
   };
 
@@ -603,9 +591,6 @@ export function CreateHotSheetDialog({
         cities: selectedCities.length > 0 ? selectedCities : null,
         state: state || null,
         selectedCountyId: selectedCountyId && selectedCountyId !== "all" ? selectedCountyId : null,
-        // Agent criteria
-        preferredCounties: preferredCounties.length > 0 ? preferredCounties : null,
-        requiresBuyerIncentives: requiresBuyerIncentives || null,
         // Client information
         clientFirstName: clientFirstName || null,
         clientLastName: clientLastName || null,
@@ -722,8 +707,6 @@ export function CreateHotSheetDialog({
     setSelectedCities([]);
     setCitySearch("");
     setState("");
-    setPreferredCounties([]);
-    setRequiresBuyerIncentives(false);
     setListingAgreementTypes([]);
     setEntryOnly(null);
     setLenderOwned(null);
@@ -1320,58 +1303,6 @@ export function CreateHotSheetDialog({
                           onChange={(value) => setMaxSqft(value)}
                         />
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-
-          {/* Agent Criteria */}
-          <Collapsible open={agentCriteriaOpen} onOpenChange={setAgentCriteriaOpen}>
-            <Card>
-              <CollapsibleTrigger className="w-full">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-base">Agent Preferences (Optional)</CardTitle>
-                  {agentCriteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="space-y-4">
-                  {/* Preferred Counties */}
-                  <div className="space-y-2">
-                    <Label>Preferred Agent Counties</Label>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Select counties where you prefer agents to be active
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
-                      {counties.map((county) => (
-                        <div key={county.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`county-${county.id}`}
-                            checked={preferredCounties.includes(county.id)}
-                            onCheckedChange={() => toggleCounty(county.id)}
-                          />
-                          <Label htmlFor={`county-${county.id}`} className="cursor-pointer text-sm">
-                            {county.name}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Agent Incentives */}
-                  <div className="space-y-2">
-                    <Label>Agent Requirements</Label>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="buyer-incentives"
-                        checked={requiresBuyerIncentives}
-                        onCheckedChange={(checked) => setRequiresBuyerIncentives(checked as boolean)}
-                      />
-                      <Label htmlFor="buyer-incentives" className="cursor-pointer">
-                        Prefer agents offering buyer incentives
-                      </Label>
                     </div>
                   </div>
                 </CardContent>
