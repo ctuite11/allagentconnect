@@ -501,6 +501,7 @@ const PropertyDetail = () => {
                 listingCity={listing.city}
                 listingState={listing.state}
                 listingZipCode={listing.zip_code}
+                listingAgentId={listing.agent_id}
               />
             )}
           </div>

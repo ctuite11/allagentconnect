@@ -16,9 +16,10 @@ interface MatchingBuyerAgentsProps {
   listingCity: string;
   listingState: string;
   listingZipCode: string;
+  listingAgentId?: string;
 }
 
-const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode }: MatchingBuyerAgentsProps) => {
+const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode, listingAgentId }: MatchingBuyerAgentsProps) => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -54,7 +55,8 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode }: Matc
       }
 
       // Find agents who have preferences for these counties (limit to 8)
-      const { data: agentData, error: agentError } = await supabase
+      // Exclude the listing agent
+      let query = supabase
         .from("agent_profiles")
         .select(`
           id,
@@ -68,6 +70,12 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode }: Matc
         .in("agent_county_preferences.county_id", targetCountyIds)
         .eq("receive_buyer_alerts", true)
         .limit(8);
+      
+      if (listingAgentId) {
+        query = query.neq("id", listingAgentId);
+      }
+      
+      const { data: agentData, error: agentError } = await query;
 
       if (agentError) throw agentError;
 
@@ -82,11 +90,17 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode }: Matc
 
       // Fallback: if no county-preference matches, show agents who opted into buyer alerts (state-agnostic)
       if (!finalAgents || finalAgents.length === 0) {
-        const { data: fallbackAgents, error: fallbackError } = await supabase
+        let fallbackQuery = supabase
           .from("agent_profiles")
           .select("id, first_name, last_name, headshot_url")
           .eq("receive_buyer_alerts", true)
           .limit(8);
+        
+        if (listingAgentId) {
+          fallbackQuery = fallbackQuery.neq("id", listingAgentId);
+        }
+        
+        const { data: fallbackAgents, error: fallbackError } = await fallbackQuery;
         if (fallbackError) throw fallbackError;
         const mappedFallback: Agent[] = ((fallbackAgents as any[]) || []).map((a) => ({
           id: a.id,
