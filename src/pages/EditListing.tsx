@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, Cloud } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
@@ -45,6 +45,8 @@ const EditListing = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [formData, setFormData] = useState({
     listing_type: "for_sale",
     address: "",
@@ -113,6 +115,85 @@ const EditListing = () => {
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
+
+  // Auto-save draft function using localStorage
+  const saveDraft = useCallback(() => {
+    if (!id) return;
+
+    try {
+      const draftData = {
+        formData,
+        disclosures,
+        propertyFeatures,
+        amenities,
+        unitNumber,
+        hoaFee,
+        hoaFeeFrequency,
+        assessedValue,
+        fiscalYear,
+        residentialExemption,
+        floors,
+        basementType,
+        basementFeatures,
+        basementFloorType,
+        leadPaint,
+        handicapAccess,
+        foundation,
+        parkingSpaces,
+        parkingComments,
+        parkingFeatures,
+        garageSpaces,
+        garageComments,
+        garageFeatures,
+        lotSizeSource,
+        lotDescription,
+        sellerDisclosure,
+        disclosuresText,
+        exclusions,
+        brokerComments,
+      };
+
+      localStorage.setItem(`listing_draft_${id}`, JSON.stringify(draftData));
+      setLastAutoSave(new Date());
+    } catch (error) {
+      console.error('Error saving draft:', error);
+    }
+  }, [id, formData, disclosures, propertyFeatures, amenities, unitNumber, hoaFee, hoaFeeFrequency, 
+      assessedValue, fiscalYear, residentialExemption, floors, basementType, basementFeatures, 
+      basementFloorType, leadPaint, handicapAccess, foundation, parkingSpaces, parkingComments, 
+      parkingFeatures, garageSpaces, garageComments, garageFeatures, lotSizeSource, lotDescription, 
+      sellerDisclosure, disclosuresText, exclusions, brokerComments]);
+
+  // Set up auto-save timer (every 10 seconds)
+  useEffect(() => {
+    if (autoSaveTimerRef.current) {
+      clearInterval(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setInterval(() => {
+      saveDraft();
+    }, 10000); // 10 seconds
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearInterval(autoSaveTimerRef.current);
+      }
+    };
+  }, [saveDraft]);
+
+  // Save on blur helper
+  const handleBlur = useCallback(() => {
+    saveDraft();
+  }, [saveDraft]);
+
+  // Clear draft after successful save
+  useEffect(() => {
+    return () => {
+      if (id && localStorage.getItem(`listing_draft_${id}`)) {
+        // Keep draft until manual save
+      }
+    };
+  }, [id]);
 
   useEffect(() => {
     const checkAuthAndLoadListing = async () => {
@@ -468,6 +549,11 @@ const EditListing = () => {
 
       if (error) throw error;
 
+      // Clear draft after successful save
+      if (id) {
+        localStorage.removeItem(`listing_draft_${id}`);
+      }
+
       toast.success("Listing updated successfully!");
       navigate("/agent-dashboard");
     } catch (error: any) {
@@ -493,6 +579,14 @@ const EditListing = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
+      {/* Auto-save indicator */}
+      {lastAutoSave && (
+        <div className="fixed bottom-4 right-4 z-50 bg-muted/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border border-border flex items-center gap-2 text-sm text-muted-foreground">
+          <Cloud className="h-4 w-4" />
+          <span>Draft saved {new Date().getTime() - lastAutoSave.getTime() < 60000 ? 'just now' : `at ${lastAutoSave.toLocaleTimeString()}`}</span>
+        </div>
+      )}
+      
       {/* Manual Address Entry Dialog */}
       <Dialog open={manualAddressDialogOpen} onOpenChange={setManualAddressDialogOpen}>
         <DialogContent>
@@ -505,12 +599,13 @@ const EditListing = () => {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="manual-address">Street Address *</Label>
-              <Input
-                id="manual-address"
-                placeholder="123 Main Street"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              />
+                <Input
+                  id="manual-address"
+                  placeholder="123 Main Street"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  onBlur={handleBlur}
+                />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -520,6 +615,7 @@ const EditListing = () => {
                   placeholder="Boston"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  onBlur={handleBlur}
                 />
               </div>
               <div className="space-y-2">
@@ -529,6 +625,7 @@ const EditListing = () => {
                   placeholder="MA"
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  onBlur={handleBlur}
                   maxLength={2}
                 />
               </div>
@@ -540,6 +637,7 @@ const EditListing = () => {
                 placeholder="02101"
                 value={formData.zip_code}
                 onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                onBlur={handleBlur}
                 maxLength={10}
               />
             </div>
@@ -664,6 +762,7 @@ const EditListing = () => {
                     id="city"
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    onBlur={handleBlur}
                     required
                   />
                 </div>
@@ -673,6 +772,7 @@ const EditListing = () => {
                     id="state"
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    onBlur={handleBlur}
                     required
                   />
                 </div>
@@ -684,6 +784,7 @@ const EditListing = () => {
                   id="zip_code"
                   value={formData.zip_code}
                   onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                  onBlur={handleBlur}
                   required
                 />
               </div>
@@ -753,6 +854,7 @@ const EditListing = () => {
                   format="currency"
                   value={formData.price}
                   onChange={(value) => setFormData({ ...formData, price: value })}
+                  onBlur={handleBlur}
                   required
                 />
               </div>
@@ -765,6 +867,7 @@ const EditListing = () => {
                     type="number"
                     value={formData.bedrooms}
                     onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                    onBlur={handleBlur}
                   />
                 </div>
                 <div className="space-y-2">
@@ -775,6 +878,7 @@ const EditListing = () => {
                     step="0.5"
                     value={formData.bathrooms}
                     onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                    onBlur={handleBlur}
                   />
                 </div>
                 <div className="space-y-2">
@@ -784,6 +888,7 @@ const EditListing = () => {
                     format="number"
                     value={formData.square_feet}
                     onChange={(value) => setFormData({ ...formData, square_feet: value })}
+                    onBlur={handleBlur}
                   />
                 </div>
               </div>
@@ -795,6 +900,7 @@ const EditListing = () => {
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onBlur={handleBlur}
                   rows={4}
                   placeholder="Describe the property..."
                 />
