@@ -477,7 +477,7 @@ const PropertyDetail = () => {
                 )}
 
                 {/* Buyer Agent Commission */}
-                {isAgent && listing.commission_rate && (
+                {listing.commission_rate && (
                   <Card className="border-primary/30 bg-primary/5">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
