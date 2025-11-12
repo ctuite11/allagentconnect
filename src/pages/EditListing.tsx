@@ -1557,9 +1557,13 @@ const EditListing = () => {
                     <Label htmlFor="lockbox_code">Lockbox Code</Label>
                     <Input
                       id="lockbox_code"
+                      name="property_lockbox_access"
                       type="password"
                       value={formData.lockbox_code}
                       onChange={(e) => setFormData({ ...formData, lockbox_code: e.target.value })}
+                      autoComplete="off"
+                      data-form-type="other"
+                      data-lpignore="true"
                     />
                   </div>
                   <div className="flex items-center space-x-2 pt-8">
