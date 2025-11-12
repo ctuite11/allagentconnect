@@ -255,7 +255,7 @@ const EditListing = () => {
           state: data.state,
           zip_code: data.zip_code,
           property_type: data.property_type || "",
-          price: data.price.toString(),
+          price: (data.price ?? "").toString(),
           bedrooms: data.bedrooms?.toString() || "",
           bathrooms: data.bathrooms?.toString() || "",
           square_feet: data.square_feet?.toString() || "",
