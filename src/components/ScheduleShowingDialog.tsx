@@ -68,12 +68,12 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
         .single();
 
       if (listingData) {
-        // Fetch agent details from profiles table
-        const { data: agentData } = await supabase
-          .from("profiles")
-          .select("email, first_name, last_name")
-          .eq("id", listingData.agent_id)
-          .single();
+      // Fetch agent details from agent_profiles (publicly readable)
+      const { data: agentData } = await supabase
+        .from("agent_profiles")
+        .select("email, first_name, last_name")
+        .eq("id", listingData.agent_id)
+        .maybeSingle();
 
         if (agentData) {
           const fullAddress = `${listingData.address}, ${listingData.city}, ${listingData.state}`;
