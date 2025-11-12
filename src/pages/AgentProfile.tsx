@@ -46,6 +46,14 @@ const generateVCard = (agent: AgentProfile) => {
   link.download = `${agent.first_name}_${agent.last_name}.vcf`;
   link.click();
   window.URL.revokeObjectURL(url);
+  
+  // Scroll to next section after saving contact
+  setTimeout(() => {
+    const nextSection = document.querySelector('.space-y-6');
+    if (nextSection) {
+      nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 100);
 };
 
 interface AgentProfile {
