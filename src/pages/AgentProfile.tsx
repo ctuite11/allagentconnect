@@ -47,13 +47,15 @@ const generateVCard = (agent: AgentProfile) => {
   link.click();
   window.URL.revokeObjectURL(url);
   
-  // Scroll to next section after saving contact
+  // Scroll to main content section after saving contact
   setTimeout(() => {
-    const nextSection = document.querySelector('.space-y-6');
-    if (nextSection) {
-      nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const mainContent = document.getElementById('agent-main-content');
+    if (mainContent) {
+      const yOffset = -100; // Account for fixed navigation
+      const y = mainContent.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
     }
-  }, 100);
+  }, 200);
 };
 
 interface AgentProfile {
@@ -344,7 +346,7 @@ const AgentProfile = () => {
         </div>
 
         {/* Main Content */}
-        <div className="space-y-6">
+        <div id="agent-main-content" className="space-y-6">
           {/* Bio Section */}
           {agent.bio && (
             <Card>
