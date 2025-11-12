@@ -411,106 +411,108 @@ const PropertyDetail = () => {
             </div>
 
             {/* Agent and Commission Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Listing Agent Card */}
-              {agentProfile && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Listing Agent</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex gap-4">
-                      {agentProfile.headshot_url && (
-                        <img 
-                          src={agentProfile.headshot_url} 
-                          alt={`${agentProfile.first_name} ${agentProfile.last_name}`}
-                          className="w-32 h-40 rounded-lg object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1 space-y-3">
-                        <div className="space-y-1">
-                          <p className="font-semibold text-lg">{agentProfile.first_name} {agentProfile.last_name}</p>
-                          {agentProfile.title && (
-                            <p className="text-sm text-muted-foreground">{agentProfile.title}</p>
-                          )}
-                          {agentProfile.company && (
-                            <p className="text-sm text-muted-foreground">{agentProfile.company}</p>
-                          )}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Listing Agent Card */}
+                {agentProfile && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Listing Agent</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex gap-4">
+                        {agentProfile.headshot_url && (
+                          <img 
+                            src={agentProfile.headshot_url} 
+                            alt={`${agentProfile.first_name} ${agentProfile.last_name}`}
+                            className="w-32 h-40 rounded-lg object-cover flex-shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 space-y-3">
+                          <div className="space-y-1">
+                            <p className="font-semibold text-lg">{agentProfile.first_name} {agentProfile.last_name}</p>
+                            {agentProfile.title && (
+                              <p className="text-sm text-muted-foreground">{agentProfile.title}</p>
+                            )}
+                            {agentProfile.company && (
+                              <p className="text-sm text-muted-foreground">{agentProfile.company}</p>
+                            )}
+                          </div>
+                          <div className="space-y-2 text-sm">
+                            {(agentProfile.cell_phone || agentProfile.phone) && (
+                              <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 flex-shrink-0" />
+                                <a href={`tel:${agentProfile.cell_phone || agentProfile.phone}`} className="text-primary hover:underline">
+                                  {formatPhoneNumber(agentProfile.cell_phone || agentProfile.phone)}
+                                </a>
+                              </div>
+                            )}
+                            {agentProfile.email && (
+                              <div className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 flex-shrink-0" />
+                                <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline break-all">
+                                  {agentProfile.email}
+                                </a>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="space-y-2 text-sm">
-                          {(agentProfile.cell_phone || agentProfile.phone) && (
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4 flex-shrink-0" />
-                              <a href={`tel:${agentProfile.cell_phone || agentProfile.phone}`} className="text-primary hover:underline">
-                                {formatPhoneNumber(agentProfile.cell_phone || agentProfile.phone)}
-                              </a>
-                            </div>
-                          )}
-                          {agentProfile.email && (
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-4 w-4 flex-shrink-0" />
-                              <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline break-all">
-                                {agentProfile.email}
-                              </a>
-                            </div>
-                          )}
-                        </div>
+                        {agentProfile.logo_url && (
+                          <img 
+                            src={agentProfile.logo_url} 
+                            alt={`${agentProfile.company || 'Company'} logo`}
+                            className="w-20 h-20 object-contain flex-shrink-0"
+                          />
+                        )}
                       </div>
-                      {agentProfile.logo_url && (
-                        <img 
-                          src={agentProfile.logo_url} 
-                          alt={`${agentProfile.company || 'Company'} logo`}
-                          className="w-20 h-20 object-contain flex-shrink-0"
-                        />
-                      )}
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => navigate(`/agent/${listing.agent_id}`)}
-                    >
-                      View Full Profile
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => navigate(`/agent/${listing.agent_id}`)}
+                      >
+                        View Full Profile
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
 
-              {/* Buyer Agent Commission */}
-              {isAgent && listing.commission_rate && (
-                <Card className="border-primary/30 bg-primary/5">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-6 w-6" />
-                      Buyer Agent Compensation
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-col items-center justify-center">
-                    <div className="flex items-center justify-center gap-2 py-2">
-                      <p className="text-3xl font-bold text-primary">
-                        {listing.commission_type === 'flat_fee' 
-                          ? `$${listing.commission_rate.toLocaleString()}`
-                          : `${listing.commission_rate}%`
-                        }
+                {/* Buyer Agent Commission */}
+                {isAgent && listing.commission_rate && (
+                  <Card className="border-primary/30 bg-primary/5">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="h-6 w-6" />
+                        Buyer Agent Compensation
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-center justify-center">
+                      <div className="flex items-center justify-center gap-2 py-2">
+                        <p className="text-3xl font-bold text-primary">
+                          {listing.commission_type === 'flat_fee' 
+                            ? `$${listing.commission_rate.toLocaleString()}`
+                            : `${listing.commission_rate}%`
+                          }
+                        </p>
+                        <BuyerAgentCompensationInfo />
+                      </div>
+                      <p className="text-sm text-muted-foreground text-center">
+                        Offered to cooperating buyer agents
                       </p>
-                      <BuyerAgentCompensationInfo />
-                    </div>
-                    <p className="text-sm text-muted-foreground text-center">
-                      Offered to cooperating buyer agents
-                    </p>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Matching Buyer Agents - Visible to everyone */}
+              {listing.city && listing.state && (
+                <MatchingBuyerAgents 
+                  listingCity={listing.city}
+                  listingState={listing.state}
+                  listingZipCode={listing.zip_code}
+                  listingAgentId={listing.agent_id}
+                />
               )}
             </div>
-
-            {/* Matching Buyer Agents - Visible to everyone */}
-            {listing.city && listing.state && (
-              <MatchingBuyerAgents 
-                listingCity={listing.city}
-                listingState={listing.state}
-                listingZipCode={listing.zip_code}
-                listingAgentId={listing.agent_id}
-              />
-            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
