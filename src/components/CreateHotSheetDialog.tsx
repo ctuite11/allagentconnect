@@ -874,11 +874,11 @@ export function CreateHotSheetDialog({
                     />
                   </div>
 
-                  {/* Address Section */}
+                  {/* Search by Address Section */}
                   <Collapsible open={addressOpen} onOpenChange={setAddressOpen} className="border-t pt-4">
                     <CollapsibleTrigger className="w-full">
-                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-2 rounded-md">
-                        <Label className="text-sm font-semibold uppercase cursor-pointer">Address</Label>
+                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border-2 border-border">
+                        <Label className="text-sm font-semibold uppercase cursor-pointer">Search by Address</Label>
                         {addressOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </div>
                     </CollapsibleTrigger>
