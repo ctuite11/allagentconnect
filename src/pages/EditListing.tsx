@@ -1711,6 +1711,8 @@ const EditListing = () => {
                       autoComplete="off"
                       data-form-type="other"
                       data-lpignore="true"
+                      data-1p-ignore="true"
+                      role="presentation"
                     />
                   </div>
                   <div className="flex items-center space-x-2 pt-8">
