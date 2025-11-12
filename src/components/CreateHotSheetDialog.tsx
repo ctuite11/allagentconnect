@@ -1274,17 +1274,33 @@ export function CreateHotSheetDialog({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="min-sqft">Living Area Total (SqFt) - Min</Label>
-                        <FormattedInput
-                          id="min-sqft"
-                          format="number"
-                          placeholder="0"
-                          value={minSqft}
-                          onChange={(value) => setMinSqft(value)}
-                        />
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">Living Area Total (SqFt)</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="min-sqft">Min</Label>
+                          <FormattedInput
+                            id="min-sqft"
+                            format="number"
+                            placeholder="0"
+                            value={minSqft}
+                            onChange={(value) => setMinSqft(value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="max-sqft">Max</Label>
+                          <FormattedInput
+                            id="max-sqft"
+                            format="number"
+                            placeholder="Any"
+                            value={maxSqft}
+                            onChange={(value) => setMaxSqft(value)}
+                          />
+                        </div>
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="price-per-sqft">Price per SqFt</Label>
                         <FormattedInput
@@ -1293,23 +1309,6 @@ export function CreateHotSheetDialog({
                           placeholder="Any"
                           value={pricePerSqft}
                           onChange={(value) => setPricePerSqft(value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Square Footage */}
-                  <div className="space-y-4 border-t pt-4">
-                    <Label className="text-sm font-semibold">Square Footage Range</Label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="max-sqft">Max Sq Ft</Label>
-                        <FormattedInput
-                          id="max-sqft"
-                          format="number"
-                          placeholder="Any"
-                          value={maxSqft}
-                          onChange={(value) => setMaxSqft(value)}
                         />
                       </div>
                     </div>
