@@ -98,28 +98,32 @@ serve(async (req) => {
           const percentChange = ((priceDiff / change.old_price) * 100).toFixed(1);
           const direction = priceDiff > 0 ? "increased" : "decreased";
           const color = priceDiff > 0 ? "#ef4444" : "#22c55e";
+          const photoUrl = change.listing.photos?.[0]?.url || '';
 
           return `
-            <div style="margin-bottom: 24px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
-              <h3 style="margin: 0 0 8px 0; font-size: 18px;">${change.listing.address}</h3>
-              <p style="margin: 0 0 12px 0; color: #6b7280;">${change.listing.city}, ${change.listing.state}</p>
-              <div style="display: flex; align-items: center; gap: 16px;">
-                <div>
-                  <p style="margin: 0; font-size: 14px; color: #6b7280;">Old Price</p>
-                  <p style="margin: 0; font-size: 18px; text-decoration: line-through;">$${change.old_price.toLocaleString()}</p>
+            <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+              ${photoUrl ? `<img src="${photoUrl}" alt="${change.listing.address}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
+              <div style="padding: 16px;">
+                <h3 style="margin: 0 0 8px 0; font-size: 18px;">${change.listing.address}</h3>
+                <p style="margin: 0 0 12px 0; color: #6b7280;">${change.listing.city}, ${change.listing.state}</p>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                  <div>
+                    <p style="margin: 0; font-size: 14px; color: #6b7280;">Old Price</p>
+                    <p style="margin: 0; font-size: 18px; text-decoration: line-through;">$${change.old_price.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p style="margin: 0; font-size: 14px; color: #6b7280;">New Price</p>
+                    <p style="margin: 0; font-size: 24px; font-weight: bold; color: ${color};">$${change.new_price.toLocaleString()}</p>
+                  </div>
                 </div>
-                <div>
-                  <p style="margin: 0; font-size: 14px; color: #6b7280;">New Price</p>
-                  <p style="margin: 0; font-size: 24px; font-weight: bold; color: ${color};">$${change.new_price.toLocaleString()}</p>
-                </div>
+                <p style="margin: 12px 0 0 0; color: ${color}; font-weight: 600;">
+                  Price ${direction} by $${Math.abs(priceDiff).toLocaleString()} (${percentChange}%)
+                </p>
+                <a href="${supabaseUrl.replace('.supabase.co', '.lovable.app')}/consumer-property/${change.listing_id}" 
+                   style="display: inline-block; margin-top: 12px; padding: 8px 16px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;">
+                  View Property
+                </a>
               </div>
-              <p style="margin: 12px 0 0 0; color: ${color}; font-weight: 600;">
-                Price ${direction} by $${Math.abs(priceDiff).toLocaleString()} (${percentChange}%)
-              </p>
-              <a href="${supabaseUrl.replace('.supabase.co', '.lovable.app')}/consumer-property/${change.listing_id}" 
-                 style="display: inline-block; margin-top: 12px; padding: 8px 16px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;">
-                View Property
-              </a>
             </div>
           `;
         })

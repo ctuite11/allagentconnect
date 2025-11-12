@@ -174,20 +174,28 @@ const handler = async (req: Request): Promise<Response> => {
         const baseUrl = req.headers.get("origin") || "http://localhost:5173";
         const accessUrl = `${baseUrl}/client-hot-sheet/${hotSheet.access_token}`;
         
-        const listingsHtml = newListings.slice(0, 5).map(listing => `
-          <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 18px;">${listing.address}</h3>
-            <p style="margin: 4px 0; color: #6b7280;">${listing.city}, ${listing.state} ${listing.zip_code}</p>
-            <p style="margin: 8px 0; font-size: 24px; font-weight: bold; color: #2563eb;">$${listing.price?.toLocaleString()}</p>
-            ${listing.bedrooms || listing.bathrooms ? `
-              <p style="margin: 4px 0; color: #6b7280;">
-                ${listing.bedrooms ? `${listing.bedrooms} beds` : ''} 
-                ${listing.bathrooms ? `• ${listing.bathrooms} baths` : ''}
-                ${listing.square_feet ? `• ${listing.square_feet.toLocaleString()} sqft` : ''}
-              </p>
-            ` : ''}
+        const listingsHtml = newListings.slice(0, 5).map(listing => {
+          const photos = listing.photos || [];
+          const photoUrl = photos[0]?.url || '';
+          
+          return `
+          <div style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 16px;">
+            ${photoUrl ? `<img src="${photoUrl}" alt="${listing.address}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
+            <div style="padding: 16px;">
+              <h3 style="margin: 0 0 8px 0; font-size: 18px;">${listing.address}</h3>
+              <p style="margin: 4px 0; color: #6b7280;">${listing.city}, ${listing.state} ${listing.zip_code}</p>
+              <p style="margin: 8px 0; font-size: 24px; font-weight: bold; color: #2563eb;">$${listing.price?.toLocaleString()}</p>
+              ${listing.bedrooms || listing.bathrooms ? `
+                <p style="margin: 4px 0; color: #6b7280;">
+                  ${listing.bedrooms ? `${listing.bedrooms} beds` : ''} 
+                  ${listing.bathrooms ? `• ${listing.bathrooms} baths` : ''}
+                  ${listing.square_feet ? `• ${listing.square_feet.toLocaleString()} sqft` : ''}
+                </p>
+              ` : ''}
+            </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
 
         const clientName = hotSheet.criteria?.clientFirstName && hotSheet.criteria?.clientLastName ?
           `${hotSheet.criteria.clientFirstName} ${hotSheet.criteria.clientLastName}` :

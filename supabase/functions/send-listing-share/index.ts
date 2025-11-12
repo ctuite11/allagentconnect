@@ -51,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Build listing details HTML (without original agent info)
     const photos = listing.photos || [];
-    const primaryPhoto = photos[0] || '';
+    const primaryPhoto = photos[0]?.url || '';
 
     const htmlContent = `
       <!DOCTYPE html>

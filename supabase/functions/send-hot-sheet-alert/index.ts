@@ -17,6 +17,7 @@ interface HotSheetAlertRequest {
     bedrooms?: number;
     bathrooms?: number;
     listingUrl: string;
+    photoUrl?: string;
   }>;
 }
 
@@ -36,12 +37,15 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending hot sheet alert to:", userEmail);
 
     const listingsList = newListings.map(listing => `
-      <li style="margin-bottom: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 5px;">
-        <strong style="font-size: 16px;">${listing.address}</strong><br>
-        <span style="color: #2754C5; font-size: 18px; font-weight: bold;">${listing.price}</span><br>
-        ${listing.bedrooms ? `${listing.bedrooms} bed` : ''} 
-        ${listing.bathrooms ? `| ${listing.bathrooms} bath` : ''}<br>
-        <a href="${listing.listingUrl}" style="color: #2754C5; text-decoration: none;">View Listing →</a>
+      <li style="margin-bottom: 20px; padding: 0; background-color: #f9f9f9; border-radius: 5px; overflow: hidden;">
+        ${listing.photoUrl ? `<img src="${listing.photoUrl}" alt="${listing.address}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
+        <div style="padding: 15px;">
+          <strong style="font-size: 16px;">${listing.address}</strong><br>
+          <span style="color: #2754C5; font-size: 18px; font-weight: bold;">${listing.price}</span><br>
+          ${listing.bedrooms ? `${listing.bedrooms} bed` : ''} 
+          ${listing.bathrooms ? `| ${listing.bathrooms} bath` : ''}<br>
+          <a href="${listing.listingUrl}" style="color: #2754C5; text-decoration: none; display: inline-block; margin-top: 10px;">View Listing →</a>
+        </div>
       </li>
     `).join('');
 
