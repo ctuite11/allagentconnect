@@ -60,35 +60,43 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
 
       if (error) throw error;
 
-      // Fetch agent and listing details to send email
+      // Fetch listing details
       const { data: listingData } = await supabase
         .from("listings")
-        .select("agent_id, address, city, state, agent_profiles!inner(email, first_name, last_name)")
+        .select("agent_id, address, city, state")
         .eq("id", listingId)
         .single();
 
       if (listingData) {
-        const agentProfile = (listingData as any).agent_profiles;
-        const fullAddress = `${listingData.address}, ${listingData.city}, ${listingData.state}`;
-        
-        // Send email notification to agent
-        try {
-          await supabase.functions.invoke("send-showing-request-email", {
-            body: {
-              agentEmail: agentProfile.email,
-              agentName: `${agentProfile.first_name} ${agentProfile.last_name}`,
-              requesterName: validatedData.requester_name,
-              requesterEmail: validatedData.requester_email,
-              requesterPhone: validatedData.requester_phone,
-              listingAddress: fullAddress,
-              preferredDate: validatedData.preferred_date,
-              preferredTime: validatedData.preferred_time,
-              message: validatedData.message,
-            },
-          });
-        } catch (emailError) {
-          console.error("Failed to send email notification:", emailError);
-          // Don't block the user experience if email fails
+        // Fetch agent details from profiles table
+        const { data: agentData } = await supabase
+          .from("profiles")
+          .select("email, first_name, last_name")
+          .eq("id", listingData.agent_id)
+          .single();
+
+        if (agentData) {
+          const fullAddress = `${listingData.address}, ${listingData.city}, ${listingData.state}`;
+          
+          // Send email notification to agent
+          try {
+            await supabase.functions.invoke("send-showing-request-email", {
+              body: {
+                agentEmail: agentData.email,
+                agentName: `${agentData.first_name} ${agentData.last_name}`,
+                requesterName: validatedData.requester_name,
+                requesterEmail: validatedData.requester_email,
+                requesterPhone: validatedData.requester_phone,
+                listingAddress: fullAddress,
+                preferredDate: validatedData.preferred_date,
+                preferredTime: validatedData.preferred_time,
+                message: validatedData.message,
+              },
+            });
+          } catch (emailError) {
+            console.error("Failed to send email notification:", emailError);
+            // Don't block the user experience if email fails
+          }
         }
       }
 
