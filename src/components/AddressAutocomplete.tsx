@@ -130,9 +130,9 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
                 console.log("[AddressAutocomplete] onPlaceSelect called successfully");
               } else {
                 console.error("[AddressAutocomplete] onPlaceSelect callback is missing!");
+                // Only call onChange if onPlaceSelect is not provided
+                onChange?.(mapped.formatted_address || "");
               }
-              
-              onChange?.(mapped.formatted_address || "");
             } catch (err) {
               console.error("[AddressAutocomplete] Error in handleSelect:", err);
             }
@@ -182,10 +182,10 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
             console.log("[AddressAutocomplete] onPlaceSelect called successfully");
           } else {
             console.error("[AddressAutocomplete] onPlaceSelect callback is missing!");
+            // Only call onChange if onPlaceSelect is not provided
+            const formatted = place.formatted_address || place.name || "";
+            onChange?.(formatted);
           }
-          
-          const formatted = place.formatted_address || place.name || "";
-          onChange?.(formatted);
         } else {
           console.warn("[AddressAutocomplete] No place data received from autocomplete");
         }
