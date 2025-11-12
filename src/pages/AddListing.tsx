@@ -3033,7 +3033,7 @@ const AddListing = () => {
                         id="commission_rate"
                         format={formData.commission_type === 'percentage' ? 'percentage' : 'currency'}
                         decimals={2}
-                        placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
+                        placeholder={formData.commission_type === 'percentage' ? '%' : '$'}
                         value={formData.commission_rate}
                         onChange={(value) => setFormData({ ...formData, commission_rate: value })}
                       />
