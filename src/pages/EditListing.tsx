@@ -943,6 +943,15 @@ const EditListing = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="parkingComments">Parking Comments</Label>
+                  <Input
+                    id="parkingComments"
+                    value={parkingComments}
+                    onChange={(e) => setParkingComments(e.target.value)}
+                    placeholder="Additional parking information..."
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="garageSpaces">Garage #</Label>
                   <Input
                     id="garageSpaces"
@@ -976,15 +985,6 @@ const EditListing = () => {
                       </div>
                     ))}
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="parkingComments">Parking Comments</Label>
-                  <Input
-                    id="parkingComments"
-                    value={parkingComments}
-                    onChange={(e) => setParkingComments(e.target.value)}
-                    placeholder="Additional parking information..."
-                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="garageComments">Garage Comments</Label>
