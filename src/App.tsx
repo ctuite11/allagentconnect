@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AgentDashboard from "./pages/AgentDashboard";
@@ -46,10 +47,11 @@ const queryClient = new QueryClient();
 const App = () => (
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-        <TooltipProvider>
-          <Sonner />
-          <Routes>
+      <HelmetProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <TooltipProvider>
+            <Sonner />
+            <Routes>
           <Route path="/" element={<ConsumerHome />} />
           <Route path="/agent-home" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
@@ -90,8 +92,9 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-        </TooltipProvider>
-      </ThemeProvider>
+          </TooltipProvider>
+        </ThemeProvider>
+      </HelmetProvider>
     </QueryClientProvider>
   </BrowserRouter>
 );

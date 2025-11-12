@@ -21,6 +21,7 @@ import { ShareListingDialog } from "@/components/ShareListingDialog";
 
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useListingView } from "@/hooks/useListingView";
+import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 
 interface AgentProfile {
   id: string;
@@ -184,6 +185,17 @@ const ConsumerPropertyDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PropertyMetaTags
+        address={listing.address}
+        city={listing.city}
+        state={listing.state}
+        price={listing.price}
+        bedrooms={listing.bedrooms}
+        bathrooms={listing.bathrooms}
+        description={listing.description}
+        photo={mainPhoto}
+        listingType={listing.listing_type}
+      />
       <Navigation />
       <div className="container mx-auto px-4 py-4 mt-20">
         <div className="max-w-7xl mx-auto">
