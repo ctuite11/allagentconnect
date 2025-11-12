@@ -1471,10 +1471,12 @@ const EditListing = () => {
                   <Label htmlFor="commission_notes">Commission Notes</Label>
                   <Input
                     id="commission_notes"
-                    name="commission_notes_field"
+                    name="notes_listing_commission"
                     value={formData.commission_notes}
                     onChange={(e) => setFormData({ ...formData, commission_notes: e.target.value })}
-                    autoComplete="new-password"
+                    autoComplete="off"
+                    data-form-type="other"
+                    data-lpignore="true"
                   />
                 </div>
               </div>
