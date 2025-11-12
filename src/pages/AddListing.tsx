@@ -3031,7 +3031,7 @@ const AddListing = () => {
                       </Label>
                       <FormattedInput
                         id="commission_rate"
-                        format={formData.commission_type === 'percentage' ? 'percentage' : 'currency'}
+                        format={formData.commission_type === 'percentage' ? 'number' : 'currency'}
                         decimals={2}
                         placeholder={formData.commission_type === 'percentage' ? '%' : '$'}
                         value={formData.commission_rate}

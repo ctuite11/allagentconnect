@@ -1114,7 +1114,7 @@ const EditListing = () => {
                     </Label>
                     <FormattedInput
                       id="commission_rate"
-                      format={formData.commission_type === 'percentage' ? 'percentage' : 'currency'}
+                      format={formData.commission_type === 'percentage' ? 'number' : 'currency'}
                       decimals={2}
                       value={formData.commission_rate}
                       onChange={(value) => setFormData({ ...formData, commission_rate: value })}
