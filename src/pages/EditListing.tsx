@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate, useParams, useBlocker } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Button } from "@/components/ui/button";
@@ -120,18 +120,16 @@ const EditListing = () => {
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
 
-  // Block navigation when there are unsaved changes
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      isDirty && currentLocation.pathname !== nextLocation.pathname
-  );
-
-  // Show warning dialog when navigation is blocked
+  // Warn on browser/tab close if there are unsaved changes
   useEffect(() => {
-    if (blocker.state === "blocked") {
-      setShowNavigationWarning(true);
-    }
-  }, [blocker.state]);
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   // Auto-save draft function using localStorage
   const saveDraft = useCallback(() => {
@@ -685,36 +683,6 @@ const EditListing = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      {/* Navigation warning dialog */}
-      <AlertDialog open={showNavigationWarning} onOpenChange={setShowNavigationWarning}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have unsaved changes. Are you sure you want to leave? Your changes will be lost.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setShowNavigationWarning(false);
-              if (blocker.state === "blocked") {
-                blocker.reset();
-              }
-            }}>
-              Stay on Page
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-              setIsDirty(false);
-              setShowNavigationWarning(false);
-              if (blocker.state === "blocked") {
-                blocker.proceed();
-              }
-            }}>
-              Leave Anyway
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
       
       {/* Auto-save indicator */}
       {lastAutoSave && (
