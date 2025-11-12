@@ -115,6 +115,7 @@ export function CreateHotSheetDialog({
   const [facingDirection, setFacingDirection] = useState<string[]>([]);
   const [minFireplaces, setMinFireplaces] = useState("");
   const [basement, setBasement] = useState<boolean | null>(null);
+  const [hasParking, setHasParking] = useState<boolean | null>(null);
   const [minGarageSpaces, setMinGarageSpaces] = useState("");
   const [minParkingSpaces, setMinParkingSpaces] = useState("");
   const [constructionFeatures, setConstructionFeatures] = useState<string[]>([]);
@@ -477,6 +478,13 @@ export function CreateHotSheetDialog({
           query = query.eq("has_basement", basement);
         }
         
+        // Parking (includes garage)
+        if (hasParking !== null) {
+          if (hasParking) {
+            query = query.or("garage_spaces.gt.0,total_parking_spaces.gt.0");
+          }
+        }
+        
         // Fireplaces
         if (minFireplaces) {
           query = query.gte("num_fireplaces", parseInt(minFireplaces));
@@ -516,6 +524,7 @@ export function CreateHotSheetDialog({
     minGarageSpaces,
     minParkingSpaces,
     basement,
+    hasParking,
     minFireplaces
   ]);
 
@@ -613,6 +622,7 @@ export function CreateHotSheetDialog({
         facingDirection: facingDirection.length > 0 ? facingDirection : null,
         minFireplaces: minFireplaces ? parseInt(minFireplaces) : null,
         basement,
+        hasParking,
         minGarageSpaces: minGarageSpaces ? parseInt(minGarageSpaces) : null,
         minParkingSpaces: minParkingSpaces ? parseInt(minParkingSpaces) : null,
         constructionFeatures: constructionFeatures.length > 0 ? constructionFeatures : null,
@@ -723,6 +733,7 @@ export function CreateHotSheetDialog({
     setFacingDirection([]);
     setMinFireplaces("");
     setBasement(null);
+    setHasParking(null);
     setMinGarageSpaces("");
     setMinParkingSpaces("");
     setConstructionFeatures([]);
@@ -1310,6 +1321,44 @@ export function CreateHotSheetDialog({
                           value={pricePerSqft}
                           onChange={(value) => setPricePerSqft(value)}
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm">Parking (includes garage)</Label>
+                        <div className="flex gap-4 mt-2">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="parking-yes"
+                              name="parking"
+                              checked={hasParking === true}
+                              onChange={() => setHasParking(true)}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor="parking-yes" className="text-sm">Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="parking-no"
+                              name="parking"
+                              checked={hasParking === false}
+                              onChange={() => setHasParking(false)}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor="parking-no" className="text-sm">No</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="parking-any"
+                              name="parking"
+                              checked={hasParking === null}
+                              onChange={() => setHasParking(null)}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor="parking-any" className="text-sm">Any</Label>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
