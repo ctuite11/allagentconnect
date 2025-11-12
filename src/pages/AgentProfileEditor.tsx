@@ -187,11 +187,12 @@ const AgentProfileEditor = () => {
     }
   };
 
-  const handleSaveProfile = async () => {
+  // Save profile data without redirecting
+  const saveProfileData = async (): Promise<string | null> => {
     setSaving(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) return null;
 
       const { error } = await supabase
         .from("agent_profiles")
@@ -215,21 +216,30 @@ const AgentProfileEditor = () => {
 
       if (error) throw error;
       toast.success("Profile updated successfully!");
-      
-      // Show redirecting state
-      setRedirecting(true);
-      
-      // Small delay to ensure DB has processed the update
-      setTimeout(() => {
-        navigate(`/agent/${session.user.id}`);
-      }, 500);
+      return session.user.id;
     } catch (error) {
       console.error("Error saving profile:", error);
       toast.error("Failed to save profile");
       setRedirecting(false);
+      return null;
     } finally {
       setSaving(false);
     }
+  };
+
+  // Section save: stays on editor
+  const handleSaveProfile = async () => {
+    await saveProfileData();
+  };
+
+  // Publish: save and redirect to public profile
+  const handlePublishProfile = async () => {
+    const userId = await saveProfileData();
+    if (!userId) return;
+    setRedirecting(true);
+    setTimeout(() => {
+      navigate(`/agent/${userId}`);
+    }, 400);
   };
 
   const handleHeadshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1213,7 +1223,7 @@ const AgentProfileEditor = () => {
             <CardContent>
               <Button 
                 size="lg" 
-                onClick={handleSaveProfile} 
+                onClick={handlePublishProfile} 
                 disabled={saving || redirecting}
                 className="w-full md:w-auto"
               >
