@@ -1113,14 +1113,17 @@ const EditListing = () => {
                       {formData.commission_type === 'percentage' ? 'Rate' : 'Amount'}
                     </Label>
                     {formData.commission_type === 'percentage' ? (
-                      <Input
-                        id="commission_rate"
-                        type="number"
-                        step="0.01"
-                        value={formData.commission_rate}
-                        onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
-                        placeholder="%"
-                      />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="commission_rate"
+                          type="number"
+                          step="0.01"
+                          value={formData.commission_rate}
+                          onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                          placeholder="2.5"
+                        />
+                        <span className="text-muted-foreground">%</span>
+                      </div>
                     ) : (
                       <FormattedInput
                         id="commission_rate"
