@@ -3029,14 +3029,25 @@ const AddListing = () => {
                       <Label htmlFor="commission_rate">
                         {formData.commission_type === 'percentage' ? 'Rate' : 'Amount'}
                       </Label>
-                      <FormattedInput
-                        id="commission_rate"
-                        format={formData.commission_type === 'percentage' ? 'number' : 'currency'}
-                        decimals={2}
-                        placeholder={formData.commission_type === 'percentage' ? '%' : '$'}
-                        value={formData.commission_rate}
-                        onChange={(value) => setFormData({ ...formData, commission_rate: value })}
-                      />
+                      {formData.commission_type === 'percentage' ? (
+                        <Input
+                          id="commission_rate"
+                          type="number"
+                          step="0.01"
+                          value={formData.commission_rate}
+                          onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                          placeholder="%"
+                        />
+                      ) : (
+                        <FormattedInput
+                          id="commission_rate"
+                          format="currency"
+                          decimals={2}
+                          value={formData.commission_rate}
+                          onChange={(value) => setFormData({ ...formData, commission_rate: value })}
+                          placeholder="$"
+                        />
+                      )}
                     </div>
                     <div className="space-y-2 md:col-span-1">
                       <Label htmlFor="commission_notes">Commission Notes</Label>
