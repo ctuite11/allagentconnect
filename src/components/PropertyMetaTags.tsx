@@ -53,6 +53,7 @@ export const PropertyMetaTags = ({
       <meta property="og:image:alt" content={`Photo of ${address}`} />
       <meta property="og:site_name" content="Agent Connect" />
       <meta property="og:locale" content="en_US" />
+      <meta property="fb:app_id" content="YOUR_FACEBOOK_APP_ID" />
       
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
