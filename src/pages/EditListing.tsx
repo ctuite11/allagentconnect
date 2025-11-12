@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const listingSchema = z.object({
   address: z.string().min(1, "Address is required"),
@@ -998,59 +1000,63 @@ const EditListing = () => {
               </div>
 
               {/* Lot Information */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Lot Information</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="lotSizeSource">Lot Size Source</Label>
-                  <Input
-                    id="lotSizeSource"
-                    value={lotSizeSource}
-                    onChange={(e) => setLotSizeSource(e.target.value)}
-                    placeholder="e.g., Assessor, Survey, Public Records"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Lot Description</Label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {['Corner Lot', 'Cul-de-sac', 'Level', 'Sloped', 'Wooded', 'Cleared', 'Fenced', 'Landscaped'].map((desc) => (
-                      <div key={desc} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={`lot-${desc}`}
-                          checked={lotDescription.includes(desc)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setLotDescription([...lotDescription, desc]);
-                            } else {
-                              setLotDescription(lotDescription.filter(d => d !== desc));
-                            }
-                          }}
-                          className="rounded"
-                        />
-                        <Label htmlFor={`lot-${desc}`} className="font-normal cursor-pointer text-sm">
-                          {desc}
-                        </Label>
-                      </div>
-                    ))}
+              {!(formData.property_type?.toLowerCase().includes("condo")) && (
+                <div className="space-y-4 border-t pt-4">
+                  <h3 className="font-semibold">Lot Information</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="lotSizeSource">Lot Size Source</Label>
+                    <Input
+                      id="lotSizeSource"
+                      value={lotSizeSource}
+                      onChange={(e) => setLotSizeSource(e.target.value)}
+                      placeholder="e.g., Assessor, Survey, Public Records"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Lot Description</Label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {['Corner Lot', 'Cul-de-sac', 'Level', 'Sloped', 'Wooded', 'Cleared', 'Fenced', 'Landscaped'].map((desc) => (
+                        <div key={desc} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`lot-${desc}`}
+                            checked={lotDescription.includes(desc)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setLotDescription([...lotDescription, desc]);
+                              } else {
+                                setLotDescription(lotDescription.filter(d => d !== desc));
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <Label htmlFor={`lot-${desc}`} className="font-normal cursor-pointer text-sm">
+                            {desc}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Disclosures & Legal */}
               <div className="space-y-4 border-t pt-4">
                 <h3 className="font-semibold">Disclosures & Legal Information</h3>
                 <div className="space-y-2">
-                  <Label htmlFor="sellerDisclosure">Seller Disclosure</Label>
-                  <Select value={sellerDisclosure} onValueChange={setSellerDisclosure}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Available">Available</SelectItem>
-                      <SelectItem value="Not Available">Not Available</SelectItem>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Seller Disclosure</Label>
+                  <RadioGroup value={sellerDisclosure} onValueChange={setSellerDisclosure}>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Yes" id="disclosure-yes" />
+                        <Label htmlFor="disclosure-yes" className="font-normal cursor-pointer">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="No" id="disclosure-no" />
+                        <Label htmlFor="disclosure-no" className="font-normal cursor-pointer">No</Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="disclosuresText">Additional Disclosures</Label>

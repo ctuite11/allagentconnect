@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
 import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud } from "lucide-react";
@@ -3258,16 +3259,19 @@ const AddListing = () => {
                   <Label className="text-xl font-semibold">Disclosures</Label>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="seller_disclosure">Seller Disclosure</Label>
-                    <Select value={sellerDisclosure} onValueChange={setSellerDisclosure}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="No">No</SelectItem>
-                        <SelectItem value="Yes">Yes</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label>Seller Disclosure</Label>
+                    <RadioGroup value={sellerDisclosure} onValueChange={setSellerDisclosure}>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="Yes" id="disclosure-yes" />
+                          <Label htmlFor="disclosure-yes" className="font-normal cursor-pointer">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="No" id="disclosure-no" />
+                          <Label htmlFor="disclosure-no" className="font-normal cursor-pointer">No</Label>
+                        </div>
+                      </div>
+                    </RadioGroup>
                   </div>
 
                   <div className="space-y-2">
