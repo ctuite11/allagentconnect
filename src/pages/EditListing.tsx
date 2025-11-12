@@ -907,7 +907,7 @@ const EditListing = () => {
                 <div className="space-y-2">
                   <Label>Parking Features</Label>
                   <div className="grid grid-cols-3 gap-3">
-                    {['Driveway', 'Off-Street', 'On-Street', 'Assigned', 'Covered', 'Uncovered', 'Garage Attached', 'Garage Detached'].map((feature) => (
+                    {['Driveway', 'Off-Street', 'On Street Permit', 'Assigned', 'Covered', 'Uncovered', 'Garage Attached', 'Garage Detached'].map((feature) => (
                       <div key={feature} className="flex items-center space-x-2">
                         <input
                           type="checkbox"
