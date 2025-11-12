@@ -1203,7 +1203,7 @@ export function CreateHotSheetDialog({
                         <FormattedInput
                           id="min-price"
                           format="currency"
-                          placeholder="0"
+                          placeholder="500000"
                           value={minPrice}
                           onChange={(value) => setMinPrice(value)}
                         />
@@ -1213,7 +1213,7 @@ export function CreateHotSheetDialog({
                         <FormattedInput
                           id="max-price"
                           format="currency"
-                          placeholder="Any"
+                          placeholder="1000000"
                           value={maxPrice}
                           onChange={(value) => setMaxPrice(value)}
                         />
