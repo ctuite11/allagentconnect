@@ -63,7 +63,7 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
       // Fetch listing details
       const { data: listingData } = await supabase
         .from("listings")
-        .select("agent_id, address, city, state")
+        .select("agent_id, address, city, state, photos")
         .eq("id", listingId)
         .single();
 
@@ -77,6 +77,9 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
 
         if (agentData) {
           const fullAddress = `${listingData.address}, ${listingData.city}, ${listingData.state}`;
+          const photoUrl = listingData.photos && Array.isArray(listingData.photos) && listingData.photos.length > 0 
+            ? listingData.photos[0] 
+            : null;
           
           // Send email notification to agent
           try {
@@ -91,6 +94,7 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
                 preferredDate: validatedData.preferred_date,
                 preferredTime: validatedData.preferred_time,
                 message: validatedData.message,
+                photoUrl,
               },
             });
           } catch (emailError) {

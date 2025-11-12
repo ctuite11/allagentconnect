@@ -17,6 +17,7 @@ interface ShowingRequestEmailRequest {
   preferredDate: string;
   preferredTime: string;
   message?: string;
+  photoUrl?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -35,6 +36,7 @@ const handler = async (req: Request): Promise<Response> => {
       preferredDate,
       preferredTime,
       message,
+      photoUrl,
     }: ShowingRequestEmailRequest = await req.json();
 
     console.log("Sending showing request email to agent:", agentEmail);
@@ -55,6 +57,12 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Hi ${agentName},</p>
           <p>You have received a new showing request for your listing at <strong>${listingAddress}</strong>.</p>
           
+          ${photoUrl ? `
+            <div style="margin: 20px 0;">
+              <img src="${photoUrl}" alt="${listingAddress}" style="max-width: 100%; height: auto; border-radius: 8px; max-height: 400px; object-fit: cover;" />
+            </div>
+          ` : ''}
+          
           <h3>Requester Details:</h3>
           <ul>
             <li><strong>Name:</strong> ${requesterName}</li>
@@ -72,7 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
           
           <p>Please respond to confirm or suggest alternative times by replying to this email or contacting them directly.</p>
           
-          <p>Best regards,<br>Your Real Estate Platform</p>
+          <p>Best regards,<br>AAC Worldwide</p>
         `,
       }),
     });
