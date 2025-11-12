@@ -1042,7 +1042,6 @@ const EditListing = () => {
 
               {/* Disclosures & Legal */}
               <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Disclosures & Legal Information</h3>
                 <div className="space-y-2">
                   <Label>Seller Disclosure</Label>
                   <RadioGroup value={sellerDisclosure} onValueChange={setSellerDisclosure}>

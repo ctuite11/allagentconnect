@@ -3256,7 +3256,6 @@ const AddListing = () => {
 
                 {/* Disclosures Section */}
                 <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Disclosures</Label>
                   
                   <div className="space-y-2">
                     <Label>Seller Disclosure</Label>
