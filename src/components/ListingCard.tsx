@@ -124,7 +124,25 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
 
   const getFirstPhoto = () => {
     if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
-      return listing.photos[0].url || listing.photos[0];
+      const photo = listing.photos[0];
+      
+      // If it's a string, assume it's already a URL
+      if (typeof photo === 'string') {
+        return photo;
+      }
+      
+      // If it's an object with a url property
+      if (photo.url) {
+        // Check if it's a full URL or a storage path
+        if (photo.url.startsWith('http')) {
+          return photo.url;
+        }
+        // If it's a storage path, construct the public URL
+        const { data } = supabase.storage
+          .from('listing-photos')
+          .getPublicUrl(photo.url);
+        return data.publicUrl;
+      }
     }
     return null;
   };
