@@ -1051,19 +1051,6 @@ export function CreateHotSheetDialog({
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        {selectedCountyId && availableCities.length > 0 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={selectAllTowns}
-                            className="w-full mb-2 text-sm"
-                          >
-                            {selectedCountyId === "all" 
-                              ? `Add All Towns from All Counties` 
-                              : `Add All Towns in County (${availableCities.length})`}
-                          </Button>
-                        )}
                         <Input
                           placeholder="Type Full or Partial Name"
                           value={citySearch}
@@ -1071,6 +1058,17 @@ export function CreateHotSheetDialog({
                           className="text-sm"
                         />
                         <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2">
+                          {selectedCountyId && availableCities.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={selectAllTowns}
+                              className="w-full text-left px-2 py-1.5 text-sm font-semibold hover:bg-muted rounded mb-1 border-b pb-2"
+                            >
+                              {selectedCountyId === "all" 
+                                ? `✓ Add All Towns from All Counties` 
+                                : `✓ Add All Towns in County (${availableCities.length})`}
+                            </button>
+                          )}
                           {filteredCities.map((city) => (
                             <button
                               key={city}
