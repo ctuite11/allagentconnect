@@ -133,6 +133,7 @@ export function CreateHotSheetDialog({
 
   // Collapsible sections - All open by default for better visibility
   const [criteriaOpen, setCriteriaOpen] = useState(true);
+  const [addressOpen, setAddressOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(true);
 
   // Fetch counties and hot sheet data on mount
@@ -874,84 +875,92 @@ export function CreateHotSheetDialog({
                   </div>
 
                   {/* Address Section */}
-                  <div className="space-y-4 border-t pt-4">
-                    <Label className="text-sm font-semibold uppercase">Address</Label>
-                    
-                    {/* Address Mode Radio Buttons */}
-                    <div className="flex gap-4">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id="street-address"
-                          name="address-mode"
-                          checked={addressMode === "street"}
-                          onChange={() => setAddressMode("street")}
-                          className="w-4 h-4"
-                        />
-                        <Label htmlFor="street-address" className="text-sm">Street Address</Label>
+                  <Collapsible open={addressOpen} onOpenChange={setAddressOpen} className="border-t pt-4">
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-2 rounded-md">
+                        <Label className="text-sm font-semibold uppercase cursor-pointer">Address</Label>
+                        {addressOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id="my-location"
-                          name="address-mode"
-                          checked={addressMode === "mylocation"}
-                          onChange={() => setAddressMode("mylocation")}
-                          className="w-4 h-4"
-                        />
-                        <Label htmlFor="my-location" className="text-sm">My Location</Label>
-                      </div>
-                    </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-4 pt-4">
+                        {/* Address Mode Radio Buttons */}
+                        <div className="flex gap-4">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="street-address"
+                              name="address-mode"
+                              checked={addressMode === "street"}
+                              onChange={() => setAddressMode("street")}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor="street-address" className="text-sm">Street Address</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="my-location"
+                              name="address-mode"
+                              checked={addressMode === "mylocation"}
+                              onChange={() => setAddressMode("mylocation")}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor="my-location" className="text-sm">My Location</Label>
+                          </div>
+                        </div>
 
-                    {/* Address Fields */}
-                    <div className="grid grid-cols-4 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="street-number" className="text-sm">Street #</Label>
-                        <Input
-                          id="street-number"
-                          placeholder=""
-                          value={streetNumber}
-                          onChange={(e) => setStreetNumber(e.target.value)}
-                          className="text-sm"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="street-name" className="text-sm">Street Name</Label>
-                        <Input
-                          id="street-name"
-                          placeholder=""
-                          value={streetName}
-                          onChange={(e) => setStreetName(e.target.value)}
-                          className="text-sm"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="zip-code" className="text-sm">Zip Code</Label>
-                        <Input
-                          id="zip-code"
-                          placeholder=""
-                          value={zipCode}
-                          onChange={(e) => setZipCode(e.target.value)}
-                          className="text-sm"
-                        />
-                      </div>
-                      <div className="space-y-2 relative">
-                        <Label htmlFor="radius" className="text-sm">Radius</Label>
-                        <div className="relative">
-                          <Input
-                            id="radius"
-                            placeholder=""
-                            value={radiusMiles}
-                            onChange={(e) => setRadiusMiles(e.target.value)}
-                            className="text-sm pr-12"
-                          />
-                          <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground">
-                            Miles
-                          </span>
+                        {/* Address Fields */}
+                        <div className="grid grid-cols-4 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="street-number" className="text-sm">Street #</Label>
+                            <Input
+                              id="street-number"
+                              placeholder=""
+                              value={streetNumber}
+                              onChange={(e) => setStreetNumber(e.target.value)}
+                              className="text-sm"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="street-name" className="text-sm">Street Name</Label>
+                            <Input
+                              id="street-name"
+                              placeholder=""
+                              value={streetName}
+                              onChange={(e) => setStreetName(e.target.value)}
+                              className="text-sm"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="zip-code" className="text-sm">Zip Code</Label>
+                            <Input
+                              id="zip-code"
+                              placeholder=""
+                              value={zipCode}
+                              onChange={(e) => setZipCode(e.target.value)}
+                              className="text-sm"
+                            />
+                          </div>
+                          <div className="space-y-2 relative">
+                            <Label htmlFor="radius" className="text-sm">Radius</Label>
+                            <div className="relative">
+                              <Input
+                                id="radius"
+                                placeholder=""
+                                value={radiusMiles}
+                                onChange={(e) => setRadiusMiles(e.target.value)}
+                                className="text-sm pr-12"
+                              />
+                              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground">
+                                Miles
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    </CollapsibleContent>
+                  </Collapsible>
 
                   {/* Towns Section */}
                   <div className="space-y-4 border-t pt-4">
