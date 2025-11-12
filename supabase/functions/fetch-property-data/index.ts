@@ -156,29 +156,36 @@ serve(async (req) => {
           const building = property.building || {};
           const lot = property.lot || {};
           const summary = property.summary || {};
+          const assessment = property.assessment || {};
 
           results.attom = {
             bedrooms: building.rooms?.beds || null,
-            bathrooms: building.rooms?.bathstotal || building.rooms?.bathsfull || null,
-            square_feet: building.size?.bldgsize || building.size?.livingsize || null,
-            lot_size: lot.lotsize2 || lot.lotsize1 || null,
-            year_built: summary.yearbuilt || null,
-            property_type: summary.proptype || null,
-            zoning: lot.zoning || null,
+            bathrooms: building.rooms?.bathsTotal || building.rooms?.bathsFull || null,
+            square_feet: building.size?.bldgSize || building.size?.livingSize || null,
+            lot_size: lot.lotSize2 || lot.lotSize1 || null,
+            year_built: summary.yearBuilt || null,
+            property_type: summary.propType || null,
+            zoning: lot.zoningType || null,
             parking_spaces: building.parking?.prkgSpaces || null,
-            stories: building.summary?.stories || null,
+            stories: building.summary?.levels || null,
             unit_number: unit_number || null,
+            // Tax and assessment data - using field names expected by AddListing page
+            annual_property_tax: assessment.tax?.taxAmt || null,
+            tax_year: assessment.tax?.taxYear || null,
+            tax_assessment_value: assessment.assessed?.assdTtlValue || null,
+            assessed_improvement_value: assessment.assessed?.assdImprValue || null,
+            assessed_land_value: assessment.assessed?.assdLandValue || null,
           };
 
           if (property.assessment?.market) {
             results.valueEstimate = {
-              estimate: property.assessment.market.mktttlvalue || null,
-              high: property.assessment.market.mkthighvalue || null,
-              low: property.assessment.market.mktlowvalue || null,
+              estimate: property.assessment.market.mktTtlValue || null,
+              high: property.assessment.market.mktHighValue || null,
+              low: property.assessment.market.mktLowValue || null,
             };
           }
           
-          console.log(`[fetch-property-data] ATTOM data fetched successfully for ${unit_number ? 'unit ' + unit_number : 'property'}`);
+          console.log(`[fetch-property-data] ATTOM data fetched successfully for ${unit_number ? 'unit ' + unit_number : 'property'}:`, results.attom);
         } else {
           console.warn("[fetch-property-data] Attom returned no properties for:", { fullAddress, streetAddress, address2 });
         }
