@@ -457,11 +457,13 @@ const EditListing = () => {
         };
       }
 
-      const validated = listingSchema.parse(dataToUpdate);
+      const validatedCore = listingSchema.parse(dataToUpdate);
+      // Merge validated core fields back with extended fields (photos, floor plans, documents, etc.)
+      const payload = { ...dataToUpdate, ...validatedCore };
 
       const { error } = await supabase
         .from("listings")
-        .update(validated)
+        .update(payload)
         .eq("id", id);
 
       if (error) throw error;
