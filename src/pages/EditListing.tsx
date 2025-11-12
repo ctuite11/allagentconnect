@@ -19,6 +19,7 @@ import { Loader2, Cloud } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
+import { getAreasForCity } from "@/data/usNeighborhoodsData";
 
 interface FileWithPreview {
   file: File;
@@ -57,6 +58,7 @@ const EditListing = () => {
     city: "",
     state: "",
     zip_code: "",
+    neighborhood: "",
     property_type: "",
     price: "",
     bedrooms: "",
@@ -252,6 +254,7 @@ const EditListing = () => {
           city: data.city,
           state: data.state,
           zip_code: data.zip_code,
+          neighborhood: data.neighborhood || "",
           property_type: data.property_type || "",
           price: (data.price ?? "").toString(),
           bedrooms: data.bedrooms?.toString() || "",
@@ -512,6 +515,7 @@ const EditListing = () => {
         city: formData.city,
         state: formData.state,
         zip_code: formData.zip_code,
+        neighborhood: formData.neighborhood || null,
         property_type: formData.property_type || null,
         price: parseFloat(formData.price),
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
@@ -746,6 +750,30 @@ const EditListing = () => {
                 maxLength={10}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="manual-neighborhood">Neighborhood (Optional)</Label>
+              <Select
+                value={formData.neighborhood}
+                onValueChange={(value) => updateFormData({ neighborhood: value })}
+              >
+                <SelectTrigger id="manual-neighborhood">
+                  <SelectValue placeholder="Select neighborhood" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getAreasForCity(formData.city, formData.state).length > 0 ? (
+                    getAreasForCity(formData.city, formData.state).map((neighborhood) => (
+                      <SelectItem key={neighborhood} value={neighborhood}>
+                        {neighborhood}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>
+                      No neighborhoods available for this city
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -892,6 +920,27 @@ const EditListing = () => {
                   onBlur={handleBlur}
                   required
                 />
+              </div>
+
+              {/* Neighborhood */}
+              <div className="space-y-2">
+                <Label htmlFor="neighborhood">Area/Neighborhood</Label>
+                <Select
+                  value={formData.neighborhood}
+                  onValueChange={(value) => updateFormData({ neighborhood: value })}
+                  disabled={!formData.city || !formData.state || getAreasForCity(formData.city, formData.state).length === 0}
+                >
+                  <SelectTrigger id="neighborhood">
+                    <SelectValue placeholder="Select neighborhood" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAreasForCity(formData.city, formData.state).map((neighborhood) => (
+                      <SelectItem key={neighborhood} value={neighborhood}>
+                        {neighborhood}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Unit Number - for properties with units */}
