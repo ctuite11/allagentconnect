@@ -130,7 +130,18 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode, listin
   }
 
   if (agents.length === 0) {
-    return null;
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Matching Buyer Agents in {listingCity}, {listingState}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground text-center py-4">
+            No buyer agents currently covering this area. Check back soon!
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
