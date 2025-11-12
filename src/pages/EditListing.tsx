@@ -16,6 +16,15 @@ import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
+
+interface FileWithPreview {
+  file: File;
+  preview: string;
+  id: string;
+  uploaded?: boolean;
+  url?: string;
+}
 
 const listingSchema = z.object({
   address: z.string().min(1, "Address is required"),
@@ -99,6 +108,11 @@ const EditListing = () => {
   const [disclosuresText, setDisclosuresText] = useState("");
   const [exclusions, setExclusions] = useState("");
   const [brokerComments, setBrokerComments] = useState("");
+  
+  // Photos, floor plans, and documents
+  const [photos, setPhotos] = useState<FileWithPreview[]>([]);
+  const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
+  const [documents, setDocuments] = useState<FileWithPreview[]>([]);
 
   useEffect(() => {
     const checkAuthAndLoadListing = async () => {
@@ -212,6 +226,40 @@ const EditListing = () => {
           setGarageSpaces(data.garage_spaces.toString());
         }
         
+        // Load existing photos, floor plans, and documents
+        if (Array.isArray(data.photos) && data.photos.length > 0) {
+          const existingPhotos: FileWithPreview[] = data.photos.map((photo: any, index: number) => ({
+            file: null as any, // No file object for existing photos
+            preview: photo.url,
+            id: `existing-${index}`,
+            uploaded: true,
+            url: photo.url
+          }));
+          setPhotos(existingPhotos);
+        }
+        
+        if (Array.isArray(data.floor_plans) && data.floor_plans.length > 0) {
+          const existingFloorPlans: FileWithPreview[] = data.floor_plans.map((plan: any, index: number) => ({
+            file: null as any,
+            preview: plan.url,
+            id: `existing-fp-${index}`,
+            uploaded: true,
+            url: plan.url
+          }));
+          setFloorPlans(existingFloorPlans);
+        }
+        
+        if (Array.isArray(data.documents) && data.documents.length > 0) {
+          const existingDocuments: FileWithPreview[] = data.documents.map((doc: any, index: number) => ({
+            file: null as any,
+            preview: '',
+            id: `existing-doc-${index}`,
+            uploaded: true,
+            url: doc.url
+          }));
+          setDocuments(existingDocuments);
+        }
+        
         // Parse broker comments from additional_notes
         if (data.additional_notes?.includes('Broker Comments:')) {
           const parts = data.additional_notes.split('Broker Comments:');
@@ -259,6 +307,69 @@ const EditListing = () => {
     setSubmitting(true);
 
     try {
+      // Upload new photos, floor plans, and documents
+      const uploadedPhotos: any[] = [];
+      const uploadedFloorPlans: any[] = [];
+      const uploadedDocuments: any[] = [];
+      
+      // Upload new photos (not already uploaded)
+      for (const photo of photos) {
+        if (!photo.uploaded && photo.file) {
+          const filePath = `${id}/${Date.now()}_${photo.file.name}`;
+          const { error } = await supabase.storage
+            .from('listing-photos')
+            .upload(filePath, photo.file);
+          
+          if (!error) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('listing-photos')
+              .getPublicUrl(filePath);
+            uploadedPhotos.push({ url: publicUrl, name: photo.file.name });
+          }
+        } else if (photo.uploaded && photo.url) {
+          // Keep existing photos
+          uploadedPhotos.push({ url: photo.url, name: '' });
+        }
+      }
+      
+      // Upload new floor plans
+      for (const plan of floorPlans) {
+        if (!plan.uploaded && plan.file) {
+          const filePath = `${id}/${Date.now()}_${plan.file.name}`;
+          const { error } = await supabase.storage
+            .from('listing-floorplans')
+            .upload(filePath, plan.file);
+          
+          if (!error) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('listing-floorplans')
+              .getPublicUrl(filePath);
+            uploadedFloorPlans.push({ url: publicUrl, name: plan.file.name });
+          }
+        } else if (plan.uploaded && plan.url) {
+          uploadedFloorPlans.push({ url: plan.url, name: '' });
+        }
+      }
+      
+      // Upload new documents
+      for (const doc of documents) {
+        if (!doc.uploaded && doc.file) {
+          const filePath = `${id}/${Date.now()}_${doc.file.name}`;
+          const { error } = await supabase.storage
+            .from('listing-documents')
+            .upload(filePath, doc.file);
+          
+          if (!error) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('listing-documents')
+              .getPublicUrl(filePath);
+            uploadedDocuments.push({ url: publicUrl, name: doc.file.name });
+          }
+        } else if (doc.uploaded && doc.url) {
+          uploadedDocuments.push({ url: doc.url, name: '' });
+        }
+      }
+
       // Build updated disclosures array
       const updatedDisclosures = [...disclosures];
       
@@ -318,6 +429,9 @@ const EditListing = () => {
         num_fireplaces: formData.num_fireplaces ? parseInt(formData.num_fireplaces) : null,
         total_parking_spaces: parkingSpaces ? parseInt(parkingSpaces) : null,
         garage_spaces: garageSpaces ? parseInt(garageSpaces) : null,
+        photos: uploadedPhotos,
+        floor_plans: uploadedFloorPlans,
+        documents: uploadedDocuments,
       };
 
       // Update condo_details if it's a condominium
@@ -1148,6 +1262,65 @@ const EditListing = () => {
                     onChange={(e) => setFormData({ ...formData, commission_notes: e.target.value })}
                     autoComplete="off"
                   />
+                </div>
+              </div>
+
+              {/* Photos & Media */}
+              <div className="space-y-4 border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">Property Photos</h3>
+                  <PhotoManagementDialog
+                    photos={photos}
+                    onPhotosChange={setPhotos}
+                  />
+                </div>
+                {photos.length > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    {photos.length} {photos.length === 1 ? 'photo' : 'photos'} uploaded. First photo will be the main image.
+                  </p>
+                )}
+              </div>
+
+              {/* Floor Plans & Documents */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-semibold">Floor Plans & Documents</h3>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Floor Plans ({floorPlans.length})</Label>
+                    <Input
+                      type="file"
+                      accept="image/*,.pdf"
+                      multiple
+                      onChange={(e) => {
+                        const files = e.target.files;
+                        if (!files) return;
+                        const newFiles: FileWithPreview[] = Array.from(files).map(file => ({
+                          file,
+                          preview: URL.createObjectURL(file),
+                          id: Math.random().toString(36).slice(2),
+                        }));
+                        setFloorPlans(prev => [...prev, ...newFiles]);
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Documents ({documents.length})</Label>
+                    <Input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      multiple
+                      onChange={(e) => {
+                        const files = e.target.files;
+                        if (!files) return;
+                        const newFiles: FileWithPreview[] = Array.from(files).map(file => ({
+                          file,
+                          preview: '',
+                          id: Math.random().toString(36).slice(2),
+                        }));
+                        setDocuments(prev => [...prev, ...newFiles]);
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
