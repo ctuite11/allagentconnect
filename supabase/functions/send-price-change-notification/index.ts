@@ -131,7 +131,7 @@ serve(async (req) => {
 
       try {
         await resend.emails.send({
-          from: "Property Alerts <onboarding@resend.dev>",
+          from: "AAC Worldwide <noreply@allagentconnect.com>",
           to: [data.email],
           subject: `Price Alert: ${data.changes.length} saved ${data.changes.length === 1 ? 'home has' : 'homes have'} changed price`,
           html: `
