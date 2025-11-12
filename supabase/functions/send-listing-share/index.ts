@@ -117,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'AAC Worldwide <noreply@allagentconnect.com>',
+        from: 'Property Alerts <onboarding@resend.dev>',
         to: [recipientEmail],
         subject: `Property Shared: ${listing.address}`,
         html: htmlContent,
