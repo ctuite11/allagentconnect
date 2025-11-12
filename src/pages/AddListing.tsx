@@ -3063,6 +3063,7 @@ const AddListing = () => {
                         placeholder="Additional commission details"
                         value={formData.commission_notes}
                         onChange={(e) => setFormData({ ...formData, commission_notes: e.target.value })}
+                        autoComplete="off"
                       />
                     </div>
                   </div>

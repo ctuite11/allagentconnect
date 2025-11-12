@@ -1146,6 +1146,7 @@ const EditListing = () => {
                     id="commission_notes"
                     value={formData.commission_notes}
                     onChange={(e) => setFormData({ ...formData, commission_notes: e.target.value })}
+                    autoComplete="off"
                   />
                 </div>
               </div>
