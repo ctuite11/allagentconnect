@@ -24,11 +24,20 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required").max(100, "Password too long"),
 });
 
+const passwordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters").max(100, "Password too long"),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 const ConsumerAuth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   
   // Login form
@@ -43,18 +52,42 @@ const ConsumerAuth = () => {
   const [phone, setPhone] = useState("");
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/consumer/dashboard");
-      }
+    // Check URL hash immediately to prevent premature navigation
+    const checkRecoveryFlow = () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      return hashParams.get('type') === 'recovery';
     };
-    checkUser();
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+      const isRecovery = checkRecoveryFlow();
+      
+      if (isRecovery && session?.user) {
+        // User clicked reset link - show password reset form, don't redirect
+        setIsResettingPassword(true);
+        setShowForgotPassword(false);
+        setActiveTab("login");
+        return;
+      }
+      
+      if (event === 'SIGNED_IN' && session && !isRecovery) {
+        navigate("/consumer/dashboard");
+      }
+    });
+
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const isRecovery = checkRecoveryFlow();
+      
+      if (isRecovery && session?.user) {
+        // User clicked reset link - show password reset form, don't redirect
+        setIsResettingPassword(true);
+        setShowForgotPassword(false);
+        setActiveTab("login");
+        return;
+      }
+      
+      if (session && !isRecovery) {
         navigate("/consumer/dashboard");
       }
     });
@@ -112,7 +145,7 @@ const ConsumerAuth = () => {
       const emailSchema = z.string().trim().email("Invalid email address");
       const validated = emailSchema.parse(resetEmail);
 
-      const redirectUrl = `${window.location.origin}/password-reset`;
+      const redirectUrl = `${window.location.origin}/consumer/auth`;
 
       const { error } = await supabase.auth.resetPasswordForEmail(validated, {
         redirectTo: redirectUrl,
@@ -131,6 +164,44 @@ const ConsumerAuth = () => {
         toast.error(error.errors[0].message);
       } else {
         toast.error("An error occurred sending reset email");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const validated = passwordSchema.parse({
+        password: signupPassword,
+        confirmPassword: loginPassword,
+      });
+
+      const { error } = await supabase.auth.updateUser({
+        password: validated.password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success("Password updated successfully!");
+      setIsResettingPassword(false);
+      setSignupPassword("");
+      setLoginPassword("");
+      
+      // Clear the hash from URL
+      window.history.replaceState(null, "", window.location.pathname);
+      navigate("/consumer/dashboard");
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error("An error occurred updating your password");
       }
     } finally {
       setLoading(false);
@@ -215,11 +286,60 @@ const ConsumerAuth = () => {
           <CardHeader>
             <CardTitle>Welcome to Agent Connect</CardTitle>
             <CardDescription>
-              Login or create an account to start finding your dream home
+              {isResettingPassword 
+                ? "Enter your new password" 
+                : showForgotPassword 
+                ? "Reset your password" 
+                : "Login or create an account to start finding your dream home"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {showForgotPassword ? (
+            {isResettingPassword ? (
+              <div className="space-y-4">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setIsResettingPassword(false);
+                    window.history.replaceState(null, "", window.location.pathname);
+                  }}
+                  className="mb-2"
+                >
+                  ← Back to Login
+                </Button>
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Password must be at least 6 characters
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Updating password..." : "Update Password"}
+                  </Button>
+                </form>
+              </div>
+            ) : showForgotPassword ? (
               <div className="space-y-4">
                 <Button
                   variant="ghost"
