@@ -14,6 +14,7 @@ const SearchResults = () => {
   const navigate = useNavigate();
   const search = useLocation().search;
   const [listings, setListings] = useState<any[]>([]);
+  const [allListings, setAllListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
 
@@ -118,6 +119,7 @@ const SearchResults = () => {
         }
 
         setListings(finalListings);
+        setAllListings(finalListings);
       } catch (e) {
         console.error(e);
       } finally {
@@ -132,6 +134,8 @@ const SearchResults = () => {
   const handleSelectAll = () => {
     if (selectedListings.size === listings.length) {
       setSelectedListings(new Set());
+      // Restore all listings when deselecting all
+      setListings(allListings);
     } else {
       setSelectedListings(new Set(listings.map(l => l.id)));
     }
