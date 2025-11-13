@@ -63,7 +63,9 @@ export function TownsPicker({
               </div>
               {hasNeighborhoods && isExpanded && (
                 <div className="ml-8 border-l-2 border-muted pl-2 mt-1 bg-muted/30 rounded-r py-1 space-y-1">
-                  {neighborhoods.map((neighborhood) => (
+                  {neighborhoods
+                    .filter((n) => !topCities.has(n))
+                    .map((neighborhood) => (
                     <button
                       key={`${town}-${neighborhood}`}
                       type="button"
