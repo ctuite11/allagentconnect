@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
-import { Trash2, Plus, Star, Upload, X, MapPin, ArrowLeft, User, Image, FileText, DollarSign, Share2 } from "lucide-react";
+import { Trash2, Plus, Star, Upload, X, MapPin, ArrowLeft, User, Image, FileText, DollarSign, Share2, MessageSquare } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
@@ -1147,9 +1147,14 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Testimonials Section */}
-          <Card className="mb-6">
+          <Card className="mb-6 border-l-4 border-l-teal-500 bg-gradient-to-br from-card to-card/50 hover:shadow-lg transition-all">
             <CardHeader>
-              <CardTitle>Testimonials</CardTitle>
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-teal-500/10">
+                  <MessageSquare className="h-5 w-5 text-teal-500" />
+                </div>
+                Testimonials
+              </CardTitle>
               <CardDescription>Add client testimonials to build trust</CardDescription>
             </CardHeader>
             <CardContent>
