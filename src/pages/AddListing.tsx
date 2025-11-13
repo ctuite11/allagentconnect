@@ -66,10 +66,6 @@ const AddListing = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
-  const [showRestoreDraftDialog, setShowRestoreDraftDialog] = useState(false);
-  const [draftToRestore, setDraftToRestore] = useState<any>(null);
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [formData, setFormData] = useState({
     status: "active",
     listing_type: "for_sale",
@@ -332,239 +328,6 @@ const AddListing = () => {
   const totalFields = Object.values(sectionProgress).reduce((sum, section) => sum + section.total, 0);
   const overallProgress = Math.round((totalCompleted / totalFields) * 100);
 
-  // Auto-save draft function
-  const saveDraft = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      const draftData = {
-        formData,
-        disclosures,
-        propertyFeatures,
-        amenities,
-        listingAgreementTypes,
-        entryOnly,
-        lenderOwned,
-        shortSale,
-        propertyStyles,
-        waterfront,
-        waterView,
-        beachNearby,
-        facingDirection,
-        minFireplaces,
-        basement,
-        garageSpaces,
-        parkingSpaces,
-        constructionFeatures,
-        roofMaterials,
-        exteriorFeatures,
-        heatingTypes,
-        coolingTypes,
-        greenFeatures,
-        unitNumber,
-        condoUnitNumber,
-        condoFloorLevel,
-        condoHoaFee,
-        condoHoaFeeFrequency,
-        condoBuildingAmenities,
-        condoPetPolicy,
-        condoPetPolicyComments,
-        condoTotalUnits,
-        condoYearBuilt,
-        multiFamilyUnits,
-        multiFamilyUnitBreakdown,
-        multiFamilyCurrentIncome,
-        multiFamilyPotentialIncome,
-        multiFamilyOccupancyStatus,
-        multiFamilyLaundryType,
-        multiFamilySeparateUtilities,
-        multiFamilyParkingPerUnit,
-        commercialSpaceType,
-        commercialLeaseType,
-        commercialLeaseRate,
-        commercialLeaseRatePer,
-        commercialLeaseTermMin,
-        commercialLeaseTermMax,
-        commercialZoning,
-        commercialBusinessTypes,
-        commercialTenantResponsibilities,
-        commercialCurrentTenant,
-        commercialLeaseExpiration,
-        commercialCeilingHeight,
-        commercialLoadingDocks,
-        commercialPowerAvailable,
-        commercialAdditionalFeatures,
-        assessedValue,
-        fiscalYear,
-        residentialExemption,
-        floors,
-        basementType,
-        basementFeatures,
-        basementFloorType,
-        leadPaint,
-        handicapAccess,
-        foundation,
-        parkingComments,
-        parkingFeatures,
-        garageComments,
-        garageFeatures,
-        garageAdditionalFeatures,
-        lotSizeSource,
-        lotDescription,
-        sellerDisclosure,
-        disclosuresText,
-        exclusions,
-        brokerComments,
-        openHouses,
-      };
-
-      // Check if draft exists
-      const { data: existingDrafts } = await supabase
-        .from('listing_drafts')
-        .select('id')
-        .eq('user_id', user.id)
-        .limit(1);
-
-      if (existingDrafts && existingDrafts.length > 0) {
-        // Update existing draft
-        await supabase
-          .from('listing_drafts')
-          .update({ draft_data: draftData })
-          .eq('user_id', user.id);
-      } else {
-        // Insert new draft
-        await supabase
-          .from('listing_drafts')
-          .insert({ user_id: user.id, draft_data: draftData });
-      }
-
-      setLastAutoSave(new Date());
-    } catch (error) {
-      console.error('Error saving draft:', error);
-    }
-  }, [user, formData, disclosures, propertyFeatures, amenities, listingAgreementTypes, entryOnly, lenderOwned, shortSale, propertyStyles, waterfront, waterView, beachNearby, facingDirection, minFireplaces, basement, garageSpaces, parkingSpaces, constructionFeatures, roofMaterials, exteriorFeatures, heatingTypes, coolingTypes, greenFeatures, unitNumber, condoUnitNumber, condoFloorLevel, condoHoaFee, condoHoaFeeFrequency, condoBuildingAmenities, condoPetPolicy, condoPetPolicyComments, condoTotalUnits, condoYearBuilt, multiFamilyUnits, multiFamilyUnitBreakdown, multiFamilyCurrentIncome, multiFamilyPotentialIncome, multiFamilyOccupancyStatus, multiFamilyLaundryType, multiFamilySeparateUtilities, multiFamilyParkingPerUnit, commercialSpaceType, commercialLeaseType, commercialLeaseRate, commercialLeaseRatePer, commercialLeaseTermMin, commercialLeaseTermMax, commercialZoning, commercialBusinessTypes, commercialTenantResponsibilities, commercialCurrentTenant, commercialLeaseExpiration, commercialCeilingHeight, commercialLoadingDocks, commercialPowerAvailable, commercialAdditionalFeatures, assessedValue, fiscalYear, residentialExemption, floors, basementType, basementFeatures, basementFloorType, leadPaint, handicapAccess, foundation, parkingComments, parkingFeatures, garageComments, garageFeatures, garageAdditionalFeatures, lotSizeSource, lotDescription, sellerDisclosure, disclosuresText, exclusions, brokerComments, openHouses]);
-
-  // Load draft on mount
-  const loadDraft = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      const { data: drafts } = await supabase
-        .from('listing_drafts')
-        .select('*')
-        .eq('user_id', user.id)
-        .limit(1);
-
-      if (drafts && drafts.length > 0) {
-        setDraftToRestore(drafts[0].draft_data);
-        setShowRestoreDraftDialog(true);
-      }
-    } catch (error) {
-      console.error('Error loading draft:', error);
-    }
-  }, [user]);
-
-  // Restore draft function
-  const restoreDraft = useCallback(() => {
-    if (!draftToRestore) return;
-
-    setFormData(draftToRestore.formData || formData);
-    setDisclosures(draftToRestore.disclosures || []);
-    setPropertyFeatures(draftToRestore.propertyFeatures || []);
-    setAmenities(draftToRestore.amenities || []);
-    setListingAgreementTypes(draftToRestore.listingAgreementTypes || []);
-    setEntryOnly(draftToRestore.entryOnly ?? null);
-    setLenderOwned(draftToRestore.lenderOwned ?? null);
-    setShortSale(draftToRestore.shortSale ?? null);
-    setPropertyStyles(draftToRestore.propertyStyles || []);
-    setWaterfront(draftToRestore.waterfront ?? null);
-    setWaterView(draftToRestore.waterView ?? null);
-    setBeachNearby(draftToRestore.beachNearby ?? null);
-    setFacingDirection(draftToRestore.facingDirection || []);
-    setMinFireplaces(draftToRestore.minFireplaces || "");
-    setBasement(draftToRestore.basement ?? null);
-    setGarageSpaces(draftToRestore.garageSpaces || "");
-    setParkingSpaces(draftToRestore.parkingSpaces || "");
-    setConstructionFeatures(draftToRestore.constructionFeatures || []);
-    setRoofMaterials(draftToRestore.roofMaterials || []);
-    setExteriorFeatures(draftToRestore.exteriorFeatures || []);
-    setHeatingTypes(draftToRestore.heatingTypes || []);
-    setCoolingTypes(draftToRestore.coolingTypes || []);
-    setGreenFeatures(draftToRestore.greenFeatures || []);
-    setUnitNumber(draftToRestore.unitNumber || "");
-    setCondoUnitNumber(draftToRestore.condoUnitNumber || "");
-    setCondoFloorLevel(draftToRestore.condoFloorLevel || "");
-    setCondoHoaFee(draftToRestore.condoHoaFee || "");
-    setCondoHoaFeeFrequency(draftToRestore.condoHoaFeeFrequency || "monthly");
-    setCondoBuildingAmenities(draftToRestore.condoBuildingAmenities || []);
-    setCondoPetPolicy(draftToRestore.condoPetPolicy || "");
-    setCondoPetPolicyComments(draftToRestore.condoPetPolicyComments || "");
-    setCondoTotalUnits(draftToRestore.condoTotalUnits || "");
-    setCondoYearBuilt(draftToRestore.condoYearBuilt || "");
-    setMultiFamilyUnits(draftToRestore.multiFamilyUnits || "");
-    setMultiFamilyUnitBreakdown(draftToRestore.multiFamilyUnitBreakdown || "");
-    setMultiFamilyCurrentIncome(draftToRestore.multiFamilyCurrentIncome || "");
-    setMultiFamilyPotentialIncome(draftToRestore.multiFamilyPotentialIncome || "");
-    setMultiFamilyOccupancyStatus(draftToRestore.multiFamilyOccupancyStatus || "");
-    setMultiFamilyLaundryType(draftToRestore.multiFamilyLaundryType || "");
-    setMultiFamilySeparateUtilities(draftToRestore.multiFamilySeparateUtilities || []);
-    setMultiFamilyParkingPerUnit(draftToRestore.multiFamilyParkingPerUnit || "");
-    setCommercialSpaceType(draftToRestore.commercialSpaceType || "");
-    setCommercialLeaseType(draftToRestore.commercialLeaseType || "");
-    setCommercialLeaseRate(draftToRestore.commercialLeaseRate || "");
-    setCommercialLeaseRatePer(draftToRestore.commercialLeaseRatePer || "sqft_year");
-    setCommercialLeaseTermMin(draftToRestore.commercialLeaseTermMin || "");
-    setCommercialLeaseTermMax(draftToRestore.commercialLeaseTermMax || "");
-    setCommercialZoning(draftToRestore.commercialZoning || "");
-    setCommercialBusinessTypes(draftToRestore.commercialBusinessTypes || []);
-    setCommercialTenantResponsibilities(draftToRestore.commercialTenantResponsibilities || []);
-    setCommercialCurrentTenant(draftToRestore.commercialCurrentTenant || "");
-    setCommercialLeaseExpiration(draftToRestore.commercialLeaseExpiration || "");
-    setCommercialCeilingHeight(draftToRestore.commercialCeilingHeight || "");
-    setCommercialLoadingDocks(draftToRestore.commercialLoadingDocks || "");
-    setCommercialPowerAvailable(draftToRestore.commercialPowerAvailable || "");
-    setCommercialAdditionalFeatures(draftToRestore.commercialAdditionalFeatures || []);
-    setAssessedValue(draftToRestore.assessedValue || "");
-    setFiscalYear(draftToRestore.fiscalYear || "");
-    setResidentialExemption(draftToRestore.residentialExemption || "Unknown");
-    setFloors(draftToRestore.floors || "");
-    setBasementType(draftToRestore.basementType || []);
-    setBasementFeatures(draftToRestore.basementFeatures || []);
-    setBasementFloorType(draftToRestore.basementFloorType || []);
-    setLeadPaint(draftToRestore.leadPaint || "Unknown");
-    setHandicapAccess(draftToRestore.handicapAccess || "Unknown");
-    setFoundation(draftToRestore.foundation || []);
-    setParkingComments(draftToRestore.parkingComments || "");
-    setParkingFeatures(draftToRestore.parkingFeatures || []);
-    setGarageComments(draftToRestore.garageComments || "");
-    setGarageFeatures(draftToRestore.garageFeatures || []);
-    setGarageAdditionalFeatures(draftToRestore.garageAdditionalFeatures || []);
-    setLotSizeSource(draftToRestore.lotSizeSource || []);
-    setLotDescription(draftToRestore.lotDescription || []);
-    setSellerDisclosure(draftToRestore.sellerDisclosure || "No");
-    setDisclosuresText(draftToRestore.disclosuresText || "");
-    setExclusions(draftToRestore.exclusions || "");
-    setBrokerComments(draftToRestore.brokerComments || "");
-    setOpenHouses(draftToRestore.openHouses || []);
-
-    setShowRestoreDraftDialog(false);
-    toast.success("Draft restored successfully");
-  }, [draftToRestore, formData]);
-
-  // Delete draft function
-  const deleteDraft = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      await supabase
-        .from('listing_drafts')
-        .delete()
-        .eq('user_id', user.id);
-    } catch (error) {
-      console.error('Error deleting draft:', error);
-    }
-  }, [user]);
-
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -579,7 +342,6 @@ const AddListing = () => {
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
       if (!session) {
         navigate("/auth");
       }
@@ -587,35 +349,6 @@ const AddListing = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
-
-  // Load draft on mount
-  useEffect(() => {
-    if (user) {
-      loadDraft();
-    }
-  }, [user, loadDraft]);
-
-  // Auto-save timer
-  useEffect(() => {
-    if (!user) return;
-
-    // Clear existing timer
-    if (autoSaveTimerRef.current) {
-      clearInterval(autoSaveTimerRef.current);
-    }
-
-    // Set up auto-save every 30 seconds
-    autoSaveTimerRef.current = setInterval(() => {
-      saveDraft();
-    }, 30000);
-
-    // Cleanup on unmount
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearInterval(autoSaveTimerRef.current);
-      }
-    };
-  }, [user, saveDraft]);
 
   const handleAddressSelect = useCallback(async (place: any) => {
     console.log("=== [AddListing] handleAddressSelect CALLED ===");
@@ -1289,8 +1022,6 @@ const AddListing = () => {
 
       if (error) throw error;
 
-      // Delete draft after successful submission
-      await deleteDraft();
 
       toast.success("Listing created successfully!");
       navigate("/agent-dashboard");
@@ -1330,10 +1061,6 @@ const AddListing = () => {
         {/* Action Buttons */}
         <div className="space-y-4 mb-8">
           <div className="flex flex-wrap gap-4">
-            <Button variant="default" size="lg" onClick={handleSaveDraft} type="button" className="gap-2">
-              <Save className="w-5 h-5" />
-              Save as Draft
-            </Button>
             <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
               <Eye className="w-5 h-5" />
               Preview Listing
@@ -1378,12 +1105,6 @@ const AddListing = () => {
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-2xl font-bold">Listing Details</h2>
                   <div className="flex items-center gap-3">
-                    {lastAutoSave && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Cloud className="h-3.5 w-3.5" />
-                        <span>Auto-saved {new Date(lastAutoSave).toLocaleTimeString()}</span>
-                      </div>
-                    )}
                     <span className="text-sm font-medium text-muted-foreground">{overallProgress}% Complete</span>
                   </div>
                 </div>
@@ -3606,10 +3327,6 @@ const AddListing = () => {
 
                 {/* Action Buttons - Bottom */}
                 <div className="flex gap-4 mt-8 pt-6 border-t">
-                  <Button variant="default" size="lg" onClick={handleSaveDraft} type="button" className="gap-2">
-                    <Save className="w-5 h-5" />
-                    Save as Draft
-                  </Button>
                   <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
                     <Eye className="w-5 h-5" />
                     Preview Listing
@@ -3944,29 +3661,6 @@ const AddListing = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Restore Draft Dialog */}
-      <AlertDialog open={showRestoreDraftDialog} onOpenChange={setShowRestoreDraftDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Restore Auto-Saved Draft?</AlertDialogTitle>
-            <AlertDialogDescription>
-              We found an auto-saved draft from your last session. Would you like to restore it and continue where you left off?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setShowRestoreDraftDialog(false);
-              deleteDraft();
-            }}>
-              Discard Draft
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={restoreDraft}>
-              Restore Draft
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
