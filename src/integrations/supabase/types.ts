@@ -596,6 +596,27 @@ export type Database = {
         }
         Relationships: []
       }
+      coming_soon_signups: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       counties: {
         Row: {
           created_at: string | null

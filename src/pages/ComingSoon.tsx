@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ComingSoon() {
+  const { toast } = useToast();
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0
   });
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Set launch date (30 days from now as example)
@@ -27,6 +33,55 @@ export default function ComingSoon() {
 
     return () => clearInterval(timer);
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!name.trim() || !email.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please enter both your name and email.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase
+        .from('coming_soon_signups')
+        .insert({ name: name.trim(), email: email.trim().toLowerCase() });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast({
+            title: "Already registered",
+            description: "This email is already registered for updates.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Success!",
+          description: "You'll be notified when we launch.",
+        });
+        setName("");
+        setEmail("");
+      }
+    } catch (error) {
+      console.error('Error submitting signup:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary-foreground to-secondary p-4">
@@ -65,18 +120,32 @@ export default function ComingSoon() {
           <p className="text-lg text-background/80">
             Get notified when we launch
           </p>
-          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3 max-w-md mx-auto">
             <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 px-4 py-3 rounded-lg bg-background/10 backdrop-blur-sm border border-background/20 text-background placeholder:text-background/50 focus:outline-none focus:ring-2 focus:ring-background/30"
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg bg-background/10 backdrop-blur-sm border border-background/20 text-background placeholder:text-background/50 focus:outline-none focus:ring-2 focus:ring-background/30"
+              required
             />
-            <button
-              type="submit"
-              className="px-6 py-3 bg-background text-primary rounded-lg font-semibold hover:bg-background/90 transition-colors"
-            >
-              Notify Me
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 px-4 py-3 rounded-lg bg-background/10 backdrop-blur-sm border border-background/20 text-background placeholder:text-background/50 focus:outline-none focus:ring-2 focus:ring-background/30"
+                required
+              />
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-3 bg-background text-primary rounded-lg font-semibold hover:bg-background/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? "Submitting..." : "Notify Me"}
+              </button>
+            </div>
           </form>
         </div>
 
