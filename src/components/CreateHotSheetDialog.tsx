@@ -303,9 +303,8 @@ export function CreateHotSheetDialog({
     availableCities.forEach((entry) => {
       const parts = entry.split(',');
       const cityPart = parts[0].trim();
-      const remainder = parts[1]?.trim() || "";
-      // If entry already plain city (from county towns), keep as-is; otherwise normalize to "City, ST"
-      const normalized = remainder ? `${cityPart}, ${state}` : entry;
+      // Normalize to consistent display format "City, ST"
+      const normalized = `${cityPart}, ${state}`;
       baseSet.add(normalized);
     });
     return Array.from(baseSet).filter(city => city.toLowerCase().includes(citySearch.toLowerCase()));
