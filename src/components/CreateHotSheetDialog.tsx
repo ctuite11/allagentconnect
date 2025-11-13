@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usCitiesByState } from "@/data/usCitiesData";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
+import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { z } from "zod";
 import { CT_COUNTY_TOWNS } from "@/data/ctCountyTowns";
@@ -138,17 +139,8 @@ export function CreateHotSheetDialog({
   const [addressOpen, setAddressOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(true);
 
-  // Fetch counties and hot sheet data on mount
+  // Fetch hot sheet data on mount if editing
   useEffect(() => {
-    const fetchCounties = async () => {
-      const { data } = await supabase
-        .from("counties")
-        .select("id, name, state")
-        .order("name");
-      if (data) setCounties(data as Array<{ id: string; name: string; state: string }>);
-    };
-    fetchCounties();
-
     // If editing, load the hot sheet data
     if (editMode && hotSheetId && open) {
       loadHotSheet();
@@ -258,14 +250,14 @@ export function CreateHotSheetDialog({
 
   const selectAllTowns = () => {
     if (selectedCountyId === "all") {
-      // When "All Counties" is selected, get all towns from all selected counties
+      // When "All Counties" is selected, get all towns from all counties in the state
       const allTowns: string[] = [];
-      counties
-        .filter(c => state ? c.state === state : true)
-        .forEach(county => {
-          const countyTowns = getCountyTowns(county.name, county.state);
+      if (state && COUNTIES_BY_STATE[state]) {
+        COUNTIES_BY_STATE[state].forEach(countyName => {
+          const countyTowns = getCountyTowns(countyName, state);
           allTowns.push(...countyTowns);
         });
+      }
       const uniqueTowns = Array.from(new Set(allTowns));
       setSelectedCities(uniqueTowns);
       toast.success(`Selected all ${uniqueTowns.length} towns from all counties`);
@@ -293,63 +285,10 @@ export function CreateHotSheetDialog({
     return towns || [];
   };
 
-  const usStates = [
-    { code: "AL", name: "Alabama" },
-    { code: "AK", name: "Alaska" },
-    { code: "AZ", name: "Arizona" },
-    { code: "AR", name: "Arkansas" },
-    { code: "CA", name: "California" },
-    { code: "CO", name: "Colorado" },
-    { code: "CT", name: "Connecticut" },
-    { code: "DE", name: "Delaware" },
-    { code: "FL", name: "Florida" },
-    { code: "GA", name: "Georgia" },
-    { code: "HI", name: "Hawaii" },
-    { code: "ID", name: "Idaho" },
-    { code: "IL", name: "Illinois" },
-    { code: "IN", name: "Indiana" },
-    { code: "IA", name: "Iowa" },
-    { code: "KS", name: "Kansas" },
-    { code: "KY", name: "Kentucky" },
-    { code: "LA", name: "Louisiana" },
-    { code: "ME", name: "Maine" },
-    { code: "MD", name: "Maryland" },
-    { code: "MA", name: "Massachusetts" },
-    { code: "MI", name: "Michigan" },
-    { code: "MN", name: "Minnesota" },
-    { code: "MS", name: "Mississippi" },
-    { code: "MO", name: "Missouri" },
-    { code: "MT", name: "Montana" },
-    { code: "NE", name: "Nebraska" },
-    { code: "NV", name: "Nevada" },
-    { code: "NH", name: "New Hampshire" },
-    { code: "NJ", name: "New Jersey" },
-    { code: "NM", name: "New Mexico" },
-    { code: "NY", name: "New York" },
-    { code: "NC", name: "North Carolina" },
-    { code: "ND", name: "North Dakota" },
-    { code: "OH", name: "Ohio" },
-    { code: "OK", name: "Oklahoma" },
-    { code: "OR", name: "Oregon" },
-    { code: "PA", name: "Pennsylvania" },
-    { code: "RI", name: "Rhode Island" },
-    { code: "SC", name: "South Carolina" },
-    { code: "SD", name: "South Dakota" },
-    { code: "TN", name: "Tennessee" },
-    { code: "TX", name: "Texas" },
-    { code: "UT", name: "Utah" },
-    { code: "VT", name: "Vermont" },
-    { code: "VA", name: "Virginia" },
-    { code: "WA", name: "Washington" },
-    { code: "WV", name: "West Virginia" },
-    { code: "WI", name: "Wisconsin" },
-    { code: "WY", name: "Wyoming" }
-  ];
-
-  // Get counties for the selected state
-  const countiesForState = state 
-    ? counties.filter(c => c.state === state)
-    : counties;
+  // Get counties for the selected state from COUNTIES_BY_STATE
+  const countiesForState = state && COUNTIES_BY_STATE[state]
+    ? COUNTIES_BY_STATE[state].map(name => ({ id: name, name, state }))
+    : [];
 
   const filteredCities = availableCities.filter(city =>
     city.toLowerCase().includes(citySearch.toLowerCase())
@@ -364,13 +303,10 @@ export function CreateHotSheetDialog({
 
     // If a specific county is selected, load towns from that county
     if (selectedCountyId && selectedCountyId !== "all") {
-      const selectedCounty = counties.find(c => c.id === selectedCountyId);
-      if (selectedCounty) {
-        const countyTowns = getCountyTowns(selectedCounty.name, state);
-        if (countyTowns.length > 0) {
-          setAvailableCities(countyTowns);
-          return;
-        }
+      const countyTowns = getCountyTowns(selectedCountyId, state);
+      if (countyTowns.length > 0) {
+        setAvailableCities(countyTowns);
+        return;
       }
     }
 
@@ -382,7 +318,7 @@ export function CreateHotSheetDialog({
     citiesForState.forEach(city => {
       const areas = getAreasForCity(city, state);
       if (areas.length > 0) {
-        // Add "Add All Towns" option for this city
+        // Add city itself
         expandedCities.push(`${city}, ${state}`);
         // Add each neighborhood
         areas.forEach(area => {
@@ -395,7 +331,7 @@ export function CreateHotSheetDialog({
     });
     
     setAvailableCities(expandedCities);
-  }, [state, selectedCountyId, counties]);
+  }, [state, selectedCountyId]);
 
   // Fetch matching listings count
   useEffect(() => {
@@ -1048,7 +984,7 @@ export function CreateHotSheetDialog({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-popover z-50 max-h-[300px]">
-                            {usStates.map((stateItem) => (
+                            {US_STATES.map((stateItem) => (
                               <SelectItem key={stateItem.code} value={stateItem.code} className="text-sm">
                                 {stateItem.code}
                               </SelectItem>
@@ -1061,11 +997,11 @@ export function CreateHotSheetDialog({
                         <Label htmlFor="coverage-areas" className="text-sm">Coverage Areas</Label>
                         <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
                           <SelectTrigger id="coverage-areas" className="bg-background text-sm">
-                            <SelectValue placeholder="All Towns" />
+                            <SelectValue placeholder="All Counties" />
                           </SelectTrigger>
                           <SelectContent className="bg-popover z-50 max-h-[300px]">
                             <SelectItem value="all" className="text-sm">
-                              All Towns
+                              All Counties
                             </SelectItem>
                             {countiesForState.map((county) => (
                               <SelectItem key={county.id} value={county.id} className="text-sm">
