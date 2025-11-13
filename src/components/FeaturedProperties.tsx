@@ -9,7 +9,6 @@ const FeaturedProperties = () => {
       image: property1,
       title: "Modern Luxury Apartment",
       price: "$1,074,000",
-      savings: "$58,000",
       address: "75 Fulton Street #21, Boston, MA 02109",
       beds: 3,
       baths: 2,
@@ -19,7 +18,6 @@ const FeaturedProperties = () => {
       image: property2,
       title: "Contemporary Family Home",
       price: "$875,000",
-      savings: "$45,000",
       address: "124 Oak Avenue, Cambridge, MA 02138",
       beds: 4,
       baths: 3,
@@ -29,7 +27,6 @@ const FeaturedProperties = () => {
       image: property3,
       title: "Downtown Luxury Condo",
       price: "$1,250,000",
-      savings: "$65,000",
       address: "88 Park Street, Boston, MA 02116",
       beds: 2,
       baths: 2,
@@ -43,7 +40,7 @@ const FeaturedProperties = () => {
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">Featured Properties</h2>
           <p className="text-xl text-muted-foreground">
-            Discover exceptional homes with transparent pricing and significant savings
+            Discover exceptional homes with transparent pricing
           </p>
         </div>
         
