@@ -41,7 +41,7 @@ import ConsumerDashboard from "./pages/ConsumerDashboard";
 import ConsumerAuth from "./pages/ConsumerAuth";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import ComingSoon from "./pages/ComingSoon";
 
 const queryClient = new QueryClient();
 
@@ -53,48 +53,10 @@ const App = () => (
           <TooltipProvider>
             <Sonner />
             <Routes>
-          {/* Public routes - authentication pages */}
-          <Route path="/consumer/auth" element={<ConsumerAuth />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/buyer-auth" element={<BuyerAuth />} />
-          <Route path="/password-reset" element={<PasswordReset />} />
-          
-          {/* Protected routes - require authentication */}
-          <Route path="/" element={<ProtectedRoute><ConsumerHome /></ProtectedRoute>} />
-          <Route path="/agent-home" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-          <Route path="/browse" element={<ProtectedRoute><BrowseProperties /></ProtectedRoute>} />
-          <Route path="/search-results" element={<ProtectedRoute><SearchResults /></ProtectedRoute>} />
-          <Route path="/our-agents" element={<ProtectedRoute><OurAgents /></ProtectedRoute>} />
-          <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-          <Route path="/hot-sheets" element={<ProtectedRoute><HotSheets /></ProtectedRoute>} />
-          <Route path="/hot-sheets/:id/review" element={<ProtectedRoute><HotSheetReview /></ProtectedRoute>} />
-          <Route path="/my-clients" element={<ProtectedRoute><MyClients /></ProtectedRoute>} />
-          <Route path="/client-hot-sheet/:token" element={<ProtectedRoute><ClientHotSheet /></ProtectedRoute>} />
-          <Route path="/agent-search" element={<ProtectedRoute><OurAgents /></ProtectedRoute>} />
-          <Route path="/agent-dashboard" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
-          <Route path="/submit-buyer-need" element={<Navigate to="/submit-client-need" replace />} />
-          <Route path="/submit-client-need" element={<ProtectedRoute><SubmitClientNeed /></ProtectedRoute>} />
-          <Route path="/client-needs" element={<ProtectedRoute><ClientNeedsDashboard /></ProtectedRoute>} />
-          <Route path="/add-listing" element={<ProtectedRoute><AddListing /></ProtectedRoute>} />
-          <Route path="/add-rental-listing" element={<ProtectedRoute><AddRentalListing /></ProtectedRoute>} />
-          <Route path="/edit-listing/:id" element={<ProtectedRoute><EditListing /></ProtectedRoute>} />
-          <Route path="/property/:id" element={<ProtectedRoute><PropertyDetail /></ProtectedRoute>} />
-          <Route path="/consumer-property/:id" element={<ProtectedRoute><ConsumerPropertyDetail /></ProtectedRoute>} />
-          <Route path="/agent/:id" element={<ProtectedRoute><AgentProfile /></ProtectedRoute>} />
-          <Route path="/agent-profile-editor" element={<ProtectedRoute><AgentProfileEditor /></ProtectedRoute>} />
-          <Route path="/manage-team" element={<ProtectedRoute><ManageTeam /></ProtectedRoute>} />
-          <Route path="/team/:id" element={<ProtectedRoute><TeamProfile /></ProtectedRoute>} />
-          <Route path="/manage-coverage-areas" element={<ProtectedRoute><ManageCoverageAreas /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><ListingAnalytics /></ProtectedRoute>} />
-          <Route path="/analytics/:id" element={<ProtectedRoute><ListingAnalytics /></ProtectedRoute>} />
-          <Route path="/market-insights" element={<ProtectedRoute><MarketInsights /></ProtectedRoute>} />
-          <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
-          <Route path="/vendor/setup" element={<ProtectedRoute><VendorSetup /></ProtectedRoute>} />
-          <Route path="/vendor/packages" element={<ProtectedRoute><VendorPackages /></ProtectedRoute>} />
-          <Route path="/vendor/directory" element={<ProtectedRoute><VendorDirectory /></ProtectedRoute>} />
-          <Route path="/consumer/dashboard" element={<ProtectedRoute><ConsumerDashboard /></ProtectedRoute>} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+          {/* Coming Soon landing page - only public route */}
+          <Route path="/" element={<ComingSoon />} />
+          {/* Redirect all other routes to coming soon */}
+          <Route path="*" element={<ComingSoon />} />
         </Routes>
           </TooltipProvider>
         </ThemeProvider>
