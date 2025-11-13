@@ -443,7 +443,7 @@ const AgentDashboard = () => {
 
           {/* Recent Activity Feed */}
           {recentActivity.length > 0 && (
-            <Card className="hover:shadow-lg transition-shadow lg:col-span-2">
+            <Card className="hover:shadow-lg transition-all hover:scale-105 border-l-4 border-l-slate-700 bg-gradient-to-br from-card to-card/50 lg:col-span-2">
               <CardHeader>
                 <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
                 <CardDescription className="text-xs">Your latest listings, messages, and client interactions</CardDescription>
