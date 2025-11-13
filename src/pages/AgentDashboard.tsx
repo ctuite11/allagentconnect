@@ -59,6 +59,7 @@ const AgentDashboard = () => {
   const [clientsCount, setClientsCount] = useState(0);
   const [messagesCount, setMessagesCount] = useState(0);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [firstName, setFirstName] = useState<string>("");
 
   useEffect(() => {
     document.title = "Agent Dashboard - All Agent Connect";
@@ -89,6 +90,17 @@ const AgentDashboard = () => {
 
   const loadData = async (userId: string) => {
     try {
+      // Load user profile
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("first_name")
+        .eq("id", userId)
+        .single();
+      
+      if (profileData?.first_name) {
+        setFirstName(profileData.first_name);
+      }
+
       // Load listings with stats
       const { data, error } = await supabase
         .from("listings")
@@ -333,9 +345,11 @@ const AgentDashboard = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">My Dashboard</h1>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Hey {firstName || "there"}! 👋
+            </h1>
             <p className="text-muted-foreground mt-2 text-lg">
-              Welcome back! Here's what's happening with your business today
+              Welcome to your success hub – let's make today amazing
             </p>
           </div>
           <Button variant="outline" onClick={handleSignOut}>
