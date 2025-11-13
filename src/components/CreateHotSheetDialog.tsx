@@ -1073,7 +1073,7 @@ export function CreateHotSheetDialog({
                             
                             const hasNeighborhoods = hasNeighborhoodData(cityPart, state);
                             const neighborhoods = hasNeighborhoods ? getAreasForCity(cityPart, state) : [];
-                            const isExpanded = expandedCities.has(cityPart);
+                            const isExpanded = expandedCities.has(cityStr);
                             
                             return (
                               <div key={cityStr}>
@@ -1081,7 +1081,7 @@ export function CreateHotSheetDialog({
                                   {hasNeighborhoods && (
                                     <button
                                       type="button"
-                                      onClick={() => toggleCityExpansion(cityPart)}
+                                      onClick={() => toggleCityExpansion(cityStr)}
                                       className="px-1 py-1.5 hover:bg-muted rounded"
                                     >
                                       {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
