@@ -359,7 +359,7 @@ const AgentDashboard = () => {
 
         {/* Dashboard Overview Cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-primary bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/agent-dashboard")}>
+          <Card className="hover:shadow-lg transition-all hover:scale-105 border-l-4 border-l-primary bg-gradient-to-br from-card to-card/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Listings</CardTitle>
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
