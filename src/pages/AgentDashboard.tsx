@@ -346,7 +346,7 @@ const AgentDashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Hey {firstName}!
+              Hey {firstName || "Agent"}!
             </h1>
             <p className="text-muted-foreground mt-2 text-lg">
               Welcome to your success hub – let's make today amazing
@@ -358,7 +358,7 @@ const AgentDashboard = () => {
         </div>
 
         {/* Dashboard Overview Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
           <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-primary bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/agent-dashboard")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Listings</CardTitle>
@@ -452,17 +452,17 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Recent Activity Feed */}
+          {/* Recent Activity Feed - Full Width */}
           {recentActivity.length > 0 && (
-            <Card className="hover:shadow-lg transition-all hover:scale-105 border-l-4 border-l-slate-700 bg-gradient-to-br from-card to-card/50 lg:col-span-2">
+            <Card className="hover:shadow-lg transition-all hover:scale-105 border-l-4 border-l-slate-700 bg-gradient-to-br from-card to-card/50 lg:col-span-3">
               <CardHeader>
                 <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
                 <CardDescription className="text-xs">Your latest listings, messages, and client interactions</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                  {recentActivity.slice(0, 5).map((activity, index) => (
-                    <div key={index} className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {recentActivity.slice(0, 6).map((activity, index) => (
+                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg border bg-background/50">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted flex-shrink-0">
                         {getActivityIcon(activity.icon)}
                       </div>
