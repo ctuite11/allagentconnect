@@ -53,10 +53,47 @@ const App = () => (
           <TooltipProvider>
             <Sonner />
             <Routes>
-          {/* Coming Soon landing page - only public route */}
+          {/* Coming Soon landing page - public homepage */}
           <Route path="/" element={<ComingSoon />} />
-          {/* Redirect all other routes to coming soon */}
-          <Route path="*" element={<ComingSoon />} />
+          
+          {/* All other routes accessible for development */}
+          <Route path="/home" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/agent-dashboard" element={<AgentDashboard />} />
+          <Route path="/buyer/auth" element={<BuyerAuth />} />
+          <Route path="/submit-client-need" element={<SubmitClientNeed />} />
+          <Route path="/client-needs" element={<ClientNeedsDashboard />} />
+          <Route path="/add-listing" element={<AddListing />} />
+          <Route path="/add-rental-listing" element={<AddRentalListing />} />
+          <Route path="/edit-listing/:id" element={<EditListing />} />
+          <Route path="/property/:id" element={<PropertyDetail />} />
+          <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
+          <Route path="/agent/:id" element={<AgentProfile />} />
+          <Route path="/agent-profile-editor" element={<AgentProfileEditor />} />
+          <Route path="/manage-team" element={<ManageTeam />} />
+          <Route path="/team/:id" element={<TeamProfile />} />
+          <Route path="/manage-coverage-areas" element={<ManageCoverageAreas />} />
+          <Route path="/browse" element={<BrowseProperties />} />
+          <Route path="/search" element={<SearchResults />} />
+          <Route path="/our-agents" element={<OurAgents />} />
+          <Route path="/agent-search" element={<OurAgents />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/hot-sheets" element={<HotSheets />} />
+          <Route path="/hot-sheets/:id/review" element={<HotSheetReview />} />
+          <Route path="/my-clients" element={<MyClients />} />
+          <Route path="/client-hot-sheet/:id" element={<ClientHotSheet />} />
+          <Route path="/analytics" element={<ListingAnalytics />} />
+          <Route path="/analytics/:id" element={<ListingAnalytics />} />
+          <Route path="/market-insights" element={<MarketInsights />} />
+          <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+          <Route path="/vendor/setup" element={<VendorSetup />} />
+          <Route path="/vendor/packages" element={<VendorPackages />} />
+          <Route path="/vendor/directory" element={<VendorDirectory />} />
+          <Route path="/consumer/home" element={<ConsumerHome />} />
+          <Route path="/consumer/dashboard" element={<ConsumerDashboard />} />
+          <Route path="/consumer/auth" element={<ConsumerAuth />} />
+          <Route path="/password-reset" element={<PasswordReset />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
           </TooltipProvider>
         </ThemeProvider>
