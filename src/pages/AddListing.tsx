@@ -827,6 +827,7 @@ const AddListing = () => {
   const handleSaveDraft = async () => {
     try {
       await handleSubmit(new Event('submit') as any, false);
+      toast.success("Draft saved successfully!");
       navigate("/agent-dashboard");
     } catch (error) {
       // Error already handled in handleSubmit
@@ -1061,6 +1062,10 @@ const AddListing = () => {
         {/* Action Buttons */}
         <div className="space-y-4 mb-8">
           <div className="flex flex-wrap gap-4">
+            <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
+              <Save className="w-5 h-5" />
+              Save as Draft
+            </Button>
             <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
               <Eye className="w-5 h-5" />
               Preview Listing
@@ -3327,6 +3332,10 @@ const AddListing = () => {
 
                 {/* Action Buttons - Bottom */}
                 <div className="flex gap-4 mt-8 pt-6 border-t">
+                  <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
+                    <Save className="w-5 h-5" />
+                    Save as Draft
+                  </Button>
                   <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
                     <Eye className="w-5 h-5" />
                     Preview Listing
