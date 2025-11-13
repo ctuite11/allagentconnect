@@ -44,7 +44,14 @@ export function TownsPicker({
           if (town.includes('-')) return null;
 
           const hasNeighborhoods = hasNeighborhoodData(town, stateKey || state);
-          const neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
+          let neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
+          if ((neighborhoods?.length ?? 0) === 0) {
+            neighborhoods = Array.from(new Set(
+              towns
+                .filter((t) => t.startsWith(`${town}-`))
+                .map((t) => t.split('-').slice(1).join('-'))
+            ));
+          }
           const isExpanded = expandedCities.has(town);
           
           return (
@@ -98,7 +105,15 @@ export function TownsPicker({
         if (town.includes('-')) return null;
 
         const hasNeighborhoods = hasNeighborhoodData(town, stateKey || state);
-        const neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
+        let neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
+        // Fallback: if dataset lookup fails, derive from provided towns list (city-neighborhood)
+        if ((neighborhoods?.length ?? 0) === 0) {
+          neighborhoods = Array.from(new Set(
+            towns
+              .filter((t) => t.startsWith(`${town}-`))
+              .map((t) => t.split('-').slice(1).join('-'))
+          ));
+        }
         const isExpanded = expandedCities.has(town);
         
         return (
