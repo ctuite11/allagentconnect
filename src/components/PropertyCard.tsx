@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ interface PropertyCardProps {
   unitNumber?: string;
   listingId?: string;
   onFavoriteChange?: () => void;
+  agentId?: string;
   agentName?: string;
   agentCompany?: string;
   agentPhoto?: string;
@@ -26,7 +28,8 @@ interface PropertyCardProps {
   agentEmail?: string;
 }
 
-const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNumber, listingId, onFavoriteChange, agentName, agentCompany, agentPhoto, agentPhone, agentEmail }: PropertyCardProps) => {
+const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNumber, listingId, onFavoriteChange, agentId, agentName, agentCompany, agentPhoto, agentPhone, agentEmail }: PropertyCardProps) => {
+  const navigate = useNavigate();
   const [isFavorited, setIsFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -138,7 +141,13 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="flex items-center gap-2 flex-shrink-0 cursor-pointer">
+                  <div 
+                    className="flex items-center gap-2 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (agentId) navigate(`/agent-profile/${agentId}`);
+                    }}
+                  >
                     <Avatar className="w-16 h-16">
                       <AvatarImage src={agentPhoto} alt={agentName} />
                       <AvatarFallback className="bg-primary/10 text-primary text-base">
