@@ -15,15 +15,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, ArrowUp, X } from "lucide-react";
 import { toast } from "sonner";
-import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
-import { usCitiesByState } from "@/data/usCitiesData";
-import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
-import { CT_COUNTY_TOWNS } from "@/data/ctCountyTowns";
-import { RI_COUNTY_TOWNS } from "@/data/riCountyTowns";
-import { NH_COUNTY_TOWNS } from "@/data/nhCountyTowns";
-import { VT_COUNTY_TOWNS } from "@/data/vtCountyTowns";
-import { ME_COUNTY_TOWNS } from "@/data/meCountyTowns";
+import { useTownsPicker } from "@/hooks/useTownsPicker";
+import { TownsPicker } from "@/components/TownsPicker";
 
 const BrowseProperties = () => {
   const navigate = useNavigate();
@@ -44,7 +38,6 @@ const BrowseProperties = () => {
   const [showAreas, setShowAreas] = useState("yes");
   const [townSearch, setTownSearch] = useState("");
   const [manualTowns, setManualTowns] = useState("");
-  const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
   
   // Listing events
   const [openHouses, setOpenHouses] = useState(false);
@@ -249,47 +242,13 @@ const BrowseProperties = () => {
   };
 
   const currentStateCounties = getCountiesForState(state);
-  const currentStateCities = usCitiesByState[state] || [];
-  // New England states have county-to-towns mapping
-  const hasCountyData = ["MA", "CT", "RI", "NH", "VT", "ME"].includes(state);
   
-  // Generate town list with neighborhoods
-  const getTownsList = () => {
-    // Build a base list of cities depending on county selection
-    let baseCities: string[] = [];
-    if (county === "all") {
-      baseCities = currentStateCities;
-    } else {
-      // Get county-specific towns based on state
-      const countyMap = {
-        MA: MA_COUNTY_TOWNS,
-        CT: CT_COUNTY_TOWNS,
-        RI: RI_COUNTY_TOWNS,
-        NH: NH_COUNTY_TOWNS,
-        VT: VT_COUNTY_TOWNS,
-        ME: ME_COUNTY_TOWNS
-      }[state];
-      
-      baseCities = countyMap?.[county] || currentStateCities;
-    }
-
-    const towns: string[] = [];
-    baseCities.forEach((city) => {
-      towns.push(`${city}, ${state}`);
-      if (showAreas === "yes") {
-        const neighborhoods = getAreasForCity(city, state);
-        neighborhoods.forEach((neighborhood) => {
-          towns.push(`${city}, ${state}-${neighborhood}`);
-        });
-      }
-    });
-
-    return towns;
-  };
-  
-  const filteredTowns = getTownsList().filter(town => 
-    town.toLowerCase().includes(townSearch.toLowerCase())
-  );
+  // Use the shared towns picker hook
+  const { townsList, expandedCities, toggleCityExpansion, hasCountyData } = useTownsPicker({
+    state,
+    county,
+    showAreas
+  });
   
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -310,20 +269,14 @@ const BrowseProperties = () => {
   };
   
   const addAllTowns = () => {
-    setSelectedTowns(getTownsList());
+    setSelectedTowns(townsList);
     toast.success("All towns added");
   };
 
-  const toggleCityExpansion = (city: string) => {
-    setExpandedCities(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(city)) {
-        newSet.delete(city);
-      } else {
-        newSet.add(city);
-      }
-      return newSet;
-    });
+  const toggleTown = (town: string) => {
+    setSelectedTowns(prev =>
+      prev.includes(town) ? prev.filter(t => t !== town) : [...prev, town]
+    );
   };
 
   return (
@@ -788,56 +741,17 @@ const BrowseProperties = () => {
                         <div className="p-2 hover:bg-muted cursor-pointer border-b font-semibold text-sm bg-background" onClick={addAllTowns}>
                           - Add All Towns -
                         </div>
-                        <div className="p-2 space-y-1">
-                          {filteredTowns.map((town) => {
-                            const hasNeighborhoods = hasNeighborhoodData(town, state);
-                            const neighborhoods = hasNeighborhoods ? getAreasForCity(town, state) : [];
-                            const isExpanded = expandedCities.has(town);
-                            
-                            return (
-                              <div key={town} className="space-y-1">
-                                <div className="flex items-center space-x-2 py-0.5">
-                                  {hasNeighborhoods && (
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleCityExpansion(town)}
-                                      className="p-1 hover:bg-muted rounded"
-                                    >
-                                      {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
-                                    </button>
-                                  )}
-                                  <Checkbox
-                                    id={`town-${town}`}
-                                    checked={selectedTowns.includes(town)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) setSelectedTowns([...selectedTowns, town]);
-                                      else setSelectedTowns(selectedTowns.filter(t => t !== town));
-                                    }}
-                                  />
-                                  <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">{town}</label>
-                                </div>
-                                {hasNeighborhoods && isExpanded && (
-                                  <div className="ml-8 border-l-2 border-muted pl-2 space-y-1 bg-muted/30 rounded-r py-1">
-                                    {neighborhoods.map((neighborhood) => (
-                                      <div key={`${town}-${neighborhood}`} className="flex items-center space-x-2 py-0.5">
-                                        <Checkbox
-                                          id={`neighborhood-${town}-${neighborhood}`}
-                                          checked={selectedTowns.includes(`${town}-${neighborhood}`)}
-                                          onCheckedChange={(checked) => {
-                                            if (checked) setSelectedTowns([...selectedTowns, `${town}-${neighborhood}`]);
-                                            else setSelectedTowns(selectedTowns.filter(t => t !== `${town}-${neighborhood}`));
-                                          }}
-                                        />
-                                        <label htmlFor={`neighborhood-${town}-${neighborhood}`} className="text-xs cursor-pointer flex-1 text-muted-foreground">
-                                          {neighborhood}
-                                        </label>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                        <div className="p-2">
+                          <TownsPicker
+                            towns={townsList}
+                            selectedTowns={selectedTowns}
+                            onToggleTown={toggleTown}
+                            expandedCities={expandedCities}
+                            onToggleCityExpansion={toggleCityExpansion}
+                            state={state}
+                            searchQuery={townSearch}
+                            variant="checkbox"
+                          />
                         </div>
                       </div>
 

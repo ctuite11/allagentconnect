@@ -14,17 +14,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronUp, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { usCitiesByState } from "@/data/usCitiesData";
-import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { z } from "zod";
-import { CT_COUNTY_TOWNS } from "@/data/ctCountyTowns";
-import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
-import { NH_COUNTY_TOWNS } from "@/data/nhCountyTowns";
-import { RI_COUNTY_TOWNS } from "@/data/riCountyTowns";
-import { VT_COUNTY_TOWNS } from "@/data/vtCountyTowns";
-import { ME_COUNTY_TOWNS } from "@/data/meCountyTowns";
+import { useTownsPicker } from "@/hooks/useTownsPicker";
+import { TownsPicker } from "@/components/TownsPicker";
 
 interface CreateHotSheetDialogProps {
   open: boolean;
@@ -92,8 +86,6 @@ export function CreateHotSheetDialog({
   const [state, setState] = useState("");
   const [selectedCountyId, setSelectedCountyId] = useState<string>("");
   const [showAreas, setShowAreas] = useState<boolean>(true);
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
-  const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
 
   // Live results counter
   const [matchingListingsCount, setMatchingListingsCount] = useState<number>(0);
@@ -235,53 +227,9 @@ export function CreateHotSheetDialog({
       prev.includes(city) ? prev.filter(c => c !== city) : [...prev, city]
     );
   };
-
-  const toggleCityExpansion = (city: string) => {
-    setExpandedCities(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(city)) {
-        newSet.delete(city);
-      } else {
-        newSet.add(city);
-      }
-      return newSet;
-    });
-  };
   const selectAllTowns = () => {
-    if (selectedCountyId === "all") {
-      // When "All Counties" is selected, get all towns from all counties in the state
-      const allTowns: string[] = [];
-      if (state && COUNTIES_BY_STATE[state]) {
-        COUNTIES_BY_STATE[state].forEach(countyName => {
-          const countyTowns = getCountyTowns(countyName, state);
-          allTowns.push(...countyTowns);
-        });
-      }
-      const uniqueTowns = Array.from(new Set(allTowns));
-      setSelectedCities(uniqueTowns);
-      toast.success(`Selected all ${uniqueTowns.length} towns from all counties`);
-    } else {
-      setSelectedCities(availableCities);
-      toast.success(`Selected all ${availableCities.length} towns`);
-    }
-  };
-
-  // Helper function to get towns for a county
-  const getCountyTowns = (countyName: string, stateCode: string): string[] => {
-    const countyTownMappings: Record<string, Record<string, string[]>> = {
-      CT: CT_COUNTY_TOWNS,
-      MA: MA_COUNTY_TOWNS,
-      NH: NH_COUNTY_TOWNS,
-      RI: RI_COUNTY_TOWNS,
-      VT: VT_COUNTY_TOWNS,
-      ME: ME_COUNTY_TOWNS,
-    };
-
-    const stateMappings = countyTownMappings[stateCode];
-    if (!stateMappings) return [];
-
-    const towns = stateMappings[countyName];
-    return towns || [];
+    setSelectedCities(townsList);
+    toast.success(`Selected all ${townsList.length} towns`);
   };
 
   // Get counties for the selected state from COUNTIES_BY_STATE
@@ -289,56 +237,12 @@ export function CreateHotSheetDialog({
     ? COUNTIES_BY_STATE[state].map(name => ({ id: name, name, state }))
     : [];
 
-  const filteredCities = React.useMemo(() => {
-    const baseSet = new Set<string>();
-    availableCities.forEach((entry) => {
-      const parts = entry.split(',');
-      const cityPart = parts[0].trim();
-      // Normalize to consistent display format "City, ST"
-      const normalized = `${cityPart}, ${state}`;
-      baseSet.add(normalized);
-    });
-    return Array.from(baseSet).filter(city => city.toLowerCase().includes(citySearch.toLowerCase()));
-  }, [availableCities, state, citySearch]);
-
-  // Load cities when state or county changes
-  useEffect(() => {
-    if (!state) {
-      setAvailableCities([]);
-      return;
-    }
-
-    // If a specific county is selected, load towns from that county
-    if (selectedCountyId && selectedCountyId !== "all") {
-      const countyTowns = getCountyTowns(selectedCountyId, state);
-      if (countyTowns.length > 0) {
-        setAvailableCities(countyTowns);
-        return;
-      }
-    }
-
-    // Otherwise, get all cities from US geographical data
-    const citiesForState = usCitiesByState[state] || [];
-    
-    // Expand cities with neighborhoods
-    const expandedCities: string[] = [];
-    citiesForState.forEach(city => {
-      const areas = getAreasForCity(city, state);
-      if (areas.length > 0) {
-        // Add city itself
-        expandedCities.push(`${city}, ${state}`);
-        // Add each neighborhood
-        areas.forEach(area => {
-          expandedCities.push(`${city}, ${state}-${area}`);
-        });
-      } else {
-        // No neighborhoods, just add the city
-        expandedCities.push(`${city}, ${state}`);
-      }
-    });
-    
-    setAvailableCities(expandedCities);
-  }, [state, selectedCountyId]);
+  // Use the shared towns picker hook
+  const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
+    state,
+    county: selectedCountyId,
+    showAreas
+  });
 
   // Fetch matching listings count
   useEffect(() => {
@@ -1057,7 +961,7 @@ export function CreateHotSheetDialog({
                           className="text-sm"
                         />
                         <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2">
-                          {selectedCountyId && availableCities.length > 0 && (
+                          {selectedCountyId && townsList.length > 0 && (
                             <button
                               type="button"
                               onClick={selectAllTowns}
@@ -1065,55 +969,19 @@ export function CreateHotSheetDialog({
                             >
                               {selectedCountyId === "all" 
                                 ? `✓ Add All Towns from All Counties` 
-                                : `✓ Add All Towns in County (${availableCities.length})`}
+                                : `✓ Add All Towns in County (${townsList.length})`}
                             </button>
                           )}
-                          {filteredCities.map((cityStr) => {
-                            // Parse city name from "City, State" format
-                            const parts = cityStr.split(',');
-                            const cityName = parts[0].trim();
-                            
-                            const hasNeighborhoods = hasNeighborhoodData(cityName, state);
-                            const neighborhoods = hasNeighborhoods ? getAreasForCity(cityName, state) : [];
-                            const isExpanded = expandedCities.has(cityName);
-                            
-                            return (
-                              <div key={cityStr} className="space-y-1">
-                                <div className="flex items-center">
-                                  {hasNeighborhoods && (
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleCityExpansion(cityName)}
-                                      className="p-1 hover:bg-muted rounded"
-                                    >
-                                      {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                                    </button>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleCity(cityStr)}
-                                    className="flex-1 text-left px-2 py-1.5 text-sm hover:bg-muted rounded"
-                                  >
-                                    {cityStr}
-                                  </button>
-                                </div>
-                                {hasNeighborhoods && isExpanded && (
-                                  <div className="ml-8 border-l-2 border-muted pl-2 mt-1 bg-muted/30 rounded-r py-1 space-y-1">
-                                    {neighborhoods.map((neighborhood) => (
-                                      <button
-                                        key={`${cityName}-${neighborhood}`}
-                                        type="button"
-                                        onClick={() => toggleCity(`${cityName}-${neighborhood}`)}
-                                        className="w-full text-left px-2 py-1 text-xs hover:bg-muted rounded text-muted-foreground"
-                                      >
-                                        {neighborhood}
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                          <TownsPicker
+                            towns={townsList}
+                            selectedTowns={selectedCities}
+                            onToggleTown={toggleCity}
+                            expandedCities={expandedCities}
+                            onToggleCityExpansion={toggleCityExpansion}
+                            state={state}
+                            searchQuery={citySearch}
+                            variant="button"
+                          />
                         </div>
                       </div>
 
