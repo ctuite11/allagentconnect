@@ -49,12 +49,10 @@ const Navigation = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div 
-              className="text-2xl font-bold cursor-pointer font-mono tracking-tight flex items-center gap-1" 
+              className="text-2xl font-bold cursor-pointer" 
               onClick={() => navigate("/")}
             >
-              <span className="text-primary">ALL</span>
-              <span className="text-foreground">AG<span className="inline-block scale-y-150">☰</span>NT</span>
-              <span className="bg-gradient-primary bg-clip-text text-transparent">CONN<span className="inline-block scale-y-150">☰</span>CT</span>
+              <span className="text-primary">All Agent</span> <span className="text-foreground">Connect</span>
             </div>
           </div>
           
