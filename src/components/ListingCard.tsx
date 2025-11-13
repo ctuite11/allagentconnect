@@ -31,6 +31,7 @@ interface ListingCardProps {
     is_relisting?: boolean;
     original_listing_id?: string | null;
     condo_details?: any;
+    cancelled_at?: string | null;
     listing_stats?: {
       view_count: number;
       save_count: number;
@@ -40,10 +41,11 @@ interface ListingCardProps {
     };
   };
   onDelete: (id: string) => void;
+  onReactivate?: (id: string) => void;
   viewMode?: 'grid' | 'list';
 }
 
-const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps) => {
+const ListingCard = ({ listing, onDelete, onReactivate, viewMode = 'grid' }: ListingCardProps) => {
   const navigate = useNavigate();
   const [matchCount, setMatchCount] = useState<number>(0);
   const [loadingMatches, setLoadingMatches] = useState(false);
@@ -475,14 +477,26 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => onDelete(listing.id)}
-                className="w-full"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
+              {listing.status === 'cancelled' && onReactivate ? (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => onReactivate(listing.id)}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                >
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                  Reactivate
+                </Button>
+              ) : (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => onDelete(listing.id)}
+                  className="w-full"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -707,13 +721,25 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => onDelete(listing.id)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          {listing.status === 'cancelled' && onReactivate ? (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => onReactivate(listing.id)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <RefreshCw className="w-4 h-4 mr-1" />
+              Reactivate
+            </Button>
+          ) : (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDelete(listing.id)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </CardContent>
       <ReverseProspectDialog
