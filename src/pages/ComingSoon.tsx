@@ -92,10 +92,7 @@ export default function ComingSoon() {
             <span className="text-background/90">AG<span className="inline-block scale-y-150">☰</span>NT</span>
             <span className="bg-gradient-to-r from-background/80 via-background to-background/80 bg-clip-text text-transparent">CONN<span className="inline-block scale-y-150">☰</span>CT</span>
           </div>
-          <h1 className="text-6xl md:text-8xl font-bold text-background animate-fade-in">
-            Coming Soon
-          </h1>
-          <p className="text-xl md:text-2xl text-background/90">
+          <p className="text-xl md:text-2xl text-background/90 mt-4">
             We're working on something amazing. Stay tuned!
           </p>
         </div>
