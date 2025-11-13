@@ -121,6 +121,40 @@ const handler = async (req: Request): Promise<Response> => {
       query = query.eq("state", criteria.state);
     }
 
+    // Handle cities with neighborhoods
+    if (criteria.cities && criteria.cities.length > 0) {
+      const cityFilters = criteria.cities.map((cityStr: string) => {
+        const parts = cityStr.split(',');
+        const cityPart = parts[0].trim();
+        
+        // Check if it's a city-neighborhood format (e.g., "Boston-Charlestown")
+        if (cityPart.includes('-')) {
+          const [city, neighborhood] = cityPart.split('-').map((s: string) => s.trim());
+          return { city, neighborhood };
+        }
+        
+        return { city: cityPart, neighborhood: null };
+      });
+      
+      // Group by cities that have neighborhoods vs just cities
+      const citiesWithNeighborhoods = cityFilters.filter((f: {city: string, neighborhood: string | null}) => f.neighborhood);
+      const citiesOnly = cityFilters.filter((f: {city: string, neighborhood: string | null}) => !f.neighborhood).map((f: {city: string, neighborhood: string | null}) => f.city);
+      
+      // Build complex filter
+      if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
+        query = query.or(
+          `city.in.(${citiesOnly.join(',')}),` +
+          citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
+        );
+      } else if (citiesWithNeighborhoods.length > 0) {
+        query = query.or(
+          citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
+        );
+      } else if (citiesOnly.length > 0) {
+        query = query.in("city", citiesOnly);
+      }
+    }
+
     const { data: matchingListings, error: listingsError } = await query.order("created_at", { ascending: false });
 
     if (listingsError) throw listingsError;

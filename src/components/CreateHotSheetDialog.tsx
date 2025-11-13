@@ -92,6 +92,7 @@ export function CreateHotSheetDialog({
   const [selectedCountyId, setSelectedCountyId] = useState<string>("");
   const [showAreas, setShowAreas] = useState<boolean>(true);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
 
   // Live results counter
   const [matchingListingsCount, setMatchingListingsCount] = useState<number>(0);
@@ -241,6 +242,18 @@ export function CreateHotSheetDialog({
     setSelectedCities(prev =>
       prev.includes(city) ? prev.filter(c => c !== city) : [...prev, city]
     );
+  };
+
+  const toggleCityExpansion = (city: string) => {
+    setExpandedCities(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(city)) {
+        newSet.delete(city);
+      } else {
+        newSet.add(city);
+      }
+      return newSet;
+    });
   };
 
   const selectAllTowns = () => {
@@ -417,11 +430,40 @@ export function CreateHotSheetDialog({
           query = query.eq("state", state);
         }
         if (selectedCities.length > 0) {
-          const cityNames = selectedCities.map((cityStr: string) => {
+          // Handle both city-only and city-neighborhood formats
+          const cityFilters = selectedCities.map((cityStr: string) => {
             const parts = cityStr.split(',');
-            return parts[0].trim();
+            const cityPart = parts[0].trim();
+            
+            // Check if it's a city-neighborhood format (e.g., "Boston-Charlestown")
+            if (cityPart.includes('-')) {
+              const [city, neighborhood] = cityPart.split('-').map(s => s.trim());
+              return { city, neighborhood };
+            }
+            
+            return { city: cityPart, neighborhood: null };
           });
-          query = query.in("city", cityNames);
+          
+          // Group by cities that have neighborhoods vs just cities
+          const citiesWithNeighborhoods = cityFilters.filter(f => f.neighborhood);
+          const citiesOnly = cityFilters.filter(f => !f.neighborhood).map(f => f.city);
+          
+          // Build complex filter: (city in citiesOnly) OR (city=X AND neighborhood=Y) OR ...
+          if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
+            // Need to use OR logic with multiple conditions
+            query = query.or(
+              `city.in.(${citiesOnly.join(',')}),` +
+              citiesWithNeighborhoods.map(f => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
+            );
+          } else if (citiesWithNeighborhoods.length > 0) {
+            // Only neighborhoods specified
+            query = query.or(
+              citiesWithNeighborhoods.map(f => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
+            );
+          } else if (citiesOnly.length > 0) {
+            // Only cities specified (no neighborhoods)
+            query = query.in("city", citiesOnly);
+          }
         }
         if (zipCode) {
           query = query.eq("zip_code", zipCode);
@@ -1083,16 +1125,48 @@ export function CreateHotSheetDialog({
                                 : `✓ Add All Towns in County (${availableCities.length})`}
                             </button>
                           )}
-                          {filteredCities.map((city) => (
-                            <button
-                              key={city}
-                              type="button"
-                              onClick={() => toggleCity(city)}
-                              className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted rounded"
-                            >
-                              {city}
-                            </button>
-                          ))}
+                          {filteredCities.map((city) => {
+                            const hasNeighborhoods = hasNeighborhoodData(city, state);
+                            const neighborhoods = hasNeighborhoods ? getAreasForCity(city, state) : [];
+                            const isExpanded = expandedCities.has(city);
+                            
+                            return (
+                              <div key={city}>
+                                <div className="flex items-center">
+                                  {hasNeighborhoods && (
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleCityExpansion(city)}
+                                      className="px-1 py-1.5 hover:bg-muted rounded"
+                                    >
+                                      {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleCity(city)}
+                                    className="flex-1 text-left px-2 py-1.5 text-sm hover:bg-muted rounded"
+                                  >
+                                    {city}, {state}
+                                  </button>
+                                </div>
+                                {hasNeighborhoods && isExpanded && (
+                                  <div className="ml-8 border-l-2 border-muted pl-2 mt-1">
+                                    {neighborhoods.map((neighborhood) => (
+                                      <button
+                                        key={`${city}-${neighborhood}`}
+                                        type="button"
+                                        onClick={() => toggleCity(`${city}-${neighborhood}`)}
+                                        className="w-full text-left px-2 py-1 text-xs hover:bg-muted rounded text-muted-foreground"
+                                      >
+                                        {neighborhood}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 

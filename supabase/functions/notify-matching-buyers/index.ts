@@ -21,6 +21,7 @@ interface Listing {
   bedrooms: number | null;
   bathrooms: number | null;
   square_feet: number | null;
+  neighborhood?: string | null;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -83,11 +84,22 @@ const handler = async (req: Request): Promise<Response> => {
       // Check state
       if (criteria.state && criteria.state !== listing.state) return false;
       
-      // Check cities
+      // Check cities with neighborhood support
       if (criteria.cities && criteria.cities.length > 0) {
-        const cityMatches = criteria.cities.some((city: string) => 
-          city.toLowerCase().includes(listing.city?.toLowerCase() || "")
-        );
+        const cityMatches = criteria.cities.some((cityStr: string) => {
+          const parts = cityStr.split(',');
+          const cityPart = parts[0].trim();
+          
+          // Check if it's a city-neighborhood format (e.g., "Boston-Charlestown")
+          if (cityPart.includes('-')) {
+            const [city, neighborhood] = cityPart.split('-').map((s: string) => s.trim());
+            return listing.city?.toLowerCase() === city.toLowerCase() && 
+                   listing.neighborhood?.toLowerCase() === neighborhood.toLowerCase();
+          }
+          
+          // Simple city match
+          return cityPart.toLowerCase() === listing.city?.toLowerCase();
+        });
         if (!cityMatches) return false;
       }
       

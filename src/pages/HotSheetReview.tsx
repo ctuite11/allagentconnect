@@ -105,12 +105,40 @@ const HotSheetReview = () => {
         query = query.lte("square_feet", criteria.maxSqft);
       }
       if (criteria.cities?.length > 0) {
-        // Extract just the city names from the formatted strings (e.g., "Boston, MA" -> "Boston")
-        const cityNames = criteria.cities.map((cityStr: string) => {
+        // Handle both city-only and city-neighborhood formats
+        const cityFilters = criteria.cities.map((cityStr: string) => {
           const parts = cityStr.split(',');
-          return parts[0].trim();
+          const cityPart = parts[0].trim();
+          
+          // Check if it's a city-neighborhood format (e.g., "Boston-Charlestown")
+          if (cityPart.includes('-')) {
+            const [city, neighborhood] = cityPart.split('-').map(s => s.trim());
+            return { city, neighborhood };
+          }
+          
+          return { city: cityPart, neighborhood: null };
         });
-        query = query.in("city", cityNames);
+        
+        // Group by cities that have neighborhoods vs just cities
+        const citiesWithNeighborhoods = cityFilters.filter(f => f.neighborhood);
+        const citiesOnly = cityFilters.filter(f => !f.neighborhood).map(f => f.city);
+        
+        // Build complex filter: (city in citiesOnly) OR (city=X AND neighborhood=Y) OR ...
+        if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
+          // Need to use OR logic with multiple conditions
+          query = query.or(
+            `city.in.(${citiesOnly.join(',')}),` +
+            citiesWithNeighborhoods.map(f => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
+          );
+        } else if (citiesWithNeighborhoods.length > 0) {
+          // Only neighborhoods specified
+          query = query.or(
+            citiesWithNeighborhoods.map(f => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
+          );
+        } else if (citiesOnly.length > 0) {
+          // Only cities specified (no neighborhoods)
+          query = query.in("city", citiesOnly);
+        }
       }
       if (criteria.state) {
         query = query.eq("state", criteria.state);
