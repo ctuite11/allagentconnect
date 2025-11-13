@@ -280,7 +280,7 @@ const SearchResults = () => {
                       <Checkbox
                         checked={selectedListings.has(listing.id)}
                         onCheckedChange={() => toggleListingSelection(listing.id)}
-                        className="h-5 w-5 border-2"
+                        className="h-5 w-5 border-2 data-[state=checked]:bg-foreground data-[state=checked]:border-foreground"
                       />
                     </div>
                   </div>
