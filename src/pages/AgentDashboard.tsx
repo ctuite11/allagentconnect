@@ -436,6 +436,39 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Recent Activity Feed */}
+        {recentActivity.length > 0 && (
+          <Card className="mb-12">
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Your latest listings, messages, and client interactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-start gap-4 pb-4 border-b last:border-0 last:pb-0">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted">
+                      {getActivityIcon(activity.icon)}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium">{activity.title}</p>
+                        <span className="text-xs text-muted-foreground">{formatTimestamp(activity.timestamp)}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{activity.description}</p>
+                      {activity.status && (
+                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary capitalize">
+                          {activity.status}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
