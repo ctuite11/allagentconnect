@@ -139,9 +139,9 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex items-center gap-2 flex-shrink-0 cursor-pointer">
-                    <Avatar className="w-12 h-12">
+                    <Avatar className="w-16 h-16">
                       <AvatarImage src={agentPhoto} alt={agentName} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                      <AvatarFallback className="bg-primary/10 text-primary text-base">
                         {agentName?.split(' ').map(n => n[0]).join('') || 'A'}
                       </AvatarFallback>
                     </Avatar>
