@@ -86,13 +86,11 @@ export default function ComingSoon() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary-foreground to-secondary p-4">
       <div className="max-w-4xl w-full text-center space-y-8">
-        <div className="space-y-6">
-          <div className="text-5xl md:text-7xl font-bold font-mono tracking-tight flex items-center justify-center gap-2 text-background animate-fade-in">
-            <span className="bg-gradient-to-r from-background to-background/70 bg-clip-text text-transparent">ALL</span>
-            <span className="text-background/90">AG<span className="inline-block scale-y-150">☰</span>NT</span>
-            <span className="bg-gradient-to-r from-background/80 via-background to-background/80 bg-clip-text text-transparent">CONN<span className="inline-block scale-y-150">☰</span>CT</span>
-          </div>
-          <p className="text-xl md:text-2xl text-background/90 mt-4">
+        <div className="space-y-4">
+          <h1 className="text-6xl md:text-8xl font-bold text-background animate-fade-in">
+            Coming Soon
+          </h1>
+          <p className="text-xl md:text-2xl text-background/90">
             We're working on something amazing. Stay tuned!
           </p>
         </div>
