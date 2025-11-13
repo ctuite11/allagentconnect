@@ -61,7 +61,7 @@ const AgentDashboard = () => {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   useEffect(() => {
-    document.title = "Agent Dashboard - Agent Connect";
+    document.title = "Agent Dashboard - All Agent Connect";
   }, []);
 
   useEffect(() => {

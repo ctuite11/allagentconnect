@@ -60,7 +60,7 @@ const ListingAnalytics = () => {
   const [statusHistory, setStatusHistory] = useState<StatusHistory[]>([]);
 
   useEffect(() => {
-    document.title = "Listing Analytics - Agent Connect";
+    document.title = "Listing Analytics - All Agent Connect";
     loadListings();
   }, []);
 

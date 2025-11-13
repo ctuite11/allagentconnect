@@ -33,9 +33,9 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Agent Connect <noreply@allagentconnect.com>",
+        from: "All Agent Connect <noreply@allagentconnect.com>",
         to: [email],
-        subject: "Reset Your Password - Agent Connect",
+        subject: "Reset Your Password - All Agent Connect",
         html: `
         <!DOCTYPE html>
         <html>
@@ -127,12 +127,12 @@ const handler = async (req: Request): Promise<Response> => {
           <body>
             <div class="container">
               <div class="header">
-                <h1>Agent Connect</h1>
+                <h1>All Agent Connect</h1>
               </div>
               
               <div class="content">
                 <h2>Reset Your Password</h2>
-                <p>We received a request to reset the password for your Agent Connect account.</p>
+                <p>We received a request to reset the password for your All Agent Connect account.</p>
                 <p>Click the button below to choose a new password:</p>
                 
                 <div class="button-container">
@@ -158,7 +158,7 @@ const handler = async (req: Request): Promise<Response> => {
               
               <div class="footer">
                 <p>
-                  <strong>Agent Connect</strong><br>
+                  <strong>All Agent Connect</strong><br>
                   Revolutionizing Real Estate Through Complete Transparency
                 </p>
                 <p>

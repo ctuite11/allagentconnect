@@ -57,7 +57,7 @@ serve(async (req) => {
     }
 
     // Build title/description
-    const title = `${listing.address}, ${listing.city}, ${listing.state} - Agent Connect`;
+    const title = `${listing.address}, ${listing.city}, ${listing.state} - All Agent Connect`;
     const priceText = listing.listing_type === "for_rent"
       ? `$${Number(listing.price || 0).toLocaleString()}/month`
       : `$${Number(listing.price || 0).toLocaleString()}`;
@@ -90,7 +90,7 @@ serve(async (req) => {
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
-  <meta property="og:site_name" content="Agent Connect" />
+  <meta property="og:site_name" content="All Agent Connect" />
   <meta property="og:locale" content="en_US" />
   ${fbAppId ? `<meta property=\"fb:app_id\" content=\"${escapeHtml(fbAppId)}\" />` : ""}
 

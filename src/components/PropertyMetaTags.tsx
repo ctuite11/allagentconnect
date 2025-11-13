@@ -23,7 +23,7 @@ export const PropertyMetaTags = ({
   photo,
   listingType,
 }: PropertyMetaTagsProps) => {
-  const title = `${address}, ${city}, ${state} - Agent Connect`;
+  const title = `${address}, ${city}, ${state} - All Agent Connect`;
   const priceText = listingType === 'for_rent' 
     ? `$${price.toLocaleString()}/month` 
     : `$${price.toLocaleString()}`;
@@ -51,7 +51,7 @@ export const PropertyMetaTags = ({
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={`Photo of ${address}`} />
-      <meta property="og:site_name" content="Agent Connect" />
+      <meta property="og:site_name" content="All Agent Connect" />
       <meta property="og:locale" content="en_US" />
       <meta property="fb:app_id" content="758660681756022" />
       

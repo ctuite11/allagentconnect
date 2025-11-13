@@ -91,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
 
         const emailResponse = await resend.emails.send({
-          from: "Agent Connect <noreply@allagentconnect.com>",
+          from: "All Agent Connect <noreply@allagentconnect.com>",
           to: [recipient.email],
           subject: subject,
           html: `
@@ -129,7 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
               </head>
               <body>
                 <div class="header">
-                  <h1 style="color: #2563eb; margin: 0;">Agent Connect</h1>
+                  <h1 style="color: #2563eb; margin: 0;">All Agent Connect</h1>
                 </div>
                 
                 <div class="content">
@@ -138,7 +138,7 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
                 
                 <div class="footer">
-                  <p>This email was sent from Agent Connect</p>
+                  <p>This email was sent from All Agent Connect</p>
                 </div>
                 
                 <!-- Tracking pixel -->

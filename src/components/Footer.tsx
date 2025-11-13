@@ -54,7 +54,7 @@ const Footer = () => {
         </div>
         
         <div className="pt-8 border-t border-border text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Agent Connect. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} All Agent Connect. All rights reserved.</p>
         </div>
       </div>
     </footer>

@@ -284,7 +284,7 @@ const ConsumerAuth = () => {
       <div className="flex-1 container mx-auto px-4 py-24 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Welcome to Agent Connect</CardTitle>
+            <CardTitle>Welcome to All Agent Connect</CardTitle>
             <CardDescription>
               {isResettingPassword 
                 ? "Enter your new password" 

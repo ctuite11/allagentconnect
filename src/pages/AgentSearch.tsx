@@ -358,7 +358,7 @@ const AgentSearch = () => {
               Are You a Real Estate Agent?
             </h2>
             <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
-              Join Agent Connect and get matched with buyers actively searching for properties in your area
+              Join All Agent Connect and get matched with buyers actively searching for properties in your area
             </p>
               <Button size="lg" variant="secondary" onClick={() => navigate("/auth")}>
                 Register as an Agent

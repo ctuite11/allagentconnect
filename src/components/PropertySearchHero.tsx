@@ -66,7 +66,7 @@ const PropertySearchHero = () => {
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              Forward-thinking and consumer-focused, Agent Connect has redefined the home buying process, 
+              Forward-thinking and consumer-focused, All Agent Connect has redefined the home buying process, 
               connecting buyers directly with qualified agents in their target areas.
             </p>
           </div>
