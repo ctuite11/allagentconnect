@@ -53,8 +53,8 @@ const Navigation = () => {
               onClick={() => navigate("/")}
             >
               <span className="text-primary">ALL</span>
-              <span className="text-foreground">AG≡NT</span>
-              <span className="bg-gradient-primary bg-clip-text text-transparent">CONN≡CT</span>
+              <span className="text-foreground">AG<span className="inline-block scale-y-150">☰</span>NT</span>
+              <span className="bg-gradient-primary bg-clip-text text-transparent">CONN<span className="inline-block scale-y-150">☰</span>CT</span>
             </div>
           </div>
           
