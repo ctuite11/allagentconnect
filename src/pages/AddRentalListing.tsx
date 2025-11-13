@@ -376,20 +376,22 @@ const AddRentalListing = () => {
             </p>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4 mb-8">
-            <Button variant="default" size="lg" onClick={handleSaveDraft} className="gap-2">
-              <Save className="w-5 h-5" />
-              Save as Draft
-            </Button>
-            <Button variant="default" size="lg" onClick={handlePreview} className="gap-2">
-              <Eye className="w-5 h-5" />
-              Preview Listing
-            </Button>
-            <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} disabled={submitting} className="gap-2">
-              <Upload className="w-5 h-5" />
-              {submitting ? "Publishing..." : "Publish"}
-            </Button>
+          {/* Action Buttons - Sticky */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-8 -mx-4 px-4 py-4">
+            <div className="flex gap-4">
+              <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
+                <Save className="w-5 h-5" />
+                Save as Draft
+              </Button>
+              <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
+                <Eye className="w-5 h-5" />
+                Preview Listing
+              </Button>
+              <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
+                <Upload className="w-5 h-5" />
+                {submitting ? "Publishing..." : "Publish"}
+              </Button>
+            </div>
           </div>
 
           {/* Form Card */}
