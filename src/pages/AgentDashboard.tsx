@@ -528,44 +528,12 @@ const AgentDashboard = () => {
         {/* Listings Section */}
         {showResults && (
           <div id="listings-section" className="mt-8 mb-12">
-            {/* Header with View Controls */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-              <div>
-                <h2 className="text-2xl font-bold">My Listings</h2>
-                <p className="text-muted-foreground text-sm">
-                  Manage and track your property listings
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="date">Date Added</SelectItem>
-                    <SelectItem value="price">Price</SelectItem>
-                    <SelectItem value="status">Status</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="flex border rounded-lg overflow-hidden">
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className="rounded-none"
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className="rounded-none"
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+            {/* Header */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold">My Listings</h2>
+              <p className="text-muted-foreground text-sm">
+                Manage and track your property listings
+              </p>
             </div>
 
             {/* Create New Listing Cards */}
@@ -592,6 +560,38 @@ const AgentDashboard = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+
+            {/* Sort and View Controls */}
+            <div className="flex items-center justify-end gap-3 mb-4">
+              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">Date Added</SelectItem>
+                  <SelectItem value="price">Price</SelectItem>
+                  <SelectItem value="status">Status</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex border rounded-lg overflow-hidden">
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="rounded-none"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="rounded-none"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Listings Display */}
