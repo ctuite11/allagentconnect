@@ -1495,35 +1495,6 @@ export function CreateHotSheetDialog({
               </div>
             </div>
 
-            {/* Search Criteria */}
-            {(propertyTypes.length > 0 || statuses.length > 0 || state || selectedCities.length > 0 || minPrice || maxPrice || bedrooms || bathrooms) && (
-              <div className="border-b pb-3">
-                <p className="text-sm font-semibold text-foreground mb-2">Search Criteria</p>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  {propertyTypes.length > 0 && (
-                    <p><span className="font-medium">Property Types:</span> {propertyTypes.map(pt => 
-                      propertyTypeOptions.find(opt => opt.value === pt)?.label
-                    ).join(", ")}</p>
-                  )}
-                  {statuses.length > 0 && (
-                    <p><span className="font-medium">Status:</span> {statuses.map(st => 
-                      statusOptions.find(opt => opt.value === st)?.label
-                    ).join(", ")}</p>
-                  )}
-                  {state && <p><span className="font-medium">State:</span> {state}</p>}
-                  {selectedCities.length > 0 && (
-                    <p><span className="font-medium">Cities:</span> {selectedCities.slice(0, 5).join(", ")}
-                    {selectedCities.length > 5 && ` (+${selectedCities.length - 5} more)`}</p>
-                  )}
-                  {minPrice && <p><span className="font-medium">Min Price:</span> ${parseFloat(minPrice).toLocaleString()}</p>}
-                  {maxPrice && <p><span className="font-medium">Max Price:</span> ${parseFloat(maxPrice).toLocaleString()}</p>}
-                  {bedrooms && <p><span className="font-medium">Bedrooms:</span> {bedrooms}+</p>}
-                  {bathrooms && <p><span className="font-medium">Bathrooms:</span> {bathrooms}+</p>}
-                  {minSqft && <p><span className="font-medium">Min Sq Ft:</span> {parseFloat(minSqft).toLocaleString()}</p>}
-                  {maxSqft && <p><span className="font-medium">Max Sq Ft:</span> {parseFloat(maxSqft).toLocaleString()}</p>}
-                </div>
-              </div>
-            )}
 
             {/* Notification Settings */}
             <div className="pb-3">
