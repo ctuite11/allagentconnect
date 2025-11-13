@@ -40,12 +40,11 @@ interface ListingCardProps {
       cumulative_active_days: number;
     };
   };
-  onDelete: (id: string) => void;
   onReactivate?: (id: string) => void;
   viewMode?: 'grid' | 'list';
 }
 
-const ListingCard = ({ listing, onDelete, onReactivate, viewMode = 'grid' }: ListingCardProps) => {
+const ListingCard = ({ listing, onReactivate, viewMode = 'grid' }: ListingCardProps) => {
   const navigate = useNavigate();
   const [matchCount, setMatchCount] = useState<number>(0);
   const [loadingMatches, setLoadingMatches] = useState(false);
@@ -477,7 +476,7 @@ const ListingCard = ({ listing, onDelete, onReactivate, viewMode = 'grid' }: Lis
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
-              {listing.status === 'cancelled' && onReactivate ? (
+              {listing.status === 'cancelled' && onReactivate && (
                 <Button
                   variant="default"
                   size="sm"
@@ -486,15 +485,6 @@ const ListingCard = ({ listing, onDelete, onReactivate, viewMode = 'grid' }: Lis
                 >
                   <RefreshCw className="w-3 h-3 mr-1" />
                   Reactivate
-                </Button>
-              ) : (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => onDelete(listing.id)}
-                  className="w-full"
-                >
-                  <Trash2 className="w-3 h-3" />
                 </Button>
               )}
             </div>
@@ -721,7 +711,7 @@ const ListingCard = ({ listing, onDelete, onReactivate, viewMode = 'grid' }: Lis
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
-          {listing.status === 'cancelled' && onReactivate ? (
+          {listing.status === 'cancelled' && onReactivate && (
             <Button
               variant="default"
               size="sm"
@@ -730,14 +720,6 @@ const ListingCard = ({ listing, onDelete, onReactivate, viewMode = 'grid' }: Lis
             >
               <RefreshCw className="w-4 h-4 mr-1" />
               Reactivate
-            </Button>
-          ) : (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => onDelete(listing.id)}
-            >
-              <Trash2 className="w-4 h-4" />
             </Button>
           )}
         </div>
