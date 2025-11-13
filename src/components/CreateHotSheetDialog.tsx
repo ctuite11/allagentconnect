@@ -1061,18 +1061,25 @@ export function CreateHotSheetDialog({
                                 : `✓ Add All Towns in County (${availableCities.length})`}
                             </button>
                           )}
-                          {filteredCities.map((city) => {
-                            const hasNeighborhoods = hasNeighborhoodData(city, state);
-                            const neighborhoods = hasNeighborhoods ? getAreasForCity(city, state) : [];
-                            const isExpanded = expandedCities.has(city);
+                          {filteredCities.map((cityStr) => {
+                            // Parse city name from "City, State" or "City, State-Neighborhood" format
+                            const parts = cityStr.split(',');
+                            const cityPart = parts[0].trim();
+                            
+                            // Skip if this is already a neighborhood entry
+                            if (cityPart.includes('-')) return null;
+                            
+                            const hasNeighborhoods = hasNeighborhoodData(cityPart, state);
+                            const neighborhoods = hasNeighborhoods ? getAreasForCity(cityPart, state) : [];
+                            const isExpanded = expandedCities.has(cityPart);
                             
                             return (
-                              <div key={city}>
+                              <div key={cityStr}>
                                 <div className="flex items-center">
                                   {hasNeighborhoods && (
                                     <button
                                       type="button"
-                                      onClick={() => toggleCityExpansion(city)}
+                                      onClick={() => toggleCityExpansion(cityPart)}
                                       className="px-1 py-1.5 hover:bg-muted rounded"
                                     >
                                       {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
@@ -1080,19 +1087,19 @@ export function CreateHotSheetDialog({
                                   )}
                                   <button
                                     type="button"
-                                    onClick={() => toggleCity(city)}
+                                    onClick={() => toggleCity(cityStr)}
                                     className="flex-1 text-left px-2 py-1.5 text-sm hover:bg-muted rounded"
                                   >
-                                    {city}, {state}
+                                    {cityStr}
                                   </button>
                                 </div>
                                 {hasNeighborhoods && isExpanded && (
-                                  <div className="ml-8 border-l-2 border-muted pl-2 mt-1">
+                                  <div className="ml-8 border-l-2 border-muted pl-2 mt-1 bg-muted/20 rounded-r py-1">
                                     {neighborhoods.map((neighborhood) => (
                                       <button
-                                        key={`${city}-${neighborhood}`}
+                                        key={`${cityStr}-${neighborhood}`}
                                         type="button"
-                                        onClick={() => toggleCity(`${city}-${neighborhood}`)}
+                                        onClick={() => toggleCity(`${cityPart}, ${state}-${neighborhood}`)}
                                         className="w-full text-left px-2 py-1 text-xs hover:bg-muted rounded text-muted-foreground"
                                       >
                                         {neighborhood}
