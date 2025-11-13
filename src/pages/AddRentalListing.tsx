@@ -252,7 +252,12 @@ const AddRentalListing = () => {
   };
 
   const handleSaveDraft = async () => {
-    toast.info("Draft saved locally");
+    try {
+      await handleSubmit(new Event('submit') as any, false);
+      toast.success("Draft saved successfully!");
+    } catch (error) {
+      // Error already handled in handleSubmit
+    }
   };
 
   const handlePreview = () => {
