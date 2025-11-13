@@ -1090,7 +1090,7 @@ export function CreateHotSheetDialog({
                                   {hasNeighborhoods && (
                                     <button
                                       type="button"
-                                      onClick={() => toggleCityExpansion(cityStr)}
+                                      onClick={(e) => { e.stopPropagation(); toggleCityExpansion(cityStr); }}
                                       className="px-1 py-1.5 hover:bg-muted rounded"
                                     >
                                       {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
