@@ -116,7 +116,9 @@ export function TownsPicker({
             </div>
             {hasNeighborhoods && isExpanded && (
               <div className="ml-8 border-l-2 border-muted pl-2 space-y-1 bg-muted/30 rounded-r py-1">
-                {neighborhoods.map((neighborhood) => (
+                {neighborhoods
+                  .filter((n) => !topCities.has(n))
+                  .map((neighborhood) => (
                   <div key={`${town}-${neighborhood}`} className="flex items-center space-x-2 py-0.5">
                     <Checkbox
                       id={`neighborhood-${town}-${neighborhood}`}
