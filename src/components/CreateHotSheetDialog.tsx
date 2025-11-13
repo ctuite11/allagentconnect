@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -290,9 +290,18 @@ export function CreateHotSheetDialog({
     ? COUNTIES_BY_STATE[state].map(name => ({ id: name, name, state }))
     : [];
 
-  const filteredCities = availableCities.filter(city =>
-    city.toLowerCase().includes(citySearch.toLowerCase())
-  );
+  const filteredCities = React.useMemo(() => {
+    const baseSet = new Set<string>();
+    availableCities.forEach((entry) => {
+      const parts = entry.split(',');
+      const cityPart = parts[0].trim();
+      const remainder = parts[1]?.trim() || "";
+      // If entry already plain city (from county towns), keep as-is; otherwise normalize to "City, ST"
+      const normalized = remainder ? `${cityPart}, ${state}` : entry;
+      baseSet.add(normalized);
+    });
+    return Array.from(baseSet).filter(city => city.toLowerCase().includes(citySearch.toLowerCase()));
+  }, [availableCities, state, citySearch]);
 
   // Load cities when state or county changes
   useEffect(() => {
