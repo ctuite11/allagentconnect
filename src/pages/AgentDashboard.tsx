@@ -612,6 +612,7 @@ const AgentDashboard = () => {
                     key={listing.id}
                     listing={listing}
                     onDelete={handleDeleteClick}
+                    viewMode={viewMode}
                   />
                 ))}
               </div>
