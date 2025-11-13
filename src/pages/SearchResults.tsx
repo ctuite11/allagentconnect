@@ -104,7 +104,7 @@ const SearchResults = () => {
         if (agentIds.length > 0) {
           const { data: profiles } = await supabase
             .from("agent_profiles")
-            .select("id, first_name, last_name, company, headshot_url")
+            .select("id, first_name, last_name, company, headshot_url, phone, email")
             .in("id", agentIds);
 
           const profileMap = new Map((profiles || []).map(p => [p.id, p]));
@@ -172,6 +172,8 @@ const SearchResults = () => {
                     agentName={listing.agent_profile ? `${listing.agent_profile.first_name} ${listing.agent_profile.last_name}` : undefined}
                     agentCompany={listing.agent_profile?.company}
                     agentPhoto={listing.agent_profile?.headshot_url}
+                    agentPhone={listing.agent_profile?.phone}
+                    agentEmail={listing.agent_profile?.email}
                   />
                 </div>
               ))}
