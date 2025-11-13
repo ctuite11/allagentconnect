@@ -61,6 +61,30 @@ const AgentDashboard = () => {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [firstName, setFirstName] = useState<string>("");
 
+  const motivationalQuotes = [
+    "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+    "Your only limit is you. Push yourself to new heights today!",
+    "Great things never come from comfort zones.",
+    "The secret of getting ahead is getting started.",
+    "Don't watch the clock; do what it does. Keep going.",
+    "Every listing is an opportunity, every client is a relationship.",
+    "Dream big, work hard, stay focused, and surround yourself with good people.",
+    "The harder you work for something, the greater you'll feel when you achieve it.",
+    "Success doesn't just find you. You have to go out and get it.",
+    "Believe you can and you're halfway there.",
+    "Your clients don't buy houses, they buy the future you help them envision.",
+    "Excellence is not a skill, it's an attitude.",
+    "The best time to plant a tree was 20 years ago. The second best time is now.",
+    "Small daily improvements lead to stunning results.",
+    "Make today so awesome that yesterday gets jealous.",
+  ];
+
+  const getDailyQuote = () => {
+    const today = new Date();
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    return motivationalQuotes[dayOfYear % motivationalQuotes.length];
+  };
+
   useEffect(() => {
     document.title = "Agent Dashboard - All Agent Connect";
   }, []);
@@ -351,6 +375,11 @@ const AgentDashboard = () => {
             <p className="text-muted-foreground mt-2 text-lg">
               Welcome to your success hub – let's make today amazing
             </p>
+            <div className="mt-3 p-3 bg-primary/5 border-l-4 border-primary rounded-r-lg">
+              <p className="text-sm italic text-foreground/80">
+                "{getDailyQuote()}"
+              </p>
+            </div>
           </div>
           <Button variant="outline" onClick={handleSignOut}>
             Sign Out
