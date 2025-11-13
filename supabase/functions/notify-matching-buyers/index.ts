@@ -69,6 +69,17 @@ const handler = async (req: Request): Promise<Response> => {
     const matchingHotSheets = hotSheets?.filter((sheet: any) => {
       const criteria = sheet.criteria;
       
+      // Property type mapping
+      const propertyTypeMap: Record<string, string> = {
+        'single_family': 'Single Family',
+        'condo': 'Condominium',
+        'multi_family': 'Multi Family',
+        'townhouse': 'Townhouse',
+        'land': 'Land',
+        'commercial': 'Commercial',
+        'business_opp': 'Business Opportunity'
+      };
+      
       // Check state
       if (criteria.state && criteria.state !== listing.state) return false;
       
@@ -80,9 +91,12 @@ const handler = async (req: Request): Promise<Response> => {
         if (!cityMatches) return false;
       }
       
-      // Check property types
+      // Check property types - map criteria values to database values
       if (criteria.propertyTypes && criteria.propertyTypes.length > 0) {
-        if (!criteria.propertyTypes.includes(listing.property_type)) return false;
+        const mappedTypes = criteria.propertyTypes.map((type: string) => 
+          propertyTypeMap[type] || type
+        );
+        if (!mappedTypes.includes(listing.property_type)) return false;
       }
       
       // Check price range

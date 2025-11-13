@@ -396,9 +396,20 @@ export function CreateHotSheetDialog({
           .select("id", { count: "exact", head: true })
           .eq("status", "active");
 
-        // Property types
+        // Property types - map to database values
+        const propertyTypeMap: Record<string, string> = {
+          'single_family': 'Single Family',
+          'condo': 'Condominium',
+          'multi_family': 'Multi Family',
+          'townhouse': 'Townhouse',
+          'land': 'Land',
+          'commercial': 'Commercial',
+          'business_opp': 'Business Opportunity'
+        };
+        
         if (propertyTypes.length > 0) {
-          query = query.in("property_type", propertyTypes);
+          const mappedTypes = propertyTypes.map(type => propertyTypeMap[type] || type);
+          query = query.in("property_type", mappedTypes);
         }
         
         // Location filters

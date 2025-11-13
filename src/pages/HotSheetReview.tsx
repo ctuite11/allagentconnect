@@ -69,8 +69,22 @@ const HotSheetReview = () => {
 
       const criteria = hotSheetData.criteria as any;
 
+      // Map criteria property type values to database values
+      const propertyTypeMap: Record<string, string> = {
+        'single_family': 'Single Family',
+        'condo': 'Condominium',
+        'multi_family': 'Multi Family',
+        'townhouse': 'Townhouse',
+        'land': 'Land',
+        'commercial': 'Commercial',
+        'business_opp': 'Business Opportunity'
+      };
+
       if (criteria.propertyTypes?.length > 0) {
-        query = query.in("property_type", criteria.propertyTypes);
+        const mappedTypes = criteria.propertyTypes.map((type: string) => 
+          propertyTypeMap[type] || type
+        );
+        query = query.in("property_type", mappedTypes);
       }
       if (criteria.minPrice) {
         query = query.gte("price", criteria.minPrice);
