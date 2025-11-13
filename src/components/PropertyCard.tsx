@@ -24,7 +24,7 @@ const PropertyCard = ({ image, title, price, savings, address, beds, baths, sqft
           className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <Badge className="absolute top-4 right-4 bg-success text-success-foreground">
-          Save {savings}
+          Favorite {savings}
         </Badge>
       </div>
       
