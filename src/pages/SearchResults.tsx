@@ -48,15 +48,7 @@ const SearchResults = () => {
         setLoading(true);
         let q = supabase
           .from("listings")
-          .select(`
-            *,
-            agent_profiles (
-              first_name,
-              last_name,
-              company,
-              headshot_url
-            )
-          `)
+          .select("*")
           .order("created_at", { ascending: false });
 
         // Default to only showing active and coming_soon if no status filter specified
@@ -105,7 +97,24 @@ const SearchResults = () => {
 
         const { data, error } = await q.limit(100);
         if (error) throw error;
-        setListings(data || []);
+
+        // Fetch agent profiles in batch and attach to listings
+        let finalListings = data || [];
+        const agentIds = Array.from(new Set((finalListings as any[]).map(l => l.agent_id).filter(Boolean)));
+        if (agentIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from("agent_profiles")
+            .select("id, first_name, last_name, company, headshot_url")
+            .in("id", agentIds);
+
+          const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+          finalListings = (finalListings as any[]).map(l => ({
+            ...l,
+            agent_profile: profileMap.get(l.agent_id)
+          }));
+        }
+
+        setListings(finalListings);
       } catch (e) {
         console.error(e);
       } finally {
@@ -160,9 +169,9 @@ const SearchResults = () => {
                     baths={listing.bathrooms}
                     sqft={listing.square_feet?.toLocaleString() || "N/A"}
                     listingId={listing.id}
-                    agentName={listing.agent_profiles ? `${listing.agent_profiles.first_name} ${listing.agent_profiles.last_name}` : undefined}
-                    agentCompany={listing.agent_profiles?.company}
-                    agentPhoto={listing.agent_profiles?.headshot_url}
+                    agentName={listing.agent_profile ? `${listing.agent_profile.first_name} ${listing.agent_profile.last_name}` : undefined}
+                    agentCompany={listing.agent_profile?.company}
+                    agentPhoto={listing.agent_profile?.headshot_url}
                   />
                 </div>
               ))}
