@@ -34,6 +34,8 @@ interface Listing {
   active_date?: string | null;
   is_relisting?: boolean;
   original_listing_id?: string | null;
+  cancelled_at?: string | null;
+  agent_id?: string;
   listing_stats?: {
     view_count: number;
     save_count: number;
@@ -311,7 +313,7 @@ const AgentDashboard = () => {
       // Update the local listings state
       setListings(listings.map(l => 
         l.id === listingToCancel 
-          ? { ...l, status: 'cancelled' }
+          ? { ...l, status: 'cancelled', cancelled_at: new Date().toISOString() }
           : l
       ));
       toast.success("Listing cancelled successfully");
@@ -320,6 +322,81 @@ const AgentDashboard = () => {
     } finally {
       setCancelDialogOpen(false);
       setListingToCancel(null);
+    }
+  };
+
+  const handleReactivate = async (listingId: string) => {
+    try {
+      const listing = listings.find(l => l.id === listingId);
+      if (!listing) return;
+
+      // Check if 30 days have passed since cancellation
+      const daysSinceCancellation = listing.cancelled_at 
+        ? Math.floor((Date.now() - new Date(listing.cancelled_at).getTime()) / (1000 * 60 * 60 * 24))
+        : 0;
+
+      // Determine if we should reset cumulative_active_days
+      const shouldResetDays = daysSinceCancellation > 30;
+
+      const updates: any = {
+        status: 'active',
+        active_date: new Date().toISOString(),
+        cancelled_at: null,
+      };
+
+      // If more than 30 days have passed, reset cumulative days
+      if (shouldResetDays) {
+        // Also need to update listing_stats
+        const { error: statsError } = await supabase
+          .from("listing_stats")
+          .update({ cumulative_active_days: 0 })
+          .eq("listing_id", listingId);
+
+        if (statsError) {
+          console.error("Error resetting stats:", statsError);
+        }
+      }
+
+      const { error } = await supabase
+        .from("listings")
+        .update(updates)
+        .eq("id", listingId);
+
+      if (error) throw error;
+
+      // Reload listings to get updated data
+      const { data: updatedListings } = await supabase
+        .from("listings")
+        .select(`
+          *,
+          listing_stats (
+            view_count,
+            save_count,
+            contact_count,
+            showing_request_count,
+            cumulative_active_days
+          )
+        `)
+        .eq("agent_id", user?.id)
+        .order("created_at", { ascending: false });
+
+      if (updatedListings) {
+        const processedListings = updatedListings.map(listing => ({
+          ...listing,
+          listing_stats: Array.isArray(listing.listing_stats) 
+            ? listing.listing_stats[0] 
+            : listing.listing_stats
+        }));
+        setListings(processedListings);
+      }
+
+      toast.success(
+        shouldResetDays 
+          ? "Listing reactivated with reset days on market (30+ days since cancellation)" 
+          : "Listing reactivated with preserved days on market"
+      );
+    } catch (error: any) {
+      toast.error("Error reactivating listing: " + error.message);
     }
   };
 
@@ -657,6 +734,7 @@ const AgentDashboard = () => {
                     key={listing.id}
                     listing={listing}
                     onDelete={handleCancelClick}
+                    onReactivate={handleReactivate}
                     viewMode={viewMode}
                   />
                 ))}
