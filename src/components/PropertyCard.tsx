@@ -145,7 +145,7 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
                     className="flex items-center gap-2 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (agentId) navigate(`/agent-profile/${agentId}`);
+                      if (agentId) navigate(`/agent/${agentId}`);
                     }}
                   >
                     <Avatar className="w-16 h-16">
