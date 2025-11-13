@@ -201,7 +201,10 @@ const HotSheetReview = () => {
       parts.push(`${criteria.bathrooms}+ baths`);
     }
     if (criteria.cities?.length > 0) {
-      parts.push(`Cities: ${criteria.cities.join(", ")}`);
+      const cityList = criteria.cities.length > 5
+        ? `${criteria.cities.slice(0, 5).join(", ")} (+${criteria.cities.length - 5} more)`
+        : criteria.cities.join(", ");
+      parts.push(`Cities: ${cityList}`);
     }
     if (criteria.state) {
       parts.push(`State: ${criteria.state}`);
