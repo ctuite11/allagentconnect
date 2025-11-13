@@ -286,9 +286,9 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
   if (viewMode === 'list') {
     return (
       <Card className="overflow-hidden hover:shadow-md transition-shadow">
-        <div className="flex gap-4 p-4">
+        <div className="flex gap-3 p-3">
           {/* Photo with Banners */}
-          <div className="relative w-32 h-32 flex-shrink-0">
+          <div className="relative w-24 h-24 flex-shrink-0">
             {photoUrl ? (
               <img src={photoUrl} alt={listing.address} className="w-full h-full object-cover rounded" />
             ) : (
@@ -323,9 +323,9 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
           </div>
 
           {/* Listing Info */}
-          <div className="flex-1 grid grid-cols-12 gap-4">
+          <div className="flex-1 grid grid-cols-12 gap-3">
             <div className="col-span-6">
-              <h3 className="font-semibold mb-1">
+              <h3 className="font-semibold text-sm mb-1">
                 {listing.address}
                 {unitNumber && (
                   <Badge variant="secondary" className="ml-2 text-xs">
@@ -333,11 +333,11 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                   </Badge>
                 )}
               </h3>
-              <div className="flex items-center text-muted-foreground text-sm mb-2">
+              <div className="flex items-center text-muted-foreground text-xs mb-1">
                 <MapPin className="w-3 h-3 mr-1" />
                 {listing.city}, {listing.state} {listing.zip_code}
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 {listing.listing_number && (
                   <span>Listing #{listing.listing_number}</span>
                 )}
@@ -366,15 +366,15 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                   </>
                 )}
               </div>
-              <div className="flex gap-3 text-sm text-muted-foreground">
+              <div className="flex gap-2 text-xs text-muted-foreground mb-1">
                 {listing.bedrooms && (
-                  <span><Bed className="w-3 h-3 inline mr-1" />{listing.bedrooms}</span>
+                  <span><Bed className="w-3 h-3 inline mr-0.5" />{listing.bedrooms}</span>
                 )}
                 {listing.bathrooms && (
-                  <span><Bath className="w-3 h-3 inline mr-1" />{listing.bathrooms}</span>
+                  <span><Bath className="w-3 h-3 inline mr-0.5" />{listing.bathrooms}</span>
                 )}
                 {listing.square_feet && (
-                  <span><Home className="w-3 h-3 inline mr-1" />{listing.square_feet.toLocaleString()} sqft</span>
+                  <span><Home className="w-3 h-3 inline mr-0.5" />{listing.square_feet.toLocaleString()} sqft</span>
                 )}
               </div>
               {listing.status === 'active' && (
@@ -383,7 +383,7 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                   variant={matchButtonStyle.variant}
                   onClick={() => setProspectDialogOpen(true)}
                   disabled={matchCount === 0 || loadingMatches}
-                  className={`mt-2 text-xs h-7 ${matchButtonStyle.className}`}
+                  className={`mt-1 text-xs h-6 ${matchButtonStyle.className}`}
                 >
                   <Users className="w-3 h-3 mr-1" />
                   {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
@@ -391,7 +391,7 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
               )}
               {/* Listing Stats */}
               {listing.listing_stats && (
-                <div className="flex gap-3 mt-3 text-xs text-muted-foreground">
+                <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1" title="Total views">
                     <Eye className="w-3 h-3" />
                     {listing.listing_stats.view_count}
@@ -413,7 +413,7 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             </div>
 
             <div className="col-span-2">
-              <Badge variant={listing.status === "active" ? "default" : "secondary"} className="mb-2">
+              <Badge variant={listing.status === "active" ? "default" : "secondary"} className="mb-1 text-xs">
                 {listing.status}
               </Badge>
               {listing.property_type && (
@@ -422,20 +422,20 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             </div>
 
             <div className="col-span-2 text-right">
-              <div className="text-xl font-bold text-primary mb-1">
+              <div className="text-base font-bold text-primary mb-0.5">
                 {formatPrice(listing.price)}
               </div>
               <div className="text-xs text-muted-foreground">
                 {listing.listing_type === 'for_rent' ? 'Rental' : 'Sale'}
               </div>
               {listing.created_at && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  Listed: {format(new Date(listing.created_at), "MM/dd/yyyy")}
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {format(new Date(listing.created_at), "MM/dd/yy")}
                 </div>
               )}
             </div>
 
-            <div className="col-span-2 flex flex-col gap-2 justify-center">
+            <div className="col-span-2 flex flex-col gap-1 justify-center">
               <Button
                 variant="outline"
                 size="sm"
@@ -487,7 +487,7 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
           </div>
         </div>
         {openHouseBanner && (
-          <div className={`${openHouseBanner.isBroker ? 'bg-purple-50 border-t border-purple-200' : 'bg-green-50 border-t border-green-200'} px-4 py-2 text-sm`}>
+          <div className={`${openHouseBanner.isBroker ? 'bg-purple-50 border-t border-purple-200' : 'bg-green-50 border-t border-green-200'} px-3 py-1.5 text-xs`}>
             <Calendar className={`w-4 h-4 inline mr-2 ${openHouseBanner.isBroker ? 'text-purple-600' : 'text-green-600'}`} />
             <span className={`font-semibold ${openHouseBanner.isBroker ? 'text-purple-700' : 'text-green-700'}`}>
               {openHouseBanner.isBroker ? 'Broker Open House:' : 'Open House:'}
@@ -555,10 +555,10 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
           {listing.photos?.length || 0} Photos
         </div>
       </div>
-      <CardContent className="p-6">
-        <div className="flex justify-between items-start mb-4">
+      <CardContent className="p-3">
+        <div className="flex justify-between items-start mb-2">
           <div className="flex-1">
-            <h3 className="text-xl font-semibold mb-2">
+            <h3 className="text-base font-semibold mb-1">
               {listing.address}
               {unitNumber && (
                 <Badge variant="secondary" className="ml-2 text-xs">
@@ -566,11 +566,11 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
                 </Badge>
               )}
             </h3>
-            <div className="flex items-center text-muted-foreground text-sm mb-3">
-              <MapPin className="w-4 h-4 mr-1" />
+            <div className="flex items-center text-muted-foreground text-xs mb-1.5">
+              <MapPin className="w-3 h-3 mr-1" />
               {listing.city}, {listing.state} {listing.zip_code}
             </div>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0.5">
               {listing.listing_number && (
                 <div className="text-xs text-muted-foreground">
                   Listing #{listing.listing_number}
@@ -596,16 +596,16 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
               </div>
             </div>
           </div>
-          <Badge variant={listing.status === "active" ? "default" : "secondary"}>
+          <Badge variant={listing.status === "active" ? "default" : "secondary"} className="text-xs">
             {listing.status}
           </Badge>
         </div>
 
-        <div className="text-2xl font-bold text-primary mb-4">
+        <div className="text-lg font-bold text-primary mb-2">
           {formatPrice(listing.price)}
         </div>
 
-        <div className="flex gap-4 mb-4 text-sm text-muted-foreground">
+        <div className="flex gap-3 mb-2 text-xs text-muted-foreground">
           {listing.bedrooms && (
             <div className="flex items-center">
               <Bed className="w-4 h-4 mr-1" />
@@ -632,42 +632,42 @@ const ListingCard = ({ listing, onDelete, viewMode = 'grid' }: ListingCardProps)
             variant={matchButtonStyle.variant}
             onClick={() => setProspectDialogOpen(true)}
             disabled={matchCount === 0 || loadingMatches}
-            className={`mb-4 w-full text-xs h-8 ${matchButtonStyle.className}`}
+            className={`mb-2 w-full text-xs h-7 ${matchButtonStyle.className}`}
           >
-            <Users className="w-3 h-3 mr-2" />
+            <Users className="w-3 h-3 mr-1" />
             {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
           </Button>
         )}
 
         {/* Listing Stats */}
         {listing.listing_stats && (
-          <div className="grid grid-cols-2 gap-2 mb-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1 p-2 rounded bg-muted/50">
+          <div className="grid grid-cols-2 gap-1.5 mb-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1 p-1.5 rounded bg-muted/50">
               <Eye className="w-3 h-3" />
-              <span>{listing.listing_stats.view_count} views</span>
+              <span>{listing.listing_stats.view_count}</span>
             </div>
-            <div className="flex items-center gap-1 p-2 rounded bg-muted/50">
+            <div className="flex items-center gap-1 p-1.5 rounded bg-muted/50">
               <Heart className="w-3 h-3" />
-              <span>{listing.listing_stats.save_count} saves</span>
+              <span>{listing.listing_stats.save_count}</span>
             </div>
-            <div className="flex items-center gap-1 p-2 rounded bg-muted/50">
+            <div className="flex items-center gap-1 p-1.5 rounded bg-muted/50">
               <Mail className="w-3 h-3" />
-              <span>{listing.listing_stats.contact_count} contacts</span>
+              <span>{listing.listing_stats.contact_count}</span>
             </div>
-            <div className="flex items-center gap-1 p-2 rounded bg-muted/50">
+            <div className="flex items-center gap-1 p-1.5 rounded bg-muted/50">
               <Calendar className="w-3 h-3" />
-              <span>{listing.listing_stats.showing_request_count} showings</span>
+              <span>{listing.listing_stats.showing_request_count}</span>
             </div>
           </div>
         )}
 
         {listing.property_type && (
-          <Badge variant="outline" className="mb-4">
+          <Badge variant="outline" className="mb-2 text-xs">
             {listing.property_type}
           </Badge>
         )}
 
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-1.5 mt-2">
           <Button
             variant="outline"
             size="sm"
