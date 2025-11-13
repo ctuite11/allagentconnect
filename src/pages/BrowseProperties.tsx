@@ -15,7 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, ChevronUp, ArrowUp, X } from "lucide-react";
 import { toast } from "sonner";
-import { getAreasForCity } from "@/data/usNeighborhoodsData";
+import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
 import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
@@ -44,6 +44,7 @@ const BrowseProperties = () => {
   const [showAreas, setShowAreas] = useState("yes");
   const [townSearch, setTownSearch] = useState("");
   const [manualTowns, setManualTowns] = useState("");
+  const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
   
   // Listing events
   const [openHouses, setOpenHouses] = useState(false);
@@ -311,6 +312,18 @@ const BrowseProperties = () => {
   const addAllTowns = () => {
     setSelectedTowns(getTownsList());
     toast.success("All towns added");
+  };
+
+  const toggleCityExpansion = (city: string) => {
+    setExpandedCities(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(city)) {
+        newSet.delete(city);
+      } else {
+        newSet.add(city);
+      }
+      return newSet;
+    });
   };
 
   return (
@@ -771,24 +784,60 @@ const BrowseProperties = () => {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="max-h-60 overflow-y-auto border rounded bg-background">
-                        <div className="p-2 hover:bg-muted cursor-pointer border-b font-semibold text-sm" onClick={addAllTowns}>
+                      <div className="max-h-60 overflow-y-auto border rounded bg-background z-10 relative">
+                        <div className="p-2 hover:bg-muted cursor-pointer border-b font-semibold text-sm bg-background" onClick={addAllTowns}>
                           - Add All Towns -
                         </div>
                         <div className="p-2 space-y-1">
-                          {filteredTowns.map((town) => (
-                            <div key={town} className="flex items-center space-x-2 py-0.5">
-                              <Checkbox
-                                id={`town-${town}`}
-                                checked={selectedTowns.includes(town)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) setSelectedTowns([...selectedTowns, town]);
-                                  else setSelectedTowns(selectedTowns.filter(t => t !== town));
-                                }}
-                              />
-                              <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">{town}</label>
-                            </div>
-                          ))}
+                          {filteredTowns.map((town) => {
+                            const hasNeighborhoods = hasNeighborhoodData(town, state);
+                            const neighborhoods = hasNeighborhoods ? getAreasForCity(town, state) : [];
+                            const isExpanded = expandedCities.has(town);
+                            
+                            return (
+                              <div key={town} className="space-y-1">
+                                <div className="flex items-center space-x-2 py-0.5">
+                                  {hasNeighborhoods && (
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleCityExpansion(town)}
+                                      className="p-1 hover:bg-muted rounded"
+                                    >
+                                      {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                                    </button>
+                                  )}
+                                  <Checkbox
+                                    id={`town-${town}`}
+                                    checked={selectedTowns.includes(town)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) setSelectedTowns([...selectedTowns, town]);
+                                      else setSelectedTowns(selectedTowns.filter(t => t !== town));
+                                    }}
+                                  />
+                                  <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">{town}</label>
+                                </div>
+                                {hasNeighborhoods && isExpanded && (
+                                  <div className="ml-8 border-l-2 border-muted pl-2 space-y-1 bg-muted/30 rounded-r py-1">
+                                    {neighborhoods.map((neighborhood) => (
+                                      <div key={`${town}-${neighborhood}`} className="flex items-center space-x-2 py-0.5">
+                                        <Checkbox
+                                          id={`neighborhood-${town}-${neighborhood}`}
+                                          checked={selectedTowns.includes(`${town}-${neighborhood}`)}
+                                          onCheckedChange={(checked) => {
+                                            if (checked) setSelectedTowns([...selectedTowns, `${town}-${neighborhood}`]);
+                                            else setSelectedTowns(selectedTowns.filter(t => t !== `${town}-${neighborhood}`));
+                                          }}
+                                        />
+                                        <label htmlFor={`neighborhood-${town}-${neighborhood}`} className="text-xs cursor-pointer flex-1 text-muted-foreground">
+                                          {neighborhood}
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 
