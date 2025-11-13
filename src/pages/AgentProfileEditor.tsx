@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
-import { Trash2, Plus, Star, Upload, X, MapPin } from "lucide-react";
+import { Trash2, Plus, Star, Upload, X, MapPin, ArrowLeft } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
@@ -473,20 +473,22 @@ const AgentProfileEditor = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold">Edit Your Profile</h1>
-              {aacId && (
-                <p className="text-sm text-muted-foreground font-mono mt-1">
-                  {aacId}
-                </p>
-              )}
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="icon" onClick={() => navigate("/agent-dashboard")}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold">Edit Your Profile</h1>
+                {aacId && (
+                  <p className="text-sm text-muted-foreground font-mono mt-1">
+                    {aacId}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => navigate("/manage-team")}>
                 Manage Team
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/agent-dashboard")}>
-                Back to Dashboard
               </Button>
             </div>
           </div>

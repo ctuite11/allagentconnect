@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Users, Plus, Trash2, Upload, X, ExternalLink, GripVertical } from "lucide-react";
+import { Users, Plus, Trash2, Upload, X, ExternalLink, GripVertical, ArrowLeft } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -405,11 +405,16 @@ const ManageTeam = () => {
       <div className="container mx-auto px-4 py-8 mt-20">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold">{team ? "Manage Team" : "Create Your Team"}</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                {team ? "Update your team profile and manage members" : "Create a team profile to collaborate with other agents"}
-              </p>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="icon" onClick={() => navigate("/agent-dashboard")}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold">{team ? "Manage Team" : "Create Your Team"}</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {team ? "Update your team profile and manage members" : "Create a team profile to collaborate with other agents"}
+                </p>
+              </div>
             </div>
             <div className="flex gap-2">
               {team && (
@@ -418,9 +423,6 @@ const ManageTeam = () => {
                   View Public Profile
                 </Button>
               )}
-              <Button variant="outline" onClick={() => navigate("/agent-dashboard")}>
-                Back to Dashboard
-              </Button>
             </div>
           </div>
 
