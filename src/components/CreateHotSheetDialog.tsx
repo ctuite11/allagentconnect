@@ -169,7 +169,12 @@ export function CreateHotSheetDialog({
       setPricePerSqft(criteria.pricePerSqft?.toString() || "");
       setZipCode(criteria.zipCode || "");
       setSelectedCities(criteria.cities || []);
-      setState(criteria.state || "");
+      // Normalize loaded state to 2-letter code, default to MA
+      const loadedState = criteria.state as string | undefined;
+      const normalizedState = loadedState && loadedState.length > 2
+        ? (US_STATES.find(s => s.name === loadedState)?.code ?? loadedState)
+        : (loadedState || "MA");
+      setState(normalizedState);
       setClientFirstName(criteria.clientFirstName || "");
       setClientLastName(criteria.clientLastName || "");
       setClientEmail(criteria.clientEmail || "");

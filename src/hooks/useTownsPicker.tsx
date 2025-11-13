@@ -7,7 +7,7 @@ import { RI_COUNTY_TOWNS } from "@/data/riCountyTowns";
 import { NH_COUNTY_TOWNS } from "@/data/nhCountyTowns";
 import { VT_COUNTY_TOWNS } from "@/data/vtCountyTowns";
 import { ME_COUNTY_TOWNS } from "@/data/meCountyTowns";
-
+import { US_STATES } from "@/data/usStatesCountiesData";
 interface UseTownsPickerProps {
   state: string;
   county?: string;
@@ -17,9 +17,13 @@ interface UseTownsPickerProps {
 export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps) {
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
 
-  // New England states have county-to-towns mapping
-  const hasCountyData = ["MA", "CT", "RI", "NH", "VT", "ME"].includes(state);
+  // Normalize state to 2-letter code
+  const stateKey = state && state.length > 2 
+    ? (US_STATES.find(s => s.name === state)?.code ?? state)
+    : state?.toUpperCase();
 
+  // New England states have county-to-towns mapping
+  const hasCountyData = ["MA", "CT", "RI", "NH", "VT", "ME"].includes(stateKey || "");
   // Get the county towns mapping for the current state
   const getCountyTowns = (countyName: string, stateCode: string): string[] => {
     const countyMap = {
@@ -36,16 +40,16 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
 
   // Generate town list with neighborhoods
   const townsList = useMemo(() => {
-    if (!state) return [];
+    if (!stateKey) return [];
 
-    const currentStateCities = usCitiesByState[state] || [];
+    const currentStateCities = usCitiesByState[stateKey || state] || [];
     
     // Build a base list of cities depending on county selection
     let baseCities: string[] = [];
     if (!county || county === "all") {
       baseCities = currentStateCities;
     } else {
-      baseCities = getCountyTowns(county, state);
+      baseCities = getCountyTowns(county, stateKey || state);
     }
 
     const towns: string[] = [];
@@ -54,7 +58,7 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
     baseCities.forEach((city) => {
       towns.push(city);
       if (shouldShowAreas) {
-        const neighborhoods = getAreasForCity(city, state);
+        const neighborhoods = getAreasForCity(city, stateKey || state);
         neighborhoods.forEach((neighborhood) => {
           towns.push(`${city}-${neighborhood}`);
         });
