@@ -4,7 +4,9 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const useQuery = () => new URLSearchParams(useLocation().search);
 
@@ -13,6 +15,7 @@ const SearchResults = () => {
   const search = useLocation().search;
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
 
   const filters = useMemo(() => {
     const params = new URLSearchParams(search);
@@ -126,6 +129,69 @@ const SearchResults = () => {
     document.title = `Search Results${filters.statuses?.length ? ` • ${filters.statuses.join("/")}` : ""}`;
   }, [filters]);
 
+  const handleSelectAll = () => {
+    if (selectedListings.size === listings.length) {
+      setSelectedListings(new Set());
+    } else {
+      setSelectedListings(new Set(listings.map(l => l.id)));
+    }
+  };
+
+  const handleKeepSelected = () => {
+    if (selectedListings.size === 0) {
+      toast.error("No properties selected");
+      return;
+    }
+    const filtered = listings.filter(l => selectedListings.has(l.id));
+    setListings(filtered);
+    toast.success(`Showing ${filtered.length} selected properties`);
+  };
+
+  const handleSaveSearch = () => {
+    toast.info("Save search feature coming soon!");
+  };
+
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    toast.success("Search link copied to clipboard!");
+  };
+
+  const handleSaveToWishList = async () => {
+    if (selectedListings.size === 0) {
+      toast.error("No properties selected");
+      return;
+    }
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please sign in to save properties");
+        return;
+      }
+
+      const promises = Array.from(selectedListings).map(listingId =>
+        supabase.from("favorites").insert({ user_id: user.id, listing_id: listingId })
+      );
+      
+      await Promise.all(promises);
+      toast.success(`Added ${selectedListings.size} properties to favorites`);
+      setSelectedListings(new Set());
+    } catch (error: any) {
+      toast.error("Error saving properties: " + error.message);
+    }
+  };
+
+  const toggleListingSelection = (listingId: string) => {
+    const newSelected = new Set(selectedListings);
+    if (newSelected.has(listingId)) {
+      newSelected.delete(listingId);
+    } else {
+      newSelected.add(listingId);
+    }
+    setSelectedListings(newSelected);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
@@ -139,8 +205,51 @@ const SearchResults = () => {
             </div>
           </div>
 
-          <div className="bg-card rounded-lg shadow-sm border p-6 mb-6 flex items-center justify-between">
-            <div className="text-lg font-semibold">{loading ? "Loading…" : `${listings.length} Properties Found`}</div>
+          <div className="bg-card rounded-lg shadow-sm border p-6 mb-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="text-lg font-semibold">{loading ? "Loading…" : `${listings.length} Properties Found`}</div>
+              {!loading && listings.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleSelectAll}
+                    className="text-sm"
+                  >
+                    {selectedListings.size === listings.length ? "Deselect All" : "Select All"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleKeepSelected}
+                    disabled={selectedListings.size === 0}
+                    className="text-sm"
+                  >
+                    Keep Selected
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleSaveSearch}
+                    className="text-sm"
+                  >
+                    Save Search
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleShare}
+                    className="text-sm"
+                  >
+                    Share
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleSaveToWishList}
+                    disabled={selectedListings.size === 0}
+                    className="text-sm"
+                  >
+                    Save To Wish Lists
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
 
           {loading ? (
@@ -157,25 +266,37 @@ const SearchResults = () => {
               {listings.map((listing) => (
                 <div 
                   key={listing.id} 
-                  onClick={() => navigate(`/property/${listing.id}`)}
-                  className="cursor-pointer"
+                  className="relative"
                 >
-                  <PropertyCard
-                    image={listing.photos?.[0]?.url || "/placeholder.svg"}
-                    title={listing.property_type}
-                    price={`$${listing.price?.toLocaleString()}`}
-                    address={listing.address}
-                    beds={listing.bedrooms}
-                    baths={listing.bathrooms}
-                    sqft={listing.square_feet?.toLocaleString() || "N/A"}
-                    listingId={listing.id}
-                    agentId={listing.agent_profile?.id}
-                    agentName={listing.agent_profile ? `${listing.agent_profile.first_name} ${listing.agent_profile.last_name}` : undefined}
-                    agentCompany={listing.agent_profile?.company}
-                    agentPhoto={listing.agent_profile?.headshot_url}
-                    agentPhone={listing.agent_profile?.phone}
-                    agentEmail={listing.agent_profile?.email}
-                  />
+                  <div className="absolute top-4 left-4 z-10">
+                    <Checkbox
+                      checked={selectedListings.has(listing.id)}
+                      onCheckedChange={() => toggleListingSelection(listing.id)}
+                      className="bg-background/80 backdrop-blur-sm border-2"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  <div 
+                    onClick={() => navigate(`/property/${listing.id}`)}
+                    className="cursor-pointer"
+                  >
+                    <PropertyCard
+                      image={listing.photos?.[0]?.url || "/placeholder.svg"}
+                      title={listing.property_type}
+                      price={`$${listing.price?.toLocaleString()}`}
+                      address={listing.address}
+                      beds={listing.bedrooms}
+                      baths={listing.bathrooms}
+                      sqft={listing.square_feet?.toLocaleString() || "N/A"}
+                      listingId={listing.id}
+                      agentId={listing.agent_profile?.id}
+                      agentName={listing.agent_profile ? `${listing.agent_profile.first_name} ${listing.agent_profile.last_name}` : undefined}
+                      agentCompany={listing.agent_profile?.company}
+                      agentPhoto={listing.agent_profile?.headshot_url}
+                      agentPhone={listing.agent_profile?.phone}
+                      agentEmail={listing.agent_profile?.email}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
