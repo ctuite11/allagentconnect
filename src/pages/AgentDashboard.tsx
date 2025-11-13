@@ -435,40 +435,40 @@ const AgentDashboard = () => {
               </Button>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Recent Activity Feed */}
-        {recentActivity.length > 0 && (
-          <Card className="mb-12">
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your latest listings, messages, and client interactions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-4 pb-4 border-b last:border-0 last:pb-0">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted">
-                      {getActivityIcon(activity.icon)}
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">{activity.title}</p>
-                        <span className="text-xs text-muted-foreground">{formatTimestamp(activity.timestamp)}</span>
+          {/* Recent Activity Feed */}
+          {recentActivity.length > 0 && (
+            <Card className="hover:shadow-lg transition-shadow lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
+                <CardDescription className="text-xs">Your latest listings, messages, and client interactions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                  {recentActivity.slice(0, 5).map((activity, index) => (
+                    <div key={index} className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted flex-shrink-0">
+                        {getActivityIcon(activity.icon)}
                       </div>
-                      <p className="text-sm text-muted-foreground">{activity.description}</p>
-                      {activity.status && (
-                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary capitalize">
-                          {activity.status}
-                        </span>
-                      )}
+                      <div className="flex-1 space-y-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-xs font-medium line-clamp-1">{activity.title}</p>
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">{formatTimestamp(activity.timestamp)}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-1">{activity.description}</p>
+                        {activity.status && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary capitalize">
+                            {activity.status}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
