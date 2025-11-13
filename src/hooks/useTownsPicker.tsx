@@ -25,6 +25,11 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
 
   // New England states have county-to-towns mapping
   const hasCountyData = ["MA", "CT", "RI", "NH", "VT", "ME"].includes(stateKey || "");
+  // Normalize county name by removing " County" suffix and trimming
+  const normalizeCountyName = (countyName: string): string => {
+    return countyName.replace(/\s+county$/i, '').trim();
+  };
+
   // Get the county towns mapping for the current state
   const getCountyTowns = (countyName: string, stateCode: string): string[] => {
     const countyMap = {
@@ -36,7 +41,19 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
       ME: ME_COUNTY_TOWNS
     }[stateCode];
 
-    return countyMap?.[countyName] || [];
+    if (!countyMap) return [];
+
+    // Normalize the input county name
+    const normalizedInput = normalizeCountyName(countyName);
+
+    // Try to find the county by comparing normalized names
+    for (const [key, towns] of Object.entries(countyMap)) {
+      if (normalizeCountyName(key).toLowerCase() === normalizedInput.toLowerCase()) {
+        return towns;
+      }
+    }
+
+    return [];
   };
 
   // Generate town list with neighborhoods
