@@ -268,13 +268,17 @@ const SearchResults = () => {
                   key={listing.id} 
                   className="relative"
                 >
-                  <div className="absolute top-4 left-4 z-10">
-                    <Checkbox
-                      checked={selectedListings.has(listing.id)}
-                      onCheckedChange={() => toggleListingSelection(listing.id)}
-                      className="bg-background/80 backdrop-blur-sm border-2"
-                      onClick={(e) => e.stopPropagation()}
-                    />
+                  <div 
+                    className="absolute top-4 left-4 z-10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="bg-background/90 backdrop-blur-sm p-2 rounded-md shadow-md border border-border">
+                      <Checkbox
+                        checked={selectedListings.has(listing.id)}
+                        onCheckedChange={() => toggleListingSelection(listing.id)}
+                        className="h-5 w-5 border-2"
+                      />
+                    </div>
                   </div>
                   <div 
                     onClick={() => navigate(`/property/${listing.id}`)}
