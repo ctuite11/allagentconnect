@@ -90,9 +90,9 @@ const AgentDashboard = () => {
 
   const loadData = async (userId: string) => {
     try {
-      // Load user profile
+      // Load user profile from agent_profiles
       const { data: profileData } = await supabase
-        .from("profiles")
+        .from("agent_profiles")
         .select("first_name")
         .eq("id", userId)
         .single();
