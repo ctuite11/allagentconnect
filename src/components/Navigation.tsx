@@ -48,8 +48,13 @@ const Navigation = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="text-2xl font-bold cursor-pointer" onClick={() => navigate("/")}>
-              <span className="text-primary">Agent</span> Connect
+            <div 
+              className="text-2xl font-bold cursor-pointer font-mono tracking-tight flex items-center gap-1" 
+              onClick={() => navigate("/")}
+            >
+              <span className="text-primary">@LL</span>
+              <span className="text-foreground">/\gent</span>
+              <span className="bg-gradient-primary bg-clip-text text-transparent">C[]nnect</span>
             </div>
           </div>
           
