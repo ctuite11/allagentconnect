@@ -52,7 +52,7 @@ const AgentDashboard = () => {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [tempStatusFilters, setTempStatusFilters] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [showResults, setShowResults] = useState(false);
+  const [showResults, setShowResults] = useState(true);
   const [sortBy, setSortBy] = useState<'date' | 'price' | 'status' | 'matches'>('date');
   const [hotSheetsCount, setHotSheetsCount] = useState(0);
   const [favoritesCount, setFavoritesCount] = useState(0);
@@ -527,17 +527,95 @@ const AgentDashboard = () => {
 
         {/* Listings Section */}
         {showResults && (
-          <div id="listings-section" className="mt-8">
-            <h2 className="text-2xl font-bold mb-4">My Listings</h2>
-            <div className="grid gap-4">
-              {sortListings(listings).map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  onDelete={handleDeleteClick}
-                />
+          <div id="listings-section" className="mt-8 mb-12">
+            {/* Header with View Controls */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-bold">My Listings</h2>
+                <p className="text-muted-foreground text-sm">
+                  Manage and track your property listings
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Date Added</SelectItem>
+                    <SelectItem value="price">Price</SelectItem>
+                    <SelectItem value="status">Status</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex border rounded-lg overflow-hidden">
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="rounded-none"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="rounded-none"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Create New Listing Cards */}
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
+              {listingTypes.map((type, index) => (
+                <Card
+                  key={index}
+                  className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 overflow-hidden"
+                  onClick={type.action}
+                >
+                  <div className="relative h-32 overflow-hidden">
+                    <img
+                      src={type.image}
+                      alt={type.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-2 left-3 text-white">
+                      <h3 className="font-semibold text-lg">{type.title}</h3>
+                    </div>
+                  </div>
+                  <CardContent className="pt-3 pb-3">
+                    <p className="text-sm text-muted-foreground">{type.description}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
+
+            {/* Listings Display */}
+            {listings.length === 0 ? (
+              <Card className="p-12">
+                <div className="text-center">
+                  <Home className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No listings yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Get started by creating your first listing above
+                  </p>
+                </div>
+              </Card>
+            ) : (
+              <div className={viewMode === 'grid' ? 'grid md:grid-cols-2 gap-4' : 'grid gap-4'}>
+                {sortListings(listings).map((listing) => (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    onDelete={handleDeleteClick}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
