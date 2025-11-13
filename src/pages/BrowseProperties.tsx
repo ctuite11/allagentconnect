@@ -190,7 +190,7 @@ const BrowseProperties = () => {
 
   const handleViewResults = () => {
     const params = buildQueryParams();
-    navigate(`/search-results?${params.toString()}`);
+    navigate(`/search?${params.toString()}`);
   };
 
   const handleClearAll = () => {
