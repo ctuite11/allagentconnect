@@ -289,7 +289,7 @@ const ListingCard = ({ listing, onReactivate, viewMode = 'grid' }: ListingCardPr
       <Card className="overflow-hidden hover:shadow-md transition-shadow">
         <div className="flex gap-3 p-3">
           {/* Photo with Banners */}
-          <div className="relative w-24 h-24 flex-shrink-0">
+          <div className="relative w-40 h-40 flex-shrink-0">
             {photoUrl ? (
               <img src={photoUrl} alt={listing.address} className="w-full h-full object-cover rounded" />
             ) : (
