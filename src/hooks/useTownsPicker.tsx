@@ -42,15 +42,37 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
   // Generate town list with neighborhoods
   const townsList = useMemo(() => {
     if (!stateKey) return [];
-
-    const currentStateCities = usCitiesByState[stateKey || state] || [];
     
     // Build a base list of cities depending on county selection
     let baseCities: string[] = [];
-    if (!county || county === "all") {
-      baseCities = currentStateCities;
+    
+    // For states with county data, use county mappings
+    if (hasCountyData) {
+      if (!county || county === "all") {
+        // Get all towns from all counties for this state
+        const countyMap = {
+          MA: MA_COUNTY_TOWNS,
+          CT: CT_COUNTY_TOWNS,
+          RI: RI_COUNTY_TOWNS,
+          NH: NH_COUNTY_TOWNS,
+          VT: VT_COUNTY_TOWNS,
+          ME: ME_COUNTY_TOWNS
+        }[stateKey];
+        
+        if (countyMap) {
+          const allTowns = new Set<string>();
+          Object.values(countyMap).forEach(towns => {
+            towns.forEach(town => allTowns.add(town));
+          });
+          baseCities = Array.from(allTowns).sort();
+        }
+      } else {
+        baseCities = getCountyTowns(county, stateKey);
+      }
     } else {
-      baseCities = getCountyTowns(county, stateKey || state);
+      // For states without county data, use the general cities list
+      const currentStateCities = usCitiesByState[stateKey] || [];
+      baseCities = currentStateCities;
     }
 
     const towns: string[] = [];
