@@ -237,15 +237,6 @@ export function CreateHotSheetDialog({
   };
 
   const toggleCityExpansion = (city: string) => {
-    // Debug: see if expansion is toggling and neighborhoods exist
-    try {
-      const parts = city.split(',');
-      const baseCity = parts[0].trim();
-      const nbhCount = getAreasForCity(baseCity, state).length;
-      console.log("[HotSheet] toggleCityExpansion", { city, baseCity, state, nbhCount });
-    } catch (e) {
-      console.warn("[HotSheet] toggleCityExpansion error", e);
-    }
     setExpandedCities(prev => {
       const newSet = new Set(prev);
       if (newSet.has(city)) {
@@ -1078,27 +1069,22 @@ export function CreateHotSheetDialog({
                             </button>
                           )}
                           {filteredCities.map((cityStr) => {
-                            // Parse city name from "City, State" or "City, State-Neighborhood" format
+                            // Parse city name from "City, State" format
                             const parts = cityStr.split(',');
-                            const cityPart = parts[0].trim();
-                            const remainder = parts[1]?.trim() || "";
+                            const cityName = parts[0].trim();
                             
-                            // Skip if this is a neighborhood entry (only when hyphen appears after the comma)
-                            const isNeighborhoodEntry = remainder.includes('-');
-                            if (isNeighborhoodEntry) return null;
-                            
-                            const hasNeighborhoods = hasNeighborhoodData(cityPart, state);
-                            const neighborhoods = hasNeighborhoods ? getAreasForCity(cityPart, state) : [];
-                            const isExpanded = expandedCities.has(cityStr);
+                            const hasNeighborhoods = hasNeighborhoodData(cityName, state);
+                            const neighborhoods = hasNeighborhoods ? getAreasForCity(cityName, state) : [];
+                            const isExpanded = expandedCities.has(cityName);
                             
                             return (
-                              <div key={cityStr}>
+                              <div key={cityStr} className="space-y-1">
                                 <div className="flex items-center">
                                   {hasNeighborhoods && (
                                     <button
                                       type="button"
-                                      onClick={(e) => { e.stopPropagation(); toggleCityExpansion(cityStr); }}
-                                      className="px-1 py-1.5 hover:bg-muted rounded"
+                                      onClick={() => toggleCityExpansion(cityName)}
+                                      className="p-1 hover:bg-muted rounded"
                                     >
                                       {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                                     </button>
@@ -1112,12 +1098,12 @@ export function CreateHotSheetDialog({
                                   </button>
                                 </div>
                                 {hasNeighborhoods && isExpanded && (
-                                  <div className="ml-8 border-l-2 border-muted pl-2 mt-1 bg-muted/20 rounded-r py-1">
+                                  <div className="ml-8 border-l-2 border-muted pl-2 mt-1 bg-muted/30 rounded-r py-1 space-y-1">
                                     {neighborhoods.map((neighborhood) => (
                                       <button
-                                        key={`${cityStr}-${neighborhood}`}
+                                        key={`${cityName}-${neighborhood}`}
                                         type="button"
-                                        onClick={() => toggleCity(`${cityPart}, ${state}-${neighborhood}`)}
+                                        onClick={() => toggleCity(`${cityName}-${neighborhood}`)}
                                         className="w-full text-left px-2 py-1 text-xs hover:bg-muted rounded text-muted-foreground"
                                       >
                                         {neighborhood}
