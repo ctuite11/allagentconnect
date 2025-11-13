@@ -53,7 +53,7 @@ export function TownsPicker({
                 )}
                 <button
                   type="button"
-                  onClick={() => onToggleTown(`${town}, ${state}`)}
+                  onClick={() => onToggleTown(town)}
                   className="flex-1 text-left px-2 py-1.5 text-sm hover:bg-muted rounded"
                 >
                   {town}, {state}

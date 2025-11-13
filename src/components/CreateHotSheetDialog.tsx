@@ -980,7 +980,7 @@ export function CreateHotSheetDialog({
                             onToggleCityExpansion={toggleCityExpansion}
                             state={state}
                             searchQuery={citySearch}
-                            variant="button"
+                            variant="checkbox"
                           />
                         </div>
                       </div>
