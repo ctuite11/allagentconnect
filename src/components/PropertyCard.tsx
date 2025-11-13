@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { MapPin, Bed, Bath, Square, Heart, Building2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { MapPin, Bed, Bath, Square, Heart, Building2, Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,9 +22,11 @@ interface PropertyCardProps {
   agentName?: string;
   agentCompany?: string;
   agentPhoto?: string;
+  agentPhone?: string;
+  agentEmail?: string;
 }
 
-const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNumber, listingId, onFavoriteChange, agentName, agentCompany, agentPhoto }: PropertyCardProps) => {
+const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNumber, listingId, onFavoriteChange, agentName, agentCompany, agentPhoto, agentPhone, agentEmail }: PropertyCardProps) => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -132,25 +135,51 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
         <div className="flex items-start justify-between gap-4 mb-3">
           <h3 className="text-2xl font-bold text-primary">{price}</h3>
           {(agentName || agentCompany) && (
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={agentPhoto} alt={agentName} />
-                <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                  {agentName?.split(' ').map(n => n[0]).join('') || 'A'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col min-w-0">
-                {agentName && (
-                  <span className="text-xs font-semibold text-foreground truncate">{agentName}</span>
-                )}
-                {agentCompany && (
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-                    <Building2 className="w-3 h-3 flex-shrink-0" />
-                    <span className="truncate">{agentCompany}</span>
-                  </span>
-                )}
-              </div>
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-2 flex-shrink-0 cursor-pointer">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={agentPhoto} alt={agentName} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                        {agentName?.split(' ').map(n => n[0]).join('') || 'A'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col min-w-0">
+                      {agentName && (
+                        <span className="text-xs font-semibold text-foreground truncate">{agentName}</span>
+                      )}
+                      {agentCompany && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                          <Building2 className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{agentCompany}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <div className="space-y-2">
+                    <p className="font-semibold">{agentName}</p>
+                    {agentCompany && (
+                      <p className="text-sm text-muted-foreground">{agentCompany}</p>
+                    )}
+                    {agentPhone && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="w-4 h-4" />
+                        <span>{agentPhone}</span>
+                      </div>
+                    )}
+                    {agentEmail && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="w-4 h-4" />
+                        <span>{agentEmail}</span>
+                      </div>
+                    )}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
         
