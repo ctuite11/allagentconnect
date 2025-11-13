@@ -335,7 +335,7 @@ const AgentDashboard = () => {
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">My Dashboard</h1>
             <p className="text-muted-foreground mt-2 text-lg">
-              Your command center for listings, clients, and opportunities 🚀
+              Welcome back! Here's what's happening with your business today
             </p>
           </div>
           <Button variant="outline" onClick={handleSignOut}>
