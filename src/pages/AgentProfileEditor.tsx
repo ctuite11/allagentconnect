@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
-import { Trash2, Plus, Star, Upload, X, MapPin, ArrowLeft } from "lucide-react";
+import { Trash2, Plus, Star, Upload, X, MapPin, ArrowLeft, User, Image, FileText, DollarSign, Share2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
@@ -494,9 +494,14 @@ const AgentProfileEditor = () => {
           </div>
 
           {/* Contact Information */}
-          <Card className="mb-6">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-card/50">
             <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <User className="h-5 w-5 text-blue-500" />
+                </div>
+                Contact Information
+              </CardTitle>
               <CardDescription>Update your contact details and office information</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -609,9 +614,14 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Profile Images */}
-          <Card className="mb-6">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-card/50">
             <CardHeader>
-              <CardTitle>Profile Images</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                  <Image className="h-5 w-5 text-purple-500" />
+                </div>
+                Profile Images
+              </CardTitle>
               <CardDescription>Upload your headshot and company logo</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -702,9 +712,14 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Bio Section */}
-          <Card className="mb-6">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-emerald-500 bg-gradient-to-br from-card to-card/50">
             <CardHeader>
-              <CardTitle>Your Bio</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-emerald-500" />
+                </div>
+                Your Bio
+              </CardTitle>
               <CardDescription>Tell clients about yourself and your expertise</CardDescription>
             </CardHeader>
             <CardContent>
@@ -722,9 +737,14 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Incentives Section */}
-          <Card className="mb-6">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-card/50">
             <CardHeader>
-              <CardTitle>Client Incentives</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                  <DollarSign className="h-5 w-5 text-orange-500" />
+                </div>
+                Client Incentives
+              </CardTitle>
               <CardDescription>Highlight special offers or incentives you provide to clients</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -755,9 +775,14 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Social Links Section */}
-          <Card className="mb-6">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-pink-500 bg-gradient-to-br from-card to-card/50">
             <CardHeader>
-              <CardTitle>Social Media Links</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-full bg-pink-500/10 flex items-center justify-center">
+                  <Share2 className="h-5 w-5 text-pink-500" />
+                </div>
+                Social Media Links
+              </CardTitle>
               <CardDescription>Connect your social media profiles</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -813,10 +838,12 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Buyer Agent Lead Opt-In Section */}
-          <Card className="mb-6">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-card/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
+                <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                  <MapPin className="h-5 w-5 text-indigo-500" />
+                </div>
                 Buyer Agent Lead Program
               </CardTitle>
               <CardDescription>
