@@ -1059,8 +1059,8 @@ const AddListing = () => {
           <img src={listingIcon} alt="Listing creation" className="w-16 h-16" />
         </div>
 
-        {/* Action Buttons */}
-        <div className="space-y-4 mb-8">
+        {/* Action Buttons - Sticky */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-8 -mx-4 px-4 py-4">
           <div className="flex flex-wrap gap-4">
             <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
               <Save className="w-5 h-5" />
@@ -1073,32 +1073,6 @@ const AddListing = () => {
             <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
               <Upload className="w-5 h-5" />
               {submitting ? "Publishing..." : "Publish Listing"}
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-4">
-            <Button 
-              variant="outline" 
-              size="lg" 
-              onClick={() => {
-                setOpenHouseDialogType('public');
-                setOpenHouseDialogOpen(true);
-              }} 
-              className="gap-2 border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
-            >
-              <span className="text-2xl">🎈</span>
-              Schedule Open House
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              onClick={() => {
-                setOpenHouseDialogType('broker');
-                setOpenHouseDialogOpen(true);
-              }} 
-              className="gap-2 border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
-            >
-              <span className="text-2xl">🚗</span>
-              Schedule Broker Open House
             </Button>
           </div>
         </div>
