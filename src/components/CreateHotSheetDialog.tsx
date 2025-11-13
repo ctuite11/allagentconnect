@@ -83,8 +83,8 @@ export function CreateHotSheetDialog({
   // Towns / coverage areas
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [citySearch, setCitySearch] = useState("");
-  const [state, setState] = useState("");
-  const [selectedCountyId, setSelectedCountyId] = useState<string>("");
+  const [state, setState] = useState("MA");
+  const [selectedCountyId, setSelectedCountyId] = useState<string>("all");
   const [showAreas, setShowAreas] = useState<boolean>(true);
 
   // Live results counter
