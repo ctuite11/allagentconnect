@@ -35,7 +35,7 @@ export const MA_COUNTY_TOWNS: Record<string, string[]> = {
   Plymouth: [
     "Abington","Bridgewater","Brockton","Carver","Duxbury","East Bridgewater","Halifax","Hanover","Hanson","Hingham","Hull","Kingston","Lakeville","Marion","Marshfield","Mattapoisett","Middleborough","Norwell","Pembroke","Plymouth","Plympton","Rochester","Rockland","Scituate","Wareham","West Bridgewater","Whitman"
   ],
-  Suffolk: ["Boston","Chelsea","Revere","Winthrop"],
+  Suffolk: ["Boston","Charlestown","Chelsea","Revere","Winthrop"],
   Worcester: [
     "Ashburnham","Ashby","Athol","Auburn","Barre","Berlin","Blackstone","Bolton","Boylston","Brookfield","Charlton","Clinton","Douglas","Dudley","East Brookfield","Fitchburg","Gardner","Grafton","Hardwick","Harvard","Holden","Hopedale","Hubbardston","Lancaster","Leicester","Leominster","Lunenburg","Mendon","Milford","Millbury","Millville","New Braintree","Northborough","Northbridge","Oakham","Oxford","Paxton","Petersham","Phillipston","Princeton","Royalston","Rutland","Shrewsbury","Southborough","Southbridge","Spencer","Sterling","Sturbridge","Sutton","Templeton","Upton","Uxbridge","Warren","Webster","West Boylston","West Brookfield","Westborough","Westminster","Winchendon","Worcester"
   ]

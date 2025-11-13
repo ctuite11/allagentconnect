@@ -376,7 +376,7 @@ const HotSheetReview = () => {
                     />
                     {listing.photos && listing.photos[0] ? (
                       <img
-                        src={listing.photos[0]}
+                        src={listing.photos[0].url || listing.photos[0]}
                         alt={listing.address}
                         className="w-full h-48 object-cover"
                       />
