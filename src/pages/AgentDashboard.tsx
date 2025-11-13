@@ -733,7 +733,6 @@ const AgentDashboard = () => {
                   <ListingCard
                     key={listing.id}
                     listing={listing}
-                    onDelete={handleCancelClick}
                     onReactivate={handleReactivate}
                     viewMode={viewMode}
                   />
