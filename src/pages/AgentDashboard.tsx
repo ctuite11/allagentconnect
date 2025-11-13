@@ -348,91 +348,96 @@ const AgentDashboard = () => {
 
         {/* Dashboard Overview Cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/agent-dashboard")}>
+          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-primary bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/agent-dashboard")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Listings</CardTitle>
-              <Home className="h-4 w-4 text-muted-foreground" />
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Home className="h-5 w-5 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{listings.length}</div>
-              <p className="text-xs text-muted-foreground">
-                {listings.filter(l => l.status === 'active').length} active
+              <div className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">{listings.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[10px] font-medium">
+                  {listings.filter(l => l.status === 'active').length} active
+                </span>
               </p>
-              <Button 
-                variant="link" 
-                className="p-0 h-auto text-xs mt-1" 
-                onClick={(e) => { e.stopPropagation(); navigate("/analytics"); }}
-              >
-                View Analytics →
-              </Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/hot-sheets")}>
+          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/hot-sheets")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Hot Sheets</CardTitle>
-              <Flame className="h-4 w-4 text-muted-foreground" />
+              <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                <Flame className="h-5 w-5 text-orange-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{hotSheetsCount}</div>
-              <p className="text-xs text-muted-foreground">Active searches</p>
+              <div className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">{hotSheetsCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Active searches</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/favorites")}>
+          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-red-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/favorites")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Favorites</CardTitle>
-              <Heart className="h-4 w-4 text-muted-foreground" />
+              <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                <Heart className="h-5 w-5 text-red-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{favoritesCount}</div>
-              <p className="text-xs text-muted-foreground">Saved properties</p>
+              <div className="text-3xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">{favoritesCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Saved properties</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/my-clients")}>
+          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/my-clients")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Contacts</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-blue-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{clientsCount}</div>
-              <p className="text-xs text-muted-foreground">Total clients</p>
+              <div className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">{clientsCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Total clients</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/coming-soon")}>
+          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/coming-soon")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Communications</CardTitle>
-              <Mail className="h-4 w-4 text-muted-foreground" />
+              <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <Mail className="h-5 w-5 text-purple-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{messagesCount}</div>
-              <p className="text-xs text-muted-foreground">Total messages</p>
+              <div className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-violet-500 bg-clip-text text-transparent">{messagesCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Total messages</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/agent-profile-editor")}>
+          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-emerald-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/agent-profile-editor")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Profile</CardTitle>
+              <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-emerald-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground mb-3">Manage your profile information</p>
-              <Button variant="outline" className="w-full" onClick={(e) => { e.stopPropagation(); navigate("/agent-profile-editor"); }}>
-                Edit Profile
-              </Button>
+              <p className="text-xs text-muted-foreground">Manage your profile information</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/manage-team")}>
+          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/manage-team")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Team</CardTitle>
+              <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-indigo-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground mb-3">Manage team members</p>
-              <Button variant="outline" className="w-full" onClick={(e) => { e.stopPropagation(); navigate("/manage-team"); }}>
-                View Team
-              </Button>
+              <p className="text-xs text-muted-foreground">Manage team members</p>
             </CardContent>
           </Card>
 
