@@ -50,7 +50,7 @@ const SearchResults = () => {
           .from("listings")
           .select(`
             *,
-            agent_profiles!listings_agent_id_fkey (
+            agent_profiles (
               first_name,
               last_name,
               company,
