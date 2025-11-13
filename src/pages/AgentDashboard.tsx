@@ -333,12 +333,9 @@ const AgentDashboard = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <p className="text-sm text-muted-foreground mb-2">
-              Hello. Bonjour. Hola. 你好. Ciao
-            </p>
-            <h1 className="text-4xl font-bold">My Dashboard</h1>
-            <p className="text-muted-foreground mt-2">
-              A convenient way to add for sale and for rent listings, update listing status, easily edit property details and track all of your listings.
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">My Dashboard</h1>
+            <p className="text-muted-foreground mt-2 text-lg">
+              Your command center for listings, clients, and opportunities 🚀
             </p>
           </div>
           <Button variant="outline" onClick={handleSignOut}>
