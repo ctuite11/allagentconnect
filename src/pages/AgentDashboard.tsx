@@ -346,7 +346,7 @@ const AgentDashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Hey {firstName || "there"}! 👋
+              Hey {firstName}!
             </h1>
             <p className="text-muted-foreground mt-2 text-lg">
               Welcome to your success hub – let's make today amazing
