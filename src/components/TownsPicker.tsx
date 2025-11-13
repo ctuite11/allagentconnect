@@ -2,6 +2,7 @@ import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
+import { US_STATES } from "@/data/usStatesCountiesData";
 
 interface TownsPickerProps {
   towns: string[];
@@ -24,6 +25,10 @@ export function TownsPicker({
   searchQuery = "",
   variant = "checkbox"
 }: TownsPickerProps) {
+  const stateKey = state && state.length > 2 
+    ? (US_STATES.find(s => s.name === state)?.code ?? state)
+    : state?.toUpperCase();
+
   const filteredTowns = towns.filter(town => 
     town.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -37,8 +42,8 @@ export function TownsPicker({
           // Check if this is a neighborhood entry (contains hyphen)
           if (town.includes('-')) return null;
 
-          const hasNeighborhoods = hasNeighborhoodData(town, state);
-          const neighborhoods = hasNeighborhoods ? getAreasForCity(town, state) : [];
+          const hasNeighborhoods = hasNeighborhoodData(town, stateKey || state);
+          const neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
           const isExpanded = expandedCities.has(town);
           
           return (
@@ -91,8 +96,8 @@ export function TownsPicker({
         // Check if this is a neighborhood entry (contains hyphen)
         if (town.includes('-')) return null;
 
-        const hasNeighborhoods = hasNeighborhoodData(town, state);
-        const neighborhoods = hasNeighborhoods ? getAreasForCity(town, state) : [];
+        const hasNeighborhoods = hasNeighborhoodData(town, stateKey || state);
+        const neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
         const isExpanded = expandedCities.has(town);
         
         return (
