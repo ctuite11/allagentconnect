@@ -237,6 +237,15 @@ export function CreateHotSheetDialog({
   };
 
   const toggleCityExpansion = (city: string) => {
+    // Debug: see if expansion is toggling and neighborhoods exist
+    try {
+      const parts = city.split(',');
+      const baseCity = parts[0].trim();
+      const nbhCount = getAreasForCity(baseCity, state).length;
+      console.log("[HotSheet] toggleCityExpansion", { city, baseCity, state, nbhCount });
+    } catch (e) {
+      console.warn("[HotSheet] toggleCityExpansion error", e);
+    }
     setExpandedCities(prev => {
       const newSet = new Set(prev);
       if (newSet.has(city)) {
@@ -247,7 +256,6 @@ export function CreateHotSheetDialog({
       return newSet;
     });
   };
-
   const selectAllTowns = () => {
     if (selectedCountyId === "all") {
       // When "All Counties" is selected, get all towns from all counties in the state
