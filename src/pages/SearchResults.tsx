@@ -46,7 +46,18 @@ const SearchResults = () => {
     const fetchResults = async () => {
       try {
         setLoading(true);
-        let q = supabase.from("listings").select("*").order("created_at", { ascending: false });
+        let q = supabase
+          .from("listings")
+          .select(`
+            *,
+            agent_profiles!listings_agent_id_fkey (
+              first_name,
+              last_name,
+              company,
+              headshot_url
+            )
+          `)
+          .order("created_at", { ascending: false });
 
         // Default to only showing active and coming_soon if no status filter specified
         if (filters.statuses && filters.statuses.length) {
@@ -149,6 +160,9 @@ const SearchResults = () => {
                     baths={listing.bathrooms}
                     sqft={listing.square_feet?.toLocaleString() || "N/A"}
                     listingId={listing.id}
+                    agentName={listing.agent_profiles ? `${listing.agent_profiles.first_name} ${listing.agent_profiles.last_name}` : undefined}
+                    agentCompany={listing.agent_profiles?.company}
+                    agentPhoto={listing.agent_profiles?.headshot_url}
                   />
                 </div>
               ))}
