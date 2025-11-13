@@ -289,7 +289,12 @@ export function CreateHotSheetDialog({
             }
             
             return { city: cityPart, neighborhood: null };
-          });
+  });
+
+  // Reset search input when state or county changes
+  useEffect(() => {
+    setCitySearch("");
+  }, [state, selectedCountyId]);
           
           // Group by cities that have neighborhoods vs just cities
           const citiesWithNeighborhoods = cityFilters.filter(f => f.neighborhood);

@@ -27,6 +27,8 @@ export function TownsPicker({
   const filteredTowns = towns.filter(town => 
     town.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const topCities = new Set(filteredTowns.filter(t => !t.includes('-')));
+
 
   if (variant === "button") {
     return (
