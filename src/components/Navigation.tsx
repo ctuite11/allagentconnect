@@ -52,9 +52,9 @@ const Navigation = () => {
               className="text-2xl font-bold cursor-pointer font-mono tracking-tight flex items-center gap-1" 
               onClick={() => navigate("/")}
             >
-              <span className="text-primary">@LL</span>
-              <span className="text-foreground">/\gent</span>
-              <span className="bg-gradient-primary bg-clip-text text-transparent">C[]nnect</span>
+              <span className="text-primary">All</span>
+              <span className="text-foreground">Ag—nt</span>
+              <span className="bg-gradient-primary bg-clip-text text-transparent">Conn—ct</span>
             </div>
           </div>
           
