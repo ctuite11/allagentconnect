@@ -48,8 +48,8 @@ const AgentDashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [listings, setListings] = useState<Listing[]>([]);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [listingToDelete, setListingToDelete] = useState<string | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [listingToCancel, setListingToCancel] = useState<string | null>(null);
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [tempStatusFilters, setTempStatusFilters] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
@@ -289,29 +289,37 @@ const AgentDashboard = () => {
     );
   };
 
-  const handleDeleteClick = (listingId: string) => {
-    setListingToDelete(listingId);
-    setDeleteDialogOpen(true);
+  const handleCancelClick = (listingId: string) => {
+    setListingToCancel(listingId);
+    setCancelDialogOpen(true);
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!listingToDelete) return;
+  const handleCancelConfirm = async () => {
+    if (!listingToCancel) return;
 
     try {
       const { error } = await supabase
         .from("listings")
-        .delete()
-        .eq("id", listingToDelete);
+        .update({ 
+          status: 'cancelled',
+          cancelled_at: new Date().toISOString()
+        })
+        .eq("id", listingToCancel);
 
       if (error) throw error;
 
-      setListings(listings.filter((l) => l.id !== listingToDelete));
-      toast.success("Listing deleted successfully");
+      // Update the local listings state
+      setListings(listings.map(l => 
+        l.id === listingToCancel 
+          ? { ...l, status: 'cancelled' }
+          : l
+      ));
+      toast.success("Listing cancelled successfully");
     } catch (error: any) {
-      toast.error("Error deleting listing: " + error.message);
+      toast.error("Error cancelling listing: " + error.message);
     } finally {
-      setDeleteDialogOpen(false);
-      setListingToDelete(null);
+      setCancelDialogOpen(false);
+      setListingToCancel(null);
     }
   };
 
@@ -648,7 +656,7 @@ const AgentDashboard = () => {
                   <ListingCard
                     key={listing.id}
                     listing={listing}
-                    onDelete={handleDeleteClick}
+                    onDelete={handleCancelClick}
                     viewMode={viewMode}
                   />
                 ))}
@@ -658,17 +666,19 @@ const AgentDashboard = () => {
         )}
       </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Listing</AlertDialogTitle>
+            <AlertDialogTitle>Cancel Listing</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this listing? This action cannot be undone.
+              Are you sure you want to cancel this listing? The listing will be hidden but you can still search for cancelled listings later.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
+            <AlertDialogCancel>Go Back</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancelConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Cancel Listing
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
