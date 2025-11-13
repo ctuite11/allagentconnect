@@ -169,6 +169,7 @@ const SearchResults = () => {
                     baths={listing.bathrooms}
                     sqft={listing.square_feet?.toLocaleString() || "N/A"}
                     listingId={listing.id}
+                    agentId={listing.agent_profile?.id}
                     agentName={listing.agent_profile ? `${listing.agent_profile.first_name} ${listing.agent_profile.last_name}` : undefined}
                     agentCompany={listing.agent_profile?.company}
                     agentPhoto={listing.agent_profile?.headshot_url}
