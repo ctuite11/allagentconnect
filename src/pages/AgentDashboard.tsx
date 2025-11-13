@@ -306,6 +306,16 @@ const AgentDashboard = () => {
     navigate("/");
   };
 
+  const scrollToListings = () => {
+    setShowResults(true);
+    setTimeout(() => {
+      const listingsSection = document.getElementById('listings-section');
+      if (listingsSection) {
+        listingsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -388,7 +398,7 @@ const AgentDashboard = () => {
 
         {/* Dashboard Overview Cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-          <Card className="hover:shadow-lg transition-all hover:scale-105 border-l-4 border-l-primary bg-gradient-to-br from-card to-card/50">
+          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-primary bg-gradient-to-br from-card to-card/50" onClick={scrollToListings}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Listings</CardTitle>
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -514,6 +524,22 @@ const AgentDashboard = () => {
             </Card>
           )}
         </div>
+
+        {/* Listings Section */}
+        {showResults && (
+          <div id="listings-section" className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">My Listings</h2>
+            <div className="grid gap-4">
+              {sortListings(listings).map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  onDelete={handleDeleteClick}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
