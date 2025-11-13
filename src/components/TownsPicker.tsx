@@ -25,9 +25,10 @@ export function TownsPicker({
   searchQuery = "",
   variant = "checkbox"
 }: TownsPickerProps) {
-  const stateKey = state && state.length > 2 
-    ? (US_STATES.find(s => s.name === state)?.code ?? state)
-    : state?.toUpperCase();
+  const rawState = (state || "").trim();
+  const stateKey = rawState && rawState.length > 2 
+    ? (US_STATES.find(s => s.name.toLowerCase() === rawState.toLowerCase())?.code ?? rawState)
+    : rawState?.toUpperCase();
 
   const filteredTowns = towns.filter(town => 
     town.toLowerCase().includes(searchQuery.toLowerCase())

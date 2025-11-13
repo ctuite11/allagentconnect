@@ -18,9 +18,10 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
 
   // Normalize state to 2-letter code
-  const stateKey = state && state.length > 2 
-    ? (US_STATES.find(s => s.name === state)?.code ?? state)
-    : state?.toUpperCase();
+  const rawState = (state || "").trim();
+  const stateKey = rawState && rawState.length > 2 
+    ? (US_STATES.find(s => s.name.toLowerCase() === rawState.toLowerCase())?.code ?? rawState)
+    : rawState?.toUpperCase();
 
   // New England states have county-to-towns mapping
   const hasCountyData = ["MA", "CT", "RI", "NH", "VT", "ME"].includes(stateKey || "");
@@ -53,7 +54,7 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
     }
 
     const towns: string[] = [];
-    const shouldShowAreas = showAreas === true || showAreas === "yes";
+    const shouldShowAreas = showAreas === true || showAreas === "yes" || showAreas === "true" || showAreas === "1";
 
     baseCities.forEach((city) => {
       towns.push(city);
