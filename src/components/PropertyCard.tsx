@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Bed, Bath, Square } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Heart } from "lucide-react";
 
 interface PropertyCardProps {
   image: string;
@@ -23,7 +23,8 @@ const PropertyCard = ({ image, title, price, savings, address, beds, baths, sqft
           alt={title}
           className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <Badge className="absolute top-4 right-4 bg-success text-success-foreground">
+        <Badge className="absolute top-4 right-4 bg-success text-success-foreground flex items-center gap-1">
+          <Heart className="w-3 h-3 fill-current" />
           Favorite {savings}
         </Badge>
       </div>
