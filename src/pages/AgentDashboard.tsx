@@ -13,6 +13,7 @@ import forRentImg from "@/assets/listing-for-rent.jpg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { LayoutGrid, List, Home, Flame, Heart, Users, Mail } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 interface Listing {
   id: string;
@@ -273,6 +274,19 @@ const AgentDashboard = () => {
           return 0;
       }
     });
+  };
+
+  const filterListings = (listingsToFilter: Listing[]) => {
+    if (statusFilters.length === 0) return listingsToFilter;
+    return listingsToFilter.filter(listing => statusFilters.includes(listing.status));
+  };
+
+  const toggleStatusFilter = (status: string) => {
+    setStatusFilters(prev => 
+      prev.includes(status) 
+        ? prev.filter(s => s !== status)
+        : [...prev, status]
+    );
   };
 
   const handleDeleteClick = (listingId: string) => {
@@ -562,6 +576,29 @@ const AgentDashboard = () => {
               ))}
             </div>
 
+            {/* Status Filter Chips */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {['active', 'pending', 'under_contract', 'sold', 'withdrawn', 'cancelled'].map((status) => (
+                <Badge
+                  key={status}
+                  variant={statusFilters.includes(status) ? 'default' : 'outline'}
+                  className="cursor-pointer capitalize"
+                  onClick={() => toggleStatusFilter(status)}
+                >
+                  {status.replace('_', ' ')}
+                </Badge>
+              ))}
+              {statusFilters.length > 0 && (
+                <Badge
+                  variant="secondary"
+                  className="cursor-pointer"
+                  onClick={() => setStatusFilters([])}
+                >
+                  Clear Filters
+                </Badge>
+              )}
+            </div>
+
             {/* Sort and View Controls */}
             <div className="flex items-center justify-end gap-3 mb-4">
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
@@ -607,7 +644,7 @@ const AgentDashboard = () => {
               </Card>
             ) : (
               <div className={viewMode === 'grid' ? 'grid md:grid-cols-2 gap-4' : 'grid gap-4'}>
-                {sortListings(listings).map((listing) => (
+                {sortListings(filterListings(listings)).map((listing) => (
                   <ListingCard
                     key={listing.id}
                     listing={listing}
