@@ -1065,9 +1065,11 @@ export function CreateHotSheetDialog({
                             // Parse city name from "City, State" or "City, State-Neighborhood" format
                             const parts = cityStr.split(',');
                             const cityPart = parts[0].trim();
+                            const remainder = parts[1]?.trim() || "";
                             
-                            // Skip if this is already a neighborhood entry
-                            if (cityPart.includes('-')) return null;
+                            // Skip if this is a neighborhood entry (only when hyphen appears after the comma)
+                            const isNeighborhoodEntry = remainder.includes('-');
+                            if (isNeighborhoodEntry) return null;
                             
                             const hasNeighborhoods = hasNeighborhoodData(cityPart, state);
                             const neighborhoods = hasNeighborhoods ? getAreasForCity(cityPart, state) : [];
