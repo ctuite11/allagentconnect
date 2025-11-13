@@ -183,10 +183,6 @@ const Navigation = () => {
           <div className="hidden md:flex items-center gap-4">
             {user ? (
               <>
-                <Button variant="outline" onClick={() => navigate("/consumer/dashboard")}>
-                  <UserCircle className="w-4 h-4 mr-2" />
-                  My Account
-                </Button>
                 <Button variant="default" onClick={() => navigate("/agent-dashboard")}>
                   <LayoutDashboard className="w-4 h-4 mr-2" />
                   Agent Tools
