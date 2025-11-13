@@ -144,11 +144,11 @@ const SearchResults = () => {
                     image={listing.photos?.[0]?.url || "/placeholder.svg"}
                     title={listing.property_type}
                     price={`$${listing.price?.toLocaleString()}`}
-                    savings="N/A"
                     address={listing.address}
                     beds={listing.bedrooms}
                     baths={listing.bathrooms}
                     sqft={listing.square_feet?.toLocaleString() || "N/A"}
+                    listingId={listing.id}
                   />
                 </div>
               ))}

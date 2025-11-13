@@ -1,20 +1,78 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { MapPin, Bed, Bath, Square, Heart } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PropertyCardProps {
   image: string;
   title: string;
   price: string;
-  savings: string;
   address: string;
   beds: number;
   baths: number;
   sqft: string;
   unitNumber?: string;
+  listingId?: string;
+  onFavoriteChange?: () => void;
 }
 
-const PropertyCard = ({ image, title, price, savings, address, beds, baths, sqft, unitNumber }: PropertyCardProps) => {
+const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNumber, listingId, onFavoriteChange }: PropertyCardProps) => {
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!listingId) {
+      toast.error("Unable to favorite this property");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Please sign in to favorite properties");
+        return;
+      }
+
+      if (isFavorited) {
+        // Remove from favorites
+        const { error } = await supabase
+          .from("favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("listing_id", listingId);
+
+        if (error) throw error;
+        setIsFavorited(false);
+        toast.success("Removed from favorites");
+      } else {
+        // Add to favorites
+        const { error } = await supabase
+          .from("favorites")
+          .insert({
+            user_id: user.id,
+            listing_id: listingId
+          });
+
+        if (error) throw error;
+        setIsFavorited(true);
+        toast.success("Added to favorites");
+      }
+      
+      onFavoriteChange?.();
+    } catch (error: any) {
+      toast.error("Error updating favorites: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Card className="overflow-hidden hover:shadow-custom-hover transition-all duration-300 group">
       <div className="relative overflow-hidden">
@@ -23,10 +81,23 @@ const PropertyCard = ({ image, title, price, savings, address, beds, baths, sqft
           alt={title}
           className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <Badge className="absolute top-4 right-4 bg-success text-success-foreground flex items-center gap-1">
-          <Heart className="w-3 h-3 fill-current" />
-          Favorite {savings}
-        </Badge>
+        {listingId && (
+          <Button
+            variant="secondary"
+            size="icon"
+            className="absolute top-4 right-4 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90"
+            onClick={handleFavoriteClick}
+            disabled={isLoading}
+          >
+            <Heart 
+              className={`w-5 h-5 transition-all ${
+                isFavorited 
+                  ? "fill-red-500 text-red-500" 
+                  : "text-muted-foreground"
+              }`} 
+            />
+          </Button>
+        )}
       </div>
       
       <div className="p-6">
