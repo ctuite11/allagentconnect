@@ -108,10 +108,24 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
     });
   };
 
-  // Reset expanded cities when state or county changes
+  // Auto-expand all cities with neighborhoods when showAreas is enabled
   useEffect(() => {
-    setExpandedCities(new Set());
-  }, [state, county]);
+    if (showAreas && townsList.length > 0) {
+      const citiesToExpand = new Set<string>();
+      
+      townsList.forEach(town => {
+        // Check if town has neighborhoods
+        const hasNeighborhoods = getAreasForCity(town, stateKey || state)?.length > 0;
+        if (hasNeighborhoods) {
+          citiesToExpand.add(town);
+        }
+      });
+      
+      setExpandedCities(citiesToExpand);
+    } else {
+      setExpandedCities(new Set());
+    }
+  }, [state, county, showAreas, townsList.length]);
 
   return {
     townsList,
