@@ -28,7 +28,7 @@ const clientSchema = z.object({
   last_name: z.string().trim().min(2, "Last name must be at least 2 characters").max(100),
   email: z.string().trim().email("Invalid email address").max(255),
   phone: z.string().trim().max(20).optional(),
-  client_type: z.enum(['buyer', 'seller', 'renter']).optional(),
+  client_type: z.enum(['buyer', 'seller', 'renter', 'agent', 'lender', 'attorney', 'inspector']).optional(),
 });
 
 interface Client {
@@ -469,6 +469,10 @@ const MyClients = () => {
                         <SelectItem value="buyer">Buyer</SelectItem>
                         <SelectItem value="seller">Seller</SelectItem>
                         <SelectItem value="renter">Renter</SelectItem>
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="lender">Lender</SelectItem>
+                        <SelectItem value="attorney">Attorney</SelectItem>
+                        <SelectItem value="inspector">Inspector</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -524,6 +528,10 @@ const MyClients = () => {
                         <SelectItem value="buyer">Buyers</SelectItem>
                         <SelectItem value="seller">Sellers</SelectItem>
                         <SelectItem value="renter">Renters</SelectItem>
+                        <SelectItem value="agent">Agents</SelectItem>
+                        <SelectItem value="lender">Lenders</SelectItem>
+                        <SelectItem value="attorney">Attorneys</SelectItem>
+                        <SelectItem value="inspector">Inspectors</SelectItem>
                         <SelectItem value="none">No Type Set</SelectItem>
                       </SelectContent>
                     </Select>
