@@ -190,23 +190,7 @@ const ClientNeedsDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Client Needs Dashboard</h1>
-          <p className="text-muted-foreground">
-            View and filter submitted client real estate needs
-          </p>
-        </div>
-
-        {/* New Section */}
-        <div className="mb-8 text-center max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold mb-2">Connect . Communicate . Collaborate</h2>
-          <p className="text-lg text-muted-foreground mb-4">Turning relationships into results</p>
-          <p className="text-base text-muted-foreground">
-            Share your active client needs and receive targeted matches from other agents. Customize your alerts by market and property type for insider-level visibility.
-          </p>
-        </div>
-
+      <div className="container mx-auto px-4 py-6 pt-20">
         {/* Notification Preference Cards */}
         <NotificationPreferenceCards />
 
