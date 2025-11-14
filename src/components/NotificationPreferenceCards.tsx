@@ -87,6 +87,9 @@ export const NotificationPreferenceCards = () => {
       description: "Get notified about buyer needs in your market",
       icon: Home,
       active: preferences.buyer_need,
+      borderColor: "border-l-primary",
+      iconBgColor: "bg-primary/20",
+      iconColor: "text-primary",
     },
     {
       key: "sales_intel" as keyof NotificationPreferences,
@@ -94,6 +97,9 @@ export const NotificationPreferenceCards = () => {
       description: "Receive updates on sales and market intelligence",
       icon: TrendingUp,
       active: preferences.sales_intel,
+      borderColor: "border-l-orange-500",
+      iconBgColor: "bg-orange-500/10",
+      iconColor: "text-orange-500",
     },
     {
       key: "renter_need" as keyof NotificationPreferences,
@@ -101,6 +107,9 @@ export const NotificationPreferenceCards = () => {
       description: "Stay informed about rental opportunities",
       icon: Building2,
       active: preferences.renter_need,
+      borderColor: "border-l-purple-500",
+      iconBgColor: "bg-purple-500/10",
+      iconColor: "text-purple-500",
     },
     {
       key: "general_discussion" as keyof NotificationPreferences,
@@ -108,6 +117,9 @@ export const NotificationPreferenceCards = () => {
       description: "Connect for referrals, recommendations, and advice",
       icon: MessageSquare,
       active: preferences.general_discussion,
+      borderColor: "border-l-red-500",
+      iconBgColor: "bg-red-500/10",
+      iconColor: "text-red-500",
     },
   ];
 
@@ -118,45 +130,33 @@ export const NotificationPreferenceCards = () => {
   return (
     <div className="mb-8">
       <h3 className="text-xl font-semibold mb-4">Choose Your Notification Preferences</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {cards.map((card) => {
             const Icon = card.icon;
-            const edgeClass = card.key === 'buyer_need'
-              ? 'before:bg-primary'
-              : card.key === 'sales_intel'
-              ? 'before:bg-orange-500'
-              : card.key === 'renter_need'
-              ? 'before:bg-purple-500'
-              : 'before:bg-red-500';
-          return (
+            return (
             <Card
               key={card.key}
-              className={`relative overflow-hidden transition-all hover:shadow-lg cursor-pointer before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:content-[''] ${edgeClass} ${
-                card.active ? "border-primary border-2" : ""
-              }`}
+              className={`border-l-4 ${card.borderColor} transition-all hover:shadow-lg cursor-pointer`}
               onClick={() => togglePreference(card.key)}
             >
-              <CardContent className="pt-6 pb-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className={`p-4 rounded-full ${
-                    card.active ? "bg-primary/10" : "bg-muted"
-                  }`}>
-                    <Icon className={`h-8 w-8 ${
-                      card.active ? "text-primary" : "text-muted-foreground"
-                    }`} />
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h4 className="text-base font-semibold mb-1">{card.title}</h4>
+                    <p className="text-xs text-muted-foreground">{card.description}</p>
                   </div>
-                  <div className="space-y-2">
-                    <h4 className="text-lg font-semibold">{card.title}</h4>
-                    <p className="text-sm text-muted-foreground">{card.description}</p>
+                  <div className={`ml-4 h-12 w-12 rounded-full ${card.iconBgColor} flex items-center justify-center flex-shrink-0`}>
+                    <Icon className={`h-6 w-6 ${card.iconColor}`} />
                   </div>
-                  <Button
-                    variant={card.active ? "default" : "outline"}
-                    className="w-full gap-2"
-                  >
-                    {card.active && <Check className="h-4 w-4" />}
-                    {card.active ? "Notifications On" : "Turn On Notifications"}
-                  </Button>
                 </div>
+                <Button
+                  variant={card.active ? "default" : "outline"}
+                  size="sm"
+                  className="w-full mt-3 gap-2"
+                >
+                  {card.active && <Check className="h-4 w-4" />}
+                  {card.active ? "Notifications On" : "Turn On Notifications"}
+                </Button>
               </CardContent>
             </Card>
           );
