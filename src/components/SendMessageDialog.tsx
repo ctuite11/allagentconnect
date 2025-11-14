@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -444,23 +445,23 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="minPrice">Min Price (Optional)</Label>
-                    <Input
+                    <FormattedInput
                       id="minPrice"
-                      type="number"
-                      placeholder="100000"
+                      format="currency"
+                      placeholder="$100,000"
                       value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)}
+                      onChange={setMinPrice}
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="maxPrice">Max Price (Optional)</Label>
-                    <Input
+                    <FormattedInput
                       id="maxPrice"
-                      type="number"
-                      placeholder="500000"
+                      format="currency"
+                      placeholder="$500,000"
                       value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)}
+                      onChange={setMaxPrice}
                     />
                   </div>
                 </div>
