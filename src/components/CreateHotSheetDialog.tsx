@@ -53,6 +53,13 @@ export function CreateHotSheetDialog({
   const [clientPhone, setClientPhone] = useState("");
   const [existingClient, setExistingClient] = useState<any>(null);
   const [internalClientId, setClientId] = useState<string | null>(null);
+  const [selectedClients, setSelectedClients] = useState<Array<{
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone?: string | null;
+  }>>([]);
   const [showCreateClientDialog, setShowCreateClientDialog] = useState(false);
   const [creatingClient, setCreatingClient] = useState(false);
   const [clientSearchQuery, setClientSearchQuery] = useState("");
@@ -213,17 +220,36 @@ export function CreateHotSheetDialog({
   }, [clientSearchQuery, userId, open]);
 
   const handleSelectClient = (client: any) => {
-    setClientFirstName(client.first_name);
-    setClientLastName(client.last_name);
-    setClientEmail(client.email);
-    setClientPhone(client.phone || "");
-    setExistingClient(client);
-    setClientId(client.id);
-    setClientSearchQuery(`${client.first_name} ${client.last_name}`);
-    setShowClientDropdown(false);
-    setClientInfoOpen(false);
+    // Check if client is already selected
+    if (selectedClients.some(c => c.id === client.id)) {
+      toast.error("This client is already added");
+      return;
+    }
     
-    toast.success(`Client selected: ${client.first_name} ${client.last_name}`);
+    // Add to selected clients
+    setSelectedClients(prev => [...prev, {
+      id: client.id,
+      first_name: client.first_name,
+      last_name: client.last_name,
+      email: client.email,
+      phone: client.phone
+    }]);
+    
+    // Clear search and form
+    setClientSearchQuery("");
+    setClientFirstName("");
+    setClientLastName("");
+    setClientEmail("");
+    setClientPhone("");
+    setExistingClient(null);
+    setShowClientDropdown(false);
+    
+    toast.success(`Added client: ${client.first_name} ${client.last_name}`);
+  };
+
+  const handleRemoveClient = (clientId: string) => {
+    setSelectedClients(prev => prev.filter(c => c.id !== clientId));
+    toast.success("Client removed");
   };
 
   const loadHotSheet = async () => {
@@ -269,7 +295,34 @@ export function CreateHotSheetDialog({
       setNotifyAgent(data.notify_agent_email);
       setNotificationSchedule(data.notification_schedule);
 
-      // Client info loaded from hot_sheets.client_id (single client per hot sheet)
+      // Load associated clients from hot_sheet_clients table
+      const { data: hotSheetClients } = await supabase
+        .from('hot_sheet_clients' as any)
+        .select(`
+          client_id,
+          clients (
+            id,
+            first_name,
+            last_name,
+            email,
+            phone
+          )
+        `)
+        .eq('hot_sheet_id', hotSheetId);
+
+      if (hotSheetClients && hotSheetClients.length > 0) {
+        const clients = hotSheetClients
+          .map((hsc: any) => {
+            const client = hsc.clients;
+            if (Array.isArray(client)) {
+              return client[0];
+            }
+            return client;
+          })
+          .filter((client: any): client is NonNullable<typeof client> => client !== null);
+        
+        setSelectedClients(clients);
+      }
 
       // Load additional criteria fields
       setListingAgreementTypes(criteria.listingAgreementTypes || []);
@@ -588,9 +641,9 @@ export function CreateHotSheetDialog({
     // Clear previous errors
     setErrors({});
     
-    // Check if at least one client field is filled
-    if (!clientFirstName && !clientEmail && !clientId) {
-      toast.error("Please provide client information");
+    // Check if at least one client is selected
+    if (selectedClients.length === 0 && !clientFirstName && !clientEmail) {
+      toast.error("Please add at least one client");
       return;
     }
 
@@ -653,12 +706,22 @@ export function CreateHotSheetDialog({
       if (error) throw error;
 
       if (data) {
-        setClientId(data.id);
-        setExistingClient(data);
-        setClientFirstName(data.first_name);
-        setClientLastName(data.last_name);
-        setClientEmail(data.email);
-        setClientPhone(data.phone || "");
+        // Add newly created client to selected clients
+        setSelectedClients(prev => [...prev, {
+          id: data.id,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          phone: data.phone
+        }]);
+        
+        // Clear the form
+        setClientFirstName("");
+        setClientLastName("");
+        setClientEmail("");
+        setClientPhone("");
+        setExistingClient(null);
+        setClientSearchQuery("");
       }
       setShowCreateClientDialog(false);
       toast.success("Client created and added successfully");
@@ -752,7 +815,28 @@ export function CreateHotSheetDialog({
 
         if (error) throw error;
 
-        // Client stored in hot_sheets.client_id
+        // Update clients in hot_sheet_clients junction table
+        if (selectedClients.length > 0) {
+          // Delete existing relationships
+          const { error: deleteError } = await supabase
+            .from('hot_sheet_clients' as any)
+            .delete()
+            .eq('hot_sheet_id', hotSheetId);
+
+          if (deleteError) throw deleteError;
+
+          // Insert new relationships
+          const { error: insertError } = await supabase
+            .from('hot_sheet_clients' as any)
+            .insert(
+              selectedClients.map(client => ({
+                hot_sheet_id: hotSheetId,
+                client_id: client.id
+              }))
+            );
+
+          if (insertError) throw insertError;
+        }
 
         toast.success("Hot sheet updated");
         setShowSuccess(true);
@@ -781,7 +865,19 @@ export function CreateHotSheetDialog({
 
         if (error) throw error;
 
-        // Client stored in hot_sheets.client_id
+        // Insert clients into hot_sheet_clients junction table
+        if (selectedClients.length > 0 && createdHotSheet) {
+          const { error: clientError } = await supabase
+            .from('hot_sheet_clients' as any)
+            .insert(
+              selectedClients.map(client => ({
+                hot_sheet_id: createdHotSheet.id,
+                client_id: client.id
+              }))
+            );
+
+          if (clientError) throw clientError;
+        }
 
         toast.success("Hot sheet created successfully!");
         setShowSuccess(true);
@@ -811,7 +907,8 @@ export function CreateHotSheetDialog({
     setClientSearchQuery("");
     setClientSearchResults([]);
     setShowClientDropdown(false);
-    setClientInfoOpen(true); // Reset to open
+    setClientInfoOpen(true);
+    setSelectedClients([]);
     setShowCreateClientDialog(false);
     setCreatingClient(false);
     setErrors({});
@@ -920,6 +1017,11 @@ export function CreateHotSheetDialog({
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">
                       Client Information *
+                      {selectedClients.length > 0 && (
+                        <span className="ml-2 text-sm font-normal text-green-600">
+                          ✓ {selectedClients.length} {selectedClients.length === 1 ? 'client' : 'clients'}
+                        </span>
+                      )}
                     </CardTitle>
                     {clientInfoOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
@@ -927,6 +1029,37 @@ export function CreateHotSheetDialog({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="space-y-4">
+              {/* Selected Clients List */}
+              {selectedClients.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Selected Clients ({selectedClients.length})</Label>
+                  <div className="space-y-2 p-3 bg-muted/30 rounded-md border">
+                    {selectedClients.map((client) => (
+                      <div key={client.id} className="flex items-center justify-between p-2 bg-background rounded border">
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">
+                            {client.first_name} {client.last_name}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{client.email}</div>
+                          {client.phone && (
+                            <div className="text-xs text-muted-foreground">{formatPhoneNumber(client.phone)}</div>
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveClient(client.id)}
+                          className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Client Search */}
               <div className="space-y-2 relative">
                 <Label htmlFor="client-search">Search Existing Client</Label>
@@ -1058,6 +1191,25 @@ export function CreateHotSheetDialog({
                   <p className="text-sm text-destructive">{errors.clientPhone}</p>
                 )}
               </div>
+
+              {/* Add Client Button */}
+              {(clientFirstName || clientLastName || clientEmail || clientPhone) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (!existingClient) {
+                      setShowCreateClientDialog(true);
+                    } else {
+                      handleSelectClient(existingClient);
+                    }
+                  }}
+                  className="w-full"
+                >
+                  <Check className="w-4 h-4 mr-2" />
+                  Add This Client
+                </Button>
+              )}
 
             </CardContent>
           </CollapsibleContent>
@@ -1690,14 +1842,18 @@ export function CreateHotSheetDialog({
             {/* Client Information */}
             <div className="border-b pb-3">
               <p className="text-sm font-semibold text-foreground mb-2">Client Information</p>
-              {clientFirstName && clientLastName ? (
-                <div className="text-sm text-muted-foreground p-2 bg-muted/30 rounded space-y-1">
-                  <p><span className="font-medium">Name:</span> {clientFirstName} {clientLastName}</p>
-                  <p><span className="font-medium">Email:</span> {clientEmail}</p>
-                  {clientPhone && <p><span className="font-medium">Phone:</span> {formatPhoneNumber(clientPhone)}</p>}
+              {selectedClients.length > 0 ? (
+                <div className="space-y-2">
+                  {selectedClients.map((client) => (
+                    <div key={client.id} className="text-sm text-muted-foreground p-2 bg-muted/30 rounded">
+                      <p><span className="font-medium">Name:</span> {client.first_name} {client.last_name}</p>
+                      <p><span className="font-medium">Email:</span> {client.email}</p>
+                      {client.phone && <p><span className="font-medium">Phone:</span> {formatPhoneNumber(client.phone)}</p>}
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No client information provided</p>
+                <p className="text-sm text-muted-foreground">No clients added</p>
               )}
             </div>
 
