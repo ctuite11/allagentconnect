@@ -14,6 +14,7 @@ import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
+import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 interface GeographicPreferencesManagerProps {
   agentId: string;
 }
@@ -130,14 +131,35 @@ const GeographicPreferencesManager = ({
     }
   };
   const selectAllCountiesAndTowns = () => {
-    // First change county filter to "all" to show all counties
+    // Ensure we have county-city mapping for this state
+    const counties = hasCountyData ? getCountiesForState(state) : [];
+    const allCities: string[] = [];
+
+    if (counties.length > 0) {
+      counties.forEach(c => {
+        const cities = getCitiesForCounty(state, c) || [];
+        allCities.push(...cities);
+      });
+    }
+
+    // Fallback: if no county mapping, use current townsList
+    const baseCities = allCities.length > 0 ? Array.from(new Set(allCities)) : townsList;
+
+    if (showAreas === "yes") {
+      const withNeighborhoods: string[] = [];
+      baseCities.forEach(city => {
+        withNeighborhoods.push(city);
+        const neighborhoods = getAreasForCity(city, state);
+        neighborhoods.forEach(n => withNeighborhoods.push(`${city}-${n}`));
+      });
+      setSelectedTowns(Array.from(new Set(withNeighborhoods)));
+    } else {
+      setSelectedTowns(Array.from(new Set(baseCities)));
+    }
+
+    // Reflect UI that we're on "All Counties"
     setCounty("all");
-    // Wait for next render cycle so townsList updates with all counties
-    // then select all towns
-    setTimeout(() => {
-      addAllTowns();
-      toast.success("All counties and towns selected");
-    }, 50);
+    toast.success("All counties and towns selected");
   };
 
   const toggleTown = (town: string) => {
