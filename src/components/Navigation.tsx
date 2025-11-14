@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut } from "lucide-react";
@@ -19,6 +19,17 @@ const Navigation = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
+
+  const hoverCloseTimer = useRef<number | null>(null);
+  const clearCloseTimer = () => {
+    if (hoverCloseTimer.current) {
+      window.clearTimeout(hoverCloseTimer.current);
+      hoverCloseTimer.current = null;
+    }
+  };
+  const scheduleClose = () => {
+    hoverCloseTimer.current = window.setTimeout(() => setIsDropdownOpen(false), 150);
+  };
 
   useEffect(() => {
     const {
@@ -184,19 +195,14 @@ const Navigation = () => {
           <div className="hidden md:flex items-center gap-4">
             {user ? (
               <>
-                <div
-                  onMouseEnter={() => setIsDropdownOpen(true)}
-                  onMouseLeave={() => setIsDropdownOpen(false)}
-                  className="relative"
-                >
+                <div className="relative">
                   <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                     <DropdownMenuTrigger asChild>
                       <Button 
                         variant="outline" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          navigate("/agent-dashboard");
-                        }}
+                        onClick={(e) => { e.preventDefault(); navigate("/agent-dashboard"); }}
+                        onMouseEnter={() => { clearCloseTimer(); setIsDropdownOpen(true); }}
+                        onMouseLeave={scheduleClose}
                       >
                         <LayoutDashboard className="w-4 h-4 mr-2" />
                         Success Hub
@@ -206,6 +212,9 @@ const Navigation = () => {
                     <DropdownMenuContent 
                       className="w-56 bg-card border-border shadow-lg z-[100]"
                       align="start"
+                      sideOffset={6}
+                      onMouseEnter={() => { clearCloseTimer(); setIsDropdownOpen(true); }}
+                      onMouseLeave={scheduleClose}
                     >
                       <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
                       <DropdownMenuGroup>
