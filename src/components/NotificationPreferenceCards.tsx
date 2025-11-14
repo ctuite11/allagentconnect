@@ -42,10 +42,10 @@ export const NotificationPreferenceCards = () => {
 
       if (data) {
         setPreferences({
-          buyer_need: data.buyer_need,
-          sales_intel: data.sales_intel,
-          renter_need: data.renter_need,
-          general_discussion: data.general_discussion,
+          buyer_need: (data as any).buyer_need ?? false,
+          sales_intel: (data as any).sales_intel ?? false,
+          renter_need: (data as any).renter_need ?? false,
+          general_discussion: (data as any).general_discussion ?? false,
         });
       }
     } catch (error) {
