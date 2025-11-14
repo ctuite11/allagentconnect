@@ -28,7 +28,7 @@ const clientSchema = z.object({
   last_name: z.string().trim().min(2, "Last name must be at least 2 characters").max(100),
   email: z.string().trim().email("Invalid email address").max(255),
   phone: z.string().trim().max(20).optional(),
-  notes: z.string().trim().max(1000).optional(),
+  client_type: z.enum(['buyer', 'seller', 'renter']).optional(),
 });
 
 interface Client {
@@ -37,7 +37,7 @@ interface Client {
   last_name: string;
   email: string;
   phone: string | null;
-  notes: string | null;
+  client_type: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -54,7 +54,7 @@ const MyClients = () => {
     last_name: "",
     email: "",
     phone: "",
-    notes: "",
+    client_type: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -107,7 +107,7 @@ const MyClients = () => {
       last_name: "",
       email: "",
       phone: "",
-      notes: "",
+      client_type: "",
     });
     setErrors({});
     setEditingClient(null);
@@ -124,7 +124,7 @@ const MyClients = () => {
       last_name: client.last_name,
       email: client.email,
       phone: client.phone || "",
-      notes: client.notes || "",
+      client_type: client.client_type || "",
     });
     setEditingClient(client);
     setAddDialogOpen(true);
@@ -147,7 +147,7 @@ const MyClients = () => {
             last_name: validatedData.last_name,
             email: validatedData.email,
             phone: validatedData.phone || null,
-            notes: validatedData.notes || null,
+            client_type: validatedData.client_type || null,
           })
           .eq("id", editingClient.id);
 
@@ -163,7 +163,7 @@ const MyClients = () => {
             last_name: validatedData.last_name,
             email: validatedData.email,
             phone: validatedData.phone || null,
-            notes: validatedData.notes || null,
+            client_type: validatedData.client_type || null,
           });
 
         if (error) throw error;
@@ -259,13 +259,13 @@ const MyClients = () => {
   const handleExportCSV = () => {
     try {
       // Prepare CSV data
-      const headers = ["First Name", "Last Name", "Email", "Phone", "Notes", "Date Added", "Last Updated"];
+      const headers = ["First Name", "Last Name", "Email", "Phone", "Client Type", "Date Added", "Last Updated"];
       const csvData = sortedClients.map(client => [
         client.first_name,
         client.last_name,
         client.email,
         formatPhoneNumber(client.phone) || "",
-        client.notes || "",
+        client.client_type || "",
         new Date(client.created_at).toLocaleDateString(),
         new Date(client.updated_at).toLocaleDateString()
       ]);
@@ -310,7 +310,7 @@ const MyClients = () => {
       fullName.includes(search) ||
       email.includes(search) ||
       phone.includes(search) ||
-      client.notes?.toLowerCase().includes(search)
+      client.client_type?.toLowerCase().includes(search)
     );
   });
 
@@ -448,16 +448,21 @@ const MyClients = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea
-                      id="notes"
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      placeholder="Additional notes about this client..."
-                      rows={3}
-                      maxLength={1000}
-                    />
-                    <p className="text-xs text-muted-foreground">{formData.notes.length}/1000</p>
+                    <Label htmlFor="client_type">Client Type (Optional)</Label>
+                    <Select
+                      value={formData.client_type}
+                      onValueChange={(value) => setFormData({ ...formData, client_type: value })}
+                    >
+                      <SelectTrigger id="client_type">
+                        <SelectValue placeholder="Select client type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="buyer">Buyer</SelectItem>
+                        <SelectItem value="seller">Seller</SelectItem>
+                        <SelectItem value="renter">Renter</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="flex justify-end gap-3">
@@ -548,7 +553,7 @@ const MyClients = () => {
                         </TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Contact</TableHead>
-                        <TableHead>Notes</TableHead>
+                        <TableHead>Client Type</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -579,8 +584,8 @@ const MyClients = () => {
                         </div>
                       </TableCell>
                       <TableCell className="max-w-xs">
-                        <p className="text-sm text-muted-foreground truncate">
-                          {client.notes || "—"}
+                        <p className="text-sm text-muted-foreground truncate capitalize">
+                          {client.client_type || "—"}
                         </p>
                       </TableCell>
                        <TableCell className="text-right">

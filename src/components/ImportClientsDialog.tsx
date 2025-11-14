@@ -13,7 +13,7 @@ const clientRowSchema = z.object({
   last_name: z.string().trim().min(2, "Last name must be at least 2 characters").max(100),
   email: z.string().trim().email("Invalid email address").max(255),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
-  notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  client_type: z.enum(['buyer', 'seller', 'renter', '']).optional(),
 });
 
 interface ImportClientsDialogProps {
@@ -28,7 +28,7 @@ interface ParsedClient {
   last_name: string;
   email: string;
   phone?: string;
-  notes?: string;
+  client_type?: string;
 }
 
 interface ValidationResult {
@@ -53,7 +53,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     const lastNameIdx = header.findIndex(h => h.includes('last') && h.includes('name'));
     const emailIdx = header.findIndex(h => h.includes('email'));
     const phoneIdx = header.findIndex(h => h.includes('phone'));
-    const notesIdx = header.findIndex(h => h.includes('note'));
+    const clientTypeIdx = header.findIndex(h => h.includes('client') && h.includes('type'));
 
     if (firstNameIdx === -1 || lastNameIdx === -1 || emailIdx === -1) {
       throw new Error("CSV must contain 'First Name', 'Last Name', and 'Email' columns");
@@ -71,7 +71,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         last_name: values[lastNameIdx] || '',
         email: values[emailIdx] || '',
         phone: phoneIdx !== -1 ? values[phoneIdx] : '',
-        notes: notesIdx !== -1 ? values[notesIdx] : '',
+        client_type: clientTypeIdx !== -1 ? values[clientTypeIdx] : '',
       });
     }
 
@@ -91,7 +91,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
           last_name: result.data.last_name,
           email: result.data.email,
           phone: result.data.phone,
-          notes: result.data.notes,
+          client_type: result.data.client_type,
         });
       } else {
         errors.push({
@@ -183,7 +183,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
             last_name: client.last_name,
             email: client.email,
             phone: client.phone || null,
-            notes: client.notes || null,
+            client_type: client.client_type || null,
           }))
         );
 
