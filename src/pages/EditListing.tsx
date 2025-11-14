@@ -402,13 +402,35 @@ const EditListing = () => {
 
     console.log("=== Address components extracted ===", { address, city, state, zip_code });
 
-    setFormData({
-      ...formData,
-      address,
-      city,
-      state,
-      zip_code,
-    });
+    // Validate that we have all required components
+    const missingFields = [];
+    if (!city) missingFields.push("city");
+    if (!state) missingFields.push("state");
+    if (!zip_code) missingFields.push("zip code");
+
+    if (missingFields.length > 0) {
+      toast.error(
+        `Unable to auto-populate ${missingFields.join(", ")} from the selected address. Please use "Enter manually" to complete all address fields.`,
+        { duration: 6000 }
+      );
+      // Still set the address field
+      setFormData({
+        ...formData,
+        address,
+      });
+      // Auto-open manual entry dialog
+      setTimeout(() => setManualAddressDialogOpen(true), 500);
+    } else {
+      setFormData({
+        ...formData,
+        address,
+        city,
+        state,
+        zip_code,
+      });
+      toast.success("Address details filled successfully");
+    }
+    
     setIsDirty(true);
   };
 
