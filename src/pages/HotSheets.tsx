@@ -289,7 +289,7 @@ const HotSheets = () => {
     <div className="min-h-screen flex flex-col">
       <Navigation />
       
-      <main className="flex-1 bg-muted/30 pt-24">
+      <main className="flex-1 bg-background pt-24">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8 flex items-center gap-4">
@@ -305,7 +305,7 @@ const HotSheets = () => {
           </div>
 
           {/* Create New Hot Sheet */}
-          <Card className="mb-8">
+          <Card className="mb-8 border-l-4 border-l-primary">
             <CardHeader>
               <CardTitle>Let's create or view your custom Hot Sheets.</CardTitle>
             </CardHeader>
@@ -319,7 +319,7 @@ const HotSheets = () => {
 
           {/* Hot Sheets Table */}
           {hotSheets.length === 0 ? (
-            <Card className="p-12">
+            <Card className="p-12 border-l-4 border-l-primary">
               <div className="text-center">
                 <Plus className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">No hot sheets yet</h3>

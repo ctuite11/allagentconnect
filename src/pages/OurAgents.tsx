@@ -88,7 +88,7 @@ const OurAgents = () => {
         </section>
 
         {/* Agents Grid */}
-        <section className="py-12 bg-muted/30">
+        <section className="py-12 bg-background">
           <div className="container mx-auto px-4">
             {loading ? (
               <div className="text-center py-12">

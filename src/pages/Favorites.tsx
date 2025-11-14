@@ -204,7 +204,7 @@ const Favorites = () => {
     <div className="min-h-screen flex flex-col">
       <Navigation />
       
-      <main className="flex-1 bg-muted/30 pt-24">
+      <main className="flex-1 bg-background pt-24">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8 flex items-center gap-4">
@@ -231,7 +231,7 @@ const Favorites = () => {
 
           {/* Favorites Grid */}
           {favorites.length === 0 ? (
-            <Card className="p-12">
+            <Card className="p-12 border-l-4 border-l-primary">
               <div className="text-center">
                 <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">No favorites yet</h3>

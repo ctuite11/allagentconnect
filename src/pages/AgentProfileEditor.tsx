@@ -494,7 +494,7 @@ const AgentProfileEditor = () => {
           </div>
 
           {/* Contact Information */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-card/50">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-blue-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
@@ -614,7 +614,7 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Profile Images */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-card/50">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-purple-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center">
@@ -712,7 +712,7 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Bio Section */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-emerald-500 bg-gradient-to-br from-card to-card/50">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-emerald-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
@@ -737,7 +737,7 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Incentives Section */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-card/50">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-orange-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center">
@@ -775,7 +775,7 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Social Links Section */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-pink-500 bg-gradient-to-br from-card to-card/50">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-pink-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <div className="h-10 w-10 rounded-full bg-pink-500/10 flex items-center justify-center">
@@ -838,7 +838,7 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Buyer Agent Lead Opt-In Section */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-card/50">
+          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-indigo-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center">
@@ -1147,7 +1147,7 @@ const AgentProfileEditor = () => {
           </Card>
 
           {/* Testimonials Section */}
-          <Card className="mb-6 border-l-4 border-l-teal-500 bg-gradient-to-br from-card to-card/50 hover:shadow-lg transition-all">
+          <Card className="mb-6 border-l-4 border-l-teal-500 hover:shadow-lg transition-all">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-teal-500/10">
