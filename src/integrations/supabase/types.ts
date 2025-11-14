@@ -563,6 +563,7 @@ export type Database = {
       clients: {
         Row: {
           agent_id: string
+          client_type: string | null
           created_at: string
           email: string
           first_name: string
@@ -574,6 +575,7 @@ export type Database = {
         }
         Insert: {
           agent_id: string
+          client_type?: string | null
           created_at?: string
           email: string
           first_name: string
@@ -585,6 +587,7 @@ export type Database = {
         }
         Update: {
           agent_id?: string
+          client_type?: string | null
           created_at?: string
           email?: string
           first_name?: string
@@ -888,6 +891,42 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hot_sheet_clients: {
+        Row: {
+          client_id: string
+          created_at: string
+          hot_sheet_id: string
+          id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          hot_sheet_id: string
+          id?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          hot_sheet_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_clients_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
             referencedColumns: ["id"]
           },
         ]
@@ -1512,29 +1551,56 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
+          buyer_need: boolean
+          client_needs_enabled: boolean | null
+          client_needs_schedule: string | null
           created_at: string
           frequency: string
+          general_discussion: boolean
           id: string
+          max_price: number | null
+          min_price: number | null
           new_matches_enabled: boolean | null
           price_changes_enabled: boolean | null
+          property_types: Json | null
+          renter_need: boolean
+          sales_intel: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
+          buyer_need?: boolean
+          client_needs_enabled?: boolean | null
+          client_needs_schedule?: string | null
           created_at?: string
           frequency?: string
+          general_discussion?: boolean
           id?: string
+          max_price?: number | null
+          min_price?: number | null
           new_matches_enabled?: boolean | null
           price_changes_enabled?: boolean | null
+          property_types?: Json | null
+          renter_need?: boolean
+          sales_intel?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
+          buyer_need?: boolean
+          client_needs_enabled?: boolean | null
+          client_needs_schedule?: string | null
           created_at?: string
           frequency?: string
+          general_discussion?: boolean
           id?: string
+          max_price?: number | null
+          min_price?: number | null
           new_matches_enabled?: boolean | null
           price_changes_enabled?: boolean | null
+          property_types?: Json | null
+          renter_need?: boolean
+          sales_intel?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -1647,6 +1713,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "team_members_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "team_members_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -1665,6 +1738,9 @@ export type Database = {
           id: string
           logo_url: string | null
           name: string
+          office_address: string | null
+          office_name: string | null
+          office_phone: string | null
           social_links: Json | null
           team_photo_url: string | null
           updated_at: string
@@ -1679,6 +1755,9 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name: string
+          office_address?: string | null
+          office_name?: string | null
+          office_phone?: string | null
           social_links?: Json | null
           team_photo_url?: string | null
           updated_at?: string
@@ -1693,6 +1772,9 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name?: string
+          office_address?: string | null
+          office_name?: string | null
+          office_phone?: string | null
           social_links?: Json | null
           team_photo_url?: string | null
           updated_at?: string
@@ -1892,6 +1974,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_team_owner: {
+        Args: { p_team_id: string; p_user_id: string }
         Returns: boolean
       }
     }
