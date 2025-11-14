@@ -29,7 +29,7 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
   const [showAreas, setShowAreas] = useState("yes");
   const [townSearch, setTownSearch] = useState("");
   const [manualTowns, setManualTowns] = useState("");
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   const { townsList, expandedCities, toggleCityExpansion, hasCountyData } = useTownsPicker({
     state,
