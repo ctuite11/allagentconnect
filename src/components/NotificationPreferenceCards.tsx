@@ -120,11 +120,18 @@ export const NotificationPreferenceCards = () => {
       <h3 className="text-xl font-semibold mb-4">Choose Your Notification Preferences</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {cards.map((card) => {
-          const Icon = card.icon;
+            const Icon = card.icon;
+            const edgeClass = card.key === 'buyer_need'
+              ? 'before:bg-primary'
+              : card.key === 'sales_intel'
+              ? 'before:bg-accent'
+              : card.key === 'renter_need'
+              ? 'before:bg-secondary'
+              : 'before:bg-accent';
           return (
             <Card
               key={card.key}
-              className={`relative overflow-hidden transition-all hover:shadow-lg cursor-pointer ${
+              className={`relative overflow-hidden transition-all hover:shadow-lg cursor-pointer before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:content-[''] ${edgeClass} ${
                 card.active ? "border-primary border-2" : ""
               }`}
               onClick={() => togglePreference(card.key)}
