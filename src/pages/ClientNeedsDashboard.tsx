@@ -203,8 +203,7 @@ const ClientNeedsDashboard = () => {
           <h2 className="text-3xl font-bold mb-2">Connect . Communicate . Collaborate</h2>
           <p className="text-lg text-muted-foreground mb-4">Turning relationships into results</p>
           <p className="text-base text-muted-foreground">
-            Post your buyer, seller, or rental needs and get matched with other agents doing the same. 
-            You control what markets and property types you get alerts for — real-time insider insight for real estate pros.
+            Share your active client needs and receive targeted matches from other agents. Customize your alerts by market and property type for insider-level visibility.
           </p>
         </div>
 
