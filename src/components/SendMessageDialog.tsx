@@ -39,8 +39,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   // Additional fields for buyer_need and renter_need
   const [state, setState] = useState("");
   const [counties, setCounties] = useState<string[]>([]);
-  const [city, setCity] = useState("");
-  const [neighborhood, setNeighborhood] = useState("");
+  const [cities, setCities] = useState<string[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [propertyType, setPropertyType] = useState("");
@@ -61,16 +61,16 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         ? counties.flatMap(county => getCitiesForCounty(state, county))
         : usCitiesByState[state] || [])
     : [];
-  const availableNeighborhoods = (city && state) 
-    ? usNeighborhoodsByCityState[`${city}-${state}`] || [] 
+  const availableNeighborhoods = cities.length > 0 && state
+    ? [...new Set(cities.flatMap(city => usNeighborhoodsByCityState[`${city}-${state}`] || []))]
     : [];
 
   // Reset dependent fields when state, county, or city changes
   const handleStateChange = (newState: string) => {
     setState(newState);
     setCounties([]);
-    setCity("");
-    setNeighborhood("");
+    setCities([]);
+    setNeighborhoods([]);
   };
 
   const handleCountyToggle = (countyName: string) => {
@@ -79,13 +79,25 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         ? prev.filter(c => c !== countyName)
         : [...prev, countyName]
     );
-    setCity("");
-    setNeighborhood("");
+    setCities([]);
+    setNeighborhoods([]);
   };
 
-  const handleCityChange = (newCity: string) => {
-    setCity(newCity);
-    setNeighborhood("");
+  const handleCityToggle = (cityName: string) => {
+    setCities(prev => 
+      prev.includes(cityName) 
+        ? prev.filter(c => c !== cityName)
+        : [...prev, cityName]
+    );
+    setNeighborhoods([]);
+  };
+
+  const handleNeighborhoodToggle = (neighborhoodName: string) => {
+    setNeighborhoods(prev => 
+      prev.includes(neighborhoodName) 
+        ? prev.filter(n => n !== neighborhoodName)
+        : [...prev, neighborhoodName]
+    );
   };
 
   const fetchRecipientCount = async () => {
@@ -145,8 +157,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         requestBody.criteria = {
           state,
           counties: counties.length > 0 ? counties : undefined,
-          city: city.trim() || undefined,
-          neighborhood: neighborhood.trim() || undefined,
+          cities: cities.length > 0 ? cities : undefined,
+          neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
           minPrice: minPrice ? parseFloat(minPrice) : undefined,
           maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
           propertyType: propertyType || undefined,
@@ -172,8 +184,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       setMessage("");
       setState("");
       setCounties([]);
-      setCity("");
-      setNeighborhood("");
+      setCities([]);
+      setNeighborhoods([]);
       setMinPrice("");
       setMaxPrice("");
       setPropertyType("");
@@ -285,37 +297,65 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                 {state && availableCities.length > 0 && (
                   <div className="space-y-2">
-                    <Label htmlFor="city">City/Town (Optional)</Label>
-                    <Select value={city} onValueChange={handleCityChange}>
-                      <SelectTrigger id="city">
-                        <SelectValue placeholder="Select city or town" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableCities.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Cities/Towns (Optional - Select Multiple)</Label>
+                    <div className="border rounded-md p-3 bg-background">
+                      <ScrollArea className="h-[200px]">
+                        <div className="space-y-2">
+                          {availableCities.map((cityName) => (
+                            <div key={cityName} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`city-${cityName}`}
+                                checked={cities.includes(cityName)}
+                                onCheckedChange={() => handleCityToggle(cityName)}
+                              />
+                              <label
+                                htmlFor={`city-${cityName}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {cityName}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                      {cities.length > 0 && (
+                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
+                          {cities.length} {cities.length === 1 ? 'city' : 'cities'} selected
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                {city && availableNeighborhoods.length > 0 && (
+                {cities.length > 0 && availableNeighborhoods.length > 0 && (
                   <div className="space-y-2">
-                    <Label htmlFor="neighborhood">Neighborhood/Area (Optional)</Label>
-                    <Select value={neighborhood} onValueChange={setNeighborhood}>
-                      <SelectTrigger id="neighborhood">
-                        <SelectValue placeholder="Select neighborhood" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableNeighborhoods.map((n) => (
-                          <SelectItem key={n} value={n}>
-                            {n}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Neighborhoods/Areas (Optional - Select Multiple)</Label>
+                    <div className="border rounded-md p-3 bg-background">
+                      <ScrollArea className="h-[200px]">
+                        <div className="space-y-2">
+                          {availableNeighborhoods.map((neighborhoodName) => (
+                            <div key={neighborhoodName} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`neighborhood-${neighborhoodName}`}
+                                checked={neighborhoods.includes(neighborhoodName)}
+                                onCheckedChange={() => handleNeighborhoodToggle(neighborhoodName)}
+                              />
+                              <label
+                                htmlFor={`neighborhood-${neighborhoodName}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {neighborhoodName}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                      {neighborhoods.length > 0 && (
+                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
+                          {neighborhoods.length} {neighborhoods.length === 1 ? 'neighborhood' : 'neighborhoods'} selected
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
