@@ -138,6 +138,7 @@ export function CreateHotSheetDialog({
   const [criteriaOpen, setCriteriaOpen] = useState(true);
   const [addressOpen, setAddressOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(true);
+  const [clientInfoOpen, setClientInfoOpen] = useState(true);
 
   // Fetch hot sheet data on mount if editing
   useEffect(() => {
@@ -218,6 +219,7 @@ export function CreateHotSheetDialog({
     setExistingClient(client);
     setClientSearchQuery(`${client.first_name} ${client.last_name}`);
     setShowClientDropdown(false);
+    setClientInfoOpen(false); // Collapse after selection
     toast.success(`Selected client: ${client.first_name} ${client.last_name}`);
   };
 
@@ -741,6 +743,7 @@ export function CreateHotSheetDialog({
     setClientSearchQuery("");
     setClientSearchResults([]);
     setShowClientDropdown(false);
+    setClientInfoOpen(true); // Reset to open
     setShowCreateClientDialog(false);
     setCreatingClient(false);
     setErrors({});
@@ -842,11 +845,25 @@ export function CreateHotSheetDialog({
           </div>
 
           {/* Client Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Client Information *</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <Collapsible open={clientInfoOpen} onOpenChange={setClientInfoOpen}>
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">
+                      Client Information * 
+                      {existingClient && (
+                        <span className="ml-2 text-sm font-normal text-green-600">
+                          ✓ {existingClient.first_name} {existingClient.last_name}
+                        </span>
+                      )}
+                    </CardTitle>
+                    {clientInfoOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-4">
               {/* Client Search */}
               <div className="space-y-2 relative">
                 <Label htmlFor="client-search">Search Existing Client</Label>
@@ -978,7 +995,9 @@ export function CreateHotSheetDialog({
                 )}
               </div>
             </CardContent>
-          </Card>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
           {/* Search Criteria */}
           <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
