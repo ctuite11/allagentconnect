@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { X, ArrowUp, Loader2, MapPin } from "lucide-react";
+import { X, ArrowUp, Loader2, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
@@ -28,6 +29,7 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
   const [showAreas, setShowAreas] = useState("yes");
   const [townSearch, setTownSearch] = useState("");
   const [manualTowns, setManualTowns] = useState("");
+  const [isOpen, setIsOpen] = useState(true);
 
   const { townsList, expandedCities, toggleCityExpansion, hasCountyData } = useTownsPicker({
     state,
@@ -172,26 +174,33 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-primary" />
-          Geographic Area Preferences
-        </CardTitle>
-        <CardDescription>
-          Select the states, counties, and towns where you want to receive notifications about client needs
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center justify-end">
-          <Button 
-            variant="link"
-            className="text-xs gap-1 h-auto p-0"
-            onClick={scrollToTop}
-          >
-            BACK TO TOP <ArrowUp className="h-3 w-3" />
-          </Button>
-        </div>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card>
+        <CollapsibleTrigger className="w-full">
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                <CardTitle>Geographic Area Preferences</CardTitle>
+              </div>
+              {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </div>
+            <CardDescription className="text-left">
+              Select states, counties, and towns for notifications
+            </CardDescription>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-3 pt-0">
+            <div className="flex items-center justify-end">
+              <Button 
+                variant="link"
+                className="text-xs gap-1 h-auto p-0"
+                onClick={scrollToTop}
+              >
+                BACK TO TOP <ArrowUp className="h-3 w-3" />
+              </Button>
+            </div>
         <div className="grid grid-cols-3 gap-2 items-end">
           <div>
             <Label className="text-xs">State</Label>
@@ -322,7 +331,9 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
           </Button>
         </div>
       </CardContent>
+    </CollapsibleContent>
     </Card>
+    </Collapsible>
   );
 };
 
