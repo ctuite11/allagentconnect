@@ -92,20 +92,8 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
       baseCities = currentStateCities;
     }
 
-    const towns: string[] = [];
-    const shouldShowAreas = showAreas === true || showAreas === "yes" || showAreas === "true" || showAreas === "1";
-
-    baseCities.forEach((city) => {
-      towns.push(city);
-      if (shouldShowAreas) {
-        const neighborhoods = getAreasForCity(city, stateKey || state);
-        neighborhoods.forEach((neighborhood) => {
-          towns.push(`${city}-${neighborhood}`);
-        });
-      }
-    });
-
-    return towns;
+    // Only return the base cities - TownsPicker handles neighborhoods separately
+    return baseCities;
   }, [state, county, showAreas]);
 
   const toggleCityExpansion = (city: string) => {
