@@ -127,7 +127,6 @@ export const NotificationPreferenceCards = () => {
   return (
     <TooltipProvider>
       <div className="mb-8">
-        <h3 className="text-xl font-semibold mb-4">Choose Your Notification Preferences</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cards.map((card) => {
               return (
@@ -140,13 +139,13 @@ export const NotificationPreferenceCards = () => {
                     <h4 className="text-base font-semibold mb-1">{card.title}</h4>
                     <p className="text-xs text-muted-foreground">{card.description}</p>
                   </div>
-                  <div className="mt-auto flex gap-2">
+                  <div className="mt-auto flex gap-3 justify-center">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1 h-8 text-xs bg-background border-2 border-green-500/50 hover:bg-background hover:border-green-500"
+                          className="w-24 h-8 text-xs bg-background border-2 border-green-500/50 hover:bg-background hover:border-green-500"
                           onClick={(e) => {
                             e.stopPropagation();
                             setOpenDialog({ open: true, category: card.key, title: card.title });
@@ -166,7 +165,7 @@ export const NotificationPreferenceCards = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className={`flex-1 h-8 text-xs bg-background border-2 ${
+                          className={`w-24 h-8 text-xs bg-background border-2 ${
                             card.active ? "border-primary" : "border-primary/50"
                           } hover:bg-background hover:border-primary`}
                           onClick={(e) => {
