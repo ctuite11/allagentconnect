@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { ContactMatchesDialog } from "@/components/ContactMatchesDialog";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import GeographicPreferencesManager from "@/components/GeographicPreferencesManager";
+import PriceRangePreferences from "@/components/PriceRangePreferences";
 
 interface ClientNeed {
   id: string;
@@ -214,11 +215,14 @@ const ClientNeedsDashboard = () => {
           <div className="mb-6">
             <h2 className="text-3xl font-display font-semibold mb-2">My Preferences</h2>
             <p className="text-muted-foreground">
-              Select the geographic areas where you want to receive email notifications about client needs
+              Control what types of client needs you want to receive notifications about
             </p>
           </div>
           
-          <GeographicPreferencesManager agentId={user?.id || ""} />
+          <div className="space-y-6">
+            <PriceRangePreferences agentId={user?.id || ""} />
+            <GeographicPreferencesManager agentId={user?.id || ""} />
+          </div>
         </div>
 
         {/* Filters */}
