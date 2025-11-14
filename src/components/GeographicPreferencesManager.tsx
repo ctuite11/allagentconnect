@@ -78,6 +78,11 @@ const GeographicPreferencesManager = ({
     }
   };
   const handleSave = async () => {
+    if (selectedTowns.length === 0) {
+      toast.error("Please select at least one town before saving");
+      return;
+    }
+    
     setSaving(true);
     try {
       // Delete all existing preferences for this agent
@@ -88,34 +93,34 @@ const GeographicPreferencesManager = ({
 
       // Insert new preferences (remove duplicates before saving)
       const uniqueTowns = [...new Set(selectedTowns)];
-      if (uniqueTowns.length > 0) {
-        const preferencesToInsert = uniqueTowns.map((town, index) => {
-          // Check if it's a neighborhood (contains hyphen)
-          if (town.includes('-')) {
-            const [city, neighborhood] = town.split('-');
-            return {
-              agent_id: agentId,
-              state,
-              county: county === "all" ? null : county,
-              city,
-              neighborhood,
-              zip_code: `${city}-${neighborhood}-${index}` // Unique identifier
-            };
-          }
+      const preferencesToInsert = uniqueTowns.map((town, index) => {
+        // Check if it's a neighborhood (contains hyphen)
+        if (town.includes('-')) {
+          const [city, neighborhood] = town.split('-');
           return {
             agent_id: agentId,
             state,
             county: county === "all" ? null : county,
-            city: town,
-            neighborhood: null,
-            zip_code: `${town}-${index}` // Unique identifier
+            city,
+            neighborhood,
+            zip_code: `${city}-${neighborhood}-${index}` // Unique identifier
           };
-        });
-        const {
-          error: insertError
-        } = await supabase.from("agent_buyer_coverage_areas").insert(preferencesToInsert);
-        if (insertError) throw insertError;
-      }
+        }
+        return {
+          agent_id: agentId,
+          state,
+          county: county === "all" ? null : county,
+          city: town,
+          neighborhood: null,
+          zip_code: `${town}-${index}` // Unique identifier
+        };
+      });
+      
+      const {
+        error: insertError
+      } = await supabase.from("agent_buyer_coverage_areas").insert(preferencesToInsert);
+      if (insertError) throw insertError;
+
       toast.success("Geographic preferences saved successfully!");
     } catch (error: any) {
       console.error("Error saving preferences:", error);
