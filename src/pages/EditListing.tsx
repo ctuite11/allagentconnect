@@ -1776,14 +1776,17 @@ const EditListing = () => {
                     <Label htmlFor="lockbox_code">Lockbox Code</Label>
                     <Input
                       id="lockbox_code"
-                      name="property_lockbox_access"
+                      name="lockbox_one_time_code"
                       type="password"
                       value={formData.lockbox_code}
                       onChange={(e) => setFormData({ ...formData, lockbox_code: e.target.value })}
-                      autoComplete="off"
+                      autoComplete="new-password"
+                      inputMode="numeric"
+                      pattern="^[0-9]*$"
                       data-form-type="other"
                       data-lpignore="true"
                       data-1p-ignore="true"
+                      aria-autocomplete="none"
                       role="presentation"
                     />
                   </div>
