@@ -193,10 +193,10 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                <DollarSign className="h-5 w-5" />
                 <CardTitle>Price Range Preferences</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5 text-blue-600 dark:text-blue-400" /> : <ChevronDown className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+              {isOpen ? <ChevronUp className="h-5 w-5 text-blue-600" /> : <ChevronDown className="h-5 w-5 text-blue-600" />}
             </div>
             <CardDescription className="text-left">
               Set your preferred price range for client need notifications

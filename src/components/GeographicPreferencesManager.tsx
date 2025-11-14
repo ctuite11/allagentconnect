@@ -180,10 +180,10 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <MapPin className="h-5 w-5" />
                 <CardTitle>Geographic Area Preferences</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5 text-blue-600 dark:text-blue-400" /> : <ChevronDown className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+              {isOpen ? <ChevronUp className="h-5 w-5 text-blue-600" /> : <ChevronDown className="h-5 w-5 text-blue-600" />}
               {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </div>
             <CardDescription className="text-left">
