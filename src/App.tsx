@@ -12,6 +12,7 @@ import BuyerAuth from "./pages/BuyerAuth";
 // import removed: AgentSearch (redirect to OurAgents)
 import SubmitClientNeed from "./pages/SubmitClientNeed";
 import ClientNeedsDashboard from "./pages/ClientNeedsDashboard";
+import ListingIntel from "./pages/ListingIntel";
 import AddListing from "./pages/AddListing";
 import AddRentalListing from "./pages/AddRentalListing";
 import EditListing from "./pages/EditListing";
@@ -63,6 +64,7 @@ const App = () => (
           <Route path="/buyer/auth" element={<BuyerAuth />} />
           <Route path="/submit-client-need" element={<SubmitClientNeed />} />
           <Route path="/client-needs" element={<ClientNeedsDashboard />} />
+          <Route path="/listing-intel" element={<ListingIntel />} />
           <Route path="/add-listing" element={<AddListing />} />
           <Route path="/add-rental-listing" element={<AddRentalListing />} />
           <Route path="/edit-listing/:id" element={<EditListing />} />
