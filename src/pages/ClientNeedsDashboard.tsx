@@ -65,7 +65,7 @@ const ClientNeedsDashboard = () => {
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-2">
             My Preferences{" "}
-            <span className="text-xs text-muted-foreground">(For receiving email notifications only)</span>
+            <span className="text-sm text-muted-foreground">(For receiving email notifications only)</span>
           </h2>
           <div className="space-y-6 mt-6">
             <PriceRangePreferences agentId={user?.id || ""} />
