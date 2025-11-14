@@ -17,8 +17,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { ContactMatchesDialog } from "@/components/ContactMatchesDialog";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
-import StatePreferencesManager from "@/components/StatePreferencesManager";
-import CountyPreferencesManager from "@/components/CountyPreferencesManager";
+import GeographicPreferencesManager from "@/components/GeographicPreferencesManager";
 
 interface ClientNeed {
   id: string;
@@ -219,10 +218,7 @@ const ClientNeedsDashboard = () => {
             </p>
           </div>
           
-          <div className="space-y-6">
-            <StatePreferencesManager agentId={user?.id || ""} />
-            <CountyPreferencesManager agentId={user?.id || ""} />
-          </div>
+          <GeographicPreferencesManager agentId={user?.id || ""} />
         </div>
 
         {/* Filters */}
