@@ -454,7 +454,7 @@ const AgentDashboard = () => {
 
         {/* Dashboard Overview Cards */}
         <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 mb-10 sm:mb-16 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-primary bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation h-56" onClick={scrollToListings}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-primary bg-card overflow-hidden relative touch-manipulation h-56" onClick={scrollToListings}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Listings</CardTitle>
@@ -468,7 +468,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-orange-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation h-56" onClick={() => navigate("/hot-sheets")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-orange-500 bg-card overflow-hidden relative touch-manipulation h-56" onClick={() => navigate("/hot-sheets")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Hot Sheets</CardTitle>
@@ -482,7 +482,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-purple-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation h-56" onClick={() => navigate("/favorites")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-purple-500 bg-card overflow-hidden relative touch-manipulation h-56" onClick={() => navigate("/favorites")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Favorites</CardTitle>
@@ -496,7 +496,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-red-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation h-56" onClick={() => navigate("/my-clients")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-red-500 bg-card overflow-hidden relative touch-manipulation h-56" onClick={() => navigate("/my-clients")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Contacts</CardTitle>
@@ -510,7 +510,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-emerald-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation h-56" onClick={() => navigate("/client-needs")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-emerald-500 bg-card overflow-hidden relative touch-manipulation h-56" onClick={() => navigate("/client-needs")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Communications</CardTitle>
@@ -524,7 +524,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-amber-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation h-56 lg:order-last lg:col-start-3" onClick={() => navigate("/agent-profile-editor")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-amber-500 bg-card overflow-hidden relative touch-manipulation h-56 lg:order-last lg:col-start-3" onClick={() => navigate("/agent-profile-editor")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Profile</CardTitle>
@@ -546,7 +546,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-cyan-600 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation h-56" onClick={() => navigate("/manage-team")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-cyan-600 bg-card overflow-hidden relative touch-manipulation h-56" onClick={() => navigate("/manage-team")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Team</CardTitle>
@@ -569,7 +569,7 @@ const AgentDashboard = () => {
           </Card>
 
           {/* Recent Activity Feed */}
-          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-slate-700 bg-gradient-to-br from-card to-card/50 md:col-span-2 lg:col-span-2 lg:col-start-2 overflow-hidden relative touch-manipulation h-56">
+          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-slate-700 bg-card md:col-span-2 lg:col-span-2 lg:col-start-2 overflow-hidden relative touch-manipulation h-56">
               
               <CardHeader className="flex flex-row items-center justify-between space-y-0 relative z-10 p-4 sm:p-6">
                 <div>
@@ -617,7 +617,7 @@ const AgentDashboard = () => {
               {listingTypes.map((type, index) => <Card key={index} className="group cursor-pointer hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 overflow-hidden border-0 ring-1 ring-border hover:ring-primary/50 touch-manipulation" onClick={type.action}>
                   <div className="relative h-32 sm:h-40 overflow-hidden">
                     <img src={type.image} alt={type.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                    
                     <div className="absolute bottom-2 sm:bottom-3 left-3 sm:left-4 text-white">
                       <h3 className="font-semibold text-lg sm:text-xl">{type.title}</h3>
                     </div>
