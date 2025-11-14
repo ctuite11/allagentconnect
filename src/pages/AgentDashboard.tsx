@@ -525,7 +525,7 @@ const AgentDashboard = () => {
           </Card>
 
           <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-amber-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/agent-profile-editor")}>
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Profile</CardTitle>
               <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 overflow-hidden flex-shrink-0">
@@ -564,8 +564,8 @@ const AgentDashboard = () => {
           </Card>
 
           {/* Recent Activity Feed */}
-          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-slate-700 bg-gradient-to-br from-card to-card/50 md:col-span-2 lg:col-span-2 overflow-hidden relative touch-manipulation">
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-700/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-slate-700 bg-gradient-to-br from-card to-card/50 md:col-span-2 lg:col-span-2 lg:col-start-2 overflow-hidden relative touch-manipulation">
+              
               <CardHeader className="flex flex-row items-center justify-between space-y-0 relative z-10 p-4 sm:p-6">
                 <div>
                   <CardTitle className="text-sm sm:text-base font-semibold">Recent Activity</CardTitle>
