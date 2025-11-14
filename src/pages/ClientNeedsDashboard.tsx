@@ -195,9 +195,13 @@ const ClientNeedsDashboard = () => {
         </div>
 
         {/* New Section */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold mb-2">Connect . Communicate . Collaborate</h2>
-          <p className="text-lg text-muted-foreground">Turning relationships into results</p>
+          <p className="text-lg text-muted-foreground mb-4">Turning relationships into results</p>
+          <p className="text-base text-muted-foreground">
+            Post your buyer, seller, or rental needs and get matched with other agents doing the same. 
+            You control what markets and property types you get alerts for — real-time insider insight for real estate pros.
+          </p>
         </div>
 
         {/* Filters */}
