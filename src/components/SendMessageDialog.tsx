@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -33,15 +34,30 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
 
     setSending(true);
     try {
-      // TODO: Implement actual sending logic via edge function
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      toast.success("Message sent successfully");
+      const { data, error } = await supabase.functions.invoke("send-client-need-notification", {
+        body: {
+          category,
+          subject: subject.trim(),
+          message: message.trim(),
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.recipientCount === 0) {
+        toast.info("No agents have this notification preference enabled");
+      } else {
+        toast.success(
+          `Message sent successfully to ${data.successCount} agent${data.successCount !== 1 ? "s" : ""}!`
+        );
+      }
+
       onOpenChange(false);
       setSubject("");
       setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message");
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setSending(false);
     }
