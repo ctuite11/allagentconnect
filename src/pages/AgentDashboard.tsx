@@ -470,7 +470,7 @@ const AgentDashboard = () => {
           </Card>
 
           <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-orange-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/hot-sheets")}>
-            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
+            <div className="absolute top-0 left-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Hot Sheets</CardTitle>
@@ -485,7 +485,7 @@ const AgentDashboard = () => {
           </Card>
 
           <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-purple-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/favorites")}>
-            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
+            <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Favorites</CardTitle>
@@ -500,7 +500,7 @@ const AgentDashboard = () => {
           </Card>
 
           <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-red-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/my-clients")}>
-            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
+            <div className="absolute top-0 left-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Contacts</CardTitle>
@@ -515,7 +515,7 @@ const AgentDashboard = () => {
           </Card>
 
           <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-emerald-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/client-needs")}>
-            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
+            <div className="absolute top-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Communications</CardTitle>
@@ -530,7 +530,7 @@ const AgentDashboard = () => {
           </Card>
 
           <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-amber-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/agent-profile-editor")}>
-            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
+            <div className="absolute top-0 left-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Profile</CardTitle>
@@ -548,7 +548,7 @@ const AgentDashboard = () => {
           </Card>
 
           <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-cyan-600 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/manage-team")}>
-            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
+            <div className="absolute top-0 left-0 w-32 h-32 bg-cyan-600/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Team</CardTitle>
