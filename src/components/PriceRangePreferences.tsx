@@ -135,11 +135,18 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
   };
 
   const handleMinPriceChange = (value: string) => {
-    // Allow only numbers and decimal point
+    // Remove any non-digit characters except decimal point
     const sanitized = value.replace(/[^\d.]/g, '');
     // Prevent multiple decimal points
     const parts = sanitized.split('.');
     const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
+    
+    // Limit to reasonable price values
+    const num = parseFloat(formatted);
+    if (!isNaN(num) && num > 999999999) {
+      return;
+    }
+    
     setMinPrice(formatted);
     if (errors.minPrice) {
       setErrors(prev => ({ ...prev, minPrice: undefined }));
@@ -147,11 +154,18 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
   };
 
   const handleMaxPriceChange = (value: string) => {
-    // Allow only numbers and decimal point
+    // Remove any non-digit characters except decimal point
     const sanitized = value.replace(/[^\d.]/g, '');
     // Prevent multiple decimal points
     const parts = sanitized.split('.');
     const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
+    
+    // Limit to reasonable price values
+    const num = parseFloat(formatted);
+    if (!isNaN(num) && num > 999999999) {
+      return;
+    }
+    
     setMaxPrice(formatted);
     if (errors.maxPrice) {
       setErrors(prev => ({ ...prev, maxPrice: undefined }));
@@ -216,7 +230,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
                 inputMode="decimal"
                 value={minPrice}
                 onChange={(e) => handleMinPriceChange(e.target.value)}
-                placeholder="0"
+                placeholder="100000"
                 className={`pl-7 ${errors.minPrice ? 'border-destructive' : ''}`}
                 maxLength={12}
               />
@@ -239,7 +253,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
                 inputMode="decimal"
                 value={maxPrice}
                 onChange={(e) => handleMaxPriceChange(e.target.value)}
-                placeholder="No limit"
+                placeholder="500000"
                 className={`pl-7 ${errors.maxPrice ? 'border-destructive' : ''}`}
                 maxLength={12}
               />
