@@ -661,27 +661,27 @@ const AgentDashboard = () => {
               ))}
             </div>
 
-            {/* Status Filter Chips */}
+            {/* Status Filter Buttons */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {['active', 'pending', 'under_contract', 'sold', 'withdrawn', 'cancelled'].map((status) => (
-                <Badge
+              <Button
+                variant={statusFilters.length === 0 ? 'default' : 'outline'}
+                size="sm"
+                className="rounded-md"
+                onClick={() => setStatusFilters([])}
+              >
+                All
+              </Button>
+              {['active', 'draft', 'coming_soon', 'new', 'back_on_market', 'expired', 'contingent', 'cancelled', 'under_agreement', 'temp_withdrawn', 'sold'].map((status) => (
+                <Button
                   key={status}
                   variant={statusFilters.includes(status) ? 'default' : 'outline'}
-                  className="cursor-pointer capitalize"
+                  size="sm"
+                  className="rounded-md capitalize"
                   onClick={() => toggleStatusFilter(status)}
                 >
-                  {status.replace('_', ' ')}
-                </Badge>
+                  {status.replace(/_/g, ' ')}
+                </Button>
               ))}
-              {statusFilters.length > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="cursor-pointer"
-                  onClick={() => setStatusFilters([])}
-                >
-                  Clear Filters
-                </Badge>
-              )}
             </div>
 
             {/* Sort and View Controls */}
