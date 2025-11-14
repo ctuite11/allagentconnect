@@ -498,7 +498,7 @@ const MyClients = () => {
           </div>
 
           {clients.length === 0 ? (
-            <Card className="p-12 border-l-4 border-l-primary">
+            <Card className="p-12 border-l-4 border-l-foreground">
               <div className="text-center">
                 <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">No clients yet</h3>
@@ -513,7 +513,7 @@ const MyClients = () => {
             </Card>
           ) : (
             <>
-              <Card className="mb-4 border-l-4 border-l-primary">
+              <Card className="mb-4 border-l-4 border-l-foreground">
                 <CardContent className="pt-6">
                   <div className="flex gap-4">
                     <div className="relative flex-1">
@@ -563,7 +563,7 @@ const MyClients = () => {
               </Card>
 
               {filteredClients.length === 0 ? (
-                <Card className="p-12 border-l-4 border-l-primary">
+                <Card className="p-12 border-l-4 border-l-foreground">
                   <div className="text-center">
                     <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                     <h3 className="text-xl font-semibold mb-2">No clients found</h3>
@@ -576,7 +576,7 @@ const MyClients = () => {
                   </div>
                 </Card>
               ) : (
-                <Card className="border-l-4 border-l-primary">
+                <Card className="border-l-4 border-l-foreground">
                   <Table>
                     <TableHeader>
                       <TableRow>
