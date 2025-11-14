@@ -116,7 +116,7 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <Card className="border-l-4 border-l-primary">
-        <CollapsibleTrigger className="w-full">
+        <CollapsibleTrigger asChild>
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -131,23 +131,18 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="space-y-4 pt-0">
-        <div className="flex items-center space-x-2 p-4 bg-primary/10 rounded-lg border-2 border-primary/30">
-          <Checkbox
-            id="select-all-types"
-            checked={allSelected}
-            onCheckedChange={selectAll}
-            className="border-primary data-[state=checked]:bg-primary"
-          />
-          <Label
-            htmlFor="select-all-types"
-            className="font-bold cursor-pointer flex-1 text-base"
-          >
-            ✓ {allSelected ? "Deselect All Property Types" : "Select All Property Types"}
-          </Label>
-        </div>
+          <CardContent className="space-y-4 pt-4">
+        
+        {/* Prominent Select All Button */}
+        <Button 
+          onClick={selectAll}
+          variant={allSelected ? "outline" : "default"}
+          className="w-full h-12 text-base font-bold"
+        >
+          ✓ {allSelected ? "Deselect All Property Types" : "Select All Property Types"}
+        </Button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border rounded-lg p-4 max-h-96 overflow-y-auto bg-background">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border rounded-lg p-4 max-h-80 overflow-y-auto bg-background">
           {PROPERTY_TYPES.map((type) => (
             <div key={type.value} className="flex items-center space-x-2">
               <Checkbox

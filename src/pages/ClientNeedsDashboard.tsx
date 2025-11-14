@@ -43,9 +43,9 @@ const ClientNeedsDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24 pb-16 flex-1 overflow-y-auto">
+      <main className="container mx-auto px-4 py-8 pt-24 pb-16 max-w-6xl">
         {/* Hero Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Connect . Communicate . Collaborate</h1>
@@ -76,7 +76,7 @@ const ClientNeedsDashboard = () => {
 
         {/* Notification Settings - Required (Final Step) */}
         <ClientNeedsNotificationSettings />
-      </div>
+      </main>
     </div>
   );
 };
