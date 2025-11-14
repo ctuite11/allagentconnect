@@ -13,6 +13,7 @@ interface TownsPickerProps {
   state: string;
   searchQuery?: string;
   variant?: "checkbox" | "button";
+  showAreas?: boolean;
 }
 
 export function TownsPicker({
@@ -23,7 +24,8 @@ export function TownsPicker({
   onToggleCityExpansion,
   state,
   searchQuery = "",
-  variant = "checkbox"
+  variant = "checkbox",
+  showAreas = false
 }: TownsPickerProps) {
   const rawState = (state || "").trim();
   const stateKey = rawState && rawState.length > 2 
@@ -52,12 +54,15 @@ export function TownsPicker({
                 .map((t) => t.split('-').slice(1).join('-'))
             ));
           }
-          const isExpanded = expandedCities.has(town);
+          
+          // Show neighborhoods if showAreas is enabled and there are neighborhoods
+          const showNeighborhoods = showAreas && (hasNeighborhoods || neighborhoods.length > 0);
+          const isExpanded = showNeighborhoods ? expandedCities.has(town) : false;
           
           return (
             <div key={town} className="space-y-1">
               <div className="flex items-center">
-                {hasNeighborhoods && (
+                {showNeighborhoods && (
                   <button
                     type="button"
                     onClick={() => onToggleCityExpansion(town)}
@@ -74,7 +79,7 @@ export function TownsPicker({
                   {town}, {state}
                 </button>
               </div>
-              {hasNeighborhoods && isExpanded && (
+              {showNeighborhoods && isExpanded && (
                 <div className="ml-8 border-l-2 border-muted pl-2 mt-1 bg-muted/30 rounded-r py-1 space-y-1">
                   {neighborhoods
                     .filter((n) => !topCities.has(n))
@@ -114,12 +119,14 @@ export function TownsPicker({
               .map((t) => t.split('-').slice(1).join('-'))
           ));
         }
-        const isExpanded = expandedCities.has(town);
+        // Show neighborhoods if showAreas is enabled and there are any
+        const showNeighborhoods = showAreas && (hasNeighborhoods || neighborhoods.length > 0);
+        const isExpanded = showNeighborhoods ? (expandedCities.has(town)) : false;
         
         return (
           <div key={town} className="space-y-1">
             <div className="flex items-center space-x-2 py-0.5">
-              {hasNeighborhoods && (
+              {showNeighborhoods && (
                 <button
                   type="button"
                   onClick={() => onToggleCityExpansion(town)}
@@ -135,7 +142,7 @@ export function TownsPicker({
               />
               <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">{town}</label>
             </div>
-            {hasNeighborhoods && isExpanded && (
+            {showNeighborhoods && isExpanded && (
               <div className="ml-8 border-l-2 border-muted pl-2 space-y-1 bg-muted/30 rounded-r py-1">
                 {neighborhoods
                   .filter((n) => !topCities.has(n))
