@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, DollarSign } from "lucide-react";
+import { Loader2, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
 import { z } from "zod";
 
 interface PriceRangePreferencesProps {
@@ -54,6 +55,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [errors, setErrors] = useState<{ minPrice?: string; maxPrice?: string }>({});
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     fetchPreferences();
@@ -185,17 +187,24 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <DollarSign className="h-5 w-5 text-primary" />
-          Price Range Preferences
-        </CardTitle>
-        <CardDescription>
-          Set your preferred price range for client need notifications. Leave blank for no price restrictions.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card>
+        <CollapsibleTrigger className="w-full">
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-primary" />
+                <CardTitle>Price Range Preferences</CardTitle>
+              </div>
+              {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </div>
+            <CardDescription className="text-left">
+              Set your preferred price range for client need notifications
+            </CardDescription>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-4 pt-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="min-price">Minimum Price</Label>
@@ -282,7 +291,9 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
           </Button>
         </div>
       </CardContent>
+    </CollapsibleContent>
     </Card>
+    </Collapsible>
   );
 };
 

@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Home } from "lucide-react";
+import { Loader2, Home, ChevronDown, ChevronUp } from "lucide-react";
 
 interface PropertyTypePreferencesProps {
   agentId: string;
@@ -26,6 +27,7 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     fetchPreferences();
@@ -112,18 +114,24 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Home className="h-5 w-5 text-primary" />
-          Property Type Preferences
-        </CardTitle>
-        <CardDescription>
-          Select which property types you want to receive notifications about. 
-          {selectedTypes.length === 0 && " Selecting none means you'll receive notifications for all types."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card>
+        <CollapsibleTrigger className="w-full">
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Home className="h-5 w-5 text-primary" />
+                <CardTitle>Property Type Preferences</CardTitle>
+              </div>
+              {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </div>
+            <CardDescription className="text-left">
+              Select which property types you want to receive notifications about
+            </CardDescription>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-4 pt-0">
         <div className="flex items-center space-x-2 p-3 bg-muted rounded-lg border">
           <Checkbox
             id="select-all-types"
@@ -199,7 +207,9 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
           </Button>
         </div>
       </CardContent>
+    </CollapsibleContent>
     </Card>
+    </Collapsible>
   );
 };
 
