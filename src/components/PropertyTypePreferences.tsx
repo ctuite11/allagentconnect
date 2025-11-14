@@ -132,21 +132,22 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-4 pt-0">
-        <div className="flex items-center space-x-2 p-3 bg-muted rounded-lg border">
+        <div className="flex items-center space-x-2 p-4 bg-primary/10 rounded-lg border-2 border-primary/30">
           <Checkbox
             id="select-all-types"
             checked={allSelected}
             onCheckedChange={selectAll}
+            className="border-primary data-[state=checked]:bg-primary"
           />
           <Label
             htmlFor="select-all-types"
-            className="font-semibold cursor-pointer flex-1"
+            className="font-bold cursor-pointer flex-1 text-base"
           >
-            {allSelected ? "Deselect All Property Types" : "Select All Property Types"}
+            ✓ {allSelected ? "Deselect All Property Types" : "Select All Property Types"}
           </Label>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border rounded-lg p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border rounded-lg p-4 max-h-96 overflow-y-auto bg-background">
           {PROPERTY_TYPES.map((type) => (
             <div key={type.value} className="flex items-center space-x-2">
               <Checkbox
