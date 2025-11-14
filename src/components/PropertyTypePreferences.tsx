@@ -62,48 +62,37 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
     }
   };
 
-  const handleSave = async () => {
-    if (selectedTypes.length === 0) {
-      toast.error("Please select at least one property type");
-      return;
-    }
-
-    setSaving(true);
+  const autoSave = async (types: string[]) => {
     try {
       const { error } = await supabase
         .from("notification_preferences")
         .upsert({
           user_id: agentId,
-          property_types: selectedTypes,
+          property_types: types,
         }, {
           onConflict: 'user_id'
         });
 
       if (error) throw error;
-
-      toast.success("Property type preferences saved successfully!");
     } catch (error) {
       console.error("Error saving property type preferences:", error);
-      toast.error("Failed to save property type preferences");
-    } finally {
-      setSaving(false);
     }
   };
 
   const togglePropertyType = (typeValue: string) => {
-    setSelectedTypes(prev =>
-      prev.includes(typeValue)
-        ? prev.filter(t => t !== typeValue)
-        : [...prev, typeValue]
-    );
+    const newTypes = selectedTypes.includes(typeValue)
+      ? selectedTypes.filter(t => t !== typeValue)
+      : [...selectedTypes, typeValue];
+    setSelectedTypes(newTypes);
+    autoSave(newTypes);
   };
 
   const selectAll = () => {
-    if (selectedTypes.length === PROPERTY_TYPES.length) {
-      setSelectedTypes([]);
-    } else {
-      setSelectedTypes(PROPERTY_TYPES.map(t => t.value));
-    }
+    const newTypes = selectedTypes.length === PROPERTY_TYPES.length 
+      ? [] 
+      : PROPERTY_TYPES.map(t => t.value);
+    setSelectedTypes(newTypes);
+    autoSave(newTypes);
   };
 
   const allSelected = selectedTypes.length === PROPERTY_TYPES.length;
@@ -192,20 +181,10 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-4 border-t">
+        <div className="pt-4 border-t">
           <p className="text-sm text-muted-foreground">
             {selectedTypes.length} of {PROPERTY_TYPES.length} types selected
           </p>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save Property Type Preferences"
-            )}
-          </Button>
         </div>
       </CardContent>
     </CollapsibleContent>

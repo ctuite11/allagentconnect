@@ -73,28 +73,24 @@ const GeographicPreferencesManager = ({
       }
     } catch (error: any) {
       console.error("Error loading preferences:", error);
-      toast.error("Failed to load preferences");
     } finally {
       setLoading(false);
     }
   };
-  const handleSave = async () => {
-    if (selectedTowns.length === 0) {
-      toast.error("Please select at least one town before saving");
-      return;
-    }
+  const autoSave = async (towns: string[]) => {
+    if (towns.length === 0) return;
     
-    setSaving(true);
     try {
       // Delete all existing preferences for this agent
-      const {
-        error: deleteError
-      } = await supabase.from("agent_buyer_coverage_areas").delete().eq("agent_id", agentId);
+      const { error: deleteError } = await supabase
+        .from("agent_buyer_coverage_areas")
+        .delete()
+        .eq("agent_id", agentId);
       if (deleteError) throw deleteError;
 
       // Insert new preferences (remove duplicates before saving)
-      const uniqueTowns = [...new Set(selectedTowns)];
-      const preferencesToInsert = uniqueTowns.map((town, index) => {
+      const uniqueTowns = [...new Set(towns)];
+      const preferencesToInsert = uniqueTowns.map((town) => {
         // Check if it's a neighborhood (contains hyphen)
         if (town.includes('-')) {
           const [city, neighborhood] = town.split('-');
@@ -104,30 +100,25 @@ const GeographicPreferencesManager = ({
             county: county === "all" ? null : county,
             city,
             neighborhood,
-            zip_code: `${city}-${neighborhood}-${index}` // Unique identifier
+            zip_code: "00000"
+          };
+        } else {
+          return {
+            agent_id: agentId,
+            state,
+            county: county === "all" ? null : county,
+            city: town,
+            neighborhood: null,
+            zip_code: "00000"
           };
         }
-        return {
-          agent_id: agentId,
-          state,
-          county: county === "all" ? null : county,
-          city: town,
-          neighborhood: null,
-          zip_code: `${town}-${index}` // Unique identifier
-        };
       });
-      
-      const {
-        error: insertError
-      } = await supabase.from("agent_buyer_coverage_areas").insert(preferencesToInsert);
+      const { error: insertError } = await supabase
+        .from("agent_buyer_coverage_areas")
+        .insert(preferencesToInsert);
       if (insertError) throw insertError;
-
-      toast.success("Geographic preferences saved successfully!");
     } catch (error: any) {
       console.error("Error saving preferences:", error);
-      toast.error("Failed to save preferences");
-    } finally {
-      setSaving(false);
     }
   };
   const selectAllCountiesAndTowns = () => {
@@ -152,14 +143,17 @@ const GeographicPreferencesManager = ({
         const neighborhoods = getAreasForCity(city, state);
         neighborhoods.forEach(n => withNeighborhoods.push(`${city}-${n}`));
       });
-      setSelectedTowns(Array.from(new Set(withNeighborhoods)));
+      const newTowns = Array.from(new Set(withNeighborhoods));
+      setSelectedTowns(newTowns);
+      autoSave(newTowns);
     } else {
-      setSelectedTowns(Array.from(new Set(baseCities)));
+      const newTowns = Array.from(new Set(baseCities));
+      setSelectedTowns(newTowns);
+      autoSave(newTowns);
     }
 
     // Reflect UI that we're on "All Counties"
     setCounty("all");
-    toast.success("All counties and towns selected");
   };
 
   const toggleTown = (town: string) => {
@@ -329,16 +323,10 @@ const GeographicPreferencesManager = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t">
+        <div className="pt-4 border-t">
           <p className="text-sm text-muted-foreground">
             {selectedTowns.length} {selectedTowns.length === 1 ? 'town' : 'towns'} selected
           </p>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Saving...
-              </> : "Save Geographic Preferences"}
-          </Button>
         </div>
       </CardContent>
     </CollapsibleContent>

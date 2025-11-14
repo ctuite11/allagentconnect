@@ -98,7 +98,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
     }
   };
 
-  const validateAndSave = async () => {
+  const autoSave = async () => {
     // Clear previous errors
     setErrors({});
 
@@ -117,11 +117,9 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
         }
       });
       setErrors(fieldErrors);
-      toast.error("Please fix validation errors");
       return;
     }
 
-    setSaving(true);
     try {
       const minPriceValue = minPrice.trim() ? parseFloat(minPrice) : null;
       const maxPriceValue = maxPrice.trim() ? parseFloat(maxPrice) : null;
@@ -137,13 +135,8 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
         });
 
       if (error) throw error;
-
-      toast.success("Price range preferences saved successfully!");
     } catch (error) {
       console.error("Error saving price preferences:", error);
-      toast.error("Failed to save price preferences");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -199,6 +192,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
     if (minPrice) {
       setMinPriceDisplay(formatNumberWithCommas(minPrice));
     }
+    autoSave();
   };
 
   const handleMaxPriceBlur = () => {
@@ -206,6 +200,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
     if (maxPrice) {
       setMaxPriceDisplay(formatNumberWithCommas(maxPrice));
     }
+    autoSave();
   };
 
   const handleMinPriceFocus = () => {
@@ -365,24 +360,25 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-4 border-t">
-          <Button 
-            variant="outline" 
-            onClick={clearPriceRange}
-            disabled={!minPrice && !maxPrice}
-          >
-            Clear Range
-          </Button>
-          <Button onClick={validateAndSave} disabled={saving}>
-            {saving ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save Price Preferences"
-            )}
-          </Button>
+        <div className="pt-4 border-t">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {minPrice && maxPrice 
+                ? `Range: $${formatNumberWithCommas(minPrice)} - $${formatNumberWithCommas(maxPrice)}`
+                : minPrice 
+                  ? `Min: $${formatNumberWithCommas(minPrice)}`
+                  : maxPrice 
+                    ? `Max: $${formatNumberWithCommas(maxPrice)}`
+                    : "No price range set"}
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={clearPriceRange}
+              disabled={!minPrice && !maxPrice}
+            >
+              Clear Range
+            </Button>
+          </div>
         </div>
       </CardContent>
     </CollapsibleContent>
