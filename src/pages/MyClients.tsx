@@ -354,7 +354,7 @@ const MyClients = () => {
       <div className="min-h-screen flex flex-col">
         <Navigation />
       
-      <main className="flex-1 bg-muted/30 pt-24">
+      <main className="flex-1 bg-background pt-24">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8 flex justify-between items-start">
             <div className="flex items-center gap-4">
