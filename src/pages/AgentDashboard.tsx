@@ -563,8 +563,8 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Recent Activity Feed - Full Width */}
-          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-slate-700 bg-gradient-to-br from-card to-card/50 md:col-span-2 lg:col-span-3 overflow-hidden relative touch-manipulation">
+          {/* Recent Activity Feed */}
+          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-slate-700 bg-gradient-to-br from-card to-card/50 md:col-span-2 lg:col-span-2 overflow-hidden relative touch-manipulation">
               <div className="absolute inset-0 bg-gradient-to-br from-slate-700/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 relative z-10 p-4 sm:p-6">
                 <div>
