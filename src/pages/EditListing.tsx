@@ -908,7 +908,8 @@ const EditListing = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setManualAddressDialogOpen(true)}
-                    className="text-xs text-muted-foreground hover:text-foreground"
+                    disabled={!!(formData.city && formData.state && formData.zip_code)}
+                    className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Enter manually
                   </Button>
@@ -919,9 +920,17 @@ const EditListing = () => {
                   value={formData.address}
                   onChange={(val) => updateFormData({ address: val })}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Can't find your address? Click "Enter manually" above
-                </p>
+                {!(formData.city && formData.state && formData.zip_code) && (
+                  <p className="text-xs text-muted-foreground">
+                    Can't find your address? Click "Enter manually" above
+                  </p>
+                )}
+                {formData.city && formData.state && formData.zip_code && (
+                  <p className="text-xs text-success flex items-center gap-1">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-success"></span>
+                    Address auto-filled successfully
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
