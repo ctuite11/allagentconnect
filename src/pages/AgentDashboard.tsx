@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +45,8 @@ interface Listing {
 }
 const AgentDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const listingsSectionRef = useRef<HTMLDivElement>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [listings, setListings] = useState<Listing[]>([]);
@@ -72,6 +74,16 @@ const AgentDashboard = () => {
   useEffect(() => {
     document.title = "Agent Dashboard - All Agent Connect";
   }, []);
+  
+  // Scroll to listings section if hash is present
+  useEffect(() => {
+    if (location.hash === '#my-listings' && listingsSectionRef.current) {
+      setTimeout(() => {
+        listingsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [location.hash, listings]);
+  
   useEffect(() => {
     const {
       data: {
@@ -619,7 +631,7 @@ const AgentDashboard = () => {
         </div>
 
         {/* Listings Section */}
-        {showResults && <div id="listings-section" className="mt-6 sm:mt-8 mb-10 sm:mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        {showResults && <div ref={listingsSectionRef} id="listings-section" className="mt-6 sm:mt-8 mb-10 sm:mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             {/* Header */}
             <div className="mb-6 sm:mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">My Listings</h2>
