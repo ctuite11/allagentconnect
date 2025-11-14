@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ interface NotificationSettings {
 }
 
 export const ClientNeedsNotificationSettings = () => {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<NotificationSettings>({
     schedule: "immediate",
   });
@@ -83,6 +85,7 @@ export const ClientNeedsNotificationSettings = () => {
 
   const handleCompleteSetup = () => {
     toast.success("Setup complete! You'll receive notifications based on your preferences.");
+    navigate("/agent-dashboard");
   };
 
   if (loading) {
