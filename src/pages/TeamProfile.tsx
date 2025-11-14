@@ -205,9 +205,9 @@ const TeamProfile = () => {
             {/* Team Photo */}
             <div className="flex-shrink-0">
               <div className="w-48 h-64 rounded-lg overflow-hidden border-4 border-background shadow-xl">
-                {team.photo_url ? (
+                {team.team_photo_url ? (
                   <img 
-                    src={team.photo_url} 
+                    src={team.team_photo_url} 
                     alt={team.name}
                     className="w-full h-full object-cover"
                   />
