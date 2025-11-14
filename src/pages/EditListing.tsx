@@ -918,7 +918,15 @@ const EditListing = () => {
                   onPlaceSelect={handleAddressSelect}
                   placeholder="Enter property address"
                   value={formData.address}
-                  onChange={(val) => updateFormData({ address: val })}
+                  onChange={(val) => {
+                    // Clear city, state, zip when address is manually changed/deleted
+                    updateFormData({ 
+                      address: val,
+                      city: '',
+                      state: '',
+                      zip_code: ''
+                    });
+                  }}
                 />
                 {!(formData.city && formData.state && formData.zip_code) && (
                   <p className="text-xs text-muted-foreground">
