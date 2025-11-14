@@ -59,6 +59,8 @@ const AgentDashboard = () => {
   const [favoritesCount, setFavoritesCount] = useState(0);
   const [clientsCount, setClientsCount] = useState(0);
   const [messagesCount, setMessagesCount] = useState(0);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [firstName, setFirstName] = useState<string>("");
   const motivationalQuotes = ["Success is not final, failure is not fatal: it is the courage to continue that counts.", "Your only limit is you. Push yourself to new heights today!", "Great things never come from comfort zones.", "The secret of getting ahead is getting started.", "Don't watch the clock; do what it does. Keep going.", "Every listing is an opportunity, every client is a relationship.", "Dream big, work hard, stay focused, and surround yourself with good people.", "The harder you work for something, the greater you'll feel when you achieve it.", "Success doesn't just find you. You have to go out and get it.", "Believe you can and you're halfway there.", "Your clients don't buy houses, they buy the future you help them envision.", "Excellence is not a skill, it's an attitude.", "The best time to plant a tree was 20 years ago. The second best time is now.", "Small daily improvements lead to stunning results.", "Make today so awesome that yesterday gets jealous."];
@@ -101,9 +103,12 @@ const AgentDashboard = () => {
       // Load user profile from agent_profiles
       const {
         data: profileData
-      } = await supabase.from("agent_profiles").select("first_name").eq("id", userId).single();
+      } = await supabase.from("agent_profiles").select("first_name, headshot_url").eq("id", userId).single();
       if (profileData?.first_name) {
         setFirstName(profileData.first_name);
+      }
+      if (profileData?.headshot_url) {
+        setProfilePicture(profileData.headshot_url);
       }
 
       // Load listings with stats
@@ -171,6 +176,14 @@ const AgentDashboard = () => {
         head: true
       }).eq("agent_id", userId);
       if (messagesCount) setMessagesCount(messagesCount);
+
+      // Load team members
+      const { data: teamData } = await supabase
+        .from("agent_profiles")
+        .select("id, first_name, last_name, headshot_url")
+        .neq("id", userId)
+        .limit(5);
+      if (teamData) setTeamMembers(teamData);
 
       // Load recent activity
       const activity: any[] = [];
@@ -515,27 +528,42 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-emerald-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/agent-profile-editor")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-l-4 border-l-amber-500 bg-gradient-to-br from-card to-card/50 overflow-hidden relative" onClick={() => navigate("/agent-profile-editor")}>
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">My Profile</CardTitle>
-              <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <Users className="h-5 w-5 text-emerald-500" />
+              <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                {profilePicture ? (
+                  <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <Users className="h-6 w-6 text-amber-500" />
+                )}
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10">
               <p className="text-xs text-muted-foreground">Manage your profile information</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/manage-team")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-l-4 border-l-cyan-600 bg-gradient-to-br from-card to-card/50 overflow-hidden relative" onClick={() => navigate("/manage-team")}>
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">My Team</CardTitle>
-              <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center">
-                <Users className="h-5 w-5 text-indigo-500" />
+              <div className="flex -space-x-2 group-hover:scale-110 transition-transform duration-300">
+                {[...teamMembers, ...Array(Math.max(0, 3 - teamMembers.length))].slice(0, 3).map((member, index) => (
+                  <div key={member?.id || `empty-${index}`} className="h-10 w-10 rounded-full bg-cyan-600/10 border-2 border-card flex items-center justify-center overflow-hidden">
+                    {member?.headshot_url ? (
+                      <img src={member.headshot_url} alt={member.first_name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Users className="h-5 w-5 text-cyan-600 opacity-30" />
+                    )}
+                  </div>
+                ))}
               </div>
             </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">Manage team members</p>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 bg-clip-text text-transparent">{teamMembers.length}</div>
+              <p className="text-xs text-muted-foreground mt-2">Team members</p>
             </CardContent>
           </Card>
 
