@@ -134,8 +134,8 @@ export const NotificationPreferenceCards = () => {
                 key={card.key}
                 className={`border-l-4 ${card.borderColor} transition-all hover:shadow-lg`}
               >
-                <CardContent className="p-4 flex flex-col h-full">
-                  <div className="mb-3">
+                <CardContent className="p-4 flex flex-col h-full min-h-[140px]">
+                  <div className="mb-6">
                     <h4 className="text-base font-semibold mb-1">{card.title}</h4>
                     <p className="text-xs text-muted-foreground">{card.description}</p>
                   </div>
