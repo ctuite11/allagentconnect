@@ -114,9 +114,16 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
       const citiesToExpand = new Set<string>();
       
       townsList.forEach(town => {
-        // Check if town has neighborhoods
+        // Skip if this is already a neighborhood entry (has hyphen)
+        if (town.includes('-')) return;
+        
+        // Check if town has neighborhoods from data
         const hasNeighborhoods = getAreasForCity(town, stateKey || state)?.length > 0;
-        if (hasNeighborhoods) {
+        
+        // Check if town has neighborhoods in the towns list (hyphenated entries)
+        const hasHyphenatedAreas = townsList.some(t => t.startsWith(`${town}-`));
+        
+        if (hasNeighborhoods || hasHyphenatedAreas) {
           citiesToExpand.add(town);
         }
       });
