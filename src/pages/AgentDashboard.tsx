@@ -429,7 +429,7 @@ const AgentDashboard = () => {
   };
   return <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 pt-20 sm:pt-24 max-w-7xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Hero Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8 sm:mb-12 animate-fade-in">
           <div className="space-y-3 sm:space-y-4 flex-1">

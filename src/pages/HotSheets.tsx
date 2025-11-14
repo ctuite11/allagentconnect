@@ -289,7 +289,7 @@ const HotSheets = () => {
     <div className="min-h-screen flex flex-col">
       <Navigation />
       
-      <main className="flex-1 bg-background pt-24">
+      <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8 flex items-center gap-4">
