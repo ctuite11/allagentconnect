@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Send } from "lucide-react";
+import { Send, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SendMessageDialogProps {
@@ -25,6 +25,41 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [recipientCount, setRecipientCount] = useState<number | null>(null);
+  const [loadingCount, setLoadingCount] = useState(false);
+
+  const fetchRecipientCount = async () => {
+    setLoadingCount(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch agents with this preference enabled (excluding self)
+      const query = supabase
+        .from("notification_preferences")
+        .select("user_id")
+        .neq("user_id", user.id);
+
+      // Type assertion to handle dynamic column name
+      const { data, error } = await (query as any).eq(category, true);
+
+      if (error) throw error;
+
+      setRecipientCount(data?.length || 0);
+    } catch (error) {
+      console.error("Error fetching recipient count:", error);
+      setRecipientCount(0);
+    } finally {
+      setLoadingCount(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      fetchRecipientCount();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, category]);
 
   const handleSend = async () => {
     if (!subject.trim() || !message.trim()) {
@@ -72,6 +107,22 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
             Compose your message to send to agents interested in {categoryTitle.toLowerCase()}.
           </DialogDescription>
         </DialogHeader>
+        
+        {/* Recipient Count Preview */}
+        {!loadingCount && recipientCount !== null && (
+          <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              {recipientCount === 0 ? (
+                "No agents will receive this message"
+              ) : (
+                <>
+                  This message will be sent to <strong className="text-foreground">{recipientCount}</strong> agent{recipientCount !== 1 ? "s" : ""}
+                </>
+              )}
+            </span>
+          </div>
+        )}
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="subject">Subject</Label>
