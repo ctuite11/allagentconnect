@@ -103,19 +103,20 @@ const PropertyDetail = () => {
   useEffect(() => {
     const referrer = document.referrer;
     const fromDashboard = sessionStorage.getItem('fromAgentDashboard');
-    
-    if (referrer.includes('/agent-dashboard') || fromDashboard === 'true') {
+    const params = new URLSearchParams(location.search);
+
+    if (referrer.includes('/agent-dashboard') || fromDashboard === 'true' || params.get('from') === 'my-listings') {
       setCameFromAgentDashboard(true);
       sessionStorage.setItem('fromAgentDashboard', 'true');
     }
-    
+
     return () => {
       // Clean up when leaving the page
       if (!window.location.pathname.includes('/property/')) {
         sessionStorage.removeItem('fromAgentDashboard');
       }
     };
-  }, []);
+  }, [location.search]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -283,7 +284,8 @@ const PropertyDetail = () => {
                   variant="secondary" 
                   size="lg"
                   onClick={() => {
-                    if (cameFromAgentDashboard) {
+                    const isOwner = isAgent && listing && listing.agent_id === currentUser?.id;
+                    if (cameFromAgentDashboard || isOwner) {
                       sessionStorage.removeItem('fromAgentDashboard');
                       navigate('/agent-dashboard#my-listings');
                     } else {
@@ -293,7 +295,7 @@ const PropertyDetail = () => {
                   className="gap-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  {cameFromAgentDashboard ? 'Back to My Listings' : 'Back to Search'}
+                  {(cameFromAgentDashboard || (isAgent && listing && listing.agent_id === currentUser?.id)) ? 'Back to My Listings' : 'Back to Search'}
                 </Button>
                 <div className="flex gap-2">
                   <SocialShareMenu
