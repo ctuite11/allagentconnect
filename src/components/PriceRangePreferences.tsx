@@ -54,6 +54,10 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
   const [saving, setSaving] = useState(false);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [minPriceDisplay, setMinPriceDisplay] = useState("");
+  const [maxPriceDisplay, setMaxPriceDisplay] = useState("");
+  const [isMinPriceFocused, setIsMinPriceFocused] = useState(false);
+  const [isMaxPriceFocused, setIsMaxPriceFocused] = useState(false);
   const [errors, setErrors] = useState<{ minPrice?: string; maxPrice?: string }>({});
   const [isOpen, setIsOpen] = useState(true);
 
@@ -74,8 +78,12 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
       }
 
       if (data) {
-        setMinPrice((data as any).min_price ? (data as any).min_price.toString() : "");
-        setMaxPrice((data as any).max_price ? (data as any).max_price.toString() : "");
+        const minVal = (data as any).min_price ? (data as any).min_price.toString() : "";
+        const maxVal = (data as any).max_price ? (data as any).max_price.toString() : "";
+        setMinPrice(minVal);
+        setMaxPrice(maxVal);
+        setMinPriceDisplay(minVal ? formatNumberWithCommas(minVal) : "");
+        setMaxPriceDisplay(maxVal ? formatNumberWithCommas(maxVal) : "");
       }
     } catch (error) {
       console.error("Error fetching price preferences:", error);
@@ -134,6 +142,13 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
     }
   };
 
+  const formatNumberWithCommas = (value: string) => {
+    if (!value) return "";
+    const num = parseFloat(value);
+    if (isNaN(num)) return value;
+    return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  };
+
   const handleMinPriceChange = (value: string) => {
     // Remove any non-digit characters except decimal point
     const sanitized = value.replace(/[^\d.]/g, '');
@@ -148,6 +163,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
     }
     
     setMinPrice(formatted);
+    setMinPriceDisplay(formatted);
     if (errors.minPrice) {
       setErrors(prev => ({ ...prev, minPrice: undefined }));
     }
@@ -167,9 +183,34 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
     }
     
     setMaxPrice(formatted);
+    setMaxPriceDisplay(formatted);
     if (errors.maxPrice) {
       setErrors(prev => ({ ...prev, maxPrice: undefined }));
     }
+  };
+
+  const handleMinPriceBlur = () => {
+    setIsMinPriceFocused(false);
+    if (minPrice) {
+      setMinPriceDisplay(formatNumberWithCommas(minPrice));
+    }
+  };
+
+  const handleMaxPriceBlur = () => {
+    setIsMaxPriceFocused(false);
+    if (maxPrice) {
+      setMaxPriceDisplay(formatNumberWithCommas(maxPrice));
+    }
+  };
+
+  const handleMinPriceFocus = () => {
+    setIsMinPriceFocused(true);
+    setMinPriceDisplay(minPrice);
+  };
+
+  const handleMaxPriceFocus = () => {
+    setIsMaxPriceFocused(true);
+    setMaxPriceDisplay(maxPrice);
   };
 
   const formatDisplayPrice = (price: string) => {
@@ -187,6 +228,8 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
   const clearPriceRange = () => {
     setMinPrice("");
     setMaxPrice("");
+    setMinPriceDisplay("");
+    setMaxPriceDisplay("");
     setErrors({});
   };
 
@@ -222,41 +265,45 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="min-price">Minimum Price</Label>
-            <Input
-              id="min-price"
-              type="text"
-              inputMode="decimal"
-              value={minPrice}
-              onChange={(e) => handleMinPriceChange(e.target.value)}
-              placeholder="e.g. 100000"
-              className={errors.minPrice ? 'border-destructive' : ''}
-              maxLength={12}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <Input
+                id="min-price"
+                type="text"
+                inputMode="decimal"
+                value={minPriceDisplay}
+                onChange={(e) => handleMinPriceChange(e.target.value)}
+                onFocus={handleMinPriceFocus}
+                onBlur={handleMinPriceBlur}
+                placeholder="100,000"
+                className={`pl-7 ${errors.minPrice ? 'border-destructive' : ''}`}
+                maxLength={15}
+              />
+            </div>
             {errors.minPrice && (
               <p className="text-sm text-destructive">{errors.minPrice}</p>
-            )}
-            {minPrice && !errors.minPrice && (
-              <p className="text-sm text-muted-foreground">Preview: {formatDisplayPrice(minPrice)}</p>
             )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="max-price">Maximum Price</Label>
-            <Input
-              id="max-price"
-              type="text"
-              inputMode="decimal"
-              value={maxPrice}
-              onChange={(e) => handleMaxPriceChange(e.target.value)}
-              placeholder="e.g. 500000"
-              className={errors.maxPrice ? 'border-destructive' : ''}
-              maxLength={12}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <Input
+                id="max-price"
+                type="text"
+                inputMode="decimal"
+                value={maxPriceDisplay}
+                onChange={(e) => handleMaxPriceChange(e.target.value)}
+                onFocus={handleMaxPriceFocus}
+                onBlur={handleMaxPriceBlur}
+                placeholder="500,000"
+                className={`pl-7 ${errors.maxPrice ? 'border-destructive' : ''}`}
+                maxLength={15}
+              />
+            </div>
             {errors.maxPrice && (
               <p className="text-sm text-destructive">{errors.maxPrice}</p>
-            )}
-            {maxPrice && !errors.maxPrice && (
-              <p className="text-sm text-muted-foreground">Preview: {formatDisplayPrice(maxPrice)}</p>
             )}
           </div>
         </div>
