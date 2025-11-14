@@ -416,37 +416,41 @@ const AgentDashboard = () => {
   };
   return <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground">
-              Hey {firstName || "Agent"}!
-            </h1>
-            <p className="text-muted-foreground mt-2 text-lg">
-              Welcome to your success hub – let's make today amazing
-            </p>
-            <div className="mt-3 p-3 bg-primary/5 border-l-4 border-primary rounded-r-lg">
-              <p className="text-sm italic text-foreground/80">
+      <div className="container mx-auto px-4 py-8 pt-24 max-w-7xl">
+        {/* Hero Section */}
+        <div className="flex justify-between items-start mb-12 animate-fade-in">
+          <div className="space-y-4 flex-1">
+            <div className="space-y-2">
+              <h1 className="text-5xl font-bold text-foreground tracking-tight">
+                Hey {firstName || "Agent"}!
+              </h1>
+              <p className="text-muted-foreground text-xl max-w-2xl">
+                Welcome to your success hub – let's make today amazing
+              </p>
+            </div>
+            <div className="mt-6 p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-l-4 border-primary rounded-lg max-w-2xl shadow-sm">
+              <p className="text-sm italic text-foreground/90 leading-relaxed">
                 "{getDailyQuote()}"
               </p>
             </div>
           </div>
-          <Button variant="outline" onClick={handleSignOut}>
+          <Button variant="outline" onClick={handleSignOut} className="ml-4 shadow-sm hover:shadow">
             Sign Out
           </Button>
         </div>
 
         {/* Dashboard Overview Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-primary bg-gradient-to-br from-card to-card/50" onClick={scrollToListings}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-16 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-l-4 border-l-primary bg-gradient-to-br from-card to-card/50 overflow-hidden relative" onClick={scrollToListings}>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">My Listings</CardTitle>
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Home className="h-5 w-5 text-primary" />
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <Home className="h-6 w-6 text-primary" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">{listings.length}</div>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">{listings.length}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[10px] font-medium">
                   {listings.filter(l => l.status === 'active').length} active
@@ -455,54 +459,58 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/hot-sheets")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-card/50 overflow-hidden relative" onClick={() => navigate("/hot-sheets")}>
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">My Hot Sheets</CardTitle>
-              <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                <Flame className="h-5 w-5 text-orange-500" />
+              <div className="h-12 w-12 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <Flame className="h-6 w-6 text-orange-500" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">{hotSheetsCount}</div>
-              <p className="text-xs text-muted-foreground mt-1">Active searches</p>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">{hotSheetsCount}</div>
+              <p className="text-xs text-muted-foreground mt-2">Active searches</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-red-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/favorites")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-l-4 border-l-red-500 bg-gradient-to-br from-card to-card/50 overflow-hidden relative" onClick={() => navigate("/favorites")}>
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">My Favorites</CardTitle>
-              <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                <Heart className="h-5 w-5 text-red-500" />
+              <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <Heart className="h-6 w-6 text-red-500" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">{favoritesCount}</div>
-              <p className="text-xs text-muted-foreground mt-1">Saved properties</p>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">{favoritesCount}</div>
+              <p className="text-xs text-muted-foreground mt-2">Saved properties</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/my-clients")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-card/50 overflow-hidden relative" onClick={() => navigate("/my-clients")}>
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">My Contacts</CardTitle>
-              <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                <Users className="h-5 w-5 text-purple-500" />
+              <div className="h-12 w-12 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <Users className="h-6 w-6 text-purple-500" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-purple-400 bg-clip-text text-transparent">{clientsCount}</div>
-              <p className="text-xs text-muted-foreground mt-1">Total clients</p>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-bold bg-gradient-to-r from-purple-500 to-purple-400 bg-clip-text text-transparent">{clientsCount}</div>
+              <p className="text-xs text-muted-foreground mt-2">Total clients</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-emerald-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/coming-soon")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-l-4 border-l-emerald-500 bg-gradient-to-br from-card to-card/50 overflow-hidden relative" onClick={() => navigate("/coming-soon")}>
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">My Communications</CardTitle>
-              <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <Mail className="h-5 w-5 text-emerald-500" />
+              <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <Mail className="h-6 w-6 text-emerald-500" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">{messagesCount}</div>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">{messagesCount}</div>
               <p className="text-xs text-muted-foreground mt-1">Total messages</p>
             </CardContent>
           </Card>
@@ -532,24 +540,25 @@ const AgentDashboard = () => {
           </Card>
 
           {/* Recent Activity Feed - Full Width */}
-          {recentActivity.length > 0 && <Card className="hover:shadow-lg transition-all hover:scale-105 border-l-4 border-l-slate-700 bg-gradient-to-br from-card to-card/50 lg:col-span-3">
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
-                <CardDescription className="text-xs">Your latest listings, messages, and client interactions</CardDescription>
+          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-slate-700 bg-gradient-to-br from-card to-card/50 lg:col-span-3 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-700/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <CardHeader className="relative z-10">
+                <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
+                <CardDescription className="text-sm">Your latest listings, messages, and client interactions</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative z-10">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recentActivity.slice(0, 6).map((activity, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-lg border bg-background/50">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted flex-shrink-0">
+                  {recentActivity.slice(0, 6).map((activity, index) => <div key={index} className="flex items-start gap-3 p-4 rounded-lg border bg-background/50 hover:bg-background/80 hover:shadow-md transition-all duration-200">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted flex-shrink-0">
                         {getActivityIcon(activity.icon)}
                       </div>
-                      <div className="flex-1 space-y-1 min-w-0">
+                      <div className="flex-1 space-y-1.5 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-xs font-medium line-clamp-1">{activity.title}</p>
-                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">{formatTimestamp(activity.timestamp)}</span>
+                          <p className="text-sm font-medium line-clamp-1">{activity.title}</p>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">{formatTimestamp(activity.timestamp)}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground line-clamp-1">{activity.description}</p>
-                        {activity.status && <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary capitalize">
+                        <p className="text-xs text-muted-foreground line-clamp-2">{activity.description}</p>
+                        {activity.status && <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary capitalize">
                             {activity.status}
                           </span>}
                       </div>
@@ -560,23 +569,23 @@ const AgentDashboard = () => {
         </div>
 
         {/* Listings Section */}
-        {showResults && <div id="listings-section" className="mt-8 mb-12">
+        {showResults && <div id="listings-section" className="mt-8 mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             {/* Header */}
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold">My Listings</h2>
-              <p className="text-muted-foreground text-sm">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold tracking-tight">My Listings</h2>
+              <p className="text-muted-foreground text-base mt-2">
                 Manage and track your property listings
               </p>
             </div>
 
             {/* Create New Listing Cards */}
-            <div className="grid md:grid-cols-3 gap-4 mb-8">
-              {listingTypes.map((type, index) => <Card key={index} className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 overflow-hidden" onClick={type.action}>
-                  <div className="relative h-32 overflow-hidden">
-                    <img src={type.image} alt={type.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-2 left-3 text-white">
-                      <h3 className="font-semibold text-lg">{type.title}</h3>
+            <div className="grid md:grid-cols-3 gap-6 mb-10">
+              {listingTypes.map((type, index) => <Card key={index} className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border-0 ring-1 ring-border hover:ring-primary/50" onClick={type.action}>
+                  <div className="relative h-40 overflow-hidden">
+                    <img src={type.image} alt={type.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                    <div className="absolute bottom-3 left-4 text-white">
+                      <h3 className="font-semibold text-xl">{type.title}</h3>
                     </div>
                   </div>
                   <CardContent className="pt-3 pb-3">
@@ -585,46 +594,51 @@ const AgentDashboard = () => {
                 </Card>)}
             </div>
 
-            {/* Status Filter Buttons */}
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {['active', 'draft', 'coming_soon', 'new', 'back_on_market', 'expired', 'contingent', 'cancelled', 'under_agreement', 'temp_withdrawn', 'sold'].map(status => <Button key={status} variant={statusFilters.includes(status) ? 'default' : 'outline'} size="sm" onClick={() => toggleStatusFilter(status)} className="rounded-md capitalize text-xs h-7 px-2.5">
-                  {status.replace(/_/g, ' ')}
-                </Button>)}
-            </div>
+            {/* Status Filter & Controls Section */}
+            <div className="space-y-4 mb-8">
+              {/* Status Filter Buttons */}
+              <div className="flex flex-wrap gap-2">
+                {['active', 'draft', 'coming_soon', 'new', 'back_on_market', 'expired', 'contingent', 'cancelled', 'under_agreement', 'temp_withdrawn', 'sold'].map(status => <Button key={status} variant={statusFilters.includes(status) ? 'default' : 'outline'} size="sm" onClick={() => toggleStatusFilter(status)} className="rounded-lg capitalize text-sm h-9 px-4 shadow-sm hover:shadow transition-all">
+                    {status.replace(/_/g, ' ')}
+                  </Button>)}
+              </div>
 
-            {/* Sort and View Controls */}
-            <div className="flex items-center justify-between mb-4">
-              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date">Date Added</SelectItem>
-                  <SelectItem value="price">Price</SelectItem>
-                  <SelectItem value="status">Status</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <div className="flex border rounded-lg overflow-hidden">
-                <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('list')} className="rounded-none">
-                  <List className="h-4 w-4" />
-                </Button>
-                <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('grid')} className="rounded-none">
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
+              {/* Sort and View Controls */}
+              <div className="flex items-center justify-between bg-muted/30 p-3 rounded-lg">
+                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                  <SelectTrigger className="w-[180px] shadow-sm">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Date Added</SelectItem>
+                    <SelectItem value="price">Price</SelectItem>
+                    <SelectItem value="status">Status</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <div className="flex border rounded-lg overflow-hidden shadow-sm bg-background">
+                  <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('list')} className="rounded-none">
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('grid')} className="rounded-none">
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
 
             {/* Listings Display */}
-            {listings.length === 0 ? <Card className="p-12">
-                <div className="text-center">
-                  <Home className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No listings yet</h3>
-                  <p className="text-muted-foreground mb-4">
+            {listings.length === 0 ? <Card className="p-16 text-center shadow-sm">
+                <div className="max-w-md mx-auto">
+                  <div className="h-20 w-20 mx-auto rounded-full bg-muted flex items-center justify-center mb-6">
+                    <Home className="h-10 w-10 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3">No listings yet</h3>
+                  <p className="text-muted-foreground text-base">
                     Get started by creating your first listing above
                   </p>
                 </div>
-              </Card> : <div className={viewMode === 'grid' ? 'grid md:grid-cols-2 gap-4' : 'grid gap-4'}>
+              </Card> : <div className={viewMode === 'grid' ? 'grid md:grid-cols-2 gap-6' : 'grid gap-6'}>
                 {sortListings(filterListings(listings)).map(listing => <ListingCard key={listing.id} listing={listing} onReactivate={handleReactivate} viewMode={viewMode} />)}
               </div>}
           </div>}
