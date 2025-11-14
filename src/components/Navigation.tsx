@@ -184,64 +184,67 @@ const Navigation = () => {
           <div className="hidden md:flex items-center gap-4">
             {user ? (
               <>
-                <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-                  <DropdownMenuTrigger asChild>
-                    <div
-                      onMouseEnter={() => setIsDropdownOpen(true)}
-                      onMouseLeave={() => setIsDropdownOpen(false)}
-                    >
+                <div
+                  onMouseEnter={() => setIsDropdownOpen(true)}
+                  onMouseLeave={() => setIsDropdownOpen(false)}
+                  className="relative"
+                >
+                  <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+                    <DropdownMenuTrigger asChild>
                       <Button 
                         variant="outline" 
-                        onClick={() => navigate("/agent-dashboard")}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate("/agent-dashboard");
+                        }}
                       >
                         <LayoutDashboard className="w-4 h-4 mr-2" />
                         Success Hub
                         <ChevronDown className="w-3 h-3 ml-2" />
                       </Button>
-                    </div>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent 
-                    className="w-56 bg-card border-border shadow-lg z-[100]"
-                    onMouseEnter={() => setIsDropdownOpen(true)}
-                    onMouseLeave={() => setIsDropdownOpen(false)}
-                  >
-                    <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        Success Hub
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/browse")}>
-                        <Search className="mr-2 h-4 w-4" />
-                        Search
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
-                        <List className="mr-2 h-4 w-4" />
-                        My Listings
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/my-clients")}>
-                        <UserCircle className="mr-2 h-4 w-4" />
-                        My Contacts
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/hot-sheets")}>
-                        <Bell className="mr-2 h-4 w-4" />
-                        Hot Sheets
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/client-needs")}>
-                        <FileText className="mr-2 h-4 w-4" />
-                        Communication Center
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")}>
-                        <UserCog className="mr-2 h-4 w-4" />
-                        Edit Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/manage-team")}>
-                        <Users className="mr-2 h-4 w-4" />
-                        Manage Team
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent 
+                      className="w-56 bg-card border-border shadow-lg z-[100]"
+                      align="start"
+                    >
+                      <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
+                          <LayoutDashboard className="mr-2 h-4 w-4" />
+                          Success Hub
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/browse")}>
+                          <Search className="mr-2 h-4 w-4" />
+                          Search
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
+                          <List className="mr-2 h-4 w-4" />
+                          My Listings
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/my-clients")}>
+                          <UserCircle className="mr-2 h-4 w-4" />
+                          My Contacts
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/hot-sheets")}>
+                          <Bell className="mr-2 h-4 w-4" />
+                          Hot Sheets
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/client-needs")}>
+                          <FileText className="mr-2 h-4 w-4" />
+                          Communication Center
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")}>
+                          <UserCog className="mr-2 h-4 w-4" />
+                          Edit Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/manage-team")}>
+                          <Users className="mr-2 h-4 w-4" />
+                          Manage Team
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
                 <Button variant="outline" onClick={() => navigate("/browse")}>
                   <Search className="w-4 h-4 mr-2" />
                   Search
