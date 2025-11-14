@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { ContactMatchesDialog } from "@/components/ContactMatchesDialog";
+import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 
 interface ClientNeed {
   id: string;
@@ -203,6 +204,9 @@ const ClientNeedsDashboard = () => {
             You control what markets and property types you get alerts for — real-time insider insight for real estate pros.
           </p>
         </div>
+
+        {/* Notification Preference Cards */}
+        <NotificationPreferenceCards />
 
         {/* Filters */}
         <Card className="mb-6 border-l-4 border-l-primary">
