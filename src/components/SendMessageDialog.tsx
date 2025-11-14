@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Send, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +38,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   
   // Additional fields for buyer_need and renter_need
   const [state, setState] = useState("");
-  const [county, setCounty] = useState("");
+  const [counties, setCounties] = useState<string[]>([]);
   const [city, setCity] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
   const [minPrice, setMinPrice] = useState("");
@@ -55,8 +57,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   // Get available counties and cities based on selection
   const availableCounties = state ? COUNTIES_BY_STATE[state] || [] : [];
   const availableCities = state 
-    ? (county && hasCountyCityMapping(state) 
-        ? getCitiesForCounty(state, county) 
+    ? (counties.length > 0 && hasCountyCityMapping(state) 
+        ? counties.flatMap(county => getCitiesForCounty(state, county))
         : usCitiesByState[state] || [])
     : [];
   const availableNeighborhoods = (city && state) 
@@ -66,13 +68,17 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   // Reset dependent fields when state, county, or city changes
   const handleStateChange = (newState: string) => {
     setState(newState);
-    setCounty("");
+    setCounties([]);
     setCity("");
     setNeighborhood("");
   };
 
-  const handleCountyChange = (newCounty: string) => {
-    setCounty(newCounty);
+  const handleCountyToggle = (countyName: string) => {
+    setCounties(prev => 
+      prev.includes(countyName) 
+        ? prev.filter(c => c !== countyName)
+        : [...prev, countyName]
+    );
     setCity("");
     setNeighborhood("");
   };
@@ -138,7 +144,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       if (showLocationFields) {
         requestBody.criteria = {
           state,
-          county: county.trim() || undefined,
+          counties: counties.length > 0 ? counties : undefined,
           city: city.trim() || undefined,
           neighborhood: neighborhood.trim() || undefined,
           minPrice: minPrice ? parseFloat(minPrice) : undefined,
@@ -165,7 +171,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       setSubject("");
       setMessage("");
       setState("");
-      setCounty("");
+      setCounties([]);
       setCity("");
       setNeighborhood("");
       setMinPrice("");
@@ -247,19 +253,33 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                 {state && availableCounties.length > 0 && (
                   <div className="space-y-2">
-                    <Label htmlFor="county">County (Optional)</Label>
-                    <Select value={county} onValueChange={handleCountyChange}>
-                      <SelectTrigger id="county">
-                        <SelectValue placeholder="Select county" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableCounties.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Counties (Optional - Select Multiple)</Label>
+                    <div className="border rounded-md p-3 bg-background">
+                      <ScrollArea className="h-[200px]">
+                        <div className="space-y-2">
+                          {availableCounties.map((countyName) => (
+                            <div key={countyName} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`county-${countyName}`}
+                                checked={counties.includes(countyName)}
+                                onCheckedChange={() => handleCountyToggle(countyName)}
+                              />
+                              <label
+                                htmlFor={`county-${countyName}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {countyName}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                      {counties.length > 0 && (
+                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
+                          {counties.length} {counties.length === 1 ? 'county' : 'counties'} selected
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
