@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, Bell } from "lucide-react";
+import { Send, Bell, Check } from "lucide-react";
 import { SendMessageDialog } from "./SendMessageDialog";
 
 interface NotificationPreferences {
@@ -173,7 +173,11 @@ export const NotificationPreferenceCards = () => {
                             togglePreference(card.key);
                           }}
                         >
-                          <Bell className="h-3 w-3 mr-1" />
+                          {card.active ? (
+                            <Check className="h-3 w-3 mr-1" />
+                          ) : (
+                            <Bell className="h-3 w-3 mr-1" />
+                          )}
                           Receive
                         </Button>
                       </TooltipTrigger>
