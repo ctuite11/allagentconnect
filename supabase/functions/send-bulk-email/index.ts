@@ -62,7 +62,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Created campaign:", campaign.id);
 
-    // Send emails individually to avoid spam filters and personalize
+    // Send emails individually for privacy and better deliverability
+    // This ensures recipients don't see each other's addresses (better than BCC)
+    // and allows for individual tracking and personalization
     const results = await Promise.allSettled(
       recipients.map(async (recipient) => {
         // Create email send record first
