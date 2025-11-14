@@ -178,7 +178,7 @@ const ClientNeedsDashboard = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 pt-24">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
@@ -190,7 +190,7 @@ const ClientNeedsDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Client Needs Dashboard</h1>
           <p className="text-muted-foreground">
