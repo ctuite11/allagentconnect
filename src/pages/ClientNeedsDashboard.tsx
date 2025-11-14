@@ -17,6 +17,8 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { ContactMatchesDialog } from "@/components/ContactMatchesDialog";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
+import StatePreferencesManager from "@/components/StatePreferencesManager";
+import CountyPreferencesManager from "@/components/CountyPreferencesManager";
 
 interface ClientNeed {
   id: string;
@@ -207,6 +209,21 @@ const ClientNeedsDashboard = () => {
 
         {/* Notification Preference Cards */}
         <NotificationPreferenceCards />
+
+        {/* My Preferences Section */}
+        <div className="mb-12">
+          <div className="mb-6">
+            <h2 className="text-3xl font-display font-semibold mb-2">My Preferences</h2>
+            <p className="text-muted-foreground">
+              Select the geographic areas where you want to receive email notifications about client needs
+            </p>
+          </div>
+          
+          <div className="space-y-6">
+            <StatePreferencesManager agentId={user?.id || ""} />
+            <CountyPreferencesManager agentId={user?.id || ""} />
+          </div>
+        </div>
 
         {/* Filters */}
         <Card className="mb-6 border-l-4 border-l-primary">
