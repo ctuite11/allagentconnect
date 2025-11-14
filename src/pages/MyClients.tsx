@@ -13,12 +13,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, ArrowLeft, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { BulkEmailDialog } from "@/components/BulkEmailDialog";
 import { EmailAnalyticsDialog } from "@/components/EmailAnalyticsDialog";
+import { ImportClientsDialog } from "@/components/ImportClientsDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -64,6 +65,7 @@ const MyClients = () => {
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
   const [bulkEmailDialogOpen, setBulkEmailDialogOpen] = useState(false);
   const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -374,6 +376,10 @@ const MyClients = () => {
                   Export CSV
                 </Button>
               )}
+              <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                <Upload className="h-4 w-4 mr-2" />
+                Import CSV
+              </Button>
               <Dialog open={addDialogOpen} onOpenChange={(open) => {
                 setAddDialogOpen(open);
                 if (!open) resetForm();
@@ -667,6 +673,16 @@ const MyClients = () => {
       <EmailAnalyticsDialog
         open={analyticsDialogOpen}
         onOpenChange={setAnalyticsDialogOpen}
+      />
+
+      {/* Import Clients Dialog */}
+      <ImportClientsDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        agentId={user?.id}
+        onImportComplete={() => {
+          if (user) fetchClients(user.id);
+        }}
       />
 
       <Footer />
