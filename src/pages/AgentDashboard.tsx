@@ -447,9 +447,6 @@ const AgentDashboard = () => {
               </p>
             </div>
           </div>
-          <Button variant="outline" onClick={handleSignOut} className="w-full sm:w-auto sm:ml-4 shadow-sm hover:shadow">
-            Sign Out
-          </Button>
         </div>
 
         {/* Dashboard Overview Cards */}

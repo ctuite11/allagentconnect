@@ -182,25 +182,14 @@ const Navigation = () => {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
             {user ? (
-              <>
-                <Button variant="default" onClick={() => navigate("/agent-dashboard")}>
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
-                  Agent Tools
-                </Button>
-                <Button variant="ghost" onClick={handleLogout}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </Button>
-              </>
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
             ) : (
-              <>
-                <Button variant="outline" size="lg" onClick={() => navigate("/consumer/auth")}>
-                  Sign In
-                </Button>
-                <Button size="lg" onClick={() => navigate("/auth")}>
-                  Agent Login
-                </Button>
-              </>
+              <Button onClick={() => navigate("/auth")}>
+                Login
+              </Button>
             )}
           </div>
 
@@ -282,50 +271,24 @@ const Navigation = () => {
             )}
             <div className="pt-4 border-t border-border mt-4 space-y-2">
               {user ? (
-                <>
-                  <Button 
-                    className="w-full" 
-                    onClick={() => {
-                      navigate("/agent-dashboard");
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    <LayoutDashboard className="w-4 h-4 mr-2" />
-                    Dashboard
-                  </Button>
-                  <Button 
-                    className="w-full"
-                    variant="outline"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </Button>
-                </>
+                <Button 
+                  className="w-full"
+                  variant="outline"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
               ) : (
-                <>
-                  <Button 
-                    className="w-full"
-                    variant="outline"
-                    size="lg"
-                    onClick={() => {
-                      navigate("/consumer/auth");
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Sign In
-                  </Button>
-                  <Button 
-                    className="w-full"
-                    size="lg"
-                    onClick={() => {
-                      navigate("/auth");
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Agent Login
-                  </Button>
-                </>
+                <Button 
+                  className="w-full"
+                  onClick={() => {
+                    navigate("/auth");
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Login
+                </Button>
               )}
             </div>
           </div>
