@@ -188,7 +188,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border-l-4 border-l-purple-500 bg-purple-50/50 dark:bg-purple-950/20">
+      <Card className="border-l-4 border-l-purple-500">
         <CollapsibleTrigger className="w-full">
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between">
