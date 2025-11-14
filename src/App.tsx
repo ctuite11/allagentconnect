@@ -43,6 +43,7 @@ import ConsumerAuth from "./pages/ConsumerAuth";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
 import ComingSoon from "./pages/ComingSoon";
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <TooltipProvider>
             <Sonner />
+            <ScrollToTop />
             <Routes>
           {/* Coming Soon landing page - public homepage */}
           <Route path="/" element={<ComingSoon />} />
