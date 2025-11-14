@@ -454,16 +454,16 @@ const AgentDashboard = () => {
 
         {/* Dashboard Overview Cards */}
         <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 mb-10 sm:mb-16 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-primary bg-gradient-to-br from-card to-card/50 overflow-hidden relative touch-manipulation" onClick={scrollToListings}>
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-primary bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={scrollToListings}>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Listings</CardTitle>
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                 <Home className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
-              <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">{listings.length}</div>
+              <div className="text-3xl sm:text-4xl font-bold text-primary">{listings.length}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[10px] font-medium">
                   {listings.filter(l => l.status === 'active').length} active
