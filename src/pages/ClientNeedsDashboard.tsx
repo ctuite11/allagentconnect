@@ -194,6 +194,12 @@ const ClientNeedsDashboard = () => {
           </p>
         </div>
 
+        {/* New Section */}
+        <div className="mb-8 text-center">
+          <h2 className="text-3xl font-bold mb-2">Connect . Communicate . Collaborate</h2>
+          <p className="text-lg text-muted-foreground">Turning relationships into results</p>
+        </div>
+
         {/* Filters */}
         <Card className="mb-6 border-l-4 border-l-primary">
           <CardHeader>
