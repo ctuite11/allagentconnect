@@ -145,14 +145,14 @@ export const NotificationPreferenceCards = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-24 h-8 text-xs bg-background border-2 border-green-500/50 hover:bg-background hover:border-green-500"
+                          className="w-24 h-8 text-xs bg-background border-2 border-green-500/50 hover:bg-green-50 hover:border-green-500 dark:hover:bg-green-950 transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
                             setOpenDialog({ open: true, category: card.key, title: card.title });
                           }}
                         >
                           <Send className="h-3 w-3 mr-1" />
-                          Send
+                          <span>Send</span>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -165,24 +165,31 @@ export const NotificationPreferenceCards = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className={`w-24 h-8 text-xs bg-background border-2 ${
-                            card.active ? "border-primary" : "border-primary/50"
-                          } hover:bg-background hover:border-primary`}
+                          className={`w-24 h-8 text-xs border-2 transition-all ${
+                            card.active 
+                              ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
+                              : "bg-background border-primary/50 hover:bg-primary/10 hover:border-primary"
+                          }`}
                           onClick={(e) => {
                             e.stopPropagation();
                             togglePreference(card.key);
                           }}
                         >
                           {card.active ? (
-                            <Check className="h-3 w-3 mr-1" />
+                            <>
+                              <Check className="h-4 w-4 mr-1 font-bold" />
+                              <span>Receive</span>
+                            </>
                           ) : (
-                            <Bell className="h-3 w-3 mr-1" />
+                            <>
+                              <Bell className="h-3 w-3 mr-1" />
+                              <span>Receive</span>
+                            </>
                           )}
-                          Receive
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Click to enable receiving messages based on your selected preferences below</p>
+                        <p>Click to {card.active ? "disable" : "enable"} receiving messages based on your selected preferences below</p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
