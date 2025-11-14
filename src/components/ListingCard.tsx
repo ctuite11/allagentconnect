@@ -357,7 +357,10 @@ const ListingCard = ({
             </div>
 
             <div className="col-span-2 flex flex-col gap-1 justify-center">
-              <Button variant="outline" size="sm" onClick={() => navigate(`/property/${listing.id}`)} className="w-full">
+              <Button variant="outline" size="sm" onClick={() => {
+                sessionStorage.setItem('fromAgentDashboard', 'true');
+                navigate(`/property/${listing.id}`);
+              }} className="w-full">
                 <Eye className="w-3 h-3 mr-1" />
                 View
               </Button>
@@ -510,7 +513,10 @@ const ListingCard = ({
           </Badge>}
 
         <div className="flex gap-1.5 mt-2">
-          <Button variant="outline" size="sm" className="flex-1" onClick={() => navigate(`/property/${listing.id}`)}>
+          <Button variant="outline" size="sm" className="flex-1" onClick={() => {
+            sessionStorage.setItem('fromAgentDashboard', 'true');
+            navigate(`/property/${listing.id}`);
+          }}>
             <Eye className="w-4 h-4 mr-2" />
             View
           </Button>

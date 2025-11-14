@@ -91,9 +91,28 @@ const PropertyDetail = () => {
   const [galleryTab, setGalleryTab] = useState("photos");
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [cameFromAgentDashboard, setCameFromAgentDashboard] = useState(false);
 
   // Track listing view
   useListingView(id);
+
+  // Check if came from agent dashboard
+  useEffect(() => {
+    const referrer = document.referrer;
+    const fromDashboard = sessionStorage.getItem('fromAgentDashboard');
+    
+    if (referrer.includes('/agent-dashboard') || fromDashboard === 'true') {
+      setCameFromAgentDashboard(true);
+      sessionStorage.setItem('fromAgentDashboard', 'true');
+    }
+    
+    return () => {
+      // Clean up when leaving the page
+      if (!window.location.pathname.includes('/property/')) {
+        sessionStorage.removeItem('fromAgentDashboard');
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -260,11 +279,18 @@ const PropertyDetail = () => {
                 <Button 
                   variant="secondary" 
                   size="lg"
-                  onClick={() => navigate(-1)}
+                  onClick={() => {
+                    if (cameFromAgentDashboard) {
+                      sessionStorage.removeItem('fromAgentDashboard');
+                      navigate('/agent-dashboard#my-listings');
+                    } else {
+                      navigate(-1);
+                    }
+                  }}
                   className="gap-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Search
+                  {cameFromAgentDashboard ? 'Back to My Listings' : 'Back to Search'}
                 </Button>
                 <div className="flex gap-2">
                   <SocialShareMenu
