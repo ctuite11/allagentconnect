@@ -244,7 +244,7 @@ const PropertyDetail = () => {
         listingType={listing.listing_type}
       />
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="max-w-7xl mx-auto">
           {/* Hero Image Section */}
           <div className="relative mb-6">

@@ -359,7 +359,7 @@ const AddRentalListing = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="max-w-5xl mx-auto">
           {/* Header Section */}
           <div className="mb-4">
