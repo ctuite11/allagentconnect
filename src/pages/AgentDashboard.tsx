@@ -438,7 +438,7 @@ const AgentDashboard = () => {
                 Hey {firstName || "Agent"}!
               </h1>
               <p className="text-muted-foreground text-base sm:text-lg lg:text-xl max-w-2xl">
-                Let's make it an amazing day
+                Welcome to your success hub – let's make it an amazing day
               </p>
             </div>
             <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-l-4 border-primary rounded-lg max-w-2xl shadow-sm">
