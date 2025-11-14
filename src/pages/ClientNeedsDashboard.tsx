@@ -54,9 +54,6 @@ const ClientNeedsDashboard = () => {
           </p>
         </div>
 
-        {/* Notification Settings - Required */}
-        <ClientNeedsNotificationSettings />
-
         {/* Notification Preference Cards */}
         <NotificationPreferenceCards />
 
@@ -75,6 +72,9 @@ const ClientNeedsDashboard = () => {
             <GeographicPreferencesManager agentId={user?.id || ""} />
           </div>
         </div>
+
+        {/* Notification Settings - Required (Final Step) */}
+        <ClientNeedsNotificationSettings />
       </div>
     </div>
   );

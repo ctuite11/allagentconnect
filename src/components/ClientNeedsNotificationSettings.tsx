@@ -31,7 +31,7 @@ export const ClientNeedsNotificationSettings = () => {
 
       const { data, error } = await supabase
         .from("notification_preferences")
-        .select("client_needs_enabled, client_needs_schedule")
+        .select("*")
         .eq("user_id", user.id)
         .single();
 
@@ -40,9 +40,10 @@ export const ClientNeedsNotificationSettings = () => {
       }
 
       if (data) {
+        const prefs = data as any;
         setSettings({
-          enabled: data.client_needs_enabled ?? true,
-          schedule: (data.client_needs_schedule ?? "immediate") as "immediate" | "daily" | "weekly",
+          enabled: prefs.client_needs_enabled ?? true,
+          schedule: (prefs.client_needs_schedule ?? "immediate") as "immediate" | "daily" | "weekly",
         });
         setHasInitialSelection(true);
       }
