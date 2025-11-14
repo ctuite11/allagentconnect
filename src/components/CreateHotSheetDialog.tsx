@@ -52,10 +52,14 @@ export function CreateHotSheetDialog({
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [existingClient, setExistingClient] = useState<any>(null);
+  const [showCreateClientDialog, setShowCreateClientDialog] = useState(false);
+  const [creatingClient, setCreatingClient] = useState(false);
   
   // Validation errors
   const [errors, setErrors] = useState<{
     hotSheetName?: string;
+    clientFirstName?: string;
+    clientLastName?: string;
     clientEmail?: string;
     clientPhone?: string;
   }>({});
@@ -169,31 +173,34 @@ export function CreateHotSheetDialog({
     fetchClient();
   }, [clientId, open]);
 
-  // Auto-populate from existing client when email changes
+  // Auto-populate from existing client when first name changes
   useEffect(() => {
     const searchClient = async () => {
-      if (!clientEmail || clientEmail.length < 5 || !open) return;
+      if (!clientFirstName || clientFirstName.length < 2 || !open) {
+        setExistingClient(null);
+        return;
+      }
       
       // Skip if we already have this client loaded
-      if (existingClient && existingClient.email === clientEmail) return;
+      if (existingClient && existingClient.first_name?.toLowerCase() === clientFirstName.toLowerCase()) return;
       
       try {
         const { data, error } = await supabase
           .from("clients")
           .select("*")
           .eq("agent_id", userId)
-          .eq("email", clientEmail.toLowerCase().trim())
+          .ilike("first_name", clientFirstName.trim())
           .maybeSingle();
         
         if (error) throw error;
         
         if (data) {
-          // Only auto-fill if the fields are empty
-          if (!clientFirstName && data.first_name) {
-            setClientFirstName(data.first_name);
-          }
+          // Auto-fill fields if they're empty
           if (!clientLastName && data.last_name) {
             setClientLastName(data.last_name);
+          }
+          if (!clientEmail && data.email) {
+            setClientEmail(data.email);
           }
           if (!clientPhone && data.phone) {
             setClientPhone(formatPhoneNumber(data.phone));
@@ -205,13 +212,14 @@ export function CreateHotSheetDialog({
         }
       } catch (error: any) {
         console.error("Error searching for client:", error);
+        setExistingClient(null);
       }
     };
     
     // Debounce the search
-    const timer = setTimeout(searchClient, 500);
+    const timer = setTimeout(searchClient, 800);
     return () => clearTimeout(timer);
-  }, [clientEmail, userId, open]);
+  }, [clientFirstName, userId, open]);
 
   const loadHotSheet = async () => {
     try {
@@ -518,6 +526,14 @@ export function CreateHotSheetDialog({
       .trim()
       .min(1, "Hot sheet name is required")
       .max(100, "Hot sheet name must be less than 100 characters"),
+    clientFirstName: z.string()
+      .trim()
+      .min(1, "Client first name is required")
+      .max(100, "First name must be less than 100 characters"),
+    clientLastName: z.string()
+      .trim()
+      .min(1, "Client last name is required")
+      .max(100, "Last name must be less than 100 characters"),
     clientEmail: z.string()
       .trim()
       .min(1, "Client email is required")
@@ -541,6 +557,8 @@ export function CreateHotSheetDialog({
     // Validate form
     const validation = hotSheetSchema.safeParse({
       hotSheetName,
+      clientFirstName,
+      clientLastName,
       clientEmail,
       clientPhone
     });
@@ -557,8 +575,45 @@ export function CreateHotSheetDialog({
       return;
     }
 
+    // Check if client exists
+    if (!existingClient && clientFirstName && clientEmail) {
+      setShowCreateClientDialog(true);
+      return;
+    }
+
     // Show confirmation dialog
     setShowConfirmDialog(true);
+  };
+
+  const handleCreateClient = async () => {
+    setCreatingClient(true);
+    try {
+      const { data, error } = await supabase
+        .from("clients")
+        .insert({
+          agent_id: userId,
+          first_name: clientFirstName.trim(),
+          last_name: clientLastName.trim(),
+          email: clientEmail.toLowerCase().trim(),
+          phone: clientPhone ? formatPhoneNumber(clientPhone) : null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setExistingClient(data);
+      setShowCreateClientDialog(false);
+      toast.success("Client created successfully");
+      
+      // Now show the hot sheet confirmation
+      setShowConfirmDialog(true);
+    } catch (error: any) {
+      console.error("Error creating client:", error);
+      toast.error(error?.message || "Failed to create client");
+    } finally {
+      setCreatingClient(false);
+    }
   };
 
   const handleCreate = async () => {
@@ -683,6 +738,8 @@ export function CreateHotSheetDialog({
     setClientEmail("");
     setClientPhone("");
     setExistingClient(null);
+    setShowCreateClientDialog(false);
+    setCreatingClient(false);
     setErrors({});
     setShowConfirmDialog(false);
     setShowSuccess(false);
@@ -794,8 +851,23 @@ export function CreateHotSheetDialog({
                     id="client-first-name"
                     placeholder="John"
                     value={clientFirstName}
-                    onChange={(e) => setClientFirstName(e.target.value)}
+                    onChange={(e) => {
+                      setClientFirstName(e.target.value);
+                      if (errors.clientFirstName) {
+                        setErrors(prev => ({ ...prev, clientFirstName: undefined }));
+                      }
+                    }}
+                    className={errors.clientFirstName ? "border-destructive" : ""}
                   />
+                  {existingClient && (
+                    <p className="text-sm text-green-600 flex items-center gap-1">
+                      <Check className="w-4 h-4" />
+                      Existing client found
+                    </p>
+                  )}
+                  {errors.clientFirstName && (
+                    <p className="text-sm text-destructive">{errors.clientFirstName}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="client-last-name">Last Name *</Label>
@@ -803,8 +875,17 @@ export function CreateHotSheetDialog({
                     id="client-last-name"
                     placeholder="Doe"
                     value={clientLastName}
-                    onChange={(e) => setClientLastName(e.target.value)}
+                    onChange={(e) => {
+                      setClientLastName(e.target.value);
+                      if (errors.clientLastName) {
+                        setErrors(prev => ({ ...prev, clientLastName: undefined }));
+                      }
+                    }}
+                    className={errors.clientLastName ? "border-destructive" : ""}
                   />
+                  {errors.clientLastName && (
+                    <p className="text-sm text-destructive">{errors.clientLastName}</p>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -822,12 +903,6 @@ export function CreateHotSheetDialog({
                   }}
                   className={errors.clientEmail ? "border-destructive" : ""}
                 />
-                {existingClient && (
-                  <p className="text-sm text-green-600 flex items-center gap-1">
-                    <Check className="w-4 h-4" />
-                    Existing client found - fields auto-filled
-                  </p>
-                )}
                 {errors.clientEmail && (
                   <p className="text-sm text-destructive">{errors.clientEmail}</p>
                 )}
@@ -1511,6 +1586,40 @@ export function CreateHotSheetDialog({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleCreate}>
               Confirm & Create
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Create Client Dialog */}
+      <AlertDialog open={showCreateClientDialog} onOpenChange={setShowCreateClientDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Create New Client?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This client is not in your database. Would you like to create a new contact for:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="space-y-2 my-4 p-4 bg-muted rounded-md">
+            <p className="text-sm"><span className="font-medium">Name:</span> {clientFirstName} {clientLastName}</p>
+            <p className="text-sm"><span className="font-medium">Email:</span> {clientEmail}</p>
+            {clientPhone && <p className="text-sm"><span className="font-medium">Phone:</span> {clientPhone}</p>}
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowCreateClientDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleCreateClient} disabled={creatingClient}>
+              {creatingClient ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Yes, Create Client"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
