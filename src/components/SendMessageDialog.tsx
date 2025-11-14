@@ -44,7 +44,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [propertyType, setPropertyType] = useState("");
+  const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
 
   // Set default subject when dialog opens
   useEffect(() => {
@@ -101,6 +101,80 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     );
   };
 
+  const handlePropertyTypeToggle = (typeValue: string) => {
+    setPropertyTypes(prev =>
+      prev.includes(typeValue)
+        ? prev.filter(t => t !== typeValue)
+        : [...prev, typeValue]
+    );
+  };
+
+  const selectAllCounties = () => {
+    if (counties.length === availableCounties.length) {
+      setCounties([]);
+    } else {
+      setCounties([...availableCounties]);
+    }
+    setCities([]);
+    setNeighborhoods([]);
+  };
+
+  const selectAllCities = () => {
+    if (cities.length === availableCities.length) {
+      setCities([]);
+    } else {
+      setCities([...availableCities]);
+    }
+    setNeighborhoods([]);
+  };
+
+  const selectAllNeighborhoods = () => {
+    if (neighborhoods.length === availableNeighborhoods.length) {
+      setNeighborhoods([]);
+    } else {
+      setNeighborhoods([...availableNeighborhoods]);
+    }
+  };
+
+  const selectAllPropertyTypes = () => {
+    const allTypes = ["single_family", "condo", "townhouse", "multi_family", "land", "commercial"];
+    if (propertyTypes.length === allTypes.length) {
+      setPropertyTypes([]);
+    } else {
+      setPropertyTypes(allTypes);
+    }
+  };
+
+  const handleMinPriceChange = (value: string) => {
+    const sanitized = value.replace(/[^\d.]/g, '');
+    const parts = sanitized.split('.');
+    const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
+    const num = parseFloat(formatted);
+    if (!isNaN(num) && num > 999999999) return;
+    setMinPrice(formatted);
+  };
+
+  const handleMaxPriceChange = (value: string) => {
+    const sanitized = value.replace(/[^\d.]/g, '');
+    const parts = sanitized.split('.');
+    const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
+    const num = parseFloat(formatted);
+    if (!isNaN(num) && num > 999999999) return;
+    setMaxPrice(formatted);
+  };
+
+  const formatDisplayPrice = (price: string) => {
+    if (!price) return "";
+    const num = parseFloat(price);
+    if (isNaN(num)) return price;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num);
+  };
+
   const fetchRecipientCount = async () => {
     setLoadingCount(true);
     try {
@@ -140,9 +214,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       return;
     }
 
-    if (showLocationFields && !state) {
-      toast.error("Please select a state");
-      return;
+    if (showLocationFields) {
+      if (!state) {
+        toast.error("Please select a state");
+        return;
+      }
+      if (propertyTypes.length === 0) {
+        toast.error("Please select at least one property type");
+        return;
+      }
     }
 
     // Show confirmation before sending
@@ -168,7 +248,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
           neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
           minPrice: minPrice ? parseFloat(minPrice) : undefined,
           maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-          propertyType: propertyType || undefined,
+          propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
         };
       }
 
@@ -195,7 +275,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       setNeighborhoods([]);
       setMinPrice("");
       setMaxPrice("");
-      setPropertyType("");
+      setPropertyTypes([]);
       setShowConfirmation(false);
     } catch (error) {
       console.error("Error sending message:", error);
@@ -234,15 +314,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
               </div>
             </div>
 
-            {showLocationFields && (state || counties.length > 0 || cities.length > 0 || neighborhoods.length > 0 || propertyType || minPrice || maxPrice) && (
+            {showLocationFields && (state || counties.length > 0 || cities.length > 0 || neighborhoods.length > 0 || propertyTypes.length > 0 || minPrice || maxPrice) && (
               <div className="bg-primary/5 rounded-lg p-4 space-y-2">
                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
                   <CheckCircle className="h-4 w-4" />
                   Search Criteria:
                 </h4>
                 <div className="space-y-1 text-sm">
-                  {propertyType && (
-                    <div><strong>Property Type:</strong> {propertyType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                  {propertyTypes.length > 0 && (
+                    <div><strong>Property Types:</strong> {propertyTypes.map(pt => pt.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())).join(', ')}</div>
                   )}
                   {state && (
                     <div><strong>State:</strong> {US_STATES.find(s => s.code === state)?.name}</div>
@@ -255,6 +335,21 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   )}
                   {neighborhoods.length > 0 && (
                     <div><strong>Neighborhoods:</strong> {neighborhoods.join(', ')}</div>
+                  )}
+                  {propertyTypes.length > 0 && (
+                    <div>
+                      <strong>Property Types:</strong> {propertyTypes.map(pt => {
+                        const labels: Record<string, string> = {
+                          single_family: "Single Family",
+                          condo: "Condo",
+                          townhouse: "Townhouse",
+                          multi_family: "Multi-Family",
+                          land: "Land",
+                          commercial: "Commercial"
+                        };
+                        return labels[pt] || pt;
+                      }).join(', ')}
+                    </div>
                   )}
                   {(minPrice || maxPrice) && (
                     <div>
@@ -305,29 +400,58 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
               </div>
             )}
         <div className="space-y-4 py-4">
-          {showLocationFields && (
-            <>
-              {/* Location Fields */}
-              <div className="space-y-4 pb-4 border-b">
-                <h3 className="text-sm font-medium">Location & Criteria</h3>
-                
+            {showLocationFields && (
+              <>
+                {/* Property Type - Required Multi-Select */}
                 <div className="space-y-2">
-                  <Label htmlFor="propertyType">Property Type (Optional)</Label>
-                  <Select value={propertyType} onValueChange={setPropertyType}>
-                    <SelectTrigger id="propertyType">
-                      <SelectValue placeholder="Select property type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="single_family">Single Family</SelectItem>
-                      <SelectItem value="condo">Condo</SelectItem>
-                      <SelectItem value="townhouse">Townhouse</SelectItem>
-                      <SelectItem value="multi_family">Multi Family</SelectItem>
-                      <SelectItem value="land">Land</SelectItem>
-                      <SelectItem value="commercial">Commercial</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Property Types * (Select Multiple)</Label>
+                  <div className="space-y-3">
+                    <Button 
+                      type="button"
+                      onClick={selectAllPropertyTypes}
+                      variant={propertyTypes.length === 6 ? "outline" : "default"}
+                      size="sm"
+                      className="w-full"
+                    >
+                      ✓ {propertyTypes.length === 6 ? "Deselect All" : "Select All Property Types"}
+                    </Button>
+                    <div className="border rounded-md p-3 bg-background max-h-[200px] overflow-y-auto">
+                      <div className="space-y-2">
+                        {[
+                          { value: "single_family", label: "Single Family" },
+                          { value: "condo", label: "Condo" },
+                          { value: "townhouse", label: "Townhouse" },
+                          { value: "multi_family", label: "Multi-Family" },
+                          { value: "land", label: "Land" },
+                          { value: "commercial", label: "Commercial" },
+                        ].map((type) => (
+                          <div key={type.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`type-${type.value}`}
+                              checked={propertyTypes.includes(type.value)}
+                              onCheckedChange={() => handlePropertyTypeToggle(type.value)}
+                            />
+                            <label
+                              htmlFor={`type-${type.value}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {type.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      {propertyTypes.length > 0 && (
+                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
+                          {propertyTypes.length} {propertyTypes.length === 1 ? 'type' : 'types'} selected
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
+
+                {/* Location Fields */}
+                <div className="space-y-4 pb-4 border-b">
+                  <h3 className="text-sm font-medium">Location & Criteria</h3>
 
                 <div className="space-y-2">
                   <Label htmlFor="state">State *</Label>
@@ -348,6 +472,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {state && availableCounties.length > 0 && (
                   <div className="space-y-2">
                     <Label>Counties (Optional - Select Multiple)</Label>
+                    <Button 
+                      type="button"
+                      onClick={selectAllCounties}
+                      variant="outline"
+                      size="sm"
+                      className="w-full mb-2"
+                    >
+                      ✓ {counties.length === availableCounties.length ? "Deselect All" : "Select All Counties"}
+                    </Button>
                     <div className="border rounded-md p-3 bg-background">
                       <ScrollArea className="h-[200px]">
                         <div className="space-y-2">
@@ -380,6 +513,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {state && availableCities.length > 0 && (
                   <div className="space-y-2">
                     <Label>Cities/Towns (Optional - Select Multiple)</Label>
+                    <Button 
+                      type="button"
+                      onClick={selectAllCities}
+                      variant="outline"
+                      size="sm"
+                      className="w-full mb-2"
+                    >
+                      ✓ {cities.length === availableCities.length ? "Deselect All" : "Select All Cities/Towns"}
+                    </Button>
                     <div className="border rounded-md p-3 bg-background">
                       <ScrollArea className="h-[200px]">
                         <div className="space-y-2">
@@ -412,6 +554,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {cities.length > 0 && availableNeighborhoods.length > 0 && (
                   <div className="space-y-2">
                     <Label>Neighborhoods/Areas (Optional - Select Multiple)</Label>
+                    <Button 
+                      type="button"
+                      onClick={selectAllNeighborhoods}
+                      variant="outline"
+                      size="sm"
+                      className="w-full mb-2"
+                    >
+                      ✓ {neighborhoods.length === availableNeighborhoods.length ? "Deselect All" : "Select All Neighborhoods"}
+                    </Button>
                     <div className="border rounded-md p-3 bg-background">
                       <ScrollArea className="h-[200px]">
                         <div className="space-y-2">
@@ -444,24 +595,34 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="minPrice">Min Price (Optional)</Label>
-                    <FormattedInput
+                    <Input
                       id="minPrice"
-                      format="currency"
-                      placeholder="$100,000"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="e.g. 100000"
                       value={minPrice}
-                      onChange={setMinPrice}
+                      onChange={(e) => handleMinPriceChange(e.target.value)}
+                      maxLength={12}
                     />
+                    {minPrice && (
+                      <p className="text-xs text-muted-foreground">Preview: {formatDisplayPrice(minPrice)}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="maxPrice">Max Price (Optional)</Label>
-                    <FormattedInput
+                    <Input
                       id="maxPrice"
-                      format="currency"
-                      placeholder="$500,000"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="e.g. 500000"
                       value={maxPrice}
-                      onChange={setMaxPrice}
+                      onChange={(e) => handleMaxPriceChange(e.target.value)}
+                      maxLength={12}
                     />
+                    {maxPrice && (
+                      <p className="text-xs text-muted-foreground">Preview: {formatDisplayPrice(maxPrice)}</p>
+                    )}
                   </div>
                 </div>
               </div>
