@@ -487,6 +487,9 @@ const AgentProfileEditor = () => {
               </div>
             </div>
             <div className="flex gap-2">
+              <Button onClick={handleSaveProfile} disabled={saving}>
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
               <Button variant="outline" onClick={() => navigate("/manage-team")}>
                 Manage Team
               </Button>
