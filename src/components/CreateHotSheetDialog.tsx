@@ -991,6 +991,7 @@ export function CreateHotSheetDialog({
                             state={state}
                             searchQuery={citySearch}
                             variant="checkbox"
+                            showAreas={showAreas}
                           />
                         </div>
                       </div>
