@@ -63,6 +63,11 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
   };
 
   const handleSave = async () => {
+    if (selectedTypes.length === 0) {
+      toast.error("Please select at least one property type");
+      return;
+    }
+
     setSaving(true);
     try {
       const { error } = await supabase
