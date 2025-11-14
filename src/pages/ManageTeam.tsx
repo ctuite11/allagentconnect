@@ -21,6 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import AgentAutocomplete from "@/components/AgentAutocomplete";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import {
   DndContext,
   closestCenter,
@@ -524,12 +525,15 @@ const ManageTeam = () => {
 
               <div>
                 <Label htmlFor="office_address">Office Address</Label>
-                <Input
-                  id="office_address"
-                  placeholder="123 Main St, City, State 12345"
+                <AddressAutocomplete
                   value={officeAddress}
-                  onChange={(e) => setOfficeAddress(e.target.value)}
-                  disabled={!isOwner && !!team}
+                  onChange={setOfficeAddress}
+                  onPlaceSelect={(place) => {
+                    if (place?.formatted_address) {
+                      setOfficeAddress(place.formatted_address);
+                    }
+                  }}
+                  placeholder="123 Main St, City, State 12345"
                 />
               </div>
 
