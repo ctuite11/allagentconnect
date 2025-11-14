@@ -524,7 +524,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-amber-500 bg-card overflow-hidden relative touch-manipulation h-56 lg:order-last lg:col-start-3" onClick={() => navigate("/agent-profile-editor")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-amber-500 bg-card overflow-hidden relative touch-manipulation h-56" onClick={() => navigate("/agent-profile-editor")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Profile</CardTitle>
@@ -539,7 +539,7 @@ const AgentDashboard = () => {
             <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
               {(firstName || profilePicture) && (
                 <div className="text-3xl sm:text-4xl font-bold text-emerald-500 mb-2">
-                  <CheckCircle className="h-10 w-10 sm:h-12 sm:w-12 text-emerald-500" />
+                  <CheckCircle className="h-10 w-10 sm:h-12 sm:w-12" />
                 </div>
               )}
               <p className="text-xs sm:text-sm text-muted-foreground">Manage your profile information</p>
@@ -569,7 +569,7 @@ const AgentDashboard = () => {
           </Card>
 
           {/* Recent Activity Feed */}
-          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-slate-700 bg-card md:col-span-2 lg:col-span-2 lg:col-start-2 overflow-hidden relative touch-manipulation h-56">
+          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-slate-700 bg-card md:col-span-2 lg:col-span-2 overflow-hidden relative touch-manipulation h-56">
               
               <CardHeader className="flex flex-row items-center justify-between space-y-0 relative z-10 p-4 sm:p-6">
                 <div>
