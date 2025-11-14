@@ -82,7 +82,16 @@ export const NotificationPreferenceCards = () => {
       if (error) throw error;
 
       setPreferences(newPreferences);
-      toast.success(`${newValue ? "Enabled" : "Disabled"} notifications`);
+      
+      // Show reminder to set preferences if enabling notifications
+      if (newValue) {
+        toast.success("Notifications enabled", {
+          description: "Remember to set your preferences below (price range, property types, and geographic areas) to receive relevant matches.",
+          duration: 6000,
+        });
+      } else {
+        toast.success("Notifications disabled");
+      }
     } catch (error) {
       console.error("Error updating preferences:", error);
       toast.error("Failed to update preferences");
