@@ -19,6 +19,7 @@ import { ContactMatchesDialog } from "@/components/ContactMatchesDialog";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import GeographicPreferencesManager from "@/components/GeographicPreferencesManager";
 import PriceRangePreferences from "@/components/PriceRangePreferences";
+import PropertyTypePreferences from "@/components/PropertyTypePreferences";
 
 interface ClientNeed {
   id: string;
@@ -221,6 +222,7 @@ const ClientNeedsDashboard = () => {
           
           <div className="space-y-6">
             <PriceRangePreferences agentId={user?.id || ""} />
+            <PropertyTypePreferences agentId={user?.id || ""} />
             <GeographicPreferencesManager agentId={user?.id || ""} />
           </div>
         </div>

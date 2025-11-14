@@ -1,0 +1,206 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { Loader2, Home } from "lucide-react";
+
+interface PropertyTypePreferencesProps {
+  agentId: string;
+}
+
+const PROPERTY_TYPES = [
+  { value: "single_family", label: "Single Family" },
+  { value: "condo", label: "Condominium" },
+  { value: "townhouse", label: "Townhouse" },
+  { value: "multi_family", label: "Multi-Family" },
+  { value: "land", label: "Land" },
+  { value: "commercial", label: "Commercial" },
+  { value: "residential_rental", label: "Residential Rental" },
+  { value: "commercial_rental", label: "Commercial Rental" },
+] as const;
+
+const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchPreferences();
+  }, [agentId]);
+
+  const fetchPreferences = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("notification_preferences")
+        .select("property_types")
+        .eq("user_id", agentId)
+        .maybeSingle();
+
+      if (error && error.code !== "PGRST116") {
+        throw error;
+      }
+
+      if (data && data.property_types) {
+        // Handle both array and object formats for safety
+        const types = Array.isArray(data.property_types) 
+          ? (data.property_types as string[])
+          : [];
+        // Validate that all items are strings
+        const validTypes = types.filter(t => typeof t === 'string');
+        setSelectedTypes(validTypes);
+      }
+    } catch (error) {
+      console.error("Error fetching property type preferences:", error);
+      toast.error("Failed to load property type preferences");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("notification_preferences")
+        .upsert({
+          user_id: agentId,
+          property_types: selectedTypes,
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) throw error;
+
+      toast.success("Property type preferences saved successfully!");
+    } catch (error) {
+      console.error("Error saving property type preferences:", error);
+      toast.error("Failed to save property type preferences");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const togglePropertyType = (typeValue: string) => {
+    setSelectedTypes(prev =>
+      prev.includes(typeValue)
+        ? prev.filter(t => t !== typeValue)
+        : [...prev, typeValue]
+    );
+  };
+
+  const selectAll = () => {
+    if (selectedTypes.length === PROPERTY_TYPES.length) {
+      setSelectedTypes([]);
+    } else {
+      setSelectedTypes(PROPERTY_TYPES.map(t => t.value));
+    }
+  };
+
+  const allSelected = selectedTypes.length === PROPERTY_TYPES.length;
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Home className="h-5 w-5 text-primary" />
+          Property Type Preferences
+        </CardTitle>
+        <CardDescription>
+          Select which property types you want to receive notifications about. 
+          {selectedTypes.length === 0 && " Selecting none means you'll receive notifications for all types."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center space-x-2 p-3 bg-muted rounded-lg border">
+          <Checkbox
+            id="select-all-types"
+            checked={allSelected}
+            onCheckedChange={selectAll}
+          />
+          <Label
+            htmlFor="select-all-types"
+            className="font-semibold cursor-pointer flex-1"
+          >
+            {allSelected ? "Deselect All Property Types" : "Select All Property Types"}
+          </Label>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border rounded-lg p-4">
+          {PROPERTY_TYPES.map((type) => (
+            <div key={type.value} className="flex items-center space-x-2">
+              <Checkbox
+                id={`type-${type.value}`}
+                checked={selectedTypes.includes(type.value)}
+                onCheckedChange={() => togglePropertyType(type.value)}
+              />
+              <Label
+                htmlFor={`type-${type.value}`}
+                className="cursor-pointer flex-1"
+              >
+                {type.label}
+              </Label>
+            </div>
+          ))}
+        </div>
+
+        {selectedTypes.length > 0 && (
+          <div className="p-3 bg-muted rounded-lg">
+            <p className="text-sm">
+              <span className="font-medium">You will receive notifications for:</span>
+              <br />
+              <span className="text-muted-foreground">
+                {selectedTypes.map(type => {
+                  const typeObj = PROPERTY_TYPES.find(t => t.value === type);
+                  return typeObj?.label;
+                }).filter(Boolean).join(", ")}
+              </span>
+            </p>
+          </div>
+        )}
+
+        {selectedTypes.length === 0 && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p className="text-sm text-blue-900 dark:text-blue-100">
+              <span className="font-medium">No property types selected.</span>
+              <br />
+              <span className="text-blue-700 dark:text-blue-300">
+                You will receive notifications for all property types.
+              </span>
+            </p>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-4 border-t">
+          <p className="text-sm text-muted-foreground">
+            {selectedTypes.length} of {PROPERTY_TYPES.length} types selected
+          </p>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Property Type Preferences"
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default PropertyTypePreferences;
