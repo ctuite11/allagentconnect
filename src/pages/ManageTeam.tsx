@@ -130,25 +130,20 @@ const ManageTeam = () => {
         });
         setIsOwner(membership.role === 'owner');
 
-        // Load team members ordered by display_order
+        // Load team members ordered by display_order (no nested join to avoid FK requirement)
         const { data: teamMembers, error: membersError } = await supabase
           .from("team_members")
-          .select(`
-            *,
-            agent_profiles (
-              id,
-              first_name,
-              last_name,
-              title,
-              headshot_url,
-              email
-            )
-          `)
+          .select("*")
           .eq("team_id", teamData.id)
           .order("display_order");
 
         if (membersError) throw membersError;
-        setMembers(teamMembers || []);
+        // Enrich with agent profile from cached list
+        const enriched = (teamMembers || []).map((m: any) => ({
+          ...m,
+          agent_profiles: allAgents.find(a => a.id === m.agent_id) || null,
+        }));
+        setMembers(enriched);
       }
     } catch (error: any) {
       console.error("Error loading team:", error);
@@ -171,6 +166,15 @@ const ManageTeam = () => {
       console.error("Error loading agents:", error);
     }
   };
+
+  // Enrich members with agent profiles once agents are loaded
+  useEffect(() => {
+    if (!members || members.length === 0 || allAgents.length === 0) return;
+    setMembers(prev => prev.map(m => ({
+      ...m,
+      agent_profiles: allAgents.find(a => a.id === m.agent_id) || m.agent_profiles || null,
+    })));
+  }, [allAgents]);
 
   const handleSaveTeam = async () => {
     if (!teamName.trim()) {
