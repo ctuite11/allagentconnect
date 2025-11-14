@@ -861,7 +861,7 @@ const EditListing = () => {
             <CardDescription>Update your property listing details</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
               {/* Listing Type */}
               <div className="space-y-2">
                 <Label htmlFor="listing_type">Listing Type</Label>
