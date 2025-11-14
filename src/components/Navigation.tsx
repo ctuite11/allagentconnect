@@ -28,7 +28,7 @@ const Navigation = () => {
     }
   };
   const scheduleClose = () => {
-    hoverCloseTimer.current = window.setTimeout(() => setIsDropdownOpen(false), 150);
+    hoverCloseTimer.current = window.setTimeout(() => setIsDropdownOpen(false), 300);
   };
 
   useEffect(() => {
@@ -212,7 +212,7 @@ const Navigation = () => {
                     <DropdownMenuContent 
                       className="w-56 bg-card border-border shadow-lg z-[100]"
                       align="start"
-                      sideOffset={6}
+                      sideOffset={-2}
                       onMouseEnter={() => { clearCloseTimer(); setIsDropdownOpen(true); }}
                       onMouseLeave={scheduleClose}
                     >
