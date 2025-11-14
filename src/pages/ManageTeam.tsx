@@ -208,6 +208,8 @@ const ManageTeam = () => {
 
         if (error) throw error;
         toast.success("Team updated successfully!");
+        // Navigate to team profile page
+        navigate(`/team/${team.id}`);
       } else {
         // Create new team
         const { data: newTeam, error: teamError } = await supabase
@@ -243,7 +245,8 @@ const ManageTeam = () => {
         if (memberError) throw memberError;
 
         toast.success("Team created successfully!");
-        await checkAuthAndLoadTeam();
+        // Navigate to new team profile page
+        navigate(`/team/${newTeam.id}`);
       }
     } catch (error: any) {
       console.error("Error saving team:", error);
