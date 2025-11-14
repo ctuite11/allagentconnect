@@ -105,9 +105,9 @@ const ManageTeam = () => {
         .from("team_members")
         .select("*, teams(*)")
         .eq("agent_id", userId)
-        .single();
+        .maybeSingle();
 
-      if (membershipError && membershipError.code !== 'PGRST116') throw membershipError;
+      if (membershipError) throw membershipError;
 
       if (membership) {
         const teamData = membership.teams as any;
