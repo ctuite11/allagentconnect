@@ -54,6 +54,9 @@ export function CreateHotSheetDialog({
   const [existingClient, setExistingClient] = useState<any>(null);
   const [showCreateClientDialog, setShowCreateClientDialog] = useState(false);
   const [creatingClient, setCreatingClient] = useState(false);
+  const [clientSearchQuery, setClientSearchQuery] = useState("");
+  const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
   
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -164,6 +167,7 @@ export function CreateHotSheetDialog({
           setClientEmail(data.email || "");
           setClientPhone(data.phone ? formatPhoneNumber(data.phone) : "");
           setExistingClient(data);
+          setClientSearchQuery(`${data.first_name} ${data.last_name}`);
         }
       } catch (error: any) {
         console.error("Error fetching client:", error);
@@ -173,53 +177,49 @@ export function CreateHotSheetDialog({
     fetchClient();
   }, [clientId, open]);
 
-  // Auto-populate from existing client when first name changes
+  // Search clients as user types
   useEffect(() => {
-    const searchClient = async () => {
-      if (!clientFirstName || clientFirstName.length < 2 || !open) {
-        setExistingClient(null);
+    const searchClients = async () => {
+      if (!clientSearchQuery || clientSearchQuery.length < 2 || !open) {
+        setClientSearchResults([]);
+        setShowClientDropdown(false);
         return;
       }
-      
-      // Skip if we already have this client loaded
-      if (existingClient && existingClient.first_name?.toLowerCase() === clientFirstName.toLowerCase()) return;
       
       try {
         const { data, error } = await supabase
           .from("clients")
           .select("*")
           .eq("agent_id", userId)
-          .ilike("first_name", clientFirstName.trim())
-          .maybeSingle();
+          .or(`first_name.ilike.%${clientSearchQuery}%,last_name.ilike.%${clientSearchQuery}%,email.ilike.%${clientSearchQuery}%`)
+          .order("first_name")
+          .limit(10);
         
         if (error) throw error;
         
-        if (data) {
-          // Auto-fill fields if they're empty
-          if (!clientLastName && data.last_name) {
-            setClientLastName(data.last_name);
-          }
-          if (!clientEmail && data.email) {
-            setClientEmail(data.email);
-          }
-          if (!clientPhone && data.phone) {
-            setClientPhone(formatPhoneNumber(data.phone));
-          }
-          setExistingClient(data);
-          toast.success(`Found existing client: ${data.first_name} ${data.last_name}`);
-        } else {
-          setExistingClient(null);
-        }
+        setClientSearchResults(data || []);
+        setShowClientDropdown((data || []).length > 0);
       } catch (error: any) {
-        console.error("Error searching for client:", error);
-        setExistingClient(null);
+        console.error("Error searching clients:", error);
+        setClientSearchResults([]);
       }
     };
     
     // Debounce the search
-    const timer = setTimeout(searchClient, 800);
+    const timer = setTimeout(searchClients, 300);
     return () => clearTimeout(timer);
-  }, [clientFirstName, userId, open]);
+  }, [clientSearchQuery, userId, open]);
+
+  const handleSelectClient = (client: any) => {
+    setClientFirstName(client.first_name || "");
+    setClientLastName(client.last_name || "");
+    setClientEmail(client.email || "");
+    setClientPhone(client.phone ? formatPhoneNumber(client.phone) : "");
+    setExistingClient(client);
+    setClientSearchQuery(`${client.first_name} ${client.last_name}`);
+    setShowClientDropdown(false);
+    toast.success(`Selected client: ${client.first_name} ${client.last_name}`);
+  };
 
   const loadHotSheet = async () => {
     try {
@@ -738,6 +738,9 @@ export function CreateHotSheetDialog({
     setClientEmail("");
     setClientPhone("");
     setExistingClient(null);
+    setClientSearchQuery("");
+    setClientSearchResults([]);
+    setShowClientDropdown(false);
     setShowCreateClientDialog(false);
     setCreatingClient(false);
     setErrors({});
@@ -844,6 +847,54 @@ export function CreateHotSheetDialog({
               <CardTitle className="text-base">Client Information *</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Client Search */}
+              <div className="space-y-2 relative">
+                <Label htmlFor="client-search">Search Existing Client</Label>
+                <Input
+                  id="client-search"
+                  placeholder="Search by name or email..."
+                  value={clientSearchQuery}
+                  onChange={(e) => setClientSearchQuery(e.target.value)}
+                  onFocus={() => {
+                    if (clientSearchResults.length > 0) {
+                      setShowClientDropdown(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Delay to allow click on dropdown items
+                    setTimeout(() => setShowClientDropdown(false), 200);
+                  }}
+                />
+                {showClientDropdown && clientSearchResults.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {clientSearchResults.map((client) => (
+                      <button
+                        key={client.id}
+                        type="button"
+                        onClick={() => handleSelectClient(client)}
+                        className="w-full text-left px-4 py-3 hover:bg-muted transition-colors border-b last:border-b-0"
+                      >
+                        <div className="font-medium text-sm">
+                          {client.first_name} {client.last_name}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{client.email}</div>
+                        {client.phone && (
+                          <div className="text-xs text-muted-foreground">{formatPhoneNumber(client.phone)}</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {existingClient && (
+                  <p className="text-sm text-green-600 flex items-center gap-1">
+                    <Check className="w-4 h-4" />
+                    Client selected: {existingClient.first_name} {existingClient.last_name}
+                  </p>
+                )}
+              </div>
+
+              <Separator />
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="client-first-name">First Name *</Label>
