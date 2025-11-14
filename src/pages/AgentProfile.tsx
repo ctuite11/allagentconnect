@@ -266,7 +266,11 @@ const AgentProfile = () => {
                 </p>
               )}
               
-              
+              {agent.company && (
+                <p className="text-xl font-semibold text-foreground mt-2">
+                  {agent.company}
+                </p>
+              )}
               
               {agent.office_phone && agent.office_phone.trim() && (
                 <p className="text-lg text-muted-foreground">
@@ -293,12 +297,17 @@ const AgentProfile = () => {
               </p>
 
               {agent.social_links?.website && (
-                <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">My website:</span>{' '}
-                  <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                    {agent.social_links.website}
+                <div className="mt-3 mb-2">
+                  <a 
+                    href={agent.social_links.website.startsWith('http') ? agent.social_links.website : `https://${agent.social_links.website}`}
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold"
+                  >
+                    <Globe className="h-4 w-4" />
+                    Visit My Website
                   </a>
-                </p>
+                </div>
               )}
 
               <div className="flex flex-wrap gap-3 pt-4">
