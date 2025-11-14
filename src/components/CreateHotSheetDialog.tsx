@@ -688,6 +688,31 @@ export function CreateHotSheetDialog({
     setShowConfirmDialog(true);
   };
 
+  const handleAddClientWithoutSaving = () => {
+    // Add client to hot sheet without saving to database
+    setSelectedClients(prev => [...prev, {
+      id: `temp-${Date.now()}`, // Temporary ID for unsaved clients
+      first_name: clientFirstName.trim(),
+      last_name: clientLastName.trim(),
+      email: clientEmail.toLowerCase().trim(),
+      phone: clientPhone ? formatPhoneNumber(clientPhone) : null
+    }]);
+    
+    setShowCreateClientDialog(false);
+    toast.success("Client added to hot sheet (not saved to your contacts)");
+    
+    // Clear the form
+    setClientFirstName("");
+    setClientLastName("");
+    setClientEmail("");
+    setClientPhone("");
+    setExistingClient(null);
+    setClientSearchQuery("");
+    
+    // Collapse client info
+    setClientInfoOpen(false);
+  };
+
   const handleCreateClient = async () => {
     setCreatingClient(true);
     try {
@@ -724,7 +749,7 @@ export function CreateHotSheetDialog({
         setClientSearchQuery("");
       }
       setShowCreateClientDialog(false);
-      toast.success("Client created and added successfully");
+      toast.success("Client saved and added to hot sheet");
       
       // Clear the form
       setClientFirstName("");
@@ -1890,9 +1915,9 @@ export function CreateHotSheetDialog({
       <AlertDialog open={showCreateClientDialog} onOpenChange={setShowCreateClientDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Create New Client?</AlertDialogTitle>
+            <AlertDialogTitle>Save this client to your contacts?</AlertDialogTitle>
             <AlertDialogDescription>
-              This client is not in your database. Would you like to create a new contact for:
+              This client will be added to the hot sheet. Would you also like to save them as a permanent contact?
             </AlertDialogDescription>
           </AlertDialogHeader>
           
@@ -1903,17 +1928,17 @@ export function CreateHotSheetDialog({
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowCreateClientDialog(false)}>
-              Cancel
+            <AlertDialogCancel onClick={handleAddClientWithoutSaving}>
+              No
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleCreateClient} disabled={creatingClient}>
               {creatingClient ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Saving...
                 </>
               ) : (
-                "Yes, Create Client"
+                "Yes"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
