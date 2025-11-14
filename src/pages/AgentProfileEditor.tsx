@@ -66,6 +66,7 @@ const AgentProfileEditor = () => {
   const [cellPhone, setCellPhone] = useState("");
   const [officeName, setOfficeName] = useState("");
   const [officeAddress, setOfficeAddress] = useState("");
+  const [teamName, setTeamName] = useState("");
   const [headshotUrl, setHeadshotUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [uploadingHeadshot, setUploadingHeadshot] = useState(false);
@@ -149,6 +150,7 @@ const AgentProfileEditor = () => {
         setCellPhone(profile.cell_phone || "");
         setOfficeName(profile.office_name || "");
         setOfficeAddress(profile.office_address || "");
+        setTeamName(profile.company || "");
         setHeadshotUrl(profile.headshot_url || "");
         setLogoUrl(profile.logo_url || "");
         const links = profile.social_links as unknown as SocialLinks;
@@ -209,6 +211,7 @@ const AgentProfileEditor = () => {
           cell_phone: cellPhone,
           office_name: officeName,
           office_address: officeAddress,
+          company: teamName,
           headshot_url: headshotUrl,
           logo_url: logoUrl,
         })
@@ -568,6 +571,25 @@ const AgentProfileEditor = () => {
                     onChange={setOfficePhone}
                   />
                 </div>
+              </div>
+              <div>
+                <Label htmlFor="team_name">Team Name</Label>
+                <Input
+                  id="team_name"
+                  placeholder="Your Team Name"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="team_website">Team Website</Label>
+                <Input
+                  id="team_website"
+                  type="url"
+                  placeholder="https://yourteam.com"
+                  value={socialLinks.website}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
+                />
               </div>
               <div>
                 <Label htmlFor="office_name">Office Name</Label>
