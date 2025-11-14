@@ -222,19 +222,16 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="min-price">Minimum Price</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <Input
-                id="min-price"
-                type="text"
-                inputMode="decimal"
-                value={minPrice}
-                onChange={(e) => handleMinPriceChange(e.target.value)}
-                placeholder="100000"
-                className={`pl-7 ${errors.minPrice ? 'border-destructive' : ''}`}
-                maxLength={12}
-              />
-            </div>
+            <Input
+              id="min-price"
+              type="text"
+              inputMode="decimal"
+              value={minPrice}
+              onChange={(e) => handleMinPriceChange(e.target.value)}
+              placeholder="100000"
+              className={errors.minPrice ? 'border-destructive' : ''}
+              maxLength={12}
+            />
             {errors.minPrice && (
               <p className="text-sm text-destructive">{errors.minPrice}</p>
             )}
@@ -245,19 +242,16 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="max-price">Maximum Price</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <Input
-                id="max-price"
-                type="text"
-                inputMode="decimal"
-                value={maxPrice}
-                onChange={(e) => handleMaxPriceChange(e.target.value)}
-                placeholder="500000"
-                className={`pl-7 ${errors.maxPrice ? 'border-destructive' : ''}`}
-                maxLength={12}
-              />
-            </div>
+            <Input
+              id="max-price"
+              type="text"
+              inputMode="decimal"
+              value={maxPrice}
+              onChange={(e) => handleMaxPriceChange(e.target.value)}
+              placeholder="500000"
+              className={errors.maxPrice ? 'border-destructive' : ''}
+              maxLength={12}
+            />
             {errors.maxPrice && (
               <p className="text-sm text-destructive">{errors.maxPrice}</p>
             )}
