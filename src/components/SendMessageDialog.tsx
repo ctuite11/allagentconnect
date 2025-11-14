@@ -165,33 +165,25 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   };
 
   const handleMinPriceChange = (value: string) => {
-    const sanitized = value.replace(/[^\d.]/g, '');
-    const parts = sanitized.split('.');
-    const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
-    const num = parseFloat(formatted);
-    if (!isNaN(num) && num > 999999999) return;
-    setMinPrice(formatted);
+    // Remove all non-digits
+    const digitsOnly = value.replace(/\D/g, '');
+    // Limit to prevent overflow
+    if (digitsOnly && parseInt(digitsOnly) > 999999999) return;
+    setMinPrice(digitsOnly);
   };
 
   const handleMaxPriceChange = (value: string) => {
-    const sanitized = value.replace(/[^\d.]/g, '');
-    const parts = sanitized.split('.');
-    const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
-    const num = parseFloat(formatted);
-    if (!isNaN(num) && num > 999999999) return;
-    setMaxPrice(formatted);
+    // Remove all non-digits
+    const digitsOnly = value.replace(/\D/g, '');
+    // Limit to prevent overflow
+    if (digitsOnly && parseInt(digitsOnly) > 999999999) return;
+    setMaxPrice(digitsOnly);
   };
 
-  const formatDisplayPrice = (price: string) => {
+  const formatPriceDisplay = (price: string) => {
     if (!price) return "";
-    const num = parseFloat(price);
-    if (isNaN(num)) return price;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(num);
+    // Add commas for thousands
+    return parseInt(price).toLocaleString('en-US');
   };
 
   const fetchRecipientCount = async () => {
@@ -617,15 +609,12 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     <Input
                       id="minPrice"
                       type="text"
-                      inputMode="decimal"
-                      placeholder="e.g. 100000"
-                      value={minPrice}
+                      inputMode="numeric"
+                      placeholder="100,000"
+                      value={formatPriceDisplay(minPrice)}
                       onChange={(e) => handleMinPriceChange(e.target.value)}
-                      maxLength={12}
+                      maxLength={15}
                     />
-                    {minPrice && (
-                      <p className="text-xs text-muted-foreground">Preview: {formatDisplayPrice(minPrice)}</p>
-                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -633,15 +622,12 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     <Input
                       id="maxPrice"
                       type="text"
-                      inputMode="decimal"
-                      placeholder="e.g. 500000"
-                      value={maxPrice}
+                      inputMode="numeric"
+                      placeholder="500,000"
+                      value={formatPriceDisplay(maxPrice)}
                       onChange={(e) => handleMaxPriceChange(e.target.value)}
-                      maxLength={12}
+                      maxLength={15}
                     />
-                    {maxPrice && (
-                      <p className="text-xs text-muted-foreground">Preview: {formatDisplayPrice(maxPrice)}</p>
-                    )}
                   </div>
                 </div>
               </div>
