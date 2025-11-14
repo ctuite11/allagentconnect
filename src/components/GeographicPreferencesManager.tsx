@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { X, ArrowUp, Loader2 } from "lucide-react";
+import { X, ArrowUp, Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
@@ -162,25 +163,35 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
 
   if (loading) {
     return (
-      <div className="bg-card rounded-lg shadow-sm border p-8 flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-card rounded-lg shadow-sm border">
-      <div className="flex items-center justify-between w-full p-4">
-        <h3 className="font-semibold text-sm text-primary">TOWNS</h3>
-        <Button 
-          variant="link"
-          className="text-xs gap-1 h-auto p-0"
-          onClick={scrollToTop}
-        >
-          BACK TO TOP <ArrowUp className="h-3 w-3" />
-        </Button>
-      </div>
-      <div className="p-4 pt-0 space-y-3">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-primary" />
+          Geographic Area Preferences
+        </CardTitle>
+        <CardDescription>
+          Select the states, counties, and towns where you want to receive notifications about client needs
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-end">
+          <Button 
+            variant="link"
+            className="text-xs gap-1 h-auto p-0"
+            onClick={scrollToTop}
+          >
+            BACK TO TOP <ArrowUp className="h-3 w-3" />
+          </Button>
+        </div>
         <div className="grid grid-cols-3 gap-2 items-end">
           <div>
             <Label className="text-xs">State</Label>
@@ -300,11 +311,18 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
             {selectedTowns.length} {selectedTowns.length === 1 ? 'town' : 'towns'} selected
           </p>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save Geographic Preferences"}
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Geographic Preferences"
+            )}
           </Button>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
