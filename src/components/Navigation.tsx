@@ -133,7 +133,7 @@ const Navigation = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/client-needs")}>
                         <FileText className="mr-2 h-4 w-4" />
-                        Client Needs
+                        Communication Center
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/add-listing")}>
                         <Plus className="mr-2 h-4 w-4" />
