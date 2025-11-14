@@ -138,8 +138,8 @@ export const NotificationPreferenceCards = () => {
               key={card.key}
               className={`border-l-4 ${card.borderColor} transition-all hover:shadow-lg cursor-pointer`}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+              <CardContent className="p-4 flex flex-col h-full">
+                <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <h4 className="text-base font-semibold mb-1">{card.title}</h4>
                     <p className="text-xs text-muted-foreground">{card.description}</p>
@@ -148,18 +148,20 @@ export const NotificationPreferenceCards = () => {
                     <Icon className={`h-6 w-6 ${card.iconColor}`} />
                   </div>
                 </div>
-                <Button
-                  variant={card.active ? "default" : "outline"}
-                  size="sm"
-                  className="w-full mt-3 gap-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    togglePreference(card.key);
-                  }}
-                >
-                  {card.active && <Check className="h-4 w-4" />}
-                  {card.active ? "Notifications On" : "Turn On Notifications"}
-                </Button>
+                <div className="mt-auto">
+                  <Button
+                    variant={card.active ? "default" : "outline"}
+                    size="sm"
+                    className="gap-1 h-8 text-xs px-3"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePreference(card.key);
+                    }}
+                  >
+                    {card.active && <Check className="h-3 w-3" />}
+                    {card.active ? "On" : "Off"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
