@@ -68,6 +68,8 @@ export const NotificationPreferenceCards = () => {
         .upsert({
           user_id: user.id,
           ...newPreferences,
+        }, {
+          onConflict: 'user_id'
         });
 
       if (error) throw error;
