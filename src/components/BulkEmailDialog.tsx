@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Mail, FileText } from "lucide-react";
@@ -21,6 +22,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [agentInfo, setAgentInfo] = useState<{ name: string; phone: string; email: string } | null>(null);
+  const [sendAsGroup, setSendAsGroup] = useState(false);
 
   useEffect(() => {
     loadAgentInfo();
@@ -94,14 +96,19 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
           subject: personalizedSubject,
           message: personalizedMessage,
           agentId: user.id,
+          sendAsGroup: sendAsGroup && recipients.length < 5, // Only allow group mode for small groups
         },
       });
 
       if (error) throw error;
 
-      toast.success(`Email sent to ${recipients.length} recipient${recipients.length > 1 ? 's' : ''}. Check analytics to track opens and clicks.`);
+      const mode = sendAsGroup && recipients.length < 5 ? "group" : "individual";
+      const modeText = mode === "group" ? " as a group (Reply All enabled)" : " individually (privacy protected)";
+      
+      toast.success(`Email sent to ${recipients.length} recipient${recipients.length > 1 ? 's' : ''}${modeText}. Check analytics to track opens and clicks.`);
       setSubject("");
       setMessage("");
+      setSendAsGroup(false);
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error sending bulk email:", error);
@@ -118,9 +125,16 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
           <DialogTitle>Send Bulk Email</DialogTitle>
           <DialogDescription>
             Sending to {recipients.length} recipient{recipients.length > 1 ? 's' : ''}
-            <span className="block mt-1 text-xs text-muted-foreground">
-              🔒 Privacy protected: Each email is sent individually - recipients won't see each other's addresses
-            </span>
+            {!sendAsGroup && (
+              <span className="block mt-1 text-xs text-muted-foreground">
+                🔒 Privacy protected: Each email is sent individually - recipients won't see each other's addresses
+              </span>
+            )}
+            {sendAsGroup && (
+              <span className="block mt-1 text-xs text-muted-foreground">
+                👥 Group mode: All recipients will see each other and can use "Reply All"
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -149,6 +163,19 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
               ))}
             </div>
           </div>
+
+          {recipients.length < 5 && (
+            <div className="flex items-center justify-between p-3 rounded-md border bg-accent/10">
+              <Label htmlFor="sendAsGroup" className="text-sm flex-1">
+                Send as group email (allow "Reply All" for collaboration)
+              </Label>
+              <Switch
+                id="sendAsGroup"
+                checked={sendAsGroup}
+                onCheckedChange={setSendAsGroup}
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="subject">Subject *</Label>

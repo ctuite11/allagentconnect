@@ -18,6 +18,7 @@ interface BulkEmailRequest {
   subject: string;
   message: string;
   agentId: string;
+  sendAsGroup?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -27,9 +28,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { recipients, subject, message, agentId }: BulkEmailRequest = await req.json();
+    const { recipients, subject, message, agentId, sendAsGroup = false }: BulkEmailRequest = await req.json();
 
-    console.log(`Sending bulk email to ${recipients.length} recipients`);
+    console.log(`Sending bulk email to ${recipients.length} recipients (group mode: ${sendAsGroup})`);
 
     if (!recipients || recipients.length === 0) {
       throw new Error("No recipients provided");
@@ -61,6 +62,121 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log("Created campaign:", campaign.id);
+
+    // Check if sending as group (for small groups to allow Reply All)
+    if (sendAsGroup && recipients.length < 5) {
+      console.log("Sending as group email");
+      
+      // Create tracking pixel URL for the group email
+      const { data: emailSend, error: sendError } = await supabase
+        .from("email_sends")
+        .insert({
+          campaign_id: campaign.id,
+          recipient_email: recipients[0].email, // Primary recipient for tracking
+          recipient_name: "Group Email",
+        })
+        .select()
+        .single();
+
+      if (sendError) {
+        console.error("Error creating email send record:", sendError);
+        throw sendError;
+      }
+
+      const trackingPixelUrl = `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`;
+      
+      // Replace URLs in message with tracked links
+      const trackedMessage = message.replace(
+        /(https?:\/\/[^\s<>"]+)/g,
+        `${supabaseUrl}/functions/v1/track-email-click?id=${emailSend.id}&url=$1`
+      );
+
+      // Send single email to all recipients
+      const emailResponse = await resend.emails.send({
+        from: "All Agent Connect <noreply@allagentconnect.com>",
+        to: recipients.map(r => r.email),
+        subject: subject,
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                  line-height: 1.6;
+                  color: #333;
+                  max-width: 600px;
+                  margin: 0 auto;
+                  padding: 20px;
+                }
+                .header {
+                  border-bottom: 2px solid #2563eb;
+                  padding-bottom: 20px;
+                  margin-bottom: 30px;
+                }
+                .content {
+                  margin-bottom: 30px;
+                  white-space: pre-wrap;
+                }
+                .footer {
+                  border-top: 1px solid #e5e7eb;
+                  padding-top: 20px;
+                  margin-top: 30px;
+                  text-align: center;
+                  color: #6b7280;
+                  font-size: 14px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h1>All Agent Connect</h1>
+              </div>
+              
+              <div class="content">
+                <p>${trackedMessage.replace(/\n/g, '<br>')}</p>
+              </div>
+              
+              <div class="footer">
+                <p>This email was sent from All Agent Connect</p>
+              </div>
+              
+              <!-- Tracking pixel -->
+              <img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />
+            </body>
+          </html>
+        `,
+      });
+
+      console.log("Group email sent:", emailResponse);
+
+      if (emailResponse.error) {
+        await supabase
+          .from("email_sends")
+          .update({ status: "failed" })
+          .eq("id", emailSend.id);
+        throw emailResponse.error;
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          sent: recipients.length,
+          failed: 0,
+          total: recipients.length,
+          mode: "group",
+        }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
+    }
 
     // Send emails individually for privacy and better deliverability
     // This ensures recipients don't see each other's addresses (better than BCC)
