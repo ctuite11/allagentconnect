@@ -239,11 +239,17 @@ const GeographicPreferencesManager = ({
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <div className="max-h-96 overflow-y-auto border rounded bg-background z-10 relative">
-              <div className="p-2 hover:bg-accent cursor-pointer border-b font-semibold text-sm bg-primary text-primary-foreground sticky top-0 z-20" onClick={addAllTowns}>
-                ✓ Select All Towns
-              </div>
+          <div className="space-y-3">
+            {/* Prominent Add All Button */}
+            <Button 
+              onClick={addAllTowns}
+              variant="default"
+              className="w-full h-12 text-base font-bold"
+            >
+              ✓ Add All Towns
+            </Button>
+            
+            <div className="max-h-96 overflow-y-auto border rounded bg-background">
               <div className="p-2">
                 <TownsPicker towns={townsList} selectedTowns={selectedTowns} onToggleTown={toggleTown} expandedCities={expandedCities} onToggleCityExpansion={toggleCityExpansion} state={state} searchQuery={townSearch} variant="checkbox" showAreas={showAreas === "yes"} />
               </div>

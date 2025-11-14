@@ -170,23 +170,17 @@ const CountyPreferencesManager = ({ agentId }: CountyPreferencesManagerProps) =>
         </div>
 
         {selectedState && (
-          <div className="flex items-center space-x-2 p-4 bg-primary/10 rounded-lg border-2 border-primary/30">
-            <Checkbox
-              id="select-all-state"
-              checked={allStateCountiesSelected}
-              onCheckedChange={() => selectAllInState(selectedState)}
-              className="border-primary data-[state=checked]:bg-primary"
-            />
-            <Label
-              htmlFor="select-all-state"
-              className="font-bold cursor-pointer text-base"
-            >
-              ✓ Select All Counties in {selectedState}
-            </Label>
-          </div>
+          <Button 
+            onClick={() => selectAllInState(selectedState)}
+            variant={allStateCountiesSelected ? "outline" : "default"}
+            className="w-full h-12 text-base font-bold"
+            disabled={!selectedState || countiesInSelectedState.length === 0}
+          >
+            ✓ {allStateCountiesSelected ? `Deselect All Counties in ${selectedState}` : `Select All Counties in ${selectedState}`}
+          </Button>
         )}
 
-        <div className="border rounded-lg p-4 max-h-96 overflow-y-auto bg-background">
+        <div className="border rounded-lg p-4 max-h-80 overflow-y-auto bg-background">
           <div className="grid gap-3">
             {filteredCounties.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
