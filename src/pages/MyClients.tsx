@@ -459,14 +459,13 @@ const MyClients = () => {
                   <div className="space-y-2">
                     <Label htmlFor="client_type">Client Type (Optional)</Label>
                     <Select
-                      value={formData.client_type}
+                      value={formData.client_type || undefined}
                       onValueChange={(value) => setFormData({ ...formData, client_type: value })}
                     >
                       <SelectTrigger id="client_type">
                         <SelectValue placeholder="Select client type..." />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value="buyer">Buyer</SelectItem>
                         <SelectItem value="seller">Seller</SelectItem>
                         <SelectItem value="renter">Renter</SelectItem>
