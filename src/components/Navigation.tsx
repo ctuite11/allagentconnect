@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut } from "lucide-react";
@@ -16,20 +16,8 @@ import {
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
-
-  const hoverCloseTimer = useRef<number | null>(null);
-  const clearCloseTimer = () => {
-    if (hoverCloseTimer.current) {
-      window.clearTimeout(hoverCloseTimer.current);
-      hoverCloseTimer.current = null;
-    }
-  };
-  const scheduleClose = () => {
-    hoverCloseTimer.current = window.setTimeout(() => setIsDropdownOpen(false), 300);
-  };
 
   useEffect(() => {
     const {
@@ -193,67 +181,54 @@ const Navigation = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            {user ? (
+          {user ? (
               <>
-                <div className="relative">
-                  <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        onClick={(e) => { e.preventDefault(); navigate("/agent-dashboard"); }}
-                        onMouseEnter={() => { clearCloseTimer(); setIsDropdownOpen(true); }}
-                        onMouseLeave={scheduleClose}
-                      >
-                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
+                      <LayoutDashboard className="w-4 h-4" />
+                      Success Hub
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-card border-border shadow-lg z-[100]">
+                    <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
                         Success Hub
-                        <ChevronDown className="w-3 h-3 ml-2" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent 
-                      className="w-56 bg-card border-border shadow-lg z-[100]"
-                      align="start"
-                      sideOffset={-2}
-                      onMouseEnter={() => { clearCloseTimer(); setIsDropdownOpen(true); }}
-                      onMouseLeave={scheduleClose}
-                    >
-                      <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
-                      <DropdownMenuGroup>
-                        <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
-                          <LayoutDashboard className="mr-2 h-4 w-4" />
-                          Success Hub
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate("/browse")}>
-                          <Search className="mr-2 h-4 w-4" />
-                          Search
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
-                          <List className="mr-2 h-4 w-4" />
-                          My Listings
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate("/my-clients")}>
-                          <UserCircle className="mr-2 h-4 w-4" />
-                          My Contacts
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate("/hot-sheets")}>
-                          <Bell className="mr-2 h-4 w-4" />
-                          Hot Sheets
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate("/client-needs")}>
-                          <FileText className="mr-2 h-4 w-4" />
-                          Communication Center
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")}>
-                          <UserCog className="mr-2 h-4 w-4" />
-                          Edit Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate("/manage-team")}>
-                          <Users className="mr-2 h-4 w-4" />
-                          Manage Team
-                        </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/browse")}>
+                        <Search className="mr-2 h-4 w-4" />
+                        Search
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
+                        <List className="mr-2 h-4 w-4" />
+                        My Listings
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/my-clients")}>
+                        <UserCircle className="mr-2 h-4 w-4" />
+                        My Contacts
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/hot-sheets")}>
+                        <Bell className="mr-2 h-4 w-4" />
+                        Hot Sheets
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/client-needs")}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Communication Center
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")}>
+                        <UserCog className="mr-2 h-4 w-4" />
+                        Edit Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/manage-team")}>
+                        <Users className="mr-2 h-4 w-4" />
+                        Manage Team
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button variant="outline" onClick={() => navigate("/browse")}>
                   <Search className="w-4 h-4 mr-2" />
                   Search
