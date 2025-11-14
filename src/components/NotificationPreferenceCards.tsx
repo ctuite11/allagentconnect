@@ -107,7 +107,7 @@ export const NotificationPreferenceCards = () => {
     {
       key: "renter_need" as keyof NotificationPreferences,
       title: "Renter Need",
-      description: "Stay informed about rental opportunities",
+      description: "Stay informed about renter needs",
       active: preferences.renter_need,
       borderColor: "border-l-purple-500",
     },
@@ -139,7 +139,7 @@ export const NotificationPreferenceCards = () => {
                     <h4 className="text-base font-semibold mb-1">{card.title}</h4>
                     <p className="text-xs text-muted-foreground">{card.description}</p>
                   </div>
-                  <div className="mt-auto flex gap-3 justify-center">
+                  <div className="mt-auto flex justify-between">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
