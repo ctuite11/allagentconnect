@@ -410,7 +410,7 @@ const AgentDashboard = () => {
   }
   const listingTypes = [{
     title: "For Sale",
-    description: "Add a new listing for sale.",
+    description: "Add new or coming soon listing.",
     image: forSaleImg,
     action: () => navigate("/add-listing?type=sale")
   }, {
