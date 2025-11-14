@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
+import { getAreasForCity } from "@/data/usNeighborhoodsData";
 interface GeographicPreferencesManagerProps {
   agentId: string;
 }
@@ -127,7 +128,20 @@ const GeographicPreferencesManager = ({
     setSelectedTowns(prev => prev.includes(town) ? prev.filter(t => t !== town) : [...prev, town]);
   };
   const addAllTowns = () => {
-    setSelectedTowns(townsList);
+    if (showAreas === "yes") {
+      // Include both cities and their neighborhoods
+      const allTownsWithNeighborhoods: string[] = [];
+      townsList.forEach(city => {
+        allTownsWithNeighborhoods.push(city);
+        const neighborhoods = getAreasForCity(city, state);
+        neighborhoods.forEach(neighborhood => {
+          allTownsWithNeighborhoods.push(`${city}-${neighborhood}`);
+        });
+      });
+      setSelectedTowns(allTownsWithNeighborhoods);
+    } else {
+      setSelectedTowns(townsList);
+    }
   };
   const removeAllTowns = () => {
     setSelectedTowns([]);
