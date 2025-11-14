@@ -75,7 +75,7 @@ const MyClients = () => {
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      toast.error("Please sign in to manage clients");
+      toast.error("Please sign in to manage contacts");
       navigate("/auth");
       return;
     }
@@ -288,16 +288,16 @@ const MyClients = () => {
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
-      link.setAttribute("download", `clients_export_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute("download", `contacts_export_${new Date().toISOString().split('T')[0]}.csv`);
       link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      toast.success(`Exported ${sortedClients.length} clients to CSV`);
+      toast.success(`Exported ${sortedClients.length} contacts to CSV`);
     } catch (error) {
       console.error("Error exporting CSV:", error);
-      toast.error("Failed to export clients");
+      toast.error("Failed to export contacts");
     }
   };
 
@@ -343,7 +343,7 @@ const MyClients = () => {
       <div className="min-h-screen flex flex-col">
         <Navigation />
         <main className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading clients...</p>
+          <p className="text-muted-foreground">Loading contacts...</p>
         </main>
       </div>
     );
@@ -362,13 +362,17 @@ const MyClients = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-4xl font-bold mb-2">My Clients</h1>
+                <h1 className="text-4xl font-bold mb-2">My Contacts</h1>
                 <p className="text-muted-foreground">
-                  Manage your clients and create personalized hot sheets for them
+                  Manage your contacts and create personalized hot sheets for them
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+          </div>
+
+          {/* Action Buttons */}
+          {clients.length > 0 && (
+            <div className="mb-4 flex gap-2 justify-end flex-wrap">
               {selectedClients.size > 0 && (
                 <Button variant="default" onClick={handleBulkEmail}>
                   <Send className="h-4 w-4 mr-2" />
@@ -396,14 +400,14 @@ const MyClients = () => {
                 <DialogTrigger asChild>
                   <Button onClick={handleAddClient}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Client
+                    Add Contact
                   </Button>
                 </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>{editingClient ? "Edit Client" : "Add New Client"}</DialogTitle>
+                  <DialogTitle>{editingClient ? "Edit Contact" : "Add New Contact"}</DialogTitle>
                   <DialogDescription>
-                    {editingClient ? "Update client information" : "Add a new client to your roster"}
+                    {editingClient ? "Update contact information" : "Add a new contact to your roster"}
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -458,7 +462,7 @@ const MyClients = () => {
 
                   <div className="border border-accent/30 rounded-lg p-4 bg-accent/5 space-y-2">
                     <Label htmlFor="client_type" className="text-base font-semibold">
-                      Client Type
+                      Contact Type
                     </Label>
                     <p className="text-sm text-muted-foreground">
                       Optional but will come in handy for organizing your contacts
@@ -468,7 +472,7 @@ const MyClients = () => {
                       onValueChange={(value) => setFormData({ ...formData, client_type: value })}
                     >
                       <SelectTrigger id="client_type">
-                        <SelectValue placeholder="Select client type..." />
+                        <SelectValue placeholder="Select contact type..." />
                       </SelectTrigger>
                       <SelectContent className="bg-background z-50">
                         <SelectItem value="buyer">Buyer</SelectItem>
@@ -488,27 +492,27 @@ const MyClients = () => {
                       Cancel
                     </Button>
                     <Button type="submit" disabled={saving}>
-                      {saving ? "Saving..." : editingClient ? "Update" : "Add Client"}
+                      {saving ? "Saving..." : editingClient ? "Update" : "Add Contact"}
                     </Button>
                   </div>
                 </form>
               </DialogContent>
             </Dialog>
-            </div>
           </div>
+          )}
 
           {clients.length === 0 ? (
             <Card className="p-12 border-l-4 border-l-primary">
               <div className="text-center">
-                <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-semibold mb-2">No clients yet</h3>
-                <p className="text-muted-foreground mb-6">
-                  Add your first client to start managing their property search
-                </p>
-                <Button onClick={handleAddClient}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add First Client
-                </Button>
+                  <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-xl font-semibold mb-2">No contacts yet</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Add your first contact to start managing their property search
+                  </p>
+                  <Button onClick={handleAddClient}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Contact
+                  </Button>
               </div>
             </Card>
           ) : (
@@ -518,7 +522,7 @@ const MyClients = () => {
                   <div className="flex gap-4">
                     <div className="relative flex-1">
                       <Input
-                        placeholder="Search clients by name, email, phone, or type..."
+                        placeholder="Search contacts by name, email, phone, or type..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
@@ -556,7 +560,7 @@ const MyClients = () => {
                   </div>
                   {(searchTerm || clientTypeFilter !== "all") && (
                     <p className="text-sm text-muted-foreground mt-2">
-                      Found {filteredClients.length} of {clients.length} clients
+                      Found {filteredClients.length} of {clients.length} contacts
                     </p>
                   )}
                 </CardContent>
@@ -566,7 +570,7 @@ const MyClients = () => {
                 <Card className="p-12 border-l-4 border-l-primary">
                   <div className="text-center">
                     <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-xl font-semibold mb-2">No clients found</h3>
+                    <h3 className="text-xl font-semibold mb-2">No contacts found</h3>
                     <p className="text-muted-foreground mb-6">
                       Try adjusting your search criteria
                     </p>
