@@ -72,8 +72,8 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
       }
 
       if (data) {
-        setMinPrice(data.min_price ? data.min_price.toString() : "");
-        setMaxPrice(data.max_price ? data.max_price.toString() : "");
+        setMinPrice((data as any).min_price ? (data as any).min_price.toString() : "");
+        setMaxPrice((data as any).max_price ? (data as any).max_price.toString() : "");
       }
     } catch (error) {
       console.error("Error fetching price preferences:", error);

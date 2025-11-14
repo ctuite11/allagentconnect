@@ -43,10 +43,10 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
         throw error;
       }
 
-      if (data && data.property_types) {
+      if (data && (data as any).property_types) {
         // Handle both array and object formats for safety
-        const types = Array.isArray(data.property_types) 
-          ? (data.property_types as string[])
+        const types = Array.isArray((data as any).property_types) 
+          ? ((data as any).property_types as string[])
           : [];
         // Validate that all items are strings
         const validTypes = types.filter(t => typeof t === 'string');
