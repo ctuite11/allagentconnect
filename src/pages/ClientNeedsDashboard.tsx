@@ -191,6 +191,15 @@ const ClientNeedsDashboard = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="container mx-auto px-4 py-6 pt-20">
+        {/* Hero Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Connect . Communicate . Collaborate</h1>
+          <p className="text-lg text-muted-foreground mb-4">Turning relationships into results</p>
+          <p className="text-base text-muted-foreground max-w-3xl">
+            Share your active client needs and receive targeted matches from other agents. Customize your alerts by market and property type for insider-level visibility.
+          </p>
+        </div>
+
         {/* Notification Preference Cards */}
         <NotificationPreferenceCards />
 
