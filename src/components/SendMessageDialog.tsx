@@ -14,7 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Send, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { US_STATES } from "@/data/usStatesCountiesData";
+import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
+import { usCitiesByState } from "@/data/usCitiesData";
+import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -32,11 +34,33 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
   
   // Additional fields for buyer_need and renter_need
   const [state, setState] = useState("");
+  const [county, setCounty] = useState("");
   const [city, setCity] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [propertyType, setPropertyType] = useState("");
 
   const showLocationFields = category === "buyer_need" || category === "renter_need";
+  
+  // Get available counties and cities based on selection
+  const availableCounties = state ? COUNTIES_BY_STATE[state] || [] : [];
+  const availableCities = state 
+    ? (county && hasCountyCityMapping(state) 
+        ? getCitiesForCounty(state, county) 
+        : usCitiesByState[state] || [])
+    : [];
+
+  // Reset dependent fields when state or county changes
+  const handleStateChange = (newState: string) => {
+    setState(newState);
+    setCounty("");
+    setCity("");
+  };
+
+  const handleCountyChange = (newCounty: string) => {
+    setCounty(newCounty);
+    setCity("");
+  };
 
   const fetchRecipientCount = async () => {
     setLoadingCount(true);
@@ -94,9 +118,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
       if (showLocationFields) {
         requestBody.criteria = {
           state,
+          county: county.trim() || undefined,
           city: city.trim() || undefined,
           minPrice: minPrice ? parseFloat(minPrice) : undefined,
           maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+          propertyType: propertyType || undefined,
         };
       }
 
@@ -118,9 +144,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
       setSubject("");
       setMessage("");
       setState("");
+      setCounty("");
       setCity("");
       setMinPrice("");
       setMaxPrice("");
+      setPropertyType("");
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message. Please try again.");
@@ -161,32 +189,74 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
               <div className="space-y-4 pb-4 border-b">
                 <h3 className="text-sm font-medium">Location & Price Criteria</h3>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="state">State *</Label>
+                  <Select value={state} onValueChange={handleStateChange}>
+                    <SelectTrigger id="state">
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {US_STATES.map((s) => (
+                        <SelectItem key={s.code} value={s.code}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {state && availableCounties.length > 0 && (
                   <div className="space-y-2">
-                    <Label htmlFor="state">State *</Label>
-                    <Select value={state} onValueChange={setState}>
-                      <SelectTrigger id="state">
-                        <SelectValue placeholder="Select state" />
+                    <Label htmlFor="county">County (Optional)</Label>
+                    <Select value={county} onValueChange={handleCountyChange}>
+                      <SelectTrigger id="county">
+                        <SelectValue placeholder="Select county" />
                       </SelectTrigger>
                       <SelectContent>
-                        {US_STATES.map((s) => (
-                          <SelectItem key={s.code} value={s.code}>
-                            {s.name}
+                        {availableCounties.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
+                )}
 
+                {state && availableCities.length > 0 && (
                   <div className="space-y-2">
                     <Label htmlFor="city">City/Town (Optional)</Label>
-                    <Input
-                      id="city"
-                      placeholder="Enter city or town"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                    />
+                    <Select value={city} onValueChange={setCity}>
+                      <SelectTrigger id="city">
+                        <SelectValue placeholder="Select city or town" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableCities.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="propertyType">Property Type (Optional)</Label>
+                  <Select value={propertyType} onValueChange={setPropertyType}>
+                    <SelectTrigger id="propertyType">
+                      <SelectValue placeholder="Select property type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single_family">Single Family</SelectItem>
+                      <SelectItem value="condo">Condo</SelectItem>
+                      <SelectItem value="townhouse">Townhouse</SelectItem>
+                      <SelectItem value="multi_family">Multi Family</SelectItem>
+                      <SelectItem value="land">Land</SelectItem>
+                      <SelectItem value="commercial">Commercial</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -195,7 +265,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
                     <Input
                       id="minPrice"
                       type="number"
-                      placeholder="$0"
+                      placeholder="0"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
                     />
