@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Send, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { US_STATES } from "@/data/usStatesCountiesData";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -27,6 +29,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
   const [sending, setSending] = useState(false);
   const [recipientCount, setRecipientCount] = useState<number | null>(null);
   const [loadingCount, setLoadingCount] = useState(false);
+  
+  // Additional fields for buyer_need and renter_need
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+
+  const showLocationFields = category === "buyer_need" || category === "renter_need";
 
   const fetchRecipientCount = async () => {
     setLoadingCount(true);
@@ -67,20 +77,37 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
       return;
     }
 
+    if (showLocationFields && !state) {
+      toast.error("Please select a state");
+      return;
+    }
+
     setSending(true);
     try {
+      const requestBody: any = {
+        category,
+        subject: subject.trim(),
+        message: message.trim(),
+      };
+
+      // Add location and price criteria for buyer_need and renter_need
+      if (showLocationFields) {
+        requestBody.criteria = {
+          state,
+          city: city.trim() || undefined,
+          minPrice: minPrice ? parseFloat(minPrice) : undefined,
+          maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+        };
+      }
+
       const { data, error } = await supabase.functions.invoke("send-client-need-notification", {
-        body: {
-          category,
-          subject: subject.trim(),
-          message: message.trim(),
-        },
+        body: requestBody,
       });
 
       if (error) throw error;
 
       if (data?.recipientCount === 0) {
-        toast.info("No agents have this notification preference enabled");
+        toast.info("No agents match the specified criteria");
       } else {
         toast.success(
           `Message sent successfully to ${data.successCount} agent${data.successCount !== 1 ? "s" : ""}!`
@@ -90,6 +117,10 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
       onOpenChange(false);
       setSubject("");
       setMessage("");
+      setState("");
+      setCity("");
+      setMinPrice("");
+      setMaxPrice("");
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message. Please try again.");
@@ -124,6 +155,68 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
           </div>
         )}
         <div className="space-y-4 py-4">
+          {showLocationFields && (
+            <>
+              {/* Location Fields */}
+              <div className="space-y-4 pb-4 border-b">
+                <h3 className="text-sm font-medium">Location & Price Criteria</h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State *</Label>
+                    <Select value={state} onValueChange={setState}>
+                      <SelectTrigger id="state">
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {US_STATES.map((s) => (
+                          <SelectItem key={s.code} value={s.code}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City/Town (Optional)</Label>
+                    <Input
+                      id="city"
+                      placeholder="Enter city or town"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="minPrice">Min Price (Optional)</Label>
+                    <Input
+                      id="minPrice"
+                      type="number"
+                      placeholder="$0"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="maxPrice">Max Price (Optional)</Label>
+                    <Input
+                      id="maxPrice"
+                      type="number"
+                      placeholder="No limit"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Message Fields */}
           <div className="space-y-2">
             <Label htmlFor="subject">Subject</Label>
             <Input
