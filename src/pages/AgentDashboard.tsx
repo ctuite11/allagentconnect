@@ -79,7 +79,17 @@ const AgentDashboard = () => {
   useEffect(() => {
     if (location.hash === '#my-listings' && listingsSectionRef.current) {
       setTimeout(() => {
-        listingsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const element = listingsSectionRef.current;
+        if (element) {
+          const offset = 100; // Account for fixed header
+          const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+          const offsetPosition = elementPosition - offset;
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
       }, 100);
     }
   }, [location.hash, listings]);
