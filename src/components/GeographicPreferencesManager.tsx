@@ -175,12 +175,12 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card>
+      <Card className="border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20">
         <CollapsibleTrigger className="w-full">
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
+                <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <CardTitle>Geographic Area Preferences</CardTitle>
               </div>
               {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}

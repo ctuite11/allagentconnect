@@ -115,12 +115,12 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card>
+      <Card className="border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-950/20">
         <CollapsibleTrigger className="w-full">
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Home className="h-5 w-5 text-primary" />
+                <Home className="h-5 w-5 text-green-600 dark:text-green-400" />
                 <CardTitle>Property Type Preferences</CardTitle>
               </div>
               {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
