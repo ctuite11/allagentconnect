@@ -158,19 +158,20 @@ export const NotificationPreferenceCards = () => {
                       <Icon className={`h-6 w-6 ${card.iconColor}`} />
                     </div>
                   </div>
-                  <div className="mt-auto flex justify-between gap-2">
+                  <div className="mt-auto flex gap-2">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
-                          variant={card.active ? "default" : "outline"}
+                          variant="outline"
                           size="sm"
-                          className="gap-1 h-8 text-xs px-3"
+                          className={`flex-1 h-8 text-xs bg-background border-2 ${
+                            card.active ? "border-primary" : "border-primary/50"
+                          } hover:bg-background hover:border-primary`}
                           onClick={(e) => {
                             e.stopPropagation();
                             togglePreference(card.key);
                           }}
                         >
-                          {card.active && <Check className="h-3 w-3" />}
                           Receive
                         </Button>
                       </TooltipTrigger>
@@ -184,13 +185,12 @@ export const NotificationPreferenceCards = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1 h-8 text-xs px-3"
+                          className="flex-1 h-8 text-xs bg-background border-2 border-green-500/50 hover:bg-background hover:border-green-500"
                           onClick={(e) => {
                             e.stopPropagation();
                             setOpenDialog({ open: true, category: card.key, title: card.title });
                           }}
                         >
-                          <Send className="h-3 w-3" />
                           Send
                         </Button>
                       </TooltipTrigger>
