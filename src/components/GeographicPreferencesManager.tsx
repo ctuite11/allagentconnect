@@ -236,22 +236,12 @@ const GeographicPreferencesManager = ({
           <div className="space-y-2">
             <Label className="text-xs">Coverage Areas</Label>
             <Select value={county} onValueChange={setCounty} disabled={!hasCountyData}>
-              <SelectTrigger className={!hasCountyData ? "opacity-50 cursor-not-allowed" : ""}><SelectValue /></SelectTrigger>
+              <SelectTrigger className={!hasCountyData ? "opacity-50 cursor-not-allowed" : ""}><SelectValue placeholder="All Counties" /></SelectTrigger>
               <SelectContent className="z-50 max-h-[300px]">
                 <SelectItem value="all">All Counties</SelectItem>
                 {hasCountyData && currentStateCounties.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
-            {hasCountyData && county !== "all" && currentStateCounties.length > 0 && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={selectAllCountiesAndTowns}
-                className="w-full text-xs"
-              >
-                Select All Counties
-              </Button>
-            )}
           </div>
           <div>
             <Label className="text-xs">Show Areas</Label>
