@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Bell } from "lucide-react";
 
 interface NotificationSettings {
   enabled: boolean;
@@ -93,15 +92,9 @@ export const ClientNeedsNotificationSettings = () => {
   }
 
   return (
-    <Card className="border-l-4 border-l-primary mb-8">
+    <Card className="mb-8">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5 text-primary" />
-          <CardTitle>Notification Settings</CardTitle>
-        </div>
-        <CardDescription>
-          Configure how you receive client need alerts
-        </CardDescription>
+        <CardTitle>Notification Settings</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Enable/Disable Notifications */}
@@ -121,54 +114,33 @@ export const ClientNeedsNotificationSettings = () => {
 
         {/* Notification Schedule - Required */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Label className="text-sm font-semibold">
-              Notification Schedule
-              <span className="text-destructive ml-1">*</span>
-            </Label>
-            {!hasInitialSelection && (
-              <span className="text-xs text-destructive">(Required selection)</span>
-            )}
-          </div>
+          <Label className="text-base font-medium">
+            Notification Schedule
+          </Label>
           <RadioGroup
             value={settings.schedule}
             onValueChange={handleScheduleChange}
-            className="space-y-3"
+            className="space-y-2"
           >
-            <div className="flex items-start space-x-2">
-              <RadioGroupItem value="immediate" id="immediate" className="mt-0.5" />
-              <div className="space-y-1">
-                <Label htmlFor="immediate" className="cursor-pointer font-medium">
-                  Immediately
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Get alerts as soon as your preferences match
-                </p>
-              </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="immediate" id="immediate" />
+              <Label htmlFor="immediate" className="cursor-pointer font-normal">
+                Immediately - Get alerts as soon as your preferences match
+              </Label>
             </div>
 
-            <div className="flex items-start space-x-2">
-              <RadioGroupItem value="daily" id="daily" className="mt-0.5" />
-              <div className="space-y-1">
-                <Label htmlFor="daily" className="cursor-pointer font-medium">
-                  Daily
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Receive a daily digest of new matches
-                </p>
-              </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="daily" id="daily" />
+              <Label htmlFor="daily" className="cursor-pointer font-normal">
+                Daily - Receive a daily digest of new matches
+              </Label>
             </div>
 
-            <div className="flex items-start space-x-2">
-              <RadioGroupItem value="weekly" id="weekly" className="mt-0.5" />
-              <div className="space-y-1">
-                <Label htmlFor="weekly" className="cursor-pointer font-medium">
-                  Weekly
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Receive a weekly summary of new matches
-                </p>
-              </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="weekly" id="weekly" />
+              <Label htmlFor="weekly" className="cursor-pointer font-normal">
+                Weekly - Receive a weekly summary of new matches
+              </Label>
             </div>
           </RadioGroup>
         </div>
