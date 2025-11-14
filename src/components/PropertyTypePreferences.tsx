@@ -123,7 +123,7 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
                 <Home className="h-5 w-5 text-green-600 dark:text-green-400" />
                 <CardTitle>Property Type Preferences</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              {isOpen ? <ChevronUp className="h-5 w-5 text-blue-600 dark:text-blue-400" /> : <ChevronDown className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
             </div>
             <CardDescription className="text-left">
               Select which property types you want to receive notifications about
