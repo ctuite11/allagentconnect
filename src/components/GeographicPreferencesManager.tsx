@@ -206,7 +206,7 @@ const GeographicPreferencesManager = ({
               </SelectContent>
             </Select>
           </div>
-          <div>
+          <div className="space-y-2">
             <Label className="text-xs">Coverage Areas</Label>
             <Select value={county} onValueChange={setCounty} disabled={!hasCountyData}>
               <SelectTrigger className={!hasCountyData ? "opacity-50 cursor-not-allowed" : ""}><SelectValue /></SelectTrigger>
@@ -215,6 +215,16 @@ const GeographicPreferencesManager = ({
                 {hasCountyData && currentStateCounties.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
+            {hasCountyData && county !== "all" && currentStateCounties.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setCounty("all")}
+                className="w-full text-xs"
+              >
+                Select All Counties
+              </Button>
+            )}
           </div>
           <div>
             <Label className="text-xs">Show Areas</Label>
@@ -246,7 +256,7 @@ const GeographicPreferencesManager = ({
               variant="default"
               className="w-full h-12 text-base font-bold"
             >
-              ✓ Add All Towns
+              ✓ Select All Towns & Neighborhoods
             </Button>
             
             <div className="max-h-96 overflow-y-auto border rounded bg-background">

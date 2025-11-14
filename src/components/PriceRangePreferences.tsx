@@ -228,7 +228,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
               inputMode="decimal"
               value={minPrice}
               onChange={(e) => handleMinPriceChange(e.target.value)}
-              placeholder="100000"
+              placeholder="e.g. 100000"
               className={errors.minPrice ? 'border-destructive' : ''}
               maxLength={12}
             />
@@ -236,7 +236,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
               <p className="text-sm text-destructive">{errors.minPrice}</p>
             )}
             {minPrice && !errors.minPrice && (
-              <p className="text-sm text-muted-foreground">{formatDisplayPrice(minPrice)}</p>
+              <p className="text-sm text-muted-foreground">Preview: {formatDisplayPrice(minPrice)}</p>
             )}
           </div>
 
@@ -248,7 +248,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
               inputMode="decimal"
               value={maxPrice}
               onChange={(e) => handleMaxPriceChange(e.target.value)}
-              placeholder="500000"
+              placeholder="e.g. 500000"
               className={errors.maxPrice ? 'border-destructive' : ''}
               maxLength={12}
             />
@@ -256,7 +256,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
               <p className="text-sm text-destructive">{errors.maxPrice}</p>
             )}
             {maxPrice && !errors.maxPrice && (
-              <p className="text-sm text-muted-foreground">{formatDisplayPrice(maxPrice)}</p>
+              <p className="text-sm text-muted-foreground">Preview: {formatDisplayPrice(maxPrice)}</p>
             )}
           </div>
         </div>

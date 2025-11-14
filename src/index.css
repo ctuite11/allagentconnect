@@ -95,6 +95,7 @@ All colors MUST be HSL.
 
   html {
     scroll-behavior: smooth;
+    overflow-y: auto;
   }
 
   body {
@@ -102,6 +103,8 @@ All colors MUST be HSL.
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-y: auto;
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
