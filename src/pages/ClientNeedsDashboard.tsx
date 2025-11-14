@@ -63,11 +63,11 @@ const ClientNeedsDashboard = () => {
 
         {/* My Preferences Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-2">
-            My Preferences{" "}
-            <span className="text-sm text-muted-foreground">(For receiving email notifications only)</span>
-          </h2>
-          <div className="space-y-6 mt-6">
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold">My Preferences</h2>
+            <p className="text-sm text-muted-foreground mt-1">(For receiving email notifications only)</p>
+          </div>
+          <div className="space-y-6">
             <PriceRangePreferences agentId={user?.id || ""} />
             <PropertyTypePreferences agentId={user?.id || ""} />
             <GeographicPreferencesManager agentId={user?.id || ""} />
