@@ -58,6 +58,9 @@ const ManageTeam = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
+  const [officeName, setOfficeName] = useState("");
+  const [officeAddress, setOfficeAddress] = useState("");
+  const [officePhone, setOfficePhone] = useState("");
   const [socialLinks, setSocialLinks] = useState({
     linkedin: "",
     facebook: "",
@@ -115,6 +118,9 @@ const ManageTeam = () => {
         setTeamPhotoUrl(teamData.team_photo_url || "");
         setContactEmail(teamData.contact_email || "");
         setContactPhone(teamData.contact_phone || "");
+        setOfficeName(teamData.office_name || "");
+        setOfficeAddress(teamData.office_address || "");
+        setOfficePhone(teamData.office_phone || "");
         setSocialLinks(teamData.social_links || {
           linkedin: "",
           facebook: "",
@@ -188,6 +194,9 @@ const ManageTeam = () => {
             team_photo_url: teamPhotoUrl,
             contact_email: contactEmail,
             contact_phone: contactPhone,
+            office_name: officeName,
+            office_address: officeAddress,
+            office_phone: officePhone,
             social_links: socialLinks,
           })
           .eq("id", team.id);
@@ -206,6 +215,9 @@ const ManageTeam = () => {
             team_photo_url: teamPhotoUrl,
             contact_email: contactEmail,
             contact_phone: contactPhone,
+            office_name: officeName,
+            office_address: officeAddress,
+            office_phone: officePhone,
             social_links: socialLinks,
             created_by: session.user.id,
           })
@@ -265,6 +277,9 @@ const ManageTeam = () => {
             teamName: team.name,
             teamContactEmail: contactEmail,
             teamContactPhone: contactPhone,
+            teamOfficeName: officeName,
+            teamOfficeAddress: officeAddress,
+            teamOfficePhone: officePhone,
           }
         });
       } catch (emailError) {
@@ -492,6 +507,40 @@ const ManageTeam = () => {
                   placeholder="5551234567"
                   value={contactPhone}
                   onChange={setContactPhone}
+                  disabled={!isOwner && !!team}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="office_name">Office Name</Label>
+                <Input
+                  id="office_name"
+                  placeholder="Main Office"
+                  value={officeName}
+                  onChange={(e) => setOfficeName(e.target.value)}
+                  disabled={!isOwner && !!team}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="office_address">Office Address</Label>
+                <Input
+                  id="office_address"
+                  placeholder="123 Main St, City, State 12345"
+                  value={officeAddress}
+                  onChange={(e) => setOfficeAddress(e.target.value)}
+                  disabled={!isOwner && !!team}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="office_phone">Office Phone</Label>
+                <FormattedInput
+                  id="office_phone"
+                  format="phone"
+                  placeholder="5551234567"
+                  value={officePhone}
+                  onChange={setOfficePhone}
                   disabled={!isOwner && !!team}
                 />
               </div>

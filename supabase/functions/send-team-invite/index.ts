@@ -14,6 +14,9 @@ interface TeamInviteRequest {
   teamName: string;
   teamContactEmail?: string;
   teamContactPhone?: string;
+  teamOfficeName?: string;
+  teamOfficeAddress?: string;
+  teamOfficePhone?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -28,7 +31,10 @@ const handler = async (req: Request): Promise<Response> => {
       agentName, 
       teamName,
       teamContactEmail,
-      teamContactPhone 
+      teamContactPhone,
+      teamOfficeName,
+      teamOfficeAddress,
+      teamOfficePhone
     }: TeamInviteRequest = await req.json();
 
     console.log("Sending team invite notification to:", agentEmail);
@@ -39,6 +45,15 @@ const handler = async (req: Request): Promise<Response> => {
     }
     if (teamContactPhone) {
       contactInfo.push(`Phone: ${teamContactPhone}`);
+    }
+    if (teamOfficeName) {
+      contactInfo.push(`Office: ${teamOfficeName}`);
+    }
+    if (teamOfficeAddress) {
+      contactInfo.push(`Address: ${teamOfficeAddress}`);
+    }
+    if (teamOfficePhone) {
+      contactInfo.push(`Office Phone: ${teamOfficePhone}`);
     }
     const contactDetails = contactInfo.length > 0 
       ? contactInfo.join(" | ") 
