@@ -751,6 +751,7 @@ const BrowseProperties = () => {
                             state={state}
                             searchQuery={townSearch}
                             variant="checkbox"
+                            showAreas={showAreas === "yes"}
                           />
                         </div>
                       </div>
