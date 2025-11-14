@@ -50,6 +50,7 @@ const EditListing = () => {
   const [submitting, setSubmitting] = useState(false);
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const addressSelectedRef = useRef(false);
   const [isDirty, setIsDirty] = useState(false);
   const [showNavigationWarning, setShowNavigationWarning] = useState(false);
   const [formData, setFormData] = useState({
@@ -389,6 +390,7 @@ const EditListing = () => {
 
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
     console.log("=== handleAddressSelect called ===", place);
+    addressSelectedRef.current = true;
     const addressComponents = place.address_components || [];
     const getComponent = (type: string) => {
       const component = addressComponents.find((c) => c.types.includes(type));
@@ -396,14 +398,14 @@ const EditListing = () => {
     };
 
     const address = place.formatted_address?.split(",")[0] || "";
-    const city = getComponent("locality") || getComponent("sublocality");
+    const city = getComponent("locality") || getComponent("sublocality") || getComponent("postal_town");
     const state = getComponent("administrative_area_level_1");
     const zip_code = getComponent("postal_code");
 
     console.log("=== Address components extracted ===", { address, city, state, zip_code });
 
     // Validate that we have all required components
-    const missingFields = [];
+    const missingFields: string[] = [];
     if (!city) missingFields.push("city");
     if (!state) missingFields.push("state");
     if (!zip_code) missingFields.push("zip code");
@@ -413,12 +415,10 @@ const EditListing = () => {
         `Unable to auto-populate ${missingFields.join(", ")} from the selected address. Please use "Enter manually" to complete all address fields.`,
         { duration: 6000 }
       );
-      // Still set the address field
       setFormData({
         ...formData,
         address,
       });
-      // Auto-open manual entry dialog
       setTimeout(() => setManualAddressDialogOpen(true), 500);
     } else {
       setFormData({
@@ -919,12 +919,18 @@ const EditListing = () => {
                   placeholder="Enter property address"
                   value={formData.address}
                   onChange={(val) => {
+                    // If the change follows a selection, don't clear dependent fields
+                    if (addressSelectedRef.current) {
+                      addressSelectedRef.current = false;
+                      updateFormData({ address: val });
+                      return;
+                    }
                     // Clear city, state, zip when address is manually changed/deleted
                     updateFormData({ 
                       address: val,
-                      city: '',
-                      state: '',
-                      zip_code: ''
+                      city: val.trim() ? '' : '',
+                      state: val.trim() ? '' : '',
+                      zip_code: val.trim() ? '' : ''
                     });
                   }}
                 />
