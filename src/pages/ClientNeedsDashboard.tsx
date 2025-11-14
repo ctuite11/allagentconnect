@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useBlocker } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Loader2 } from "lucide-react";
@@ -9,15 +9,47 @@ import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotific
 import GeographicPreferencesManager from "@/components/GeographicPreferencesManager";
 import PriceRangePreferences from "@/components/PriceRangePreferences";
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ClientNeedsDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showWarning, setShowWarning] = useState(false);
+  const [hasNotificationsEnabled, setHasNotificationsEnabled] = useState(false);
+  const [hasFilters, setHasFilters] = useState(false);
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      checkPreferences();
+    }
+  }, [user]);
+
+  // Check before unload (closing tab/browser)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasNotificationsEnabled && !hasFilters) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasNotificationsEnabled, hasFilters]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -27,6 +59,39 @@ const ClientNeedsDashboard = () => {
     }
     setUser(session.user);
     setLoading(false);
+  };
+
+  const checkPreferences = async () => {
+    try {
+      const { data: prefs } = await supabase
+        .from("notification_preferences")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (prefs) {
+        // Check if notifications are enabled
+        const notificationsEnabled = prefs.client_needs_enabled === true;
+        setHasNotificationsEnabled(notificationsEnabled);
+
+        // Check if any filters are set
+        const hasPriceFilter = prefs.min_price != null || prefs.max_price != null;
+        const hasPropertyTypes = prefs.property_types && Array.isArray(prefs.property_types) && prefs.property_types.length > 0;
+        
+        // Check geographic preferences
+        const { data: geoPrefs } = await supabase
+          .from("agent_buyer_coverage_areas")
+          .select("id")
+          .eq("agent_id", user.id)
+          .limit(1);
+
+        const hasGeographicFilter = geoPrefs && geoPrefs.length > 0;
+        
+        setHasFilters(hasPriceFilter || hasPropertyTypes || hasGeographicFilter);
+      }
+    } catch (error) {
+      console.error("Error checking preferences:", error);
+    }
   };
 
   if (loading) {
@@ -76,6 +141,25 @@ const ClientNeedsDashboard = () => {
 
         {/* Notification Settings - Required (Final Step) */}
         <ClientNeedsNotificationSettings />
+
+        {/* Warning Banner */}
+        {hasNotificationsEnabled && !hasFilters && (
+          <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg">
+            <div className="flex items-start gap-3">
+              <div className="text-yellow-600 dark:text-yellow-400 text-2xl">⚠️</div>
+              <div>
+                <h3 className="font-bold text-yellow-900 dark:text-yellow-100 mb-1">
+                  Important: You'll Receive All Notifications
+                </h3>
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  You have email notifications enabled but haven't set any filters (price range, property types, or locations). 
+                  This means you will receive notifications for <strong>ALL</strong> client needs submitted by other agents. 
+                  Consider setting some preferences above to filter the notifications you receive.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
