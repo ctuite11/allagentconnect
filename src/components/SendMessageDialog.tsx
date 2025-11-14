@@ -610,7 +610,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       id="minPrice"
                       type="text"
                       inputMode="numeric"
-                      placeholder="100,000"
+                      placeholder="e.g. 100000"
                       value={formatPriceDisplay(minPrice)}
                       onChange={(e) => handleMinPriceChange(e.target.value)}
                       maxLength={15}
@@ -623,7 +623,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       id="maxPrice"
                       type="text"
                       inputMode="numeric"
-                      placeholder="500,000"
+                      placeholder="e.g. 500000"
                       value={formatPriceDisplay(maxPrice)}
                       onChange={(e) => handleMaxPriceChange(e.target.value)}
                       maxLength={15}
