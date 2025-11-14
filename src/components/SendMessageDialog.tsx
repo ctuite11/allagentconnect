@@ -209,8 +209,26 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             <>
               {/* Location Fields */}
               <div className="space-y-4 pb-4 border-b">
-                <h3 className="text-sm font-medium">Location & Price Criteria</h3>
+                <h3 className="text-sm font-medium">Location & Criteria</h3>
                 
+                <div className="space-y-2">
+                  <Label htmlFor="propertyType">Property Type (Optional)</Label>
+                  <Select value={propertyType} onValueChange={setPropertyType}>
+                    <SelectTrigger id="propertyType">
+                      <SelectValue placeholder="Select property type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single_family">Single Family</SelectItem>
+                      <SelectItem value="condo">Condo</SelectItem>
+                      <SelectItem value="townhouse">Townhouse</SelectItem>
+                      <SelectItem value="multi_family">Multi Family</SelectItem>
+                      <SelectItem value="land">Land</SelectItem>
+                      <SelectItem value="commercial">Commercial</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="state">State *</Label>
                   <Select value={state} onValueChange={handleStateChange}>
@@ -280,24 +298,6 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     </Select>
                   </div>
                 )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="propertyType">Property Type (Optional)</Label>
-                  <Select value={propertyType} onValueChange={setPropertyType}>
-                    <SelectTrigger id="propertyType">
-                      <SelectValue placeholder="Select property type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="single_family">Single Family</SelectItem>
-                      <SelectItem value="condo">Condo</SelectItem>
-                      <SelectItem value="townhouse">Townhouse</SelectItem>
-                      <SelectItem value="multi_family">Multi Family</SelectItem>
-                      <SelectItem value="land">Land</SelectItem>
-                      <SelectItem value="commercial">Commercial</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
