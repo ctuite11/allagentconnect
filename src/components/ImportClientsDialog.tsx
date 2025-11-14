@@ -13,7 +13,7 @@ const clientRowSchema = z.object({
   last_name: z.string().trim().min(2, "Last name must be at least 2 characters").max(100),
   email: z.string().trim().email("Invalid email address").max(255),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
-  client_type: z.enum(['buyer', 'seller', 'renter', 'agent', 'lender', 'attorney', 'inspector', '']).optional(),
+  client_type: z.enum(['buyer', 'seller', 'renter', 'agent', 'lender', 'attorney', 'inspector', 'other', '']).optional(),
 });
 
 interface ImportClientsDialogProps {

@@ -28,7 +28,7 @@ const clientSchema = z.object({
   last_name: z.string().trim().min(2, "Last name must be at least 2 characters").max(100),
   email: z.string().trim().email("Invalid email address").max(255),
   phone: z.string().trim().max(20).optional(),
-  client_type: z.enum(['buyer', 'seller', 'renter', 'agent', 'lender', 'attorney', 'inspector']).optional(),
+  client_type: z.enum(['buyer', 'seller', 'renter', 'agent', 'lender', 'attorney', 'inspector', 'other']).optional(),
 });
 
 interface Client {
@@ -456,8 +456,13 @@ const MyClients = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="client_type">Client Type (Optional)</Label>
+                  <div className="border border-accent/30 rounded-lg p-4 bg-accent/5 space-y-2">
+                    <Label htmlFor="client_type" className="text-base font-semibold">
+                      Client Type
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Optional but will come in handy for organizing your contacts
+                    </p>
                     <Select
                       value={formData.client_type || undefined}
                       onValueChange={(value) => setFormData({ ...formData, client_type: value })}
@@ -473,6 +478,7 @@ const MyClients = () => {
                         <SelectItem value="lender">Lender</SelectItem>
                         <SelectItem value="attorney">Attorney</SelectItem>
                         <SelectItem value="inspector">Inspector</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -532,6 +538,7 @@ const MyClients = () => {
                         <SelectItem value="lender">Lenders</SelectItem>
                         <SelectItem value="attorney">Attorneys</SelectItem>
                         <SelectItem value="inspector">Inspectors</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                         <SelectItem value="none">No Type Set</SelectItem>
                       </SelectContent>
                     </Select>
