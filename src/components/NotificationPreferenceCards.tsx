@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Home, TrendingUp, Building2, MessageSquare, Check } from "lucide-react";
+import { Home, TrendingUp, Building2, MessageSquare, Check, Send } from "lucide-react";
+import { SendMessageDialog } from "./SendMessageDialog";
 
 interface NotificationPreferences {
   buyer_need: boolean;
@@ -20,6 +22,11 @@ export const NotificationPreferenceCards = () => {
     general_discussion: false,
   });
   const [loading, setLoading] = useState(true);
+  const [openDialog, setOpenDialog] = useState<{
+    open: boolean;
+    category: keyof NotificationPreferences | null;
+    title: string;
+  }>({ open: false, category: null, title: "" });
 
   useEffect(() => {
     fetchPreferences();
@@ -130,45 +137,83 @@ export const NotificationPreferenceCards = () => {
   }
 
   return (
-    <div className="mb-8">
-      <h3 className="text-xl font-semibold mb-4">Choose Your Notification Preferences</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {cards.map((card) => {
-            const Icon = card.icon;
-            return (
-            <Card
-              key={card.key}
-              className={`border-l-4 ${card.borderColor} transition-all hover:shadow-lg cursor-pointer`}
-            >
-              <CardContent className="p-4 flex flex-col h-full">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h4 className="text-base font-semibold mb-1">{card.title}</h4>
-                    <p className="text-xs text-muted-foreground">{card.description}</p>
+    <TooltipProvider>
+      <div className="mb-8">
+        <h3 className="text-xl font-semibold mb-4">Choose Your Notification Preferences</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {cards.map((card) => {
+              const Icon = card.icon;
+              return (
+              <Card
+                key={card.key}
+                className={`border-l-4 ${card.borderColor} transition-all hover:shadow-lg`}
+              >
+                <CardContent className="p-4 flex flex-col h-full">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h4 className="text-base font-semibold mb-1">{card.title}</h4>
+                      <p className="text-xs text-muted-foreground">{card.description}</p>
+                    </div>
+                    <div className={`ml-4 h-12 w-12 rounded-full ${card.iconBgColor} flex items-center justify-center flex-shrink-0`}>
+                      <Icon className={`h-6 w-6 ${card.iconColor}`} />
+                    </div>
                   </div>
-                  <div className={`ml-4 h-12 w-12 rounded-full ${card.iconBgColor} flex items-center justify-center flex-shrink-0`}>
-                    <Icon className={`h-6 w-6 ${card.iconColor}`} />
+                  <div className="mt-auto flex justify-between gap-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant={card.active ? "default" : "outline"}
+                          size="sm"
+                          className="gap-1 h-8 text-xs px-3"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            togglePreference(card.key);
+                          }}
+                        >
+                          {card.active && <Check className="h-3 w-3" />}
+                          Receive
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Click to enable for receiving notifications</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1 h-8 text-xs px-3"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDialog({ open: true, category: card.key, title: card.title });
+                          }}
+                        >
+                          <Send className="h-3 w-3" />
+                          Send
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Click here to send a message</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
-                </div>
-                <div className="mt-auto">
-                  <Button
-                    variant={card.active ? "default" : "outline"}
-                    size="sm"
-                    className="gap-1 h-8 text-xs px-3"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      togglePreference(card.key);
-                    }}
-                  >
-                    {card.active && <Check className="h-3 w-3" />}
-                    {card.active ? "On" : "Off"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
-    </div>
+
+      {openDialog.category && (
+        <SendMessageDialog
+          open={openDialog.open}
+          onOpenChange={(open) => setOpenDialog({ open, category: null, title: "" })}
+          category={openDialog.category}
+          categoryTitle={openDialog.title}
+        />
+      )}
+    </TooltipProvider>
   );
 };
