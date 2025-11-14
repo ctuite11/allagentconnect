@@ -125,7 +125,7 @@ const Navigation = () => {
                     <DropdownMenuGroup>
                       <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
                         <LayoutDashboard className="mr-2 h-4 w-4" />
-                        Dashboard
+                        Success Hub
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/my-clients")}>
                         <UserCircle className="mr-2 h-4 w-4" />
@@ -185,7 +185,7 @@ const Navigation = () => {
               <>
                 <Button variant="outline" onClick={() => navigate("/agent-dashboard")}>
                   <LayoutDashboard className="w-4 h-4 mr-2" />
-                  Dashboard
+                  Success Hub
                 </Button>
                 <Button variant="outline" onClick={handleLogout}>
                   <LogOut className="w-4 h-4 mr-2" />
@@ -287,7 +287,7 @@ const Navigation = () => {
                     }}
                   >
                     <LayoutDashboard className="w-4 h-4 mr-2" />
-                    Dashboard
+                    Success Hub
                   </Button>
                   <Button 
                     className="w-full"
