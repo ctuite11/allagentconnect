@@ -175,7 +175,7 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20">
+      <Card className="border-l-4 border-l-blue-500">
         <CollapsibleTrigger className="w-full">
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between">
