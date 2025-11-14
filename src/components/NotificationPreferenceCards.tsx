@@ -124,10 +124,10 @@ export const NotificationPreferenceCards = () => {
             const edgeClass = card.key === 'buyer_need'
               ? 'before:bg-primary'
               : card.key === 'sales_intel'
-              ? 'before:bg-accent'
+              ? 'before:bg-orange-500'
               : card.key === 'renter_need'
-              ? 'before:bg-secondary'
-              : 'before:bg-accent';
+              ? 'before:bg-purple-500'
+              : 'before:bg-red-500';
           return (
             <Card
               key={card.key}
