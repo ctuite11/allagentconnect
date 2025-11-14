@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Loader2 } from "lucide-react";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
+import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
 import GeographicPreferencesManager from "@/components/GeographicPreferencesManager";
 import PriceRangePreferences from "@/components/PriceRangePreferences";
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
@@ -52,6 +53,9 @@ const ClientNeedsDashboard = () => {
             Share your active client needs and receive targeted matches from other agents. Customize your alerts by market and property type for insider-level visibility.
           </p>
         </div>
+
+        {/* Notification Settings - Required */}
+        <ClientNeedsNotificationSettings />
 
         {/* Notification Preference Cards */}
         <NotificationPreferenceCards />
