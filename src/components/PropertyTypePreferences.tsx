@@ -115,7 +115,7 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border-l-4 border-l-green-500">
+      <Card className="relative before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-primary">
         <CollapsibleTrigger className="w-full">
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between">
@@ -123,7 +123,7 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
                 <Home className="h-5 w-5" />
                 <CardTitle>Property Type Preferences</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5 text-blue-600" /> : <ChevronDown className="h-5 w-5 text-blue-600" />}
+              {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-primary" />}
             </div>
             <CardDescription className="text-left">
               Select which property types you want to receive notifications about

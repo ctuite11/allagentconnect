@@ -175,7 +175,7 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border-l-4 border-l-blue-500">
+      <Card className="relative before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-primary">
         <CollapsibleTrigger className="w-full">
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between">
@@ -183,8 +183,7 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
                 <MapPin className="h-5 w-5" />
                 <CardTitle>Geographic Area Preferences</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5 text-blue-600" /> : <ChevronDown className="h-5 w-5 text-blue-600" />}
-              {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-primary" />}
             </div>
             <CardDescription className="text-left">
               Select states, counties, and towns for notifications
