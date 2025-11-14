@@ -83,6 +83,16 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
           if (placeholder) {
             try { (el as any).placeholder = placeholder; } catch { el.setAttribute('placeholder', placeholder); }
           }
+          // Hint to password managers that this is an address field, not credentials
+          try {
+            el.setAttribute('autocomplete', 'street-address');
+            el.setAttribute('name', 'address_line1');
+            el.setAttribute('autocapitalize', 'none');
+            el.setAttribute('spellcheck', 'false');
+            el.setAttribute('data-lpignore', 'true');
+            el.setAttribute('data-1p-ignore', 'true');
+            el.setAttribute('data-form-type', 'other');
+          } catch {}
           containerRef.current.appendChild(el);
           autocompleteRef.current = el;
 
@@ -230,6 +240,16 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
       placeholder={placeholder || "City, State, Zip or Neighborhood"}
       className={className}
       value={value}
+      // Prevent password managers from triggering
+      name="address_line1"
+      autoComplete="street-address"
+      autoCorrect="off"
+      autoCapitalize="none"
+      spellCheck={false}
+      inputMode="text"
+      data-lpignore="true"
+      data-1p-ignore="true"
+      data-form-type="other"
       onChange={(e) => onChange?.(e.target.value)}
     />
   );
