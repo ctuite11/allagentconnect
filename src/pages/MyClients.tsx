@@ -66,6 +66,7 @@ const MyClients = () => {
   const [bulkEmailDialogOpen, setBulkEmailDialogOpen] = useState(false);
   const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [clientTypeFilter, setClientTypeFilter] = useState<string>("all");
 
   useEffect(() => {
     checkAuth();
@@ -92,7 +93,7 @@ const MyClients = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setClients(data || []);
+      setClients((data || []) as unknown as Client[]);
     } catch (error: any) {
       console.error("Error fetching clients:", error);
       toast.error("Failed to load clients");
@@ -306,12 +307,20 @@ const MyClients = () => {
     const phone = client.phone?.toLowerCase() || "";
     const search = searchTerm.toLowerCase();
     
-    return (
+    // Apply search filter
+    const matchesSearch = (
       fullName.includes(search) ||
       email.includes(search) ||
       phone.includes(search) ||
       client.client_type?.toLowerCase().includes(search)
     );
+
+    // Apply client type filter
+    const matchesType = clientTypeFilter === "all" || 
+      (clientTypeFilter === "none" && !client.client_type) ||
+      client.client_type === clientTypeFilter;
+    
+    return matchesSearch && matchesType;
   });
 
   const sortedClients = [...filteredClients].sort((a, b) => {
@@ -500,26 +509,38 @@ const MyClients = () => {
                   <div className="flex gap-4">
                     <div className="relative flex-1">
                       <Input
-                        placeholder="Search clients by name, email, phone, or notes..."
+                        placeholder="Search clients by name, email, phone, or type..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
                       />
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
+                    <Select value={clientTypeFilter} onValueChange={setClientTypeFilter}>
+                      <SelectTrigger className="w-[180px] bg-background">
+                        <SelectValue placeholder="Filter by type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="buyer">Buyers</SelectItem>
+                        <SelectItem value="seller">Sellers</SelectItem>
+                        <SelectItem value="renter">Renters</SelectItem>
+                        <SelectItem value="none">No Type Set</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                      <SelectTrigger className="w-[200px]">
+                      <SelectTrigger className="w-[200px] bg-background">
                         <ArrowUpDown className="h-4 w-4 mr-2" />
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value="name">Sort by Name</SelectItem>
                         <SelectItem value="created_at">Sort by Date Added</SelectItem>
                         <SelectItem value="updated_at">Sort by Last Updated</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  {searchTerm && (
+                  {(searchTerm || clientTypeFilter !== "all") && (
                     <p className="text-sm text-muted-foreground mt-2">
                       Found {filteredClients.length} of {clients.length} clients
                     </p>
