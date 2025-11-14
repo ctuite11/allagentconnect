@@ -30,7 +30,7 @@ const GeographicPreferencesManager = ({
   const [showAreas, setShowAreas] = useState("yes");
   const [townSearch, setTownSearch] = useState("");
   const [manualTowns, setManualTowns] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const {
     townsList,
     expandedCities,

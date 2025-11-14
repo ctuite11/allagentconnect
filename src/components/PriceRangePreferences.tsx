@@ -55,7 +55,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [errors, setErrors] = useState<{ minPrice?: string; maxPrice?: string }>({});
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
     fetchPreferences();

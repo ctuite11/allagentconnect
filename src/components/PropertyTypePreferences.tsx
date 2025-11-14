@@ -27,7 +27,7 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
     fetchPreferences();
