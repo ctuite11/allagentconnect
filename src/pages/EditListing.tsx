@@ -122,6 +122,11 @@ const EditListing = () => {
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   // Warn on browser/tab close if there are unsaved changes
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -383,6 +388,7 @@ const EditListing = () => {
   };
 
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
+    console.log("=== handleAddressSelect called ===", place);
     const addressComponents = place.address_components || [];
     const getComponent = (type: string) => {
       const component = addressComponents.find((c) => c.types.includes(type));
@@ -393,6 +399,8 @@ const EditListing = () => {
     const city = getComponent("locality") || getComponent("sublocality");
     const state = getComponent("administrative_area_level_1");
     const zip_code = getComponent("postal_code");
+
+    console.log("=== Address components extracted ===", { address, city, state, zip_code });
 
     setFormData({
       ...formData,

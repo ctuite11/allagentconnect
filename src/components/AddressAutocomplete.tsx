@@ -122,12 +122,19 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
               };
 
               console.log("[AddressAutocomplete] Mapped place data:", mapped);
+              console.log("[AddressAutocomplete] Address components:", mapped.address_components);
               console.log("[AddressAutocomplete] About to call onPlaceSelect callback");
               console.log("[AddressAutocomplete] onPlaceSelect exists?", !!onPlaceSelect);
               
               if (onPlaceSelect) {
                 onPlaceSelect(mapped);
                 console.log("[AddressAutocomplete] onPlaceSelect called successfully");
+                // Update the input value to show the formatted address
+                try { 
+                  (el as any).value = mapped.formatted_address;
+                } catch (e) {
+                  console.warn("[AddressAutocomplete] Could not update element value:", e);
+                }
               } else {
                 console.error("[AddressAutocomplete] onPlaceSelect callback is missing!");
                 // Only call onChange if onPlaceSelect is not provided
