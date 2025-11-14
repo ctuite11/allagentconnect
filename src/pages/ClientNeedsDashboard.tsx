@@ -61,8 +61,9 @@ const ClientNeedsDashboard = () => {
         {/* Separator */}
         <Separator className="my-8" />
 
-        {/* Preferences Section */}
-        <div className="mb-12">
+        {/* My Preferences Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-6">My Preferences</h2>
           <div className="space-y-6">
             <PriceRangePreferences agentId={user?.id || ""} />
             <PropertyTypePreferences agentId={user?.id || ""} />

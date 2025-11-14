@@ -121,7 +121,7 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Home className="h-5 w-5" />
-                <CardTitle>Property Type Preferences</CardTitle>
+                <CardTitle>Property Type</CardTitle>
               </div>
               {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-primary" />}
             </div>

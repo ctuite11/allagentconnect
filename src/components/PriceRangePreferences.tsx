@@ -194,7 +194,7 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                <CardTitle>Price Range Preferences</CardTitle>
+                <CardTitle>Price Range</CardTitle>
               </div>
               {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-primary" />}
             </div>
