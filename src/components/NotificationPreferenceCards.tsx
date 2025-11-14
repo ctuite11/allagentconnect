@@ -97,9 +97,9 @@ export const NotificationPreferenceCards = () => {
       description: "Receive updates on sales and market intelligence",
       icon: TrendingUp,
       active: preferences.sales_intel,
-      borderColor: "border-l-orange-500",
-      iconBgColor: "bg-orange-500/10",
-      iconColor: "text-orange-500",
+      borderColor: "border-l-accent",
+      iconBgColor: "bg-accent/10",
+      iconColor: "text-accent",
     },
     {
       key: "renter_need" as keyof NotificationPreferences,
@@ -137,7 +137,6 @@ export const NotificationPreferenceCards = () => {
             <Card
               key={card.key}
               className={`border-l-4 ${card.borderColor} transition-all hover:shadow-lg cursor-pointer`}
-              onClick={() => togglePreference(card.key)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -153,6 +152,10 @@ export const NotificationPreferenceCards = () => {
                   variant={card.active ? "default" : "outline"}
                   size="sm"
                   className="w-full mt-3 gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePreference(card.key);
+                  }}
                 >
                   {card.active && <Check className="h-4 w-4" />}
                   {card.active ? "Notifications On" : "Turn On Notifications"}
