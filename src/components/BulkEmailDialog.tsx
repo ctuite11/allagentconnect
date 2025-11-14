@@ -118,6 +118,9 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
           <DialogTitle>Send Bulk Email</DialogTitle>
           <DialogDescription>
             Sending to {recipients.length} recipient{recipients.length > 1 ? 's' : ''}
+            <span className="block mt-1 text-xs text-muted-foreground">
+              🔒 Privacy protected: Each email is sent individually - recipients won't see each other's addresses
+            </span>
           </DialogDescription>
         </DialogHeader>
 
