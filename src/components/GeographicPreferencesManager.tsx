@@ -89,7 +89,7 @@ const GeographicPreferencesManager = ({
       // Insert new preferences (remove duplicates before saving)
       const uniqueTowns = [...new Set(selectedTowns)];
       if (uniqueTowns.length > 0) {
-        const preferencesToInsert = uniqueTowns.map(town => {
+        const preferencesToInsert = uniqueTowns.map((town, index) => {
           // Check if it's a neighborhood (contains hyphen)
           if (town.includes('-')) {
             const [city, neighborhood] = town.split('-');
@@ -99,7 +99,7 @@ const GeographicPreferencesManager = ({
               county: county === "all" ? null : county,
               city,
               neighborhood,
-              zip_code: "" // We'll populate this later if needed
+              zip_code: `${city}-${neighborhood}-${index}` // Unique identifier
             };
           }
           return {
@@ -108,7 +108,7 @@ const GeographicPreferencesManager = ({
             county: county === "all" ? null : county,
             city: town,
             neighborhood: null,
-            zip_code: "" // We'll populate this later if needed
+            zip_code: `${town}-${index}` // Unique identifier
           };
         });
         const {
