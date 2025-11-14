@@ -299,13 +299,20 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
               ) : (
                 <div className="space-y-1">
                   {selectedTowns.map((town) => (
-                    <div key={town} className="flex items-center justify-between text-xs py-1 px-2 hover:bg-muted rounded group">
+                    <div
+                      key={town}
+                      className="flex items-center justify-between text-xs py-1 px-2 hover:bg-muted rounded cursor-pointer"
+                      onClick={() => removeTown(town)}
+                      role="button"
+                      aria-label={`Remove ${town}`}
+                      title="Click to remove"
+                    >
                       <span>{town}</span>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-5 w-5 p-0 hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => removeTown(town)}
+                        onClick={(e) => { e.stopPropagation(); removeTown(town); }}
                         title="Click to remove"
                       >
                         <X className="h-3 w-3" />
