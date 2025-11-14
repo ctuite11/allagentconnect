@@ -631,7 +631,7 @@ const AgentDashboard = () => {
         </div>
 
         {/* Listings Section */}
-        {showResults && <div ref={listingsSectionRef} id="listings-section" className="mt-6 sm:mt-8 mb-10 sm:mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        {showResults && <div ref={listingsSectionRef} id="my-listings" className="mt-6 sm:mt-8 mb-10 sm:mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             {/* Header */}
             <div className="mb-6 sm:mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">My Listings</h2>
