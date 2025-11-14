@@ -9,6 +9,7 @@ import { FormattedInput } from "@/components/ui/formatted-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -67,6 +68,8 @@ const MyClients = () => {
   const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [clientTypeFilter, setClientTypeFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
 
   useEffect(() => {
     checkAuth();
@@ -338,6 +341,17 @@ const MyClients = () => {
     }
   });
 
+  // Pagination calculations
+  const totalPages = itemsPerPage === -1 ? 1 : Math.ceil(sortedClients.length / itemsPerPage);
+  const startIndex = itemsPerPage === -1 ? 0 : (currentPage - 1) * itemsPerPage;
+  const endIndex = itemsPerPage === -1 ? sortedClients.length : startIndex + itemsPerPage;
+  const paginatedClients = sortedClients.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, clientTypeFilter, sortBy]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -558,11 +572,35 @@ const MyClients = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  {(searchTerm || clientTypeFilter !== "all") && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Found {filteredClients.length} of {clients.length} contacts
-                    </p>
-                  )}
+                  <div className="flex items-center justify-between mt-2">
+                    <div>
+                      {(searchTerm || clientTypeFilter !== "all") && (
+                        <p className="text-sm text-muted-foreground">
+                          Found {filteredClients.length} of {clients.length} contacts
+                        </p>
+                      )}
+                      <p className="text-sm text-muted-foreground">
+                        Showing {startIndex + 1}-{Math.min(endIndex, sortedClients.length)} of {sortedClients.length} contacts
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Contacts per page:</span>
+                      <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                      }}>
+                        <SelectTrigger className="w-[100px] bg-background">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background z-50">
+                          <SelectItem value="25">25</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                          <SelectItem value="100">100</SelectItem>
+                          <SelectItem value="-1">All</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -584,10 +622,23 @@ const MyClients = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-12">
+                      <TableHead className="w-12">
                           <Checkbox
-                            checked={selectedClients.size === sortedClients.length && sortedClients.length > 0}
-                            onCheckedChange={toggleSelectAll}
+                            checked={
+                              paginatedClients.length > 0 && 
+                              paginatedClients.every(client => selectedClients.has(client.id))
+                            }
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                const newSelected = new Set(selectedClients);
+                                paginatedClients.forEach(client => newSelected.add(client.id));
+                                setSelectedClients(newSelected);
+                              } else {
+                                const newSelected = new Set(selectedClients);
+                                paginatedClients.forEach(client => newSelected.delete(client.id));
+                                setSelectedClients(newSelected);
+                              }
+                            }}
                           />
                         </TableHead>
                         <TableHead>Name</TableHead>
@@ -597,7 +648,7 @@ const MyClients = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sortedClients.map((client) => (
+                      {paginatedClients.map((client) => (
                     <TableRow key={client.id}>
                       <TableCell>
                         <Checkbox
@@ -679,6 +730,58 @@ const MyClients = () => {
                   ))}
                 </TableBody>
               </Table>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      
+                      {[...Array(totalPages)].map((_, idx) => {
+                        const pageNum = idx + 1;
+                        // Show first page, last page, current page, and pages around current
+                        if (
+                          pageNum === 1 ||
+                          pageNum === totalPages ||
+                          (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                        ) {
+                          return (
+                            <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => setCurrentPage(pageNum)}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                                {pageNum}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                          return (
+                            <PaginationItem key={pageNum}>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
+                        }
+                        return null;
+                      })}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </Card>
               )}
             </>
