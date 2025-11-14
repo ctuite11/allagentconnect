@@ -206,6 +206,7 @@ export const NotificationPreferenceCards = () => {
           onOpenChange={(open) => setOpenDialog({ open, category: null, title: "" })}
           category={openDialog.category}
           categoryTitle={openDialog.title}
+          defaultSubject={openDialog.title}
         />
       )}
     </TooltipProvider>

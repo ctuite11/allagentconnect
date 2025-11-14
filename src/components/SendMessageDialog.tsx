@@ -17,15 +17,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
 import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
+import { usNeighborhoodsByCityState } from "@/data/usNeighborhoodsData";
 
 interface SendMessageDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   category: "buyer_need" | "sales_intel" | "renter_need" | "general_discussion";
   categoryTitle: string;
+  defaultSubject?: string;
 }
 
-export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle }: SendMessageDialogProps) => {
+export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle, defaultSubject }: SendMessageDialogProps) => {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -36,9 +38,17 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
   const [state, setState] = useState("");
   const [county, setCounty] = useState("");
   const [city, setCity] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [propertyType, setPropertyType] = useState("");
+
+  // Set default subject when dialog opens
+  useEffect(() => {
+    if (open && defaultSubject) {
+      setSubject(defaultSubject);
+    }
+  }, [open, defaultSubject]);
 
   const showLocationFields = category === "buyer_need" || category === "renter_need";
   
@@ -49,17 +59,27 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
         ? getCitiesForCounty(state, county) 
         : usCitiesByState[state] || [])
     : [];
+  const availableNeighborhoods = (city && state) 
+    ? usNeighborhoodsByCityState[`${city}-${state}`] || [] 
+    : [];
 
-  // Reset dependent fields when state or county changes
+  // Reset dependent fields when state, county, or city changes
   const handleStateChange = (newState: string) => {
     setState(newState);
     setCounty("");
     setCity("");
+    setNeighborhood("");
   };
 
   const handleCountyChange = (newCounty: string) => {
     setCounty(newCounty);
     setCity("");
+    setNeighborhood("");
+  };
+
+  const handleCityChange = (newCity: string) => {
+    setCity(newCity);
+    setNeighborhood("");
   };
 
   const fetchRecipientCount = async () => {
@@ -120,6 +140,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
           state,
           county: county.trim() || undefined,
           city: city.trim() || undefined,
+          neighborhood: neighborhood.trim() || undefined,
           minPrice: minPrice ? parseFloat(minPrice) : undefined,
           maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
           propertyType: propertyType || undefined,
@@ -146,6 +167,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
       setState("");
       setCounty("");
       setCity("");
+      setNeighborhood("");
       setMinPrice("");
       setMaxPrice("");
       setPropertyType("");
@@ -226,7 +248,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
                 {state && availableCities.length > 0 && (
                   <div className="space-y-2">
                     <Label htmlFor="city">City/Town (Optional)</Label>
-                    <Select value={city} onValueChange={setCity}>
+                    <Select value={city} onValueChange={handleCityChange}>
                       <SelectTrigger id="city">
                         <SelectValue placeholder="Select city or town" />
                       </SelectTrigger>
@@ -234,6 +256,24 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
                         {availableCities.map((c) => (
                           <SelectItem key={c} value={c}>
                             {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {city && availableNeighborhoods.length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="neighborhood">Neighborhood/Area (Optional)</Label>
+                    <Select value={neighborhood} onValueChange={setNeighborhood}>
+                      <SelectTrigger id="neighborhood">
+                        <SelectValue placeholder="Select neighborhood" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableNeighborhoods.map((n) => (
+                          <SelectItem key={n} value={n}>
+                            {n}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -265,7 +305,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
                     <Input
                       id="minPrice"
                       type="number"
-                      placeholder="0"
+                      placeholder="100000"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
                     />
@@ -276,7 +316,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle 
                     <Input
                       id="maxPrice"
                       type="number"
-                      placeholder="No limit"
+                      placeholder="500000"
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
                     />
