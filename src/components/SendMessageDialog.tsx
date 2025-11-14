@@ -57,13 +57,32 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   
   // Get available counties and cities based on selection
   const availableCounties = state ? COUNTIES_BY_STATE[state] || [] : [];
-  const availableCities = state 
-    ? (counties.length > 0 && hasCountyCityMapping(state) 
-        ? counties.flatMap(county => getCitiesForCounty(state, county))
-        : usCitiesByState[state] || [])
+
+  // Normalize helpers to improve matching across datasets
+  const stateKey = (state || '').toUpperCase();
+  const normalizeCountyName = (name: string) =>
+    name.replace(/ county$/i, '').trim();
+
+  // Build city list with county→city mapping when available
+  const citiesRaw = state
+    ? (hasCountyCityMapping(stateKey)
+        ? (
+            (counties.length > 0
+              ? counties
+              : (COUNTIES_BY_STATE[stateKey] || [])
+            )
+            .map(normalizeCountyName)
+            .flatMap((county) => getCitiesForCounty(stateKey, county))
+          )
+        : (usCitiesByState[stateKey] || [])
+      )
     : [];
-  const availableNeighborhoods = cities.length > 0 && state
-    ? [...new Set(cities.flatMap(city => usNeighborhoodsByCityState[`${city}-${state}`] || []))]
+
+  // Deduplicate and sort cities for a cleaner UX
+  const availableCities = Array.from(new Set(citiesRaw)).sort((a, b) => a.localeCompare(b));
+
+  const availableNeighborhoods = cities.length > 0 && stateKey
+    ? [...new Set(cities.flatMap(city => usNeighborhoodsByCityState[`${city}-${stateKey}`] || []))]
     : [];
 
   // Reset dependent fields when state, county, or city changes
