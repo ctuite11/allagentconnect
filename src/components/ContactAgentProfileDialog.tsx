@@ -22,9 +22,10 @@ interface ContactAgentProfileDialogProps {
   agentId: string;
   agentName: string;
   agentEmail: string;
+  buttonText?: string;
 }
 
-const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail }: ContactAgentProfileDialogProps) => {
+const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText = "Contact Agent" }: ContactAgentProfileDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -96,7 +97,7 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail }: ContactAg
       <DialogTrigger asChild>
         <Button className="w-full gap-2">
           <Mail className="h-4 w-4" />
-          Contact Agent
+          {buttonText}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">

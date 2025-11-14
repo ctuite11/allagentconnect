@@ -200,20 +200,20 @@ const TeamProfile = () => {
         </Button>
 
         {/* Hero Section with Team Contact Information */}
-        <div className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 rounded-xl p-8 mb-8">
+        <div className="bg-background rounded-xl p-8 mb-8 border">
           <div className="flex flex-col md:flex-row gap-8 items-start mb-8">
-            {/* Team Logo */}
+            {/* Team Photo */}
             <div className="flex-shrink-0">
-              <div className="w-48 h-48 rounded-lg overflow-hidden border-4 border-background shadow-xl bg-white p-4">
-                {team.logo_url ? (
+              <div className="w-48 h-64 rounded-lg overflow-hidden border-4 border-background shadow-xl">
+                {team.photo_url ? (
                   <img 
-                    src={team.logo_url} 
+                    src={team.photo_url} 
                     alt={team.name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                    <Users className="h-20 w-20 text-primary" />
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <Users className="h-20 w-20 text-muted-foreground" />
                   </div>
                 )}
               </div>
@@ -239,8 +239,8 @@ const TeamProfile = () => {
                     {members.length} {members.length === 1 ? 'Member' : 'Members'}
                   </Badge>
                 </div>
-                {team.company_logo_url && (
-                  <img src={team.company_logo_url} alt="Company logo" className="h-28 object-contain" />
+                {team.logo_url && (
+                  <img src={team.logo_url} alt="Team logo" className="h-28 object-contain" />
                 )}
               </div>
 
@@ -292,6 +292,7 @@ const TeamProfile = () => {
                     agentId={primaryContact.id}
                     agentName={team.name}
                     agentEmail={primaryContact.email}
+                    buttonText="Contact Team"
                   />
                 </div>
               )}
