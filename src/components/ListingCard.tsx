@@ -335,8 +335,6 @@ const ListingCard = ({
                   <Users className="w-3 h-3 mr-1" />
                   {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
                 </Button>}
-              {/* Listing Stats */}
-              {listing.listing_stats}
             </div>
 
             <div className="col-span-2">
