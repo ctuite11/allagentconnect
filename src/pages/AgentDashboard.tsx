@@ -455,6 +455,7 @@ const AgentDashboard = () => {
         {/* Dashboard Overview Cards */}
         <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 mb-10 sm:mb-16 animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-primary bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={scrollToListings}>
+            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Listings</CardTitle>
@@ -464,15 +465,12 @@ const AgentDashboard = () => {
             </CardHeader>
             <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
               <div className="text-3xl sm:text-4xl font-bold text-primary">{listings.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[10px] font-medium">
-                  {listings.filter(l => l.status === 'active').length} active
-                </span>
-              </p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2">View and manage your property listings</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-card/50 overflow-hidden relative touch-manipulation" onClick={() => navigate("/hot-sheets")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-orange-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/hot-sheets")}>
+            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Hot Sheets</CardTitle>
@@ -482,11 +480,12 @@ const AgentDashboard = () => {
             </CardHeader>
             <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
               <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">{hotSheetsCount}</div>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2">Active searches</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2">Track your active property searches</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-card/50 overflow-hidden relative touch-manipulation" onClick={() => navigate("/favorites")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-purple-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/favorites")}>
+            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Favorites</CardTitle>
@@ -496,11 +495,12 @@ const AgentDashboard = () => {
             </CardHeader>
             <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
               <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-500 to-purple-400 bg-clip-text text-transparent">{favoritesCount}</div>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2">Saved properties</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2">Access your saved favorite properties</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-red-500 bg-gradient-to-br from-card to-card/50 overflow-hidden relative touch-manipulation" onClick={() => navigate("/my-clients")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-red-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/my-clients")}>
+            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Contacts</CardTitle>
@@ -510,11 +510,12 @@ const AgentDashboard = () => {
             </CardHeader>
             <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
               <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">{clientsCount}</div>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2">Total clients</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2">Manage your client relationships</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-emerald-500 bg-gradient-to-br from-card to-card/50 overflow-hidden relative touch-manipulation" onClick={() => navigate("/coming-soon")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-emerald-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/client-needs")}>
+            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Communications</CardTitle>
@@ -524,11 +525,12 @@ const AgentDashboard = () => {
             </CardHeader>
             <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
               <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">{messagesCount}</div>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2">Total messages</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2">Review client needs and requests</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-amber-500 bg-gradient-to-br from-card to-card/50 overflow-hidden relative touch-manipulation" onClick={() => navigate("/agent-profile-editor")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-amber-500 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/agent-profile-editor")}>
+            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Profile</CardTitle>
@@ -545,7 +547,8 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-cyan-600 bg-gradient-to-br from-card to-card/50 overflow-hidden relative touch-manipulation" onClick={() => navigate("/manage-team")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-cyan-600 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden relative touch-manipulation" onClick={() => navigate("/manage-team")}>
+            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-8 -translate-y-8" />
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 p-4 sm:p-6 relative z-10">
               <CardTitle className="text-sm sm:text-base font-medium">My Team</CardTitle>
@@ -563,7 +566,7 @@ const AgentDashboard = () => {
             </CardHeader>
             <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
               <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 bg-clip-text text-transparent">{teamMembers.length}</div>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2">Team members</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2">Collaborate with your team members</p>
             </CardContent>
           </Card>
 
