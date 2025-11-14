@@ -129,6 +129,17 @@ const GeographicPreferencesManager = ({
       setSaving(false);
     }
   };
+  const selectAllCountiesAndTowns = () => {
+    // First change county filter to "all" to show all counties
+    setCounty("all");
+    // Wait for next render cycle so townsList updates with all counties
+    // then select all towns
+    setTimeout(() => {
+      addAllTowns();
+      toast.success("All counties and towns selected");
+    }, 50);
+  };
+
   const toggleTown = (town: string) => {
     setSelectedTowns(prev => prev.includes(town) ? prev.filter(t => t !== town) : [...prev, town]);
   };
@@ -219,7 +230,7 @@ const GeographicPreferencesManager = ({
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => setCounty("all")}
+                onClick={selectAllCountiesAndTowns}
                 className="w-full text-xs"
               >
                 Select All Counties
