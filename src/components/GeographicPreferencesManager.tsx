@@ -60,14 +60,15 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
         const firstState = prefsData[0].state;
         if (firstState) setState(firstState);
 
-        // Build selected towns list
+        // Build selected towns list and remove duplicates
         const towns = prefsData.map(p => {
           if (p.neighborhood) {
             return `${p.city}-${p.neighborhood}`;
           }
           return p.city;
         });
-        setSelectedTowns(towns);
+        // Remove duplicate cities
+        setSelectedTowns([...new Set(towns)]);
       }
     } catch (error: any) {
       console.error("Error loading preferences:", error);
@@ -88,9 +89,10 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
 
       if (deleteError) throw deleteError;
 
-      // Insert new preferences
-      if (selectedTowns.length > 0) {
-        const preferencesToInsert = selectedTowns.map(town => {
+      // Insert new preferences (remove duplicates before saving)
+      const uniqueTowns = [...new Set(selectedTowns)];
+      if (uniqueTowns.length > 0) {
+        const preferencesToInsert = uniqueTowns.map(town => {
           // Check if it's a neighborhood (contains hyphen)
           if (town.includes('-')) {
             const [city, neighborhood] = town.split('-');
