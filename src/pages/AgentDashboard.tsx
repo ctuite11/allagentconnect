@@ -588,13 +588,10 @@ const AgentDashboard = () => {
             {/* Filters and Controls */}
             <div className="flex items-start justify-between gap-4 mb-4">
               {/* Status Filter Buttons */}
-              <div className="flex flex-wrap gap-2 flex-1">
-                {['active', 'draft', 'coming_soon', 'new', 'back_on_market', 'expired', 'contingent', 'cancelled', 'under_agreement', 'temp_withdrawn', 'sold'].map(status => <Button key={status} variant={statusFilters.includes(status) ? 'default' : 'outline'} size="sm" onClick={() => toggleStatusFilter(status)} className="rounded-md capitalize text-sm text-slate-500">
+              <div className="flex flex-wrap gap-1.5 flex-1">
+                {['active', 'draft', 'coming_soon', 'new', 'back_on_market', 'expired', 'contingent', 'cancelled', 'under_agreement', 'temp_withdrawn', 'sold'].map(status => <Button key={status} variant={statusFilters.includes(status) ? 'default' : 'outline'} size="sm" onClick={() => toggleStatusFilter(status)} className="rounded-md capitalize text-xs h-7 px-2.5">
                     {status.replace(/_/g, ' ')}
                   </Button>)}
-                <Button variant={statusFilters.length === 0 ? 'default' : 'outline'} size="sm" className="rounded-md w-full" onClick={() => setStatusFilters([])}>
-                  All
-                </Button>
               </div>
 
               {/* Sort and View Controls */}
