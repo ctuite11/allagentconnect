@@ -109,3 +109,11 @@ All colors MUST be HSL.
     font-weight: 700;
   }
 }
+
+@layer utilities {
+  .text-security-disc {
+    -webkit-text-security: disc;
+    text-security: disc;
+  }
+}
+

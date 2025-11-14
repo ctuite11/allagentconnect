@@ -1777,10 +1777,11 @@ const EditListing = () => {
                     <Input
                       id="lockbox_code"
                       name="lockbox_one_time_code"
-                      type="password"
+                      type="text"
+                      className="text-security-disc"
                       value={formData.lockbox_code}
                       onChange={(e) => setFormData({ ...formData, lockbox_code: e.target.value })}
-                      autoComplete="new-password"
+                      autoComplete="off"
                       inputMode="numeric"
                       pattern="^[0-9]*$"
                       data-form-type="other"
