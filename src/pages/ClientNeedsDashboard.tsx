@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Loader2 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
 import GeographicPreferencesManager from "@/components/GeographicPreferencesManager";
@@ -57,15 +58,11 @@ const ClientNeedsDashboard = () => {
         {/* Notification Preference Cards */}
         <NotificationPreferenceCards />
 
-        {/* My Preferences Section */}
+        {/* Separator */}
+        <Separator className="my-8" />
+
+        {/* Preferences Section */}
         <div className="mb-12">
-          <div className="mb-6">
-            <h2 className="text-3xl font-display font-semibold mb-2">My Preferences</h2>
-            <p className="text-muted-foreground">
-              Control what types of client needs you want to receive notifications about
-            </p>
-          </div>
-          
           <div className="space-y-6">
             <PriceRangePreferences agentId={user?.id || ""} />
             <PropertyTypePreferences agentId={user?.id || ""} />
