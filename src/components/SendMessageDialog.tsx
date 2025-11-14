@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Send, Users } from "lucide-react";
+import { Send, Users, ArrowLeft, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
@@ -35,6 +35,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [sending, setSending] = useState(false);
   const [recipientCount, setRecipientCount] = useState<number | null>(null);
   const [loadingCount, setLoadingCount] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   
   // Additional fields for buyer_need and renter_need
   const [state, setState] = useState("");
@@ -144,6 +145,12 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       return;
     }
 
+    // Show confirmation before sending
+    if (!showConfirmation) {
+      setShowConfirmation(true);
+      return;
+    }
+
     setSending(true);
     try {
       const requestBody: any = {
@@ -189,6 +196,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       setMinPrice("");
       setMaxPrice("");
       setPropertyType("");
+      setShowConfirmation(false);
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message. Please try again.");
@@ -201,27 +209,101 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Send {categoryTitle} Message</DialogTitle>
+          <DialogTitle>
+            {showConfirmation ? "Confirm & Send Message" : `Send ${categoryTitle} Message`}
+          </DialogTitle>
           <DialogDescription>
-            Compose your message to send to agents interested in {categoryTitle.toLowerCase()}.
+            {showConfirmation 
+              ? "Please review your message and criteria before sending."
+              : `Compose your message to send to agents interested in ${categoryTitle.toLowerCase()}.`
+            }
           </DialogDescription>
         </DialogHeader>
         
-        {/* Recipient Count Preview */}
-        {!loadingCount && recipientCount !== null && (
-          <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {recipientCount === 0 ? (
-                "No agents will receive this message"
-              ) : (
-                <>
-                  This message will be sent to <strong className="text-foreground">{recipientCount}</strong> agent{recipientCount !== 1 ? "s" : ""}
-                </>
-              )}
-            </span>
+        {showConfirmation ? (
+          /* Confirmation View */
+          <div className="space-y-4 py-4">
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+              <div>
+                <h4 className="text-sm font-semibold mb-1">Subject:</h4>
+                <p className="text-sm">{subject}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold mb-1">Message:</h4>
+                <p className="text-sm whitespace-pre-wrap">{message}</p>
+              </div>
+            </div>
+
+            {showLocationFields && (state || counties.length > 0 || cities.length > 0 || neighborhoods.length > 0 || propertyType || minPrice || maxPrice) && (
+              <div className="bg-primary/5 rounded-lg p-4 space-y-2">
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  Search Criteria:
+                </h4>
+                <div className="space-y-1 text-sm">
+                  {propertyType && (
+                    <div><strong>Property Type:</strong> {propertyType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                  )}
+                  {state && (
+                    <div><strong>State:</strong> {US_STATES.find(s => s.code === state)?.name}</div>
+                  )}
+                  {counties.length > 0 && (
+                    <div><strong>Counties:</strong> {counties.join(', ')}</div>
+                  )}
+                  {cities.length > 0 && (
+                    <div><strong>Cities:</strong> {cities.join(', ')}</div>
+                  )}
+                  {neighborhoods.length > 0 && (
+                    <div><strong>Neighborhoods:</strong> {neighborhoods.join(', ')}</div>
+                  )}
+                  {(minPrice || maxPrice) && (
+                    <div>
+                      <strong>Price Range:</strong>{' '}
+                      {minPrice && maxPrice 
+                        ? `$${parseFloat(minPrice).toLocaleString()} - $${parseFloat(maxPrice).toLocaleString()}`
+                        : minPrice 
+                        ? `$${parseFloat(minPrice).toLocaleString()}+`
+                        : `Up to $${parseFloat(maxPrice).toLocaleString()}`
+                      }
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {!loadingCount && recipientCount !== null && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {recipientCount === 0 ? (
+                    "No agents will receive this message"
+                  ) : (
+                    <>
+                      This message will be sent to <strong className="text-foreground">{recipientCount}</strong> agent{recipientCount !== 1 ? "s" : ""}
+                    </>
+                  )}
+                </span>
+              </div>
+            )}
           </div>
-        )}
+        ) : (
+          /* Form View */
+          <>
+            {/* Recipient Count Preview */}
+            {!loadingCount && recipientCount !== null && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {recipientCount === 0 ? (
+                    "No agents will receive this message"
+                  ) : (
+                    <>
+                      This message will be sent to <strong className="text-foreground">{recipientCount}</strong> agent{recipientCount !== 1 ? "s" : ""}
+                    </>
+                  )}
+                </span>
+              </div>
+            )}
         <div className="space-y-4 py-4">
           {showLocationFields && (
             <>
@@ -407,14 +489,35 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             />
           </div>
         </div>
+        </>
+        )}
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSend} disabled={sending}>
-            <Send className="mr-2 h-4 w-4" />
-            {sending ? "Sending..." : "Send Message"}
-          </Button>
+          {showConfirmation ? (
+            <>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowConfirmation(false)}
+                disabled={sending}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Edit
+              </Button>
+              <Button onClick={handleSend} disabled={sending || recipientCount === 0}>
+                <Send className="mr-2 h-4 w-4" />
+                {sending ? "Sending..." : "Confirm & Send"}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSend} disabled={sending}>
+                <Send className="mr-2 h-4 w-4" />
+                Review & Send
+              </Button>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
