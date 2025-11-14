@@ -52,6 +52,7 @@ export function CreateHotSheetDialog({
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [existingClient, setExistingClient] = useState<any>(null);
+  const [selectedClients, setSelectedClients] = useState<any[]>([]);
   const [showCreateClientDialog, setShowCreateClientDialog] = useState(false);
   const [creatingClient, setCreatingClient] = useState(false);
   const [clientSearchQuery, setClientSearchQuery] = useState("");
@@ -212,15 +213,26 @@ export function CreateHotSheetDialog({
   }, [clientSearchQuery, userId, open]);
 
   const handleSelectClient = (client: any) => {
-    setClientFirstName(client.first_name || "");
-    setClientLastName(client.last_name || "");
-    setClientEmail(client.email || "");
-    setClientPhone(client.phone ? formatPhoneNumber(client.phone) : "");
-    setExistingClient(client);
-    setClientSearchQuery(`${client.first_name} ${client.last_name}`);
+    // Check if client is already selected
+    if (selectedClients.some(c => c.id === client.id)) {
+      toast.error("This client is already added");
+      return;
+    }
+    
+    // Add to selected clients
+    setSelectedClients(prev => [...prev, client]);
+    
+    // Clear search
+    setClientSearchQuery("");
     setShowClientDropdown(false);
     setClientInfoOpen(false); // Collapse after selection
-    toast.success(`Selected client: ${client.first_name} ${client.last_name}`);
+    
+    toast.success(`Added client: ${client.first_name} ${client.last_name}`);
+  };
+
+  const handleRemoveClient = (clientId: string) => {
+    setSelectedClients(prev => prev.filter(c => c.id !== clientId));
+    toast.success("Client removed");
   };
 
   const loadHotSheet = async () => {
@@ -238,6 +250,7 @@ export function CreateHotSheetDialog({
       setHotSheetName(data.name);
       const criteria = data.criteria as any;
       
+      // Load all the criteria fields
       setListingNumbers(criteria.listingNumbers || "");
       setAddress(criteria.address || "");
       setPropertyTypes(criteria.propertyTypes || []);
@@ -259,14 +272,56 @@ export function CreateHotSheetDialog({
         ? (US_STATES.find(s => s.name === loadedState)?.code ?? loadedState)
         : (loadedState || "MA");
       setState(normalizedState);
-      setClientFirstName(criteria.clientFirstName || "");
-      setClientLastName(criteria.clientLastName || "");
-      setClientEmail(criteria.clientEmail || "");
-      setClientPhone(criteria.clientPhone ? formatPhoneNumber(criteria.clientPhone) : "");
+      
+      // Load notification settings
       setNotifyClient(data.notify_client_email);
       setNotifyAgent(data.notify_agent_email);
       setNotificationSchedule(data.notification_schedule);
-    } catch (error) {
+
+      // Load clients from junction table
+      const { data: clientsData, error: clientsError } = await supabase
+        .from("hot_sheet_clients")
+        .select(`
+          client_id,
+          clients (*)
+        `)
+        .eq("hot_sheet_id", hotSheetId);
+
+      if (clientsError) throw clientsError;
+
+      if (clientsData && clientsData.length > 0) {
+        const clients = clientsData.map((item: any) => item.clients).filter(Boolean);
+        setSelectedClients(clients);
+      }
+
+      // Load additional criteria fields
+      setListingAgreementTypes(criteria.listingAgreementTypes || []);
+      setEntryOnly(criteria.entryOnly ?? null);
+      setLenderOwned(criteria.lenderOwned ?? null);
+      setShortSale(criteria.shortSale ?? null);
+      setPropertyStyles(criteria.propertyStyles || []);
+      setMinYearBuilt(criteria.minYearBuilt?.toString() || "");
+      setMaxYearBuilt(criteria.maxYearBuilt?.toString() || "");
+      setMinLotSize(criteria.minLotSize?.toString() || "");
+      setMaxLotSize(criteria.maxLotSize?.toString() || "");
+      setWaterfront(criteria.waterfront ?? null);
+      setWaterView(criteria.waterView ?? null);
+      setBeachNearby(criteria.beachNearby ?? null);
+      setFacingDirection(criteria.facingDirection || []);
+      setMinFireplaces(criteria.minFireplaces?.toString() || "");
+      setBasement(criteria.basement ?? null);
+      setHasParking(criteria.hasParking ?? null);
+      setMinGarageSpaces(criteria.minGarageSpaces?.toString() || "");
+      setMinParkingSpaces(criteria.minParkingSpaces?.toString() || "");
+      setConstructionFeatures(criteria.constructionFeatures || []);
+      setRoofMaterials(criteria.roofMaterials || []);
+      setExteriorFeatures(criteria.exteriorFeatures || []);
+      setHeatingTypes(criteria.heatingTypes || []);
+      setCoolingTypes(criteria.coolingTypes || []);
+      setGreenFeatures(criteria.greenFeatures || []);
+
+      // ... rest of criteria loading
+    } catch (error: any) {
       console.error("Error loading hot sheet:", error);
       toast.error("Failed to load hot sheet data");
     }
@@ -556,30 +611,46 @@ export function CreateHotSheetDialog({
     // Clear previous errors
     setErrors({});
     
-    // Validate form
-    const validation = hotSheetSchema.safeParse({
-      hotSheetName,
-      clientFirstName,
-      clientLastName,
-      clientEmail,
-      clientPhone
-    });
-    
-    if (!validation.success) {
-      const fieldErrors: Record<string, string> = {};
-      validation.error.errors.forEach((err) => {
-        if (err.path[0]) {
-          fieldErrors[err.path[0] as string] = err.message;
-        }
-      });
-      setErrors(fieldErrors);
-      toast.error("Please fix the validation errors");
+    // Check if at least one client is selected
+    if (selectedClients.length === 0 && !clientFirstName && !clientEmail) {
+      toast.error("Please add at least one client");
       return;
     }
 
-    // Check if client exists
-    if (!existingClient && clientFirstName && clientEmail) {
-      setShowCreateClientDialog(true);
+    // If there's client data in the form but not added to list, validate and offer to add
+    if (clientFirstName || clientEmail) {
+      // Validate the pending client
+      const validation = hotSheetSchema.safeParse({
+        hotSheetName,
+        clientFirstName,
+        clientLastName,
+        clientEmail,
+        clientPhone
+      });
+      
+      if (!validation.success) {
+        const fieldErrors: Record<string, string> = {};
+        validation.error.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+        toast.error("Please fix the validation errors or clear the client form");
+        return;
+      }
+
+      // Check if this client exists or needs to be created
+      if (!existingClient && clientFirstName && clientEmail) {
+        setShowCreateClientDialog(true);
+        return;
+      }
+    }
+
+    // Validate hot sheet name
+    if (!hotSheetName || hotSheetName.trim().length === 0) {
+      setErrors({ hotSheetName: "Hot sheet name is required" });
+      toast.error("Hot sheet name is required");
       return;
     }
 
@@ -604,12 +675,21 @@ export function CreateHotSheetDialog({
 
       if (error) throw error;
 
-      setExistingClient(data);
+      // Add to selected clients
+      setSelectedClients(prev => [...prev, data]);
       setShowCreateClientDialog(false);
-      toast.success("Client created successfully");
+      toast.success("Client created and added successfully");
       
-      // Now show the hot sheet confirmation
-      setShowConfirmDialog(true);
+      // Clear the form
+      setClientFirstName("");
+      setClientLastName("");
+      setClientEmail("");
+      setClientPhone("");
+      setExistingClient(null);
+      setClientSearchQuery("");
+      
+      // Collapse client info
+      setClientInfoOpen(false);
     } catch (error: any) {
       console.error("Error creating client:", error);
       toast.error(error?.message || "Failed to create client");
@@ -689,6 +769,27 @@ export function CreateHotSheetDialog({
 
         if (error) throw error;
 
+        // Update clients - delete existing and insert new ones
+        const { error: deleteError } = await supabase
+          .from("hot_sheet_clients")
+          .delete()
+          .eq("hot_sheet_id", hotSheetId);
+
+        if (deleteError) throw deleteError;
+
+        if (selectedClients.length > 0) {
+          const { error: insertError } = await supabase
+            .from("hot_sheet_clients")
+            .insert(
+              selectedClients.map(client => ({
+                hot_sheet_id: hotSheetId,
+                client_id: client.id
+              }))
+            );
+
+          if (insertError) throw insertError;
+        }
+
         toast.success("Hot sheet updated");
         setShowSuccess(true);
         setTimeout(() => {
@@ -716,6 +817,20 @@ export function CreateHotSheetDialog({
 
         if (error) throw error;
 
+        // Insert clients into junction table
+        if (selectedClients.length > 0) {
+          const { error: clientError } = await supabase
+            .from("hot_sheet_clients")
+            .insert(
+              selectedClients.map(client => ({
+                hot_sheet_id: createdHotSheet.id,
+                client_id: client.id
+              }))
+            );
+
+          if (clientError) throw clientError;
+        }
+
         toast.success("Hot sheet created successfully!");
         setShowSuccess(true);
         setTimeout(() => {
@@ -740,6 +855,7 @@ export function CreateHotSheetDialog({
     setClientEmail("");
     setClientPhone("");
     setExistingClient(null);
+    setSelectedClients([]);
     setClientSearchQuery("");
     setClientSearchResults([]);
     setShowClientDropdown(false);
@@ -852,9 +968,9 @@ export function CreateHotSheetDialog({
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">
                       Client Information * 
-                      {existingClient && (
+                      {selectedClients.length > 0 && (
                         <span className="ml-2 text-sm font-normal text-green-600">
-                          ✓ {existingClient.first_name} {existingClient.last_name}
+                          ✓ {selectedClients.length} {selectedClients.length === 1 ? 'client' : 'clients'}
                         </span>
                       )}
                     </CardTitle>
@@ -864,6 +980,34 @@ export function CreateHotSheetDialog({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="space-y-4">
+              {/* Selected Clients List */}
+              {selectedClients.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Selected Clients ({selectedClients.length})</Label>
+                  <div className="space-y-2 p-3 bg-muted/30 rounded-md border">
+                    {selectedClients.map((client) => (
+                      <div key={client.id} className="flex items-center justify-between p-2 bg-background rounded border">
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">
+                            {client.first_name} {client.last_name}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{client.email}</div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveClient(client.id)}
+                          className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Client Search */}
               <div className="space-y-2 relative">
                 <Label htmlFor="client-search">Search Existing Client</Label>
@@ -903,14 +1047,15 @@ export function CreateHotSheetDialog({
                   </div>
                 )}
                 {existingClient && (
-                  <p className="text-sm text-green-600 flex items-center gap-1">
-                    <Check className="w-4 h-4" />
-                    Client selected: {existingClient.first_name} {existingClient.last_name}
+                  <p className="text-sm text-muted-foreground">
+                    Found existing client - fields auto-filled
                   </p>
                 )}
               </div>
 
               <Separator />
+
+              <p className="text-sm text-muted-foreground">Or add a new client manually:</p>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -994,6 +1139,47 @@ export function CreateHotSheetDialog({
                   <p className="text-sm text-destructive">{errors.clientPhone}</p>
                 )}
               </div>
+
+              {/* Add Client Button */}
+              {(clientFirstName || clientLastName || clientEmail || clientPhone) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    // Validate the fields
+                    const validation = hotSheetSchema.safeParse({
+                      hotSheetName: hotSheetName || "temp",
+                      clientFirstName,
+                      clientLastName,
+                      clientEmail,
+                      clientPhone
+                    });
+                    
+                    if (!validation.success) {
+                      const fieldErrors: Record<string, string> = {};
+                      validation.error.errors.forEach((err) => {
+                        if (err.path[0] && err.path[0] !== 'hotSheetName') {
+                          fieldErrors[err.path[0] as string] = err.message;
+                        }
+                      });
+                      setErrors(fieldErrors);
+                      toast.error("Please fix the validation errors");
+                      return;
+                    }
+
+                    // Check if client exists or needs to be created
+                    if (!existingClient) {
+                      setShowCreateClientDialog(true);
+                    } else {
+                      handleSelectClient(existingClient);
+                    }
+                  }}
+                  className="w-full"
+                >
+                  <Check className="w-4 h-4 mr-2" />
+                  Add This Client
+                </Button>
+              )}
             </CardContent>
           </CollapsibleContent>
         </Card>
@@ -1625,11 +1811,19 @@ export function CreateHotSheetDialog({
             {/* Client Information */}
             <div className="border-b pb-3">
               <p className="text-sm font-semibold text-foreground mb-2">Client Information</p>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <p><span className="font-medium">Name:</span> {clientFirstName} {clientLastName}</p>
-                <p><span className="font-medium">Email:</span> {clientEmail}</p>
-                {clientPhone && <p><span className="font-medium">Phone:</span> {clientPhone}</p>}
-              </div>
+              {selectedClients.length > 0 ? (
+                <div className="space-y-2">
+                  {selectedClients.map((client, index) => (
+                    <div key={client.id} className="text-sm text-muted-foreground p-2 bg-muted/30 rounded">
+                      <p><span className="font-medium">#{index + 1} Name:</span> {client.first_name} {client.last_name}</p>
+                      <p><span className="font-medium">Email:</span> {client.email}</p>
+                      {client.phone && <p><span className="font-medium">Phone:</span> {formatPhoneNumber(client.phone)}</p>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No clients selected</p>
+              )}
             </div>
 
 
