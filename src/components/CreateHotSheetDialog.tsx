@@ -51,6 +51,7 @@ export function CreateHotSheetDialog({
   const [clientLastName, setClientLastName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  const [existingClient, setExistingClient] = useState<any>(null);
   
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -138,6 +139,79 @@ export function CreateHotSheetDialog({
       loadHotSheet();
     }
   }, [editMode, hotSheetId, open]);
+
+  // Fetch client data if clientId is provided
+  useEffect(() => {
+    const fetchClient = async () => {
+      if (!clientId || !open) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("clients")
+          .select("*")
+          .eq("id", clientId)
+          .single();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setClientFirstName(data.first_name || "");
+          setClientLastName(data.last_name || "");
+          setClientEmail(data.email || "");
+          setClientPhone(data.phone ? formatPhoneNumber(data.phone) : "");
+          setExistingClient(data);
+        }
+      } catch (error: any) {
+        console.error("Error fetching client:", error);
+      }
+    };
+    
+    fetchClient();
+  }, [clientId, open]);
+
+  // Auto-populate from existing client when email changes
+  useEffect(() => {
+    const searchClient = async () => {
+      if (!clientEmail || clientEmail.length < 5 || !open) return;
+      
+      // Skip if we already have this client loaded
+      if (existingClient && existingClient.email === clientEmail) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("clients")
+          .select("*")
+          .eq("agent_id", userId)
+          .eq("email", clientEmail.toLowerCase().trim())
+          .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data) {
+          // Only auto-fill if the fields are empty
+          if (!clientFirstName && data.first_name) {
+            setClientFirstName(data.first_name);
+          }
+          if (!clientLastName && data.last_name) {
+            setClientLastName(data.last_name);
+          }
+          if (!clientPhone && data.phone) {
+            setClientPhone(formatPhoneNumber(data.phone));
+          }
+          setExistingClient(data);
+          toast.success(`Found existing client: ${data.first_name} ${data.last_name}`);
+        } else {
+          setExistingClient(null);
+        }
+      } catch (error: any) {
+        console.error("Error searching for client:", error);
+      }
+    };
+    
+    // Debounce the search
+    const timer = setTimeout(searchClient, 500);
+    return () => clearTimeout(timer);
+  }, [clientEmail, userId, open]);
 
   const loadHotSheet = async () => {
     try {
@@ -608,6 +682,7 @@ export function CreateHotSheetDialog({
     setClientLastName("");
     setClientEmail("");
     setClientPhone("");
+    setExistingClient(null);
     setErrors({});
     setShowConfirmDialog(false);
     setShowSuccess(false);
@@ -747,6 +822,12 @@ export function CreateHotSheetDialog({
                   }}
                   className={errors.clientEmail ? "border-destructive" : ""}
                 />
+                {existingClient && (
+                  <p className="text-sm text-green-600 flex items-center gap-1">
+                    <Check className="w-4 h-4" />
+                    Existing client found - fields auto-filled
+                  </p>
+                )}
                 {errors.clientEmail && (
                   <p className="text-sm text-destructive">{errors.clientEmail}</p>
                 )}
