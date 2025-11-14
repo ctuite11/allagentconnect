@@ -185,7 +185,7 @@ const Navigation = () => {
               <>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={() => navigate("/agent-dashboard")}>
                       <LayoutDashboard className="w-4 h-4 mr-2" />
                       Success Hub
                       <ChevronDown className="w-3 h-3 ml-2" />
@@ -194,6 +194,10 @@ const Navigation = () => {
                   <DropdownMenuContent className="w-56 bg-card border-border shadow-lg z-[100]">
                     <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
                     <DropdownMenuGroup>
+                      <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Success Hub
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/browse")}>
                         <Search className="mr-2 h-4 w-4" />
                         Search
@@ -225,6 +229,10 @@ const Navigation = () => {
                     </DropdownMenuGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                <Button variant="outline" onClick={() => navigate("/browse")}>
+                  <Search className="w-4 h-4 mr-2" />
+                  Search
+                </Button>
                 <Button variant="outline" onClick={handleLogout}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
