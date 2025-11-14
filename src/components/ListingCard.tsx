@@ -359,7 +359,7 @@ const ListingCard = ({
             <div className="col-span-2 flex flex-col gap-1 justify-center">
               <Button variant="outline" size="sm" onClick={() => {
                 sessionStorage.setItem('fromAgentDashboard', 'true');
-                navigate(`/property/${listing.id}`, { state: { fromAgentDashboard: true } });
+                navigate(`/property/${listing.id}?from=my-listings`, { state: { fromAgentDashboard: true } });
               }} className="w-full">
                 <Eye className="w-3 h-3 mr-1" />
                 View
@@ -515,7 +515,7 @@ const ListingCard = ({
         <div className="flex gap-1.5 mt-2">
           <Button variant="outline" size="sm" className="flex-1" onClick={() => {
             sessionStorage.setItem('fromAgentDashboard', 'true');
-            navigate(`/property/${listing.id}`, { state: { fromAgentDashboard: true } });
+            navigate(`/property/${listing.id}?from=my-listings`, { state: { fromAgentDashboard: true } });
           }}>
             <Eye className="w-4 h-4 mr-2" />
             View
