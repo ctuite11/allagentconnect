@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,6 +81,7 @@ interface Listing {
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -91,7 +92,9 @@ const PropertyDetail = () => {
   const [galleryTab, setGalleryTab] = useState("photos");
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [cameFromAgentDashboard, setCameFromAgentDashboard] = useState(false);
+  const [cameFromAgentDashboard, setCameFromAgentDashboard] = useState<boolean>(
+    Boolean((location as any)?.state?.fromAgentDashboard) || sessionStorage.getItem('fromAgentDashboard') === 'true'
+  );
 
   // Track listing view
   useListingView(id);
