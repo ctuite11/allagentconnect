@@ -585,35 +585,38 @@ const AgentDashboard = () => {
                 </Card>)}
             </div>
 
-            {/* Status Filter Buttons */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              <Button variant={statusFilters.length === 0 ? 'default' : 'outline'} size="sm" className="rounded-md" onClick={() => setStatusFilters([])}>
-                All
-              </Button>
-              {['active', 'draft', 'coming_soon', 'new', 'back_on_market', 'expired', 'contingent', 'cancelled', 'under_agreement', 'temp_withdrawn', 'sold'].map(status => <Button key={status} variant={statusFilters.includes(status) ? 'default' : 'outline'} size="sm" onClick={() => toggleStatusFilter(status)} className="rounded-md capitalize text-sm text-slate-500">
-                  {status.replace(/_/g, ' ')}
-                </Button>)}
-            </div>
+            {/* Filters and Controls */}
+            <div className="flex items-start justify-between gap-4 mb-4">
+              {/* Status Filter Buttons */}
+              <div className="flex flex-wrap gap-2 flex-1">
+                {['active', 'draft', 'coming_soon', 'new', 'back_on_market', 'expired', 'contingent', 'cancelled', 'under_agreement', 'temp_withdrawn', 'sold'].map(status => <Button key={status} variant={statusFilters.includes(status) ? 'default' : 'outline'} size="sm" onClick={() => toggleStatusFilter(status)} className="rounded-md capitalize text-sm text-slate-500">
+                    {status.replace(/_/g, ' ')}
+                  </Button>)}
+                <Button variant={statusFilters.length === 0 ? 'default' : 'outline'} size="sm" className="rounded-md w-full" onClick={() => setStatusFilters([])}>
+                  All
+                </Button>
+              </div>
 
-            {/* Sort and View Controls */}
-            <div className="flex items-center justify-end gap-3 mb-4">
-              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date">Date Added</SelectItem>
-                  <SelectItem value="price">Price</SelectItem>
-                  <SelectItem value="status">Status</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex border rounded-lg overflow-hidden">
-                <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('list')} className="rounded-none">
-                  <List className="h-4 w-4" />
-                </Button>
-                <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('grid')} className="rounded-none">
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
+              {/* Sort and View Controls */}
+              <div className="flex flex-col gap-2 items-end">
+                <div className="flex border rounded-lg overflow-hidden">
+                  <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('list')} className="rounded-none">
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('grid')} className="rounded-none">
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Date Added</SelectItem>
+                    <SelectItem value="price">Price</SelectItem>
+                    <SelectItem value="status">Status</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
