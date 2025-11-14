@@ -481,28 +481,28 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/my-clients")}>
+          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/my-clients")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Contacts</CardTitle>
-              <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                <Users className="h-5 w-5 text-blue-500" />
+              <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-purple-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">{clientsCount}</div>
+              <div className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-purple-400 bg-clip-text text-transparent">{clientsCount}</div>
               <p className="text-xs text-muted-foreground mt-1">Total clients</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/coming-soon")}>
+          <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-l-4 border-l-emerald-500 bg-gradient-to-br from-card to-card/50" onClick={() => navigate("/coming-soon")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">My Communications</CardTitle>
-              <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                <Mail className="h-5 w-5 text-purple-500" />
+              <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <Mail className="h-5 w-5 text-emerald-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-violet-500 bg-clip-text text-transparent">{messagesCount}</div>
+              <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">{messagesCount}</div>
               <p className="text-xs text-muted-foreground mt-1">Total messages</p>
             </CardContent>
           </Card>
