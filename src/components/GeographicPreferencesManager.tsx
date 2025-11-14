@@ -304,8 +304,9 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="h-5 w-5 p-0 hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => removeTown(town)}
+                        title="Click to remove"
                       >
                         <X className="h-3 w-3" />
                       </Button>
