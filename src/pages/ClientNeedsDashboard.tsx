@@ -64,7 +64,7 @@ const ClientNeedsDashboard = () => {
         {/* My Preferences Section */}
         <div className="mb-8">
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold">My Preferences</h2>
+            <h2 className="text-2xl font-semibold">Set My Preferences</h2>
             <p className="text-sm text-muted-foreground mt-1">(For receiving email notifications only)</p>
           </div>
           <div className="space-y-6">
