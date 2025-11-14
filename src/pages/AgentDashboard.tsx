@@ -569,15 +569,15 @@ const AgentDashboard = () => {
           </Card>
 
           {/* Recent Activity Feed */}
-          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-slate-700 bg-card md:col-span-2 lg:col-span-2 overflow-hidden relative touch-manipulation h-56">
+          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-primary bg-card md:col-span-2 lg:col-span-2 overflow-hidden relative touch-manipulation h-56">
               
               <CardHeader className="flex flex-row items-center justify-between space-y-0 relative z-10 p-4 sm:p-6">
                 <div>
                   <CardTitle className="text-sm sm:text-base font-semibold">Recent Activity</CardTitle>
                   <CardDescription className="text-xs sm:text-sm">Your latest listings, messages, and client interactions</CardDescription>
                 </div>
-                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-slate-700/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                  <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                  <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
               </CardHeader>
               <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
@@ -638,7 +638,7 @@ const AgentDashboard = () => {
               </div>
 
               {/* Sort and View Controls */}
-              <div className="flex items-center justify-between bg-muted/30 p-2.5 sm:p-3 rounded-lg gap-2">
+              <div className="flex items-center justify-between bg-background p-2.5 sm:p-3 rounded-lg gap-2 border">
                 <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                   <SelectTrigger className="w-[140px] sm:w-[180px] shadow-sm text-sm">
                     <SelectValue placeholder="Sort by" />
