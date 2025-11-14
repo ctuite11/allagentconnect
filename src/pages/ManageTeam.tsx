@@ -256,6 +256,22 @@ const ManageTeam = () => {
 
       if (error) throw error;
       
+      // Send notification email to the added agent
+      try {
+        await supabase.functions.invoke('send-team-invite', {
+          body: {
+            agentEmail: agent.email,
+            agentName: `${agent.first_name} ${agent.last_name}`,
+            teamName: team.name,
+            teamContactEmail: contactEmail,
+            teamContactPhone: contactPhone,
+          }
+        });
+      } catch (emailError) {
+        console.error("Error sending notification email:", emailError);
+        // Don't fail the whole operation if email fails
+      }
+      
       toast.success(`${agent.first_name} ${agent.last_name} added to team!`);
       setAddMemberOpen(false);
       await checkAuthAndLoadTeam();
