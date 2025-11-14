@@ -394,15 +394,27 @@ const EditListing = () => {
     const addressComponents = place.address_components || [];
     const getComponent = (type: string) => {
       const component = addressComponents.find((c) => c.types.includes(type));
-      return component?.long_name || "";
+      return component?.long_name || component?.short_name || "";
     };
 
     const address = place.formatted_address?.split(",")[0] || "";
-    const city = getComponent("locality") || getComponent("sublocality") || getComponent("postal_town");
+    const city = getComponent("locality") || getComponent("sublocality") || getComponent("sublocality_level_1") || getComponent("postal_town");
     const state = getComponent("administrative_area_level_1");
     const zip_code = getComponent("postal_code");
 
-    console.log("=== Address components extracted ===", { address, city, state, zip_code });
+    // Neighborhood/Area extraction
+    const neighborhoodCandidate = getComponent("neighborhood") || getComponent("sublocality") || getComponent("sublocality_level_1");
+    let neighborhood = "";
+    try {
+      const availableAreas = getAreasForCity(city, state);
+      if (neighborhoodCandidate && availableAreas.includes(neighborhoodCandidate)) {
+        neighborhood = neighborhoodCandidate;
+      }
+    } catch (e) {
+      console.warn("Neighborhood lookup failed", e);
+    }
+
+    console.log("=== Address components extracted ===", { address, city, state, zip_code, neighborhoodCandidate, neighborhood });
 
     // Validate that we have all required components
     const missingFields: string[] = [];
@@ -411,15 +423,20 @@ const EditListing = () => {
     if (!zip_code) missingFields.push("zip code");
 
     if (missingFields.length > 0) {
-      toast.error(
-        `Unable to auto-populate ${missingFields.join(", ")} from the selected address. Please use "Enter manually" to complete all address fields.`,
+      console.warn("Missing components from selected place:", missingFields);
+      toast(
+        `Unable to auto-populate ${missingFields.join(", ")}. You can fill the missing fields manually.`,
         { duration: 6000 }
       );
+      // Set whatever we have; do not force-open manual dialog
       setFormData({
         ...formData,
         address,
+        city: city || "",
+        state: state || "",
+        zip_code: zip_code || "",
+        neighborhood: neighborhood || "",
       });
-      setTimeout(() => setManualAddressDialogOpen(true), 500);
     } else {
       setFormData({
         ...formData,
@@ -427,8 +444,9 @@ const EditListing = () => {
         city,
         state,
         zip_code,
+        neighborhood: neighborhood || formData.neighborhood,
       });
-      toast.success("Address details filled successfully");
+      toast.success("Address auto-filled successfully");
     }
     
     setIsDirty(true);
@@ -925,12 +943,13 @@ const EditListing = () => {
                       updateFormData({ address: val });
                       return;
                     }
-                    // Clear city, state, zip when address is manually changed/deleted
+                    // Manual edit: clear dependent fields to avoid stale data
                     updateFormData({ 
                       address: val,
-                      city: val.trim() ? '' : '',
-                      state: val.trim() ? '' : '',
-                      zip_code: val.trim() ? '' : ''
+                      city: '',
+                      state: '',
+                      zip_code: '',
+                      neighborhood: ''
                     });
                   }}
                 />
