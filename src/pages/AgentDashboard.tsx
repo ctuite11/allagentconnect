@@ -77,11 +77,11 @@ const AgentDashboard = () => {
   
   // Scroll to listings section if hash is present
   useEffect(() => {
-    if (location.hash === '#my-listings' && listingsSectionRef.current) {
+    if (location.hash === '#my-listings' && listingsSectionRef.current && !loading) {
       setTimeout(() => {
         const element = listingsSectionRef.current;
         if (element) {
-          const offset = 100; // Account for fixed header
+          const offset = 80; // Account for fixed header
           const elementPosition = element.getBoundingClientRect().top + window.scrollY;
           const offsetPosition = elementPosition - offset;
           
@@ -90,9 +90,9 @@ const AgentDashboard = () => {
             behavior: 'smooth'
           });
         }
-      }, 100);
+      }, 300);
     }
-  }, [location.hash, listings]);
+  }, [location.hash, listings, loading]);
   
   useEffect(() => {
     const {
@@ -607,9 +607,9 @@ const AgentDashboard = () => {
           </Card>
 
           {/* Recent Activity Feed - Full Width */}
-          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-primary bg-card md:col-span-2 lg:col-span-3 overflow-hidden relative touch-manipulation h-40">
+          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-primary bg-card md:col-span-2 lg:col-span-3 overflow-hidden relative touch-manipulation">
               
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 relative z-10 p-3 sm:p-4">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 relative z-10 p-3 sm:p-4 pb-2">
                 <div>
                   <CardTitle className="text-sm font-semibold">Recent Activity</CardTitle>
                   <CardDescription className="text-xs">Latest updates and interactions</CardDescription>
@@ -618,19 +618,19 @@ const AgentDashboard = () => {
                   <Activity className="h-4 w-4 text-primary" />
                 </div>
               </CardHeader>
-              <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
+              <CardContent className="relative z-10 p-3 sm:p-4 pt-2">
                 <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  {recentActivity.slice(0, 4).map((activity, index) => <div key={index} className="flex items-start gap-2 p-2 rounded-lg border bg-background/50 hover:bg-background/80 hover:shadow-md transition-all duration-200 touch-manipulation">
-                      <div className="flex items-center justify-center w-7 h-7 rounded-full bg-muted flex-shrink-0">
+                  {recentActivity.slice(0, 4).map((activity, index) => <div key={index} className="flex items-start gap-2 p-2 rounded-lg border bg-background/50 hover:bg-background/80 hover:shadow-md transition-all duration-200 touch-manipulation min-h-[80px]">
+                      <div className="flex items-center justify-center w-7 h-7 rounded-full bg-muted flex-shrink-0 mt-0.5">
                         {getActivityIcon(activity.icon)}
                       </div>
-                      <div className="flex-1 space-y-0.5 min-w-0">
+                      <div className="flex-1 space-y-1 min-w-0">
                         <div className="flex items-start justify-between gap-1">
-                          <p className="text-xs font-medium line-clamp-1">{activity.title}</p>
-                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">{formatTimestamp(activity.timestamp)}</span>
+                          <p className="text-xs font-medium line-clamp-2">{activity.title}</p>
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0">{formatTimestamp(activity.timestamp)}</span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground line-clamp-1">{activity.description}</p>
-                        {activity.status && <span className="inline-flex items-center px-1 py-0.5 text-[9px] font-medium rounded-full bg-primary/10 text-primary capitalize">
+                        <p className="text-[10px] text-muted-foreground line-clamp-2">{activity.description}</p>
+                        {activity.status && <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium rounded-full bg-primary/10 text-primary capitalize mt-1">
                             {activity.status}
                           </span>}
                       </div>
