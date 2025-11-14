@@ -18,9 +18,12 @@ interface SendNotificationRequest {
   message: string;
   criteria?: {
     state?: string;
-    city?: string;
+    counties?: string[];
+    cities?: string[];
+    neighborhoods?: string[];
     minPrice?: number;
     maxPrice?: number;
+    propertyTypes?: string[];
   };
 }
 
@@ -120,16 +123,71 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
 
-        // Further filter by city if provided
-        if (criteria.city && matchingAgentIds.length > 0) {
-          const { data: cityPrefs } = await supabase
+        // Further filter by cities and neighborhoods if provided
+        const hasCities = criteria.cities && criteria.cities.length > 0;
+        const hasNeighborhoods = criteria.neighborhoods && criteria.neighborhoods.length > 0;
+        
+        if ((hasCities || hasNeighborhoods) && matchingAgentIds.length > 0) {
+          let geoQuery = supabase
+            .from("agent_buyer_coverage_areas")
+            .select("agent_id")
+            .in("agent_id", matchingAgentIds);
+
+          // Build an OR condition for cities and neighborhoods
+          const orConditions: string[] = [];
+          
+          if (hasCities && criteria.cities) {
+            criteria.cities.forEach(city => {
+              orConditions.push(`city.eq.${city}`);
+            });
+          }
+          
+          if (hasNeighborhoods && criteria.neighborhoods) {
+            criteria.neighborhoods.forEach(neighborhood => {
+              // Neighborhoods are stored as "city-neighborhood" format
+              const parts = neighborhood.split('-');
+              if (parts.length === 2) {
+                const [city, nbhd] = parts;
+                orConditions.push(`and(city.eq.${city},neighborhood.eq.${nbhd})`);
+              }
+            });
+          }
+
+          if (orConditions.length > 0) {
+            geoQuery = geoQuery.or(orConditions.join(','));
+          }
+
+          const { data: detailedGeoPrefs } = await geoQuery;
+          if (detailedGeoPrefs && detailedGeoPrefs.length > 0) {
+            matchingAgentIds = detailedGeoPrefs.map(g => g.agent_id);
+          } else {
+            // No agents match the detailed location criteria
+            return new Response(
+              JSON.stringify({ 
+                success: true, 
+                message: "No agents found covering the specified cities/neighborhoods",
+                recipientCount: 0 
+              }),
+              {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              }
+            );
+          }
+        }
+
+        // Also filter by counties if provided and no cities/neighborhoods specified
+        const hasCounties = criteria.counties && criteria.counties.length > 0;
+        if (hasCounties && !hasCities && !hasNeighborhoods && matchingAgentIds.length > 0) {
+          const countyOrConditions = criteria.counties!.map(county => `county.eq.${county}`).join(',');
+          const { data: countyPrefs } = await supabase
             .from("agent_buyer_coverage_areas")
             .select("agent_id")
             .in("agent_id", matchingAgentIds)
-            .eq("city", criteria.city);
+            .or(countyOrConditions);
 
-          if (cityPrefs && cityPrefs.length > 0) {
-            matchingAgentIds = cityPrefs.map(c => c.agent_id);
+          if (countyPrefs && countyPrefs.length > 0) {
+            matchingAgentIds = countyPrefs.map(c => c.agent_id);
           }
         }
       }
@@ -217,8 +275,28 @@ const handler = async (req: Request): Promise<Response> => {
           if (criteria.state) {
             criteriaText += `<strong>State:</strong> ${criteria.state}<br>`;
           }
-          if (criteria.city) {
-            criteriaText += `<strong>City:</strong> ${criteria.city}<br>`;
+          if (criteria.counties && criteria.counties.length > 0) {
+            criteriaText += `<strong>Counties:</strong> ${criteria.counties.join(', ')}<br>`;
+          }
+          if (criteria.cities && criteria.cities.length > 0) {
+            criteriaText += `<strong>Cities:</strong> ${criteria.cities.join(', ')}<br>`;
+          }
+          if (criteria.neighborhoods && criteria.neighborhoods.length > 0) {
+            criteriaText += `<strong>Neighborhoods:</strong> ${criteria.neighborhoods.join(', ')}<br>`;
+          }
+          if (criteria.propertyTypes && criteria.propertyTypes.length > 0) {
+            const typeLabels: Record<string, string> = {
+              single_family: "Single Family",
+              condo: "Condo",
+              townhouse: "Townhouse",
+              multi_family: "Multi-Family",
+              land: "Land",
+              commercial: "Commercial",
+              residential_rental: "Residential Rental",
+              commercial_rental: "Commercial Rental"
+            };
+            const types = criteria.propertyTypes.map(t => typeLabels[t] || t).join(', ');
+            criteriaText += `<strong>Property Types:</strong> ${types}<br>`;
           }
           if (criteria.minPrice || criteria.maxPrice) {
             criteriaText += `<strong>Price Range:</strong> `;
