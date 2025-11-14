@@ -1,19 +1,18 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Bell, Check } from "lucide-react";
 
 interface NotificationSettings {
-  enabled: boolean;
   schedule: "immediate" | "daily" | "weekly";
 }
 
 export const ClientNeedsNotificationSettings = () => {
   const [settings, setSettings] = useState<NotificationSettings>({
-    enabled: true,
     schedule: "immediate",
   });
   const [loading, setLoading] = useState(true);
@@ -41,7 +40,6 @@ export const ClientNeedsNotificationSettings = () => {
       if (data) {
         const prefs = data as any;
         setSettings({
-          enabled: prefs.client_needs_enabled ?? true,
           schedule: (prefs.client_needs_schedule ?? "immediate") as "immediate" | "daily" | "weekly",
         });
         setHasInitialSelection(true);
@@ -62,7 +60,7 @@ export const ClientNeedsNotificationSettings = () => {
         .from("notification_preferences")
         .upsert({
           user_id: user.id,
-          client_needs_enabled: newSettings.enabled,
+          client_needs_enabled: true,
           client_needs_schedule: newSettings.schedule,
         }, {
           onConflict: 'user_id'
@@ -79,12 +77,12 @@ export const ClientNeedsNotificationSettings = () => {
     }
   };
 
-  const handleEnabledChange = (checked: boolean) => {
-    updateSettings({ ...settings, enabled: checked });
-  };
-
   const handleScheduleChange = (value: string) => {
     updateSettings({ ...settings, schedule: value as "immediate" | "daily" | "weekly" });
+  };
+
+  const handleCompleteSetup = () => {
+    toast.success("Setup complete! You'll receive notifications based on your preferences.");
   };
 
   if (loading) {
@@ -92,30 +90,18 @@ export const ClientNeedsNotificationSettings = () => {
   }
 
   return (
-    <Card className="mb-8">
+    <Card className="border-l-4 border-l-primary mb-8">
       <CardHeader>
-        <CardTitle>Notification Settings</CardTitle>
+        <div className="flex items-center gap-2">
+          <Bell className="h-5 w-5" />
+          <CardTitle>Notification Settings</CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Enable/Disable Notifications */}
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="notifications-enabled"
-            checked={settings.enabled}
-            onCheckedChange={handleEnabledChange}
-          />
-          <Label
-            htmlFor="notifications-enabled"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-          >
-            Send notifications to me (agent)
-          </Label>
-        </div>
-
-        {/* Notification Schedule - Required */}
+        {/* Notification Schedule */}
         <div className="space-y-3">
           <Label className="text-base font-medium">
-            Notification Schedule
+            How often would you like to receive notifications?
           </Label>
           <RadioGroup
             value={settings.schedule}
@@ -143,6 +129,18 @@ export const ClientNeedsNotificationSettings = () => {
               </Label>
             </div>
           </RadioGroup>
+        </div>
+
+        {/* Complete Setup Button */}
+        <div className="pt-4">
+          <Button 
+            onClick={handleCompleteSetup}
+            className="w-full"
+            size="lg"
+          >
+            <Check className="mr-2 h-4 w-4" />
+            Complete Your Setup
+          </Button>
         </div>
       </CardContent>
     </Card>
