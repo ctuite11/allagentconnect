@@ -44,6 +44,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [noMinPrice, setNoMinPrice] = useState(false);
+  const [noMaxPrice, setNoMaxPrice] = useState(false);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
 
   // Set default subject when dialog opens
@@ -619,7 +621,19 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       value={formatPriceDisplay(minPrice)}
                       onChange={(e) => handleMinPriceChange(e.target.value)}
                       maxLength={15}
+                      disabled={noMinPrice}
                     />
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="no-min-price"
+                        checked={noMinPrice}
+                        onCheckedChange={(checked) => {
+                          setNoMinPrice(!!checked);
+                          if (checked) setMinPrice("");
+                        }}
+                      />
+                      <label htmlFor="no-min-price" className="text-xs cursor-pointer">No Minimum</label>
+                    </div>
                     {minPrice && (
                       <p className="text-xs text-muted-foreground">Preview: {formatCurrency(minPrice)}</p>
                     )}
@@ -635,7 +649,19 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       value={formatPriceDisplay(maxPrice)}
                       onChange={(e) => handleMaxPriceChange(e.target.value)}
                       maxLength={15}
+                      disabled={noMaxPrice}
                     />
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="no-max-price"
+                        checked={noMaxPrice}
+                        onCheckedChange={(checked) => {
+                          setNoMaxPrice(!!checked);
+                          if (checked) setMaxPrice("");
+                        }}
+                      />
+                      <label htmlFor="no-max-price" className="text-xs cursor-pointer">No Maximum</label>
+                    </div>
                     {maxPrice && (
                       <p className="text-xs text-muted-foreground">Preview: {formatCurrency(maxPrice)}</p>
                     )}

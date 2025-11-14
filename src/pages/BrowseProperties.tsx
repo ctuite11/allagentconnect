@@ -54,6 +54,8 @@ const BrowseProperties = () => {
   // Price filters
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [noMinPrice, setNoMinPrice] = useState(false);
+  const [noMaxPrice, setNoMaxPrice] = useState(false);
   
   // Standard criteria
   const [bedrooms, setBedrooms] = useState("");
@@ -588,14 +590,50 @@ const BrowseProperties = () => {
                 <h3 className="font-semibold text-sm text-primary">PRICE</h3>
                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-lime-500 text-white text-[10px] font-bold">?</span>
               </div>
-              <div className="p-3 grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Low</Label>
-                  <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-8" />
-                </div>
-                <div>
-                  <Label className="text-xs">High</Label>
-                  <Input type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-8" />
+              <div className="p-3 space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Low</Label>
+                    <Input 
+                      type="number" 
+                      value={minPrice} 
+                      onChange={(e) => setMinPrice(e.target.value)} 
+                      className="h-8" 
+                      disabled={noMinPrice}
+                    />
+                    <div className="flex items-center space-x-1.5">
+                      <Checkbox
+                        id="browse-no-min"
+                        checked={noMinPrice}
+                        onCheckedChange={(checked) => {
+                          setNoMinPrice(!!checked);
+                          if (checked) setMinPrice("");
+                        }}
+                      />
+                      <label htmlFor="browse-no-min" className="text-[10px] cursor-pointer">No Min</label>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">High</Label>
+                    <Input 
+                      type="number" 
+                      value={maxPrice} 
+                      onChange={(e) => setMaxPrice(e.target.value)} 
+                      className="h-8"
+                      disabled={noMaxPrice}
+                    />
+                    <div className="flex items-center space-x-1.5">
+                      <Checkbox
+                        id="browse-no-max"
+                        checked={noMaxPrice}
+                        onCheckedChange={(checked) => {
+                          setNoMaxPrice(!!checked);
+                          if (checked) setMaxPrice("");
+                        }}
+                      />
+                      <label htmlFor="browse-no-max" className="text-[10px] cursor-pointer">No Max</label>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

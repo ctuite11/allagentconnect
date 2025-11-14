@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Loader2, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
 import { z } from "zod";
@@ -58,6 +59,8 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
   const [maxPriceDisplay, setMaxPriceDisplay] = useState("");
   const [isMinPriceFocused, setIsMinPriceFocused] = useState(false);
   const [isMaxPriceFocused, setIsMaxPriceFocused] = useState(false);
+  const [noMin, setNoMin] = useState(false);
+  const [noMax, setNoMax] = useState(false);
   const [errors, setErrors] = useState<{ minPrice?: string; maxPrice?: string }>({});
   const [isOpen, setIsOpen] = useState(true);
 
@@ -84,6 +87,8 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
         setMaxPrice(maxVal);
         setMinPriceDisplay(minVal ? formatNumberWithCommas(minVal) : "");
         setMaxPriceDisplay(maxVal ? formatNumberWithCommas(maxVal) : "");
+        setNoMin((data as any).min_price === null);
+        setNoMax((data as any).max_price === null);
       }
     } catch (error) {
       console.error("Error fetching price preferences:", error);
@@ -230,6 +235,8 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
     setMaxPrice("");
     setMinPriceDisplay("");
     setMaxPriceDisplay("");
+    setNoMin(false);
+    setNoMax(false);
     setErrors({});
   };
 
@@ -278,7 +285,23 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
                 placeholder="100,000"
                 className={`pl-7 ${errors.minPrice ? 'border-destructive' : ''}`}
                 maxLength={15}
+                disabled={noMin}
               />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="no-min"
+                checked={noMin}
+                onCheckedChange={(checked) => {
+                  setNoMin(!!checked);
+                  if (checked) {
+                    setMinPrice("");
+                    setMinPriceDisplay("");
+                    setErrors(prev => ({ ...prev, minPrice: undefined }));
+                  }
+                }}
+              />
+              <label htmlFor="no-min" className="text-sm cursor-pointer">No Minimum</label>
             </div>
             {errors.minPrice && (
               <p className="text-sm text-destructive">{errors.minPrice}</p>
@@ -300,7 +323,23 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
                 placeholder="500,000"
                 className={`pl-7 ${errors.maxPrice ? 'border-destructive' : ''}`}
                 maxLength={15}
+                disabled={noMax}
               />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="no-max"
+                checked={noMax}
+                onCheckedChange={(checked) => {
+                  setNoMax(!!checked);
+                  if (checked) {
+                    setMaxPrice("");
+                    setMaxPriceDisplay("");
+                    setErrors(prev => ({ ...prev, maxPrice: undefined }));
+                  }
+                }}
+              />
+              <label htmlFor="no-max" className="text-sm cursor-pointer">No Maximum</label>
             </div>
             {errors.maxPrice && (
               <p className="text-sm text-destructive">{errors.maxPrice}</p>
