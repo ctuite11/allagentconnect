@@ -99,6 +99,7 @@ export function CreateHotSheetDialog({
   // Towns / coverage areas
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [citySearch, setCitySearch] = useState("");
+  const [multiTownInput, setMultiTownInput] = useState("");
   const [state, setState] = useState("MA");
   const [selectedCountyId, setSelectedCountyId] = useState<string>("all");
   const [showAreas, setShowAreas] = useState<boolean>(true);
@@ -404,6 +405,53 @@ export function CreateHotSheetDialog({
   const selectAllTowns = () => {
     setSelectedCities(townsList);
     toast.success(`Selected all ${townsList.length} towns`);
+  };
+
+  const handleAddMultipleTowns = () => {
+    if (!multiTownInput.trim()) {
+      toast.error("Please enter at least one town name");
+      return;
+    }
+
+    // Split by comma, semicolon, or newline and trim each entry
+    const inputTowns = multiTownInput
+      .split(/[,;\n]/)
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+
+    const addedTowns: string[] = [];
+    const notFoundTowns: string[] = [];
+
+    inputTowns.forEach(inputTown => {
+      // Try to find matching town (case-insensitive, partial match)
+      const matchedTown = townsList.find(town => 
+        town.toLowerCase().includes(inputTown.toLowerCase())
+      );
+
+      if (matchedTown) {
+        if (!selectedCities.includes(matchedTown)) {
+          addedTowns.push(matchedTown);
+        }
+      } else {
+        notFoundTowns.push(inputTown);
+      }
+    });
+
+    // Add the matched towns to selection
+    if (addedTowns.length > 0) {
+      setSelectedCities(prev => [...prev, ...addedTowns]);
+    }
+
+    // Provide feedback
+    if (addedTowns.length > 0 && notFoundTowns.length === 0) {
+      toast.success(`Added ${addedTowns.length} town(s) to selected areas`);
+      setMultiTownInput("");
+    } else if (addedTowns.length > 0 && notFoundTowns.length > 0) {
+      toast.success(`Added ${addedTowns.length} town(s). Not found: ${notFoundTowns.join(", ")}`);
+      setMultiTownInput("");
+    } else {
+      toast.error(`No matching towns found for: ${notFoundTowns.join(", ")}`);
+    }
   };
 
   // Get counties for the selected state from COUNTIES_BY_STATE
@@ -1500,12 +1548,25 @@ export function CreateHotSheetDialog({
 
                     <div className="space-y-2">
                       <Label className="text-sm">Type Multiple Towns/Areas</Label>
+                      <p className="text-xs text-muted-foreground">Separate multiple towns with commas</p>
                       <div className="flex gap-2">
                         <Input
-                          placeholder="Type Towns/Areas"
+                          value={multiTownInput}
+                          onChange={(e) => setMultiTownInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddMultipleTowns();
+                            }
+                          }}
+                          placeholder="e.g. Northborough, Worcester, Boston"
                           className="text-sm flex-1"
                         />
-                        <Button type="button" className="bg-blue-500 hover:bg-blue-600 text-white px-4 text-sm">
+                        <Button 
+                          type="button" 
+                          onClick={handleAddMultipleTowns}
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-4 text-sm"
+                        >
                           Add
                         </Button>
                       </div>
