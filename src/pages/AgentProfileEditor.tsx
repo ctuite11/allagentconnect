@@ -592,6 +592,16 @@ const AgentProfileEditor = () => {
                 />
               </div>
               <div>
+                <Label htmlFor="personal_website">Personal Website</Label>
+                <Input
+                  id="personal_website"
+                  type="url"
+                  placeholder="https://yourwebsite.com"
+                  value={socialLinks.website}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
+                />
+              </div>
+              <div>
                 <Label htmlFor="office_name">Office Name</Label>
                 <Input
                   id="office_name"
@@ -845,15 +855,6 @@ const AgentProfileEditor = () => {
                   placeholder="https://instagram.com/yourprofile"
                   value={socialLinks.instagram}
                   onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="website">Personal Website</Label>
-                <Input
-                  id="website"
-                  placeholder="https://yourwebsite.com"
-                  value={socialLinks.website}
-                  onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
                 />
               </div>
               <Button onClick={handleSaveProfile} disabled={saving}>
