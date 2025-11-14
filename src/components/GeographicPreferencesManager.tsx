@@ -183,6 +183,7 @@ const GeographicPreferencesManager = ({ agentId }: GeographicPreferencesManagerP
                 <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <CardTitle>Geographic Area Preferences</CardTitle>
               </div>
+              {isOpen ? <ChevronUp className="h-5 w-5 text-blue-600 dark:text-blue-400" /> : <ChevronDown className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
               {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </div>
             <CardDescription className="text-left">
