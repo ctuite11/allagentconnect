@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,10 +15,30 @@ import { z } from "zod";
 import { US_STATES } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
 
+const PROPERTY_TYPES = [
+  "single_family",
+  "condo",
+  "townhouse",
+  "multi_family",
+  "land",
+  "commercial",
+  "residential_rental",
+  "commercial_rental",
+] as const;
+
+const PROPERTY_TYPE_LABELS: Record<typeof PROPERTY_TYPES[number], string> = {
+  single_family: "Single Family",
+  condo: "Condominium",
+  townhouse: "Townhouse",
+  multi_family: "Multi-Family",
+  land: "Land",
+  commercial: "Commercial",
+  residential_rental: "Residential Rental",
+  commercial_rental: "Commercial Rental",
+};
+
 const clientNeedSchema = z.object({
-  propertyType: z.enum(["single_family", "condo", "townhouse", "multi_family", "land", "commercial", "residential_rental", "commercial_rental"], {
-    errorMap: () => ({ message: "Please select a valid property type" }),
-  }),
+  propertyTypes: z.array(z.enum(PROPERTY_TYPES)).min(1, "Select at least one property type"),
   city: z.string().trim().min(1, "City is required").max(100, "City must be less than 100 characters"),
   state: z.string().trim().length(2, "State must be 2 characters"),
   maxPrice: z.string()
@@ -43,7 +64,7 @@ const SubmitClientNeed = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    propertyType: "",
+    propertyTypes: [] as string[],
     city: "",
     state: "",
     maxPrice: "",
@@ -51,6 +72,23 @@ const SubmitClientNeed = () => {
     bathrooms: "",
     description: "",
   });
+
+  // Property type helpers
+  const toggleType = (type: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      propertyTypes: prev.propertyTypes.includes(type)
+        ? prev.propertyTypes.filter((t: string) => t !== type)
+        : [...prev.propertyTypes, type],
+    }));
+  };
+  const allSelected = formData.propertyTypes.length === PROPERTY_TYPES.length;
+  const toggleSelectAll = () => {
+    setFormData((prev) => ({
+      ...prev,
+      propertyTypes: allSelected ? [] : [...PROPERTY_TYPES],
+    }));
+  };
 
   // Get cities for selected state
   const availableCities = formData.state ? (usCitiesByState[formData.state] || []) : [];
@@ -97,7 +135,8 @@ const SubmitClientNeed = () => {
 
       const { error: insertError } = await supabase.from("client_needs").insert({
         submitted_by: user?.id,
-        property_type: validatedData.propertyType as any,
+        property_type: validatedData.propertyTypes[0] as any,
+        property_types: validatedData.propertyTypes as any,
         city: validatedData.city,
         state: validatedData.state,
         max_price: parseFloat(validatedData.maxPrice),
@@ -136,27 +175,32 @@ const SubmitClientNeed = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="propertyType">Property Type</Label>
-                <Select
-                  value={formData.propertyType}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, propertyType: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select property type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="single_family">Single Family</SelectItem>
-                    <SelectItem value="condo">Condo</SelectItem>
-                    <SelectItem value="townhouse">Townhouse</SelectItem>
-                    <SelectItem value="multi_family">Multi-Family</SelectItem>
-                    <SelectItem value="land">Land</SelectItem>
-                    <SelectItem value="commercial">Commercial</SelectItem>
-                    <SelectItem value="residential_rental">Residential Rental</SelectItem>
-                    <SelectItem value="commercial_rental">Commercial Rental</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="propertyTypes">Property Type</Label>
+                <div className="space-y-3">
+                  <Button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    variant={allSelected ? "outline" : "default"}
+                    className="h-9"
+                  >
+                    {allSelected ? "Deselect All" : "Select All"}
+                  </Button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border rounded-lg p-3 max-h-64 overflow-y-auto bg-background">
+                    {PROPERTY_TYPES.map((type) => (
+                      <div key={type} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`type-${type}`}
+                          checked={formData.propertyTypes.includes(type)}
+                          onCheckedChange={() => toggleType(type)}
+                        />
+                        <Label htmlFor={`type-${type}`} className="cursor-pointer">
+                          {PROPERTY_TYPE_LABELS[type]}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{formData.propertyTypes.length} selected</p>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

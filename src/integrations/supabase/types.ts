@@ -514,6 +514,7 @@ export type Database = {
           id: string
           max_price: number
           property_type: Database["public"]["Enums"]["property_type"]
+          property_types: Database["public"]["Enums"]["property_type"][] | null
           state: string | null
           submitted_by: string
         }
@@ -527,6 +528,7 @@ export type Database = {
           id?: string
           max_price: number
           property_type: Database["public"]["Enums"]["property_type"]
+          property_types?: Database["public"]["Enums"]["property_type"][] | null
           state?: string | null
           submitted_by: string
         }
@@ -540,6 +542,7 @@ export type Database = {
           id?: string
           max_price?: number
           property_type?: Database["public"]["Enums"]["property_type"]
+          property_types?: Database["public"]["Enums"]["property_type"][] | null
           state?: string | null
           submitted_by?: string
         }
