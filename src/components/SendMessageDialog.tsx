@@ -186,6 +186,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     return parseInt(price).toLocaleString('en-US');
   };
 
+  const formatCurrency = (price: string) => {
+    if (!price) return "";
+    return `$${parseInt(price).toLocaleString('en-US')}`;
+  };
+
   const fetchRecipientCount = async () => {
     setLoadingCount(true);
     try {
@@ -615,6 +620,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       onChange={(e) => handleMinPriceChange(e.target.value)}
                       maxLength={15}
                     />
+                    {minPrice && (
+                      <p className="text-xs text-muted-foreground">Preview: {formatCurrency(minPrice)}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -628,6 +636,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       onChange={(e) => handleMaxPriceChange(e.target.value)}
                       maxLength={15}
                     />
+                    {maxPrice && (
+                      <p className="text-xs text-muted-foreground">Preview: {formatCurrency(maxPrice)}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -668,7 +679,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Edit
               </Button>
-              <Button onClick={handleSend} disabled={sending || recipientCount === 0}>
+              <Button onClick={handleSend} disabled={sending}>
                 <Send className="mr-2 h-4 w-4" />
                 {sending ? "Sending..." : "Confirm & Send"}
               </Button>
