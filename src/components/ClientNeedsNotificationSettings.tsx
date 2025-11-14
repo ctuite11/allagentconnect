@@ -142,7 +142,7 @@ export const ClientNeedsNotificationSettings = () => {
                   Immediately
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Get alerts as soon as matching client needs appear
+                  Get alerts as soon as your preferences match
                 </p>
               </div>
             </div>
@@ -154,7 +154,7 @@ export const ClientNeedsNotificationSettings = () => {
                   Daily
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Receive a daily digest of new matching client needs
+                  Receive a daily digest of new matches
                 </p>
               </div>
             </div>
@@ -166,7 +166,7 @@ export const ClientNeedsNotificationSettings = () => {
                   Weekly
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Receive a weekly summary of new matching client needs
+                  Receive a weekly summary of new matches
                 </p>
               </div>
             </div>
