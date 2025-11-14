@@ -72,10 +72,8 @@ export const ClientNeedsNotificationSettings = () => {
 
       setSettings(newSettings);
       setHasInitialSelection(true);
-      toast.success("Notification settings updated");
     } catch (error) {
       console.error("Error updating notification settings:", error);
-      toast.error("Failed to update notification settings");
     }
   };
 
@@ -84,7 +82,6 @@ export const ClientNeedsNotificationSettings = () => {
   };
 
   const handleCompleteSetup = () => {
-    toast.success("Setup complete! You'll receive notifications based on your preferences.");
     navigate("/agent-dashboard");
   };
 

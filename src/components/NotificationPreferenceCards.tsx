@@ -82,19 +82,40 @@ export const NotificationPreferenceCards = () => {
       if (error) throw error;
 
       setPreferences(newPreferences);
-      
-      // Show reminder to set preferences if enabling notifications
-      if (newValue) {
-        toast.success("Notifications enabled", {
-          description: "Remember to set your preferences below (price range, property types, and geographic areas) to receive relevant matches.",
-          duration: 6000,
-        });
-      } else {
-        toast.success("Notifications disabled");
-      }
     } catch (error) {
       console.error("Error updating preferences:", error);
-      toast.error("Failed to update preferences");
+    }
+  };
+
+  const selectAllPreferences = async () => {
+    const allEnabled = Object.values(preferences).every(v => v);
+    const newValue = !allEnabled;
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const newPreferences = {
+        buyer_need: newValue,
+        sales_intel: newValue,
+        renter_need: newValue,
+        general_discussion: newValue,
+      };
+
+      const { error } = await supabase
+        .from("notification_preferences")
+        .upsert({
+          user_id: user.id,
+          ...newPreferences,
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) throw error;
+
+      setPreferences(newPreferences);
+    } catch (error) {
+      console.error("Error updating preferences:", error);
     }
   };
 
@@ -133,9 +154,18 @@ export const NotificationPreferenceCards = () => {
     return null;
   }
 
+  const allEnabled = Object.values(preferences).every(v => v);
+
   return (
     <TooltipProvider>
       <div className="mb-8">
+        <Button 
+          onClick={selectAllPreferences}
+          variant={allEnabled ? "outline" : "default"}
+          className="w-full h-12 text-base font-bold mb-4"
+        >
+          ✓ {allEnabled ? "Deselect All Notifications" : "Select All Notifications"}
+        </Button>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cards.map((card) => {
               return (
