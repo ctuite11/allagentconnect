@@ -272,7 +272,7 @@ const ListingAnalytics = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
+      <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Button variant="outline" onClick={() => navigate("/agent-dashboard")} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
