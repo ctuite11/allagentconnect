@@ -108,7 +108,7 @@ const VendorDashboard = () => {
 
   if (!vendorProfile) {
     return (
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
         <Alert>
           <Store className="h-4 w-4" />
           <AlertDescription>
@@ -126,7 +126,7 @@ const VendorDashboard = () => {
 
   if (!vendorProfile.is_approved) {
     return (
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -140,7 +140,7 @@ const VendorDashboard = () => {
   const activeSubscription = subscriptions.find(sub => sub.status === 'active');
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pt-24">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Vendor Dashboard</h1>
         <p className="text-muted-foreground">

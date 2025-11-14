@@ -61,7 +61,7 @@ const OurAgents = () => {
     <div className="min-h-screen flex flex-col">
       <Navigation />
       
-      <main className="flex-1">
+      <main className="flex-1 pt-20">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-16">
           <div className="container mx-auto px-4 text-center">

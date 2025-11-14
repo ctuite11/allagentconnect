@@ -280,7 +280,7 @@ const ClientHotSheet = () => {
     <div className="min-h-screen flex flex-col">
       <Navigation />
       
-      <main className="flex-1 bg-background">
+      <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8 flex justify-between items-start">
