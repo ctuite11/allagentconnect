@@ -240,9 +240,9 @@ const GeographicPreferencesManager = ({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <div className="max-h-60 overflow-y-auto border rounded bg-background z-10 relative">
-              <div className="p-2 hover:bg-muted cursor-pointer border-b font-semibold text-sm bg-background" onClick={addAllTowns}>
-                ✓ Add All Towns from All Counties
+            <div className="max-h-96 overflow-y-auto border rounded bg-background z-10 relative">
+              <div className="p-2 hover:bg-accent cursor-pointer border-b font-semibold text-sm bg-primary text-primary-foreground sticky top-0 z-20" onClick={addAllTowns}>
+                ✓ Select All Towns
               </div>
               <div className="p-2">
                 <TownsPicker towns={townsList} selectedTowns={selectedTowns} onToggleTown={toggleTown} expandedCities={expandedCities} onToggleCityExpansion={toggleCityExpansion} state={state} searchQuery={townSearch} variant="checkbox" showAreas={showAreas === "yes"} />
@@ -261,10 +261,10 @@ const GeographicPreferencesManager = ({
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <Label className="text-xs font-semibold">Selected Towns</Label>
-              <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={removeAllTowns}>Remove All</Button>
+              <Label className="text-xs font-semibold">Selected Towns ({selectedTowns.length})</Label>
+              <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={removeAllTowns}>Clear All</Button>
             </div>
-            <div className="border rounded bg-background p-2 max-h-[17.5rem] overflow-y-auto">
+            <div className="border rounded bg-background p-2 max-h-96 overflow-y-auto">
               {selectedTowns.length === 0 ? <p className="text-xs text-muted-foreground text-center py-4">No towns selected</p> : <div className="space-y-1">
                   {selectedTowns.map(town => <div key={town} className="flex items-center justify-between text-xs py-1 px-2 hover:bg-muted rounded cursor-pointer" onClick={() => removeTown(town)} role="button" aria-label={`Remove ${town}`} title="Click to remove">
                       <span>{town}</span>

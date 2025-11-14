@@ -45,7 +45,7 @@ const ClientNeedsDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
+      <div className="container mx-auto px-4 py-8 pt-24 pb-16 overflow-y-auto">
         {/* Hero Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Connect . Communicate . Collaborate</h1>
