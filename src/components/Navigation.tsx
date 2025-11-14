@@ -16,6 +16,7 @@ import {
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
@@ -183,15 +184,27 @@ const Navigation = () => {
           <div className="hidden md:flex items-center gap-4">
             {user ? (
               <>
-                <DropdownMenu>
+                <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" onClick={() => navigate("/agent-dashboard")}>
-                      <LayoutDashboard className="w-4 h-4 mr-2" />
-                      Success Hub
-                      <ChevronDown className="w-3 h-3 ml-2" />
-                    </Button>
+                    <div
+                      onMouseEnter={() => setIsDropdownOpen(true)}
+                      onMouseLeave={() => setIsDropdownOpen(false)}
+                    >
+                      <Button 
+                        variant="outline" 
+                        onClick={() => navigate("/agent-dashboard")}
+                      >
+                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                        Success Hub
+                        <ChevronDown className="w-3 h-3 ml-2" />
+                      </Button>
+                    </div>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-card border-border shadow-lg z-[100]">
+                  <DropdownMenuContent 
+                    className="w-56 bg-card border-border shadow-lg z-[100]"
+                    onMouseEnter={() => setIsDropdownOpen(true)}
+                    onMouseLeave={() => setIsDropdownOpen(false)}
+                  >
                     <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
                     <DropdownMenuGroup>
                       <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
