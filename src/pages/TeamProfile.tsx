@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { 
   Users, Globe, ArrowLeft, Loader2, Mail, Phone, MapPin, 
   Linkedin, Facebook, Twitter, Instagram, Download, Star, 
-  Home, Building2, DollarSign, Edit
+  Home, Building2, DollarSign
 } from "lucide-react";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -75,31 +75,10 @@ const TeamProfile = () => {
   const [listings, setListings] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [canEdit, setCanEdit] = useState(false);
 
   useEffect(() => {
-    checkEditPermission();
     fetchTeamProfile();
   }, [id]);
-
-  const checkEditPermission = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Check if user is a member of this team
-      const { data: membership } = await supabase
-        .from("team_members")
-        .select("role")
-        .eq("team_id", id)
-        .eq("agent_id", user.id)
-        .maybeSingle();
-
-      setCanEdit(!!membership);
-    } catch (error) {
-      console.error("Error checking edit permission:", error);
-    }
-  };
 
   const fetchTeamProfile = async () => {
     try {
@@ -210,26 +189,14 @@ const TeamProfile = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
-      {/* Sticky Edit Button */}
-      {canEdit && (
-        <Button
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
-          onClick={() => navigate("/manage-team")}
-          title="Edit Team Profile"
-        >
-          <Edit className="h-5 w-5" />
-        </Button>
-      )}
-
       <div className="container mx-auto px-4 py-8 pt-24">
         <Button
           variant="outline"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/manage-team")}
           className="mb-6 gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
+          Back to Edit Team
         </Button>
 
         {/* Hero Section with Team Contact Information */}
