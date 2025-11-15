@@ -41,12 +41,8 @@ const PropertySearchHero = () => {
   };
 
   return (
-    <section className="relative bg-gradient-hero pt-32 pb-20 overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl animate-glow" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-3xl animate-glow" style={{ animationDelay: '1s' }} />
-      </div>
+    <section className="relative bg-background pt-32 pb-20 overflow-hidden">
+      {/* Decorative background elements removed to eliminate blue haze */}
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-6xl mx-auto">
@@ -74,8 +70,7 @@ const PropertySearchHero = () => {
           {/* Modern Search Card */}
           <div className="max-w-4xl mx-auto animate-scale-in" style={{ animationDelay: '0.4s' }}>
             <div className="relative">
-              {/* Glow effect */}
-              <div className="absolute inset-0 bg-gradient-primary opacity-20 blur-2xl rounded-3xl" />
+              {/* Glow effect removed to eliminate blue haze */}
               
               {/* Main card */}
               <div className="relative bg-gradient-card backdrop-blur-xl rounded-3xl shadow-custom-xl border border-white/20 p-8 md:p-10">
