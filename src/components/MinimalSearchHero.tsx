@@ -10,7 +10,7 @@ const MinimalSearchHero = () => {
   const handleAgents = () => navigate("/our-agents");
 
   return (
-    <section className="relative bg-gradient-to-b from-background to-muted/30">
+    <section className="relative bg-background to-muted/30">
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4">
@@ -21,7 +21,7 @@ const MinimalSearchHero = () => {
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto bg-card border rounded-2xl shadow-custom-md p-4 md:p-6">
+        <div className="max-w-3xl mx-auto bg-card border rounded-2xl shadow-md p-4 md:p-6">
           <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1">
               <AddressAutocomplete

@@ -18,7 +18,7 @@ const CommissionTransparency = () => {
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-4">
                   <DollarSign className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle>Traditional Commission</CardTitle>
@@ -75,10 +75,10 @@ const CommissionTransparency = () => {
           </div>
 
           {/* Variable Rate Commission Explanation */}
-          <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-2">
+          <Card className="bg-secondary/30 border-2">
             <CardHeader>
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
                   <Info className="h-6 w-6 text-primary" />
                 </div>
                 <div>

@@ -114,7 +114,7 @@ export function PhotoManagementDialog({ photos, onPhotosChange, trigger }: Photo
                   onDragEnd={handleDragEnd}
                   className="relative group cursor-move border rounded-lg overflow-hidden bg-muted transition-transform hover:scale-105"
                 >
-                  <div className="absolute top-2 left-2 z-10 bg-background/80 backdrop-blur-sm rounded p-1">
+                  <div className="absolute top-2 left-2 z-10 bg-background/90 rounded p-1">
                     <GripVertical className="w-4 h-4" />
                   </div>
                   {index === 0 && (
@@ -127,7 +127,7 @@ export function PhotoManagementDialog({ photos, onPhotosChange, trigger }: Photo
                     alt={`Property ${index + 1}`}
                     className="w-full h-40 object-cover"
                   />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-0 left-0 right-0 bg-background/90 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
                       type="button"
                       variant="destructive"

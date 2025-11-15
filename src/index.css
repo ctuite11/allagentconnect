@@ -38,20 +38,14 @@ All colors MUST be HSL.
 
     --radius: 1rem;
 
-    /* Modern gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(215 95% 55%) 0%, hsl(250 95% 65%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(215 95% 98%) 50%, hsl(250 95% 98%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(0 0% 100% / 0.8) 0%, hsl(215 95% 98% / 0.9) 100%);
-    
     --success: 145 75% 50%;
     --success-foreground: 0 0% 100%;
-    
-    /* Modern shadows */
+
+    /* Shadows */
     --shadow-sm: 0 2px 8px hsl(215 25% 60% / 0.08);
     --shadow-md: 0 4px 16px hsl(215 25% 60% / 0.1);
     --shadow-lg: 0 12px 48px hsl(215 95% 55% / 0.12);
     --shadow-xl: 0 20px 64px hsl(215 95% 55% / 0.16);
-    --shadow-glow: 0 0 48px hsl(215 95% 55% / 0.25);
   }
 
   .dark {

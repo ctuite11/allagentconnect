@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin } from "lucide-react";
-import FavoriteButton from "@/components/FavoriteButton";
+import ListingCard from "@/components/ListingCard";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 
@@ -30,6 +30,7 @@ interface Listing {
   photos: any;
   attom_data?: any;
   created_at: string;
+  status: string;
 }
 
 interface HotSheet {
@@ -427,107 +428,14 @@ if (agentIds.length > 0) {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedListings.map((listing) => (
-                <Card key={listing.id} className="overflow-hidden">
-                  <div className="relative">
-                    <div className="absolute top-4 left-4 z-10">
-                      <div 
-                        onClick={() => toggleListing(listing.id)}
-                        className={`w-6 h-6 rounded border-2 cursor-pointer transition-all flex items-center justify-center ${
-                          selectedListings.has(listing.id) 
-                            ? 'bg-primary border-primary' 
-                            : 'bg-background border-border hover:border-primary'
-                        }`}
-                      >
-                        {selectedListings.has(listing.id) && (
-                          <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                    <div className="absolute top-4 right-4 z-10">
-                      <FavoriteButton listingId={listing.id} size="icon" variant="secondary" />
-                    </div>
-                    {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
-                      <div className="absolute bottom-2 right-2 z-10">
-                        <span className="inline-flex items-center rounded-full bg-background/80 text-foreground px-2 py-1 text-xs shadow">
-                          {listing.neighborhood || (listing as any).attom_data?.neighborhood}
-                        </span>
-                      </div>
-                    )}
-                    {listing.photos && listing.photos[0] ? (
-                      <img
-                        src={listing.photos[0].url || listing.photos[0]}
-                        alt={listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}
-                        className="w-full h-48 object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-48 bg-muted flex items-center justify-center">
-                        <ImageIcon className="h-12 w-12 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-2xl font-bold text-primary">
-                        ${listing.price.toLocaleString()}
-                      </p>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">
-                          ID# {listing.listing_number}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {Math.floor((new Date().getTime() - new Date(listing.created_at).getTime()) / (1000 * 60 * 60 * 24))} days
-                        </p>
-                      </div>
-                    </div>
-                    {listing.property_type && (
-                      <div className="flex items-center gap-2 mb-1">
-                        <Home className="h-4 w-4 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">{listing.property_type}</p>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1 mb-1">
-                      <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <p className="font-medium">
-                        {listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}
-                      </p>
-                    </div>
-                    <div className="flex justify-between items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex gap-4">
-                        {listing.bedrooms && (
-                          <div className="flex items-center gap-1">
-                            <Bed className="h-4 w-4" />
-                            <span>{listing.bedrooms} bed</span>
-                          </div>
-                        )}
-                        {listing.bathrooms && (
-                          <div className="flex items-center gap-1">
-                            <Bath className="h-4 w-4" />
-                            <span>{listing.bathrooms} bath</span>
-                          </div>
-                        )}
-                        {listing.square_feet && (
-                          <div className="flex items-center gap-1">
-                            <Maximize className="h-4 w-4" />
-                            <span>{listing.square_feet.toLocaleString()} sqft</span>
-                          </div>
-                        )}
-                      </div>
-                      {agentMap[listing.agent_id] && (
-                        <button
-                          onClick={() => navigate(`/agent/${listing.agent_id}`)}
-                          className="text-xs text-muted-foreground hover:text-primary transition-colors text-right shrink-0"
-                        >
-                          {agentMap[listing.agent_id].fullName}
-                          {agentMap[listing.agent_id].company && (
-                            <span className="block">{agentMap[listing.agent_id].company}</span>
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  viewMode="compact"
+                  showActions={false}
+                  onSelect={toggleListing}
+                  isSelected={selectedListings.has(listing.id)}
+                />
               ))}
             </div>
           )}

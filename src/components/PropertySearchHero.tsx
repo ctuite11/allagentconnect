@@ -42,13 +42,12 @@ const PropertySearchHero = () => {
 
   return (
     <section className="relative bg-background pt-32 pb-20 overflow-hidden">
-      {/* Decorative background elements removed to eliminate blue haze */}
-
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-6xl mx-auto">
           {/* Hero Content */}
           <div className="text-center mb-16 space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/20 text-sm font-medium text-primary mb-6 animate-fade-in">
+              {/* Badge with neutral styling */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary backdrop-blur-sm border border-border text-sm font-medium text-foreground mb-6 animate-fade-in">
               <MapPin className="h-4 w-4" />
               <span>Connecting You to Your Perfect Property</span>
             </div>
@@ -56,7 +55,7 @@ const PropertySearchHero = () => {
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold mb-6 leading-[1.1] tracking-tight animate-fade-in-up">
               Revolutionizing<br />
               Real Estate Through
-              <span className="block mt-2 bg-gradient-primary bg-clip-text text-transparent">
+              <span className="block mt-2 text-primary">
                 Complete Transparency
               </span>
             </h1>
@@ -70,23 +69,21 @@ const PropertySearchHero = () => {
           {/* Modern Search Card */}
           <div className="max-w-4xl mx-auto animate-scale-in" style={{ animationDelay: '0.4s' }}>
             <div className="relative">
-              {/* Glow effect removed to eliminate blue haze */}
-              
               {/* Main card */}
-              <div className="relative bg-gradient-card backdrop-blur-xl rounded-3xl shadow-custom-xl border border-white/20 p-8 md:p-10">
-                <h2 className="text-2xl md:text-3xl font-display font-semibold mb-8 text-center bg-gradient-primary bg-clip-text text-transparent">
+              <div className="relative bg-card backdrop-blur-xl rounded-3xl shadow-lg border p-8 md:p-10">
+                <h2 className="text-2xl md:text-3xl font-display font-semibold mb-8 text-center text-primary">
                   Let's find your dream home
                 </h2>
                 
                 <form onSubmit={handleSearch} className="space-y-5">
                   {/* Search input */}
                   <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-card opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300" />
                     <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10 group-hover:text-primary transition-colors" />
                     <AddressAutocomplete
                       onPlaceSelect={handlePlaceSelect}
                       placeholder="City, State, Zip or Neighborhood"
-                      className="pl-14 h-16 text-lg w-full rounded-2xl border-2 border-border hover:border-primary/50 focus:border-primary transition-colors bg-white/50 backdrop-blur-sm"
+                      className="pl-14 h-16 text-lg w-full rounded-2xl border-2 border-border hover:border-primary focus:border-primary transition-colors bg-card"
                       value={searchQuery}
                       onChange={setSearchQuery}
                     />
@@ -99,14 +96,14 @@ const PropertySearchHero = () => {
                       placeholder="Min Price"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
-                      className="h-16 text-lg rounded-2xl border-2 border-border hover:border-primary/50 focus:border-primary transition-colors bg-white/50 backdrop-blur-sm"
+                      className="h-16 text-lg rounded-2xl border-2 border-border hover:border-primary focus:border-primary transition-colors bg-card"
                     />
                     <Input
                       type="number"
                       placeholder="Max Price"
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
-                      className="h-16 text-lg rounded-2xl border-2 border-border hover:border-primary/50 focus:border-primary transition-colors bg-white/50 backdrop-blur-sm"
+                      className="h-16 text-lg rounded-2xl border-2 border-border hover:border-primary focus:border-primary transition-colors bg-card"
                     />
                   </div>
                   
@@ -114,7 +111,7 @@ const PropertySearchHero = () => {
                   <Button 
                     type="submit" 
                     size="lg" 
-                    className="h-16 px-10 text-lg w-full rounded-2xl bg-gradient-primary hover:shadow-custom-glow transition-all duration-300 font-semibold group"
+                    className="h-16 px-10 text-lg w-full rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 font-semibold group"
                   >
                     <span>Search Properties</span>
                     <Search className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

@@ -207,7 +207,7 @@ export const NotificationPreferenceCards = () => {
                           className={`w-24 h-8 text-xs border-2 transition-all ${
                             card.active 
                               ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
-                              : "bg-background border-primary/50 hover:bg-primary/10 hover:border-primary"
+                              : "bg-background border-secondary hover:bg-secondary hover:border-primary"
                           }`}
                           onClick={(e) => {
                             e.stopPropagation();

@@ -333,7 +333,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             </div>
 
             {showLocationFields && (state || counties.length > 0 || cities.length > 0 || neighborhoods.length > 0 || propertyTypes.length > 0 || minPrice || maxPrice) && (
-              <div className="bg-primary/5 rounded-lg p-4 space-y-2">
+              <div className="bg-secondary rounded-lg p-4 space-y-2">
                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
                   <CheckCircle className="h-4 w-4" />
                   Search Criteria:

@@ -119,7 +119,7 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
           <Button
             variant="secondary"
             size="icon"
-            className="absolute top-4 right-4 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90"
+            className="absolute top-4 right-4 rounded-full bg-background/90 hover:bg-background"
             onClick={handleFavoriteClick}
             disabled={isLoading}
           >
@@ -150,7 +150,7 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
                   >
                     <Avatar className="w-16 h-16">
                       <AvatarImage src={agentPhoto} alt={agentName} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-base">
+                      <AvatarFallback className="bg-secondary text-primary text-base">
                         {agentName?.split(' ').map(n => n[0]).join('') || 'A'}
                       </AvatarFallback>
                     </Avatar>
