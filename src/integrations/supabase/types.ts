@@ -1012,6 +1012,48 @@ export type Database = {
           },
         ]
       }
+      hot_sheet_listing_status: {
+        Row: {
+          created_at: string
+          hot_sheet_id: string
+          id: string
+          listing_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hot_sheet_id: string
+          id?: string
+          listing_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hot_sheet_id?: string
+          id?: string
+          listing_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_listing_status_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_listing_status_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hot_sheet_notifications: {
         Row: {
           created_at: string
