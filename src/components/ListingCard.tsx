@@ -309,7 +309,15 @@ const ListingCard = ({
         }
       }
     }
-
+    // Append city/state/zip if missing in base
+    const lowerBase = base.toLowerCase();
+    const hasCity = city && lowerBase.includes(city.toLowerCase());
+    const hasState = state && new RegExp(`\\b${state}\\b`, 'i').test(base);
+    const hasZip = zip && base.includes(zip);
+    if (!hasCity && !hasState && !hasZip) {
+      const tail = [city && `${city}, ${state} ${zip}`].filter(Boolean).join(', ');
+      if (tail) base = [base, tail].filter(Boolean).join(', ');
+    }
     return base;
   };
   
@@ -415,12 +423,12 @@ const ListingCard = ({
           </div>
           
           {agentInfo && (
-            <div className="text-xs text-muted-foreground pt-1 border-t">
-              <span className="text-red-600 font-medium">{agentInfo.name}</span>
+            <div className="text-xs mt-1">
+              <span className="text-destructive font-medium">{agentInfo.name}</span>
               {agentInfo.company && (
                 <>
                   {' • '}
-                  <span>{agentInfo.company}</span>
+                  <span className="text-muted-foreground">{agentInfo.company}</span>
                 </>
               )}
             </div>
