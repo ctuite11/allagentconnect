@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw } from "lucide-react";
+import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { ReverseProspectDialog } from "./ReverseProspectDialog";
 import MarketInsightsDialog from "./MarketInsightsDialog";
+import FavoriteButton from "./FavoriteButton";
 interface ListingCardProps {
   listing: {
     id: string;
@@ -38,14 +39,22 @@ interface ListingCardProps {
       showing_request_count: number;
       cumulative_active_days: number;
     };
+    neighborhood?: string | null;
+    agent_id?: string;
   };
   onReactivate?: (id: string) => void;
-  viewMode?: 'grid' | 'list';
+  viewMode?: 'grid' | 'list' | 'compact';
+  showActions?: boolean;
+  onSelect?: (id: string) => void;
+  isSelected?: boolean;
 }
 const ListingCard = ({
   listing,
   onReactivate,
-  viewMode = 'grid'
+  viewMode = 'grid',
+  showActions = true,
+  onSelect,
+  isSelected = false
 }: ListingCardProps) => {
   const navigate = useNavigate();
   const [matchCount, setMatchCount] = useState<number>(0);
@@ -268,6 +277,107 @@ const ListingCard = ({
     return diffDays;
   };
   const daysOnMarket = calculateDaysOnMarket();
+  
+  // Compact view (for HotSheets and search results)
+  if (viewMode === 'compact') {
+    return (
+      <Card className="overflow-hidden hover:shadow-md transition-shadow">
+        <div className="relative">
+          {onSelect && (
+            <div className="absolute top-4 left-4 z-10">
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect(listing.id);
+                }}
+                className={`w-6 h-6 rounded border-2 cursor-pointer transition-all flex items-center justify-center ${
+                  isSelected 
+                    ? 'bg-primary border-primary' 
+                    : 'bg-background border-border hover:border-primary'
+                }`}
+              >
+                {isSelected && (
+                  <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+            </div>
+          )}
+          <div className="absolute top-4 right-4 z-10">
+            <FavoriteButton listingId={listing.id} size="icon" variant="secondary" />
+          </div>
+          {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
+            <div className="absolute bottom-2 right-2 z-10">
+              <span className="inline-flex items-center rounded-full bg-background/80 text-foreground px-2 py-1 text-xs shadow">
+                {listing.neighborhood || (listing as any).attom_data?.neighborhood}
+              </span>
+            </div>
+          )}
+          {photoUrl ? (
+            <img
+              src={photoUrl}
+              alt={listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}
+              className="w-full h-48 object-cover cursor-pointer"
+              onClick={() => navigate(`/property/${listing.id}`)}
+            />
+          ) : (
+            <div className="w-full h-48 bg-muted flex items-center justify-center">
+              <Home className="h-12 w-12 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+        <CardContent className="p-3">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-2xl font-bold text-primary cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+              ${listing.price.toLocaleString()}
+            </p>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">
+                ID# {listing.listing_number}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {Math.floor((new Date().getTime() - new Date(listing.created_at || new Date()).getTime()) / (1000 * 60 * 60 * 24))} days
+              </p>
+            </div>
+          </div>
+          {listing.property_type && (
+            <div className="flex items-center gap-2 mb-1">
+              <Home className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">{listing.property_type}</p>
+            </div>
+          )}
+          <div className="flex items-center gap-1 mb-1 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+            <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <p className="font-medium">
+              {listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}
+            </p>
+          </div>
+          <div className="flex justify-between items-center gap-4 text-sm text-muted-foreground">
+            {listing.bedrooms && (
+              <div className="flex items-center gap-1">
+                <Bed className="h-4 w-4" />
+                <span>{listing.bedrooms}</span>
+              </div>
+            )}
+            {listing.bathrooms && (
+              <div className="flex items-center gap-1">
+                <Bath className="h-4 w-4" />
+                <span>{listing.bathrooms}</span>
+              </div>
+            )}
+            {listing.square_feet && (
+              <div className="flex items-center gap-1">
+                <Maximize className="h-4 w-4" />
+                <span>{listing.square_feet.toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   if (viewMode === 'list') {
     return <Card className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-primary">
         <div className="flex gap-3 p-3">

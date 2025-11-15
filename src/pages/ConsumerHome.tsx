@@ -72,8 +72,8 @@ const ConsumerHome = () => {
               {benefits.map((benefit, idx) => {
                 const Icon = benefit.icon;
                 return (
-                  <div key={idx} className="text-center rounded-lg bg-card shadow-custom-md p-8 border">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+                  <div className="text-center rounded-lg bg-card shadow-md p-8 border">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-secondary rounded-full mb-4">
                       <Icon className="w-8 h-8 text-primary" />
                     </div>
                     <h3 className="text-xl font-semibold mb-2">{benefit.title}</h3>

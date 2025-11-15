@@ -39,8 +39,8 @@ const Benefits = () => {
           {benefits.map((benefit, index) => {
             const Icon = benefit.icon;
             return (
-              <Card key={index} className="p-6 text-center hover:shadow-custom-hover transition-all duration-300">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
+              <Card key={index} className="p-6 text-center hover:shadow-md transition-all duration-300">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-secondary text-primary mb-4">
                   <Icon className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">{benefit.title}</h3>

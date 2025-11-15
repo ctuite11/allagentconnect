@@ -47,7 +47,7 @@ const Hero = () => {
           alt="Luxury real estate neighborhood" 
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/60" />
+        <div className="absolute inset-0 bg-background/80" />
       </div>
       
       <div className="container mx-auto px-4 py-20 relative z-10">
@@ -65,7 +65,7 @@ const Hero = () => {
             Forward-thinking and consumer-focused, All Agent Connect has redefined the home buying and home selling process, saving consumers billions along the way.
           </p>
           
-          <div className="bg-card rounded-xl shadow-custom-lg p-6 max-w-2xl">
+          <div className="bg-card rounded-xl shadow-md p-6 max-w-2xl">
             <h2 className="text-lg font-semibold mb-4">Let's help you find your dream home.</h2>
             <div className="space-y-3">
               <AddressAutocomplete 

@@ -42,11 +42,11 @@ const RealtimeListingUpdates = () => {
   };
 
   return (
-    <section className="py-16 bg-gradient-to-br from-primary/5 to-secondary/5">
+    <section className="py-16 bg-secondary/30">
       <div className="container mx-auto px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-secondary mb-4">
               <Zap className="h-8 w-8 text-primary" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -61,7 +61,7 @@ const RealtimeListingUpdates = () => {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
                     <Bell className="h-5 w-5 text-primary" />
                   </div>
                   <CardTitle>Instant Notifications</CardTitle>

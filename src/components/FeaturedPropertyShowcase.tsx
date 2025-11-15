@@ -63,9 +63,9 @@ const FeaturedPropertyShowcase = () => {
             <CardContent className="p-0">
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Property Image Placeholder */}
-                <div className="bg-gradient-to-br from-primary/20 to-secondary/20 aspect-video md:aspect-auto flex items-center justify-center p-8">
+                <div className="bg-secondary/30 aspect-video md:aspect-auto flex items-center justify-center p-8">
                   <div className="text-center">
-                    <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-secondary flex items-center justify-center">
                       <DollarSign className="w-16 h-16 text-primary" />
                     </div>
                     <p className="text-sm text-muted-foreground">Property Image</p>

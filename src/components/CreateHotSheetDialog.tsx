@@ -1043,7 +1043,7 @@ export function CreateHotSheetDialog({
           <DialogDescription>
             Set up search criteria and notification preferences for automatic listing alerts
           </DialogDescription>
-          <div className="mt-2 p-3 bg-primary/10 rounded-md">
+          <div className="mt-2 p-3 bg-secondary rounded-md">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">Matching Listings:</span>
               {loadingCount ? (
@@ -1955,7 +1955,7 @@ export function CreateHotSheetDialog({
             </div>
 
             {matchingListingsCount > 0 && (
-              <div className="bg-primary/10 p-3 rounded-md">
+              <div className="bg-secondary p-3 rounded-md">
                 <p className="text-sm font-medium text-primary">
                   {matchingListingsCount} {matchingListingsCount === 1 ? "property currently matches" : "properties currently match"} these criteria
                 </p>
