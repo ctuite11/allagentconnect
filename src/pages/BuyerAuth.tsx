@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import { z } from "zod";
