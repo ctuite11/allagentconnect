@@ -8,7 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Image as ImageIcon, Bed, Bath, Maximize, Home } from "lucide-react";
+import { ArrowLeft, Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin } from "lucide-react";
+import FavoriteButton from "@/components/FavoriteButton";
 
 interface Listing {
   id: string;
@@ -17,11 +18,13 @@ interface Listing {
   city: string;
   state: string;
   zip_code: string;
+  neighborhood?: string | null;
+  agent_id: string;
   price: number;
-  bedrooms: number;
-  bathrooms: number;
-  square_feet: number;
-  property_type: string;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  square_feet: number | null;
+  property_type: string | null;
   photos: any;
   created_at: string;
 }
@@ -38,9 +41,10 @@ const HotSheetReview = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [hotSheet, setHotSheet] = useState<HotSheet | null>(null);
-  const [listings, setListings] = useState<Listing[]>([]);
-  const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
-  const [sortBy, setSortBy] = useState("newest");
+const [listings, setListings] = useState<Listing[]>([]);
+const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
+const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
+const [sortBy, setSortBy] = useState("newest");
 
   useEffect(() => {
     if (id) {
@@ -124,22 +128,26 @@ const HotSheetReview = () => {
         const citiesWithNeighborhoods = cityFilters.filter(f => f.neighborhood);
         const citiesOnly = cityFilters.filter(f => !f.neighborhood).map(f => f.city);
         
-        // Build complex filter: (city in citiesOnly) OR (city=X AND neighborhood=Y) OR ...
-        if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
-          // Need to use OR logic with multiple conditions
-          query = query.or(
-            `city.in.(${citiesOnly.join(',')}),` +
-            citiesWithNeighborhoods.map(f => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
-          );
-        } else if (citiesWithNeighborhoods.length > 0) {
-          // Only neighborhoods specified
-          query = query.or(
-            citiesWithNeighborhoods.map(f => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
-          );
-        } else if (citiesOnly.length > 0) {
-          // Only cities specified (no neighborhoods)
-          query = query.in("city", citiesOnly);
-        }
+// Build complex filter: (city in citiesOnly) OR (city=X AND neighborhood=Y) OR ...
+const q = (v: string) => `"${String(v).replace(/"/g, '\\"')}"`;
+if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
+  // Use OR logic with properly quoted string values (handles spaces like "Back Bay")
+  query = query.or(
+    `city.in.(${citiesOnly.map(q).join(',')}),` +
+    citiesWithNeighborhoods
+      .map((f) => `and(city.eq.${q(f.city)},neighborhood.eq.${q(f.neighborhood!)} )`)
+      .join(',')
+  );
+} else if (citiesWithNeighborhoods.length > 0) {
+  query = query.or(
+    citiesWithNeighborhoods
+      .map((f) => `and(city.eq.${q(f.city)},neighborhood.eq.${q(f.neighborhood!)} )`)
+      .join(',')
+  );
+} else if (citiesOnly.length > 0) {
+  // Only cities specified (no neighborhoods)
+  query = query.in("city", citiesOnly);
+}
       }
       if (criteria.state) {
         query = query.eq("state", criteria.state);
@@ -148,10 +156,24 @@ const HotSheetReview = () => {
         query = query.eq("zip_code", criteria.zipCode);
       }
 
-      const { data: listingsData, error: listingsError } = await query;
+const { data: listingsData, error: listingsError } = await query.order("created_at", { ascending: false });
 
-      if (listingsError) throw listingsError;
-      setListings(listingsData || []);
+if (listingsError) throw listingsError;
+setListings(listingsData || []);
+
+// Load listing agents for display
+const agentIds = Array.from(new Set((listingsData || []).map((l: any) => l.agent_id).filter(Boolean)));
+if (agentIds.length > 0) {
+  const { data: agents } = await supabase
+    .from("agent_profiles")
+    .select("id, first_name, last_name, company")
+    .in("id", agentIds as string[]);
+  const map: Record<string, { fullName: string; company?: string | null }> = {};
+  (agents || []).forEach((a: any) => {
+    map[a.id] = { fullName: `${a.first_name} ${a.last_name}`.trim(), company: a.company };
+  });
+  setAgentMap(map);
+}
     } catch (error: any) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load hot sheet data");
