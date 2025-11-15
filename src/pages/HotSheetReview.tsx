@@ -460,13 +460,18 @@ if (agentIds.length > 0) {
                     )}
                   </div>
                   <CardContent className="p-3">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-1">
                       <p className="text-2xl font-bold text-primary">
                         ${listing.price.toLocaleString()}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        ID# {listing.listing_number}
-                      </p>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">
+                          ID# {listing.listing_number}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {Math.floor((new Date().getTime() - new Date(listing.created_at).getTime()) / (1000 * 60 * 60 * 24))} days
+                        </p>
+                      </div>
                     </div>
                     {listing.property_type && (
                       <div className="flex items-center gap-2 mb-1">
@@ -475,10 +480,10 @@ if (agentIds.length > 0) {
                       </div>
                     )}
                     <p className="font-medium mb-1">{listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}</p>
-                    <div className="flex items-center gap-1 mb-2">
+                    <div className="flex items-center gap-1 mb-1">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground">
-                        {listing.neighborhood ? `${listing.neighborhood}, ` : ''}{listing.city}, {listing.state} {listing.zip_code}
+                        {listing.city}, {listing.state} {listing.zip_code}
                       </p>
                     </div>
                     <div className="flex justify-between items-center gap-4 text-sm text-muted-foreground">
