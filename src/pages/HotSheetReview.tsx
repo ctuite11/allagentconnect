@@ -451,7 +451,7 @@ if (agentIds.length > 0) {
                       </div>
                     )}
                   </div>
-                  <CardContent className="p-4">
+                  <CardContent className="p-3">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-2xl font-bold text-primary">
                         ${listing.price.toLocaleString()}
@@ -473,39 +473,39 @@ if (agentIds.length > 0) {
                         {listing.neighborhood ? `${listing.neighborhood}, ` : ''}{listing.city}, {listing.state} {listing.zip_code}
                       </p>
                     </div>
-                    <div className="flex gap-4 text-sm text-muted-foreground mb-3">
-                      {listing.bedrooms && (
-                        <div className="flex items-center gap-1">
-                          <Bed className="h-4 w-4" />
-                          <span>{listing.bedrooms} bed</span>
-                        </div>
-                      )}
-                      {listing.bathrooms && (
-                        <div className="flex items-center gap-1">
-                          <Bath className="h-4 w-4" />
-                          <span>{listing.bathrooms} bath</span>
-                        </div>
-                      )}
-                      {listing.square_feet && (
-                        <div className="flex items-center gap-1">
-                          <Maximize className="h-4 w-4" />
-                          <span>{listing.square_feet.toLocaleString()} sqft</span>
-                        </div>
-                      )}
-                    </div>
-                    {agentMap[listing.agent_id] && (
-                      <div className="flex justify-end">
+                    <div className="flex justify-between items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex gap-4">
+                        {listing.bedrooms && (
+                          <div className="flex items-center gap-1">
+                            <Bed className="h-4 w-4" />
+                            <span>{listing.bedrooms} bed</span>
+                          </div>
+                        )}
+                        {listing.bathrooms && (
+                          <div className="flex items-center gap-1">
+                            <Bath className="h-4 w-4" />
+                            <span>{listing.bathrooms} bath</span>
+                          </div>
+                        )}
+                        {listing.square_feet && (
+                          <div className="flex items-center gap-1">
+                            <Maximize className="h-4 w-4" />
+                            <span>{listing.square_feet.toLocaleString()} sqft</span>
+                          </div>
+                        )}
+                      </div>
+                      {agentMap[listing.agent_id] && (
                         <button
                           onClick={() => navigate(`/agent/${listing.agent_id}`)}
-                          className="text-xs text-muted-foreground hover:text-primary transition-colors text-right"
+                          className="text-xs text-muted-foreground hover:text-primary transition-colors text-right shrink-0"
                         >
                           {agentMap[listing.agent_id].fullName}
                           {agentMap[listing.agent_id].company && (
                             <span className="block">{agentMap[listing.agent_id].company}</span>
                           )}
                         </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
