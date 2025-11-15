@@ -388,7 +388,7 @@ const EditListing = () => {
     }
   };
 
-  const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
+  const handleAddressSelect = async (place: google.maps.places.PlaceResult) => {
     console.log("=== handleAddressSelect called ===", place);
     addressSelectedRef.current = true;
     const addressComponents = place.address_components || [];
@@ -401,6 +401,8 @@ const EditListing = () => {
     const city = getComponent("locality") || getComponent("sublocality") || getComponent("sublocality_level_1") || getComponent("postal_town");
     const state = getComponent("administrative_area_level_1");
     const zip_code = getComponent("postal_code");
+    const lat = place.geometry?.location?.lat();
+    const lng = place.geometry?.location?.lng();
 
     // Neighborhood/Area extraction
     const neighborhoodCandidate = getComponent("neighborhood") || getComponent("sublocality") || getComponent("sublocality_level_1");
@@ -414,7 +416,7 @@ const EditListing = () => {
       console.warn("Neighborhood lookup failed", e);
     }
 
-    console.log("=== Address components extracted ===", { address, city, state, zip_code, neighborhoodCandidate, neighborhood });
+    console.log("=== Address components extracted ===", { address, city, state, zip_code, lat, lng, neighborhoodCandidate, neighborhood });
 
     // Validate that we have all required components
     const missingFields: string[] = [];
@@ -425,10 +427,9 @@ const EditListing = () => {
     if (missingFields.length > 0) {
       console.warn("Missing components from selected place:", missingFields);
       toast(
-        `Unable to auto-populate ${missingFields.join(", ")}. You can fill the missing fields manually.`,
+        `Unable to auto-populate ${missingFields.join(", ")}. Click "Enter manually" to fill missing fields.`,
         { duration: 6000 }
       );
-      // Set whatever we have; do not force-open manual dialog
       setFormData({
         ...formData,
         address,
@@ -437,19 +438,64 @@ const EditListing = () => {
         zip_code: zip_code || "",
         neighborhood: neighborhood || "",
       });
-    } else {
-      setFormData({
-        ...formData,
-        address,
-        city,
-        state,
-        zip_code,
-        neighborhood: neighborhood || formData.neighborhood,
-      });
-      toast.success("Address auto-filled successfully");
+      setIsDirty(true);
+      return;
     }
-    
+
+    // Update form with address components
+    setFormData({
+      ...formData,
+      address,
+      city,
+      state,
+      zip_code,
+      neighborhood: neighborhood || formData.neighborhood,
+    });
+    toast.success("Address auto-filled successfully");
     setIsDirty(true);
+
+    // Fetch ATTOM property data
+    if (lat && lng) {
+      try {
+        console.log("[EditListing] Fetching property data from ATTOM...");
+        const { data, error } = await supabase.functions.invoke("fetch-property-data", {
+          body: { 
+            lat, 
+            lng, 
+            address, 
+            city, 
+            state, 
+            zip: zip_code,
+            unit_number: unitNumber,
+            property_type: formData.property_type
+          },
+        });
+
+        if (error) {
+          console.error("[EditListing] ATTOM fetch error:", error);
+        } else if (data?.attom) {
+          console.log("[EditListing] ATTOM data received:", data.attom);
+          
+          // Auto-fill property details from ATTOM
+          setFormData((prev) => ({
+            ...prev,
+            bedrooms: data.attom.bedrooms?.toString() || prev.bedrooms,
+            bathrooms: data.attom.bathrooms?.toString() || prev.bathrooms,
+            square_feet: data.attom.square_feet?.toString() || prev.square_feet,
+            lot_size: data.attom.lot_size ? Math.round(Number(data.attom.lot_size)).toString() : prev.lot_size,
+            year_built: data.attom.year_built?.toString() || prev.year_built,
+            property_type: data.attom.property_type || prev.property_type,
+            annual_property_tax: data.attom.annual_property_tax?.toString() || prev.annual_property_tax,
+            tax_year: data.attom.tax_year?.toString() || prev.tax_year,
+            tax_assessment_value: data.attom.tax_assessment_value?.toString() || prev.tax_assessment_value,
+          }));
+          
+          toast.success("Property details auto-filled from ATTOM data");
+        }
+      } catch (err) {
+        console.error("[EditListing] Error fetching ATTOM data:", err);
+      }
+    }
   };
 
   // Helper to update form data and mark as dirty
@@ -937,20 +983,7 @@ const EditListing = () => {
                   placeholder="Enter property address"
                   value={formData.address}
                   onChange={(val) => {
-                    // If the change follows a selection, don't clear dependent fields
-                    if (addressSelectedRef.current) {
-                      addressSelectedRef.current = false;
-                      updateFormData({ address: val });
-                      return;
-                    }
-                    // Manual edit: clear dependent fields to avoid stale data
-                    updateFormData({ 
-                      address: val,
-                      city: '',
-                      state: '',
-                      zip_code: '',
-                      neighborhood: ''
-                    });
+                    updateFormData({ address: val });
                   }}
                 />
                 {!(formData.city && formData.state && formData.zip_code) && (
@@ -961,7 +994,7 @@ const EditListing = () => {
                 {formData.city && formData.state && formData.zip_code && (
                   <p className="text-xs text-success flex items-center gap-1">
                     <span className="inline-block w-1.5 h-1.5 rounded-full bg-success"></span>
-                    Address auto-filled successfully
+                    Address verified
                   </p>
                 )}
               </div>
