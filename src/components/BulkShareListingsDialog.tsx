@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,13 +11,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Share2 } from "lucide-react";
+import { FormattedInput } from "@/components/ui/formatted-input";
+import { Share2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 interface BulkShareListingsDialogProps {
   listingIds: string[];
   listingCount: number;
+}
+
+interface Client {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string | null;
 }
 
 export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareListingsDialogProps) {
@@ -29,12 +39,69 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
   const [agentEmail, setAgentEmail] = useState("");
   const [agentPhone, setAgentPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [clientSearch, setClientSearch] = useState("");
+  const [clientResults, setClientResults] = useState<Client[]>([]);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const clientSearchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
       loadAgentProfile();
+    } else {
+      // Reset form when closing
+      setRecipientName("");
+      setRecipientEmail("");
+      setMessage("");
+      setClientSearch("");
+      setClientResults([]);
+      setShowClientDropdown(false);
     }
   }, [open]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (clientSearchRef.current && !clientSearchRef.current.contains(event.target as Node)) {
+        setShowClientDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Search clients
+  useEffect(() => {
+    const searchClients = async () => {
+      if (!clientSearch.trim() || clientSearch.length < 2) {
+        setClientResults([]);
+        setShowClientDropdown(false);
+        return;
+      }
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from("clients")
+          .select("*")
+          .eq("agent_id", user.id)
+          .or(`first_name.ilike.%${clientSearch}%,last_name.ilike.%${clientSearch}%,email.ilike.%${clientSearch}%`)
+          .order("first_name")
+          .limit(5);
+
+        if (error) throw error;
+        setClientResults(data || []);
+        setShowClientDropdown((data || []).length > 0);
+      } catch (error) {
+        console.error("Error searching clients:", error);
+      }
+    };
+
+    const debounce = setTimeout(searchClients, 300);
+    return () => clearTimeout(debounce);
+  }, [clientSearch]);
 
   const loadAgentProfile = async () => {
     try {
@@ -57,6 +124,13 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
     }
   };
 
+  const handleSelectClient = (client: Client) => {
+    setRecipientName(`${client.first_name} ${client.last_name}`);
+    setRecipientEmail(client.email);
+    setClientSearch(`${client.first_name} ${client.last_name}`);
+    setShowClientDropdown(false);
+  };
+
   const handleShare = async () => {
     if (!recipientName || !recipientEmail || !agentName || !agentEmail) {
       toast.error("Please fill in all required fields");
@@ -65,6 +139,8 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
 
     setSending(true);
     try {
+      const formattedPhone = agentPhone ? formatPhoneNumber(agentPhone) : "";
+      
       const { error } = await supabase.functions.invoke("send-bulk-listing-share", {
         body: {
           listingIds,
@@ -72,7 +148,7 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
           recipientEmail,
           agentName,
           agentEmail,
-          agentPhone,
+          agentPhone: formattedPhone,
           message,
         },
       });
@@ -81,9 +157,6 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
 
       toast.success(`Successfully shared ${listingCount} listing${listingCount > 1 ? 's' : ''}`);
       setOpen(false);
-      setRecipientName("");
-      setRecipientEmail("");
-      setMessage("");
     } catch (error) {
       console.error("Error sharing listings:", error);
       toast.error("Failed to share listings");
@@ -108,6 +181,34 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
+          <div className="space-y-2" ref={clientSearchRef}>
+            <Label htmlFor="clientSearch">Search Contact</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="clientSearch"
+                value={clientSearch}
+                onChange={(e) => setClientSearch(e.target.value)}
+                placeholder="Search by name or email..."
+                className="pl-9"
+              />
+            </div>
+            {showClientDropdown && clientResults.length > 0 && (
+              <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                {clientResults.map((client) => (
+                  <button
+                    key={client.id}
+                    type="button"
+                    onClick={() => handleSelectClient(client)}
+                    className="w-full text-left px-4 py-2 hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    <div className="font-medium">{client.first_name} {client.last_name}</div>
+                    <div className="text-sm text-muted-foreground">{client.email}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="space-y-2">
             <Label htmlFor="recipientName">Recipient Name *</Label>
             <Input
@@ -148,11 +249,11 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
           </div>
           <div className="space-y-2">
             <Label htmlFor="agentPhone">Your Phone</Label>
-            <Input
+            <FormattedInput
               id="agentPhone"
-              type="tel"
+              format="phone"
               value={agentPhone}
-              onChange={(e) => setAgentPhone(e.target.value)}
+              onChange={setAgentPhone}
               placeholder="(555) 123-4567"
             />
           </div>
