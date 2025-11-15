@@ -26,6 +26,7 @@ interface Listing {
   square_feet: number | null;
   property_type: string | null;
   photos: any;
+  attom_data?: any;
   created_at: string;
 }
 
@@ -439,10 +440,17 @@ if (agentIds.length > 0) {
                     <div className="absolute top-4 right-4 z-10">
                       <FavoriteButton listingId={listing.id} size="icon" variant="secondary" />
                     </div>
+                    {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
+                      <div className="absolute bottom-2 right-2 z-10">
+                        <span className="inline-flex items-center rounded-full bg-background/80 text-foreground px-2 py-1 text-xs shadow">
+                          {listing.neighborhood || (listing as any).attom_data?.neighborhood}
+                        </span>
+                      </div>
+                    )}
                     {listing.photos && listing.photos[0] ? (
                       <img
                         src={listing.photos[0].url || listing.photos[0]}
-                        alt={listing.address}
+                        alt={listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}
                         className="w-full h-48 object-cover"
                       />
                     ) : (
@@ -461,12 +469,12 @@ if (agentIds.length > 0) {
                       </p>
                     </div>
                     {listing.property_type && (
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-1">
                         <Home className="h-4 w-4 text-muted-foreground" />
                         <p className="text-sm text-muted-foreground">{listing.property_type}</p>
                       </div>
                     )}
-                    <p className="font-medium mb-1">{listing.address}</p>
+                    <p className="font-medium mb-1">{listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}</p>
                     <div className="flex items-center gap-1 mb-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground">

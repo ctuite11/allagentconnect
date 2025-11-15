@@ -91,9 +91,10 @@ const FavoriteButton = ({ listingId, size = "lg", variant = "secondary", classNa
       disabled={loading}
       className={`gap-2 ${className}`}
       title={!userId ? "Sign in to save this property to your favorites" : undefined}
+      aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
     >
-      <Heart className={`w-4 h-4 ${isFavorite ? "fill-current text-red-500" : ""}`} />
-      {getButtonText()}
+      <Heart className={`w-4 h-4 ${isFavorite ? "fill-current text-destructive" : ""}`} />
+      {size !== "icon" && getButtonText()}
     </Button>
   );
 };
