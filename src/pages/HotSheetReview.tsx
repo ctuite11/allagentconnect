@@ -426,15 +426,18 @@ if (agentIds.length > 0) {
                         className={`w-6 h-6 rounded border-2 cursor-pointer transition-all flex items-center justify-center ${
                           selectedListings.has(listing.id) 
                             ? 'bg-primary border-primary' 
-                            : 'bg-white border-gray-300 hover:border-primary'
+                            : 'bg-background border-border hover:border-primary'
                         }`}
                       >
                         {selectedListings.has(listing.id) && (
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
                       </div>
+                    </div>
+                    <div className="absolute top-4 right-4 z-10">
+                      <FavoriteButton listingId={listing.id} size="icon" variant="secondary" />
                     </div>
                     {listing.photos && listing.photos[0] ? (
                       <img
@@ -464,10 +467,13 @@ if (agentIds.length > 0) {
                       </div>
                     )}
                     <p className="font-medium mb-1">{listing.address}</p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {listing.city}, {listing.state} {listing.zip_code}
-                    </p>
-                    <div className="flex gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1 mb-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        {listing.neighborhood ? `${listing.neighborhood}, ` : ''}{listing.city}, {listing.state} {listing.zip_code}
+                      </p>
+                    </div>
+                    <div className="flex gap-4 text-sm text-muted-foreground mb-3">
                       {listing.bedrooms && (
                         <div className="flex items-center gap-1">
                           <Bed className="h-4 w-4" />
@@ -487,6 +493,19 @@ if (agentIds.length > 0) {
                         </div>
                       )}
                     </div>
+                    {agentMap[listing.agent_id] && (
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => navigate(`/agent/${listing.agent_id}`)}
+                          className="text-xs text-muted-foreground hover:text-primary transition-colors text-right"
+                        >
+                          {agentMap[listing.agent_id].fullName}
+                          {agentMap[listing.agent_id].company && (
+                            <span className="block">{agentMap[listing.agent_id].company}</span>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}

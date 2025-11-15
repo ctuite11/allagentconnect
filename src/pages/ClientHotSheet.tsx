@@ -12,8 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, MessageSquare, ChevronDown, ChevronUp, Settings, Send, Bed, Bath, Maximize, Home } from "lucide-react";
+import { Heart, MessageSquare, ChevronDown, ChevronUp, Settings, Send, Bed, Bath, Maximize, Home, MapPin, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import FavoriteButton from "@/components/FavoriteButton";
 
 interface Listing {
   id: string;
@@ -22,6 +24,8 @@ interface Listing {
   city: string;
   state: string;
   zip_code: string;
+  neighborhood?: string | null;
+  agent_id: string;
   price: number;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -33,9 +37,11 @@ interface Listing {
 
 const ClientHotSheet = () => {
   const { token } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [hotSheet, setHotSheet] = useState<any>(null);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [comments, setComments] = useState<Record<string, string>>({});
   const [newComment, setNewComment] = useState<Record<string, string>>({});
@@ -100,6 +106,20 @@ const ClientHotSheet = () => {
 
       if (listingsError) throw listingsError;
       setListings(listingsData || []);
+
+      // Load listing agents for display
+      const agentIds = Array.from(new Set((listingsData || []).map((l: any) => l.agent_id).filter(Boolean)));
+      if (agentIds.length > 0) {
+        const { data: agents } = await supabase
+          .from("agent_profiles")
+          .select("id, first_name, last_name, company")
+          .in("id", agentIds as string[]);
+        const map: Record<string, { fullName: string; company?: string | null }> = {};
+        (agents || []).forEach((a: any) => {
+          map[a.id] = { fullName: `${a.first_name} ${a.last_name}`.trim(), company: a.company };
+        });
+        setAgentMap(map);
+      }
 
       // Fetch favorites
       const { data: favData } = await supabase
@@ -421,71 +441,79 @@ const ClientHotSheet = () => {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {listings.map((listing) => (
-                <Card key={listing.id} className="overflow-hidden">
-                  <div className="relative aspect-video bg-muted">
+                <Card key={listing.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
+                  <div className="relative" onClick={() => navigate(`/consumer/property/${listing.id}`)}>
+                    <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
+                      <FavoriteButton listingId={listing.id} size="icon" variant="secondary" />
+                    </div>
                     {listing.photos && listing.photos[0] ? (
-                      <img 
-                        src={listing.photos[0]} 
+                      <img
+                        src={listing.photos[0].url || listing.photos[0]}
                         alt={listing.address}
-                        className="w-full h-full object-cover"
+                        className="w-full h-48 object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <p className="text-muted-foreground">No photo</p>
+                      <div className="w-full h-48 bg-muted flex items-center justify-center">
+                        <ImageIcon className="h-12 w-12 text-muted-foreground" />
                       </div>
                     )}
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      className="absolute top-2 right-2"
-                      onClick={() => toggleFavorite(listing.id)}
-                    >
-                      <Heart 
-                        className={`h-4 w-4 ${favorites.has(listing.id) ? 'fill-red-500 text-red-500' : ''}`}
-                      />
-                    </Button>
                   </div>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">${listing.price?.toLocaleString()}</CardTitle>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-2xl font-bold text-primary">
+                        ${listing.price.toLocaleString()}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         ID# {listing.listing_number}
                       </p>
                     </div>
                     {listing.property_type && (
-                      <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center gap-2 mb-2">
                         <Home className="h-4 w-4 text-muted-foreground" />
                         <p className="text-sm text-muted-foreground">{listing.property_type}</p>
                       </div>
                     )}
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {listing.address}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {listing.city}, {listing.state} {listing.zip_code}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {(listing.bedrooms || listing.bathrooms || listing.square_feet) && (
-                      <div className="flex gap-4 text-sm text-muted-foreground">
-                        {listing.bedrooms && (
-                          <div className="flex items-center gap-1">
-                            <Bed className="h-4 w-4" />
-                            <span>{listing.bedrooms} bed</span>
-                          </div>
-                        )}
-                        {listing.bathrooms && (
-                          <div className="flex items-center gap-1">
-                            <Bath className="h-4 w-4" />
-                            <span>{listing.bathrooms} bath</span>
-                          </div>
-                        )}
-                        {listing.square_feet && (
-                          <div className="flex items-center gap-1">
-                            <Maximize className="h-4 w-4" />
-                            <span>{listing.square_feet.toLocaleString()} sqft</span>
-                          </div>
-                        )}
+                    <p className="font-medium mb-1">{listing.address}</p>
+                    <div className="flex items-center gap-1 mb-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        {listing.neighborhood ? `${listing.neighborhood}, ` : ''}{listing.city}, {listing.state} {listing.zip_code}
+                      </p>
+                    </div>
+                    <div className="flex gap-4 text-sm text-muted-foreground mb-3">
+                      {listing.bedrooms && (
+                        <div className="flex items-center gap-1">
+                          <Bed className="h-4 w-4" />
+                          <span>{listing.bedrooms} bed</span>
+                        </div>
+                      )}
+                      {listing.bathrooms && (
+                        <div className="flex items-center gap-1">
+                          <Bath className="h-4 w-4" />
+                          <span>{listing.bathrooms} bath</span>
+                        </div>
+                      )}
+                      {listing.square_feet && (
+                        <div className="flex items-center gap-1">
+                          <Maximize className="h-4 w-4" />
+                          <span>{listing.square_feet.toLocaleString()} sqft</span>
+                        </div>
+                      )}
+                    </div>
+                    {agentMap[listing.agent_id] && (
+                      <div className="flex justify-end mb-3">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/agent/${listing.agent_id}`);
+                          }}
+                          className="text-xs text-muted-foreground hover:text-primary transition-colors text-right"
+                        >
+                          {agentMap[listing.agent_id].fullName}
+                          {agentMap[listing.agent_id].company && (
+                            <span className="block">{agentMap[listing.agent_id].company}</span>
+                          )}
+                        </button>
                       </div>
                     )}
 
