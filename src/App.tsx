@@ -27,6 +27,7 @@ import BrowseProperties from "./pages/BrowseProperties";
 import SearchResults from "./pages/SearchResults";
 import OurAgents from "./pages/OurAgents";
 import Favorites from "./pages/Favorites";
+import MyFavorites from "./pages/MyFavorites";
 import HotSheets from "./pages/HotSheets";
 import HotSheetReview from "./pages/HotSheetReview";
 import MyClients from "./pages/MyClients";
@@ -82,6 +83,7 @@ const App = () => (
           <Route path="/our-agents" element={<OurAgents />} />
           <Route path="/agent-search" element={<OurAgents />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/my-favorites" element={<MyFavorites />} />
           <Route path="/hot-sheets" element={<HotSheets />} />
           <Route path="/hot-sheets/:id/review" element={<HotSheetReview />} />
           <Route path="/my-clients" element={<MyClients />} />
