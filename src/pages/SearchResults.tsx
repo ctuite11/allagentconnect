@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import PropertyCard from "@/components/PropertyCard";
+import ListingCard from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
@@ -268,44 +268,14 @@ const SearchResults = () => {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {listings.map((listing) => (
-                <div 
-                  key={listing.id} 
-                  className="relative"
-                >
-                  <div 
-                    className="absolute top-4 left-4 z-10"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="bg-background/90 backdrop-blur-sm p-2 rounded-md shadow-md border border-border">
-                      <Checkbox
-                        checked={selectedListings.has(listing.id)}
-                        onCheckedChange={() => toggleListingSelection(listing.id)}
-                        className="h-5 w-5 border-2 data-[state=checked]:bg-foreground data-[state=checked]:border-foreground"
-                      />
-                    </div>
-                  </div>
-                  <div 
-                    onClick={() => navigate(`/property/${listing.id}`)}
-                    className="cursor-pointer"
-                  >
-                    <PropertyCard
-                      image={listing.photos?.[0]?.url || "/placeholder.svg"}
-                      title={listing.property_type}
-                      price={`$${listing.price?.toLocaleString()}`}
-                      address={listing.address}
-                      beds={listing.bedrooms}
-                      baths={listing.bathrooms}
-                      sqft={listing.square_feet?.toLocaleString() || "N/A"}
-                      listingId={listing.id}
-                      agentId={listing.agent_profile?.id}
-                      agentName={listing.agent_profile ? `${listing.agent_profile.first_name} ${listing.agent_profile.last_name}` : undefined}
-                      agentCompany={listing.agent_profile?.company}
-                      agentPhoto={listing.agent_profile?.headshot_url}
-                      agentPhone={listing.agent_profile?.phone}
-                      agentEmail={listing.agent_profile?.email}
-                    />
-                  </div>
-                </div>
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  viewMode="grid"
+                  showActions={false}
+                  onSelect={toggleListingSelection}
+                  isSelected={selectedListings.has(listing.id)}
+                />
               ))}
             </div>
           )}
