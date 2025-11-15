@@ -47,6 +47,7 @@ interface ListingCardProps {
   showActions?: boolean;
   onSelect?: (id: string) => void;
   isSelected?: boolean;
+  agentInfo?: { name: string; company?: string | null } | null;
 }
 const ListingCard = ({
   listing,
