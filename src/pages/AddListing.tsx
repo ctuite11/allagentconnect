@@ -1661,7 +1661,7 @@ const AddListing = () => {
                             decimals={2}
                             value={multiFamilyCurrentIncome}
                             onChange={(value) => setMultiFamilyCurrentIncome(value)}
-                            placeholder="$0.00"
+                             placeholder="0.00"
                           />
                         </div>
 
@@ -1673,7 +1673,7 @@ const AddListing = () => {
                             decimals={2}
                             value={multiFamilyPotentialIncome}
                             onChange={(value) => setMultiFamilyPotentialIncome(value)}
-                            placeholder="$0.00"
+                             placeholder="0.00"
                           />
                         </div>
                       </div>
@@ -1806,7 +1806,7 @@ const AddListing = () => {
                               decimals={2}
                               value={commercialLeaseRate}
                               onChange={(value) => setCommercialLeaseRate(value)}
-                              placeholder="$0.00"
+                              placeholder="0.00"
                             />
                             <Select
                               value={commercialLeaseRatePer}
@@ -2946,7 +2946,7 @@ const AddListing = () => {
                         <FormattedInput
                           id="showing_contact_phone"
                           format="phone"
-                          placeholder="(555) 123-4567"
+                          placeholder="1234567890"
                           value={formData.showing_contact_phone}
                           onChange={(value) => setFormData({ ...formData, showing_contact_phone: value })}
                         />

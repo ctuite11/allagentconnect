@@ -177,7 +177,7 @@ export function ContactMatchesDialog({
             <FormattedInput
               id="agentPhone"
               format="phone"
-              placeholder="(555) 123-4567"
+              placeholder="1234567890"
               value={agentPhone}
               onChange={(value) => setAgentPhone(value)}
             />
@@ -197,7 +197,7 @@ export function ContactMatchesDialog({
             <Label htmlFor="listingPrice">Listing Price (Optional)</Label>
             <Input
               id="listingPrice"
-              placeholder="$500,000"
+              placeholder="500000"
               value={listingPrice}
               onChange={(e) => setListingPrice(e.target.value)}
             />

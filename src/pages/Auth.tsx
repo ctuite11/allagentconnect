@@ -314,7 +314,7 @@ const Auth = () => {
                   <FormattedInput
                     id="phone"
                     format="phone"
-                    placeholder="(555) 123-4567"
+                    placeholder="1234567890"
                     value={formData.phone}
                     onChange={(value) =>
                       setFormData({ ...formData, phone: value })

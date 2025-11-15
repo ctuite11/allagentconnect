@@ -332,7 +332,7 @@ const ClientHotSheet = () => {
                       <Input
                         id="edit-min-price"
                         type="number"
-                        placeholder="$0"
+                        placeholder="0"
                         value={minPrice}
                         onChange={(e) => setMinPrice(e.target.value)}
                       />

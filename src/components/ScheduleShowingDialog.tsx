@@ -179,7 +179,7 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
               format="phone"
               value={formData.requester_phone}
               onChange={(value) => setFormData({ ...formData, requester_phone: value })}
-              placeholder="(555) 123-4567"
+              placeholder="1234567890"
             />
           </div>
 

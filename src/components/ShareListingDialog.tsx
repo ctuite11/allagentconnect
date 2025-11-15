@@ -152,7 +152,7 @@ export const ShareListingDialog = ({ listingId, listingAddress }: ShareListingDi
                 format="phone"
                 value={agentPhone}
                 onChange={(value) => setAgentPhone(value)}
-                placeholder="(555) 123-4567"
+                placeholder="1234567890"
               />
             </div>
           </div>
