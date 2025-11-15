@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin } from "lucide-react";
 import FavoriteButton from "@/components/FavoriteButton";
+import { ShareListingDialog } from "@/components/ShareListingDialog";
 
 interface Listing {
   id: string;
@@ -437,7 +438,11 @@ if (agentIds.length > 0) {
                         )}
                       </div>
                     </div>
-                    <div className="absolute top-4 right-4 z-10">
+                    <div className="absolute top-4 right-4 z-10 flex gap-2">
+                      <ShareListingDialog 
+                        listingId={listing.id}
+                        listingAddress={listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}
+                      />
                       <FavoriteButton listingId={listing.id} size="icon" variant="secondary" />
                     </div>
                     {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
