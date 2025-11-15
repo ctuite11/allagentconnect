@@ -269,7 +269,7 @@ const ListingCard = ({
   };
   const daysOnMarket = calculateDaysOnMarket();
   if (viewMode === 'list') {
-    return <Card className="overflow-hidden hover:shadow-md transition-shadow">
+    return <Card className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-primary">
         <div className="flex gap-3 p-3">
           {/* Photo with Banners */}
           <div className="relative w-40 h-40 flex-shrink-0">
