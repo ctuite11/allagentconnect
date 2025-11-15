@@ -460,12 +460,12 @@ const EditListing = () => {
         console.log("[EditListing] Fetching property data from ATTOM...");
         const { data, error } = await supabase.functions.invoke("fetch-property-data", {
           body: { 
-            lat, 
-            lng, 
+            latitude: lat, 
+            longitude: lng, 
             address, 
             city, 
             state, 
-            zip: zip_code,
+            zip_code: zip_code,
             unit_number: unitNumber,
             property_type: formData.property_type
           },
@@ -1811,7 +1811,7 @@ const EditListing = () => {
                       id="lockbox_code"
                       name="lockbox_one_time_code"
                       type="text"
-                      className="text-security-disc"
+                      placeholder="Enter lockbox code"
                       value={formData.lockbox_code}
                       onChange={(e) => setFormData({ ...formData, lockbox_code: e.target.value })}
                       autoComplete="off"
