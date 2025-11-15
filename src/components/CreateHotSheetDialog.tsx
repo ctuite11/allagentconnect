@@ -1250,7 +1250,7 @@ export function CreateHotSheetDialog({
                 <FormattedInput
                   id="client-phone"
                   format="phone"
-                  placeholder="(555) 123-4567"
+                  placeholder="1234567890"
                   value={clientPhone}
                   onChange={(value) => {
                     setClientPhone(value);

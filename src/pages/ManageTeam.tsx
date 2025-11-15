@@ -512,7 +512,7 @@ const ManageTeam = () => {
                 <FormattedInput
                   id="contact_phone"
                   format="phone"
-                  placeholder="5551234567"
+                   placeholder="1234567890"
                   value={contactPhone}
                   onChange={setContactPhone}
                   disabled={!isOwner && !!team}
@@ -549,7 +549,7 @@ const ManageTeam = () => {
                 <FormattedInput
                   id="office_phone"
                   format="phone"
-                  placeholder="5551234567"
+                  placeholder="1234567890"
                   value={officePhone}
                   onChange={setOfficePhone}
                   disabled={!isOwner && !!team}

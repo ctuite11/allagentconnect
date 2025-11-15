@@ -556,7 +556,7 @@ const AgentProfileEditor = () => {
                   <FormattedInput
                     id="cell_phone"
                     format="phone"
-                    placeholder="(555) 123-4567"
+                     placeholder="1234567890"
                     value={cellPhone}
                     onChange={setCellPhone}
                   />
@@ -566,7 +566,7 @@ const AgentProfileEditor = () => {
                   <FormattedInput
                     id="office_phone"
                     format="phone"
-                    placeholder="(555) 123-4567"
+                    placeholder="1234567890"
                     value={officePhone}
                     onChange={setOfficePhone}
                   />

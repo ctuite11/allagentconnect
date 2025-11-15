@@ -466,7 +466,7 @@ const ConsumerAuth = () => {
                     <FormattedInput
                       id="phone"
                       format="phone"
-                      placeholder="(555) 123-4567"
+                      placeholder="1234567890"
                       value={phone}
                       onChange={(value) => setPhone(value)}
                       disabled={loading}

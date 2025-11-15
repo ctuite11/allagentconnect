@@ -140,7 +140,7 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText 
               format="phone"
               value={formData.sender_phone}
               onChange={(value) => setFormData({ ...formData, sender_phone: value })}
-              placeholder="(555) 123-4567"
+              placeholder="1234567890"
             />
           </div>
 

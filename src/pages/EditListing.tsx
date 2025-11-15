@@ -1821,7 +1821,7 @@ const EditListing = () => {
                       value={formData.showing_contact_phone}
                       onChange={(value) => setFormData({ ...formData, showing_contact_phone: value })}
                       format="phone"
-                      placeholder="(555) 123-4567"
+                      placeholder="1234567890"
                     />
                   </div>
                 </div>
