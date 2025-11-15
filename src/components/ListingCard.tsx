@@ -55,7 +55,8 @@ const ListingCard = ({
   viewMode = 'grid',
   showActions = true,
   onSelect,
-  isSelected = false
+  isSelected = false,
+  agentInfo = null
 }: ListingCardProps) => {
   const navigate = useNavigate();
   const [matchCount, setMatchCount] = useState<number>(0);
@@ -329,7 +330,7 @@ const ListingCard = ({
           )}
         </div>
         <CardContent className="p-3">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-start justify-between mb-2">
             <p className="text-2xl font-bold text-primary cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
               ${listing.price.toLocaleString()}
             </p>
@@ -342,38 +343,55 @@ const ListingCard = ({
               </p>
             </div>
           </div>
+          
           {listing.property_type && (
             <div className="flex items-center gap-2 mb-1">
               <Home className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">{listing.property_type}</p>
             </div>
           )}
-          <div className="flex items-center gap-1 mb-1 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+          
+          <div className="flex items-center gap-1 mb-2 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <p className="font-medium">
+            <p className="font-medium text-sm">
               {listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}
             </p>
           </div>
-          <div className="flex justify-between items-center gap-4 text-sm text-muted-foreground">
-            {listing.bedrooms && (
-              <div className="flex items-center gap-1">
-                <Bed className="h-4 w-4" />
-                <span>{listing.bedrooms}</span>
-              </div>
-            )}
-            {listing.bathrooms && (
-              <div className="flex items-center gap-1">
-                <Bath className="h-4 w-4" />
-                <span>{listing.bathrooms}</span>
-              </div>
-            )}
+          
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              {listing.bedrooms && (
+                <div className="flex items-center gap-1">
+                  <Bed className="h-4 w-4" />
+                  <span>{listing.bedrooms}</span>
+                </div>
+              )}
+              {listing.bathrooms && (
+                <div className="flex items-center gap-1">
+                  <Bath className="h-4 w-4" />
+                  <span>{listing.bathrooms}</span>
+                </div>
+              )}
+            </div>
             {listing.square_feet && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Maximize className="h-4 w-4" />
                 <span>{listing.square_feet.toLocaleString()}</span>
               </div>
             )}
           </div>
+          
+          {agentInfo && (
+            <div className="text-xs text-muted-foreground pt-1 border-t">
+              <span className="text-red-600 font-medium">{agentInfo.name}</span>
+              {agentInfo.company && (
+                <>
+                  {' • '}
+                  <span>{agentInfo.company}</span>
+                </>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     );

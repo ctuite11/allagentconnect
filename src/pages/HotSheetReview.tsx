@@ -435,6 +435,14 @@ if (agentIds.length > 0) {
                   showActions={false}
                   onSelect={toggleListing}
                   isSelected={selectedListings.has(listing.id)}
+                  agentInfo={
+                    agentMap[listing.agent_id]
+                      ? {
+                          name: agentMap[listing.agent_id].fullName,
+                          company: agentMap[listing.agent_id].company
+                        }
+                      : null
+                  }
                 />
               ))}
             </div>
