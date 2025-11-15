@@ -271,7 +271,7 @@ const SearchResults = () => {
                 <ListingCard
                   key={listing.id}
                   listing={listing}
-                  viewMode="grid"
+                  viewMode="compact"
                   showActions={false}
                   onSelect={toggleListingSelection}
                   isSelected={selectedListings.has(listing.id)}
