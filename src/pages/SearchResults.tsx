@@ -275,6 +275,14 @@ const SearchResults = () => {
                   showActions={false}
                   onSelect={toggleListingSelection}
                   isSelected={selectedListings.has(listing.id)}
+                  agentInfo={
+                    (listing as any).agent_profile
+                      ? {
+                          name: `${(listing as any).agent_profile.first_name} ${(listing as any).agent_profile.last_name}`.trim(),
+                          company: (listing as any).agent_profile.company
+                        }
+                      : null
+                  }
                 />
               ))}
             </div>
