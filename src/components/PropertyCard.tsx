@@ -108,12 +108,12 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-custom-hover transition-all duration-300 group">
-      <div className="relative overflow-hidden">
+    <Card className="overflow-hidden hover:shadow-md transition-shadow">
+      <div className="relative">
         <img 
           src={image} 
           alt={title}
-          className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-48 object-cover"
         />
         {listingId && (
           <Button
