@@ -280,6 +280,39 @@ const ListingCard = ({
   };
   const daysOnMarket = calculateDaysOnMarket();
   
+  // Build display address, avoid duplicate unit and strip country
+  const getDisplayAddress = () => {
+    const city = listing.city || '';
+    const state = listing.state || '';
+    const zip = listing.zip_code || '';
+    const removeCountry = (s: string) => s.replace(/\s*,?\s*(USA|United States)$/i, '');
+    let base = (listing.address || '').trim();
+    base = removeCountry(base);
+
+    if (!base) {
+      // Construct from parts
+      base = listing.address ? listing.address.trim() : '';
+      const tail = [city && `${city}, ${state} ${zip}`].filter(Boolean).join(', ');
+      base = [base, tail].filter(Boolean).join(', ');
+    }
+
+    const unit = unitNumber ? String(unitNumber) : null;
+    if (unit) {
+      const hasHash = new RegExp(`#\s*${unit}\\b`, 'i').test(base);
+      const hasWord = new RegExp(`\\bUnit\\s*${unit}\\b`, 'i').test(base);
+      if (!hasHash && !hasWord) {
+        const cityIndex = city ? base.indexOf(`, ${city}`) : -1;
+        if (cityIndex > -1) {
+          base = `${base.slice(0, cityIndex)} #${unit}${base.slice(cityIndex)}`;
+        } else {
+          base = `${base} #${unit}`;
+        }
+      }
+    }
+
+    return base;
+  };
+  
   // Compact view (for HotSheets and search results)
   if (viewMode === 'compact') {
     return (
@@ -354,7 +387,7 @@ const ListingCard = ({
           <div className="flex items-center gap-1 mb-2 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <p className="font-medium text-sm">
-              {listing.address ? (unitNumber ? `${listing.address} #${unitNumber}` : listing.address) : `${listing.city}, ${listing.state} ${listing.zip_code}`}
+              {getDisplayAddress() || `${listing.city}, ${listing.state} ${listing.zip_code}`}
             </p>
           </div>
           
