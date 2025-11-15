@@ -479,11 +479,10 @@ if (agentIds.length > 0) {
                         <p className="text-sm text-muted-foreground">{listing.property_type}</p>
                       </div>
                     )}
-                    <p className="font-medium mb-1">{listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}</p>
                     <div className="flex items-center gap-1 mb-1">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">
-                        {listing.city}, {listing.state} {listing.zip_code}
+                      <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <p className="font-medium">
+                        {listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}
                       </p>
                     </div>
                     <div className="flex justify-between items-center gap-4 text-sm text-muted-foreground">
