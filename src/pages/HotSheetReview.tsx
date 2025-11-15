@@ -445,11 +445,7 @@ if (agentIds.length > 0) {
                         )}
                       </div>
                     </div>
-                    <div className="absolute top-4 right-4 z-10 flex gap-2">
-                      <ShareListingDialog 
-                        listingId={listing.id}
-                        listingAddress={listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}
-                      />
+                    <div className="absolute top-4 right-4 z-10">
                       <FavoriteButton listingId={listing.id} size="icon" variant="secondary" />
                     </div>
                     {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
