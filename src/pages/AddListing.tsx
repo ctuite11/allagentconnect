@@ -2943,12 +2943,12 @@ const AddListing = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="showing_contact_phone">Contact Phone</Label>
-                        <Input
+                        <FormattedInput
                           id="showing_contact_phone"
-                          type="tel"
-                          placeholder="5551234567"
+                          format="phone"
+                          placeholder="(555) 123-4567"
                           value={formData.showing_contact_phone}
-                          onChange={(e) => setFormData({ ...formData, showing_contact_phone: e.target.value })}
+                          onChange={(value) => setFormData({ ...formData, showing_contact_phone: value })}
                         />
                       </div>
                     </div>

@@ -155,7 +155,7 @@ const ContactAgentDialog = ({ listingId, agentId, listingAddress }: ContactAgent
               format="phone"
               value={formData.sender_phone}
               onChange={(value) => setFormData({ ...formData, sender_phone: value })}
-              placeholder="5555555555"
+              placeholder="(555) 123-4567"
             />
           </div>
 

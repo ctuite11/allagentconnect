@@ -289,7 +289,7 @@ export function ReverseProspectDialog({
             <FormattedInput
               id="agentPhone"
               format="phone"
-              placeholder="5555555555"
+              placeholder="(555) 123-4567"
               value={agentPhone}
               onChange={(value) => setAgentPhone(value)}
             />
