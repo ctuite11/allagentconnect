@@ -394,9 +394,8 @@ const AgentDashboard = () => {
   const scrollToListings = () => {
     setShowResults(true);
     setTimeout(() => {
-      const listingsSection = document.getElementById('listings-section');
-      if (listingsSection) {
-        listingsSection.scrollIntoView({
+      if (listingsSectionRef.current) {
+        listingsSectionRef.current.scrollIntoView({
           behavior: 'smooth',
           block: 'start'
         });
