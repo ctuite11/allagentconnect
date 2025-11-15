@@ -12,11 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, MessageSquare, ChevronDown, ChevronUp, Settings, Send } from "lucide-react";
+import { Heart, MessageSquare, ChevronDown, ChevronUp, Settings, Send, Bed, Bath, Maximize, Home } from "lucide-react";
 import { toast } from "sonner";
 
 interface Listing {
   id: string;
+  listing_number: string;
   address: string;
   city: string;
   state: string;
@@ -445,8 +446,19 @@ const ClientHotSheet = () => {
                     </Button>
                   </div>
                   <CardHeader>
-                    <CardTitle className="text-lg">${listing.price?.toLocaleString()}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">${listing.price?.toLocaleString()}</CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        ID# {listing.listing_number}
+                      </p>
+                    </div>
+                    {listing.property_type && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Home className="h-4 w-4 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">{listing.property_type}</p>
+                      </div>
+                    )}
+                    <p className="text-sm text-muted-foreground mt-2">
                       {listing.address}
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -455,10 +467,25 @@ const ClientHotSheet = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {(listing.bedrooms || listing.bathrooms || listing.square_feet) && (
-                      <div className="text-sm text-muted-foreground">
-                        {listing.bedrooms && `${listing.bedrooms} beds`}
-                        {listing.bathrooms && ` • ${listing.bathrooms} baths`}
-                        {listing.square_feet && ` • ${listing.square_feet.toLocaleString()} sqft`}
+                      <div className="flex gap-4 text-sm text-muted-foreground">
+                        {listing.bedrooms && (
+                          <div className="flex items-center gap-1">
+                            <Bed className="h-4 w-4" />
+                            <span>{listing.bedrooms} bed</span>
+                          </div>
+                        )}
+                        {listing.bathrooms && (
+                          <div className="flex items-center gap-1">
+                            <Bath className="h-4 w-4" />
+                            <span>{listing.bathrooms} bath</span>
+                          </div>
+                        )}
+                        {listing.square_feet && (
+                          <div className="flex items-center gap-1">
+                            <Maximize className="h-4 w-4" />
+                            <span>{listing.square_feet.toLocaleString()} sqft</span>
+                          </div>
+                        )}
                       </div>
                     )}
 
