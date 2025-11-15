@@ -339,7 +339,7 @@ const ListingCard = ({
                 ID# {listing.listing_number}
               </p>
               <p className="text-xs text-muted-foreground">
-                {Math.floor((new Date().getTime() - new Date(listing.created_at || new Date()).getTime()) / (1000 * 60 * 60 * 24))} days
+                {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'}
               </p>
             </div>
           </div>
@@ -354,7 +354,7 @@ const ListingCard = ({
           <div className="flex items-center gap-1 mb-2 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <p className="font-medium text-sm">
-              {listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}
+              {listing.address ? (unitNumber ? `${listing.address} #${unitNumber}` : listing.address) : `${listing.city}, ${listing.state} ${listing.zip_code}`}
             </p>
           </div>
           
