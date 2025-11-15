@@ -94,6 +94,7 @@ const AddListing = () => {
     commission_notes: "",
     showing_instructions: "",
     lockbox_code: "",
+    virtual_tour_url: "",
     appointment_required: false,
     showing_contact_name: "",
     showing_contact_phone: "",
@@ -915,6 +916,7 @@ const AddListing = () => {
         commission_notes: formData.commission_notes || null,
         showing_instructions: formData.showing_instructions || null,
         lockbox_code: formData.lockbox_code || null,
+        virtual_tour_url: formData.virtual_tour_url || null,
         appointment_required: formData.appointment_required,
         showing_contact_name: formData.showing_contact_name || null,
         showing_contact_phone: formData.showing_contact_phone || null,
@@ -1242,7 +1244,7 @@ const AddListing = () => {
                     SECTION 2: PROPERTY LOCATION  
                     ======================================== */}
 
-                {/* Row 2: Enter Address, List Price */}
+                {/* Row 2: Enter Address and Unit Number */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -1277,6 +1279,7 @@ const AddListing = () => {
                       Can't find your address? Click "Enter manually" above
                     </p>
                   </div>
+                  
                   {/* Unit Number - for properties with units */}
                   {(formData.property_type === "Condominium" || 
                     formData.property_type === "Townhouse" || 
@@ -1457,11 +1460,12 @@ const AddListing = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="square_feet">Sq Ft</Label>
-                    <Input
+                    <FormattedInput
                       id="square_feet"
-                      type="number"
+                      format="number"
+                      placeholder="1234"
                       value={formData.square_feet}
-                      onChange={(e) => setFormData({ ...formData, square_feet: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, square_feet: value })}
                     />
                   </div>
                 </div>
@@ -2759,10 +2763,13 @@ const AddListing = () => {
                       <Label htmlFor="commission_notes">Commission Notes</Label>
                       <Input
                         id="commission_notes"
+                        name="commission_notes"
                         placeholder="Additional commission details"
                         value={formData.commission_notes}
                         onChange={(e) => setFormData({ ...formData, commission_notes: e.target.value })}
                         autoComplete="off"
+                        data-lpignore="true"
+                        data-form-type="other"
                       />
                     </div>
                   </div>
@@ -2780,6 +2787,7 @@ const AddListing = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {[
                         "A-Exclusive Right to Sell",
+                        "A-Exclusive Right to Sell with Variable Rate",
                         "B-ER w/ Named Exclusion",
                         "D-Exclusive Agency",
                         "G-Facilitation/ER to Sell",
@@ -2926,10 +2934,27 @@ const AddListing = () => {
                         <Label htmlFor="lockbox_code">Lockbox Code</Label>
                         <Input
                           id="lockbox_code"
-                          type="password"
+                          name="lockbox_code"
+                          type="text"
                           placeholder="1234"
                           value={formData.lockbox_code}
                           onChange={(e) => setFormData({ ...formData, lockbox_code: e.target.value })}
+                          autoComplete="off"
+                          data-lpignore="true"
+                          data-form-type="other"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="virtual_tour_url">Virtual Tour URL</Label>
+                        <Input
+                          id="virtual_tour_url"
+                          name="virtual_tour_url"
+                          type="url"
+                          placeholder="https://example.com/virtual-tour"
+                          value={formData.virtual_tour_url}
+                          onChange={(e) => setFormData({ ...formData, virtual_tour_url: e.target.value })}
+                          autoComplete="off"
                         />
                       </div>
                       <div className="space-y-2">
