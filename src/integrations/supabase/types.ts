@@ -1388,6 +1388,7 @@ export type Database = {
           total_parking_spaces: number | null
           updated_at: string
           value_estimate: Json | null
+          virtual_tour_url: string | null
           walk_score_data: Json | null
           water_view: boolean | null
           waterfront: boolean | null
@@ -1462,6 +1463,7 @@ export type Database = {
           total_parking_spaces?: number | null
           updated_at?: string
           value_estimate?: Json | null
+          virtual_tour_url?: string | null
           walk_score_data?: Json | null
           water_view?: boolean | null
           waterfront?: boolean | null
@@ -1536,6 +1538,7 @@ export type Database = {
           total_parking_spaces?: number | null
           updated_at?: string
           value_estimate?: Json | null
+          virtual_tour_url?: string | null
           walk_score_data?: Json | null
           water_view?: boolean | null
           waterfront?: boolean | null
