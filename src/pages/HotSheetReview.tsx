@@ -8,10 +8,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Send, Image as ImageIcon, Bed, Bath, Maximize, Home } from "lucide-react";
 
 interface Listing {
   id: string;
+  listing_number: string;
   address: string;
   city: string;
   state: string;
@@ -397,11 +398,22 @@ const HotSheetReview = () => {
               {sortedListings.map((listing) => (
                 <Card key={listing.id} className="overflow-hidden">
                   <div className="relative">
-                    <Checkbox
-                      checked={selectedListings.has(listing.id)}
-                      onCheckedChange={() => toggleListing(listing.id)}
-                      className="absolute top-4 left-4 z-10 bg-white"
-                    />
+                    <div className="absolute top-4 left-4 z-10">
+                      <div 
+                        onClick={() => toggleListing(listing.id)}
+                        className={`w-6 h-6 rounded border-2 cursor-pointer transition-all flex items-center justify-center ${
+                          selectedListings.has(listing.id) 
+                            ? 'bg-primary border-primary' 
+                            : 'bg-white border-gray-300 hover:border-primary'
+                        }`}
+                      >
+                        {selectedListings.has(listing.id) && (
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
                     {listing.photos && listing.photos[0] ? (
                       <img
                         src={listing.photos[0].url || listing.photos[0]}
@@ -415,18 +427,42 @@ const HotSheetReview = () => {
                     )}
                   </div>
                   <CardContent className="p-4">
-                    <p className="text-2xl font-bold text-primary mb-2">
-                      ${listing.price.toLocaleString()}
-                    </p>
-                    <p className="font-medium mb-2">{listing.address}</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-2xl font-bold text-primary">
+                        ${listing.price.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        ID# {listing.listing_number}
+                      </p>
+                    </div>
+                    {listing.property_type && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <Home className="h-4 w-4 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">{listing.property_type}</p>
+                      </div>
+                    )}
+                    <p className="font-medium mb-1">{listing.address}</p>
                     <p className="text-sm text-muted-foreground mb-4">
                       {listing.city}, {listing.state} {listing.zip_code}
                     </p>
-                    <div className="flex gap-4 text-sm">
-                      <span>{listing.bedrooms} bed</span>
-                      <span>{listing.bathrooms} bath</span>
+                    <div className="flex gap-4 text-sm text-muted-foreground">
+                      {listing.bedrooms && (
+                        <div className="flex items-center gap-1">
+                          <Bed className="h-4 w-4" />
+                          <span>{listing.bedrooms} bed</span>
+                        </div>
+                      )}
+                      {listing.bathrooms && (
+                        <div className="flex items-center gap-1">
+                          <Bath className="h-4 w-4" />
+                          <span>{listing.bathrooms} bath</span>
+                        </div>
+                      )}
                       {listing.square_feet && (
-                        <span>{listing.square_feet.toLocaleString()} sqft</span>
+                        <div className="flex items-center gap-1">
+                          <Maximize className="h-4 w-4" />
+                          <span>{listing.square_feet.toLocaleString()} sqft</span>
+                        </div>
                       )}
                     </div>
                   </CardContent>
