@@ -179,7 +179,7 @@ const VendorSetup = () => {
                     <FormItem>
                       <FormLabel>Phone</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="(555) 123-4567" {...field} />
+                        <FormattedInput format="phone" placeholder="(555) 123-4567" value={field.value || ""} onChange={field.onChange} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -307,12 +307,13 @@ const BuyerAuth = () => {
                 </div>
                 <div>
                   <Label htmlFor="phone">Phone (Optional)</Label>
-                  <Input
+                  <FormattedInput
                     id="phone"
-                    type="tel"
+                    format="phone"
+                    placeholder="(555) 123-4567"
                     value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
+                    onChange={(value) =>
+                      setFormData({ ...formData, phone: value })
                     }
                   />
                 </div>

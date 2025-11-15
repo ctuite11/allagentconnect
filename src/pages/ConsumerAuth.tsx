@@ -463,12 +463,12 @@ const ConsumerAuth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone (Optional)</Label>
-                    <Input
+                    <FormattedInput
                       id="phone"
-                      type="tel"
+                      format="phone"
                       placeholder="(555) 123-4567"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(value) => setPhone(value)}
                       disabled={loading}
                     />
                   </div>
