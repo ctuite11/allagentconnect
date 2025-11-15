@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin } from "lucide-react";
 import FavoriteButton from "@/components/FavoriteButton";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
+import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 
 interface Listing {
   id: string;
@@ -387,6 +388,12 @@ if (agentIds.length > 0) {
               )}
             </div>
             <div className="flex items-center gap-4">
+              {selectedListings.size > 0 && (
+                <BulkShareListingsDialog 
+                  listingIds={Array.from(selectedListings)}
+                  listingCount={selectedListings.size}
+                />
+              )}
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-[200px]">
                   <SelectValue />
