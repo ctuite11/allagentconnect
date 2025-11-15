@@ -582,16 +582,6 @@ const AgentProfileEditor = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="team_website">Team Website</Label>
-                <Input
-                  id="team_website"
-                  type="url"
-                  placeholder="https://yourteam.com"
-                  value={socialLinks.website}
-                  onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
-                />
-              </div>
-              <div>
                 <Label htmlFor="personal_website">Personal Website</Label>
                 <Input
                   id="personal_website"
