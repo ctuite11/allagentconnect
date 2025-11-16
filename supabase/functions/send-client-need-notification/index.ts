@@ -507,6 +507,17 @@ const handler = async (req: Request): Promise<Response> => {
         });
 
         console.log(`Email sent to ${agent.email}:`, result);
+        
+        // Check if Resend returned an error (even if no exception was thrown)
+        if (result.error) {
+          console.error(`Resend error for ${agent.email}:`, result.error);
+          return { 
+            success: false, 
+            email: agent.email, 
+            error: result.error.message || "Email delivery failed" 
+          };
+        }
+        
         return { success: true, email: agent.email };
       } catch (error) {
         console.error(`Failed to send email to ${agent.email}:`, error);
