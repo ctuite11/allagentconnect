@@ -351,10 +351,19 @@ const AddListing = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Parse unit from a street line like "123 Main St Apt 4B" or "123 Main St #4B"
+  const extractUnitFromAddress = (streetLine: string) => {
+    const pattern = /(.*?)(?:\s+(?:#|Unit|Apt|Apartment|Suite|Ste)\s*([A-Za-z0-9-]+))$/i;
+    const match = streetLine.match(pattern);
+    if (match) {
+      return { street: match[1].trim(), unit: match[2].trim() };
+    }
+    return { street: streetLine.trim(), unit: "" };
+  };
+
   const handleAddressSelect = useCallback(async (place: any) => {
     console.log("=== [AddListing] handleAddressSelect CALLED ===");
     console.log("[AddListing] Address selected - raw place data:", place);
-    console.log("[AddListing] Place keys:", place ? Object.keys(place) : "NO PLACE");
     
     // Normalize address components between legacy Autocomplete and new PlaceAutocompleteElement
     const legacyComponents = place.address_components;
@@ -364,8 +373,6 @@ const AddListing = () => {
       types: c.types || [],
     }));
     const addressComponents = legacyComponents || newComponents || [];
-    
-    console.log("[AddListing] Normalized address components:", addressComponents);
 
     const getComponent = (type: string) => {
       const component = addressComponents.find((c: any) => c.types?.includes(type));
@@ -378,14 +385,18 @@ const AddListing = () => {
     };
 
     const formattedAddress = place.formatted_address || place.formattedAddress || place.name || "";
-    const streetAddress = formattedAddress.split(",")[0] || "";
+    const streetLine = formattedAddress.split(",")[0] || "";
+    
+    // Extract unit number if present in street line
+    const { street, unit } = extractUnitFromAddress(streetLine);
+    
     const city = getComponent("locality") || getComponent("sublocality") || getComponent("postal_town");
     const stateShort = getComponentShort("administrative_area_level_1") || getComponent("administrative_area_level_1");
     const zip_code = getComponent("postal_code");
     const county = getComponent("administrative_area_level_2");
     const neighborhood = getComponent("neighborhood") || getComponent("sublocality_level_1");
     
-    console.log("[AddListing] Extracted data:", { streetAddress, city, state: stateShort, zip_code, county, neighborhood });
+    console.log("[AddListing] Extracted data:", { street, unit, city, state: stateShort, zip_code, county, neighborhood });
 
     // Normalize location
     let latitude: number | null = null;
@@ -403,10 +414,10 @@ const AddListing = () => {
     
     console.log("[AddListing] Extracted location:", { latitude, longitude });
 
+    // Store only the street address (without unit, city, state, zip)
     setFormData(prev => ({
       ...prev,
-      // Store the FULL formatted address so the input shows the complete selection
-      address: formattedAddress,
+      address: street,
       city,
       state: stateShort,
       zip_code,
@@ -415,6 +426,11 @@ const AddListing = () => {
       latitude,
       longitude,
     }));
+    
+    // Update unit number if extracted
+    if (unit && !unitNumber) {
+      setUnitNumber(unit);
+    }
 
     console.log("[AddListing] About to call fetchPropertyData:", { 
       hasLatLng: !!(latitude && longitude),
