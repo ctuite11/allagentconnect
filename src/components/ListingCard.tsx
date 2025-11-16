@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize } from "lucide-react";
+import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,6 +67,7 @@ const ListingCard = ({
   const [prospectDialogOpen, setProspectDialogOpen] = useState(false);
   const [marketInsightsOpen, setMarketInsightsOpen] = useState(false);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   useEffect(() => {
     loadMatchCount();
     loadStatusHistory();
@@ -134,9 +135,10 @@ const ListingCard = ({
       maximumFractionDigits: 0
     }).format(price);
   };
-  const getFirstPhoto = () => {
+  const getPhotoByIndex = (index: number) => {
     if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
-      const photo = listing.photos[0];
+      const photo = listing.photos[index];
+      if (!photo) return null;
 
       // If it's a string, assume it's already a URL
       if (typeof photo === 'string') {
@@ -157,6 +159,24 @@ const ListingCard = ({
       }
     }
     return null;
+  };
+  
+  const getFirstPhoto = () => {
+    return getPhotoByIndex(0);
+  };
+  
+  const getTotalPhotos = () => {
+    return listing.photos && Array.isArray(listing.photos) ? listing.photos.length : 0;
+  };
+  
+  const handlePreviousPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentPhotoIndex(prev => prev > 0 ? prev - 1 : getTotalPhotos() - 1);
+  };
+  
+  const handleNextPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentPhotoIndex(prev => prev < getTotalPhotos() - 1 ? prev + 1 : 0);
   };
   const hasUpcomingOpenHouse = () => {
     if (!listing.open_houses || !Array.isArray(listing.open_houses)) return false;
@@ -324,8 +344,12 @@ const ListingCard = ({
 
   // Compact view (for HotSheets and search results)
   if (viewMode === 'compact') {
+    const currentPhoto = getPhotoByIndex(currentPhotoIndex);
+    const totalPhotos = getTotalPhotos();
+    const hasMultiplePhotos = totalPhotos > 1;
+    
     return <Card className="overflow-hidden hover:shadow-md transition-shadow">
-        <div className="relative">
+        <div className="relative group">
           {onSelect && <div className="absolute top-2 left-2 z-10">
               <div onClick={e => {
             e.stopPropagation();
@@ -344,7 +368,35 @@ const ListingCard = ({
                 {listing.neighborhood || (listing as any).attom_data?.neighborhood}
               </span>
             </div>}
-          {photoUrl ? <img src={photoUrl} alt={listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`} className="w-full h-48 object-cover cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)} /> : <div className="w-full h-48 bg-muted flex items-center justify-center">
+          
+          {/* Photo navigation arrows */}
+          {hasMultiplePhotos && (
+            <>
+              <button
+                onClick={handlePreviousPhoto}
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-background/90 backdrop-blur-sm p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
+                aria-label="Previous photo"
+              >
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
+              <button
+                onClick={handleNextPhoto}
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-background/90 backdrop-blur-sm p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
+                aria-label="Next photo"
+              >
+                <ChevronRight className="h-5 w-5 text-foreground" />
+              </button>
+              
+              {/* Photo counter */}
+              <div className="absolute bottom-2 left-2 z-10 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-md shadow-md">
+                <span className="text-xs font-medium text-foreground">
+                  {currentPhotoIndex + 1} / {totalPhotos}
+                </span>
+              </div>
+            </>
+          )}
+          
+          {currentPhoto ? <img src={currentPhoto} alt={listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`} className="w-full h-48 object-cover cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)} /> : <div className="w-full h-48 bg-muted flex items-center justify-center">
               <Home className="h-12 w-12 text-muted-foreground" />
             </div>}
         </div>
@@ -363,17 +415,17 @@ const ListingCard = ({
             </div>
           </div>
           
-          {listing.property_type && <div className="flex items-center gap-2 mb-1">
-              <Home className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">{listing.property_type}</p>
-            </div>}
-          
           <div className="flex items-center gap-1 mb-1.5 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <p className="font-medium text-sm">
               {getDisplayAddress() || `${listing.address}${listing.city ? `, ${listing.city}` : ''}${listing.state ? `, ${listing.state}` : ''}${listing.zip_code ? ` ${listing.zip_code}` : ''}`}
             </p>
           </div>
+          
+          {listing.property_type && <div className="flex items-center gap-2 mb-1">
+              <Home className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">{listing.property_type}</p>
+            </div>}
           
           <div className="flex items-center justify-between mt-1">
             <div className="flex items-center gap-6 text-lg">
