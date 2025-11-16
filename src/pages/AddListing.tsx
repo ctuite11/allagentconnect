@@ -386,9 +386,12 @@ const AddListing = () => {
 
     const formattedAddress = place.formatted_address || place.formattedAddress || place.name || "";
     const streetLine = formattedAddress.split(",")[0] || "";
+    const streetNumber = getComponent("street_number");
+    const route = getComponent("route");
+    const composedStreetLine = (streetNumber && route) ? `${streetNumber} ${route}` : streetLine;
     
     // Extract unit number if present in street line
-    const { street, unit } = extractUnitFromAddress(streetLine);
+    const { street, unit } = extractUnitFromAddress(composedStreetLine);
     
     const city = getComponent("locality") || getComponent("sublocality") || getComponent("postal_town");
     const stateShort = getComponentShort("administrative_area_level_1") || getComponent("administrative_area_level_1");
@@ -1140,7 +1143,7 @@ const AddListing = () => {
                     <Label htmlFor="listing_type">Listing Type *</Label>
                     <Select
                       value={formData.listing_type}
-                      onValueChange={(value) => setFormData({ ...formData, listing_type: value })}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, listing_type: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -1155,7 +1158,7 @@ const AddListing = () => {
                     <Label htmlFor="property_type">Property Type *</Label>
                     <Select
                       value={formData.property_type}
-                      onValueChange={(value) => setFormData({ ...formData, property_type: value })}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, property_type: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -1177,7 +1180,7 @@ const AddListing = () => {
                     <Label htmlFor="status">Status *</Label>
                     <Select
                       value={formData.status}
-                      onValueChange={(value) => setFormData({ ...formData, status: value })}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -1217,10 +1220,10 @@ const AddListing = () => {
                           mode="single"
                           selected={formData.activation_date ? new Date(formData.activation_date) : undefined}
                           onSelect={(date) => 
-                            setFormData({ 
-                              ...formData, 
+                            setFormData(prev => ({ 
+                              ...prev, 
                               activation_date: date ? date.toISOString().split('T')[0] : "" 
-                            })
+                            }))
                           }
                           disabled={(date) => date < new Date()}
                           initialFocus
@@ -1242,7 +1245,7 @@ const AddListing = () => {
                       id="list_date"
                       type="date"
                       value={formData.list_date}
-                      onChange={(e) => setFormData({ ...formData, list_date: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, list_date: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1251,7 +1254,7 @@ const AddListing = () => {
                       id="expiration_date"
                       type="date"
                       value={formData.expiration_date}
-                      onChange={(e) => setFormData({ ...formData, expiration_date: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, expiration_date: e.target.value }))}
                     />
                   </div>
                 </div>
@@ -1394,7 +1397,7 @@ const AddListing = () => {
                     <Label htmlFor="county">County</Label>
                     <Select
                       value={formData.county}
-                      onValueChange={(value) => setFormData({ ...formData, county: value })}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, county: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select county" />
@@ -1412,8 +1415,8 @@ const AddListing = () => {
                     <Label htmlFor="neighborhood">Area/Neighborhood</Label>
                     <Select
                       value={formData.neighborhood}
-                      onValueChange={(value) => setFormData({ ...formData, neighborhood: value })}
-                      disabled={!
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
+                      disabled={! 
                         ((formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
                          (formData.county ?? '').toLowerCase().includes('suffolk'))
                       }
@@ -1461,7 +1464,7 @@ const AddListing = () => {
                       id="bedrooms"
                       type="number"
                       value={formData.bedrooms}
-                      onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bedrooms: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1471,7 +1474,7 @@ const AddListing = () => {
                       type="number"
                       step="0.5"
                       value={formData.bathrooms}
-                      onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bathrooms: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1481,7 +1484,7 @@ const AddListing = () => {
                       format="number"
                       placeholder="1234"
                       value={formData.square_feet}
-                      onChange={(value) => setFormData({ ...formData, square_feet: value })}
+                      onChange={(value) => setFormData(prev => ({ ...prev, square_feet: value }))}
                     />
                   </div>
                 </div>
@@ -1494,7 +1497,7 @@ const AddListing = () => {
                       type="number"
                       step="0.01"
                       value={formData.lot_size}
-                      onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lot_size: e.target.value }))}
                     />
                   </div>
                 )}
@@ -2041,7 +2044,7 @@ const AddListing = () => {
                           format="number"
                           decimals={0}
                           value={formData.lot_size}
-                          onChange={(value) => setFormData({ ...formData, lot_size: value })}
+                          onChange={(value) => setFormData(prev => ({ ...prev, lot_size: value }))}
                         />
                       </div>
                       <div className="space-y-2">
@@ -2154,7 +2157,7 @@ const AddListing = () => {
                         format="currency"
                         decimals={0}
                         value={formData.annual_property_tax}
-                        onChange={(value) => setFormData({ ...formData, annual_property_tax: value })}
+                        onChange={(value) => setFormData(prev => ({ ...prev, annual_property_tax: value }))}
                         placeholder="0"
                       />
                     </div>
@@ -2207,7 +2210,7 @@ const AddListing = () => {
                         id="year_built"
                         type="number"
                         value={formData.year_built}
-                        onChange={(e) => setFormData({ ...formData, year_built: e.target.value })}
+                        onChange={(e) => setFormData(prev => ({ ...prev, year_built: e.target.value }))}
                         placeholder="e.g., 1990"
                       />
                     </div>
@@ -2226,7 +2229,7 @@ const AddListing = () => {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     rows={6}
                     placeholder="Describe the property features, location highlights, and any special details..."
                   />
@@ -2733,7 +2736,7 @@ const AddListing = () => {
                       <Label htmlFor="commission_type">Commission Type</Label>
                       <Select
                         value={formData.commission_type}
-                        onValueChange={(value) => setFormData({ ...formData, commission_type: value })}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -2755,7 +2758,7 @@ const AddListing = () => {
                             type="number"
                             step="0.01"
                             value={formData.commission_rate}
-                            onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                            onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
                             placeholder="2.5"
                           />
                           <span className="text-muted-foreground">%</span>
