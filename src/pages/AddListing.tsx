@@ -2771,7 +2771,7 @@ const AddListing = () => {
                             type="number"
                             step="0.01"
                             value={formData.commission_rate}
-                            onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                            onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
                             placeholder="5000"
                             className="pl-6"
                           />
@@ -2785,7 +2785,7 @@ const AddListing = () => {
                         name="commission_notes"
                         placeholder="Additional commission details"
                         value={formData.commission_notes}
-                        onChange={(e) => setFormData({ ...formData, commission_notes: e.target.value })}
+                        onChange={(e) => setFormData(prev => ({ ...prev, commission_notes: e.target.value }))}
                         autoComplete="off"
                         data-lpignore="true"
                         data-form-type="other"
@@ -2944,7 +2944,7 @@ const AddListing = () => {
                         id="showing_instructions"
                         placeholder="Please call 24 hours in advance. Remove shoes. Beware of dog..."
                         value={formData.showing_instructions}
-                        onChange={(e) => setFormData({ ...formData, showing_instructions: e.target.value })}
+                        onChange={(e) => setFormData(prev => ({ ...prev, showing_instructions: e.target.value }))}
                         rows={3}
                       />
                     </div>
@@ -2957,7 +2957,7 @@ const AddListing = () => {
                           type="text"
                           placeholder="1234"
                           value={formData.lockbox_code}
-                          onChange={(e) => setFormData({ ...formData, lockbox_code: e.target.value })}
+                          onChange={(e) => setFormData(prev => ({ ...prev, lockbox_code: e.target.value }))}
                           autoComplete="off"
                           data-lpignore="true"
                           data-form-type="other"
@@ -2972,7 +2972,7 @@ const AddListing = () => {
                           type="url"
                           placeholder="https://example.com/virtual-tour"
                           value={formData.virtual_tour_url}
-                          onChange={(e) => setFormData({ ...formData, virtual_tour_url: e.target.value })}
+                          onChange={(e) => setFormData(prev => ({ ...prev, virtual_tour_url: e.target.value }))}
                           autoComplete="off"
                         />
                       </div>
@@ -2982,7 +2982,7 @@ const AddListing = () => {
                           id="showing_contact_name"
                           placeholder="John Doe"
                           value={formData.showing_contact_name}
-                          onChange={(e) => setFormData({ ...formData, showing_contact_name: e.target.value })}
+                          onChange={(e) => setFormData(prev => ({ ...prev, showing_contact_name: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
@@ -2992,7 +2992,7 @@ const AddListing = () => {
                           format="phone"
                           placeholder="1234567890"
                           value={formData.showing_contact_phone}
-                          onChange={(value) => setFormData({ ...formData, showing_contact_phone: value })}
+                          onChange={(value) => setFormData(prev => ({ ...prev, showing_contact_phone: value }))}
                         />
                       </div>
                     </div>
@@ -3001,7 +3001,7 @@ const AddListing = () => {
                         type="checkbox"
                         id="appointment_required"
                         checked={formData.appointment_required}
-                        onChange={(e) => setFormData({ ...formData, appointment_required: e.target.checked })}
+                        onChange={(e) => setFormData(prev => ({ ...prev, appointment_required: e.target.checked }))}
                         className="rounded border-gray-300"
                       />
                       <Label htmlFor="appointment_required" className="font-normal cursor-pointer">
@@ -3203,7 +3203,7 @@ const AddListing = () => {
                     id="additional_notes"
                     placeholder="Any other important information about the property..."
                     value={formData.additional_notes}
-                    onChange={(e) => setFormData({ ...formData, additional_notes: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, additional_notes: e.target.value }))}
                     rows={4}
                   />
                 </div>
@@ -3554,7 +3554,7 @@ const AddListing = () => {
                   id="manual-city"
                   placeholder="Boston"
                   value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
@@ -3563,7 +3563,7 @@ const AddListing = () => {
                   id="manual-state"
                   placeholder="MA"
                   value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
                 />
               </div>
             </div>
@@ -3575,14 +3575,14 @@ const AddListing = () => {
                   id="manual-zip"
                   placeholder="02101"
                   value={formData.zip_code}
-                  onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="manual-county">County</Label>
                 <Select
                   value={formData.county}
-                  onValueChange={(value) => setFormData({ ...formData, county: value })}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, county: value }))}
                 >
                   <SelectTrigger id="manual-county">
                     <SelectValue placeholder="Select county" />
@@ -3602,7 +3602,7 @@ const AddListing = () => {
               <Label htmlFor="manual-neighborhood">Neighborhood (Optional)</Label>
               <Select
                 value={formData.neighborhood}
-                onValueChange={(value) => setFormData({ ...formData, neighborhood: value })}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
               >
                 <SelectTrigger id="manual-neighborhood">
                   <SelectValue placeholder="Select neighborhood" />

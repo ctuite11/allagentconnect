@@ -477,7 +477,7 @@ const EditListing = () => {
           body: { 
             latitude: lat, 
             longitude: lng, 
-            address, 
+            address: street, 
             city, 
             state, 
             zip_code: zip_code,
@@ -515,7 +515,7 @@ const EditListing = () => {
 
   // Helper to update form data and mark as dirty
   const updateFormData = (updates: Partial<typeof formData>) => {
-    setFormData({ ...formData, ...updates });
+    setFormData(prev => ({ ...prev, ...updates }));
     setIsDirty(true);
   };
 
@@ -1133,7 +1133,7 @@ const EditListing = () => {
                   id="price"
                   format="currency"
                   value={formData.price}
-                  onChange={(value) => setFormData({ ...formData, price: value })}
+                  onChange={(value) => setFormData(prev => ({ ...prev, price: value }))}
                   onBlur={handleBlur}
                   required
                 />
@@ -1146,7 +1146,7 @@ const EditListing = () => {
                     id="bedrooms"
                     type="number"
                     value={formData.bedrooms}
-                    onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, bedrooms: e.target.value }))}
                     onBlur={handleBlur}
                   />
                 </div>
@@ -1157,7 +1157,7 @@ const EditListing = () => {
                     type="number"
                     step="0.5"
                     value={formData.bathrooms}
-                    onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, bathrooms: e.target.value }))}
                     onBlur={handleBlur}
                   />
                 </div>
@@ -1167,7 +1167,7 @@ const EditListing = () => {
                     id="square_feet"
                     format="number"
                     value={formData.square_feet}
-                    onChange={(value) => setFormData({ ...formData, square_feet: value })}
+                    onChange={(value) => setFormData(prev => ({ ...prev, square_feet: value }))}
                     onBlur={handleBlur}
                   />
                 </div>
@@ -1179,7 +1179,7 @@ const EditListing = () => {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   onBlur={handleBlur}
                   rows={4}
                   placeholder="Describe the property..."
@@ -1204,7 +1204,7 @@ const EditListing = () => {
                       id="num_fireplaces"
                       type="number"
                       value={formData.num_fireplaces}
-                      onChange={(e) => setFormData({ ...formData, num_fireplaces: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, num_fireplaces: e.target.value }))}
                     />
                   </div>
                 </div>
@@ -1220,7 +1220,7 @@ const EditListing = () => {
                       id="annual_property_tax"
                       format="currency"
                       value={formData.annual_property_tax}
-                      onChange={(value) => setFormData({ ...formData, annual_property_tax: value })}
+                      onChange={(value) => setFormData(prev => ({ ...prev, annual_property_tax: value }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1229,7 +1229,7 @@ const EditListing = () => {
                       id="tax_assessment_value"
                       format="currency"
                       value={formData.tax_assessment_value}
-                      onChange={(value) => setFormData({ ...formData, tax_assessment_value: value })}
+                      onChange={(value) => setFormData(prev => ({ ...prev, tax_assessment_value: value }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1238,7 +1238,7 @@ const EditListing = () => {
                       id="tax_year"
                       type="number"
                       value={formData.tax_year}
-                      onChange={(e) => setFormData({ ...formData, tax_year: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, tax_year: e.target.value }))}
                     />
                   </div>
                 </div>
@@ -1264,7 +1264,7 @@ const EditListing = () => {
                         type="number"
                         step="0.01"
                         value={formData.lot_size}
-                        onChange={(e) => setFormData({ ...formData, lot_size: e.target.value })}
+                        onChange={(e) => setFormData(prev => ({ ...prev, lot_size: e.target.value }))}
                       />
                     </div>
                   )}
@@ -1274,7 +1274,7 @@ const EditListing = () => {
                       id="year_built"
                       type="number"
                       value={formData.year_built}
-                      onChange={(e) => setFormData({ ...formData, year_built: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, year_built: e.target.value }))}
                     />
                   </div>
                 </div>
@@ -1599,7 +1599,7 @@ const EditListing = () => {
                     <Label htmlFor="commission_type">Commission Type</Label>
                     <Select
                       value={formData.commission_type}
-                      onValueChange={(value) => setFormData({ ...formData, commission_type: value })}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -1621,7 +1621,7 @@ const EditListing = () => {
                           type="number"
                           step="0.01"
                           value={formData.commission_rate}
-                          onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                          onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
                           placeholder="2.5"
                         />
                         <span className="text-muted-foreground">%</span>
@@ -1634,7 +1634,7 @@ const EditListing = () => {
                           type="number"
                           step="0.01"
                           value={formData.commission_rate}
-                          onChange={(e) => setFormData({ ...formData, commission_rate: e.target.value })}
+                          onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
                           placeholder="5000"
                           className="pl-6"
                         />
@@ -1648,7 +1648,7 @@ const EditListing = () => {
                     id="commission_notes"
                     name="notes_listing_commission"
                     value={formData.commission_notes}
-                    onChange={(e) => setFormData({ ...formData, commission_notes: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, commission_notes: e.target.value }))}
                     autoComplete="off"
                     data-form-type="other"
                     data-lpignore="true"
@@ -1815,7 +1815,7 @@ const EditListing = () => {
                   <Textarea
                     id="showing_instructions"
                     value={formData.showing_instructions}
-                    onChange={(e) => setFormData({ ...formData, showing_instructions: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, showing_instructions: e.target.value }))}
                     rows={3}
                   />
                 </div>
@@ -1828,7 +1828,7 @@ const EditListing = () => {
                       type="text"
                       placeholder="Enter lockbox code"
                       value={formData.lockbox_code}
-                      onChange={(e) => setFormData({ ...formData, lockbox_code: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lockbox_code: e.target.value }))}
                       autoComplete="off"
                       inputMode="numeric"
                       pattern="^[0-9]*$"
@@ -1844,7 +1844,7 @@ const EditListing = () => {
                       type="checkbox"
                       id="appointment_required"
                       checked={formData.appointment_required}
-                      onChange={(e) => setFormData({ ...formData, appointment_required: e.target.checked })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, appointment_required: e.target.checked }))}
                       className="rounded"
                     />
                     <Label htmlFor="appointment_required" className="font-normal cursor-pointer">
@@ -1858,7 +1858,7 @@ const EditListing = () => {
                     <Input
                       id="showing_contact_name"
                       value={formData.showing_contact_name}
-                      onChange={(e) => setFormData({ ...formData, showing_contact_name: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, showing_contact_name: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1867,7 +1867,7 @@ const EditListing = () => {
                       id="showing_contact_phone"
                       type="tel"
                       value={formData.showing_contact_phone}
-                      onChange={(value) => setFormData({ ...formData, showing_contact_phone: value })}
+                      onChange={(value) => setFormData(prev => ({ ...prev, showing_contact_phone: value }))}
                       format="phone"
                       placeholder="1234567890"
                     />
