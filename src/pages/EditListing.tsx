@@ -94,6 +94,10 @@ const EditListing = () => {
   const [hoaFee, setHoaFee] = useState("");
   const [hoaFeeFrequency, setHoaFeeFrequency] = useState("monthly");
   
+  useEffect(() => {
+    if (manualAddressDialogOpen) addressSelectedRef.current = false;
+  }, [manualAddressDialogOpen]);
+  
   // Parse unit from a street line like "123 Main St Apt 4B" or "123 Main St #4B"
   const extractUnitFromAddress = (streetLine: string) => {
     const pattern = /(.*?)(?:\s+(?:#|Unit|Apt|Apartment|Suite|Ste)\s*([A-Za-z0-9-]+))$/i;
@@ -998,9 +1002,10 @@ const EditListing = () => {
                     onPlaceSelect={handleAddressSelect}
                     placeholder="Enter property address"
                     value={formData.address}
-                    onChange={(val) => {
-                      updateFormData({ address: val });
-                    }}
+                     onChange={(val) => {
+                       if (addressSelectedRef.current) return;
+                       updateFormData({ address: val });
+                     }}
                   />
                   {!(formData.city && formData.state && formData.zip_code) && (
                     <p className="text-xs text-muted-foreground">
