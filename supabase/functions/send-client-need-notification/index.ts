@@ -373,7 +373,7 @@ const handler = async (req: Request): Promise<Response> => {
           `;
 
           const result = await resend.emails.send({
-            from: "Agent Network <onboarding@resend.dev>",
+            from: "All Agent Connect <hello@allagentconnect.com>",
             to: [agent.email],
             subject: `${getCategoryLabel(category)}: ${subject}`,
             html: emailHtml,
@@ -521,7 +521,7 @@ const handler = async (req: Request): Promise<Response> => {
         `;
 
         const result = await resend.emails.send({
-          from: "Agent Network <onboarding@resend.dev>",
+          from: "All Agent Connect <hello@allagentconnect.com>",
           to: [agent.email],
           subject: `${getCategoryLabel(category)}: ${subject}`,
           html: emailHtml,

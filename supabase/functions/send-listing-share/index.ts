@@ -119,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'AAC Worldwide <onboarding@resend.dev>',
+        from: 'All Agent Connect <hello@allagentconnect.com>',
         to: [recipientEmail],
         subject: `Property Shared: ${listing.address}`,
         html: htmlContent,

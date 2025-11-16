@@ -36,7 +36,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "AAC Worldwide <onboarding@resend.dev>",
+        from: "All Agent Connect <hello@allagentconnect.com>",
         to: [invitedEmail],
         subject: `${inviterName} shared a Hot Sheet with you`,
         html: `
