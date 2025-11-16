@@ -84,7 +84,10 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const availableCities = Array.from(new Set(citiesRaw)).sort((a, b) => a.localeCompare(b));
 
   const availableNeighborhoods = cities.length > 0 && stateKey
-    ? [...new Set(cities.flatMap(city => usNeighborhoodsByCityState[`${city}-${stateKey}`] || []))]
+    ? [...new Set(cities.flatMap(city => {
+        const list = usNeighborhoodsByCityState[`${city}-${stateKey}`] || [];
+        return list.map((n) => `${city}-${n}`);
+      }))]
     : [];
 
   // Reset dependent fields when state, county, or city changes
@@ -106,12 +109,19 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   };
 
   const handleCityToggle = (cityName: string) => {
-    setCities(prev => 
-      prev.includes(cityName) 
-        ? prev.filter(c => c !== cityName)
-        : [...prev, cityName]
-    );
-    setNeighborhoods([]);
+    const cityNeighborhoods = stateKey ? (usNeighborhoodsByCityState[`${cityName}-${stateKey}`] || []) : [];
+    setCities((prev) => {
+      const isSelected = prev.includes(cityName);
+      if (isSelected) {
+        // Removing city: also remove its neighborhoods from selection
+        setNeighborhoods((prevN) => prevN.filter((n) => !cityNeighborhoods.includes(n)));
+        return prev.filter((c) => c !== cityName);
+      } else {
+        // Adding city: also include its neighborhoods
+        setNeighborhoods((prevN) => Array.from(new Set([...prevN, ...cityNeighborhoods])));
+        return [...prev, cityName];
+      }
+    });
   };
 
   const handleNeighborhoodToggle = (neighborhoodName: string) => {
@@ -143,10 +153,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const selectAllCities = () => {
     if (cities.length === availableCities.length) {
       setCities([]);
+      setNeighborhoods([]);
     } else {
       setCities([...availableCities]);
+      const allNeighborhoods = stateKey
+        ? Array.from(new Set(availableCities.flatMap((city) => usNeighborhoodsByCityState[`${city}-${stateKey}`] || [])))
+        : [];
+      setNeighborhoods(allNeighborhoods);
     }
-    setNeighborhoods([]);
   };
 
   const selectAllNeighborhoods = () => {
@@ -196,21 +210,42 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const fetchRecipientCount = async () => {
     setLoadingCount(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (category === "buyer_need" || category === "renter_need") {
+        const requestBody: any = {
+          category,
+          subject: subject || "Preview",
+          message: message || "Preview",
+          previewOnly: true,
+          criteria: {
+            state,
+            counties: counties.length > 0 ? counties : undefined,
+            cities: cities.length > 0 ? cities : undefined,
+            neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
+            minPrice: minPrice ? parseFloat(minPrice) : undefined,
+            maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+            propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
+          },
+        };
 
-      // Fetch agents with this preference enabled (excluding self)
-      const query = supabase
-        .from("notification_preferences")
-        .select("user_id")
-        .neq("user_id", user.id);
+        const { data, error } = await supabase.functions.invoke("send-client-need-notification", {
+          body: requestBody,
+        });
 
-      // Type assertion to handle dynamic column name
-      const { data, error } = await (query as any).eq(category, true);
+        if (error) throw error;
+        setRecipientCount(data?.recipientCount ?? 0);
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-      if (error) throw error;
+        const query = supabase
+          .from("notification_preferences")
+          .select("user_id")
+          .neq("user_id", user.id) as any;
 
-      setRecipientCount(data?.length || 0);
+        const { data, error } = await (query as any).eq(category, true);
+        if (error) throw error;
+        setRecipientCount(data?.length || 0);
+      }
     } catch (error) {
       console.error("Error fetching recipient count:", error);
       setRecipientCount(0);
@@ -224,7 +259,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       fetchRecipientCount();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, category]);
+  }, [open, category, state, counties.join(','), cities.join(','), neighborhoods.join(','), minPrice, maxPrice, propertyTypes.join(','), subject, message]);
 
   const handleSend = async () => {
     if (!subject.trim() || !message.trim()) {
@@ -278,9 +313,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
       if (data?.recipientCount === 0) {
         toast.info("No agents match the specified criteria");
-      } else {
+      } else if (data?.successCount > 0) {
         toast.success(
           `Message sent successfully to ${data.successCount} agent${data.successCount !== 1 ? "s" : ""}!`
+        );
+      } else {
+        const failures = data?.failureCount ?? data?.recipientCount ?? 0;
+        toast.error(
+          `Failed to send emails to ${failures} agent${failures !== 1 ? "s" : ""}. Please verify your email domain settings.`
         );
       }
 

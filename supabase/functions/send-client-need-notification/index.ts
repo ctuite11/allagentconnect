@@ -16,6 +16,7 @@ interface SendNotificationRequest {
   category: "buyer_need" | "sales_intel" | "renter_need" | "general_discussion";
   subject: string;
   message: string;
+  previewOnly?: boolean;
   criteria?: {
     state?: string;
     counties?: string[];
@@ -44,7 +45,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Unauthorized");
     }
 
-    const { category, subject, message, criteria }: SendNotificationRequest = await req.json();
+    const { category, subject, message, criteria, previewOnly }: SendNotificationRequest = await req.json();
 
     console.log(`Sending ${category} notification from user ${user.id}`, criteria ? `with criteria: ${JSON.stringify(criteria)}` : "");
 
@@ -268,6 +269,14 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
+      // Early return for preview-only requests
+      if (previewOnly) {
+        return new Response(
+          JSON.stringify({ success: true, recipientCount: agents.length, preview: true }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       // Send emails with criteria information
       const emailPromises = agents.map(async (agent) => {
         try {
@@ -371,6 +380,12 @@ const handler = async (req: Request): Promise<Response> => {
             reply_to: senderEmail,
           });
 
+          const resendError = (result as any)?.error;
+          if (resendError) {
+            console.error(`Resend API error for ${agent.email}:`, resendError);
+            return { success: false, email: agent.email, error: resendError?.message || "Resend error" };
+          }
+
           console.log(`Email sent to ${agent.email}:`, result);
           return { success: true, email: agent.email };
         } catch (error) {
@@ -451,6 +466,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send emails to all matching agents
+    if (previewOnly) {
+      return new Response(
+        JSON.stringify({ success: true, recipientCount: agents.length, preview: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const emailPromises = agents.map(async (agent) => {
       try {
         const emailHtml = `
