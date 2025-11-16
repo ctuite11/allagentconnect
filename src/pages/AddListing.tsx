@@ -109,12 +109,17 @@ const AddListing = () => {
   const [amenities, setAmenities] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [manualAddressDialogOpen, setManualAddressDialogOpen] = useState(false);
+  const addressLockedRef = useRef(false);
 
   // Store fetched property data
   const [attomData, setAttomData] = useState<any>(null);
   const [walkScoreData, setWalkScoreData] = useState<any>(null);
   const [schoolsData, setSchoolsData] = useState<any>(null);
   const [valueEstimate, setValueEstimate] = useState<any>(null);
+
+  useEffect(() => {
+    if (manualAddressDialogOpen) addressLockedRef.current = false;
+  }, [manualAddressDialogOpen]);
 
   // Sale listing criteria
   const [listingAgreementTypes, setListingAgreementTypes] = useState<string[]>([]);
@@ -364,7 +369,7 @@ const AddListing = () => {
   const handleAddressSelect = useCallback(async (place: any) => {
     console.log("=== [AddListing] handleAddressSelect CALLED ===");
     console.log("[AddListing] Address selected - raw place data:", place);
-    
+    addressLockedRef.current = true;
     // Normalize address components between legacy Autocomplete and new PlaceAutocompleteElement
     const legacyComponents = place.address_components;
     const newComponents = place.addressComponents?.map((c: any) => ({
@@ -1285,10 +1290,11 @@ const AddListing = () => {
                         onPlaceSelect={handleAddressSelect}
                         placeholder="Full property address"
                         value={formData.address}
-                        onChange={(val) => {
-                          setFormData(prev => ({ ...prev, address: val }));
-                          setValidationErrors(errors => errors.filter(e => e !== "Address"));
-                        }}
+                          onChange={(val) => {
+                            if (addressLockedRef.current) return;
+                            setFormData(prev => ({ ...prev, address: val }));
+                            setValidationErrors(errors => errors.filter(e => e !== "Address"));
+                          }}
                       />
                     </div>
                     {validationErrors.includes("Address") && (
