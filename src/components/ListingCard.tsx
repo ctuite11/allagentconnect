@@ -380,7 +380,7 @@ const ListingCard = ({
                 ID# {listing.listing_number}
               </p>
               <p className="text-xs text-muted-foreground">
-                {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'}
+                DOM {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'}
               </p>
             </div>
           </div>
@@ -395,39 +395,36 @@ const ListingCard = ({
           <div className="flex items-center gap-1 mb-2 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <p className="font-medium text-sm">
-              {getDisplayAddress() || `${listing.city}, ${listing.state} ${listing.zip_code}`}
+              {getDisplayAddress() || `${listing.address}${listing.city ? `, ${listing.city}` : ''}${listing.state ? `, ${listing.state}` : ''}${listing.zip_code ? ` ${listing.zip_code}` : ''}`}
             </p>
           </div>
           
-          <div className="flex items-center gap-3 mb-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4 mb-2 text-base">
             {listing.bedrooms && (
               <div className="flex items-center gap-1">
-                <Bed className="h-4 w-4" />
-                <span>{listing.bedrooms}</span>
+                <Bed className="h-4 w-4 text-muted-foreground" />
+                <span className="text-foreground font-medium">{listing.bedrooms}</span>
               </div>
             )}
             {listing.bathrooms && (
               <div className="flex items-center gap-1">
-                <Bath className="h-4 w-4" />
-                <span>{listing.bathrooms}</span>
+                <Bath className="h-4 w-4 text-muted-foreground" />
+                <span className="text-foreground font-medium">{listing.bathrooms}</span>
               </div>
             )}
             {listing.square_feet && (
               <div className="flex items-center gap-1">
-                <Maximize className="h-4 w-4" />
-                <span>{listing.square_feet.toLocaleString()}</span>
+                <Maximize className="h-4 w-4 text-muted-foreground" />
+                <span className="text-foreground font-medium">{listing.square_feet.toLocaleString()}</span>
               </div>
             )}
           </div>
           
           {agentInfo && (
-            <div className="text-xs mt-1">
-              <span className="text-primary font-medium hover:underline">{agentInfo.name}</span>
+            <div className="text-xs mt-2 text-right">
+              <div className="text-foreground font-medium">{agentInfo.name}</div>
               {agentInfo.company && (
-                <>
-                  {' • '}
-                  <span className="text-muted-foreground">{agentInfo.company}</span>
-                </>
+                <div className="text-muted-foreground">{agentInfo.company}</div>
               )}
             </div>
           )}
