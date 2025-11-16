@@ -399,23 +399,23 @@ const ListingCard = ({
             </p>
           </div>
           
-          <div className="flex items-center gap-4 mb-2 text-base">
+          <div className="flex items-center gap-6 mb-3 mt-1 text-lg">
             {listing.bedrooms && (
-              <div className="flex items-center gap-1">
-                <Bed className="h-4 w-4 text-muted-foreground" />
-                <span className="text-foreground font-medium">{listing.bedrooms}</span>
+              <div className="flex items-center gap-1.5">
+                <Bed className="h-5 w-5 text-muted-foreground" />
+                <span className="text-foreground font-semibold">{listing.bedrooms}</span>
               </div>
             )}
             {listing.bathrooms && (
-              <div className="flex items-center gap-1">
-                <Bath className="h-4 w-4 text-muted-foreground" />
-                <span className="text-foreground font-medium">{listing.bathrooms}</span>
+              <div className="flex items-center gap-1.5">
+                <Bath className="h-5 w-5 text-muted-foreground" />
+                <span className="text-foreground font-semibold">{listing.bathrooms}</span>
               </div>
             )}
             {listing.square_feet && (
-              <div className="flex items-center gap-1">
-                <Maximize className="h-4 w-4 text-muted-foreground" />
-                <span className="text-foreground font-medium">{listing.square_feet.toLocaleString()}</span>
+              <div className="flex items-center gap-1.5">
+                <Maximize className="h-5 w-5 text-muted-foreground" />
+                <span className="text-foreground font-semibold">{listing.square_feet.toLocaleString()}</span>
               </div>
             )}
           </div>
