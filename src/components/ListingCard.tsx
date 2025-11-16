@@ -47,7 +47,10 @@ interface ListingCardProps {
   showActions?: boolean;
   onSelect?: (id: string) => void;
   isSelected?: boolean;
-  agentInfo?: { name: string; company?: string | null } | null;
+  agentInfo?: {
+    name: string;
+    company?: string | null;
+  } | null;
 }
 const ListingCard = ({
   listing,
@@ -279,7 +282,7 @@ const ListingCard = ({
     return diffDays;
   };
   const daysOnMarket = calculateDaysOnMarket();
-  
+
   // Build display address, avoid duplicate unit and strip country
   const getDisplayAddress = () => {
     const city = listing.city || '';
@@ -288,14 +291,12 @@ const ListingCard = ({
     const removeCountry = (s: string) => s.replace(/\s*,?\s*(USA|United States)$/i, '');
     let base = (listing.address || '').trim();
     base = removeCountry(base);
-
     if (!base) {
       // Construct from parts
       base = listing.address ? listing.address.trim() : '';
       const tail = [city && `${city}, ${state} ${zip}`].filter(Boolean).join(', ');
       base = [base, tail].filter(Boolean).join(', ');
     }
-
     const unit = unitNumber ? String(unitNumber) : null;
     if (unit) {
       const hasHash = new RegExp(`#\s*${unit}\\b`, 'i').test(base);
@@ -320,59 +321,36 @@ const ListingCard = ({
     }
     return base;
   };
-  
+
   // Compact view (for HotSheets and search results)
   if (viewMode === 'compact') {
-    return (
-      <Card className="overflow-hidden hover:shadow-md transition-shadow">
+    return <Card className="overflow-hidden hover:shadow-md transition-shadow">
         <div className="relative">
-          {onSelect && (
-            <div className="absolute top-4 left-4 z-10">
-              <div 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelect(listing.id);
-                }}
-                className={`w-6 h-6 rounded border-2 cursor-pointer transition-all flex items-center justify-center ${
-                  isSelected 
-                    ? 'bg-primary border-primary' 
-                    : 'bg-background border-border hover:border-primary'
-                }`}
-              >
-                {isSelected && (
-                  <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+          {onSelect && <div className="absolute top-4 left-4 z-10">
+              <div onClick={e => {
+            e.stopPropagation();
+            onSelect(listing.id);
+          }} className={`w-6 h-6 rounded border-2 cursor-pointer transition-all flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'bg-background border-border hover:border-primary'}`}>
+                {isSelected && <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                )}
+                  </svg>}
               </div>
-            </div>
-          )}
+            </div>}
           <div className="absolute top-4 right-4 z-10">
             <FavoriteButton listingId={listing.id} size="icon" variant="secondary" />
           </div>
-          {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
-            <div className="absolute bottom-2 right-2 z-10">
+          {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && <div className="absolute bottom-2 right-2 z-10">
               <span className="inline-flex items-center rounded-full bg-background/80 text-foreground px-2 py-1 text-xs shadow">
                 {listing.neighborhood || (listing as any).attom_data?.neighborhood}
               </span>
-            </div>
-          )}
-          {photoUrl ? (
-            <img
-              src={photoUrl}
-              alt={listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`}
-              className="w-full h-48 object-cover cursor-pointer"
-              onClick={() => navigate(`/property/${listing.id}`)}
-            />
-          ) : (
-            <div className="w-full h-48 bg-muted flex items-center justify-center">
+            </div>}
+          {photoUrl ? <img src={photoUrl} alt={listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`} className="w-full h-48 object-cover cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)} /> : <div className="w-full h-48 bg-muted flex items-center justify-center">
               <Home className="h-12 w-12 text-muted-foreground" />
-            </div>
-          )}
+            </div>}
         </div>
         <CardContent className="p-2.5">
           <div className="flex items-start justify-between mb-1.5">
-            <p className="text-2xl font-bold text-primary cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+            <p onClick={() => navigate(`/property/${listing.id}`)} className="font-bold text-primary cursor-pointer text-lg">
               ${listing.price.toLocaleString()}
             </p>
             <div className="text-right">
@@ -385,12 +363,10 @@ const ListingCard = ({
             </div>
           </div>
           
-          {listing.property_type && (
-            <div className="flex items-center gap-2 mb-1">
+          {listing.property_type && <div className="flex items-center gap-2 mb-1">
               <Home className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">{listing.property_type}</p>
-            </div>
-          )}
+            </div>}
           
           <div className="flex items-center gap-1 mb-1.5 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -401,40 +377,28 @@ const ListingCard = ({
           
           <div className="flex items-center justify-between mt-1">
             <div className="flex items-center gap-6 text-lg">
-              {listing.bedrooms && (
-                <div className="flex items-center gap-1.5">
+              {listing.bedrooms && <div className="flex items-center gap-1.5">
                   <Bed className="h-5 w-5 text-primary" />
                   <span className="text-foreground font-semibold">{listing.bedrooms}</span>
-                </div>
-              )}
-              {listing.bathrooms && (
-                <div className="flex items-center gap-1.5">
+                </div>}
+              {listing.bathrooms && <div className="flex items-center gap-1.5">
                   <Bath className="h-5 w-5 text-primary" />
                   <span className="text-foreground font-semibold">{listing.bathrooms}</span>
-                </div>
-              )}
-              {listing.square_feet && (
-                <div className="flex items-center gap-1.5">
+                </div>}
+              {listing.square_feet && <div className="flex items-center gap-1.5">
                   <Maximize className="h-5 w-5 text-primary" />
                   <span className="text-foreground font-semibold">{listing.square_feet.toLocaleString()}</span>
-                </div>
-              )}
+                </div>}
             </div>
             
-            {agentInfo && (
-              <div className="text-xs text-right">
+            {agentInfo && <div className="text-xs text-right">
                 <span className="text-foreground font-medium">{agentInfo.name}</span>
-                {agentInfo.company && (
-                  <span className="text-muted-foreground"> • {agentInfo.company}</span>
-                )}
-              </div>
-            )}
+                {agentInfo.company && <span className="text-muted-foreground"> • {agentInfo.company}</span>}
+              </div>}
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-  
   if (viewMode === 'list') {
     return <Card className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-primary">
         <div className="flex gap-3 p-3">
@@ -525,9 +489,13 @@ const ListingCard = ({
 
             <div className="col-span-2 flex flex-col gap-1 justify-center">
               <Button variant="outline" size="sm" onClick={() => {
-                sessionStorage.setItem('fromAgentDashboard', 'true');
-                navigate(`/property/${listing.id}?from=my-listings`, { state: { fromAgentDashboard: true } });
-              }} className="w-full">
+              sessionStorage.setItem('fromAgentDashboard', 'true');
+              navigate(`/property/${listing.id}?from=my-listings`, {
+                state: {
+                  fromAgentDashboard: true
+                }
+              });
+            }} className="w-full">
                 <Eye className="w-3 h-3 mr-1" />
                 View
               </Button>
@@ -681,9 +649,13 @@ const ListingCard = ({
 
         <div className="flex gap-1.5 mt-2">
           <Button variant="outline" size="sm" className="flex-1" onClick={() => {
-            sessionStorage.setItem('fromAgentDashboard', 'true');
-            navigate(`/property/${listing.id}?from=my-listings`, { state: { fromAgentDashboard: true } });
-          }}>
+          sessionStorage.setItem('fromAgentDashboard', 'true');
+          navigate(`/property/${listing.id}?from=my-listings`, {
+            state: {
+              fromAgentDashboard: true
+            }
+          });
+        }}>
             <Eye className="w-4 h-4 mr-2" />
             View
           </Button>
