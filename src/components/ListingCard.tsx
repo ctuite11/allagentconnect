@@ -374,25 +374,18 @@ const ListingCard = ({
             <>
               <button
                 onClick={handlePreviousPhoto}
-                className="absolute left-1 top-1/2 -translate-y-1/2 z-10 bg-background/95 backdrop-blur-sm p-1.5 rounded-full shadow-lg transition-all hover:bg-background hover:scale-110"
+                className="absolute left-1 top-1/2 -translate-y-1/2 z-10 bg-background/95 backdrop-blur-sm p-1 rounded-full shadow-lg transition-all hover:bg-background hover:scale-110"
                 aria-label="Previous photo"
               >
-                <ChevronLeft className="h-6 w-6 text-foreground" />
+                <ChevronLeft className="h-4 w-4 text-foreground" />
               </button>
               <button
                 onClick={handleNextPhoto}
-                className="absolute right-1 top-1/2 -translate-y-1/2 z-10 bg-background/95 backdrop-blur-sm p-1.5 rounded-full shadow-lg transition-all hover:bg-background hover:scale-110"
+                className="absolute right-1 top-1/2 -translate-y-1/2 z-10 bg-background/95 backdrop-blur-sm p-1 rounded-full shadow-lg transition-all hover:bg-background hover:scale-110"
                 aria-label="Next photo"
               >
-                <ChevronRight className="h-6 w-6 text-foreground" />
+                <ChevronRight className="h-4 w-4 text-foreground" />
               </button>
-              
-              {/* Photo counter */}
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-background/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-lg">
-                <span className="text-xs font-semibold text-foreground">
-                  {currentPhotoIndex + 1} / {totalPhotos}
-                </span>
-              </div>
             </>
           )}
           
