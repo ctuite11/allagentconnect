@@ -45,9 +45,9 @@ const MA_COUNTIES = [
 // Zod validation schema for listing data
 const listingSchema = z.object({
   address: z.string().trim().min(1, "Address is required").max(500, "Address must be less than 500 characters"),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  zip_code: z.string().trim().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code format").optional().or(z.literal("")),
+  city: z.string().trim().min(1, "City is required"),
+  state: z.string().trim().min(1, "State is required"),
+  zip_code: z.string().trim().regex(/^\d{5}(-\d{4})?$/, "ZIP code is required and must be valid (e.g., 02134 or 02134-5678)"),
   price: z.number().min(1000, "Price must be at least $1,000").max(100000000, "Price must be less than $100,000,000"),
   property_type: z.string().optional(),
   bedrooms: z.number().int().min(0, "Bedrooms must be 0 or more").max(50, "Bedrooms must be 50 or less").optional(),
@@ -878,6 +878,9 @@ const AddListing = () => {
       // Check required fields
       const missingFields: string[] = [];
       if (!formData.address.trim()) missingFields.push("Address");
+      if (!formData.city.trim()) missingFields.push("City");
+      if (!formData.state.trim()) missingFields.push("State");
+      if (!formData.zip_code.trim()) missingFields.push("ZIP Code");
       if (!formData.price || parseFloat(formData.price) <= 0) missingFields.push("Price");
       
       if (missingFields.length > 0) {
