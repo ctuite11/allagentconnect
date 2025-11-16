@@ -111,7 +111,9 @@ const AddListing = () => {
   const [manualAddressDialogOpen, setManualAddressDialogOpen] = useState(false);
   const addressLockedRef = useRef(false);
   const addressLockUntilRef = useRef(0);
-
+  // Cache last non-empty location to prevent accidental clearing
+  const cachedLocationRef = useRef({ city: "", state: "", zip_code: "" });
+  
   // Store fetched property data
   const [attomData, setAttomData] = useState<any>(null);
   const [walkScoreData, setWalkScoreData] = useState<any>(null);
@@ -337,6 +339,33 @@ const AddListing = () => {
   const totalCompleted = Object.values(sectionProgress).reduce((sum, section) => sum + section.completed, 0);
   const totalFields = Object.values(sectionProgress).reduce((sum, section) => sum + section.total, 0);
   const overallProgress = Math.round((totalCompleted / totalFields) * 100);
+
+  // Keep a cached copy of location when set, to restore if UI clears it unintentionally
+  useEffect(() => {
+    if (formData.city && formData.state && formData.zip_code) {
+      cachedLocationRef.current = {
+        city: formData.city,
+        state: formData.state,
+        zip_code: formData.zip_code,
+      };
+    }
+  }, [formData.city, formData.state, formData.zip_code]);
+
+  // Restore missing location parts if they get cleared (e.g., after price changes)
+  useEffect(() => {
+    if (
+      formData.address &&
+      (formData.city === "" || formData.state === "" || formData.zip_code === "")
+    ) {
+      const { city, state, zip_code } = cachedLocationRef.current;
+      setFormData(prev => ({
+        ...prev,
+        city: prev.city || city,
+        state: prev.state || state,
+        zip_code: prev.zip_code || zip_code,
+      }));
+    }
+  }, [formData.address, formData.city, formData.state, formData.zip_code]);
 
   useEffect(() => {
     const checkUser = async () => {
