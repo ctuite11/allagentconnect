@@ -44,6 +44,7 @@ import ConsumerAuth from "./pages/ConsumerAuth";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
 import ComingSoon from "./pages/ComingSoon";
+import SeedTestData from "./pages/SeedTestData";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -99,6 +100,7 @@ const App = () => (
           <Route path="/consumer/dashboard" element={<ConsumerDashboard />} />
           <Route path="/consumer/auth" element={<ConsumerAuth />} />
           <Route path="/password-reset" element={<PasswordReset />} />
+          <Route path="/seed-test-data" element={<SeedTestData />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
           </TooltipProvider>
