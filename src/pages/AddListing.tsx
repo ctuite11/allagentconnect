@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud, Lock, Unlock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
@@ -113,6 +113,7 @@ const AddListing = () => {
   const addressLockUntilRef = useRef(0);
   // Cache last non-empty location to prevent accidental clearing
   const cachedLocationRef = useRef({ city: "", state: "", zip_code: "" });
+  const [locationLocked, setLocationLocked] = useState(false);
   
   // Store fetched property data
   const [attomData, setAttomData] = useState<any>(null);
@@ -351,22 +352,6 @@ const AddListing = () => {
     }
   }, [formData.city, formData.state, formData.zip_code]);
 
-  // Restore missing location parts if they get cleared (e.g., after price changes)
-  useEffect(() => {
-    if (
-      formData.address &&
-      (formData.city === "" || formData.state === "" || formData.zip_code === "")
-    ) {
-      const { city, state, zip_code } = cachedLocationRef.current;
-      setFormData(prev => ({
-        ...prev,
-        city: prev.city || city,
-        state: prev.state || state,
-        zip_code: prev.zip_code || zip_code,
-      }));
-    }
-  }, [formData.address, formData.city, formData.state, formData.zip_code]);
-
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -468,6 +453,11 @@ const AddListing = () => {
       latitude,
       longitude,
     }));
+    
+    // Lock location fields after successful address selection
+    if (city && stateShort && zip_code) {
+      setLocationLocked(true);
+    }
     
     // Update unit number if extracted
     if (unit && !unitNumber) {
@@ -1412,7 +1402,101 @@ const AddListing = () => {
                   )}
                 </div>
 
-                {/* List Price - placed after unit number */}
+                {/* City, State, ZIP Row */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Location Details</Label>
+                    {locationLocked && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setLocationLocked(false)}
+                        className="text-xs text-primary hover:text-primary/80 gap-1"
+                      >
+                        <Unlock className="h-3 w-3" />
+                        Edit Location
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city" className={validationErrors.includes("City") ? "text-destructive" : ""}>
+                        City *
+                      </Label>
+                      <Input
+                        id="city"
+                        value={formData.city}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, city: e.target.value }));
+                          setValidationErrors(errors => errors.filter(e => e !== "City"));
+                        }}
+                        readOnly={locationLocked}
+                        placeholder="Boston"
+                        className={cn(
+                          validationErrors.includes("City") ? "border-destructive ring-2 ring-destructive" : "",
+                          locationLocked ? "bg-muted cursor-not-allowed" : ""
+                        )}
+                      />
+                      {validationErrors.includes("City") && (
+                        <p className="text-sm text-destructive">City is required</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state" className={validationErrors.includes("State") ? "text-destructive" : ""}>
+                        State *
+                      </Label>
+                      <Input
+                        id="state"
+                        value={formData.state}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, state: e.target.value }));
+                          setValidationErrors(errors => errors.filter(e => e !== "State"));
+                        }}
+                        readOnly={locationLocked}
+                        placeholder="MA"
+                        maxLength={2}
+                        className={cn(
+                          validationErrors.includes("State") ? "border-destructive ring-2 ring-destructive" : "",
+                          locationLocked ? "bg-muted cursor-not-allowed" : ""
+                        )}
+                      />
+                      {validationErrors.includes("State") && (
+                        <p className="text-sm text-destructive">State is required</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="zip_code" className={validationErrors.includes("ZIP Code") ? "text-destructive" : ""}>
+                        ZIP Code *
+                      </Label>
+                      <Input
+                        id="zip_code"
+                        value={formData.zip_code}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, zip_code: e.target.value }));
+                          setValidationErrors(errors => errors.filter(e => e !== "ZIP Code"));
+                        }}
+                        readOnly={locationLocked}
+                        placeholder="02134"
+                        className={cn(
+                          validationErrors.includes("ZIP Code") ? "border-destructive ring-2 ring-destructive" : "",
+                          locationLocked ? "bg-muted cursor-not-allowed" : ""
+                        )}
+                      />
+                      {validationErrors.includes("ZIP Code") && (
+                        <p className="text-sm text-destructive">ZIP Code is required</p>
+                      )}
+                    </div>
+                  </div>
+                  {locationLocked && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Lock className="h-3 w-3 text-primary" />
+                      Location locked. Click "Edit Location" above to modify.
+                    </p>
+                  )}
+                </div>
+
+                {/* List Price - placed after location */}
                 <div className="space-y-2">
                   <Label htmlFor="price" className={validationErrors.includes("Price") ? "text-destructive" : ""}>
                     List Price *
@@ -3681,6 +3765,12 @@ const AddListing = () => {
                   return;
                 }
                 setValidationErrors(errors => errors.filter(e => e !== "Address"));
+                
+                // Lock location fields if all required fields are present
+                if (formData.city && formData.state && formData.zip_code) {
+                  setLocationLocked(true);
+                }
+                
                 setManualAddressDialogOpen(false);
                 toast.success("Address details saved");
                 
