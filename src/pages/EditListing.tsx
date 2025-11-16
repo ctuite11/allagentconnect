@@ -51,6 +51,7 @@ const EditListing = () => {
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const addressSelectedRef = useRef(false);
+  const addressLockUntilRef = useRef(0);
   const [isDirty, setIsDirty] = useState(false);
   const [showNavigationWarning, setShowNavigationWarning] = useState(false);
   const [formData, setFormData] = useState({
@@ -95,7 +96,10 @@ const EditListing = () => {
   const [hoaFeeFrequency, setHoaFeeFrequency] = useState("monthly");
   
   useEffect(() => {
-    if (manualAddressDialogOpen) addressSelectedRef.current = false;
+    if (manualAddressDialogOpen) {
+      addressSelectedRef.current = false;
+      addressLockUntilRef.current = 0;
+    }
   }, [manualAddressDialogOpen]);
   
   // Parse unit from a street line like "123 Main St Apt 4B" or "123 Main St #4B"
@@ -405,6 +409,7 @@ const EditListing = () => {
   const handleAddressSelect = async (place: google.maps.places.PlaceResult) => {
     console.log("=== handleAddressSelect called ===", place);
     addressSelectedRef.current = true;
+    addressLockUntilRef.current = Date.now() + 1500;
     const addressComponents = place.address_components || [];
     const getComponent = (type: string) => {
       const component = addressComponents.find((c) => c.types.includes(type));
@@ -1003,7 +1008,7 @@ const EditListing = () => {
                     placeholder="Enter property address"
                     value={formData.address}
                      onChange={(val) => {
-                       if (addressSelectedRef.current) return;
+                       if (addressSelectedRef.current || Date.now() < addressLockUntilRef.current) return;
                        updateFormData({ address: val });
                      }}
                   />

@@ -110,6 +110,7 @@ const AddListing = () => {
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [manualAddressDialogOpen, setManualAddressDialogOpen] = useState(false);
   const addressLockedRef = useRef(false);
+  const addressLockUntilRef = useRef(0);
 
   // Store fetched property data
   const [attomData, setAttomData] = useState<any>(null);
@@ -118,7 +119,10 @@ const AddListing = () => {
   const [valueEstimate, setValueEstimate] = useState<any>(null);
 
   useEffect(() => {
-    if (manualAddressDialogOpen) addressLockedRef.current = false;
+    if (manualAddressDialogOpen) {
+      addressLockedRef.current = false;
+      addressLockUntilRef.current = 0;
+    }
   }, [manualAddressDialogOpen]);
 
   // Sale listing criteria
@@ -370,6 +374,7 @@ const AddListing = () => {
     console.log("=== [AddListing] handleAddressSelect CALLED ===");
     console.log("[AddListing] Address selected - raw place data:", place);
     addressLockedRef.current = true;
+    addressLockUntilRef.current = Date.now() + 1500;
     // Normalize address components between legacy Autocomplete and new PlaceAutocompleteElement
     const legacyComponents = place.address_components;
     const newComponents = place.addressComponents?.map((c: any) => ({
@@ -1291,7 +1296,7 @@ const AddListing = () => {
                         placeholder="Full property address"
                         value={formData.address}
                           onChange={(val) => {
-                            if (addressLockedRef.current) return;
+                            if (addressLockedRef.current || Date.now() < addressLockUntilRef.current) return;
                             setFormData(prev => ({ ...prev, address: val }));
                             setValidationErrors(errors => errors.filter(e => e !== "Address"));
                           }}
