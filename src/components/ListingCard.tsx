@@ -399,23 +399,21 @@ const ListingCard = ({
             </p>
           </div>
           
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              {listing.bedrooms && (
-                <div className="flex items-center gap-1">
-                  <Bed className="h-4 w-4" />
-                  <span>{listing.bedrooms}</span>
-                </div>
-              )}
-              {listing.bathrooms && (
-                <div className="flex items-center gap-1">
-                  <Bath className="h-4 w-4" />
-                  <span>{listing.bathrooms}</span>
-                </div>
-              )}
-            </div>
+          <div className="flex items-center gap-3 mb-2 text-sm text-muted-foreground">
+            {listing.bedrooms && (
+              <div className="flex items-center gap-1">
+                <Bed className="h-4 w-4" />
+                <span>{listing.bedrooms}</span>
+              </div>
+            )}
+            {listing.bathrooms && (
+              <div className="flex items-center gap-1">
+                <Bath className="h-4 w-4" />
+                <span>{listing.bathrooms}</span>
+              </div>
+            )}
             {listing.square_feet && (
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
                 <Maximize className="h-4 w-4" />
                 <span>{listing.square_feet.toLocaleString()}</span>
               </div>
@@ -424,7 +422,7 @@ const ListingCard = ({
           
           {agentInfo && (
             <div className="text-xs mt-1">
-              <span className="text-destructive font-medium">{agentInfo.name}</span>
+              <span className="text-primary font-medium hover:underline">{agentInfo.name}</span>
               {agentInfo.company && (
                 <>
                   {' • '}
