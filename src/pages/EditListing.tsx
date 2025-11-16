@@ -445,10 +445,13 @@ const EditListing = () => {
       return;
     }
 
-    // Use only street line for address input and extract unit if present
-    const { street, unit } = extractUnitFromAddress(address);
+    // Extract street line from formatted address
+    const streetLine = address.split(",")[0] || address;
+    
+    // Extract unit number if present in street line
+    const { street, unit } = extractUnitFromAddress(streetLine);
 
-    // Update form with parsed address components
+    // Update form with parsed address components (only street in address field)
     setFormData({
       ...formData,
       address: street,
@@ -458,6 +461,7 @@ const EditListing = () => {
       neighborhood: neighborhood || formData.neighborhood,
     });
 
+    // Update unit number if extracted and not already set
     if (unit && !unitNumber) {
       setUnitNumber(unit);
     }
