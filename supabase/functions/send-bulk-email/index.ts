@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -93,7 +93,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Send single email to all recipients
       const emailResponse = await resend.emails.send({
-        from: "All Agent Connect <noreply@allagentconnect.com>",
+        from: "All Agent Connect <onboarding@resend.dev>",
         to: recipients.map(r => r.email),
         subject: subject,
         html: `
@@ -209,7 +209,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
 
         const emailResponse = await resend.emails.send({
-          from: "All Agent Connect <noreply@allagentconnect.com>",
+          from: "All Agent Connect <onboarding@resend.dev>",
           to: [recipient.email],
           subject: subject,
           html: `

@@ -141,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "AAC Worldwide <noreply@allagentconnect.com>",
+            from: "AAC Worldwide <onboarding@resend.dev>",
             to: [agent.email],
             subject: `New Client Need in ${clientNeedData.city}, ${clientNeedData.state}`,
             html: emailHtml,
