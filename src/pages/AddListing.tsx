@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud, Lock, Unlock, AlertCircle } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud, Lock, Unlock, AlertCircle, ArrowLeft } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -1111,17 +1111,22 @@ const AddListing = () => {
         {/* Action Buttons - Sticky */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-8 -mx-4 px-4 py-4">
           <div className="flex flex-wrap gap-4">
+            <Button variant="ghost" size="lg" onClick={() => navigate("/agent-dashboard")} type="button" className="gap-2">
+              <ArrowLeft className="w-5 h-5" />
+              Back
+            </Button>
+            <div className="flex-1" />
             <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
               <Save className="w-5 h-5" />
-              Save as Draft
+              Save Changes
             </Button>
             <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
               <Eye className="w-5 h-5" />
-              Preview Listing
+              Preview
             </Button>
             <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
               <Upload className="w-5 h-5" />
-              {submitting ? "Publishing..." : "Publish Listing"}
+              {submitting ? "Publishing..." : "Publish"}
             </Button>
           </div>
         </div>
@@ -3498,18 +3503,23 @@ const AddListing = () => {
                 </div>
 
                 {/* Action Buttons - Bottom */}
-                <div className="flex gap-4 mt-8 pt-6 border-t">
+                <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t">
+                  <Button variant="ghost" size="lg" onClick={() => navigate("/agent-dashboard")} type="button" className="gap-2">
+                    <ArrowLeft className="w-5 h-5" />
+                    Back
+                  </Button>
+                  <div className="flex-1" />
                   <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
                     <Save className="w-5 h-5" />
-                    Save as Draft
+                    Save Changes
                   </Button>
                   <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
                     <Eye className="w-5 h-5" />
-                    Preview Listing
+                    Preview
                   </Button>
                   <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
                     <Upload className="w-5 h-5" />
-                    {submitting ? "Publishing..." : "Publish Listing"}
+                    {submitting ? "Publishing..." : "Publish"}
                   </Button>
                 </div>
               </form>
