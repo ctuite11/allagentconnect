@@ -13,8 +13,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud, Lock, Unlock } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud, Lock, Unlock, AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import { z } from "zod";
@@ -1390,6 +1391,24 @@ const AddListing = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Notification to lock address and import data */}
+                {!locationLocked && formData.address && formData.city && formData.state && formData.zip_code && (
+                  <Alert className="border-primary/50 bg-primary/5">
+                    <AlertCircle className="h-4 w-4 text-primary" />
+                    <AlertTitle>Ready to Import Property Data</AlertTitle>
+                    <AlertDescription className="space-y-2">
+                      <p>Click "Verify & Lock" below to geocode this address and automatically import public records data including:</p>
+                      <ul className="list-disc list-inside text-sm space-y-1 ml-2">
+                        <li>Property details (bedrooms, bathrooms, square feet)</li>
+                        <li>Tax assessment value and year</li>
+                        <li>School ratings and walk scores</li>
+                        <li>Property characteristics and features</li>
+                      </ul>
+                      <p className="text-sm font-medium mt-2">After locking, you can still edit any imported values.</p>
+                    </AlertDescription>
+                  </Alert>
+                )}
 
                 {/* City, State, ZIP Row */}
                 <div className="space-y-2">
