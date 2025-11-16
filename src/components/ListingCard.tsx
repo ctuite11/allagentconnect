@@ -370,8 +370,8 @@ const ListingCard = ({
             </div>
           )}
         </div>
-        <CardContent className="p-3">
-          <div className="flex items-start justify-between mb-2">
+        <CardContent className="p-2.5">
+          <div className="flex items-start justify-between mb-1.5">
             <p className="text-2xl font-bold text-primary cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
               ${listing.price.toLocaleString()}
             </p>
@@ -392,42 +392,44 @@ const ListingCard = ({
             </div>
           )}
           
-          <div className="flex items-center gap-1 mb-2 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+          <div className="flex items-center gap-1 mb-1.5 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <p className="font-medium text-sm">
               {getDisplayAddress() || `${listing.address}${listing.city ? `, ${listing.city}` : ''}${listing.state ? `, ${listing.state}` : ''}${listing.zip_code ? ` ${listing.zip_code}` : ''}`}
             </p>
           </div>
           
-          <div className="flex items-center gap-6 mb-3 mt-1 text-lg">
-            {listing.bedrooms && (
-              <div className="flex items-center gap-1.5">
-                <Bed className="h-5 w-5 text-muted-foreground" />
-                <span className="text-foreground font-semibold">{listing.bedrooms}</span>
-              </div>
-            )}
-            {listing.bathrooms && (
-              <div className="flex items-center gap-1.5">
-                <Bath className="h-5 w-5 text-muted-foreground" />
-                <span className="text-foreground font-semibold">{listing.bathrooms}</span>
-              </div>
-            )}
-            {listing.square_feet && (
-              <div className="flex items-center gap-1.5">
-                <Maximize className="h-5 w-5 text-muted-foreground" />
-                <span className="text-foreground font-semibold">{listing.square_feet.toLocaleString()}</span>
+          <div className="flex items-center justify-between mt-1">
+            <div className="flex items-center gap-6 text-lg">
+              {listing.bedrooms && (
+                <div className="flex items-center gap-1.5">
+                  <Bed className="h-5 w-5 text-primary" />
+                  <span className="text-foreground font-semibold">{listing.bedrooms}</span>
+                </div>
+              )}
+              {listing.bathrooms && (
+                <div className="flex items-center gap-1.5">
+                  <Bath className="h-5 w-5 text-primary" />
+                  <span className="text-foreground font-semibold">{listing.bathrooms}</span>
+                </div>
+              )}
+              {listing.square_feet && (
+                <div className="flex items-center gap-1.5">
+                  <Maximize className="h-5 w-5 text-primary" />
+                  <span className="text-foreground font-semibold">{listing.square_feet.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+            
+            {agentInfo && (
+              <div className="text-xs text-right">
+                <span className="text-foreground font-medium">{agentInfo.name}</span>
+                {agentInfo.company && (
+                  <span className="text-muted-foreground"> • {agentInfo.company}</span>
+                )}
               </div>
             )}
           </div>
-          
-          {agentInfo && (
-            <div className="text-xs mt-2 text-right">
-              <div className="text-foreground font-medium">{agentInfo.name}</div>
-              {agentInfo.company && (
-                <div className="text-muted-foreground">{agentInfo.company}</div>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
     );
