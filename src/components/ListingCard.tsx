@@ -374,22 +374,22 @@ const ListingCard = ({
             <>
               <button
                 onClick={handlePreviousPhoto}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-background/90 backdrop-blur-sm p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
+                className="absolute left-1 top-1/2 -translate-y-1/2 z-10 bg-background/95 backdrop-blur-sm p-1.5 rounded-full shadow-lg transition-all hover:bg-background hover:scale-110"
                 aria-label="Previous photo"
               >
-                <ChevronLeft className="h-5 w-5 text-foreground" />
+                <ChevronLeft className="h-6 w-6 text-foreground" />
               </button>
               <button
                 onClick={handleNextPhoto}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-background/90 backdrop-blur-sm p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
+                className="absolute right-1 top-1/2 -translate-y-1/2 z-10 bg-background/95 backdrop-blur-sm p-1.5 rounded-full shadow-lg transition-all hover:bg-background hover:scale-110"
                 aria-label="Next photo"
               >
-                <ChevronRight className="h-5 w-5 text-foreground" />
+                <ChevronRight className="h-6 w-6 text-foreground" />
               </button>
               
               {/* Photo counter */}
-              <div className="absolute bottom-2 left-2 z-10 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-md shadow-md">
-                <span className="text-xs font-medium text-foreground">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-background/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-lg">
+                <span className="text-xs font-semibold text-foreground">
                   {currentPhotoIndex + 1} / {totalPhotos}
                 </span>
               </div>
