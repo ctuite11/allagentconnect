@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
-import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -384,106 +383,66 @@ const AddListing = () => {
     return { street: streetLine.trim(), unit: "" };
   };
 
-  const handleAddressSelect = useCallback(async (place: any) => {
-    console.log("=== [AddListing] handleAddressSelect CALLED ===");
-    console.log("[AddListing] Address selected - raw place data:", place);
-    addressLockedRef.current = true;
-    addressLockUntilRef.current = Date.now() + 1500;
-    // Normalize address components between legacy Autocomplete and new PlaceAutocompleteElement
-    const legacyComponents = place.address_components;
-    const newComponents = place.addressComponents?.map((c: any) => ({
-      long_name: c.longText,
-      short_name: c.shortText,
-      types: c.types || [],
-    }));
-    const addressComponents = legacyComponents || newComponents || [];
-
-    const getComponent = (type: string) => {
-      const component = addressComponents.find((c: any) => c.types?.includes(type));
-      return component?.long_name || "";
-    };
-
-    const getComponentShort = (type: string) => {
-      const component = addressComponents.find((c: any) => c.types?.includes(type));
-      return component?.short_name || "";
-    };
-
-    const formattedAddress = place.formatted_address || place.formattedAddress || place.name || "";
-    const streetLine = formattedAddress.split(",")[0] || "";
-    const streetNumber = getComponent("street_number");
-    const route = getComponent("route");
-    const composedStreetLine = (streetNumber && route) ? `${streetNumber} ${route}` : streetLine;
+  const handleVerifyAndLock = useCallback(async () => {
+    const { address, city, state, zip_code } = formData;
     
-    // Extract unit number if present in street line
-    const { street, unit } = extractUnitFromAddress(composedStreetLine);
-    
-    const city = getComponent("locality") || getComponent("sublocality") || getComponent("postal_town");
-    const stateShort = getComponentShort("administrative_area_level_1") || getComponent("administrative_area_level_1");
-    const zip_code = getComponent("postal_code");
-    const county = getComponent("administrative_area_level_2");
-    const neighborhood = getComponent("neighborhood") || getComponent("sublocality_level_1");
-    
-    console.log("[AddListing] Extracted data:", { street, unit, city, state: stateShort, zip_code, county, neighborhood });
-
-    // Normalize location
-    let latitude: number | null = null;
-    let longitude: number | null = null;
-    const loc = place.geometry?.location || place.location;
-    try {
-      if (typeof loc?.lat === "function") {
-        latitude = loc.lat();
-        longitude = loc.lng();
-      } else if (typeof loc?.lat === "number") {
-        latitude = loc.lat;
-        longitude = loc.lng;
-      }
-    } catch {}
-    
-    console.log("[AddListing] Extracted location:", { latitude, longitude });
-
-    // Store only the street address (without unit, city, state, zip)
-    setFormData(prev => ({
-      ...prev,
-      address: street,
-      city,
-      state: stateShort,
-      zip_code,
-      county,
-      neighborhood,
-      latitude,
-      longitude,
-    }));
-    
-    // Lock location fields after successful address selection
-    if (city && stateShort && zip_code) {
-      setLocationLocked(true);
+    if (!address || !city || !state || !zip_code) {
+      toast.error("Please fill in all address fields before verifying");
+      return;
     }
+
+    // Validate ZIP format
+    if (!/^\d{5}(-\d{4})?$/.test(zip_code)) {
+      toast.error("Please enter a valid ZIP code (e.g., 02134 or 02134-5678)");
+      return;
+    }
+
+    toast.info("Verifying address and fetching property data...");
+    setLocationLocked(true);
     
-    // Update unit number if extracted
+    // Extract unit number if present in address
+    const { street, unit } = extractUnitFromAddress(address);
     if (unit && !unitNumber) {
       setUnitNumber(unit);
     }
 
-    console.log("[AddListing] About to call fetchPropertyData:", { 
-      hasLatLng: !!(latitude && longitude),
+    // Try to geocode the address to get coordinates for Walk Score and Schools
+    const fullAddress = `${address}, ${city}, ${state} ${zip_code}`;
+    let latitude: number | undefined;
+    let longitude: number | undefined;
+
+    try {
+      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`;
+      const geocodeResponse = await fetch(geocodeUrl);
+      const geocodeData = await geocodeResponse.json();
+      
+      if (geocodeData.status === "OK" && geocodeData.results?.[0]?.geometry?.location) {
+        latitude = geocodeData.results[0].geometry.location.lat;
+        longitude = geocodeData.results[0].geometry.location.lng;
+        console.log("[AddListing] Geocoded address:", { latitude, longitude });
+      } else {
+        console.warn("[AddListing] Geocoding failed:", geocodeData.status);
+        toast.warning("Could not verify exact coordinates, but will still fetch available property data");
+      }
+    } catch (error) {
+      console.error("[AddListing] Geocoding error:", error);
+      toast.warning("Could not verify coordinates, but will still fetch available property data");
+    }
+
+    // Fetch property data with whatever we have
+    await fetchPropertyData(
       latitude, 
       longitude, 
-      address: formattedAddress,
-      city,
-      state: stateShort,
-      zip: zip_code,
-      unit: unitNumber
-    });
-
-    if (latitude && longitude) {
-      await fetchPropertyData(latitude, longitude, formattedAddress, city, stateShort, zip_code, unitNumber, formData.property_type);
-    } else {
-      console.warn("[AddListing] Skipping fetchPropertyData - missing coordinates");
-      toast.error("Could not extract coordinates from address. Please try again.");
-    }
-  }, [unitNumber, formData.property_type]);
+      address, 
+      city, 
+      state, 
+      zip_code, 
+      unit || unitNumber, 
+      formData.property_type
+    );
+  }, [formData, unitNumber]);
   
-  const fetchPropertyData = async (lat: number, lng: number, address: string, city: string, state: string, zip: string, unit_number?: string, property_type?: string) => {
+  const fetchPropertyData = async (lat: number | undefined, lng: number | undefined, address: string, city: string, state: string, zip: string, unit_number?: string, property_type?: string) => {
     console.log("[AddListing] fetchPropertyData called with:", { lat, lng, address, city, state, zip, unit_number, property_type });
     setSubmitting(true);
     try {
@@ -1302,26 +1261,20 @@ const AddListing = () => {
                       <Label htmlFor="address" className={validationErrors.includes("Address") ? "text-destructive" : ""}>
                         Enter Address *
                       </Label>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setManualAddressDialogOpen(true)}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        Enter manually
-                      </Button>
                     </div>
                     <div className={validationErrors.includes("Address") ? "ring-2 ring-destructive rounded-md" : ""}>
-                      <AddressAutocomplete
-                        onPlaceSelect={handleAddressSelect}
-                        placeholder="Full property address"
+                      <Input
                         value={formData.address}
-                          onChange={(val) => {
-                            if (addressLockedRef.current || Date.now() < addressLockUntilRef.current) return;
-                            setFormData(prev => ({ ...prev, address: val }));
-                            setValidationErrors(errors => errors.filter(e => e !== "Address"));
-                          }}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, address: e.target.value }));
+                          setValidationErrors(errors => errors.filter(e => e !== "Address"));
+                        }}
+                        readOnly={locationLocked}
+                        placeholder="123 Main Street"
+                        className={cn(
+                          validationErrors.includes("Address") ? "border-destructive ring-2 ring-destructive" : "",
+                          locationLocked ? "bg-muted cursor-not-allowed" : ""
+                        )}
                       />
                     </div>
                     {validationErrors.includes("Address") && (
@@ -1406,18 +1359,32 @@ const AddListing = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-medium">Location Details</Label>
-                    {locationLocked && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setLocationLocked(false)}
-                        className="text-xs text-primary hover:text-primary/80 gap-1"
-                      >
-                        <Unlock className="h-3 w-3" />
-                        Edit Location
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {!locationLocked && (
+                        <Button
+                          type="button"
+                          variant="default"
+                          size="sm"
+                          onClick={handleVerifyAndLock}
+                          className="text-xs gap-1"
+                        >
+                          <CheckCircle2 className="h-3 w-3" />
+                          Verify & Lock
+                        </Button>
+                      )}
+                      {locationLocked && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setLocationLocked(false)}
+                          className="text-xs text-primary hover:text-primary/80 gap-1"
+                        >
+                          <Unlock className="h-3 w-3" />
+                          Edit Location
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
