@@ -94,6 +94,16 @@ const EditListing = () => {
   const [hoaFee, setHoaFee] = useState("");
   const [hoaFeeFrequency, setHoaFeeFrequency] = useState("monthly");
   
+  // Parse unit from a street line like "123 Main St Apt 4B" or "123 Main St #4B"
+  const extractUnitFromAddress = (streetLine: string) => {
+    const pattern = /(.*?)(?:\s+(?:#|Unit|Apt|Apartment|Suite|Ste)\s*([A-Za-z0-9-]+))$/i;
+    const match = streetLine.match(pattern);
+    if (match) {
+      return { street: match[1].trim(), unit: match[2].trim() };
+    }
+    return { street: streetLine.trim(), unit: "" };
+  };
+  
   // New comprehensive fields
   const [assessedValue, setAssessedValue] = useState("");
   const [fiscalYear, setFiscalYear] = useState("");
@@ -435,15 +445,23 @@ const EditListing = () => {
       return;
     }
 
-    // Update form with address components (use formatted_address for display)
+    // Use only street line for address input and extract unit if present
+    const { street, unit } = extractUnitFromAddress(address);
+
+    // Update form with parsed address components
     setFormData({
       ...formData,
-      address: place.formatted_address || address,
+      address: street,
       city,
       state,
       zip_code,
       neighborhood: neighborhood || formData.neighborhood,
     });
+
+    if (unit && !unitNumber) {
+      setUnitNumber(unit);
+    }
+
     toast.success("Address selected successfully");
     setIsDirty(true);
 
@@ -957,7 +975,7 @@ const EditListing = () => {
                 </Select>
               </div>
 
-              <div className="grid grid-cols-[1fr_auto] gap-4">
+              <div className="grid grid-cols-[1fr_auto] items-end gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="address">Address</Label>
@@ -999,18 +1017,15 @@ const EditListing = () => {
                   formData.property_type?.includes("Multi") || 
                   formData.property_type?.includes("Rental") ||
                   formData.listing_type === "for_rent") && (
-                  <div className="space-y-2 w-32">
-                    <Label htmlFor="unit_number">
+                  <div className="space-y-2 w-28 self-end">
+                    <Label htmlFor="unit_number" className="sr-only">
                       Unit #
-                      {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")) && (
-                        <span className="text-destructive ml-1">*</span>
-                      )}
                     </Label>
                     <Input
                       id="unit_number"
                       value={unitNumber}
                       onChange={(e) => { setUnitNumber(e.target.value); setIsDirty(true); }}
-                      placeholder="e.g., 3B"
+                      placeholder="Unit #"
                       required={formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")}
                     />
                   </div>
