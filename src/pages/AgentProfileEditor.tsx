@@ -66,6 +66,9 @@ const AgentProfileEditor = () => {
   const [cellPhone, setCellPhone] = useState("");
   const [officeName, setOfficeName] = useState("");
   const [officeAddress, setOfficeAddress] = useState("");
+  const [officeCity, setOfficeCity] = useState("");
+  const [officeState, setOfficeState] = useState("");
+  const [officeZip, setOfficeZip] = useState("");
   const [teamName, setTeamName] = useState("");
   const [headshotUrl, setHeadshotUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
@@ -150,6 +153,9 @@ const AgentProfileEditor = () => {
         setCellPhone(profile.cell_phone || "");
         setOfficeName(profile.office_name || "");
         setOfficeAddress(profile.office_address || "");
+        setOfficeCity(profile.office_city || "");
+        setOfficeState(profile.office_state || "");
+        setOfficeZip(profile.office_zip || "");
         setTeamName(profile.company || "");
         setHeadshotUrl(profile.headshot_url || "");
         setLogoUrl(profile.logo_url || "");
@@ -211,6 +217,9 @@ const AgentProfileEditor = () => {
           cell_phone: cellPhone,
           office_name: officeName,
           office_address: officeAddress,
+          office_city: officeCity,
+          office_state: officeState,
+          office_zip: officeZip,
           company: teamName,
           headshot_url: headshotUrl,
           logo_url: logoUrl,
@@ -621,6 +630,35 @@ const AgentProfileEditor = () => {
                     onChange={setOfficeAddress}
                     onPlaceSelect={(place) => {
                       setOfficeAddress(place.formatted_address || place.name || "");
+                      
+                      // Parse address components
+                      if (place.address_components) {
+                        const components = place.address_components;
+                        
+                        // Extract city
+                        const cityComponent = components.find((c: any) => 
+                          c.types.includes('locality') || c.types.includes('sublocality')
+                        );
+                        if (cityComponent) {
+                          setOfficeCity(cityComponent.long_name);
+                        }
+                        
+                        // Extract state
+                        const stateComponent = components.find((c: any) => 
+                          c.types.includes('administrative_area_level_1')
+                        );
+                        if (stateComponent) {
+                          setOfficeState(stateComponent.short_name);
+                        }
+                        
+                        // Extract zip
+                        const zipComponent = components.find((c: any) => 
+                          c.types.includes('postal_code')
+                        );
+                        if (zipComponent) {
+                          setOfficeZip(zipComponent.long_name);
+                        }
+                      }
                     }}
                   />
                 ) : (
