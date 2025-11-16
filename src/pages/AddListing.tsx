@@ -1283,7 +1283,7 @@ const AddListing = () => {
                         placeholder="Full property address"
                         value={formData.address}
                         onChange={(val) => {
-                          setFormData({ ...formData, address: val });
+                          setFormData(prev => ({ ...prev, address: val }));
                           setValidationErrors(errors => errors.filter(e => e !== "Address"));
                         }}
                       />
@@ -1377,7 +1377,7 @@ const AddListing = () => {
                     placeholder="500000"
                     value={formData.price}
                     onChange={(value) => {
-                      setFormData({ ...formData, price: value });
+                      setFormData(prev => ({ ...prev, price: value }));
                       setValidationErrors(errors => errors.filter(e => e !== "Price"));
                     }}
                     required
@@ -3536,12 +3536,12 @@ const AddListing = () => {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="manual-address">Street Address *</Label>
-              <Input
-                id="manual-address"
-                placeholder="123 Main Street"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              />
+                <Input
+                  id="manual-address"
+                  placeholder="123 Main Street"
+                  value={formData.address}
+                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                />
             </div>
             
             <div className="grid grid-cols-2 gap-4">
