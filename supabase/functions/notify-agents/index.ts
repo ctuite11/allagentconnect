@@ -150,7 +150,7 @@ serve(async (req) => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "AAC Worldwide <noreply@allagentconnect.com>",
+            from: "AAC Worldwide <onboarding@resend.dev>",
             to: [profile.email],
             subject: `New buyer looking in ${countyName}`,
             html: `

@@ -258,7 +258,7 @@ const handler = async (req: Request): Promise<Response> => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "AAC Worldwide <noreply@allagentconnect.com>",
+            from: "AAC Worldwide <onboarding@resend.dev>",
             to: recipients,
             subject: `${newListings.length} New Properties Match Your Search - ${hotSheet.name}`,
             html: `
