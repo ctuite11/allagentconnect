@@ -460,6 +460,15 @@ const AddListing = () => {
         // Store all fetched data in state
         if (data.attom) {
           setAttomData(data.attom);
+          
+          // Update separate state variables for assessed value and fiscal year
+          if (data.attom.tax_assessment_value !== undefined && data.attom.tax_assessment_value !== null) {
+            setAssessedValue(data.attom.tax_assessment_value.toString());
+          }
+          if (data.attom.tax_year !== undefined && data.attom.tax_year !== null) {
+            setFiscalYear(data.attom.tax_year.toString());
+          }
+          
           setFormData(prev => ({
             ...prev,
             bedrooms: data.attom.bedrooms?.toString() || prev.bedrooms,
@@ -516,6 +525,15 @@ const AddListing = () => {
                   tax_year: assessment.tax?.taxYear || null,
                   tax_assessment_value: assessment.assessed?.assdTtlValue || null,
                 };
+                
+                // Update separate state variables for assessed value and fiscal year
+                if (mapped.tax_assessment_value !== null && mapped.tax_assessment_value !== undefined) {
+                  setAssessedValue(String(mapped.tax_assessment_value));
+                }
+                if (mapped.tax_year !== null && mapped.tax_year !== undefined) {
+                  setFiscalYear(String(mapped.tax_year));
+                }
+                
                 setFormData(prev => ({
                   ...prev,
                   bedrooms: prev.bedrooms || (mapped.bedrooms?.toString() ?? prev.bedrooms),
@@ -565,6 +583,15 @@ const AddListing = () => {
                 tax_assessment_value: assessment.assessed?.assdTtlValue || null,
               };
               setAttomData(mapped as any);
+              
+              // Update separate state variables for assessed value and fiscal year
+              if (mapped.tax_assessment_value !== null && mapped.tax_assessment_value !== undefined) {
+                setAssessedValue(String(mapped.tax_assessment_value));
+              }
+              if (mapped.tax_year !== null && mapped.tax_year !== undefined) {
+                setFiscalYear(String(mapped.tax_year));
+              }
+              
               setFormData(prev => ({
                 ...prev,
                 bedrooms: mapped.bedrooms?.toString() || prev.bedrooms,
@@ -690,6 +717,15 @@ const AddListing = () => {
         tax_assessment_value: assessment.assessed?.assdTtlValue || null,
       };
       setAttomData(mapped as any);
+      
+      // Update separate state variables for assessed value and fiscal year
+      if (mapped.tax_assessment_value !== null && mapped.tax_assessment_value !== undefined) {
+        setAssessedValue(String(mapped.tax_assessment_value));
+      }
+      if (mapped.tax_year !== null && mapped.tax_year !== undefined) {
+        setFiscalYear(String(mapped.tax_year));
+      }
+      
       setFormData((prev: any) => ({
         ...prev,
         bedrooms: (mapped.bedrooms !== null && mapped.bedrooms !== undefined) ? String(mapped.bedrooms) : prev.bedrooms,
