@@ -957,38 +957,63 @@ const EditListing = () => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="address">Address</Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setManualAddressDialogOpen(true)}
-                    disabled={!!(formData.city && formData.state && formData.zip_code)}
-                    className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Enter manually
-                  </Button>
+              <div className="grid grid-cols-[1fr_auto] gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="address">Address</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setManualAddressDialogOpen(true)}
+                      disabled={!!(formData.city && formData.state && formData.zip_code)}
+                      className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Enter manually
+                    </Button>
+                  </div>
+                  <AddressAutocomplete
+                    onPlaceSelect={handleAddressSelect}
+                    placeholder="Enter property address"
+                    value={formData.address}
+                    onChange={(val) => {
+                      updateFormData({ address: val });
+                    }}
+                  />
+                  {!(formData.city && formData.state && formData.zip_code) && (
+                    <p className="text-xs text-muted-foreground">
+                      Can't find your address? Click "Enter manually" above
+                    </p>
+                  )}
+                  {formData.city && formData.state && formData.zip_code && (
+                    <p className="text-xs text-success flex items-center gap-1">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-success"></span>
+                      Address verified
+                    </p>
+                  )}
                 </div>
-                <AddressAutocomplete
-                  onPlaceSelect={handleAddressSelect}
-                  placeholder="Enter property address"
-                  value={formData.address}
-                  onChange={(val) => {
-                    updateFormData({ address: val });
-                  }}
-                />
-                {!(formData.city && formData.state && formData.zip_code) && (
-                  <p className="text-xs text-muted-foreground">
-                    Can't find your address? Click "Enter manually" above
-                  </p>
-                )}
-                {formData.city && formData.state && formData.zip_code && (
-                  <p className="text-xs text-success flex items-center gap-1">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-success"></span>
-                    Address verified
-                  </p>
+
+                {/* Unit Number - for properties with units */}
+                {(formData.property_type?.includes("Condo") || 
+                  formData.property_type?.includes("Townhouse") || 
+                  formData.property_type?.includes("Multi") || 
+                  formData.property_type?.includes("Rental") ||
+                  formData.listing_type === "for_rent") && (
+                  <div className="space-y-2 w-32">
+                    <Label htmlFor="unit_number">
+                      Unit #
+                      {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")) && (
+                        <span className="text-destructive ml-1">*</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="unit_number"
+                      value={unitNumber}
+                      onChange={(e) => { setUnitNumber(e.target.value); setIsDirty(true); }}
+                      placeholder="e.g., 3B"
+                      required={formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")}
+                    />
+                  </div>
                 )}
               </div>
 
@@ -1052,33 +1077,6 @@ const EditListing = () => {
                 </Select>
               </div>
 
-              {/* Unit Number - for properties with units */}
-              {(formData.property_type?.includes("Condo") || 
-                formData.property_type?.includes("Townhouse") || 
-                formData.property_type?.includes("Multi") || 
-                formData.property_type?.includes("Rental") ||
-                formData.listing_type === "for_rent") && (
-                <div className="space-y-2">
-                  <Label htmlFor="unit_number">
-                    Unit/Apartment Number
-                    {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")) && (
-                      <span className="text-destructive ml-1">*</span>
-                    )}
-                  </Label>
-                  <Input
-                    id="unit_number"
-                    value={unitNumber}
-                    onChange={(e) => { setUnitNumber(e.target.value); setIsDirty(true); }}
-                  placeholder="e.g., 3B, 205, Apt 4"
-                  required={formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")}
-                />
-                <p className="text-xs text-muted-foreground">
-                  {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse"))
-                    ? "Required - Helps identify the specific unit and fetch accurate property data"
-                    : "Helps identify the specific unit and fetch accurate property data"}
-                </p>
-              </div>
-            )}
 
             {/* HOA/Condo Fee - for condos and townhouses */}
             {(formData.property_type?.includes("Condo") || formData.property_type?.includes("Townhouse")) && (
