@@ -407,7 +407,10 @@ const EditListing = () => {
       return component?.long_name || component?.short_name || "";
     };
 
-    const address = place.formatted_address?.split(",")[0] || "";
+    const fullStreetLine = place.formatted_address?.split(",")[0] || "";
+    const streetNumber = getComponent("street_number");
+    const route = getComponent("route");
+    const composedStreetLine = (streetNumber && route) ? `${streetNumber} ${route}` : fullStreetLine;
     const city = getComponent("locality") || getComponent("sublocality") || getComponent("sublocality_level_1") || getComponent("postal_town");
     const state = getComponent("administrative_area_level_1");
     const zip_code = getComponent("postal_code");
@@ -426,7 +429,7 @@ const EditListing = () => {
       console.warn("Neighborhood lookup failed", e);
     }
 
-    console.log("=== Address components extracted ===", { address, city, state, zip_code, lat, lng, neighborhoodCandidate, neighborhood });
+    console.log("=== Address components extracted ===", { address: composedStreetLine, city, state, zip_code, lat, lng, neighborhoodCandidate, neighborhood });
 
     // Validate that we have all required components
     const missingFields: string[] = [];
@@ -445,21 +448,18 @@ const EditListing = () => {
       return;
     }
 
-    // Extract street line from formatted address
-    const streetLine = address.split(",")[0] || address;
-    
-    // Extract unit number if present in street line
-    const { street, unit } = extractUnitFromAddress(streetLine);
+    // Compose final street and extract unit number if present
+    const { street, unit } = extractUnitFromAddress(composedStreetLine);
 
     // Update form with parsed address components (only street in address field)
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       address: street,
       city,
       state,
       zip_code,
-      neighborhood: neighborhood || formData.neighborhood,
-    });
+      neighborhood: neighborhood || prev.neighborhood,
+    }));
 
     // Update unit number if extracted and not already set
     if (unit && !unitNumber) {
