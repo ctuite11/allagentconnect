@@ -430,28 +430,21 @@ const EditListing = () => {
         `Unable to auto-populate ${missingFields.join(", ")}. Click "Enter manually" to fill missing fields.`,
         { duration: 6000 }
       );
-      setFormData({
-        ...formData,
-        address,
-        city: city || "",
-        state: state || "",
-        zip_code: zip_code || "",
-        neighborhood: neighborhood || "",
-      });
-      setIsDirty(true);
+      // Open manual dialog since autocomplete couldn't get all components
+      setManualAddressDialogOpen(true);
       return;
     }
 
-    // Update form with address components
+    // Update form with address components (use formatted_address for display)
     setFormData({
       ...formData,
-      address,
+      address: place.formatted_address || address,
       city,
       state,
       zip_code,
       neighborhood: neighborhood || formData.neighborhood,
     });
-    toast.success("Address auto-filled successfully");
+    toast.success("Address selected successfully");
     setIsDirty(true);
 
     // Fetch ATTOM property data
@@ -999,39 +992,44 @@ const EditListing = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) => updateFormData({ city: e.target.value })}
-                    onBlur={handleBlur}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
-                  <Input
-                    id="state"
-                    value={formData.state}
-                    onChange={(e) => updateFormData({ state: e.target.value })}
-                    onBlur={handleBlur}
-                    required
-                  />
-                </div>
-              </div>
+              {/* Only show city/state/zip fields if they're empty (manual entry mode) */}
+              {!(formData.city && formData.state && formData.zip_code) && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        value={formData.city}
+                        onChange={(e) => updateFormData({ city: e.target.value })}
+                        onBlur={handleBlur}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <Input
+                        id="state"
+                        value={formData.state}
+                        onChange={(e) => updateFormData({ state: e.target.value })}
+                        onBlur={handleBlur}
+                        required
+                      />
+                    </div>
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="zip_code">Zip Code</Label>
-                <Input
-                  id="zip_code"
-                  value={formData.zip_code}
-                  onChange={(e) => updateFormData({ zip_code: e.target.value })}
-                  onBlur={handleBlur}
-                  required
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="zip_code">Zip Code</Label>
+                    <Input
+                      id="zip_code"
+                      value={formData.zip_code}
+                      onChange={(e) => updateFormData({ zip_code: e.target.value })}
+                      onBlur={handleBlur}
+                      required
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Neighborhood */}
               <div className="space-y-2">
