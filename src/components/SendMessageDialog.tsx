@@ -530,7 +530,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                 {state && availableCities.length > 0 && (
                   <div className="space-y-2">
-                    <Label>Cities/Towns (Optional - Select Multiple)</Label>
+                    <Label>Cities/Towns & Neighborhoods (Optional - Select Multiple)</Label>
                     <Button 
                       type="button"
                       onClick={selectAllCities}
@@ -541,69 +541,57 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       ✓ {cities.length === availableCities.length ? "Deselect All" : "Select All Cities/Towns"}
                     </Button>
                     <div className="border rounded-md p-3 bg-background">
-                      <ScrollArea className="h-[200px]">
-                        <div className="space-y-2">
-                          {availableCities.map((cityName) => (
-                            <div key={cityName} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`city-${cityName}`}
-                                checked={cities.includes(cityName)}
-                                onCheckedChange={() => handleCityToggle(cityName)}
-                              />
-                              <label
-                                htmlFor={`city-${cityName}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                              >
-                                {cityName}
-                              </label>
-                            </div>
-                          ))}
+                      <ScrollArea className="h-[250px]">
+                        <div className="space-y-3">
+                          {availableCities.map((cityName) => {
+                            const cityNeighborhoods = stateKey ? (usNeighborhoodsByCityState[`${cityName}-${stateKey}`] || []) : [];
+                            return (
+                              <div key={cityName} className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`city-${cityName}`}
+                                    checked={cities.includes(cityName)}
+                                    onCheckedChange={() => handleCityToggle(cityName)}
+                                  />
+                                  <label
+                                    htmlFor={`city-${cityName}`}
+                                    className="text-sm font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                  >
+                                    {cityName}
+                                  </label>
+                                </div>
+                                {cityNeighborhoods.length > 0 && cities.includes(cityName) && (
+                                  <div className="ml-6 space-y-1.5 pl-2 border-l-2 border-muted">
+                                    {cityNeighborhoods.map((neighborhoodName) => (
+                                      <div key={neighborhoodName} className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={`neighborhood-${neighborhoodName}`}
+                                          checked={neighborhoods.includes(neighborhoodName)}
+                                          onCheckedChange={() => handleNeighborhoodToggle(neighborhoodName)}
+                                        />
+                                        <label
+                                          htmlFor={`neighborhood-${neighborhoodName}`}
+                                          className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-muted-foreground"
+                                        >
+                                          {neighborhoodName}
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </ScrollArea>
-                      {cities.length > 0 && (
-                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
-                          {cities.length} {cities.length === 1 ? 'city' : 'cities'} selected
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {cities.length > 0 && availableNeighborhoods.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Neighborhoods/Areas (Optional - Select Multiple)</Label>
-                    <Button 
-                      type="button"
-                      onClick={selectAllNeighborhoods}
-                      variant="outline"
-                      size="sm"
-                      className="w-full mb-2"
-                    >
-                      ✓ {neighborhoods.length === availableNeighborhoods.length ? "Deselect All" : "Select All Neighborhoods"}
-                    </Button>
-                    <div className="border rounded-md p-3 bg-background">
-                      <ScrollArea className="h-[200px]">
-                        <div className="space-y-2">
-                          {availableNeighborhoods.map((neighborhoodName) => (
-                            <div key={neighborhoodName} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`neighborhood-${neighborhoodName}`}
-                                checked={neighborhoods.includes(neighborhoodName)}
-                                onCheckedChange={() => handleNeighborhoodToggle(neighborhoodName)}
-                              />
-                              <label
-                                htmlFor={`neighborhood-${neighborhoodName}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                              >
-                                {neighborhoodName}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                      {neighborhoods.length > 0 && (
-                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
-                          {neighborhoods.length} {neighborhoods.length === 1 ? 'neighborhood' : 'neighborhoods'} selected
+                      {(cities.length > 0 || neighborhoods.length > 0) && (
+                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground space-y-1">
+                          {cities.length > 0 && (
+                            <div>{cities.length} {cities.length === 1 ? 'city' : 'cities'} selected</div>
+                          )}
+                          {neighborhoods.length > 0 && (
+                            <div>{neighborhoods.length} {neighborhoods.length === 1 ? 'neighborhood' : 'neighborhoods'} selected</div>
+                          )}
                         </div>
                       )}
                     </div>
