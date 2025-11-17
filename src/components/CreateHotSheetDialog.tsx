@@ -19,6 +19,7 @@ import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { z } from "zod";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
+import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 
 interface CreateHotSheetDialogProps {
   open: boolean;
@@ -403,8 +404,43 @@ export function CreateHotSheetDialog({
     );
   };
   const selectAllTowns = () => {
-    setSelectedCities(townsList);
-    toast.success(`Selected all ${townsList.length} towns`);
+    const allSelections = [...townsList];
+    
+    // If showAreas is enabled, include all neighborhoods for each town
+    if (showAreas) {
+      const stateKey = state && state.length > 2 
+        ? (US_STATES.find(s => s.name.toLowerCase() === state.toLowerCase())?.code ?? state)
+        : state?.toUpperCase();
+
+      townsList.forEach(town => {
+        // Skip if this is already a neighborhood entry
+        if (town.includes('-')) return;
+        
+        // Get neighborhoods from the data
+        const hasNeighborhoods = hasNeighborhoodData(town, stateKey || state);
+        let neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
+        
+        // Also check for hyphenated neighborhoods in the towns list
+        if ((neighborhoods?.length ?? 0) === 0) {
+          neighborhoods = Array.from(new Set(
+            townsList
+              .filter((t) => t.startsWith(`${town}-`))
+              .map((t) => t.split('-').slice(1).join('-'))
+          ));
+        }
+        
+        // Add all neighborhoods for this town
+        neighborhoods?.forEach(neighborhood => {
+          allSelections.push(`${town}-${neighborhood}`);
+        });
+      });
+      
+      setSelectedCities(allSelections);
+      toast.success(`Selected all ${allSelections.length} towns and neighborhoods`);
+    } else {
+      setSelectedCities(allSelections);
+      toast.success(`Selected all ${allSelections.length} towns`);
+    }
   };
 
   const handleAddMultipleTowns = () => {
