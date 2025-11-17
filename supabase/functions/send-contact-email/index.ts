@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,40 +36,37 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending contact email to agent:", agentEmail);
 
-    const emailResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "AAC Worldwide <onboarding@resend.dev>",
-        to: [agentEmail],
-        reply_to: senderEmail,
-        subject: `New inquiry about ${listingAddress}`,
-        html: `
-          <h2>New Contact Message</h2>
-          <p>Hi ${agentName},</p>
-          <p>You have received a new message about your listing at <strong>${listingAddress}</strong>.</p>
-          
-          <h3>Contact Details:</h3>
-          <ul>
-            <li><strong>Name:</strong> ${senderName}</li>
-            <li><strong>Email:</strong> ${senderEmail}</li>
-            ${senderPhone ? `<li><strong>Phone:</strong> ${senderPhone}</li>` : ""}
-          </ul>
-          
-          <h3>Message:</h3>
-          <p>${message}</p>
-          
-          <p>Please respond to this inquiry at your earliest convenience by replying to this email or contacting them directly.</p>
-          
-          <p>Best regards,<br>Your Real Estate Platform</p>
-        `,
-      }),
+    const { data, error: emailError } = await resend.emails.send({
+      from: "AAC Worldwide <onboarding@resend.dev>",
+      to: [agentEmail],
+      replyTo: senderEmail,
+      subject: `New inquiry about ${listingAddress}`,
+      html: `
+        <h2>New Contact Message</h2>
+        <p>Hi ${agentName},</p>
+        <p>You have received a new message about your listing at <strong>${listingAddress}</strong>.</p>
+        
+        <h3>Contact Details:</h3>
+        <ul>
+          <li><strong>Name:</strong> ${senderName}</li>
+          <li><strong>Email:</strong> ${senderEmail}</li>
+          ${senderPhone ? `<li><strong>Phone:</strong> ${senderPhone}</li>` : ""}
+        </ul>
+        
+        <h3>Message:</h3>
+        <p>${message}</p>
+        
+        <p>Please respond to this inquiry at your earliest convenience by replying to this email or contacting them directly.</p>
+        
+        <p>Best regards,<br>Your Real Estate Platform</p>
+      `,
     });
 
-    const data = await emailResponse.json();
+    if (emailError) {
+      console.error("Resend API error:", emailError);
+      throw emailError;
+    }
+
     console.log("Email sent successfully:", data);
 
     return new Response(JSON.stringify(data), {

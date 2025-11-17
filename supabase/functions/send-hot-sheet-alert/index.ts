@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,41 +50,38 @@ const handler = async (req: Request): Promise<Response> => {
       </li>
     `).join('');
 
-    const emailResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "All Agent Connect <hello@allagentconnect.com>",
-        to: [userEmail],
-        subject: `🏠 New listings match your Hot Sheet: ${hotSheetName}`,
-        html: `
-          <h2>New Properties Match Your Hot Sheet!</h2>
-          <p>Hi ${userName},</p>
-          <p>We found <strong>${newListings.length}</strong> new ${newListings.length === 1 ? 'listing' : 'listings'} that match your Hot Sheet "<strong>${hotSheetName}</strong>":</p>
-          
-          <ul style="list-style: none; padding: 0;">
-            ${listingsList}
-          </ul>
-          
-          <p style="margin-top: 30px;">
-            Don't miss out on these opportunities! Properties that match your criteria can go quickly.
-          </p>
-          
-          <p>Best regards,<br>Your Real Estate Platform</p>
-          
-          <hr style="margin-top: 30px; border: none; border-top: 1px solid #eee;">
-          <p style="font-size: 12px; color: #999;">
-            You're receiving this because you have an active Hot Sheet alert. 
-            You can manage your alerts in your account settings.
-          </p>
-        `,
-      }),
+    const { data, error: emailError } = await resend.emails.send({
+      from: "AAC Worldwide <onboarding@resend.dev>",
+      to: [userEmail],
+      subject: `🏠 New listings match your Hot Sheet: ${hotSheetName}`,
+      html: `
+        <h2>New Properties Match Your Hot Sheet!</h2>
+        <p>Hi ${userName},</p>
+        <p>We found <strong>${newListings.length}</strong> new ${newListings.length === 1 ? 'listing' : 'listings'} that match your Hot Sheet "<strong>${hotSheetName}</strong>":</p>
+        
+        <ul style="list-style: none; padding: 0;">
+          ${listingsList}
+        </ul>
+        
+        <p style="margin-top: 30px;">
+          Don't miss out on these opportunities! Properties that match your criteria can go quickly.
+        </p>
+        
+        <p>Best regards,<br>Your Real Estate Platform</p>
+        
+        <hr style="margin-top: 30px; border: none; border-top: 1px solid #eee;">
+        <p style="font-size: 12px; color: #999;">
+          You're receiving this because you have an active Hot Sheet alert. 
+          You can manage your alerts in your account settings.
+        </p>
+      `,
     });
 
-    const data = await emailResponse.json();
+    if (emailError) {
+      console.error("Resend API error:", emailError);
+      throw emailError;
+    }
+
     console.log("Hot sheet alert sent successfully:", data);
 
     return new Response(JSON.stringify(data), {
