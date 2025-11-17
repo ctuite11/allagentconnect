@@ -940,7 +940,7 @@ const AddListing = () => {
       toast.info("Uploading files...");
       const uploadedFiles = await uploadFiles();
 
-      const { error } = await supabase.from("listings").insert({
+      const { data: insertedListing, error } = await supabase.from("listings").insert({
         agent_id: user.id,
         status: publishNow ? formData.status : "draft",
         listing_type: formData.listing_type,
@@ -1062,17 +1062,24 @@ const AddListing = () => {
           zoning: commercialZoning || null,
           allowed_business_types: commercialBusinessTypes.length > 0 ? commercialBusinessTypes : null,
           tenant_responsibilities: commercialTenantResponsibilities.length > 0 ? commercialTenantResponsibilities : null,
-          current_tenant: commercialCurrentTenant || null,
-          lease_expiration: commercialLeaseExpiration || null,
-          ceiling_height: commercialCeilingHeight ? parseFloat(commercialCeilingHeight) : null,
-          loading_docks: commercialLoadingDocks ? parseInt(commercialLoadingDocks) : null,
-          power_available: commercialPowerAvailable || null,
-          additional_features: commercialAdditionalFeatures.length > 0 ? commercialAdditionalFeatures : null,
         } : null,
-      });
+      }).select('id').single();
 
       if (error) throw error;
 
+      // Automatically fetch ATTOM data (walk score and schools) after listing is created
+      if (insertedListing?.id) {
+        try {
+          console.log("[AddListing] Triggering auto-fetch-property-data for listing:", insertedListing.id);
+          await supabase.functions.invoke('auto-fetch-property-data', {
+            body: { listing_id: insertedListing.id }
+          });
+          console.log("[AddListing] ATTOM data fetch initiated successfully");
+        } catch (fetchError) {
+          console.error("[AddListing] Error fetching ATTOM data:", fetchError);
+          // Don't fail the submission if ATTOM fetch fails
+        }
+      }
 
       toast.success("Listing created successfully!");
       navigate("/agent-dashboard");
