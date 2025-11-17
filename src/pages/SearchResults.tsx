@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Grid3x3, List } from "lucide-react";
 
 const useQuery = () => new URLSearchParams(useLocation().search);
 
@@ -17,6 +19,8 @@ const SearchResults = () => {
   const [allListings, setAllListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [viewType, setViewType] = useState<"grid" | "list">("grid");
 
   const filters = useMemo(() => {
     const params = new URLSearchParams(search);
@@ -135,6 +139,23 @@ const SearchResults = () => {
     fetchResults();
     document.title = `Search Results${filters.statuses?.length ? ` • ${filters.statuses.join("/")}` : ""}`;
   }, [filters]);
+
+  // Sort listings based on selected option
+  const sortedListings = useMemo(() => {
+    const sorted = [...listings];
+    switch (sortBy) {
+      case "price-low":
+        return sorted.sort((a, b) => a.price - b.price);
+      case "price-high":
+        return sorted.sort((a, b) => b.price - a.price);
+      case "newest":
+        return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      case "oldest":
+        return sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      default:
+        return sorted;
+    }
+  }, [listings, sortBy]);
 
   const handleSelectAll = () => {
     if (selectedListings.size === listings.length) {
@@ -261,6 +282,42 @@ const SearchResults = () => {
             </div>
           </div>
 
+          {/* Sort and View Controls */}
+          {!loading && listings.length > 0 && (
+            <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Sort by:</span>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewType === "grid" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewType("grid")}
+                >
+                  <Grid3x3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewType === "list" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewType("list")}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="text-center py-12 bg-card rounded-lg border">
               <p className="text-muted-foreground">Loading properties...</p>
@@ -271,8 +328,8 @@ const SearchResults = () => {
               <Button variant="outline" onClick={() => navigate("/browse")}>Adjust Filters</Button>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {listings.map((listing) => (
+            <div className={viewType === "grid" ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+              {sortedListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
                   listing={listing}
