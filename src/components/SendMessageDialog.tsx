@@ -625,13 +625,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         </div>
                       </ScrollArea>
                       {(cities.length > 0 || neighborhoods.length > 0) && (
-                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground space-y-1">
-                          {cities.length > 0 && (
-                            <div>{cities.length} {cities.length === 1 ? 'city' : 'cities'} selected</div>
-                          )}
-                          {neighborhoods.length > 0 && (
-                            <div>{neighborhoods.length} {neighborhoods.length === 1 ? 'neighborhood' : 'neighborhoods'} selected</div>
-                          )}
+                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
+                          {cities.length + neighborhoods.length} {cities.length + neighborhoods.length === 1 ? 'location' : 'locations'} selected
                         </div>
                       )}
                     </div>
