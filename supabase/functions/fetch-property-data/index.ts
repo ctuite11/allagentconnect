@@ -96,30 +96,51 @@ serve(async (req) => {
       valueEstimate: null,
     };
 
-    // Fetch Attom data
-    if (attomApiKey && address && (city || state || zip_code)) {
-      try {
-        const parts: string[] = [];
-        if (city) parts.push(city);
-        if (state && zip_code) parts.push(`${state} ${zip_code}`);
-        else if (state) parts.push(state);
-        else if (zip_code) parts.push(zip_code);
-        const address2 = parts.join(", ");
-        
-        // Construct street address with unit number for condominiums
-        let streetAddress = address;
-        if (unit_number && (property_type === "Condominium" || property_type === "Townhouse" || property_type === "Residential Rental")) {
-          streetAddress = `${address} Unit ${unit_number}`;
-          console.log("[fetch-property-data] Added unit number to address:", streetAddress);
-        }
-        
-        const fullAddress = [streetAddress, address2].filter(Boolean).join(", ");
+        // Fetch Attom data
+        if (attomApiKey && address && (city || state || zip_code)) {
+          try {
+            // Normalize inputs
+            const stateUpper = (state || "").toString().toUpperCase();
+            const cityTitle = (city || "").toString().replace(/\b\w/g, (ch: string) => ch.toUpperCase());
 
-        // Try basicprofile first (more tolerant), then fallback to address endpoint
-        const attomUrlBasic = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/basicprofile?address=${encodeURIComponent(fullAddress)}&debug=true`;
-        const attomUrlAddr = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address?address1=${encodeURIComponent(streetAddress)}&address2=${encodeURIComponent(address2)}`;
+            const parts: string[] = [];
+            if (cityTitle) parts.push(cityTitle);
+            if (stateUpper && zip_code) parts.push(`${stateUpper} ${zip_code}`);
+            else if (stateUpper) parts.push(stateUpper);
+            else if (zip_code) parts.push(zip_code);
+            const address2 = parts.join(", ");
+            
+            // Construct street address with unit number for condominiums
+            let streetAddress = address;
+            if (unit_number && (property_type === "Condominium" || property_type === "Townhouse" || property_type === "Residential Rental")) {
+              streetAddress = `${address} Unit ${unit_number}`;
+              console.log("[fetch-property-data] Added unit number to address:", streetAddress);
+            }
 
-        console.log("[fetch-property-data] Calling Attom basicprofile:", attomUrlBasic);
+            // Expand common abbreviations (e.g., "n" -> "North", "st" -> "Street") for better Attom matching
+            const expandDirectionals = (s: string) => s
+              .replace(/(\b\d+\s+)[nN](\.?\s+)/, "$1North ")
+              .replace(/(\b\d+\s+)[sS](\.?\s+)/, "$1South ")
+              .replace(/(\b\d+\s+)[eE](\.?\s+)/, "$1East ")
+              .replace(/(\b\d+\s+)[wW](\.?\s+)/, "$1West ");
+            const expandSuffix = (s: string) => s
+              .replace(/\bSt\b\.*/i, "Street")
+              .replace(/\bAve\b\.*/i, "Avenue")
+              .replace(/\bRd\b\.*/i, "Road")
+              .replace(/\bDr\b\.*/i, "Drive")
+              .replace(/\bLn\b\.*/i, "Lane")
+              .replace(/\bCt\b\.*/i, "Court")
+              .replace(/\bPl\b\.*/i, "Place")
+              .replace(/\bSq\b\.*/i, "Square");
+
+            const normalizedStreet = expandSuffix(expandDirectionals(streetAddress));
+            const fullAddress = [normalizedStreet, address2].filter(Boolean).join(", ");
+
+            // Try basicprofile first (more tolerant), then fallback to address endpoint
+            const attomUrlBasic = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/basicprofile?address=${encodeURIComponent(fullAddress)}&debug=true`;
+            const attomUrlAddr = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/address?address1=${encodeURIComponent(normalizedStreet)}&address2=${encodeURIComponent(address2)}`;
+
+            console.log("[fetch-property-data] Calling Attom basicprofile:", attomUrlBasic);
 
         let attomResponse = await fetch(attomUrlBasic, {
           headers: {
