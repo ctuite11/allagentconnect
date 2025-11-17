@@ -140,15 +140,16 @@ const handler = async (req: Request): Promise<Response> => {
       const citiesWithNeighborhoods = cityFilters.filter((f: {city: string, neighborhood: string | null}) => f.neighborhood);
       const citiesOnly = cityFilters.filter((f: {city: string, neighborhood: string | null}) => !f.neighborhood).map((f: {city: string, neighborhood: string | null}) => f.city);
       
-      // Build complex filter
+      // Build complex filter with proper quoting (handles spaces like "Back Bay")
+      const q = (v: string) => `"${String(v).replace(/"/g, '\\"')}"`;
       if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
         query = query.or(
-          `city.in.(${citiesOnly.join(',')}),` +
-          citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
+          `city.in.(${citiesOnly.map(q).join(',')}),` +
+          citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${q(f.city)},neighborhood.eq.${q(f.neighborhood!)})`).join(',')
         );
       } else if (citiesWithNeighborhoods.length > 0) {
         query = query.or(
-          citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
+          citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${q(f.city)},neighborhood.eq.${q(f.neighborhood!)})`).join(',')
         );
       } else if (citiesOnly.length > 0) {
         query = query.in("city", citiesOnly);
