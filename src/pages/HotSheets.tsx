@@ -75,6 +75,16 @@ const HotSheets = () => {
             id,
             shared_with_email,
             created_at
+          ),
+          hot_sheet_clients (
+            client_id,
+            clients (
+              id,
+              first_name,
+              last_name,
+              email,
+              phone
+            )
           )
         `)
         .eq("user_id", userId)
@@ -343,15 +353,23 @@ const HotSheets = () => {
                 <TableBody>
                   {hotSheets.map((sheet) => {
                     const criteria = sheet.criteria as any;
-                    const clientName = [criteria.clientFirstName, criteria.clientLastName]
-                      .filter(Boolean)
-                      .join(" ") || "—";
-                    const contactInfo = [
-                      criteria.clientEmail,
-                      criteria.clientPhone ? formatPhoneNumber(criteria.clientPhone) : null
-                    ]
-                      .filter(Boolean)
-                      .join(" | ") || "—";
+                    const clients = (sheet as any).hot_sheet_clients?.map((hsc: any) => {
+                      const c = hsc.clients;
+                      return Array.isArray(c) ? c[0] : c;
+                    }).filter(Boolean) || [];
+                    const primaryClient = clients[0];
+
+                    const clientName = primaryClient
+                      ? [primaryClient.first_name, primaryClient.last_name].filter(Boolean).join(" ")
+                      : ([criteria?.clientFirstName, criteria?.clientLastName].filter(Boolean).join(" ") || "—");
+
+                    const contactInfo = primaryClient
+                      ? [primaryClient.email, primaryClient.phone ? formatPhoneNumber(primaryClient.phone) : null]
+                          .filter(Boolean)
+                          .join(" | ") || "—"
+                      : ([criteria?.clientEmail, criteria?.clientPhone ? formatPhoneNumber(criteria.clientPhone) : null]
+                          .filter(Boolean)
+                          .join(" | ") || "—");
                     
                     return (
                       <TableRow key={sheet.id}>
