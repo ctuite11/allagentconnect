@@ -1562,7 +1562,7 @@ const AddListing = () => {
                   <div className="space-y-2">
                     <Label htmlFor="neighborhood">Area/Neighborhood</Label>
                     <Select
-                      value={formData.neighborhood || undefined}
+                      value={formData.neighborhood || "__none__"}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value === "__none__" ? "" : value }))}
                       disabled={
                         locationLocked ||
@@ -3788,7 +3788,7 @@ const AddListing = () => {
                   <div className="space-y-2">
                     <Label htmlFor="boston-area">Specific Area</Label>
                     <Select
-                      value={formData.town || undefined}
+                      value={formData.town || "__none__"}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, town: value === "__none__" ? "" : value }))}
                     >
                       <SelectTrigger id="boston-area" className="bg-background">
