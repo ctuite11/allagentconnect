@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
+import { getAreasForCity } from "@/data/usNeighborhoodsData";
 
 const BrowseProperties = () => {
   const navigate = useNavigate();
@@ -271,7 +272,24 @@ const BrowseProperties = () => {
   };
   
   const addAllTowns = () => {
-    setSelectedTowns(townsList);
+    const allTownsWithNeighborhoods: string[] = [];
+    
+    // If showAreas is enabled, include all neighborhoods for each city
+    if (showAreas === "yes") {
+      townsList.forEach(town => {
+        allTownsWithNeighborhoods.push(town);
+        const neighborhoods = getAreasForCity(town, state);
+        if (neighborhoods && neighborhoods.length > 0) {
+          neighborhoods.forEach(neighborhood => {
+            allTownsWithNeighborhoods.push(`${town}-${neighborhood}`);
+          });
+        }
+      });
+      setSelectedTowns(allTownsWithNeighborhoods);
+    } else {
+      setSelectedTowns(townsList);
+    }
+    
     toast.success("All towns added");
   };
 

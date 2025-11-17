@@ -85,16 +85,21 @@ const SearchResults = () => {
           const citiesOnly = cityFilters.filter((f: {city: string, neighborhood: string | null}) => !f.neighborhood).map((f: {city: string, neighborhood: string | null}) => f.city);
           
           // Build complex filter
+          // When a city is selected without neighborhoods, match ALL listings in that city (with or without neighborhoods)
           if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
-            q = q.or(
-              `city.in.(${citiesOnly.join(',')}),` +
-              citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
-            );
+            // Combine: cities without neighborhoods (match all in that city) AND specific city-neighborhood combos
+            const orConditions = [
+              `city.in.(${citiesOnly.join(',')})`,
+              ...citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`)
+            ];
+            q = q.or(orConditions.join(','));
           } else if (citiesWithNeighborhoods.length > 0) {
+            // Only specific city-neighborhood combinations
             q = q.or(
               citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
             );
           } else if (citiesOnly.length > 0) {
+            // Only cities - match all listings in those cities (with or without neighborhoods)
             q = q.in("city", citiesOnly);
           }
         }
