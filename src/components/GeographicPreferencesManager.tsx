@@ -281,7 +281,7 @@ const GeographicPreferencesManager = ({
               ✓ Select All Towns & Neighborhoods
             </Button>
             
-            <div className="max-h-96 overflow-y-auto border rounded bg-background">
+            <div className="max-h-96 overflow-y-auto border rounded bg-background relative z-10">
               <div className="p-2">
                 <TownsPicker towns={townsList} selectedTowns={selectedTowns} onToggleTown={toggleTown} expandedCities={expandedCities} onToggleCityExpansion={toggleCityExpansion} state={state} searchQuery={townSearch} variant="checkbox" showAreas={showAreas === "yes"} />
               </div>

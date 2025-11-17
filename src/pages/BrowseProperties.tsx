@@ -802,7 +802,7 @@ const BrowseProperties = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <div className="max-h-60 overflow-y-auto border rounded bg-background z-10 relative">
-                        <div className="p-2 hover:bg-muted cursor-pointer border-b font-semibold text-sm bg-background" onClick={addAllTowns}>
+                        <div className="p-2 hover:bg-muted cursor-pointer border-b font-semibold text-sm bg-background z-10 relative" onClick={addAllTowns}>
                           - Add All Towns -
                         </div>
                         <div className="p-2">
