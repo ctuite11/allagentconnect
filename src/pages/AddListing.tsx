@@ -481,7 +481,8 @@ const AddListing = () => {
                   : (!isNaN(Number(data.attom.lot_size)) ? Math.round(Number(data.attom.lot_size)).toString() : data.attom.lot_size?.toString()))
               : prev.lot_size,
             year_built: data.attom.year_built?.toString() || prev.year_built,
-            property_type: data.attom.property_type || prev.property_type,
+            // Only update property_type if user hasn't already selected one
+            property_type: prev.property_type || data.attom.property_type || prev.property_type,
             annual_property_tax: (data.attom.annual_property_tax !== undefined && data.attom.annual_property_tax !== null)
               ? data.attom.annual_property_tax.toString()
               : prev.annual_property_tax,
@@ -1415,37 +1416,58 @@ const AddListing = () => {
                   </Alert>
                 )}
 
-                {/* City, State, ZIP Row */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Location Details</Label>
-                    <div className="flex gap-2">
-                      {!locationLocked && (
-                        <Button
-                          type="button"
-                          variant="default"
-                          size="sm"
-                          onClick={handleVerifyAndLock}
-                          className="text-xs gap-1"
-                        >
-                          <CheckCircle2 className="h-3 w-3" />
-                          Verify & Lock
-                        </Button>
-                      )}
-                      {locationLocked && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setLocationLocked(false)}
-                          className="text-xs text-primary hover:text-primary/80 gap-1"
-                        >
-                          <Unlock className="h-3 w-3" />
-                          Edit Location
-                        </Button>
-                      )}
-                    </div>
+                {/* Location Details Header with Lock/Unlock */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Label className="text-lg font-semibold">Location Details</Label>
+                    {!locationLocked && (
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="default"
+                        onClick={handleVerifyAndLock}
+                        className="gap-2"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Verify & Lock
+                      </Button>
+                    )}
+                    {locationLocked && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="default"
+                        onClick={() => setLocationLocked(false)}
+                        className="gap-2 border-primary text-primary hover:bg-primary/10"
+                      >
+                        <Unlock className="h-4 w-4" />
+                        Edit Location
+                      </Button>
+                    )}
                   </div>
+                  
+                  {/* County Field - Before City/State/Zip */}
+                  <div className="space-y-2">
+                    <Label htmlFor="county">County</Label>
+                    <Select
+                      value={formData.county}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, county: value }))}
+                      disabled={locationLocked}
+                    >
+                      <SelectTrigger className={locationLocked ? "bg-muted cursor-not-allowed" : ""}>
+                        <SelectValue placeholder="Select county" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MA_COUNTIES.map((county) => (
+                          <SelectItem key={county} value={county}>
+                            {county}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* City, State, ZIP Row */}
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="city" className={validationErrors.includes("City") ? "text-destructive" : ""}>
@@ -1521,6 +1543,57 @@ const AddListing = () => {
                       Location locked. Click "Edit Location" above to modify.
                     </p>
                   )}
+                  
+                  {/* Neighborhood - After Zip Code */}
+                  <div className="space-y-2">
+                    <Label htmlFor="neighborhood">Area/Neighborhood</Label>
+                    <Select
+                      value={formData.neighborhood}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
+                      disabled={
+                        locationLocked ||
+                        !((formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
+                          (formData.county ?? '').toLowerCase().includes('suffolk'))
+                      }
+                    >
+                      <SelectTrigger className={locationLocked ? "bg-muted cursor-not-allowed" : ""}>
+                        <SelectValue placeholder={
+                          formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0
+                            ? "Select neighborhood"
+                            : "Enter city first"
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formData.city && formData.state && getAreasForCity(formData.city, formData.state).map((area) => (
+                          <SelectItem key={area} value={area}>
+                            {area}
+                          </SelectItem>
+                        ))}
+                        {(formData.county ?? '').toLowerCase().includes('suffolk') && (
+                          <>
+                            <SelectItem value="Back Bay">Back Bay</SelectItem>
+                            <SelectItem value="Beacon Hill">Beacon Hill</SelectItem>
+                            <SelectItem value="North End">North End</SelectItem>
+                            <SelectItem value="South End">South End</SelectItem>
+                            <SelectItem value="Charlestown">Charlestown</SelectItem>
+                            <SelectItem value="Jamaica Plain">Jamaica Plain</SelectItem>
+                            <SelectItem value="Roxbury">Roxbury</SelectItem>
+                            <SelectItem value="Dorchester">Dorchester</SelectItem>
+                            <SelectItem value="Mattapan">Mattapan</SelectItem>
+                            <SelectItem value="Hyde Park">Hyde Park</SelectItem>
+                            <SelectItem value="Roslindale">Roslindale</SelectItem>
+                            <SelectItem value="West Roxbury">West Roxbury</SelectItem>
+                            <SelectItem value="Allston">Allston</SelectItem>
+                            <SelectItem value="Brighton">Brighton</SelectItem>
+                            <SelectItem value="East Boston">East Boston</SelectItem>
+                            <SelectItem value="South Boston">South Boston</SelectItem>
+                            <SelectItem value="Fenway">Fenway</SelectItem>
+                            <SelectItem value="Mission Hill">Mission Hill</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* List Price - placed after location */}
@@ -1543,63 +1616,6 @@ const AddListing = () => {
                   {validationErrors.includes("Price") && (
                     <p className="text-sm text-destructive">Price is required</p>
                   )}
-                </div>
-
-                {/* Row 3: County, Neighborhood */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="county">County</Label>
-                    <Select
-                      value={formData.county}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, county: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select county" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MA_COUNTIES.map((county) => (
-                          <SelectItem key={county} value={county}>
-                            {county}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="neighborhood">Area/Neighborhood</Label>
-                    <Select
-                      value={formData.neighborhood}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
-                      disabled={! 
-                        ((formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
-                         (formData.county ?? '').toLowerCase().includes('suffolk'))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={
-                          ((formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
-                           (formData.county ?? '').toLowerCase().includes('suffolk'))
-                            ? 'Select area'
-                            : 'Enter address or set county first'
-                        } />
-                      </SelectTrigger>
-                      {(
-                        (formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
-                        (formData.county ?? '').toLowerCase().includes('suffolk')
-                      ) && (
-                        <SelectContent className="max-h-[300px]">
-                          {(getAreasForCity(formData.city, formData.state).length > 0
-                            ? getAreasForCity(formData.city, formData.state)
-                            : getAreasForCity('Boston', 'MA')
-                          ).map((area) => (
-                            <SelectItem key={area} value={area}>
-                              {area}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      )}
-                    </Select>
-                  </div>
                 </div>
 
                 {/* Hidden fields for state and zip (auto-populated from address) */}
