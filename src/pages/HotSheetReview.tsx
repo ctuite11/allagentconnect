@@ -138,26 +138,24 @@ const [sortBy, setSortBy] = useState("newest");
         const citiesWithNeighborhoods = cityFilters.filter(f => f.neighborhood);
         const citiesOnly = cityFilters.filter(f => !f.neighborhood).map(f => f.city);
         
-// Build complex filter: (city in citiesOnly) OR (city=X AND neighborhood=Y) OR ...
-const q = (v: string) => `"${String(v).replace(/"/g, '\\"')}"`;
+// Build complex filter: support partial/wildcard matches to normalize variants
+const qLike = (v: string) => `"${`%${String(v).replace(/"/g, '\\"')}%`}"`;
 if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
-  // Use OR logic with ilike for case-insensitive exact matches
   query = query.or(
-    citiesOnly.map((c) => `city.ilike.${q(c)}`).join(',') + ',' +
+    citiesOnly.map((c) => `city.ilike.${qLike(c)}`).join(',') + ',' +
     citiesWithNeighborhoods
-      .map((f) => `and(city.ilike.${q(f.city)},neighborhood.ilike.${q(f.neighborhood!)} )`)
+      .map((f) => `and(city.ilike.${qLike(f.city)},neighborhood.ilike.${qLike(f.neighborhood!)} )`)
       .join(',')
   );
 } else if (citiesWithNeighborhoods.length > 0) {
   query = query.or(
     citiesWithNeighborhoods
-      .map((f) => `and(city.ilike.${q(f.city)},neighborhood.ilike.${q(f.neighborhood!)} )`)
+      .map((f) => `and(city.ilike.${qLike(f.city)},neighborhood.ilike.${qLike(f.neighborhood!)} )`)
       .join(',')
   );
 } else if (citiesOnly.length > 0) {
-  // Only cities specified (no neighborhoods)
   query = query.or(
-    citiesOnly.map((c) => `city.ilike.${q(c)}`).join(',')
+    citiesOnly.map((c) => `city.ilike.${qLike(c)}`).join(',')
   );
 }
       }
