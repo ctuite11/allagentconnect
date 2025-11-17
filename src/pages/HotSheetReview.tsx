@@ -161,7 +161,9 @@ if (citiesWithNeighborhoods.length > 0 || citiesOnly.length > 0) {
         query = query.eq("zip_code", criteria.zipCode);
       }
 
-const { data: listingsData, error: listingsError } = await query.order("created_at", { ascending: false });
+const { data: listingsData, error: listingsError } = await query
+  .order("created_at", { ascending: false })
+  .limit(200);
 
 if (listingsError) throw listingsError;
 setListings(listingsData || []);
