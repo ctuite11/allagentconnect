@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
+import { bostonNeighborhoods } from "@/data/bostonNeighborhoods";
 import { z } from "zod";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
@@ -3735,7 +3736,15 @@ const AddListing = () => {
                   id="manual-city"
                   placeholder="Boston"
                   value={formData.city}
-                  onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                  onChange={(e) => {
+                    const newCity = e.target.value;
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      city: newCity,
+                      // Clear neighborhood if city is not Boston
+                      neighborhood: newCity === "Boston" ? prev.neighborhood : ""
+                    }));
+                  }}
                 />
               </div>
               <div className="space-y-2">
@@ -3748,6 +3757,28 @@ const AddListing = () => {
                 />
               </div>
             </div>
+            
+            {/* Boston Neighborhood Selector */}
+            {formData.city === "Boston" && (
+              <div className="space-y-2">
+                <Label htmlFor="boston-neighborhood">Boston Neighborhood *</Label>
+                <Select
+                  value={formData.neighborhood}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
+                >
+                  <SelectTrigger id="boston-neighborhood" className="bg-background">
+                    <SelectValue placeholder="Select neighborhood" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {bostonNeighborhoods.map((neighborhood) => (
+                      <SelectItem key={neighborhood} value={neighborhood}>
+                        {neighborhood}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

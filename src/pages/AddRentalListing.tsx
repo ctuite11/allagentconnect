@@ -13,6 +13,7 @@ import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
 import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical } from "lucide-react";
 import { z } from "zod";
+import { bostonNeighborhoods } from "@/data/bostonNeighborhoods";
 import listingIcon from "@/assets/listing-creation-icon.png";
 
 interface FileWithPreview {
@@ -510,13 +511,43 @@ const AddRentalListing = () => {
                     <Input
                       id="city"
                       value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      onChange={(e) => {
+                        const newCity = e.target.value;
+                        setFormData({ 
+                          ...formData, 
+                          city: newCity,
+                          // Clear neighborhood if city is not Boston
+                          neighborhood: newCity === "Boston" ? formData.neighborhood : ""
+                        });
+                      }}
                       required
                     />
                   </div>
                 </div>
 
-                {/* Row: State, County, Town, Neighborhood */}
+                {/* Boston Neighborhood Selector */}
+                {formData.city === "Boston" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="boston-neighborhood">Boston Neighborhood *</Label>
+                    <Select
+                      value={formData.neighborhood}
+                      onValueChange={(value) => setFormData({ ...formData, neighborhood: value })}
+                    >
+                      <SelectTrigger id="boston-neighborhood" className="bg-background">
+                        <SelectValue placeholder="Select neighborhood" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        {bostonNeighborhoods.map((neighborhood) => (
+                          <SelectItem key={neighborhood} value={neighborhood}>
+                            {neighborhood}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Row: State, County, Town, Neighborhood (for non-Boston) */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="state">State *</Label>
@@ -543,14 +574,16 @@ const AddRentalListing = () => {
                       onChange={(e) => setFormData({ ...formData, town: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="neighborhood">Neighborhood</Label>
-                    <Input
-                      id="neighborhood"
-                      value={formData.neighborhood}
-                      onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                    />
-                  </div>
+                  {formData.city !== "Boston" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="neighborhood">Neighborhood</Label>
+                      <Input
+                        id="neighborhood"
+                        value={formData.neighborhood}
+                        onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Property Details */}
