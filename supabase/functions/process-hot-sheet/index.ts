@@ -146,15 +146,21 @@ const handler = async (req: Request): Promise<Response> => {
       const q = (v: string) => `"${String(v).replace(/"/g, '\\"')}"`;
       if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
         query = query.or(
-          `city.in.(${citiesOnly.map(q).join(',')}),` +
-          citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${q(f.city)},neighborhood.eq.${q(f.neighborhood!)})`).join(',')
+          citiesOnly.map((c: string) => `city.ilike.${q(c)}`).join(',') + ',' +
+          citiesWithNeighborhoods
+            .map((f: {city: string, neighborhood: string | null}) => `and(city.ilike.${q(f.city)},neighborhood.ilike.${q(f.neighborhood!)})`)
+            .join(',')
         );
       } else if (citiesWithNeighborhoods.length > 0) {
         query = query.or(
-          citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${q(f.city)},neighborhood.eq.${q(f.neighborhood!)})`).join(',')
+          citiesWithNeighborhoods
+            .map((f: {city: string, neighborhood: string | null}) => `and(city.ilike.${q(f.city)},neighborhood.ilike.${q(f.neighborhood!)})`)
+            .join(',')
         );
       } else if (citiesOnly.length > 0) {
-        query = query.in("city", citiesOnly);
+        query = query.or(
+          citiesOnly.map((c: string) => `city.ilike.${q(c)}`).join(',')
+        );
       }
     }
 

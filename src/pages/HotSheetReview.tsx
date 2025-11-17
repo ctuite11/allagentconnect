@@ -141,22 +141,24 @@ const [sortBy, setSortBy] = useState("newest");
 // Build complex filter: (city in citiesOnly) OR (city=X AND neighborhood=Y) OR ...
 const q = (v: string) => `"${String(v).replace(/"/g, '\\"')}"`;
 if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
-  // Use OR logic with properly quoted string values (handles spaces like "Back Bay")
+  // Use OR logic with ilike for case-insensitive exact matches
   query = query.or(
-    `city.in.(${citiesOnly.map(q).join(',')}),` +
+    citiesOnly.map((c) => `city.ilike.${q(c)}`).join(',') + ',' +
     citiesWithNeighborhoods
-      .map((f) => `and(city.eq.${q(f.city)},neighborhood.eq.${q(f.neighborhood!)} )`)
+      .map((f) => `and(city.ilike.${q(f.city)},neighborhood.ilike.${q(f.neighborhood!)} )`)
       .join(',')
   );
 } else if (citiesWithNeighborhoods.length > 0) {
   query = query.or(
     citiesWithNeighborhoods
-      .map((f) => `and(city.eq.${q(f.city)},neighborhood.eq.${q(f.neighborhood!)} )`)
+      .map((f) => `and(city.ilike.${q(f.city)},neighborhood.ilike.${q(f.neighborhood!)} )`)
       .join(',')
   );
 } else if (citiesOnly.length > 0) {
   // Only cities specified (no neighborhoods)
-  query = query.in("city", citiesOnly);
+  query = query.or(
+    citiesOnly.map((c) => `city.ilike.${q(c)}`).join(',')
+  );
 }
       }
       if (criteria.state) {
