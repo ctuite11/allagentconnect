@@ -65,7 +65,7 @@ const [sortBy, setSortBy] = useState("newest");
         .from("hot_sheets")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (hotSheetError) throw hotSheetError;
       setHotSheet(hotSheetData);
@@ -138,25 +138,20 @@ const [sortBy, setSortBy] = useState("newest");
         const citiesWithNeighborhoods = cityFilters.filter(f => f.neighborhood);
         const citiesOnly = cityFilters.filter(f => !f.neighborhood).map(f => f.city);
         
-// Build complex filter: support partial/wildcard matches to normalize variants
-const qLike = (v: string) => `"${`%${String(v).replace(/"/g, '\\"')}%`}"`;
-if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
-  query = query.or(
-    citiesOnly.map((c) => `city.ilike.${qLike(c)}`).join(',') + ',' +
-    citiesWithNeighborhoods
-      .map((f) => `and(city.ilike.${qLike(f.city)},neighborhood.ilike.${qLike(f.neighborhood!)} )`)
-      .join(',')
-  );
-} else if (citiesWithNeighborhoods.length > 0) {
-  query = query.or(
-    citiesWithNeighborhoods
-      .map((f) => `and(city.ilike.${qLike(f.city)},neighborhood.ilike.${qLike(f.neighborhood!)} )`)
-      .join(',')
-  );
-} else if (citiesOnly.length > 0) {
-  query = query.or(
-    citiesOnly.map((c) => `city.ilike.${qLike(c)}`).join(',')
-  );
+// Build complex filter: use PostgREST wildcard "*" with ilike (case-insensitive)
+// Example: city.ilike.*Boston*; no quotes
+const wild = (v: string) => `*${String(v).replace(/[*",]/g, ' ').trim()}*`;
+if (citiesWithNeighborhoods.length > 0 || citiesOnly.length > 0) {
+  const segments: string[] = [];
+  if (citiesOnly.length > 0) {
+    segments.push(...citiesOnly.map((c) => `city.ilike.${wild(c)}`));
+  }
+  if (citiesWithNeighborhoods.length > 0) {
+    segments.push(
+      ...citiesWithNeighborhoods.map((f) => `and(city.ilike.${wild(f.city)},neighborhood.ilike.${wild(f.neighborhood!)})`)
+    );
+  }
+  query = query.or(segments.join(','));
 }
       }
       if (criteria.state) {
