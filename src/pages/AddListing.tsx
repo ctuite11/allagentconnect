@@ -633,7 +633,11 @@ const AddListing = () => {
           setValueEstimate(data.valueEstimate);
         }
         
-        toast.success("Property data loaded successfully");
+        if (data.attom || data.walkScore || data.schools || data.valueEstimate) {
+          toast.success("Property data loaded successfully");
+        } else {
+          toast.warning("No property data found for this address. You can continue by entering details manually.");
+        }
       }
     } catch (error: any) {
       console.error("Error fetching property data:", error);
