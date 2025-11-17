@@ -294,7 +294,7 @@ const AddRentalListing = () => {
       toast.info("Uploading files...");
       const uploadedFiles = await uploadFiles();
 
-      const { error } = await supabase.from("listings").insert({
+      const { data: insertedListing, error } = await supabase.from("listings").insert({
         agent_id: user.id,
         status: publishNow ? formData.status : "draft",
         listing_type: formData.listing_type,
@@ -327,9 +327,23 @@ const AddRentalListing = () => {
         photos: uploadedFiles.photos,
         floor_plans: uploadedFiles.floorPlans,
         documents: uploadedFiles.documents,
-      });
+      }).select('id').single();
 
       if (error) throw error;
+
+      // Automatically fetch ATTOM data (walk score and schools) after listing is created
+      if (insertedListing?.id) {
+        try {
+          console.log("[AddRentalListing] Triggering auto-fetch-property-data for listing:", insertedListing.id);
+          await supabase.functions.invoke('auto-fetch-property-data', {
+            body: { listing_id: insertedListing.id }
+          });
+          console.log("[AddRentalListing] ATTOM data fetch initiated successfully");
+        } catch (fetchError) {
+          console.error("[AddRentalListing] Error fetching ATTOM data:", fetchError);
+          // Don't fail the submission if ATTOM fetch fails
+        }
+      }
 
       toast.success("Rental listing created successfully!");
       navigate("/agent-dashboard");
