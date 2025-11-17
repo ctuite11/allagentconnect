@@ -142,25 +142,19 @@ const handler = async (req: Request): Promise<Response> => {
       const citiesWithNeighborhoods = cityFilters.filter((f: {city: string, neighborhood: string | null}) => f.neighborhood);
       const citiesOnly = cityFilters.filter((f: {city: string, neighborhood: string | null}) => !f.neighborhood).map((f: {city: string, neighborhood: string | null}) => f.city);
       
-      // Build complex filter with proper quoting (handles spaces like "Back Bay")
-      const q = (v: string) => `"${String(v).replace(/"/g, '\\"')}"`;
-      if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
-        query = query.or(
-          citiesOnly.map((c: string) => `city.ilike.${q(c)}`).join(',') + ',' +
-          citiesWithNeighborhoods
-            .map((f: {city: string, neighborhood: string | null}) => `and(city.ilike.${q(f.city)},neighborhood.ilike.${q(f.neighborhood!)})`)
-            .join(',')
-        );
-      } else if (citiesWithNeighborhoods.length > 0) {
-        query = query.or(
-          citiesWithNeighborhoods
-            .map((f: {city: string, neighborhood: string | null}) => `and(city.ilike.${q(f.city)},neighborhood.ilike.${q(f.neighborhood!)})`)
-            .join(',')
-        );
-      } else if (citiesOnly.length > 0) {
-        query = query.or(
-          citiesOnly.map((c: string) => `city.ilike.${q(c)}`).join(',')
-        );
+      // Build complex filter: use PostgREST wildcard "*" with ilike (case-insensitive)
+      const wild = (v: string) => `*${String(v).replace(/[*",]/g, ' ').trim()}*`;
+      if (citiesWithNeighborhoods.length > 0 || citiesOnly.length > 0) {
+        const segments: string[] = [];
+        if (citiesOnly.length > 0) {
+          segments.push(...citiesOnly.map((c: string) => `city.ilike.${wild(c)}`));
+        }
+        if (citiesWithNeighborhoods.length > 0) {
+          segments.push(
+            ...citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.ilike.${wild(f.city)},neighborhood.ilike.${wild(f.neighborhood!)})`)
+          );
+        }
+        query = query.or(segments.join(','));
       }
     }
 
