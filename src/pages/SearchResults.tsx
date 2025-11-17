@@ -229,10 +229,7 @@ const SearchResults = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-4xl font-bold">Search Results</h1>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => navigate(-1)}>Back to Filters</Button>
-              <Button onClick={() => navigate("/browse")}>Modify Search</Button>
-            </div>
+            <Button onClick={() => navigate(`/browse${search}`)}>Modify Search</Button>
           </div>
 
           {/* Results Count */}
