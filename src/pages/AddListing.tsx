@@ -18,7 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
-import { bostonNeighborhoods } from "@/data/bostonNeighborhoods";
+import { bostonNeighborhoods, bostonNeighborhoodsWithAreas } from "@/data/bostonNeighborhoods";
 import { z } from "zod";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
@@ -3760,24 +3760,51 @@ const AddListing = () => {
             
             {/* Boston Neighborhood Selector */}
             {formData.city === "Boston" && (
-              <div className="space-y-2">
-                <Label htmlFor="boston-neighborhood">Boston Neighborhood *</Label>
-                <Select
-                  value={formData.neighborhood}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
-                >
-                  <SelectTrigger id="boston-neighborhood" className="bg-background">
-                    <SelectValue placeholder="Select neighborhood" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    {bostonNeighborhoods.map((neighborhood) => (
-                      <SelectItem key={neighborhood} value={neighborhood}>
-                        {neighborhood}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="boston-neighborhood">Boston Neighborhood *</Label>
+                  <Select
+                    value={formData.neighborhood}
+                    onValueChange={(value) => {
+                      setFormData(prev => ({ ...prev, neighborhood: value }));
+                    }}
+                  >
+                    <SelectTrigger id="boston-neighborhood" className="bg-background">
+                      <SelectValue placeholder="Select neighborhood" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {bostonNeighborhoods.map((neighborhood) => (
+                        <SelectItem key={neighborhood} value={neighborhood}>
+                          {neighborhood}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Boston Area Selector (sub-neighborhood) */}
+                {formData.neighborhood && 
+                 bostonNeighborhoodsWithAreas[formData.neighborhood as keyof typeof bostonNeighborhoodsWithAreas]?.length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="boston-area">Specific Area</Label>
+                    <Select
+                      value={formData.town || ""}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, town: value }))}
+                    >
+                      <SelectTrigger id="boston-area" className="bg-background">
+                        <SelectValue placeholder="Select specific area (optional)" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        {bostonNeighborhoodsWithAreas[formData.neighborhood as keyof typeof bostonNeighborhoodsWithAreas].map((area) => (
+                          <SelectItem key={area} value={area}>
+                            {area}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </>
             )}
             
             <div className="grid grid-cols-2 gap-4">
