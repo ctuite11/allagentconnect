@@ -1567,11 +1567,7 @@ const AddListing = () => {
                       }
                     >
                       <SelectTrigger className={locationLocked ? "bg-muted cursor-not-allowed" : ""}>
-                        <SelectValue placeholder={
-                          formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0
-                            ? "Select neighborhood"
-                            : "Enter city first"
-                        } />
+                        <SelectValue placeholder="Select neighborhood" />
                       </SelectTrigger>
                       <SelectContent>
                         {formData.city && formData.state && getAreasForCity(formData.city, formData.state).map((area) => (
