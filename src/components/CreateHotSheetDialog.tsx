@@ -1522,7 +1522,7 @@ export function CreateHotSheetDialog({
                           onChange={(e) => setCitySearch(e.target.value)}
                           className="text-sm"
                         />
-                        <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2">
+                        <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2 relative z-10">
                           {selectedCountyId && townsList.length > 0 && (
                             <button
                               type="button"

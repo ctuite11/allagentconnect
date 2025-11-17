@@ -108,6 +108,31 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
     });
   };
 
+  // Compute a full selection list including neighborhoods when requested
+  const getAllTownsSelection = (includeAreas: boolean): string[] => {
+    const selection = new Set<string>(townsList);
+    if (!includeAreas) return Array.from(selection);
+
+    // For each top-level city, include known neighborhoods and any hyphenated entries
+    townsList.forEach((town) => {
+      if (town.includes('-')) {
+        selection.add(town);
+        return;
+      }
+      const neighborhoodsFromData = getAreasForCity(town, stateKey || state) || [];
+      let neighborhoods = neighborhoodsFromData;
+      if ((neighborhoods?.length ?? 0) === 0) {
+        neighborhoods = Array.from(new Set(
+          townsList
+            .filter((t) => t.startsWith(`${town}-`))
+            .map((t) => t.split('-').slice(1).join('-'))
+        ));
+      }
+      neighborhoods.forEach((n) => selection.add(`${town}-${n}`));
+    });
+
+    return Array.from(selection);
+  };
   // Auto-expand all cities with neighborhoods when showAreas is enabled
   useEffect(() => {
     if (showAreas && townsList.length > 0) {

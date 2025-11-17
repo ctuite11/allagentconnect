@@ -272,27 +272,35 @@ const BrowseProperties = () => {
   };
   
   const addAllTowns = () => {
-    const allTownsWithNeighborhoods: string[] = [];
+    const selection = new Set<string>(townsList);
     
-    // If showAreas is enabled, include all neighborhoods for each city
     if (showAreas === "yes") {
-      townsList.forEach(town => {
-        allTownsWithNeighborhoods.push(town);
-        const neighborhoods = getAreasForCity(town, state);
-        if (neighborhoods && neighborhoods.length > 0) {
-          neighborhoods.forEach(neighborhood => {
-            allTownsWithNeighborhoods.push(`${town}-${neighborhood}`);
-          });
+      townsList.forEach((town) => {
+        // Skip if this is already a neighborhood entry
+        if (town.includes('-')) return;
+        
+        // Prefer neighborhoods from data
+        let neighborhoods = getAreasForCity(town, state) || [];
+        
+        // Fallback: also include hyphenated neighborhoods present in the list
+        if ((neighborhoods?.length ?? 0) === 0) {
+          neighborhoods = Array.from(new Set(
+            townsList
+              .filter((t) => t.startsWith(`${town}-`))
+              .map((t) => t.split('-').slice(1).join('-'))
+          ));
         }
+        neighborhoods.forEach((n) => selection.add(`${town}-${n}`));
       });
-      setSelectedTowns(allTownsWithNeighborhoods);
-    } else {
-      setSelectedTowns(townsList);
     }
     
-    toast.success("All towns added");
+    setSelectedTowns(Array.from(selection));
+    toast.success(
+      showAreas === "yes" 
+        ? `All towns and neighborhoods added (${selection.size})`
+        : `All towns added (${selection.size})`
+    );
   };
-
   const toggleTown = (town: string) => {
     setSelectedTowns(prev =>
       prev.includes(town) ? prev.filter(t => t !== town) : [...prev, town]
