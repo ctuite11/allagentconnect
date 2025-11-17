@@ -13,7 +13,7 @@ import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
 import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical } from "lucide-react";
 import { z } from "zod";
-import { bostonNeighborhoods } from "@/data/bostonNeighborhoods";
+import { bostonNeighborhoods, bostonNeighborhoodsWithAreas } from "@/data/bostonNeighborhoods";
 import listingIcon from "@/assets/listing-creation-icon.png";
 
 interface FileWithPreview {
@@ -527,24 +527,51 @@ const AddRentalListing = () => {
 
                 {/* Boston Neighborhood Selector */}
                 {formData.city === "Boston" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="boston-neighborhood">Boston Neighborhood *</Label>
-                    <Select
-                      value={formData.neighborhood}
-                      onValueChange={(value) => setFormData({ ...formData, neighborhood: value })}
-                    >
-                      <SelectTrigger id="boston-neighborhood" className="bg-background">
-                        <SelectValue placeholder="Select neighborhood" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        {bostonNeighborhoods.map((neighborhood) => (
-                          <SelectItem key={neighborhood} value={neighborhood}>
-                            {neighborhood}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="boston-neighborhood">Boston Neighborhood *</Label>
+                      <Select
+                        value={formData.neighborhood}
+                        onValueChange={(value) => {
+                          setFormData({ ...formData, neighborhood: value, town: "" });
+                        }}
+                      >
+                        <SelectTrigger id="boston-neighborhood" className="bg-background">
+                          <SelectValue placeholder="Select neighborhood" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          {bostonNeighborhoods.map((neighborhood) => (
+                            <SelectItem key={neighborhood} value={neighborhood}>
+                              {neighborhood}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Boston Area Selector (sub-neighborhood) */}
+                    {formData.neighborhood && 
+                     bostonNeighborhoodsWithAreas[formData.neighborhood as keyof typeof bostonNeighborhoodsWithAreas]?.length > 0 && (
+                      <div className="space-y-2">
+                        <Label htmlFor="boston-area">Specific Area</Label>
+                        <Select
+                          value={formData.town || ""}
+                          onValueChange={(value) => setFormData({ ...formData, town: value })}
+                        >
+                          <SelectTrigger id="boston-area" className="bg-background">
+                            <SelectValue placeholder="Select specific area (optional)" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover z-50">
+                            {bostonNeighborhoodsWithAreas[formData.neighborhood as keyof typeof bostonNeighborhoodsWithAreas].map((area) => (
+                              <SelectItem key={area} value={area}>
+                                {area}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Row: State, County, Town, Neighborhood (for non-Boston) */}
