@@ -51,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
     `).join('');
 
     const { data, error: emailError } = await resend.emails.send({
-      from: "AAC Worldwide <onboarding@resend.dev>",
+      from: "AAC Worldwide <hello@allagentconnect.com>",
       to: [userEmail],
       subject: `🏠 New listings match your Hot Sheet: ${hotSheetName}`,
       html: `
