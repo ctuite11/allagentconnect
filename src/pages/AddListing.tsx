@@ -1567,9 +1567,10 @@ const AddListing = () => {
                       }
                     >
                       <SelectTrigger className={locationLocked ? "bg-muted cursor-not-allowed" : ""}>
-                        <SelectValue placeholder="Select neighborhood" />
+                        <SelectValue placeholder="Please Select" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="">Please Select</SelectItem>
                         {formData.city && formData.state && getAreasForCity(formData.city, formData.state).map((area) => (
                           <SelectItem key={area} value={area}>
                             {area}
@@ -3791,9 +3792,10 @@ const AddListing = () => {
                       onValueChange={(value) => setFormData(prev => ({ ...prev, town: value }))}
                     >
                       <SelectTrigger id="boston-area" className="bg-background">
-                        <SelectValue placeholder="Select specific area (optional)" />
+                        <SelectValue placeholder="Please Select" />
                       </SelectTrigger>
                       <SelectContent className="bg-popover z-50">
+                        <SelectItem value="">Please Select</SelectItem>
                         {bostonNeighborhoodsWithAreas[formData.neighborhood as keyof typeof bostonNeighborhoodsWithAreas].map((area) => (
                           <SelectItem key={area} value={area}>
                             {area}
