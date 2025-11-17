@@ -1297,6 +1297,43 @@ const AddListing = () => {
                     SECTION 2: PROPERTY LOCATION  
                     ======================================== */}
 
+                {/* Location Details Header with Lock/Unlock */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Label className="text-lg font-semibold">Location Details</Label>
+                    {!locationLocked && (
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="default"
+                        onClick={handleVerifyAndLock}
+                        className="gap-2"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Verify & Lock
+                      </Button>
+                    )}
+                    {locationLocked && (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="default"
+                          onClick={() => setLocationLocked(false)}
+                          className="gap-2 border-primary text-primary hover:bg-primary/10"
+                        >
+                          <Unlock className="h-4 w-4" />
+                          Edit Location
+                        </Button>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Lock className="h-3 w-3 text-primary" />
+                          Location locked. Click "Edit Location" to modify.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
                 {/* Row 2: Enter Address and Unit Number */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -1323,9 +1360,6 @@ const AddListing = () => {
                     {validationErrors.includes("Address") && (
                       <p className="text-sm text-destructive">Address is required</p>
                     )}
-                    <p className="text-xs text-muted-foreground">
-                      Can't find your address? Click "Enter manually" above
-                    </p>
                   </div>
                   
                   {/* Unit Number - for properties with units */}
@@ -1416,36 +1450,7 @@ const AddListing = () => {
                   </Alert>
                 )}
 
-                {/* Location Details Header with Lock/Unlock */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Label className="text-lg font-semibold">Location Details</Label>
-                    {!locationLocked && (
-                      <Button
-                        type="button"
-                        variant="default"
-                        size="default"
-                        onClick={handleVerifyAndLock}
-                        className="gap-2"
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        Verify & Lock
-                      </Button>
-                    )}
-                    {locationLocked && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="default"
-                        onClick={() => setLocationLocked(false)}
-                        className="gap-2 border-primary text-primary hover:bg-primary/10"
-                      >
-                        <Unlock className="h-4 w-4" />
-                        Edit Location
-                      </Button>
-                    )}
-                  </div>
-                  
                   {/* County Field - Before City/State/Zip */}
                   <div className="space-y-2">
                     <Label htmlFor="county">County</Label>
@@ -1537,12 +1542,6 @@ const AddListing = () => {
                       )}
                     </div>
                   </div>
-                  {locationLocked && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Lock className="h-3 w-3 text-primary" />
-                      Location locked. Click "Edit Location" above to modify.
-                    </p>
-                  )}
                   
                   {/* Neighborhood - After Zip Code */}
                   <div className="space-y-2">
