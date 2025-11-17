@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -253,46 +254,42 @@ const handler = async (req: Request): Promise<Response> => {
           `${hotSheet.clients.first_name} ${hotSheet.clients.last_name}` : 
           "Client";
 
-        await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-          },
-          body: JSON.stringify({
-            from: "AAC Worldwide <onboarding@resend.dev>",
-            to: recipients,
-            subject: `${newListings.length} New Properties Match Your Search - ${hotSheet.name}`,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h1 style="color: #1f2937; margin-bottom: 16px;">New Properties Available!</h1>
-                <p style="color: #6b7280; margin-bottom: 24px;">
-                  We found ${newListings.length} new ${newListings.length === 1 ? 'property' : 'properties'} matching your hot sheet "${hotSheet.name}"${hotSheet.clients ? ` for ${clientName}` : ''}.
+        const { data, error: emailError } = await resend.emails.send({
+          from: "AAC Worldwide <onboarding@resend.dev>",
+          to: recipients,
+          subject: `${newListings.length} New Properties Match Your Search - ${hotSheet.name}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #1f2937; margin-bottom: 16px;">New Properties Available!</h1>
+              <p style="color: #6b7280; margin-bottom: 24px;">
+                We found ${newListings.length} new ${newListings.length === 1 ? 'property' : 'properties'} matching your hot sheet "${hotSheet.name}"${hotSheet.clients ? ` for ${clientName}` : ''}.
+              </p>
+              
+              ${listingsHtml}
+              
+              ${newListings.length > 5 ? `
+                <p style="color: #6b7280; margin: 16px 0;">
+                  And ${newListings.length - 5} more ${newListings.length - 5 === 1 ? 'property' : 'properties'}...
                 </p>
-                
-                ${listingsHtml}
-                
-                ${newListings.length > 5 ? `
-                  <p style="color: #6b7280; margin: 16px 0;">
-                    And ${newListings.length - 5} more ${newListings.length - 5 === 1 ? 'property' : 'properties'}...
-                  </p>
-                ` : ''}
-                
-                <div style="margin: 32px 0; padding: 16px; background-color: #f3f4f6; border-radius: 8px;">
-                  <p style="margin: 0 0 12px 0; font-weight: 600;">View all matches and manage your favorites:</p>
-                  <a href="${accessUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
-                    View Hot Sheet
-                  </a>
-                </div>
-                
-                <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">
-                  This is an automated notification from your property hot sheet. 
-                  You can manage your notification preferences in your hot sheet settings.
-                </p>
+              ` : ''}
+              
+              <div style="margin-top: 32px; padding: 16px; background-color: #f3f4f6; border-radius: 8px;">
+                <p style="margin: 0 0 12px 0; color: #1f2937;">View all properties and add comments:</p>
+                <a href="${accessUrl}" 
+                   style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+                  View Hot Sheet
+                </a>
               </div>
-            `,
-          }),
+            </div>
+          `,
         });
+
+        if (emailError) {
+          console.error("Resend API error:", emailError);
+          throw emailError;
+        }
+
+        console.log("Email sent successfully to:", recipients);
 
         console.log("Email sent to:", recipients);
       }
