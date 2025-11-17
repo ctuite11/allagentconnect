@@ -15,7 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
-import { Loader2, Cloud, Upload, FileText, X } from "lucide-react";
+import { Loader2, Cloud, Upload, FileText, X, ArrowLeft, Save, Eye } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { PhotoManagementDialog } from "@/components/PhotoManagementDialog";
@@ -528,7 +528,19 @@ const EditListing = () => {
     setIsDirty(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSaveChanges = async () => {
+    try {
+      await handleSubmit(new Event('submit') as any, false);
+    } catch (error) {
+      // Error already handled in handleSubmit
+    }
+  };
+
+  const handlePreview = () => {
+    toast.info("Preview functionality coming soon");
+  };
+
+  const handleSubmit = async (e: React.FormEvent, publishNow: boolean = false) => {
     e.preventDefault();
 
     // Validate unit number for Condominium and Townhouse
@@ -931,7 +943,30 @@ const EditListing = () => {
             <CardDescription>Update your property listing details</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+            <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6" autoComplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+              {/* Action Buttons - Sticky Top */}
+              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-8 -mx-4 px-4 py-4">
+                <div className="flex flex-wrap gap-4">
+                  <Button variant="ghost" size="lg" onClick={() => navigate("/agent-dashboard")} type="button" className="gap-2">
+                    <ArrowLeft className="w-5 h-5" />
+                    Back
+                  </Button>
+                  <div className="flex-1" />
+                  <Button variant="outline" size="lg" onClick={handleSaveChanges} type="button" disabled={submitting} className="gap-2">
+                    <Save className="w-5 h-5" />
+                    Save Changes
+                  </Button>
+                  <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
+                    <Eye className="w-5 h-5" />
+                    Preview
+                  </Button>
+                  <Button variant="default" size="lg" type="submit" disabled={submitting} className="gap-2">
+                    <Upload className="w-5 h-5" />
+                    {submitting ? "Publishing..." : "Publish"}
+                  </Button>
+                </div>
+              </div>
+
               {/* Listing Type */}
               <div className="space-y-2">
                 <Label htmlFor="listing_type">Listing Type</Label>
@@ -1885,16 +1920,24 @@ const EditListing = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4">
-                <Button type="submit" disabled={submitting} className="flex-1">
-                  {submitting ? "Updating..." : "Update Listing"}
+              {/* Action Buttons - Bottom */}
+              <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t">
+                <Button variant="ghost" size="lg" onClick={() => navigate("/agent-dashboard")} type="button" className="gap-2">
+                  <ArrowLeft className="w-5 h-5" />
+                  Back
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/agent-dashboard")}
-                >
-                  Cancel
+                <div className="flex-1" />
+                <Button variant="outline" size="lg" onClick={handleSaveChanges} type="button" disabled={submitting} className="gap-2">
+                  <Save className="w-5 h-5" />
+                  Save Changes
+                </Button>
+                <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
+                  <Eye className="w-5 h-5" />
+                  Preview
+                </Button>
+                <Button variant="default" size="lg" type="submit" disabled={submitting} className="gap-2">
+                  <Upload className="w-5 h-5" />
+                  {submitting ? "Publishing..." : "Publish"}
                 </Button>
               </div>
             </form>
