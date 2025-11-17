@@ -49,8 +49,8 @@ const BrowseProperties = () => {
   // Property Type filters
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   
-  // Status filters - default to only showing active and coming_soon listings
-  const [statuses, setStatuses] = useState<string[]>(["active", "coming_soon"]);
+  // Status filters
+  const [statuses, setStatuses] = useState<string[]>([]);
   
   // Price filters
   const [minPrice, setMinPrice] = useState("");
