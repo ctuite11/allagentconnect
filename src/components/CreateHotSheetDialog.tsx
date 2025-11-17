@@ -513,22 +513,18 @@ export function CreateHotSheetDialog({
           .from("listings")
           .select("id", { count: "exact", head: true });
 
-        // Property types - map to database values
-        const propertyTypeMap: Record<string, string> = {
-          'single_family': 'Single Family',
-          'condo': 'Condominium',
-          'multi_family': 'Multi Family',
-          'townhouse': 'Townhouse',
-          'land': 'Land',
-          'commercial': 'Commercial',
-          'business_opp': 'Business Opportunity'
-        };
-        
+        // Property types filter
         if (propertyTypes.length > 0) {
-          const mappedTypes = propertyTypes.map(type => propertyTypeMap[type] || type);
-          query = query.in("property_type", mappedTypes);
+          query = query.in("property_type", propertyTypes);
         }
-        
+
+        // Status filter default aligns with Search page
+        if (statuses.length > 0) {
+          query = query.in("status", statuses);
+        } else {
+          query = query.in("status", ["active", "coming_soon"]);
+        }
+
         // Location filters
         if (state) {
           query = query.eq("state", state);
