@@ -445,16 +445,19 @@ const AddListing = () => {
   }, [formData, unitNumber]);
   
   const fetchPropertyData = async (lat: number | undefined, lng: number | undefined, address: string, city: string, state: string, zip: string, unit_number?: string, property_type?: string) => {
-    console.log("[AddListing] fetchPropertyData called with:", { lat, lng, address, city, state, zip, unit_number, property_type });
+    // For Boston neighborhoods, always use "Boston" as the city for Attom API
+    const attomCity = formData.neighborhood && bostonNeighborhoods.includes(formData.neighborhood as any) ? "Boston" : city;
+    
+    console.log("[AddListing] fetchPropertyData called with:", { lat, lng, address, city: attomCity, state, zip, unit_number, property_type });
     setSubmitting(true);
     try {
       console.log("[AddListing] Invoking fetch-property-data edge function...");
       const { data, error } = await supabase.functions.invoke("fetch-property-data", {
-        body: { latitude: lat, longitude: lng, address, city, state, zip_code: zip, unit_number, property_type },
+        body: { latitude: lat, longitude: lng, address, city: attomCity, state, zip_code: zip, unit_number, property_type },
       });
 
       console.log("[AddListing] Edge function response:", { data, error });
-      setDebugInfo({ source: 'fetch-property-data', payload: { lat, lng, address, city, state, zip, unit_number, property_type }, data, error });
+      setDebugInfo({ source: 'fetch-property-data', payload: { lat, lng, address, city: attomCity, state, zip, unit_number, property_type }, data, error });
 
       if (error) throw error;
 
