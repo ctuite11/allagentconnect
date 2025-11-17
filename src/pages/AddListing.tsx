@@ -2945,18 +2945,14 @@ const AddListing = () => {
                           <span className="text-muted-foreground">%</span>
                         </div>
                       ) : (
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                          <Input
-                            id="commission_rate"
-                            type="number"
-                            step="0.01"
-                            value={formData.commission_rate}
-                            onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
-                            placeholder="5000"
-                            className="pl-6"
-                          />
-                        </div>
+                        <FormattedInput
+                          id="commission_rate"
+                          format="currency"
+                          decimals={0}
+                          value={formData.commission_rate}
+                          onChange={(value) => setFormData(prev => ({ ...prev, commission_rate: value }))}
+                          placeholder="5000"
+                        />
                       )}
                     </div>
                     <div className="space-y-2 md:col-span-1">
