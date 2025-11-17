@@ -73,8 +73,7 @@ const [sortBy, setSortBy] = useState("newest");
       // Build query for matching listings
       let query = supabase
         .from("listings")
-        .select("*")
-        .eq("status", "active");
+        .select("*");
 
       const criteria = hotSheetData.criteria as any;
 
@@ -94,6 +93,13 @@ const [sortBy, setSortBy] = useState("newest");
           propertyTypeMap[type] || type
         );
         query = query.in("property_type", mappedTypes);
+      }
+
+      // Status filter default aligns with Search page
+      if (criteria.statuses?.length > 0) {
+        query = query.in("status", criteria.statuses);
+      } else {
+        query = query.in("status", ["active", "coming_soon"]);
       }
       if (criteria.minPrice) {
         query = query.gte("price", criteria.minPrice);

@@ -57,8 +57,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Build query to match listings
     let query = supabaseClient
       .from("listings")
-      .select("*")
-      .eq("status", "active");
+      .select("*");
 
     const criteria = hotSheet.criteria || {};
 
@@ -83,8 +82,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (criteria.statuses && criteria.statuses.length > 0) {
       query = query.in("status", criteria.statuses);
+    } else {
+      // Default to match Search page behavior
+      query = query.in("status", ["active", "coming_soon"]);
     }
-
     if (criteria.minPrice) {
       query = query.gte("price", criteria.minPrice);
     }

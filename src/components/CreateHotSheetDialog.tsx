@@ -511,8 +511,7 @@ export function CreateHotSheetDialog({
       try {
         let query = supabase
           .from("listings")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "active");
+          .select("id", { count: "exact", head: true });
 
         // Property types - map to database values
         const propertyTypeMap: Record<string, string> = {
@@ -666,16 +665,17 @@ export function CreateHotSheetDialog({
     const timeoutId = setTimeout(fetchMatchingCount, 300);
     return () => clearTimeout(timeoutId);
   }, [
-    open, 
-    propertyTypes, 
-    state, 
-    selectedCities, 
+    open,
+    statuses,
+    propertyTypes,
+    state,
+    selectedCities,
     zipCode,
-    minPrice, 
-    maxPrice, 
-    bedrooms, 
-    bathrooms, 
-    minSqft, 
+    minPrice,
+    maxPrice,
+    bedrooms,
+    bathrooms,
+    minSqft,
     maxSqft,
     minLotSize,
     maxLotSize,
@@ -688,7 +688,7 @@ export function CreateHotSheetDialog({
     minParkingSpaces,
     basement,
     hasParking,
-    minFireplaces
+    minFireplaces,
   ]);
 
   // Validation schema
