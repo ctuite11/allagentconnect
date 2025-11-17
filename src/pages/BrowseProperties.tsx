@@ -52,6 +52,32 @@ const BrowseProperties = () => {
   // Status filters
   const [statuses, setStatuses] = useState<string[]>([]);
   
+  // Initialize filters from URL params on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    
+    if (params.has("status")) setStatuses(params.get("status")!.split(","));
+    if (params.has("type")) setPropertyTypes(params.get("type")!.split(","));
+    if (params.has("minPrice")) setMinPrice(params.get("minPrice")!);
+    if (params.has("maxPrice")) setMaxPrice(params.get("maxPrice")!);
+    if (params.has("bedrooms")) setBedrooms(params.get("bedrooms")!);
+    if (params.has("bathrooms")) setBathrooms(params.get("bathrooms")!);
+    if (params.has("rooms")) setRooms(params.get("rooms")!);
+    if (params.has("acres")) setAcres(params.get("acres")!);
+    if (params.has("livingArea")) setLivingArea(params.get("livingArea")!);
+    if (params.has("pricePerSqFt")) setPricePerSqFt(params.get("pricePerSqFt")!);
+    if (params.has("yearBuilt")) setYearBuilt(params.get("yearBuilt")!);
+    if (params.has("zip")) setZipCode(params.get("zip")!);
+    if (params.has("listingNumber")) setListingNumber(params.get("listingNumber")!);
+    if (params.has("state")) setState(params.get("state")!);
+    if (params.has("county")) setCounty(params.get("county")!);
+    if (params.has("towns")) setSelectedTowns(params.get("towns")!.split("|"));
+    if (params.has("showAreas")) setShowAreas(params.get("showAreas")!);
+    if (params.has("keywords")) setKeywords(params.get("keywords")!);
+    if (params.has("keywordMatch")) setKeywordMatch(params.get("keywordMatch")!);
+    if (params.has("keywordType")) setKeywordType(params.get("keywordType")!);
+  }, []);
+  
   // Price filters
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -404,10 +430,10 @@ const BrowseProperties = () => {
                     <div className="flex items-center space-x-2 mb-1">
                       <Checkbox
                         id="status-select-all"
-                        checked={statuses.length >= 5}
+                        checked={statuses.length >= 14}
                         onCheckedChange={(checked) => {
                           if (checked) {
-                            setStatuses(["active", "coming_soon", "off_market", "pending", "sold"]);
+                            setStatuses(["new", "active", "price_changed", "back_on_market", "extended", "reactivated", "contingent", "pending", "sold", "rented", "temporarily_withdrawn", "expired", "cancelled", "coming_soon"]);
                           } else {
                             setStatuses([]);
                           }
@@ -417,19 +443,19 @@ const BrowseProperties = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pr-2">
                       {[
-                        { value: "active", label: "New" },
+                        { value: "new", label: "New" },
                         { value: "active", label: "Active" },
-                        { value: "coming_soon", label: "Price Changed" },
-                        { value: "off_market", label: "Back on Market" },
-                        { value: "pending", label: "Extended" },
-                        { value: "sold", label: "Reactivated" },
-                        { value: "sold", label: "Contingent" },
+                        { value: "price_changed", label: "Price Changed" },
+                        { value: "back_on_market", label: "Back on Market" },
+                        { value: "extended", label: "Extended" },
+                        { value: "reactivated", label: "Reactivated" },
+                        { value: "contingent", label: "Contingent" },
                         { value: "pending", label: "Under Agreement" },
                         { value: "sold", label: "Sold" },
-                        { value: "off_market", label: "Rented" },
-                        { value: "off_market", label: "Temporarily Withdrawn" },
-                        { value: "off_market", label: "Expired" },
-                        { value: "off_market", label: "Canceled" },
+                        { value: "rented", label: "Rented" },
+                        { value: "temporarily_withdrawn", label: "Temporarily Withdrawn" },
+                        { value: "expired", label: "Expired" },
+                        { value: "cancelled", label: "Canceled" },
                         { value: "coming_soon", label: "Coming Soon" },
                       ].map((status, idx) => (
                         <div key={idx} className="flex items-center space-x-2">
