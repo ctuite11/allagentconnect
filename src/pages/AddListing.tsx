@@ -1558,8 +1558,8 @@ const AddListing = () => {
                   <div className="space-y-2">
                     <Label htmlFor="neighborhood">Area/Neighborhood</Label>
                     <Select
-                      value={formData.neighborhood}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
+                      value={formData.neighborhood || undefined}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value === "__none__" ? "" : value }))}
                       disabled={
                         locationLocked ||
                         !((formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
@@ -1570,7 +1570,7 @@ const AddListing = () => {
                         <SelectValue placeholder="Please Select" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Please Select</SelectItem>
+                        <SelectItem value="__none__">Please Select</SelectItem>
                         {formData.city && formData.state && getAreasForCity(formData.city, formData.state).map((area) => (
                           <SelectItem key={area} value={area}>
                             {area}
@@ -3788,14 +3788,14 @@ const AddListing = () => {
                   <div className="space-y-2">
                     <Label htmlFor="boston-area">Specific Area</Label>
                     <Select
-                      value={formData.town || ""}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, town: value }))}
+                      value={formData.town || undefined}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, town: value === "__none__" ? "" : value }))}
                     >
                       <SelectTrigger id="boston-area" className="bg-background">
                         <SelectValue placeholder="Please Select" />
                       </SelectTrigger>
                       <SelectContent className="bg-popover z-50">
-                        <SelectItem value="">Please Select</SelectItem>
+                        <SelectItem value="__none__">Please Select</SelectItem>
                         {bostonNeighborhoodsWithAreas[formData.neighborhood as keyof typeof bostonNeighborhoodsWithAreas].map((area) => (
                           <SelectItem key={area} value={area}>
                             {area}
