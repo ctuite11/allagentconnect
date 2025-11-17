@@ -160,20 +160,25 @@ const GeographicPreferencesManager = ({
     setSelectedTowns(prev => prev.includes(town) ? prev.filter(t => t !== town) : [...prev, town]);
   };
   const addAllTowns = () => {
+    const selection = new Set<string>(townsList);
+
     if (showAreas === "yes") {
       // Include both cities and their neighborhoods
-      const allTownsWithNeighborhoods: string[] = [];
-      townsList.forEach(city => {
-        allTownsWithNeighborhoods.push(city);
-        const neighborhoods = getAreasForCity(city, state);
-        neighborhoods.forEach(neighborhood => {
-          allTownsWithNeighborhoods.push(`${city}-${neighborhood}`);
-        });
+      townsList.forEach((city) => {
+        if (city.includes('-')) return;
+        let neighborhoods = getAreasForCity(city, state) || [];
+        if ((neighborhoods?.length ?? 0) === 0) {
+          neighborhoods = Array.from(new Set(
+            townsList
+              .filter((t) => t.startsWith(`${city}-`))
+              .map((t) => t.split('-').slice(1).join('-'))
+          ));
+        }
+        neighborhoods.forEach((n) => selection.add(`${city}-${n}`));
       });
-      setSelectedTowns(allTownsWithNeighborhoods);
-    } else {
-      setSelectedTowns(townsList);
     }
+
+    setSelectedTowns(Array.from(selection));
   };
   const removeAllTowns = () => {
     setSelectedTowns([]);
