@@ -235,56 +235,17 @@ const SearchResults = () => {
             </div>
           </div>
 
-          <div className="bg-card rounded-lg shadow-sm border p-6 mb-6">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="text-lg font-semibold">{loading ? "Loading…" : `${listings.length} Properties Found`}</div>
-              {!loading && listings.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Button 
-                    variant="outline" 
-                    onClick={handleSelectAll}
-                    className="text-sm"
-                  >
-                    {selectedListings.size === listings.length ? "Deselect All" : "Select All"}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleKeepSelected}
-                    disabled={selectedListings.size === 0}
-                    className="text-sm"
-                  >
-                    Keep Selected
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleSaveSearch}
-                    className="text-sm"
-                  >
-                    Save Search
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleShare}
-                    className="text-sm"
-                  >
-                    Share
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleSaveToWishList}
-                    disabled={selectedListings.size === 0}
-                    className="text-sm"
-                  >
-                    Save To Wish Lists
-                  </Button>
-                </div>
-              )}
-            </div>
+          {/* Results Count */}
+          <div className="mb-4">
+            <Button variant="outline" disabled>
+              {loading ? "Loading…" : `${listings.length} Properties Found`}
+            </Button>
           </div>
 
-          {/* Sort and View Controls */}
+          {/* Controls Bar: Sort | Action Buttons | View Toggle */}
           {!loading && listings.length > 0 && (
             <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+              {/* Sort Controls */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Sort by:</span>
                 <Select value={sortBy} onValueChange={setSortBy}>
@@ -299,6 +260,49 @@ const SearchResults = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Action Toolbar */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleSelectAll}
+                >
+                  {selectedListings.size === listings.length ? "Deselect All" : "Select All"}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleKeepSelected}
+                  disabled={selectedListings.size === 0}
+                >
+                  Keep Selected
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleSaveSearch}
+                >
+                  Save Search
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleShare}
+                >
+                  Share
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleSaveToWishList}
+                  disabled={selectedListings.size === 0}
+                >
+                  Save To Wish Lists
+                </Button>
+              </div>
+
+              {/* View Toggle */}
               <div className="flex items-center gap-2">
                 <Button
                   variant={viewType === "grid" ? "default" : "outline"}
