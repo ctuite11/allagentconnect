@@ -20,6 +20,7 @@ import { z } from "zod";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
+import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
 interface CreateHotSheetDialogProps {
   open: boolean;
@@ -509,140 +510,29 @@ export function CreateHotSheetDialog({
       
       setLoadingCount(true);
       try {
-        let query = supabase
-          .from("listings")
-          .select("id", { count: "exact", head: true });
+        // Build criteria object in the same format as SearchResults/HotSheetReview
+        const criteria = {
+          propertyTypes, // UI codes like "single_family" - will be mapped to DB values
+          statuses: statuses.length > 0 ? statuses : undefined,
+          cities: selectedCities,
+          state,
+          zipCode,
+          minPrice: minPrice ? parseFloat(minPrice) : undefined,
+          maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+          bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
+          bathrooms: bathrooms ? parseFloat(bathrooms) : undefined,
+          minSqft: minSqft ? parseInt(minSqft) : undefined,
+          maxSqft: maxSqft ? parseInt(maxSqft) : undefined,
+        };
 
-        // Property types filter
-        if (propertyTypes.length > 0) {
-          query = query.in("property_type", propertyTypes);
-        }
-
-        // Status filter default aligns with Search page
-        if (statuses.length > 0) {
-          query = query.in("status", statuses);
-        } else {
-          query = query.in("status", ["active", "coming_soon"]);
-        }
-
-        // Location filters
-        if (state) {
-          query = query.eq("state", state);
-        }
-        if (selectedCities.length > 0) {
-          // Handle both city-only and city-neighborhood formats
-          const cityFilters = selectedCities.map((cityStr: string) => {
-            const parts = cityStr.split(',');
-            const cityPart = parts[0].trim();
-            
-            // Check if it's a city-neighborhood format (e.g., "Boston-Charlestown")
-            if (cityPart.includes('-')) {
-              const [city, neighborhood] = cityPart.split('-').map(s => s.trim());
-              return { city, neighborhood };
-            }
-            
-            return { city: cityPart, neighborhood: null };
-          });
-          
-          // Group by cities that have neighborhoods vs just cities
-          const citiesWithNeighborhoods = cityFilters.filter(f => f.neighborhood);
-          const citiesOnly = cityFilters.filter(f => !f.neighborhood).map(f => f.city);
-          
-          // Build complex filter: use PostgREST wildcard "*" with ilike (case-insensitive)
-          const wild = (v: string) => `*${String(v).replace(/[*",]/g, ' ').trim()}*`;
-          if (citiesWithNeighborhoods.length > 0 || citiesOnly.length > 0) {
-            const segments: string[] = [];
-            if (citiesOnly.length > 0) {
-              segments.push(...citiesOnly.map((c) => `city.ilike.${wild(c)}`));
-            }
-            if (citiesWithNeighborhoods.length > 0) {
-              segments.push(
-                ...citiesWithNeighborhoods.map((f) => `and(city.ilike.${wild(f.city)},neighborhood.ilike.${wild(f.neighborhood!)})`)
-              );
-            }
-            query = query.or(segments.join(','));
-          }
-        }
-        if (zipCode) {
-          query = query.eq("zip_code", zipCode);
-        }
+        // Use buildListingsQuery to get the full query, then count the results
+        // Since we can't get count directly from the query (select is already called),
+        // we fetch IDs and count them
+        const { data, error } = await buildListingsQuery(supabase, criteria).limit(1000);
         
-        // Price filters
-        if (minPrice) {
-          query = query.gte("price", parseFloat(minPrice));
-        }
-        if (maxPrice) {
-          query = query.lte("price", parseFloat(maxPrice));
-        }
+        if (error) throw error;
         
-        // Size filters
-        if (bedrooms) {
-          query = query.gte("bedrooms", parseInt(bedrooms));
-        }
-        if (bathrooms) {
-          query = query.gte("bathrooms", parseFloat(bathrooms));
-        }
-        if (minSqft) {
-          query = query.gte("square_feet", parseInt(minSqft));
-        }
-        if (maxSqft) {
-          query = query.lte("square_feet", parseInt(maxSqft));
-        }
-        
-        // Lot size
-        if (minLotSize) {
-          query = query.gte("lot_size", parseFloat(minLotSize));
-        }
-        if (maxLotSize) {
-          query = query.lte("lot_size", parseFloat(maxLotSize));
-        }
-        
-        // Year built
-        if (minYearBuilt) {
-          query = query.gte("year_built", parseInt(minYearBuilt));
-        }
-        if (maxYearBuilt) {
-          query = query.lte("year_built", parseInt(maxYearBuilt));
-        }
-        
-        // Waterfront features
-        if (waterfront !== null) {
-          query = query.eq("waterfront", waterfront);
-        }
-        if (waterView !== null) {
-          query = query.eq("water_view", waterView);
-        }
-        if (beachNearby !== null) {
-          query = query.eq("beach_nearby", beachNearby);
-        }
-        
-        // Garage and parking
-        if (minGarageSpaces) {
-          query = query.gte("garage_spaces", parseInt(minGarageSpaces));
-        }
-        if (minParkingSpaces) {
-          query = query.gte("total_parking_spaces", parseInt(minParkingSpaces));
-        }
-        
-        // Basement
-        if (basement !== null) {
-          query = query.eq("has_basement", basement);
-        }
-        
-        // Parking (includes garage)
-        if (hasParking !== null) {
-          if (hasParking) {
-            query = query.or("garage_spaces.gt.0,total_parking_spaces.gt.0");
-          }
-        }
-        
-        // Fireplaces
-        if (minFireplaces) {
-          query = query.gte("num_fireplaces", parseInt(minFireplaces));
-        }
-
-        const { count } = await query;
-        setMatchingListingsCount(count || 0);
+        setMatchingListingsCount(data?.length || 0);
       } catch (error) {
         console.error("Error fetching matching count:", error);
       } finally {
@@ -666,18 +556,6 @@ export function CreateHotSheetDialog({
     bathrooms,
     minSqft,
     maxSqft,
-    minLotSize,
-    maxLotSize,
-    minYearBuilt,
-    maxYearBuilt,
-    waterfront,
-    waterView,
-    beachNearby,
-    minGarageSpaces,
-    minParkingSpaces,
-    basement,
-    hasParking,
-    minFireplaces,
   ]);
 
   // Reset search input when state or county changes
