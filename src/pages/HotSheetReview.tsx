@@ -12,6 +12,7 @@ import { ArrowLeft, Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin 
 import ListingCard from "@/components/ListingCard";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
+import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
 interface Listing {
   id: string;
@@ -70,100 +71,11 @@ const [sortBy, setSortBy] = useState("newest");
       if (hotSheetError) throw hotSheetError;
       setHotSheet(hotSheetData);
 
-      // Build query for matching listings
-      let query = supabase
-        .from("listings")
-        .select("*");
-
+      // Build query using unified search utility
       const criteria = hotSheetData.criteria as any;
+      const query = buildListingsQuery(supabase, criteria).limit(200);
 
-      // Map criteria property type values to database values
-      const propertyTypeMap: Record<string, string> = {
-        'single_family': 'Single Family',
-        'condo': 'Condominium',
-        'multi_family': 'Multi Family',
-        'townhouse': 'Townhouse',
-        'land': 'Land',
-        'commercial': 'Commercial',
-        'business_opp': 'Business Opportunity'
-      };
-
-      if (criteria.propertyTypes?.length > 0) {
-        const mappedTypes = criteria.propertyTypes.map((type: string) => 
-          propertyTypeMap[type] || type
-        );
-        query = query.in("property_type", mappedTypes);
-      }
-
-      // Status filter default aligns with Search page
-      if (criteria.statuses?.length > 0) {
-        query = query.in("status", criteria.statuses);
-      } else {
-        query = query.in("status", ["active", "coming_soon"]);
-      }
-      if (criteria.minPrice) {
-        query = query.gte("price", criteria.minPrice);
-      }
-      if (criteria.maxPrice) {
-        query = query.lte("price", criteria.maxPrice);
-      }
-      if (criteria.bedrooms) {
-        query = query.gte("bedrooms", criteria.bedrooms);
-      }
-      if (criteria.bathrooms) {
-        query = query.gte("bathrooms", criteria.bathrooms);
-      }
-      if (criteria.minSqft) {
-        query = query.gte("square_feet", criteria.minSqft);
-      }
-      if (criteria.maxSqft) {
-        query = query.lte("square_feet", criteria.maxSqft);
-      }
-      if (criteria.cities?.length > 0) {
-        // Handle both city-only and city-neighborhood formats
-        const cityFilters = criteria.cities.map((cityStr: string) => {
-          const parts = cityStr.split(',');
-          const cityPart = parts[0].trim();
-          
-          // Check if it's a city-neighborhood format (e.g., "Boston-Charlestown")
-          if (cityPart.includes('-')) {
-            const [city, neighborhood] = cityPart.split('-').map(s => s.trim());
-            return { city, neighborhood };
-          }
-          
-          return { city: cityPart, neighborhood: null };
-        });
-        
-        // Group by cities that have neighborhoods vs just cities
-        const citiesWithNeighborhoods = cityFilters.filter(f => f.neighborhood);
-        const citiesOnly = cityFilters.filter(f => !f.neighborhood).map(f => f.city);
-        
-// Build complex filter: use PostgREST wildcard "*" with ilike (case-insensitive)
-// Example: city.ilike.*Boston*; no quotes
-const wild = (v: string) => `*${String(v).replace(/[*",]/g, ' ').trim()}*`;
-if (citiesWithNeighborhoods.length > 0 || citiesOnly.length > 0) {
-  const segments: string[] = [];
-  if (citiesOnly.length > 0) {
-    segments.push(...citiesOnly.map((c) => `city.ilike.${wild(c)}`));
-  }
-  if (citiesWithNeighborhoods.length > 0) {
-    segments.push(
-      ...citiesWithNeighborhoods.map((f) => `and(city.ilike.${wild(f.city)},neighborhood.ilike.${wild(f.neighborhood!)})`)
-    );
-  }
-  query = query.or(segments.join(','));
-}
-      }
-      if (criteria.state) {
-        query = query.eq("state", criteria.state);
-      }
-      if (criteria.zipCode) {
-        query = query.eq("zip_code", criteria.zipCode);
-      }
-
-const { data: listingsData, error: listingsError } = await query
-  .order("created_at", { ascending: false })
-  .limit(200);
+      const { data: listingsData, error: listingsError } = await query;
 
 if (listingsError) throw listingsError;
 setListings(listingsData || []);

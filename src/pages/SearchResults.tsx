@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Grid3x3, List } from "lucide-react";
+import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
 const useQuery = () => new URLSearchParams(useLocation().search);
 
@@ -54,61 +55,22 @@ const SearchResults = () => {
     const fetchResults = async () => {
       try {
         setLoading(true);
-        let q = supabase
-          .from("listings")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        // Default to only showing active and coming_soon if no status filter specified
-        if (filters.statuses && filters.statuses.length) {
-          q = q.in("status", filters.statuses);
-        } else {
-          q = q.in("status", ["active", "coming_soon"]);
-        }
-        if (filters.types && filters.types.length) q = q.in("property_type", filters.types);
-        if (filters.minPrice) q = q.gte("price", parseFloat(filters.minPrice));
-        if (filters.maxPrice) q = q.lte("price", parseFloat(filters.maxPrice));
-        if (filters.bedrooms) q = q.gte("bedrooms", parseInt(filters.bedrooms));
-        if (filters.bathrooms) q = q.gte("bathrooms", parseFloat(filters.bathrooms));
-        if (filters.zip) q = q.ilike("zip_code", `%${filters.zip}%`);
-        if (filters.listingNumber) q = q.ilike("listing_number", `%${filters.listingNumber}%`);
         
-        // Handle city/neighborhood filtering
-        if (filters.towns && filters.towns.length > 0) {
-          const cityFilters = filters.towns.map((townStr: string) => {
-            // Check if it's a city-neighborhood format (e.g., "Boston-Charlestown")
-            if (townStr.includes('-')) {
-              const [city, neighborhood] = townStr.split('-').map((s: string) => s.trim());
-              return { city, neighborhood };
-            }
-            return { city: townStr, neighborhood: null };
-          });
-          
-          // Group by cities that have neighborhoods vs just cities
-          const citiesWithNeighborhoods = cityFilters.filter((f: {city: string, neighborhood: string | null}) => f.neighborhood);
-          const citiesOnly = cityFilters.filter((f: {city: string, neighborhood: string | null}) => !f.neighborhood).map((f: {city: string, neighborhood: string | null}) => f.city);
-          
-          // Build complex filter
-          // When a city is selected without neighborhoods, match ALL listings in that city (with or without neighborhoods)
-          if (citiesWithNeighborhoods.length > 0 && citiesOnly.length > 0) {
-            // Combine: cities without neighborhoods (match all in that city) AND specific city-neighborhood combos
-            const orConditions = [
-              `city.in.(${citiesOnly.join(',')})`,
-              ...citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`)
-            ];
-            q = q.or(orConditions.join(','));
-          } else if (citiesWithNeighborhoods.length > 0) {
-            // Only specific city-neighborhood combinations
-            q = q.or(
-              citiesWithNeighborhoods.map((f: {city: string, neighborhood: string | null}) => `and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`).join(',')
-            );
-          } else if (citiesOnly.length > 0) {
-            // Only cities - match all listings in those cities (with or without neighborhoods)
-            q = q.in("city", citiesOnly);
-          }
-        }
-
-        const { data, error } = await q.limit(100);
+        // Build unified search criteria
+        const criteria = {
+          statuses: filters.statuses,
+          propertyTypes: filters.types,
+          cities: filters.towns || [],
+          state: filters.state,
+          zipCode: filters.zip,
+          minPrice: filters.minPrice ? parseFloat(filters.minPrice) : undefined,
+          maxPrice: filters.maxPrice ? parseFloat(filters.maxPrice) : undefined,
+          bedrooms: filters.bedrooms ? parseInt(filters.bedrooms) : undefined,
+          bathrooms: filters.bathrooms ? parseFloat(filters.bathrooms) : undefined,
+          listingNumber: filters.listingNumber
+        };
+        
+        const { data, error } = await buildListingsQuery(supabase, criteria).limit(200);
         if (error) throw error;
 
         // Fetch agent profiles in batch and attach to listings
