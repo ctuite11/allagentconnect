@@ -12,14 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Send, Users, ArrowLeft, CheckCircle } from "lucide-react";
+import { Send, Users, ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
-import { usCitiesByState } from "@/data/usCitiesData";
-import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
-import { usNeighborhoodsByCityState } from "@/data/usNeighborhoodsData";
+import { US_STATES } from "@/data/usStatesCountiesData";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -37,11 +33,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [loadingCount, setLoadingCount] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   
-  // Additional fields for buyer_need and renter_need
+  // Simplified fields for buyer_need and renter_need
   const [state, setState] = useState("");
-  const [counties, setCounties] = useState<string[]>([]);
-  const [cities, setCities] = useState<string[]>([]);
-  const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [noMinPrice, setNoMinPrice] = useState(false);
@@ -55,182 +48,76 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     }
   }, [open, defaultSubject]);
 
-  const showLocationFields = true; // Show detailed filtering for all categories
-  
-  // Get available counties and cities based on selection
-  const availableCounties = state ? COUNTIES_BY_STATE[state] || [] : [];
+  const showLocationFields = true; // Show filtering for all categories
 
-  // Normalize helpers to improve matching across datasets
-  const stateKey = (state || '').toUpperCase();
-  const normalizeCountyName = (name: string) =>
-    name.replace(/ county$/i, '').trim();
-
-  // Build city list with county→city mapping when available
-  const citiesRaw = state
-    ? (hasCountyCityMapping(stateKey)
-        ? (
-            (counties.length > 0
-              ? counties
-              : (COUNTIES_BY_STATE[stateKey] || [])
-            )
-            .map(normalizeCountyName)
-            .flatMap((county) => getCitiesForCounty(stateKey, county))
-          )
-        : (usCitiesByState[stateKey] || [])
-      )
-    : [];
-
-  // Deduplicate and sort cities for a cleaner UX
-  const availableCities = Array.from(new Set(citiesRaw)).sort((a, b) => a.localeCompare(b));
-
-  const availableNeighborhoods = cities.length > 0 && stateKey
-    ? [...new Set(cities.flatMap(city => {
-        const list = usNeighborhoodsByCityState[`${city}-${stateKey}`] || [];
-        return list.map((n) => `${city}-${n}`);
-      }))]
-    : [];
-
-  // Reset dependent fields when state, county, or city changes
-  const handleStateChange = (newState: string) => {
-    setState(newState);
-    setCounties([]);
-    setCities([]);
-    setNeighborhoods([]);
-  };
-
-  const handleCountyToggle = (countyName: string) => {
-    setCounties(prev => 
-      prev.includes(countyName) 
-        ? prev.filter(c => c !== countyName)
-        : [...prev, countyName]
-    );
-    setCities([]);
-    setNeighborhoods([]);
-  };
-
-  const handleCityToggle = (cityName: string) => {
-    const cityNeighborhoods = stateKey ? (usNeighborhoodsByCityState[`${cityName}-${stateKey}`] || []) : [];
-    setCities((prev) => {
-      const isSelected = prev.includes(cityName);
-      if (isSelected) {
-        // Removing city: also remove its neighborhoods from selection
-        setNeighborhoods((prevN) => prevN.filter((n) => !cityNeighborhoods.includes(n)));
-        return prev.filter((c) => c !== cityName);
-      } else {
-        // Adding city: also include its neighborhoods
-        setNeighborhoods((prevN) => Array.from(new Set([...prevN, ...cityNeighborhoods])));
-        return [...prev, cityName];
-      }
-    });
-  };
-
-  const handleNeighborhoodToggle = (neighborhoodName: string) => {
-    setNeighborhoods(prev => 
-      prev.includes(neighborhoodName) 
-        ? prev.filter(n => n !== neighborhoodName)
-        : [...prev, neighborhoodName]
-    );
-  };
-
-  const handlePropertyTypeToggle = (typeValue: string) => {
+  const handlePropertyTypeToggle = (type: string) => {
     setPropertyTypes(prev =>
-      prev.includes(typeValue)
-        ? prev.filter(t => t !== typeValue)
-        : [...prev, typeValue]
+      prev.includes(type)
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
     );
-  };
-
-  const selectAllCounties = () => {
-    if (counties.length === availableCounties.length) {
-      setCounties([]);
-    } else {
-      setCounties([...availableCounties]);
-    }
-    setCities([]);
-    setNeighborhoods([]);
-  };
-
-  const selectAllCities = () => {
-    if (cities.length === availableCities.length) {
-      setCities([]);
-      setNeighborhoods([]);
-    } else {
-      setCities([...availableCities]);
-      const allNeighborhoods = stateKey
-        ? Array.from(new Set(availableCities.flatMap((city) => usNeighborhoodsByCityState[`${city}-${stateKey}`] || [])))
-        : [];
-      setNeighborhoods(allNeighborhoods);
-    }
-  };
-
-  const selectAllNeighborhoods = () => {
-    if (neighborhoods.length === availableNeighborhoods.length) {
-      setNeighborhoods([]);
-    } else {
-      setNeighborhoods([...availableNeighborhoods]);
-    }
   };
 
   const selectAllPropertyTypes = () => {
-    const allTypes = ["single_family", "condo", "townhouse", "multi_family", "land", "commercial"];
-    if (propertyTypes.length === allTypes.length) {
+    if (propertyTypes.length === 6) {
       setPropertyTypes([]);
     } else {
-      setPropertyTypes(allTypes);
+      setPropertyTypes([
+        "single_family",
+        "condo",
+        "townhouse",
+        "multi_family",
+        "land",
+        "commercial",
+      ]);
     }
   };
 
   const handleMinPriceChange = (value: string) => {
-    // Remove all non-digits
-    const digitsOnly = value.replace(/\D/g, '');
-    // Limit to prevent overflow
-    if (digitsOnly && parseInt(digitsOnly) > 999999999) return;
-    setMinPrice(digitsOnly);
+    setMinPrice(value);
+    if (value) setNoMinPrice(false);
   };
 
   const handleMaxPriceChange = (value: string) => {
-    // Remove all non-digits
-    const digitsOnly = value.replace(/\D/g, '');
-    // Limit to prevent overflow
-    if (digitsOnly && parseInt(digitsOnly) > 999999999) return;
-    setMaxPrice(digitsOnly);
+    setMaxPrice(value);
+    if (value) setNoMaxPrice(false);
   };
 
-  const formatPriceDisplay = (price: string) => {
-    if (!price) return "";
-    // Add commas for thousands
-    return parseInt(price).toLocaleString('en-US');
-  };
-
-  const formatCurrency = (price: string) => {
-    if (!price) return "";
-    return `$${parseInt(price).toLocaleString('en-US')}`;
-  };
+  // Fetch recipient count when criteria changes
+  useEffect(() => {
+    if (open && showLocationFields) {
+      fetchRecipientCount();
+    }
+  }, [open, state, propertyTypes, minPrice, maxPrice, noMinPrice, noMaxPrice]);
 
   const fetchRecipientCount = async () => {
+    if (!state) {
+      setRecipientCount(null);
+      return;
+    }
+
     setLoadingCount(true);
     try {
-      // Build request body with criteria for ALL categories
       const requestBody: any = {
         category,
-        subject: subject || "Preview",
-        message: message || "Preview",
+        subject,
+        message,
         previewOnly: true,
-        criteria: {
-          state,
-          counties: counties.length > 0 ? counties : undefined,
-          cities: cities.length > 0 ? cities : undefined,
-          neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
-          minPrice: minPrice ? parseFloat(minPrice) : undefined,
-          maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-          propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
-        },
       };
 
-      // Fetch recipient count (agents who will receive the message)
-      const { data, error } = await supabase.functions.invoke("send-client-need-notification", {
-        body: requestBody,
-      });
+      if (showLocationFields) {
+        requestBody.criteria = {
+          state: state || undefined,
+          minPrice: !noMinPrice && minPrice ? parseFloat(minPrice) : undefined,
+          maxPrice: !noMaxPrice && maxPrice ? parseFloat(maxPrice) : undefined,
+          propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
+        };
+      }
+
+      const { data, error } = await supabase.functions.invoke(
+        "send-client-need-notification",
+        { body: requestBody }
+      );
 
       if (error) throw error;
       setRecipientCount(data?.recipientCount ?? 0);
@@ -242,194 +129,158 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     }
   };
 
-  useEffect(() => {
-    if (open) {
-      fetchRecipientCount();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, category, state, counties.join(','), cities.join(','), neighborhoods.join(','), minPrice, maxPrice, propertyTypes.join(','), subject, message]);
-
   const handleSend = async () => {
-    if (!subject.trim() || !message.trim()) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-
-    if (showLocationFields) {
-      if (!state) {
+    if (!showConfirmation) {
+      // Validate
+      if (!subject.trim()) {
+        toast.error("Please enter a subject");
+        return;
+      }
+      if (!message.trim()) {
+        toast.error("Please enter a message");
+        return;
+      }
+      if (showLocationFields && !state) {
         toast.error("Please select a state");
         return;
       }
-      if (propertyTypes.length === 0) {
-        toast.error("Please select at least one property type");
-        return;
-      }
-    }
 
-    // Show confirmation before sending
-    if (!showConfirmation) {
+      // Show confirmation
       setShowConfirmation(true);
       return;
     }
 
+    // Actually send
     setSending(true);
     try {
       const requestBody: any = {
         category,
-        subject: subject.trim(),
-        message: message.trim(),
+        subject,
+        message,
       };
 
-      // Add location and price criteria for buyer_need and renter_need
       if (showLocationFields) {
         requestBody.criteria = {
-          state,
-          counties: counties.length > 0 ? counties : undefined,
-          cities: cities.length > 0 ? cities : undefined,
-          neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
-          minPrice: minPrice ? parseFloat(minPrice) : undefined,
-          maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+          state: state || undefined,
+          minPrice: !noMinPrice && minPrice ? parseFloat(minPrice) : undefined,
+          maxPrice: !noMaxPrice && maxPrice ? parseFloat(maxPrice) : undefined,
           propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
         };
       }
 
-      const { data, error } = await supabase.functions.invoke("send-client-need-notification", {
-        body: requestBody,
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "send-client-need-notification",
+        { body: requestBody }
+      );
 
       if (error) throw error;
 
-      if (data?.recipientCount === 0) {
-        toast.info("No agents match the specified criteria");
-      } else if (data?.successCount > 0) {
-        toast.success(
-          `Message sent successfully to ${data.successCount} agent${data.successCount !== 1 ? "s" : ""}!`
-        );
+      if (data.success) {
+        toast.success(data.message || "Message sent successfully!");
+        handleClose();
       } else {
-        const failures = data?.failureCount ?? data?.recipientCount ?? 0;
-        toast.error(
-          `Failed to send emails to ${failures} agent${failures !== 1 ? "s" : ""}. Please verify your email domain settings.`
-        );
+        throw new Error(data.error || "Failed to send message");
       }
-
-      onOpenChange(false);
-      setSubject("");
-      setMessage("");
-      setState("");
-      setCounties([]);
-      setCities([]);
-      setNeighborhoods([]);
-      setMinPrice("");
-      setMaxPrice("");
-      setPropertyTypes([]);
-      setShowConfirmation(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message. Please try again.");
+      toast.error(error.message || "Failed to send message");
     } finally {
       setSending(false);
     }
   };
 
+  const handleClose = () => {
+    setSubject("");
+    setMessage("");
+    setState("");
+    setMinPrice("");
+    setMaxPrice("");
+    setNoMinPrice(false);
+    setNoMaxPrice(false);
+    setPropertyTypes([]);
+    setRecipientCount(null);
+    setShowConfirmation(false);
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {showConfirmation ? "Confirm & Send Message" : `Send ${categoryTitle} Message`}
+            {showConfirmation ? "Confirm & Send" : `Send ${categoryTitle}`}
           </DialogTitle>
           <DialogDescription>
-            {showConfirmation 
-              ? "Please review your message and criteria before sending."
-              : `Compose your message to send to agents interested in ${categoryTitle.toLowerCase()}.`
-            }
+            {showConfirmation
+              ? "Review your message before sending"
+              : "Compose and send a message to matching agents"}
           </DialogDescription>
         </DialogHeader>
-        
+
         {showConfirmation ? (
           /* Confirmation View */
-          <div className="space-y-4 py-4">
-            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+          <div className="space-y-6">
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
               <div>
-                <h4 className="text-sm font-semibold mb-1">Subject:</h4>
-                <p className="text-sm">{subject}</p>
+                <Label className="text-sm font-semibold">Subject</Label>
+                <p className="mt-1 text-sm">{subject}</p>
               </div>
               <div>
-                <h4 className="text-sm font-semibold mb-1">Message:</h4>
-                <p className="text-sm whitespace-pre-wrap">{message}</p>
+                <Label className="text-sm font-semibold">Message</Label>
+                <p className="mt-1 text-sm whitespace-pre-wrap">{message}</p>
               </div>
+              {state && (
+                <div>
+                  <Label className="text-sm font-semibold">Criteria</Label>
+                  <div className="mt-1 text-sm space-y-1">
+                    <p><strong>State:</strong> {state}</p>
+                    {propertyTypes.length > 0 && (
+                      <p><strong>Property Types:</strong> {propertyTypes.join(", ")}</p>
+                    )}
+                    {minPrice && !noMinPrice && (
+                      <p><strong>Min Price:</strong> ${parseFloat(minPrice).toLocaleString()}</p>
+                    )}
+                    {maxPrice && !noMaxPrice && (
+                      <p><strong>Max Price:</strong> ${parseFloat(maxPrice).toLocaleString()}</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {showLocationFields && (state || counties.length > 0 || cities.length > 0 || neighborhoods.length > 0 || propertyTypes.length > 0 || minPrice || maxPrice) && (
-              <div className="bg-secondary rounded-lg p-4 space-y-2">
-                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" />
-                  Search Criteria:
-                </h4>
-                <div className="space-y-1 text-sm">
-                  {propertyTypes.length > 0 && (
-                    <div><strong>Property Types:</strong> {propertyTypes.map(pt => pt.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())).join(', ')}</div>
-                  )}
-                  {state && (
-                    <div><strong>State:</strong> {US_STATES.find(s => s.code === state)?.name}</div>
-                  )}
-                  {counties.length > 0 && (
-                    <div><strong>Counties:</strong> {counties.join(', ')}</div>
-                  )}
-                  {cities.length > 0 && (
-                    <div><strong>Cities:</strong> {cities.join(', ')}</div>
-                  )}
-                  {neighborhoods.length > 0 && (
-                    <div><strong>Neighborhoods:</strong> {neighborhoods.join(', ')}</div>
-                  )}
-                  {propertyTypes.length > 0 && (
-                    <div>
-                      <strong>Property Types:</strong> {propertyTypes.map(pt => {
-                        const labels: Record<string, string> = {
-                          single_family: "Single Family",
-                          condo: "Condo",
-                          townhouse: "Townhouse",
-                          multi_family: "Multi-Family",
-                          land: "Land",
-                          commercial: "Commercial"
-                        };
-                        return labels[pt] || pt;
-                      }).join(', ')}
-                    </div>
-                  )}
-                  {(minPrice || maxPrice) && (
-                    <div>
-                      <strong>Price Range:</strong>{' '}
-                      {minPrice && maxPrice 
-                        ? `$${parseFloat(minPrice).toLocaleString()} - $${parseFloat(maxPrice).toLocaleString()}`
-                        : minPrice 
-                        ? `$${parseFloat(minPrice).toLocaleString()}+`
-                        : `Up to $${parseFloat(maxPrice).toLocaleString()}`
-                      }
-                    </div>
-                  )}
-                </div>
+            {!loadingCount && recipientCount !== null && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">
+                  This will be sent to <strong className="text-foreground">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
+                </span>
               </div>
             )}
 
-            {!loadingCount && recipientCount !== null && (
-              <div className="space-y-2">
-                {recipientCount !== null && (
-                  <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      {recipientCount === 0 ? (
-                        "No agents will receive this message"
-                      ) : (
-                        <>
-                          <strong className="text-foreground">{recipientCount}</strong> agent{recipientCount !== 1 ? "s" : ""} will receive this message based on their coverage areas
-                        </>
-                      )}
-                    </span>
-                  </div>
+            <div className="flex gap-3 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowConfirmation(false)}
+                disabled={sending}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Edit
+              </Button>
+              <Button onClick={handleSend} disabled={sending}>
+                {sending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Confirm & Send
+                  </>
                 )}
-              </div>
-            )}
+              </Button>
+            </div>
           </div>
         ) : (
           /* Form View */
@@ -440,307 +291,181 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {recipientCount !== null && (
                   <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      {recipientCount === 0 ? (
-                        "No agents will receive this message"
-                      ) : (
-                        <>
-                          <strong className="text-foreground">{recipientCount}</strong> agent{recipientCount !== 1 ? "s" : ""} will receive this message based on their coverage areas
-                        </>
-                      )}
+                    <span className="text-sm">
+                      <strong className="text-foreground">{recipientCount}</strong> {recipientCount === 1 ? "agent will" : "agents will"} receive this message
                     </span>
                   </div>
                 )}
               </div>
             )}
-        <div className="space-y-4 py-4">
-            {showLocationFields && (
-              <>
-                {/* Property Type - Required Multi-Select */}
+
+            <div className="space-y-6">
+              {/* Subject and Message */}
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Property Types * (Select Multiple)</Label>
-                  <div className="space-y-3">
-                    <Button 
-                      type="button"
-                      onClick={selectAllPropertyTypes}
-                      variant={propertyTypes.length === 6 ? "outline" : "default"}
-                      size="sm"
-                      className="w-full"
-                    >
-                      ✓ {propertyTypes.length === 6 ? "Deselect All" : "Select All Property Types"}
-                    </Button>
-                    <div className="border rounded-md p-3 bg-background max-h-[200px] overflow-y-auto">
-                      <div className="space-y-2">
-                        {[
-                          { value: "single_family", label: "Single Family" },
-                          { value: "condo", label: "Condo" },
-                          { value: "townhouse", label: "Townhouse" },
-                          { value: "multi_family", label: "Multi-Family" },
-                          { value: "land", label: "Land" },
-                          { value: "commercial", label: "Commercial" },
-                        ].map((type) => (
-                          <div key={type.value} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`type-${type.value}`}
-                              checked={propertyTypes.includes(type.value)}
-                              onCheckedChange={() => handlePropertyTypeToggle(type.value)}
-                            />
-                            <label
-                              htmlFor={`type-${type.value}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                            >
-                              {type.label}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                      {propertyTypes.length > 0 && (
-                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
-                          {propertyTypes.length} {propertyTypes.length === 1 ? 'type' : 'types'} selected
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <Label htmlFor="subject">Subject *</Label>
+                  <Input
+                    id="subject"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Enter subject"
+                  />
                 </div>
 
-                {/* Location Fields */}
+                <div className="space-y-2">
+                  <Label htmlFor="message">Message *</Label>
+                  <Textarea
+                    id="message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Enter your message"
+                    rows={6}
+                  />
+                </div>
+              </div>
+
+              {/* Simplified Location & Criteria */}
+              {showLocationFields && (
                 <div className="space-y-4 pb-4 border-b">
                   <h3 className="text-sm font-medium">Location & Criteria</h3>
 
-                <div className="space-y-2">
-                  <Label htmlFor="state">State *</Label>
-                  <Select value={state} onValueChange={handleStateChange}>
-                    <SelectTrigger id="state">
-                      <SelectValue placeholder="Select state" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {US_STATES.map((s) => (
-                        <SelectItem key={s.code} value={s.code}>
-                          {s.name}
-                        </SelectItem>
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State *</Label>
+                    <Select value={state} onValueChange={setState}>
+                      <SelectTrigger id="state">
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {US_STATES.map((s) => (
+                          <SelectItem key={s.code} value={s.code}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Property Types */}
+                  <div className="space-y-2">
+                    <Label>Property Types (Optional)</Label>
+                    <Button
+                      type="button"
+                      onClick={selectAllPropertyTypes}
+                      variant="outline"
+                      size="sm"
+                      className="w-full mb-2"
+                    >
+                      {propertyTypes.length === 6 ? "Deselect All" : "Select All Types"}
+                    </Button>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { value: "single_family", label: "Single Family" },
+                        { value: "condo", label: "Condo" },
+                        { value: "townhouse", label: "Townhouse" },
+                        { value: "multi_family", label: "Multi Family" },
+                        { value: "land", label: "Land" },
+                        { value: "commercial", label: "Commercial" },
+                      ].map((type) => (
+                        <div key={type.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`type-${type.value}`}
+                            checked={propertyTypes.includes(type.value)}
+                            onCheckedChange={() => handlePropertyTypeToggle(type.value)}
+                          />
+                          <label
+                            htmlFor={`type-${type.value}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {type.label}
+                          </label>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {state && availableCounties.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Counties (Optional - Select Multiple)</Label>
-                    <Button 
-                      type="button"
-                      onClick={selectAllCounties}
-                      variant="outline"
-                      size="sm"
-                      className="w-full mb-2"
-                    >
-                      ✓ {counties.length === availableCounties.length ? "Deselect All" : "Select All Counties"}
-                    </Button>
-                    <div className="border rounded-md p-3 bg-background">
-                      <ScrollArea className="h-[200px]">
-                        <div className="space-y-2">
-                          {availableCounties.map((countyName) => (
-                            <div key={countyName} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`county-${countyName}`}
-                                checked={counties.includes(countyName)}
-                                onCheckedChange={() => handleCountyToggle(countyName)}
-                              />
-                              <label
-                                htmlFor={`county-${countyName}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                              >
-                                {countyName}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                      {counties.length > 0 && (
-                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
-                          {counties.length} {counties.length === 1 ? 'county' : 'counties'} selected
-                        </div>
-                      )}
                     </div>
                   </div>
-                )}
 
-                {state && availableCities.length > 0 && (
+                  {/* Price Range */}
                   <div className="space-y-2">
-                    <Label>Cities/Towns & Neighborhoods (Optional - Select Multiple)</Label>
-                    <Button 
-                      type="button"
-                      onClick={selectAllCities}
-                      variant="outline"
-                      size="sm"
-                      className="w-full mb-2"
-                    >
-                      ✓ {cities.length === availableCities.length ? "Deselect All" : "Select All Cities/Towns"}
-                    </Button>
-                    <div className="border rounded-md p-3 bg-background">
-                      <ScrollArea className="h-[250px]">
-                        <div className="space-y-3">
-                          {availableCities.map((cityName) => {
-                            const cityNeighborhoods = stateKey ? (usNeighborhoodsByCityState[`${cityName}-${stateKey}`] || []) : [];
-                            return (
-                              <div key={cityName} className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={`city-${cityName}`}
-                                    checked={cities.includes(cityName)}
-                                    onCheckedChange={() => handleCityToggle(cityName)}
-                                  />
-                                  <label
-                                    htmlFor={`city-${cityName}`}
-                                    className="text-sm font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                  >
-                                    {cityName}
-                                  </label>
-                                </div>
-                                {cityNeighborhoods.length > 0 && cities.includes(cityName) && (
-                                  <div className="ml-6 space-y-1.5 pl-2 border-l-2 border-muted">
-                                    {cityNeighborhoods.map((neighborhoodName) => (
-                                      <div key={neighborhoodName} className="flex items-center space-x-2">
-                                        <Checkbox
-                                          id={`neighborhood-${neighborhoodName}`}
-                                          checked={neighborhoods.includes(neighborhoodName)}
-                                          onCheckedChange={() => handleNeighborhoodToggle(neighborhoodName)}
-                                        />
-                                        <label
-                                          htmlFor={`neighborhood-${neighborhoodName}`}
-                                          className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-muted-foreground"
-                                        >
-                                          {neighborhoodName}
-                                        </label>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                    <Label>Price Range (Optional)</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="minPrice" className="text-xs text-muted-foreground">
+                          Minimum Price
+                        </Label>
+                        <Input
+                          id="minPrice"
+                          type="number"
+                          value={minPrice}
+                          onChange={(e) => handleMinPriceChange(e.target.value)}
+                          placeholder="Min"
+                          disabled={noMinPrice}
+                        />
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Checkbox
+                            id="noMinPrice"
+                            checked={noMinPrice}
+                            onCheckedChange={(checked) => {
+                              setNoMinPrice(checked as boolean);
+                              if (checked) setMinPrice("");
+                            }}
+                          />
+                          <label htmlFor="noMinPrice" className="text-xs text-muted-foreground cursor-pointer">
+                            No minimum
+                          </label>
                         </div>
-                      </ScrollArea>
-                      {(cities.length > 0 || neighborhoods.length > 0) && (
-                        <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
-                          {cities.length + neighborhoods.length} {cities.length + neighborhoods.length === 1 ? 'location' : 'locations'} selected
+                      </div>
+                      <div>
+                        <Label htmlFor="maxPrice" className="text-xs text-muted-foreground">
+                          Maximum Price
+                        </Label>
+                        <Input
+                          id="maxPrice"
+                          type="number"
+                          value={maxPrice}
+                          onChange={(e) => handleMaxPriceChange(e.target.value)}
+                          placeholder="Max"
+                          disabled={noMaxPrice}
+                        />
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Checkbox
+                            id="noMaxPrice"
+                            checked={noMaxPrice}
+                            onCheckedChange={(checked) => {
+                              setNoMaxPrice(checked as boolean);
+                              if (checked) setMaxPrice("");
+                            }}
+                          />
+                          <label htmlFor="noMaxPrice" className="text-xs text-muted-foreground cursor-pointer">
+                            No maximum
+                          </label>
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="minPrice">Min Price (Optional)</Label>
-                    <Input
-                      id="minPrice"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="e.g. 100000"
-                      value={formatPriceDisplay(minPrice)}
-                      onChange={(e) => handleMinPriceChange(e.target.value)}
-                      maxLength={15}
-                      disabled={noMinPrice}
-                    />
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="no-min-price"
-                        checked={noMinPrice}
-                        onCheckedChange={(checked) => {
-                          setNoMinPrice(!!checked);
-                          if (checked) setMinPrice("");
-                        }}
-                      />
-                      <label htmlFor="no-min-price" className="text-xs cursor-pointer">No Minimum</label>
-                    </div>
-                    {minPrice && (
-                      <p className="text-xs text-muted-foreground">Preview: {formatCurrency(minPrice)}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="maxPrice">Max Price (Optional)</Label>
-                    <Input
-                      id="maxPrice"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="e.g. 500000"
-                      value={formatPriceDisplay(maxPrice)}
-                      onChange={(e) => handleMaxPriceChange(e.target.value)}
-                      maxLength={15}
-                      disabled={noMaxPrice}
-                    />
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="no-max-price"
-                        checked={noMaxPrice}
-                        onCheckedChange={(checked) => {
-                          setNoMaxPrice(!!checked);
-                          if (checked) setMaxPrice("");
-                        }}
-                      />
-                      <label htmlFor="no-max-price" className="text-xs cursor-pointer">No Maximum</label>
-                    </div>
-                    {maxPrice && (
-                      <p className="text-xs text-muted-foreground">Preview: {formatCurrency(maxPrice)}</p>
-                    )}
                   </div>
                 </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 justify-end">
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSend}
+                  disabled={
+                    !subject.trim() ||
+                    !message.trim() ||
+                    (showLocationFields && !state) ||
+                    loadingCount ||
+                    recipientCount === 0
+                  }
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Review & Send
+                </Button>
               </div>
-            </>
-          )}
-
-          {/* Message Fields */}
-          <div className="space-y-2">
-            <Label htmlFor="subject">Subject</Label>
-            <Input
-              id="subject"
-              placeholder="Enter message subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="message">Message</Label>
-            <Textarea
-              id="message"
-              placeholder="Enter your message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={6}
-            />
-          </div>
-        </div>
-        </>
+            </div>
+          </>
         )}
-        <div className="flex justify-end gap-3">
-          {showConfirmation ? (
-            <>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowConfirmation(false)}
-                disabled={sending}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Edit
-              </Button>
-              <Button onClick={handleSend} disabled={sending}>
-                <Send className="mr-2 h-4 w-4" />
-                {sending ? "Sending..." : "Confirm & Send"}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSend} disabled={sending}>
-                <Send className="mr-2 h-4 w-4" />
-                Review & Send
-              </Button>
-            </>
-          )}
-        </div>
       </DialogContent>
     </Dialog>
   );

@@ -19,9 +19,6 @@ interface SendNotificationRequest {
   previewOnly?: boolean;
   criteria?: {
     state?: string;
-    counties?: string[];
-    cities?: string[];
-    neighborhoods?: string[];
     minPrice?: number;
     maxPrice?: number;
     propertyTypes?: string[];
@@ -75,13 +72,13 @@ const handler = async (req: Request): Promise<Response> => {
       `)
       .eq(category, true);
 
-    // Filter by geographic and price preferences if criteria provided
+    // Filter by state, property type, and price preferences if criteria provided
     if (criteria && criteria.state) {
-      // Get agent profiles first to have their IDs, then filter by preferences
+      // Get agent profiles first to have their IDs
       const { data: allPrefs } = await query;
       
       if (!allPrefs || allPrefs.length === 0) {
-        console.log("No agents found with buyer_need/renter_need preference enabled");
+        console.log("No agents found with notification preference enabled");
         return new Response(
           JSON.stringify({ 
             success: true, 
@@ -98,353 +95,108 @@ const handler = async (req: Request): Promise<Response> => {
       const agentIds = allPrefs.map(p => p.user_id);
       console.log(`Initial agents with ${category} enabled: ${agentIds.length}`);
 
-      // Filter by geographic preferences if state is provided
+      // Filter by state preferences (simplified from complex geography)
       let matchingAgentIds = agentIds;
       if (criteria.state) {
-        const { data: geoPrefs, error: geoError } = await supabase
-          .from("agent_buyer_coverage_areas")
+        const { data: statePrefs, error: stateError } = await supabase
+          .from("agent_state_preferences")
           .select("agent_id")
           .in("agent_id", agentIds)
           .eq("state", criteria.state);
 
-        if (geoError) {
-          console.error("Error fetching geographic preferences:", geoError);
-        } else if (geoPrefs && geoPrefs.length > 0) {
-          matchingAgentIds = geoPrefs.map(g => g.agent_id);
-          console.log(`Agents covering state ${criteria.state}: ${matchingAgentIds.length}`);
+        if (stateError) {
+          console.error("Error fetching state preferences:", stateError);
+        } else if (statePrefs && statePrefs.length > 0) {
+          matchingAgentIds = statePrefs.map(p => p.agent_id);
+          console.log(`After state filtering: ${matchingAgentIds.length} agents`);
         } else {
-          // No agents match the state criteria
-          console.log(`No agents found covering state: ${criteria.state}`);
-          return new Response(
-            JSON.stringify({ 
-              success: true, 
-              message: "No agents found covering the specified location",
-              recipientCount: 0 
-            }),
-            {
-              status: 200,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-
-        // Further filter by cities and neighborhoods if provided
-        const hasCities = criteria.cities && criteria.cities.length > 0;
-        const hasNeighborhoods = criteria.neighborhoods && criteria.neighborhoods.length > 0;
-        
-        if ((hasCities || hasNeighborhoods) && matchingAgentIds.length > 0) {
-          let geoQuery = supabase
-            .from("agent_buyer_coverage_areas")
-            .select("agent_id")
-            .in("agent_id", matchingAgentIds);
-
-          // Build an OR condition for cities and neighborhoods
-          // CRITICAL: Include agents with NULL city (meaning "all cities" coverage)
-          const orConditions: string[] = ["city.is.null"];
-          
-          if (hasCities && criteria.cities) {
-            criteria.cities.forEach(city => {
-              orConditions.push(`city.eq.${city}`);
-              // Also include agents who cover this city but have NULL neighborhood (all neighborhoods in that city)
-              orConditions.push(`and(city.eq.${city},neighborhood.is.null)`);
-            });
-          }
-          
-          if (hasNeighborhoods && criteria.neighborhoods) {
-            criteria.neighborhoods.forEach(neighborhood => {
-              // Neighborhoods are stored as "city-neighborhood" format
-              const parts = neighborhood.split('-');
-              if (parts.length === 2) {
-                const [city, nbhd] = parts;
-                orConditions.push(`and(city.eq.${city},neighborhood.eq.${nbhd})`);
-                // Also include agents who cover this city with NULL neighborhood
-                orConditions.push(`and(city.eq.${city},neighborhood.is.null)`);
-              }
-            });
-          }
-
-          if (orConditions.length > 0) {
-            geoQuery = geoQuery.or(orConditions.join(','));
-          }
-
-          const { data: detailedGeoPrefs } = await geoQuery;
-          if (detailedGeoPrefs && detailedGeoPrefs.length > 0) {
-            matchingAgentIds = detailedGeoPrefs.map(g => g.agent_id);
-            console.log(`Agents after city/neighborhood filter: ${matchingAgentIds.length}`);
-          } else {
-            // No agents match the detailed location criteria
-            console.log("No agents found covering the specified cities/neighborhoods");
-            return new Response(
-              JSON.stringify({ 
-                success: true, 
-                message: "No agents found covering the specified cities/neighborhoods",
-                recipientCount: 0 
-              }),
-              {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-              }
-            );
-          }
-        }
-
-        // Also filter by counties if provided and no cities/neighborhoods specified
-        const hasCounties = criteria.counties && criteria.counties.length > 0;
-        if (hasCounties && !hasCities && !hasNeighborhoods && matchingAgentIds.length > 0) {
-          // CRITICAL: Include agents with NULL county (meaning "all counties" coverage)
-          const countyOrConditions = ["county.is.null", ...criteria.counties!.map(county => `county.eq.${county}`)].join(',');
-          const { data: countyPrefs } = await supabase
-            .from("agent_buyer_coverage_areas")
-            .select("agent_id")
-            .in("agent_id", matchingAgentIds)
-            .or(countyOrConditions);
-
-          if (countyPrefs && countyPrefs.length > 0) {
-            matchingAgentIds = countyPrefs.map(c => c.agent_id);
-            console.log(`Agents after county filter: ${matchingAgentIds.length}`);
-          }
+          console.log("No agents found matching state criteria");
+          matchingAgentIds = [];
         }
       }
 
       // Filter by price preferences if provided
       if ((criteria.minPrice || criteria.maxPrice) && matchingAgentIds.length > 0) {
-        let priceQuery = supabase
+        const { data: pricePrefs, error: priceError } = await supabase
           .from("notification_preferences")
-          .select("user_id")
+          .select("user_id, min_price, max_price")
           .in("user_id", matchingAgentIds);
 
-        if (criteria.maxPrice) {
-          priceQuery = priceQuery.or(`min_price.is.null,min_price.lte.${criteria.maxPrice}`);
-        }
-        if (criteria.minPrice) {
-          priceQuery = priceQuery.or(`max_price.is.null,max_price.gte.${criteria.minPrice}`);
-        }
-
-        const { data: pricePrefs } = await priceQuery;
-        if (pricePrefs && pricePrefs.length > 0) {
-          matchingAgentIds = pricePrefs.map(p => p.user_id);
+        if (priceError) {
+          console.error("Error fetching price preferences:", priceError);
+        } else if (pricePrefs && pricePrefs.length > 0) {
+          matchingAgentIds = pricePrefs
+            .filter(pref => {
+              const criteriaMin = criteria.minPrice || 0;
+              const criteriaMax = criteria.maxPrice || Infinity;
+              const prefMin = pref.min_price || 0;
+              const prefMax = pref.max_price || Infinity;
+              
+              return prefMin <= criteriaMax && prefMax >= criteriaMin;
+            })
+            .map(p => p.user_id);
+          
+          console.log(`After price filtering: ${matchingAgentIds.length} agents`);
         }
       }
 
-      // Use the filtered agent IDs
-      const { data: preferences, error: prefsError } = await supabase
+      // Filter by property types if provided
+      if (criteria.propertyTypes && criteria.propertyTypes.length > 0 && matchingAgentIds.length > 0) {
+        const { data: propertyTypePrefs, error: propertyTypeError } = await supabase
+          .from("notification_preferences")
+          .select("user_id, property_types")
+          .in("user_id", matchingAgentIds);
+
+        if (propertyTypeError) {
+          console.error("Error fetching property type preferences:", propertyTypeError);
+        } else if (propertyTypePrefs && propertyTypePrefs.length > 0) {
+          matchingAgentIds = propertyTypePrefs
+            .filter(pref => {
+              const agentTypes = (pref.property_types as string[]) || [];
+              // Agent must have at least one matching property type
+              return criteria.propertyTypes!.some(type => agentTypes.includes(type));
+            })
+            .map(p => p.user_id);
+          
+          console.log(`After property type filtering: ${matchingAgentIds.length} agents`);
+        }
+      }
+
+      if (matchingAgentIds.length === 0) {
+        console.log("No agents match all criteria");
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: "No agents found matching all criteria",
+            recipientCount: 0 
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Final matching agent IDs
+      query = supabase
         .from("notification_preferences")
-        .select(`
-          user_id,
-          ${category}
-        `)
-        .in("user_id", matchingAgentIds)
-        .eq(category, true);
-
-      if (prefsError) {
-        console.error("Error fetching filtered preferences:", prefsError);
-        throw prefsError;
-      }
-
-      if (!preferences || preferences.length === 0) {
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            message: "No agents match the specified criteria",
-            recipientCount: 0 
-          }),
-          {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-
-      // Continue with the filtered preferences
-      const userIds = preferences.map(p => p.user_id);
-      const { data: agents, error: agentsError } = await supabase
-        .from("agent_profiles")
-        .select("id, email, first_name, last_name")
-        .in("id", userIds)
-        .not("id", "eq", user.id);
-
-      if (agentsError) {
-        console.error("Error fetching agents:", agentsError);
-        throw agentsError;
-      }
-
-      if (!agents || agents.length === 0) {
-        console.log("No agents found after all filters");
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            message: "No other agents match the criteria",
-            recipientCount: 0 
-          }),
-          {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-
-      console.log(`Final recipient count: ${agents.length} agents`);
-
-      // Early return for preview-only requests
-      if (previewOnly) {
-        return new Response(
-          JSON.stringify({ success: true, recipientCount: agents.length, preview: true }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Send emails with criteria information
-      const emailPromises = agents.map(async (agent) => {
-        try {
-          let criteriaText = "";
-          if (criteria.state) {
-            criteriaText += `<strong>State:</strong> ${criteria.state}<br>`;
-          }
-          if (criteria.counties && criteria.counties.length > 0) {
-            criteriaText += `<strong>Counties:</strong> ${criteria.counties.join(', ')}<br>`;
-          }
-          if (criteria.cities && criteria.cities.length > 0) {
-            criteriaText += `<strong>Cities:</strong> ${criteria.cities.join(', ')}<br>`;
-          }
-          if (criteria.neighborhoods && criteria.neighborhoods.length > 0) {
-            criteriaText += `<strong>Neighborhoods:</strong> ${criteria.neighborhoods.join(', ')}<br>`;
-          }
-          if (criteria.propertyTypes && criteria.propertyTypes.length > 0) {
-            const typeLabels: Record<string, string> = {
-              single_family: "Single Family",
-              condo: "Condo",
-              townhouse: "Townhouse",
-              multi_family: "Multi-Family",
-              land: "Land",
-              commercial: "Commercial",
-              residential_rental: "Residential Rental",
-              commercial_rental: "Commercial Rental"
-            };
-            const types = criteria.propertyTypes.map(t => typeLabels[t] || t).join(', ');
-            criteriaText += `<strong>Property Types:</strong> ${types}<br>`;
-          }
-          if (criteria.minPrice || criteria.maxPrice) {
-            criteriaText += `<strong>Price Range:</strong> `;
-            if (criteria.minPrice && criteria.maxPrice) {
-              criteriaText += `$${criteria.minPrice.toLocaleString()} - $${criteria.maxPrice.toLocaleString()}`;
-            } else if (criteria.minPrice) {
-              criteriaText += `$${criteria.minPrice.toLocaleString()}+`;
-            } else if (criteria.maxPrice) {
-              criteriaText += `Up to $${criteria.maxPrice.toLocaleString()}`;
-            }
-            criteriaText += `<br>`;
-          }
-
-          const emailHtml = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-                .content { background-color: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-radius: 0 0 8px 8px; }
-                .message-box { background-color: white; padding: 20px; border-left: 4px solid #2563eb; margin: 20px 0; border-radius: 4px; }
-                .criteria-box { background-color: #eff6ff; padding: 15px; border-radius: 4px; margin: 15px 0; }
-                .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280; }
-                .category-badge { display: inline-block; background-color: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-bottom: 10px; }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="header">
-                  <h1 style="margin: 0;">New ${getCategoryLabel(category)} Message</h1>
-                </div>
-                <div class="content">
-                  <p>Hi ${agent.first_name},</p>
-                  <p>You received a new message from ${senderName}${senderCompany ? ` at ${senderCompany}` : ""}:</p>
-                  
-                  ${criteriaText ? `
-                  <div class="criteria-box">
-                    <strong>Client Criteria:</strong><br>
-                    ${criteriaText}
-                  </div>
-                  ` : ""}
-
-                  <div class="message-box">
-                    <div class="category-badge">${getCategoryLabel(category)}</div>
-                    <h2 style="margin-top: 0; color: #1f2937;">${subject}</h2>
-                    <p style="white-space: pre-wrap;">${message}</p>
-                  </div>
-
-                  <p style="margin-top: 30px;">
-                    <strong>From:</strong> ${senderName}<br>
-                    ${senderCompany ? `<strong>Company:</strong> ${senderCompany}<br>` : ""}
-                    <strong>Reply to:</strong> <a href="mailto:${senderEmail}">${senderEmail}</a>
-                  </p>
-
-                  <div class="footer">
-                    <p>You received this email because you have ${getCategoryLabel(category)} notifications enabled${criteriaText ? " and your preferences match the criteria" : ""}.</p>
-                    <p>To manage your notification preferences, visit your account settings.</p>
-                  </div>
-                </div>
-              </div>
-            </body>
-            </html>
-          `;
-
-          const result = await resend.emails.send({
-            from: "All Agent Connect <hello@allagentconnect.com>",
-            to: [agent.email],
-            subject: `${getCategoryLabel(category)}: ${subject}`,
-            html: emailHtml,
-            reply_to: senderEmail,
-          });
-
-          const resendError = (result as any)?.error;
-          if (resendError) {
-            console.error(`Resend API error for ${agent.email}:`, resendError);
-            return { success: false, email: agent.email, error: resendError?.message || "Resend error" };
-          }
-
-          console.log(`Email sent to ${agent.email}:`, result);
-          return { success: true, email: agent.email };
-        } catch (error) {
-          console.error(`Failed to send email to ${agent.email}:`, error);
-          const errorMessage = error instanceof Error ? error.message : "Unknown error";
-          return { success: false, email: agent.email, error: errorMessage };
-        }
-      });
-
-      const results = await Promise.all(emailPromises);
-      const successCount = results.filter(r => r.success).length;
-      const failureCount = results.filter(r => !r.success).length;
-
-      console.log(`Email sending complete: ${successCount} sent, ${failureCount} failed`);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          recipientCount: agents.length,
-          successCount,
-          failureCount,
-          results,
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+        .select("user_id")
+        .in("user_id", matchingAgentIds);
     }
 
-    // For other categories (sales_intel, general_discussion), use simple filtering
-    const { data: preferences, error: prefsError } = await query;
+    const { data: recipients, error: recipientsError } = await query;
 
-    if (prefsError) {
-      console.error("Error fetching preferences:", prefsError);
-      throw prefsError;
+    if (recipientsError) {
+      console.error("Error fetching recipients:", recipientsError);
+      throw new Error("Failed to fetch recipients");
     }
 
-    if (!preferences || preferences.length === 0) {
+    if (!recipients || recipients.length === 0) {
+      console.log("No matching recipients found");
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: "No agents found with this notification preference enabled",
+          message: "No agents found matching your criteria",
           recipientCount: 0 
         }),
         {
@@ -454,129 +206,121 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get agent profiles for all matching users
-    const userIds = preferences.map(p => p.user_id);
-    const { data: agents, error: agentsError } = await supabase
+    // If preview only, return the count
+    if (previewOnly) {
+      console.log(`Preview mode: Found ${recipients.length} potential recipients`);
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          recipientCount: recipients.length
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Get full agent profiles for recipients
+    const agentIds = recipients.map(r => r.user_id);
+    const { data: agentProfiles, error: profileError } = await supabase
       .from("agent_profiles")
       .select("id, email, first_name, last_name")
-      .in("id", userIds)
-      .not("id", "eq", user.id); // Don't send to self
+      .in("id", agentIds);
 
-    if (agentsError) {
-      console.error("Error fetching agents:", agentsError);
-      throw agentsError;
+    if (profileError || !agentProfiles) {
+      console.error("Error fetching agent profiles:", profileError);
+      throw new Error("Failed to fetch agent profiles");
     }
 
-    if (!agents || agents.length === 0) {
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: "No other agents found to notify",
-          recipientCount: 0 
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+    // Build criteria summary for email
+    let criteriaText = "";
+    if (criteria) {
+      if (criteria.state) {
+        criteriaText += `<strong>State:</strong> ${criteria.state}<br>`;
+      }
+      if (criteria.propertyTypes && criteria.propertyTypes.length > 0) {
+        criteriaText += `<strong>Property Types:</strong> ${criteria.propertyTypes.join(', ')}<br>`;
+      }
+      if (criteria.minPrice) {
+        criteriaText += `<strong>Min Price:</strong> $${criteria.minPrice.toLocaleString()}<br>`;
+      }
+      if (criteria.maxPrice) {
+        criteriaText += `<strong>Max Price:</strong> $${criteria.maxPrice.toLocaleString()}<br>`;
+      }
     }
 
     // Send emails to all matching agents
-    if (previewOnly) {
-      return new Response(
-        JSON.stringify({ success: true, recipientCount: agents.length, preview: true }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const emailResults = {
+      sent: 0,
+      failed: 0,
+      errors: [] as string[],
+    };
 
-    const emailPromises = agents.map(async (agent) => {
+    const getCategoryLabel = (cat: string) => {
+      switch (cat) {
+        case "buyer_need": return "Buyer Need";
+        case "renter_need": return "Renter Need";
+        case "sales_intel": return "Sales Intel";
+        case "general_discussion": return "General Discussion";
+        default: return cat;
+      }
+    };
+
+    for (const agent of agentProfiles) {
       try {
-        const emailHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-              .content { background-color: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-radius: 0 0 8px 8px; }
-              .message-box { background-color: white; padding: 20px; border-left: 4px solid #2563eb; margin: 20px 0; border-radius: 4px; }
-              .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280; }
-              .category-badge { display: inline-block; background-color: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-bottom: 10px; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1 style="margin: 0;">New ${getCategoryLabel(category)} Message</h1>
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">${subject}</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
+              <strong>From:</strong> ${senderName}${senderCompany ? ` (${senderCompany})` : ""}<br>
+              <strong>Category:</strong> ${getCategoryLabel(category)}
+            </p>
+            
+            ${criteriaText ? `
+              <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #333;">Request Criteria</h3>
+                ${criteriaText}
               </div>
-              <div class="content">
-                <p>Hi ${agent.first_name},</p>
-                <p>You received a new message from ${senderName}${senderCompany ? ` at ${senderCompany}` : ""}:</p>
-                
-                <div class="message-box">
-                  <div class="category-badge">${getCategoryLabel(category)}</div>
-                  <h2 style="margin-top: 0; color: #1f2937;">${subject}</h2>
-                  <p style="white-space: pre-wrap;">${message}</p>
-                </div>
-
-                <p style="margin-top: 30px;">
-                  <strong>From:</strong> ${senderName}<br>
-                  ${senderCompany ? `<strong>Company:</strong> ${senderCompany}<br>` : ""}
-                  <strong>Reply to:</strong> <a href="mailto:${senderEmail}">${senderEmail}</a>
-                </p>
-
-                <div class="footer">
-                  <p>You received this email because you have ${getCategoryLabel(category)} notifications enabled.</p>
-                  <p>To manage your notification preferences, visit your account settings.</p>
-                </div>
-              </div>
+            ` : ""}
+            
+            <div style="background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+              <p style="white-space: pre-wrap; color: #333;">${message}</p>
             </div>
-          </body>
-          </html>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+              You received this email because you opted into ${getCategoryLabel(category)} notifications. You can manage your notification preferences in your dashboard.
+            </p>
+          </div>
         `;
 
-        const result = await resend.emails.send({
-          from: "All Agent Connect <hello@allagentconnect.com>",
-          to: [agent.email],
-          subject: `${getCategoryLabel(category)}: ${subject}`,
-          html: emailHtml,
+        await resend.emails.send({
+          from: "AgentConnect <notifications@agentconnect.ai>",
+          to: agent.email,
+          subject: `[${getCategoryLabel(category)}] ${subject}`,
+          html,
           reply_to: senderEmail,
         });
 
-        console.log(`Email sent to ${agent.email}:`, result);
-        
-        // Check if Resend returned an error (even if no exception was thrown)
-        if (result.error) {
-          console.error(`Resend error for ${agent.email}:`, result.error);
-          return { 
-            success: false, 
-            email: agent.email, 
-            error: result.error.message || "Email delivery failed" 
-          };
-        }
-        
-        return { success: true, email: agent.email };
-      } catch (error) {
-        console.error(`Failed to send email to ${agent.email}:`, error);
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        return { success: false, email: agent.email, error: errorMessage };
+        emailResults.sent++;
+        console.log(`Email sent successfully to ${agent.email}`);
+      } catch (error: any) {
+        emailResults.failed++;
+        const errorMsg = `Failed to send to ${agent.email}: ${error.message}`;
+        emailResults.errors.push(errorMsg);
+        console.error(errorMsg);
       }
-    });
+    }
 
-    const results = await Promise.all(emailPromises);
-    const successCount = results.filter(r => r.success).length;
-    const failureCount = results.filter(r => !r.success).length;
-
-    console.log(`Email sending complete: ${successCount} sent, ${failureCount} failed`);
+    console.log(`Email campaign completed: ${emailResults.sent} sent, ${emailResults.failed} failed`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        recipientCount: agents.length,
-        successCount,
-        failureCount,
-        results,
+        message: `Successfully sent ${emailResults.sent} email${emailResults.sent !== 1 ? 's' : ''}`,
+        sent: emailResults.sent,
+        failed: emailResults.failed,
+        errors: emailResults.errors,
       }),
       {
         status: 200,
@@ -586,7 +330,10 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-client-need-notification:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        success: false
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -594,15 +341,5 @@ const handler = async (req: Request): Promise<Response> => {
     );
   }
 };
-
-function getCategoryLabel(category: string): string {
-  const labels: Record<string, string> = {
-    buyer_need: "Buyer Need",
-    sales_intel: "Sales Intel",
-    renter_need: "Renter Need",
-    general_discussion: "General Discussion",
-  };
-  return labels[category] || category;
-}
 
 serve(handler);
