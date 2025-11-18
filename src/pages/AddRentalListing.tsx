@@ -256,6 +256,7 @@ const AddRentalListing = () => {
     try {
       await handleSubmit(new Event('submit') as any, false);
       toast.success("Draft saved successfully!");
+      navigate("/agent-dashboard", { state: { reload: true } });
     } catch (error) {
       // Error already handled in handleSubmit
     }
@@ -347,7 +348,7 @@ const AddRentalListing = () => {
       }
 
       toast.success("Rental listing created successfully!");
-      navigate("/agent-dashboard");
+      navigate("/agent-dashboard", { state: { reload: true } });
     } catch (error: any) {
       console.error("Error creating listing:", error);
       

@@ -120,6 +120,16 @@ const AgentDashboard = () => {
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Reload data when returning to dashboard
+  useEffect(() => {
+    if (user && location.state?.reload) {
+      loadData(user.id);
+      // Clear the state to prevent reload loops
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, user]);
+
   const loadData = async (userId: string) => {
     try {
       // Load user profile from agent_profiles
