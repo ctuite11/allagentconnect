@@ -50,7 +50,7 @@ const listingSchema = z.object({
   state: z.string().trim().min(1, "State is required"),
   zip_code: z.string().trim().regex(/^\d{5}(-\d{4})?$/, "ZIP code is required and must be valid (e.g., 02134 or 02134-5678)"),
   price: z.number().min(1000, "Price must be at least $1,000").max(100000000, "Price must be less than $100,000,000"),
-  property_type: z.string().optional(),
+  property_type: z.string().min(1, "Property type is required"),
   bedrooms: z.number().int().min(0, "Bedrooms must be 0 or more").max(50, "Bedrooms must be 50 or less").optional(),
   bathrooms: z.number().min(0, "Bathrooms must be 0 or more").max(50, "Bathrooms must be 50 or less").optional(),
   square_feet: z.number().int().min(1, "Square feet must be at least 1").max(100000, "Square feet must be less than 100,000").optional(),
@@ -935,6 +935,7 @@ const AddListing = () => {
       if (!formData.state.trim()) missingFields.push("State");
       if (!formData.zip_code.trim()) missingFields.push("ZIP Code");
       if (!formData.price || parseFloat(formData.price) <= 0) missingFields.push("Price");
+      if (publishNow && !formData.property_type) missingFields.push("Property Type");
       
       if (missingFields.length > 0) {
         setValidationErrors(missingFields);
@@ -959,7 +960,7 @@ const AddListing = () => {
         state: formData.state,
         zip_code: formData.zip_code.trim() || "",
         price: parseFloat(formData.price),
-        property_type: formData.property_type || undefined,
+        property_type: formData.property_type || "",
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : undefined,
         bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : undefined,
         square_feet: formData.square_feet ? parseInt(formData.square_feet) : undefined,
