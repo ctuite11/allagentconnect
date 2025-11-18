@@ -89,8 +89,14 @@ const ClientHotSheet = () => {
       // Fetch matching listings
       let query = supabase
         .from("listings")
-        .select("*")
-        .eq("status", "active");
+        .select("*");
+
+      // Status filter - use criteria.statuses if provided, default to active only
+      if (criteria.statuses && Array.isArray(criteria.statuses) && criteria.statuses.length > 0) {
+        query = query.in("status", criteria.statuses);
+      } else {
+        query = query.eq("status", "active");
+      }
 
       if (criteria.propertyTypes && Array.isArray(criteria.propertyTypes) && criteria.propertyTypes.length > 0) {
         query = query.in("property_type", criteria.propertyTypes);
@@ -99,7 +105,45 @@ const ClientHotSheet = () => {
       if (criteria.maxPrice) query = query.lte("price", criteria.maxPrice);
       if (criteria.bedrooms) query = query.gte("bedrooms", criteria.bedrooms);
       if (criteria.bathrooms) query = query.gte("bathrooms", criteria.bathrooms);
-      if (criteria.city) query = query.ilike("city", `%${criteria.city}%`);
+      
+      // Handle state filter
+      if (criteria.state) {
+        query = query.eq("state", criteria.state);
+      }
+      
+      // Handle cities/neighborhoods filtering (matches SearchResults logic)
+      if (criteria.cities && Array.isArray(criteria.cities) && criteria.cities.length > 0) {
+        const cityFilters = criteria.cities.map((townStr: string) => {
+          if (townStr.includes('-')) {
+            const [city, neighborhood] = townStr.split('-').map((s: string) => s.trim());
+            return { city, neighborhood };
+          }
+          return { city: townStr, neighborhood: null };
+        });
+        
+        const citiesWithNeighborhoods = cityFilters.filter((f: any) => f.neighborhood);
+        const citiesOnly = cityFilters.filter((f: any) => !f.neighborhood).map((f: any) => f.city);
+        
+        if (citiesWithNeighborhoods.length > 0 || citiesOnly.length > 0) {
+          const orConditions: string[] = [];
+          
+          if (citiesOnly.length > 0) {
+            orConditions.push(`city.in.(${citiesOnly.join(',')})`);
+          }
+          
+          citiesWithNeighborhoods.forEach((f: any) => {
+            orConditions.push(`and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`);
+          });
+          
+          if (orConditions.length > 0) {
+            query = query.or(orConditions.join(','));
+          }
+        }
+      } else if (criteria.city) {
+        // Fallback for legacy single city criteria
+        query = query.ilike("city", `%${criteria.city}%`);
+      }
+      
       if (criteria.zipCode) query = query.eq("zip_code", criteria.zipCode);
 
       const { data: listingsData, error: listingsError } = await query.order("created_at", { ascending: false });
