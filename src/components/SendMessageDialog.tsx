@@ -56,7 +56,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     }
   }, [open, defaultSubject]);
 
-  const showLocationFields = category === "buyer_need" || category === "renter_need";
+  const showLocationFields = true; // Show detailed filtering for all categories
   
   // Get available counties and cities based on selection
   const availableCounties = state ? COUNTIES_BY_STATE[state] || [] : [];

@@ -75,8 +75,8 @@ const handler = async (req: Request): Promise<Response> => {
       `)
       .eq(category, true);
 
-    // For buyer_need and renter_need, filter by geographic and price preferences if criteria provided
-    if ((category === "buyer_need" || category === "renter_need") && criteria) {
+    // Filter by geographic and price preferences if criteria provided
+    if (criteria && criteria.state) {
       // Get agent profiles first to have their IDs, then filter by preferences
       const { data: allPrefs } = await query;
       
