@@ -307,13 +307,16 @@ const EditListing = () => {
         setAmenities(Array.isArray(data.amenities) ? data.amenities as string[] : []);
         
         // Extract unit number from condo_details if available
-        if (data.property_type === "Condominium" && data.condo_details) {
+        const pt = (data.property_type || '').toLowerCase();
+        if ((pt.includes('condo') || pt.includes('townhouse'))) {
           try {
             const condoDetails = typeof data.condo_details === 'string' 
               ? JSON.parse(data.condo_details) 
               : data.condo_details;
             if (condoDetails?.unit_number) {
               setUnitNumber(condoDetails.unit_number);
+            } else if (data.attom_data && typeof data.attom_data === 'object' && (data.attom_data as any).unit_number) {
+              setUnitNumber((data.attom_data as any).unit_number);
             }
             if (condoDetails?.hoa_fee) {
               setHoaFee(condoDetails.hoa_fee.toString());
@@ -543,8 +546,8 @@ const EditListing = () => {
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = false) => {
     e.preventDefault();
 
-    // Validate unit number for Condominium and Townhouse
-    if ((formData.property_type === "Condominium" || formData.property_type === "Townhouse") && !unitNumber.trim()) {
+    // Validate unit number only when publishing (strict)
+    if (publishNow && (formData.property_type === "Condominium" || formData.property_type === "Townhouse") && !unitNumber.trim()) {
       toast.error("Unit number is required for condominium and townhouse properties");
       return;
     }
@@ -652,8 +655,8 @@ const EditListing = () => {
         state: formData.state,
         zip_code: formData.zip_code,
         neighborhood: formData.neighborhood || null,
-        property_type: formData.property_type || null,
-        price: parseFloat(formData.price),
+        property_type: formData.property_type || undefined,
+        price: formData.price ? parseFloat(formData.price) : 0,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
         square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
@@ -685,7 +688,7 @@ const EditListing = () => {
       };
 
       // Update condo_details if it's a condominium
-      if (formData.property_type?.includes("Condo") && unitNumber) {
+      if ((formData.property_type?.toLowerCase().includes("condo") || formData.property_type?.toLowerCase().includes("townhouse")) && unitNumber) {
         // Fetch existing condo_details first
         const { data: existingData } = await supabase
           .from("listings")
@@ -707,9 +710,12 @@ const EditListing = () => {
         };
       }
 
-      const validatedCore = listingSchema.parse(dataToUpdate);
-      // Merge validated core fields back with extended fields (photos, floor plans, documents, etc.)
-      const payload = { ...dataToUpdate, ...validatedCore };
+      // Validate strictly only when publishing
+      let payload = { ...dataToUpdate } as any;
+      if (publishNow) {
+        const validatedCore = listingSchema.parse(dataToUpdate);
+        payload = { ...dataToUpdate, ...validatedCore };
+      }
 
       const { error } = await supabase
         .from("listings")
