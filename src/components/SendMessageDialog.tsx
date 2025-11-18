@@ -20,6 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
+import { FormattedInput } from "@/components/ui/formatted-input";
+import { getAreasForCity } from "@/data/usNeighborhoodsData";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -185,6 +187,37 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     }
   };
 
+  // Auto-select neighborhoods when all towns are selected
+  useEffect(() => {
+    if (showAreas === "yes" && state) {
+      // Get all city names (non-hyphenated entries)
+      const allCities = townsList.filter(t => !t.includes('-'));
+      
+      // Check if all cities are selected
+      const allCitiesSelected = allCities.every(city => selectedTowns.includes(city));
+      
+      if (allCitiesSelected && allCities.length > 0) {
+        // Auto-add all neighborhoods
+        const withNeighborhoods = [...selectedTowns];
+        allCities.forEach(city => {
+          const neighborhoods = getAreasForCity(city, state);
+          if (neighborhoods && neighborhoods.length > 0) {
+            neighborhoods.forEach(n => {
+              const key = `${city}-${n}`;
+              if (!withNeighborhoods.includes(key)) {
+                withNeighborhoods.push(key);
+              }
+            });
+          }
+        });
+        
+        if (withNeighborhoods.length > selectedTowns.length) {
+          setSelectedTowns(withNeighborhoods);
+        }
+      }
+    }
+  }, [selectedTowns, townsList, showAreas, state]);
+
   const handleSend = async () => {
     if (!showConfirmation) {
       // Validate
@@ -287,6 +320,35 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     );
   };
 
+  const selectAllTowns = () => {
+    if (selectedTowns.length === townsList.length) {
+      // Deselect all
+      setSelectedTowns([]);
+    } else {
+      // Select all towns AND neighborhoods
+      const allLocations: string[] = [];
+      
+      townsList.forEach(town => {
+        if (!town.includes('-')) {
+          // Add the city/town
+          allLocations.push(town);
+          
+          // Add all its neighborhoods if showAreas is enabled
+          if (showAreas === "yes") {
+            const neighborhoods = getAreasForCity(town, state);
+            if (neighborhoods && neighborhoods.length > 0) {
+              neighborhoods.forEach(n => {
+                allLocations.push(`${town}-${n}`);
+              });
+            }
+          }
+        }
+      });
+      
+      setSelectedTowns(allLocations);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -375,17 +437,13 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         ) : (
           /* Form View */
           <>
-            {/* Counts Preview */}
+            {/* Agent Counter */}
             {!loadingCount && recipientCount !== null && (
-              <div className="space-y-2">
-                {recipientCount !== null && (
-                  <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">
-                      <strong className="text-foreground">{recipientCount}</strong> {recipientCount === 1 ? "agent will" : "agents will"} receive this message
-                    </span>
-                  </div>
-                )}
+              <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg mb-6">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">
+                  Sending to <strong className="text-foreground">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
+                </span>
               </div>
             )}
 
@@ -447,13 +505,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         <Label htmlFor="minPrice" className="text-xs text-muted-foreground">
                           Minimum Price
                         </Label>
-                        <Input
+                        <FormattedInput
                           id="minPrice"
-                          type="number"
+                          format="currency"
                           value={minPrice}
-                          onChange={(e) => handleMinPriceChange(e.target.value)}
-                          placeholder="Min"
+                          onChange={handleMinPriceChange}
+                          placeholder="0"
                           disabled={noMinPrice}
+                          className="text-right"
                         />
                         <div className="flex items-center space-x-2 mt-1">
                           <Checkbox
@@ -473,13 +532,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         <Label htmlFor="maxPrice" className="text-xs text-muted-foreground">
                           Maximum Price
                         </Label>
-                        <Input
+                        <FormattedInput
                           id="maxPrice"
-                          type="number"
+                          format="currency"
                           value={maxPrice}
-                          onChange={(e) => handleMaxPriceChange(e.target.value)}
-                          placeholder="Max"
+                          onChange={handleMaxPriceChange}
+                          placeholder="0"
                           disabled={noMaxPrice}
+                          className="text-right"
                         />
                         <div className="flex items-center space-x-2 mt-1">
                           <Checkbox
@@ -514,72 +574,83 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     </Select>
                   </div>
 
-                  {/* County Selection with checkboxes */}
+                  {/* Counties and Neighborhoods Side-by-Side */}
                   {state && hasCountyData && currentStateCounties.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label>Counties (Optional)</Label>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={selectAllCounties}
-                        >
-                          {selectedCounties.length === currentStateCounties.length ? "Deselect All" : "Select All"}
-                        </Button>
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Counties Section (Left) */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label>Counties (Optional)</Label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={selectAllCounties}
+                          >
+                            {selectedCounties.length === currentStateCounties.length ? "Deselect All" : "Select All"}
+                          </Button>
+                        </div>
+                        <ScrollArea className="h-32 border rounded-md">
+                          <div className="space-y-2 p-2 pl-1">
+                            {currentStateCounties.map((countyName) => (
+                              <div key={countyName} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`county-${countyName}`}
+                                  checked={selectedCounties.includes(countyName)}
+                                  onCheckedChange={() => toggleCounty(countyName)}
+                                />
+                                <Label
+                                  htmlFor={`county-${countyName}`}
+                                  className="font-normal cursor-pointer"
+                                >
+                                  {countyName}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                        {selectedCounties.length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {selectedCounties.length} county/counties selected
+                          </p>
+                        )}
                       </div>
-                      <ScrollArea className="h-32 border rounded-md p-2">
-                        <div className="space-y-2">
-                          {currentStateCounties.map((countyName) => (
-                            <div key={countyName} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`county-${countyName}`}
-                                checked={selectedCounties.includes(countyName)}
-                                onCheckedChange={() => toggleCounty(countyName)}
-                              />
-                              <Label
-                                htmlFor={`county-${countyName}`}
-                                className="font-normal cursor-pointer"
-                              >
-                                {countyName}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                      {selectedCounties.length > 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          {selectedCounties.length} county/counties selected
-                        </p>
-                      )}
-                    </div>
-                  )}
 
-                  {/* Show Areas Toggle */}
-                  {state && (
-                    <div className="space-y-2">
-                      <Label>Include Neighborhoods?</Label>
-                      <RadioGroup value={showAreas} onValueChange={setShowAreas}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="yes" id="areas-yes" />
-                          <Label htmlFor="areas-yes" className="font-normal cursor-pointer">
-                            Yes - Show neighborhoods within cities
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="no" id="areas-no" />
-                          <Label htmlFor="areas-no" className="font-normal cursor-pointer">
-                            No - Cities only
-                          </Label>
-                        </div>
-                      </RadioGroup>
+                      {/* Include Neighborhoods Section (Right) */}
+                      <div className="space-y-2">
+                        <Label>Include Neighborhoods?</Label>
+                        <RadioGroup value={showAreas} onValueChange={setShowAreas}>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="areas-yes" />
+                            <Label htmlFor="areas-yes" className="font-normal cursor-pointer">
+                              Yes - Show neighborhoods within cities
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="areas-no" />
+                            <Label htmlFor="areas-no" className="font-normal cursor-pointer">
+                              No - Cities only
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
                     </div>
                   )}
 
                   {/* Town/City Selection */}
                   {state && (
                     <div className="space-y-2">
-                      <Label htmlFor="townSearch">Cities/Towns (Optional)</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="townSearch">Cities/Towns (Optional)</Label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={selectAllTowns}
+                        >
+                          {selectedTowns.length === townsList.length ? "Deselect All" : "Select All"}
+                        </Button>
+                      </div>
                       <Input
                         id="townSearch"
                         placeholder="Search cities..."
