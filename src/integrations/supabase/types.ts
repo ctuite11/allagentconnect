@@ -2015,6 +2015,10 @@ export type Database = {
           listing_id: string
         }[]
       }
+      delete_draft_listing: {
+        Args: { p_listing_id: string }
+        Returns: undefined
+      }
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }
       has_role: {

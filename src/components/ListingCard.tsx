@@ -136,22 +136,14 @@ const ListingCard = ({
   
   const handleDelete = async () => {
     try {
-      const { error } = await supabase
-        .from("listings")
-        .delete()
-        .eq("id", listing.id);
-      
+      const { error } = await supabase.rpc('delete_draft_listing', { p_listing_id: listing.id });
       if (error) throw error;
-      
       toast.success("Draft listing deleted successfully");
       setDeleteDialogOpen(false);
-      
-      if (onDelete) {
-        onDelete(listing.id);
-      }
-    } catch (error) {
+      if (onDelete) onDelete(listing.id);
+    } catch (error: any) {
       console.error("Error deleting draft:", error);
-      toast.error("Failed to delete draft listing");
+      toast.error(error?.message || "Failed to delete draft listing");
     }
   };
   
