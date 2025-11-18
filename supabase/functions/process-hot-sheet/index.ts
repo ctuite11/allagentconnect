@@ -32,9 +32,15 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
+    // Admin client for bypassing RLS when fetching client emails
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
     const { hotSheetId, sendInitialBatch = false, selectedListingIds }: ProcessHotSheetRequest = await req.json();
 
-    console.log("Processing hot sheet:", hotSheetId);
+    console.log("Processing hot sheet:", hotSheetId, { sendInitialBatch, selectedListingCount: selectedListingIds?.length });
 
     // Get hot sheet with client info from junction table
     const { data: hotSheet, error: hotSheetError } = await supabaseClient
@@ -42,9 +48,31 @@ const handler = async (req: Request): Promise<Response> => {
       .select("*")
       .eq("id", hotSheetId)
       .single();
+
+    if (hotSheetError) throw hotSheetError;
+    if (!hotSheet) throw new Error("Hot sheet not found");
+
+    // Cooldown check: skip if sent within last 60 seconds
+    if (hotSheet.last_sent_at) {
+      const lastSentTime = new Date(hotSheet.last_sent_at).getTime();
+      const now = Date.now();
+      const cooldownSeconds = 60;
+      const secondsSinceLastSend = (now - lastSentTime) / 1000;
+
+      if (secondsSinceLastSend < cooldownSeconds) {
+        console.log(`Cooldown active: last sent ${secondsSinceLastSend.toFixed(0)}s ago (< ${cooldownSeconds}s) - skipping duplicate send`);
+        return new Response(
+          JSON.stringify({ 
+            message: "Hot sheet was sent recently. Please wait before sending again.",
+            cooldownRemaining: Math.ceil(cooldownSeconds - secondsSinceLastSend)
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
     
-    // Fetch clients associated with this hot sheet via junction table
-    const { data: hotSheetClients, error: clientsError } = await supabaseClient
+    // Fetch clients using admin client to bypass RLS
+    const { data: hotSheetClients, error: clientsError } = await adminClient
       .from("hot_sheet_clients")
       .select(`
         clients (
@@ -55,8 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
       `)
       .eq("hot_sheet_id", hotSheetId);
 
-    if (hotSheetError) throw hotSheetError;
-    if (!hotSheet) throw new Error("Hot sheet not found");
+    console.log("Fetched clients for hot sheet:", hotSheetClients?.length || 0);
 
     console.log("Hot sheet criteria:", hotSheet.criteria);
 
@@ -203,8 +230,16 @@ const handler = async (req: Request): Promise<Response> => {
       (hotSheet.notification_schedule === "immediately" && 
        (hotSheet.notify_client_email || hotSheet.notify_agent_email));
 
+    console.log("Send decision:", { 
+      shouldSendEmail, 
+      sendInitialBatch, 
+      notifyAgent: hotSheet.notify_agent_email, 
+      notifyClient: hotSheet.notify_client_email,
+      schedule: hotSheet.notification_schedule 
+    });
+
     if (shouldSendEmail) {
-      const recipients: string[] = [];
+      const recipientSet = new Set<string>();
       
       if (hotSheet.notify_agent_email) {
         const { data: agentProfile } = await supabaseClient
@@ -214,25 +249,31 @@ const handler = async (req: Request): Promise<Response> => {
           .single();
         
         if (agentProfile?.email) {
-          recipients.push(agentProfile.email);
+          recipientSet.add(agentProfile.email.toLowerCase().trim());
+          console.log("Added agent email:", agentProfile.email);
         }
       }
 
       if (hotSheet.notify_client_email) {
         // Get client emails from criteria first
         if (hotSheet.criteria?.clientEmail) {
-          recipients.push(hotSheet.criteria.clientEmail);
+          recipientSet.add(hotSheet.criteria.clientEmail.toLowerCase().trim());
+          console.log("Added client email from criteria:", hotSheet.criteria.clientEmail);
         }
         
         // Also add clients from junction table
         if (hotSheetClients && hotSheetClients.length > 0) {
           hotSheetClients.forEach((hsc: any) => {
-            if (hsc.clients?.email && !recipients.includes(hsc.clients.email)) {
-              recipients.push(hsc.clients.email);
+            if (hsc.clients?.email) {
+              recipientSet.add(hsc.clients.email.toLowerCase().trim());
+              console.log("Added client email from junction:", hsc.clients.email);
             }
           });
         }
       }
+
+      const recipients = Array.from(recipientSet);
+      console.log("Final recipients (deduplicated):", recipients);
 
       if (recipients.length > 0) {
         const baseUrl = req.headers.get("origin") || "http://localhost:5173";
@@ -309,10 +350,15 @@ const handler = async (req: Request): Promise<Response> => {
           throw emailError;
         }
 
-        console.log("Email sent successfully to:", recipients);
-
-        console.log("Email sent to:", recipients);
+        console.log("✅ Email sent successfully");
+        console.log("Recipients:", recipients);
+        console.log("Listing count:", newListings.length);
+        console.log("Hot sheet:", hotSheet.name);
+      } else {
+        console.log("No recipients configured - skipping email");
       }
+    } else {
+      console.log("Email send skipped based on notification settings");
     }
 
     // Mark listings as sent
