@@ -211,64 +211,40 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const fetchRecipientCount = async () => {
     setLoadingCount(true);
     try {
-      if (category === "buyer_need" || category === "renter_need") {
-        const requestBody: any = {
-          category,
-          subject: subject || "Preview",
-          message: message || "Preview",
-          previewOnly: true,
-          criteria: {
-            state,
-            counties: counties.length > 0 ? counties : undefined,
-            cities: cities.length > 0 ? cities : undefined,
-            neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
-            minPrice: minPrice ? parseFloat(minPrice) : undefined,
-            maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-            propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
-          },
-        };
-
-        // Fetch recipient count (agents who will receive the message)
-        const { data, error } = await supabase.functions.invoke("send-client-need-notification", {
-          body: requestBody,
-        });
-
-        if (error) throw error;
-        setRecipientCount(data?.recipientCount ?? 0);
-
-        // Fetch listing count (properties matching this criteria)
-        const searchCriteria: any = {
-          statuses: ["active", "coming_soon"],
+      // Build request body with criteria for ALL categories
+      const requestBody: any = {
+        category,
+        subject: subject || "Preview",
+        message: message || "Preview",
+        previewOnly: true,
+        criteria: {
           state,
+          counties: counties.length > 0 ? counties : undefined,
           cities: cities.length > 0 ? cities : undefined,
+          neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
           minPrice: minPrice ? parseFloat(minPrice) : undefined,
           maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-          propertyTypes: propertyTypes.length > 0 ? propertyTypes.map(pt => {
-            const typeMap: Record<string, string> = {
-              "Single Family": "single_family",
-              "Condo": "condo",
-              "Townhouse": "townhouse",
-              "Multi Family": "multi_family",
-              "Land": "land",
-              "Commercial": "commercial",
-            };
-            return typeMap[pt] || pt;
-          }) : undefined,
-        };
+          propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
+        },
+      };
 
-        // Fetch listing count (properties matching this criteria)
-        // Build query manually to get proper count
+      // Fetch recipient count (agents who will receive the message)
+      const { data, error } = await supabase.functions.invoke("send-client-need-notification", {
+        body: requestBody,
+      });
+
+      if (error) throw error;
+      setRecipientCount(data?.recipientCount ?? 0);
+
+      // Fetch listing count (properties matching this criteria) - only if state is selected
+      if (state) {
         let listingsQuery = supabase
           .from("listings")
           .select('*', { count: 'exact', head: true })
-          .in("status", ["active", "coming_soon"]);
-
-        if (state) {
-          listingsQuery = listingsQuery.eq("state", state);
-        }
+          .in("status", ["active", "coming_soon"])
+          .eq("state", state);
 
         if (cities.length > 0) {
-          // Match cities case-insensitively
           const cityFilters = cities.map(city => `city.ilike.${city}`).join(',');
           listingsQuery = listingsQuery.or(cityFilters);
         }
@@ -305,18 +281,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
           setListingCount(listingsCount ?? 0);
         }
       } else {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const query = supabase
-          .from("notification_preferences")
-          .select("user_id")
-          .neq("user_id", user.id) as any;
-
-        const { data, error } = await (query as any).eq(category, true);
-        if (error) throw error;
-        setRecipientCount(data?.length || 0);
-        setListingCount(null); // No listing count for non-buyer/renter categories
+        setListingCount(null); // No state selected, can't count listings
       }
     } catch (error) {
       console.error("Error fetching counts:", error);
