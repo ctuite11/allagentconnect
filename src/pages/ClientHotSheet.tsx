@@ -16,6 +16,7 @@ import { Heart, MessageSquare, ChevronDown, ChevronUp, Settings, Send, Bed, Bath
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import FavoriteButton from "@/components/FavoriteButton";
+import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
 interface Listing {
   id: string;
@@ -86,72 +87,10 @@ const ClientHotSheet = () => {
       setCity(criteria.city || "");
       setZipCode(criteria.zipCode || "");
 
-      // Fetch matching listings
-      let query = supabase
-        .from("listings")
-        .select("*");
+      // Build query using unified search utility
+      const query = buildListingsQuery(supabase, criteria).limit(200);
 
-      // Status filter - use criteria.statuses if provided, default to active only
-      if (criteria.statuses && Array.isArray(criteria.statuses) && criteria.statuses.length > 0) {
-        query = query.in("status", criteria.statuses);
-      } else {
-        query = query.eq("status", "active");
-      }
-
-      if (criteria.propertyTypes && Array.isArray(criteria.propertyTypes) && criteria.propertyTypes.length > 0) {
-        query = query.in("property_type", criteria.propertyTypes);
-      }
-      if (criteria.minPrice) query = query.gte("price", criteria.minPrice);
-      if (criteria.maxPrice) query = query.lte("price", criteria.maxPrice);
-      if (criteria.bedrooms) query = query.gte("bedrooms", criteria.bedrooms);
-      if (criteria.bathrooms) query = query.gte("bathrooms", criteria.bathrooms);
-      
-      // Handle state filter
-      if (criteria.state) {
-        query = query.eq("state", criteria.state);
-      }
-      
-      // Handle cities/neighborhoods filtering (matches CreateHotSheetDialog preview logic)
-      if (criteria.cities && Array.isArray(criteria.cities) && criteria.cities.length > 0) {
-        const cityFilters = criteria.cities.map((cityStr: string) => {
-          const parts = cityStr.split(',');
-          const cityPart = parts[0].trim();
-          
-          // Check if it's a city-neighborhood format (e.g., "Boston-Charlestown")
-          if (cityPart.includes('-')) {
-            const [city, neighborhood] = cityPart.split('-').map((s: string) => s.trim());
-            return { city, neighborhood };
-          }
-          
-          return { city: cityPart, neighborhood: null };
-        });
-        
-        // Group by cities that have neighborhoods vs just cities
-        const citiesWithNeighborhoods = cityFilters.filter((f: any) => f.neighborhood);
-        const citiesOnly = cityFilters.filter((f: any) => !f.neighborhood).map((f: any) => f.city);
-        
-        // Build complex filter using ilike for case-insensitive matching
-        const wild = (v: string) => `*${String(v).replace(/[*",]/g, ' ').trim()}*`;
-        if (citiesWithNeighborhoods.length > 0 || citiesOnly.length > 0) {
-          const segments: string[] = [];
-          if (citiesOnly.length > 0) {
-            segments.push(...citiesOnly.map((c) => `city.ilike.${wild(c)}`));
-          }
-          if (citiesWithNeighborhoods.length > 0) {
-            segments.push(
-              ...citiesWithNeighborhoods.map((f: any) => `and(city.ilike.${wild(f.city)},neighborhood.ilike.${wild(f.neighborhood!)})`)
-            );
-          }
-          query = query.or(segments.join(','));
-        }
-      } else if (criteria.city) {
-        // Fallback for legacy single city criteria
-        query = query.ilike("city", `%${criteria.city}%`);
-      }
-      
-      if (criteria.zipCode) query = query.eq("zip_code", criteria.zipCode);
-
-      const { data: listingsData, error: listingsError } = await query.order("created_at", { ascending: false });
+      const { data: listingsData, error: listingsError } = await query;
 
       if (listingsError) throw listingsError;
       setListings(listingsData || []);
