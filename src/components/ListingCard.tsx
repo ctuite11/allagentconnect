@@ -578,7 +578,7 @@ const ListingCard = ({
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
-              {listing.status === 'draft' && <Button variant="destructive" size="sm" onClick={() => { if (window.confirm('Delete this draft listing? This cannot be undone.')) handleDelete(); }} className="w-full">
+              {listing.status === 'draft' && <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)} className="w-full">
                   <Trash2 className="w-3 h-3 mr-1" />
                   Delete
                 </Button>}
@@ -742,7 +742,7 @@ const ListingCard = ({
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
-          {listing.status === 'draft' && <Button variant="destructive" size="sm" className="flex-1" onClick={() => { if (window.confirm('Delete this draft listing? This cannot be undone.')) handleDelete(); }}>
+          {listing.status === 'draft' && <Button variant="destructive" size="sm" className="flex-1" onClick={() => setDeleteDialogOpen(true)}>
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
             </Button>}
