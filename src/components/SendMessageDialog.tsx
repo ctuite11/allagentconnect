@@ -34,6 +34,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [recipientCount, setRecipientCount] = useState<number | null>(null);
+  const [listingCount, setListingCount] = useState<number | null>(null);
   const [loadingCount, setLoadingCount] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   
@@ -227,12 +228,82 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
           },
         };
 
+        // Fetch recipient count (agents who will receive the message)
         const { data, error } = await supabase.functions.invoke("send-client-need-notification", {
           body: requestBody,
         });
 
         if (error) throw error;
         setRecipientCount(data?.recipientCount ?? 0);
+
+        // Fetch listing count (properties matching this criteria)
+        const searchCriteria: any = {
+          statuses: ["active", "coming_soon"],
+          state,
+          cities: cities.length > 0 ? cities : undefined,
+          minPrice: minPrice ? parseFloat(minPrice) : undefined,
+          maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+          propertyTypes: propertyTypes.length > 0 ? propertyTypes.map(pt => {
+            const typeMap: Record<string, string> = {
+              "Single Family": "single_family",
+              "Condo": "condo",
+              "Townhouse": "townhouse",
+              "Multi Family": "multi_family",
+              "Land": "land",
+              "Commercial": "commercial",
+            };
+            return typeMap[pt] || pt;
+          }) : undefined,
+        };
+
+        // Fetch listing count (properties matching this criteria)
+        // Build query manually to get proper count
+        let listingsQuery = supabase
+          .from("listings")
+          .select('*', { count: 'exact', head: true })
+          .in("status", ["active", "coming_soon"]);
+
+        if (state) {
+          listingsQuery = listingsQuery.eq("state", state);
+        }
+
+        if (cities.length > 0) {
+          // Match cities case-insensitively
+          const cityFilters = cities.map(city => `city.ilike.${city}`).join(',');
+          listingsQuery = listingsQuery.or(cityFilters);
+        }
+
+        if (minPrice) {
+          listingsQuery = listingsQuery.gte("price", parseFloat(minPrice));
+        }
+
+        if (maxPrice) {
+          listingsQuery = listingsQuery.lte("price", parseFloat(maxPrice));
+        }
+
+        if (propertyTypes.length > 0) {
+          const mappedTypes = propertyTypes.map(pt => {
+            const typeMap: Record<string, string> = {
+              "Single Family": "single_family",
+              "Condo": "condo",
+              "Townhouse": "townhouse",
+              "Multi Family": "multi_family",
+              "Land": "land",
+              "Commercial": "commercial",
+            };
+            return typeMap[pt] || pt;
+          });
+          listingsQuery = listingsQuery.in("property_type", mappedTypes);
+        }
+
+        const { count: listingsCount, error: listingsError } = await listingsQuery;
+
+        if (listingsError) {
+          console.error("Error fetching listing count:", listingsError);
+          setListingCount(0);
+        } else {
+          setListingCount(listingsCount ?? 0);
+        }
       } else {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -245,10 +316,12 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         const { data, error } = await (query as any).eq(category, true);
         if (error) throw error;
         setRecipientCount(data?.length || 0);
+        setListingCount(null); // No listing count for non-buyer/renter categories
       }
     } catch (error) {
-      console.error("Error fetching recipient count:", error);
+      console.error("Error fetching counts:", error);
       setRecipientCount(0);
+      setListingCount(0);
     } finally {
       setLoadingCount(false);
     }
@@ -424,37 +497,61 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
               </div>
             )}
 
-            {!loadingCount && recipientCount !== null && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {recipientCount === 0 ? (
-                    "No agents will receive this message"
-                  ) : (
-                    <>
-                      This message will be sent to <strong className="text-foreground">{recipientCount}</strong> agent{recipientCount !== 1 ? "s" : ""}
-                    </>
-                  )}
-                </span>
+            {!loadingCount && (listingCount !== null || recipientCount !== null) && (
+              <div className="space-y-2">
+                {listingCount !== null && (
+                  <div className="flex items-center gap-2 px-4 py-3 bg-secondary/50 rounded-lg">
+                    <CheckCircle className="h-4 w-4 text-primary" />
+                    <span className="text-sm">
+                      <strong className="text-foreground">{listingCount}</strong> {listingCount === 1 ? "property matches" : "properties match"} this criteria
+                    </span>
+                  </div>
+                )}
+                {recipientCount !== null && (
+                  <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      {recipientCount === 0 ? (
+                        "No agents will receive this message"
+                      ) : (
+                        <>
+                          <strong className="text-foreground">{recipientCount}</strong> agent{recipientCount !== 1 ? "s" : ""} will receive this message based on their coverage areas
+                        </>
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
         ) : (
           /* Form View */
           <>
-            {/* Recipient Count Preview */}
-            {!loadingCount && recipientCount !== null && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {recipientCount === 0 ? (
-                    "No agents will receive this message"
-                  ) : (
-                    <>
-                      This message will be sent to <strong className="text-foreground">{recipientCount}</strong> agent{recipientCount !== 1 ? "s" : ""}
-                    </>
-                  )}
-                </span>
+            {/* Counts Preview */}
+            {!loadingCount && (listingCount !== null || recipientCount !== null) && (
+              <div className="space-y-2">
+                {listingCount !== null && (
+                  <div className="flex items-center gap-2 px-4 py-3 bg-secondary/50 rounded-lg">
+                    <CheckCircle className="h-4 w-4 text-primary" />
+                    <span className="text-sm">
+                      <strong className="text-foreground">{listingCount}</strong> {listingCount === 1 ? "property matches" : "properties match"} this criteria
+                    </span>
+                  </div>
+                )}
+                {recipientCount !== null && (
+                  <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      {recipientCount === 0 ? (
+                        "No agents will receive this message"
+                      ) : (
+                        <>
+                          <strong className="text-foreground">{recipientCount}</strong> agent{recipientCount !== 1 ? "s" : ""} will receive this message based on their coverage areas
+                        </>
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
         <div className="space-y-4 py-4">
