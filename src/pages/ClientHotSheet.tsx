@@ -111,33 +111,38 @@ const ClientHotSheet = () => {
         query = query.eq("state", criteria.state);
       }
       
-      // Handle cities/neighborhoods filtering (matches SearchResults logic)
+      // Handle cities/neighborhoods filtering (matches CreateHotSheetDialog preview logic)
       if (criteria.cities && Array.isArray(criteria.cities) && criteria.cities.length > 0) {
-        const cityFilters = criteria.cities.map((townStr: string) => {
-          if (townStr.includes('-')) {
-            const [city, neighborhood] = townStr.split('-').map((s: string) => s.trim());
+        const cityFilters = criteria.cities.map((cityStr: string) => {
+          const parts = cityStr.split(',');
+          const cityPart = parts[0].trim();
+          
+          // Check if it's a city-neighborhood format (e.g., "Boston-Charlestown")
+          if (cityPart.includes('-')) {
+            const [city, neighborhood] = cityPart.split('-').map((s: string) => s.trim());
             return { city, neighborhood };
           }
-          return { city: townStr, neighborhood: null };
+          
+          return { city: cityPart, neighborhood: null };
         });
         
+        // Group by cities that have neighborhoods vs just cities
         const citiesWithNeighborhoods = cityFilters.filter((f: any) => f.neighborhood);
         const citiesOnly = cityFilters.filter((f: any) => !f.neighborhood).map((f: any) => f.city);
         
+        // Build complex filter using ilike for case-insensitive matching
+        const wild = (v: string) => `*${String(v).replace(/[*",]/g, ' ').trim()}*`;
         if (citiesWithNeighborhoods.length > 0 || citiesOnly.length > 0) {
-          const orConditions: string[] = [];
-          
+          const segments: string[] = [];
           if (citiesOnly.length > 0) {
-            orConditions.push(`city.in.(${citiesOnly.join(',')})`);
+            segments.push(...citiesOnly.map((c) => `city.ilike.${wild(c)}`));
           }
-          
-          citiesWithNeighborhoods.forEach((f: any) => {
-            orConditions.push(`and(city.eq.${f.city},neighborhood.eq.${f.neighborhood})`);
-          });
-          
-          if (orConditions.length > 0) {
-            query = query.or(orConditions.join(','));
+          if (citiesWithNeighborhoods.length > 0) {
+            segments.push(
+              ...citiesWithNeighborhoods.map((f: any) => `and(city.ilike.${wild(f.city)},neighborhood.ilike.${wild(f.neighborhood!)})`)
+            );
           }
+          query = query.or(segments.join(','));
         }
       } else if (criteria.city) {
         // Fallback for legacy single city criteria
