@@ -1134,7 +1134,7 @@ const AddListing = () => {
             <div className="flex-1" />
             <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
               <Save className="w-5 h-5" />
-              Save Changes
+              Save Draft
             </Button>
             <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
               <Eye className="w-5 h-5" />
@@ -3533,7 +3533,7 @@ const AddListing = () => {
                   <div className="flex-1" />
                   <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
                     <Save className="w-5 h-5" />
-                    Save Changes
+                    Save Draft
                   </Button>
                   <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
                     <Eye className="w-5 h-5" />

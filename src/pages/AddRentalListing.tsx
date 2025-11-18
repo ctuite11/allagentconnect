@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { bostonNeighborhoods, bostonNeighborhoodsWithAreas } from "@/data/bostonNeighborhoods";
 import listingIcon from "@/assets/listing-creation-icon.png";
@@ -394,10 +394,10 @@ const AddRentalListing = () => {
           {/* Action Buttons - Sticky */}
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-8 -mx-4 px-4 py-4">
             <div className="flex gap-4">
-              <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
-                <Save className="w-5 h-5" />
-                Save as Draft
-              </Button>
+            <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
+              <Save className="w-5 h-5" />
+              Save Draft
+            </Button>
               <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
                 <Eye className="w-5 h-5" />
                 Preview Listing
@@ -1049,6 +1049,27 @@ const AddRentalListing = () => {
                       ))}
                     </div>
                   )}
+                </div>
+                
+                {/* Action Buttons - Bottom */}
+                <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t">
+                  <Button variant="ghost" size="lg" onClick={() => navigate("/agent-dashboard")} type="button" className="gap-2">
+                    <ArrowLeft className="w-5 h-5" />
+                    Back
+                  </Button>
+                  <div className="flex-1" />
+                  <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
+                    <Save className="w-5 h-5" />
+                    Save Draft
+                  </Button>
+                  <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
+                    <Eye className="w-5 h-5" />
+                    Preview
+                  </Button>
+                  <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
+                    <Upload className="w-5 h-5" />
+                    {submitting ? "Publishing..." : "Publish"}
+                  </Button>
                 </div>
               </form>
             </CardContent>
