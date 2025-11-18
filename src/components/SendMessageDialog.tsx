@@ -34,7 +34,6 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [recipientCount, setRecipientCount] = useState<number | null>(null);
-  const [listingCount, setListingCount] = useState<number | null>(null);
   const [loadingCount, setLoadingCount] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   
@@ -235,58 +234,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
       if (error) throw error;
       setRecipientCount(data?.recipientCount ?? 0);
-
-      // Fetch listing count (properties matching this criteria) - only for buyer_need and renter_need
-      if (state && (category === "buyer_need" || category === "renter_need")) {
-        let listingsQuery = supabase
-          .from("listings")
-          .select('*', { count: 'exact', head: true })
-          .in("status", ["active", "coming_soon"])
-          .eq("state", state);
-
-        if (cities.length > 0) {
-          const cityFilters = cities.map(city => `city.ilike.${city}`).join(',');
-          listingsQuery = listingsQuery.or(cityFilters);
-        }
-
-        if (minPrice) {
-          listingsQuery = listingsQuery.gte("price", parseFloat(minPrice));
-        }
-
-        if (maxPrice) {
-          listingsQuery = listingsQuery.lte("price", parseFloat(maxPrice));
-        }
-
-        if (propertyTypes.length > 0) {
-          const mappedTypes = propertyTypes.map(pt => {
-            const typeMap: Record<string, string> = {
-              "Single Family": "single_family",
-              "Condo": "condo",
-              "Townhouse": "townhouse",
-              "Multi Family": "multi_family",
-              "Land": "land",
-              "Commercial": "commercial",
-            };
-            return typeMap[pt] || pt;
-          });
-          listingsQuery = listingsQuery.in("property_type", mappedTypes);
-        }
-
-        const { count: listingsCount, error: listingsError } = await listingsQuery;
-
-        if (listingsError) {
-          console.error("Error fetching listing count:", listingsError);
-          setListingCount(0);
-        } else {
-          setListingCount(listingsCount ?? 0);
-        }
-      } else {
-        setListingCount(null); // No state selected, can't count listings
-      }
     } catch (error) {
       console.error("Error fetching counts:", error);
       setRecipientCount(0);
-      setListingCount(0);
     } finally {
       setLoadingCount(false);
     }
@@ -462,16 +412,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
               </div>
             )}
 
-            {!loadingCount && (listingCount !== null || recipientCount !== null) && (
+            {!loadingCount && recipientCount !== null && (
               <div className="space-y-2">
-                {listingCount !== null && (
-                  <div className="flex items-center gap-2 px-4 py-3 bg-secondary/50 rounded-lg">
-                    <CheckCircle className="h-4 w-4 text-primary" />
-                    <span className="text-sm">
-                      <strong className="text-foreground">{listingCount}</strong> {listingCount === 1 ? "property matches" : "properties match"} this criteria
-                    </span>
-                  </div>
-                )}
                 {recipientCount !== null && (
                   <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
                     <Users className="h-4 w-4 text-muted-foreground" />
@@ -493,16 +435,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
           /* Form View */
           <>
             {/* Counts Preview */}
-            {!loadingCount && (listingCount !== null || recipientCount !== null) && (
+            {!loadingCount && recipientCount !== null && (
               <div className="space-y-2">
-                {listingCount !== null && (
-                  <div className="flex items-center gap-2 px-4 py-3 bg-secondary/50 rounded-lg">
-                    <CheckCircle className="h-4 w-4 text-primary" />
-                    <span className="text-sm">
-                      <strong className="text-foreground">{listingCount}</strong> {listingCount === 1 ? "property matches" : "properties match"} this criteria
-                    </span>
-                  </div>
-                )}
                 {recipientCount !== null && (
                   <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg">
                     <Users className="h-4 w-4 text-muted-foreground" />
