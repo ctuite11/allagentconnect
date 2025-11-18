@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReverseProspectDialog } from "./ReverseProspectDialog";
 import MarketInsightsDialog from "./MarketInsightsDialog";
 import FavoriteButton from "./FavoriteButton";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 interface ListingCardProps {
   listing: {
     id: string;
@@ -43,6 +45,7 @@ interface ListingCardProps {
     agent_id?: string;
   };
   onReactivate?: (id: string) => void;
+  onDelete?: (id: string) => void;
   viewMode?: 'grid' | 'list' | 'compact';
   showActions?: boolean;
   onSelect?: (id: string) => void;
@@ -55,6 +58,7 @@ interface ListingCardProps {
 const ListingCard = ({
   listing,
   onReactivate,
+  onDelete,
   viewMode = 'grid',
   showActions = true,
   onSelect,
@@ -68,6 +72,7 @@ const ListingCard = ({
   const [marketInsightsOpen, setMarketInsightsOpen] = useState(false);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   useEffect(() => {
     loadMatchCount();
     loadStatusHistory();
@@ -128,6 +133,28 @@ const ListingCard = ({
       setLoadingMatches(false);
     }
   };
+  
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .delete()
+        .eq("id", listing.id);
+      
+      if (error) throw error;
+      
+      toast.success("Draft listing deleted successfully");
+      setDeleteDialogOpen(false);
+      
+      if (onDelete) {
+        onDelete(listing.id);
+      }
+    } catch (error) {
+      console.error("Error deleting draft:", error);
+      toast.error("Failed to delete draft listing");
+    }
+  };
+  
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -559,6 +586,10 @@ const ListingCard = ({
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
+              {listing.status === 'draft' && <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)} className="w-full">
+                  <Trash2 className="w-3 h-3 mr-1" />
+                  Delete
+                </Button>}
               {listing.status === 'cancelled' && onReactivate && <Button variant="default" size="sm" onClick={() => onReactivate(listing.id)} className="w-full bg-green-600 hover:bg-green-700">
                   <RefreshCw className="w-3 h-3 mr-1" />
                   Reactivate
@@ -719,6 +750,10 @@ const ListingCard = ({
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
+          {listing.status === 'draft' && <Button variant="destructive" size="sm" className="flex-1" onClick={() => setDeleteDialogOpen(true)}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </Button>}
           {listing.status === 'cancelled' && onReactivate && <Button variant="default" size="sm" onClick={() => onReactivate(listing.id)} className="bg-green-600 hover:bg-green-700">
               <RefreshCw className="w-4 h-4 mr-1" />
               Reactivate
@@ -734,6 +769,22 @@ const ListingCard = ({
       price: listing.price,
       property_type: listing.property_type
     }} />
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Draft Listing</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this draft listing? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>;
 };
 export default ListingCard;

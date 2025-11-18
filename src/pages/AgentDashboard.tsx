@@ -387,6 +387,11 @@ const AgentDashboard = () => {
       toast.error("Error reactivating listing: " + error.message);
     }
   };
+  
+  const handleDelete = (listingId: string) => {
+    setListings(prevListings => prevListings.filter(l => l.id !== listingId));
+  };
+  
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
@@ -710,7 +715,7 @@ const AgentDashboard = () => {
                   </p>
                 </div>
               </Card> : <div className={viewMode === 'grid' ? 'grid gap-4 sm:gap-5 md:grid-cols-2' : 'grid gap-4 sm:gap-6'}>
-                {sortListings(filterListings(listings)).map(listing => <ListingCard key={listing.id} listing={listing} onReactivate={handleReactivate} viewMode={viewMode} />)}
+                {sortListings(filterListings(listings)).map(listing => <ListingCard key={listing.id} listing={listing} onReactivate={handleReactivate} onDelete={handleDelete} viewMode={viewMode} />)}
               </div>}
           </div>}
       </div>
