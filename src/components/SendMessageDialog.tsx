@@ -12,11 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Send, Users, ArrowLeft, Loader2, X } from "lucide-react";
+import { Send, Users, ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { US_STATES } from "@/data/usStatesCountiesData";
+import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
+import { useTownsPicker } from "@/hooks/useTownsPicker";
+import { TownsPicker } from "@/components/TownsPicker";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -34,20 +37,32 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [loadingCount, setLoadingCount] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   
-  // Detailed geographic fields for buyer_need and renter_need
+  // Geographic fields
   const [state, setState] = useState("");
-  const [counties, setCounties] = useState<string[]>([]);
-  const [cities, setCities] = useState<string[]>([]);
-  const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
+  const [county, setCounty] = useState("all");
+  const [selectedTowns, setSelectedTowns] = useState<string[]>([]);
+  const [showAreas, setShowAreas] = useState("yes");
+  const [townSearch, setTownSearch] = useState("");
+  
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [noMinPrice, setNoMinPrice] = useState(false);
   const [noMaxPrice, setNoMaxPrice] = useState(false);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
-  
-  // Input states for adding items
-  const [countyInput, setCountyInput] = useState("");
-  const [cityInput, setCityInput] = useState("");
+
+  // Use the towns picker hook
+  const {
+    townsList,
+    expandedCities,
+    toggleCityExpansion,
+    hasCountyData
+  } = useTownsPicker({
+    state,
+    county,
+    showAreas: showAreas === "yes"
+  });
+
+  const currentStateCounties = hasCountyData ? getCountiesForState(state) : [];
 
   // Set default subject when dialog opens
   useEffect(() => {
@@ -96,7 +111,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     if (open && showLocationFields) {
       fetchRecipientCount();
     }
-  }, [open, state, counties, cities, neighborhoods, propertyTypes, minPrice, maxPrice, noMinPrice, noMaxPrice]);
+  }, [open, state, county, selectedTowns, propertyTypes, minPrice, maxPrice, noMinPrice, noMaxPrice]);
 
   const fetchRecipientCount = async () => {
     if (!state) {
@@ -114,9 +129,23 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       };
 
       if (showLocationFields) {
+        // Extract cities and neighborhoods from selectedTowns
+        const cities: string[] = [];
+        const neighborhoods: string[] = [];
+        
+        selectedTowns.forEach(town => {
+          if (town.includes('-')) {
+            const [city, neighborhood] = town.split('-');
+            if (!cities.includes(city)) cities.push(city);
+            neighborhoods.push(neighborhood);
+          } else {
+            if (!cities.includes(town)) cities.push(town);
+          }
+        });
+
         requestBody.criteria = {
           state: state || undefined,
-          counties: counties.length > 0 ? counties : undefined,
+          county: county !== "all" ? county : undefined,
           cities: cities.length > 0 ? cities : undefined,
           neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
           minPrice: !noMinPrice && minPrice ? parseFloat(minPrice) : undefined,
@@ -171,8 +200,25 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       };
 
       if (showLocationFields) {
+        // Extract cities and neighborhoods from selectedTowns
+        const cities: string[] = [];
+        const neighborhoods: string[] = [];
+        
+        selectedTowns.forEach(town => {
+          if (town.includes('-')) {
+            const [city, neighborhood] = town.split('-');
+            if (!cities.includes(city)) cities.push(city);
+            neighborhoods.push(neighborhood);
+          } else {
+            if (!cities.includes(town)) cities.push(town);
+          }
+        });
+
         requestBody.criteria = {
           state: state || undefined,
+          county: county !== "all" ? county : undefined,
+          cities: cities.length > 0 ? cities : undefined,
+          neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
           minPrice: !noMinPrice && minPrice ? parseFloat(minPrice) : undefined,
           maxPrice: !noMaxPrice && maxPrice ? parseFloat(maxPrice) : undefined,
           propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
@@ -204,9 +250,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     setSubject("");
     setMessage("");
     setState("");
-    setCounties([]);
-    setCities([]);
-    setNeighborhoods([]);
+    setCounty("all");
+    setSelectedTowns([]);
+    setTownSearch("");
     setMinPrice("");
     setMaxPrice("");
     setNoMinPrice(false);
@@ -215,6 +261,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     setRecipientCount(null);
     setShowConfirmation(false);
     onOpenChange(false);
+  };
+
+  const toggleTown = (town: string) => {
+    setSelectedTowns(prev =>
+      prev.includes(town)
+        ? prev.filter(t => t !== town)
+        : [...prev, town]
+    );
   };
 
   return (
@@ -248,15 +302,12 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   <Label className="text-sm font-semibold">Criteria</Label>
                   <div className="mt-1 text-sm space-y-1">
                     <p><strong>State:</strong> {state}</p>
-                    {counties.length > 0 && (
-                      <p><strong>Counties:</strong> {counties.length} selected</p>
-                    )}
-                    {cities.length > 0 && (
-                      <p><strong>Towns/Cities:</strong> {cities.length} selected</p>
-                    )}
-                    {neighborhoods.length > 0 && (
-                      <p><strong>Neighborhoods:</strong> {neighborhoods.length} selected</p>
-                    )}
+                  {county !== "all" && (
+                    <p><strong>County:</strong> {county}</p>
+                  )}
+                  {selectedTowns.length > 0 && (
+                    <p><strong>Towns/Cities:</strong> {selectedTowns.length} selected</p>
+                  )}
                     {propertyTypes.length > 0 && (
                       <p><strong>Property Types:</strong> {propertyTypes.map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ")}</p>
                     )}
@@ -368,76 +419,74 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     </Select>
                   </div>
 
-                  {/* Counties (Optional) */}
-                  {state && (
+                  {/* County Selection (for states with county data) */}
+                  {state && hasCountyData && (
                     <div className="space-y-2">
-                      <Label htmlFor="countyInput">Counties (Optional)</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="countyInput"
-                          value={countyInput}
-                          onChange={(e) => setCountyInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && countyInput.trim()) {
-                              e.preventDefault();
-                              if (!counties.includes(countyInput.trim())) {
-                                setCounties([...counties, countyInput.trim()]);
-                              }
-                              setCountyInput("");
-                            }
-                          }}
-                          placeholder="Type county name and press Enter"
-                        />
-                      </div>
-                      {counties.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {counties.map((county) => (
-                            <Badge key={county} variant="secondary" className="gap-1">
-                              {county}
-                              <X
-                                className="h-3 w-3 cursor-pointer"
-                                onClick={() => setCounties(counties.filter(c => c !== county))}
-                              />
-                            </Badge>
+                      <Label htmlFor="county">County (Optional)</Label>
+                      <Select value={county} onValueChange={setCounty}>
+                        <SelectTrigger id="county">
+                          <SelectValue placeholder="Select county" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Counties</SelectItem>
+                          {currentStateCounties.map((c) => (
+                            <SelectItem key={c} value={c}>
+                              {c}
+                            </SelectItem>
                           ))}
-                        </div>
-                      )}
+                        </SelectContent>
+                      </Select>
                     </div>
                   )}
 
-                  {/* Cities/Towns (Optional) */}
+                  {/* Show Areas Toggle */}
                   {state && (
                     <div className="space-y-2">
-                      <Label htmlFor="cityInput">Cities/Towns (Optional)</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="cityInput"
-                          value={cityInput}
-                          onChange={(e) => setCityInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && cityInput.trim()) {
-                              e.preventDefault();
-                              if (!cities.includes(cityInput.trim())) {
-                                setCities([...cities, cityInput.trim()]);
-                              }
-                              setCityInput("");
-                            }
-                          }}
-                          placeholder="Type city/town name and press Enter"
-                        />
-                      </div>
-                      {cities.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {cities.map((city) => (
-                            <Badge key={city} variant="secondary" className="gap-1">
-                              {city}
-                              <X
-                                className="h-3 w-3 cursor-pointer"
-                                onClick={() => setCities(cities.filter(c => c !== city))}
-                              />
-                            </Badge>
-                          ))}
+                      <Label>Include Neighborhoods?</Label>
+                      <RadioGroup value={showAreas} onValueChange={setShowAreas}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id="areas-yes" />
+                          <Label htmlFor="areas-yes" className="font-normal cursor-pointer">
+                            Yes - Show neighborhoods within cities
+                          </Label>
                         </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="areas-no" />
+                          <Label htmlFor="areas-no" className="font-normal cursor-pointer">
+                            No - Cities only
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  )}
+
+                  {/* Town/City Selection */}
+                  {state && (
+                    <div className="space-y-2">
+                      <Label htmlFor="townSearch">Cities/Towns (Optional)</Label>
+                      <Input
+                        id="townSearch"
+                        placeholder="Search cities..."
+                        value={townSearch}
+                        onChange={(e) => setTownSearch(e.target.value)}
+                      />
+                      <ScrollArea className="h-48 border rounded-md p-2">
+                        <TownsPicker
+                          towns={townsList}
+                          selectedTowns={selectedTowns}
+                          onToggleTown={toggleTown}
+                          expandedCities={expandedCities}
+                          onToggleCityExpansion={toggleCityExpansion}
+                          state={state}
+                          searchQuery={townSearch}
+                          variant="checkbox"
+                          showAreas={showAreas === "yes"}
+                        />
+                      </ScrollArea>
+                      {selectedTowns.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {selectedTowns.length} location(s) selected
+                        </p>
                       )}
                     </div>
                   )}
