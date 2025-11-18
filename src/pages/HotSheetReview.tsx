@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin } from "lucide-react";
+import { ArrowLeft, Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
@@ -56,6 +56,24 @@ const [sortBy, setSortBy] = useState("newest");
       fetchHotSheetAndListings();
     }
   }, [id]);
+
+  const buildSearchUrl = () => {
+    if (!hotSheet) return "";
+    const criteria = hotSheet.criteria as any;
+    const params = new URLSearchParams();
+    
+    if (criteria.statuses?.length) params.set("status", criteria.statuses.join(","));
+    if (criteria.propertyTypes?.length) params.set("type", criteria.propertyTypes.join(","));
+    if (criteria.state) params.set("state", criteria.state);
+    if (criteria.cities?.length) params.set("towns", criteria.cities.join("|"));
+    if (criteria.zipCode) params.set("zip", criteria.zipCode);
+    if (criteria.minPrice) params.set("minPrice", criteria.minPrice.toString());
+    if (criteria.maxPrice) params.set("maxPrice", criteria.maxPrice.toString());
+    if (criteria.bedrooms) params.set("bedrooms", criteria.bedrooms.toString());
+    if (criteria.bathrooms) params.set("bathrooms", criteria.bathrooms.toString());
+    
+    return `/search?${params.toString()}`;
+  };
 
   const fetchHotSheetAndListings = async () => {
     try {
@@ -247,14 +265,22 @@ if (agentIds.length > 0) {
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
-            <Button
-              variant="ghost"
-              onClick={() => navigate("/hot-sheets")}
-              className="mb-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Hot Sheets
-            </Button>
+            <div className="flex items-center gap-3 mb-4">
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/hot-sheets")}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Hot Sheets
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate(buildSearchUrl())}
+              >
+                <Search className="h-4 w-4 mr-2" />
+                View in Search
+              </Button>
+            </div>
             <h1 className="text-4xl font-bold mb-2">{hotSheet.name}</h1>
             {getClientDisplay() && (
               <p className="text-lg text-muted-foreground">
@@ -269,6 +295,19 @@ if (agentIds.length > 0) {
               <CardTitle>Search Criteria</CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="mb-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                  <MapPin className="h-4 w-4" />
+                  <span className="font-medium">Scope:</span>
+                  {hotSheet.criteria.cities?.length > 0 ? (
+                    <span>{hotSheet.criteria.cities.join(", ")}</span>
+                  ) : hotSheet.criteria.state ? (
+                    <span>All of {hotSheet.criteria.state}</span>
+                  ) : (
+                    <span>No location filter</span>
+                  )}
+                </div>
+              </div>
               {getCriteriaDisplay().length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {getCriteriaDisplay().map((criterion, index) => (

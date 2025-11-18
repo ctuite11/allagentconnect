@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Grid3x3, List } from "lucide-react";
+import { Grid3x3, List, MapPin } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
 const useQuery = () => new URLSearchParams(useLocation().search);
@@ -189,9 +189,22 @@ const SearchResults = () => {
       <Navigation />
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-4xl font-bold">Search Results</h1>
-            <Button onClick={() => navigate(`/browse${search}`)}>Modify Search</Button>
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-4xl font-bold">Search Results</h1>
+              <Button onClick={() => navigate(`/browse${search}`)}>Modify Search</Button>
+            </div>
+            {filters.state && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                <MapPin className="h-4 w-4" />
+                <span className="font-medium">Scope:</span>
+                {filters.towns && filters.towns.length > 0 ? (
+                  <span>{filters.towns.join(", ")}</span>
+                ) : (
+                  <span>All of {filters.state}</span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Results Count */}
