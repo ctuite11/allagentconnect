@@ -36,19 +36,24 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Processing hot sheet:", hotSheetId);
 
-    // Get hot sheet with client info
+    // Get hot sheet with client info from junction table
     const { data: hotSheet, error: hotSheetError } = await supabaseClient
       .from("hot_sheets")
+      .select("*")
+      .eq("id", hotSheetId)
+      .single();
+    
+    // Fetch clients associated with this hot sheet via junction table
+    const { data: hotSheetClients, error: clientsError } = await supabaseClient
+      .from("hot_sheet_clients")
       .select(`
-        *,
         clients (
           first_name,
           last_name,
           email
         )
       `)
-      .eq("id", hotSheetId)
-      .single();
+      .eq("hot_sheet_id", hotSheetId);
 
     if (hotSheetError) throw hotSheetError;
     if (!hotSheet) throw new Error("Hot sheet not found");
@@ -199,7 +204,7 @@ const handler = async (req: Request): Promise<Response> => {
        (hotSheet.notify_client_email || hotSheet.notify_agent_email));
 
     if (shouldSendEmail) {
-      const recipients = [];
+      const recipients: string[] = [];
       
       if (hotSheet.notify_agent_email) {
         const { data: agentProfile } = await supabaseClient
@@ -214,10 +219,18 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       if (hotSheet.notify_client_email) {
-        // Try to get client email from criteria first, then from clients table
-        const clientEmail = hotSheet.criteria?.clientEmail || hotSheet.clients?.email;
-        if (clientEmail) {
-          recipients.push(clientEmail);
+        // Get client emails from criteria first
+        if (hotSheet.criteria?.clientEmail) {
+          recipients.push(hotSheet.criteria.clientEmail);
+        }
+        
+        // Also add clients from junction table
+        if (hotSheetClients && hotSheetClients.length > 0) {
+          hotSheetClients.forEach((hsc: any) => {
+            if (hsc.clients?.email && !recipients.includes(hsc.clients.email)) {
+              recipients.push(hsc.clients.email);
+            }
+          });
         }
       }
 
@@ -248,11 +261,18 @@ const handler = async (req: Request): Promise<Response> => {
         `;
         }).join('');
 
-        const clientName = hotSheet.criteria?.clientFirstName && hotSheet.criteria?.clientLastName ?
-          `${hotSheet.criteria.clientFirstName} ${hotSheet.criteria.clientLastName}` :
-          hotSheet.clients ? 
-          `${hotSheet.clients.first_name} ${hotSheet.clients.last_name}` : 
-          "Client";
+        // Get client name from criteria or from first client in junction table
+        let clientName = "Client";
+        if (hotSheet.criteria?.clientFirstName && hotSheet.criteria?.clientLastName) {
+          clientName = `${hotSheet.criteria.clientFirstName} ${hotSheet.criteria.clientLastName}`;
+        } else if (hotSheetClients && hotSheetClients.length > 0 && hotSheetClients[0].clients) {
+          const firstClientData = Array.isArray(hotSheetClients[0].clients) 
+            ? hotSheetClients[0].clients[0] 
+            : hotSheetClients[0].clients;
+          if (firstClientData) {
+            clientName = `${firstClientData.first_name} ${firstClientData.last_name}`;
+          }
+        }
 
         const { data, error: emailError } = await resend.emails.send({
           from: "AAC Worldwide <hello@allagentconnect.com>",
