@@ -73,6 +73,7 @@ const ListingCard = ({
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   useEffect(() => {
     loadMatchCount();
     loadStatusHistory();
@@ -135,22 +136,27 @@ const ListingCard = ({
   };
   
   const handleDelete = async () => {
+    setDeleting(true);
     try {
-      // Delete from listings directly since drafts are stored in the listings table
-      const { error } = await supabase
-        .from('listings')
-        .delete()
-        .eq('id', listing.id)
-        .eq('status', 'draft');
-
-      if (error) throw error;
-
+      // Try RPC first (handles RLS and cascades)
+      const { error: rpcError } = await supabase.rpc('delete_draft_listing', { p_listing_id: listing.id });
+      if (rpcError) {
+        console.warn("RPC delete_draft_listing failed, falling back to direct delete:", rpcError);
+        const { error: directError } = await supabase
+          .from('listings')
+          .delete()
+          .eq('id', listing.id)
+          .eq('status', 'draft');
+        if (directError) throw directError;
+      }
       toast.success("Draft listing deleted successfully");
       setDeleteDialogOpen(false);
-      if (onDelete) onDelete(listing.id);
+      onDelete?.(listing.id);
     } catch (error: any) {
       console.error("Error deleting draft:", error);
       toast.error(error?.message || "Failed to delete draft listing");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -778,8 +784,8 @@ const ListingCard = ({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
