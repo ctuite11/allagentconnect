@@ -880,11 +880,40 @@ const AddListing = () => {
 
   const handleSaveDraft = async () => {
     try {
-      await handleSubmit(new Event('submit') as any, false);
+      if (!user) {
+        toast.error("Please sign in to save drafts");
+        navigate("/auth");
+        return;
+      }
+      setSubmitting(true);
+
+      const payload: any = {
+        agent_id: user.id,
+        status: "draft",
+        listing_type: formData.listing_type,
+        address: (formData.address || "Draft").trim(),
+        city: formData.city?.trim() || "",
+        state: formData.state?.trim() || "",
+        zip_code: formData.zip_code?.trim() || "",
+        price: formData.price ? parseFloat(formData.price) : 0,
+        property_type: formData.property_type || null,
+        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+        bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
+        square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
+        photos: [],
+        floor_plans: [],
+        documents: [],
+      };
+
+      const { error } = await supabase.from("listings").insert(payload);
+      if (error) throw error;
+
       toast.success("Draft saved successfully!");
       navigate("/agent-dashboard", { state: { reload: true } });
-    } catch (error) {
-      // Error already handled in handleSubmit
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save draft");
+    } finally {
+      setSubmitting(false);
     }
   };
 
