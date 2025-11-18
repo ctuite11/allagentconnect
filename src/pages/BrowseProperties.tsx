@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,8 +50,8 @@ const BrowseProperties = () => {
   // Property Type filters
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   
-  // Status filters
-  const [statuses, setStatuses] = useState<string[]>([]);
+  // Status filters - Auto-select: New, Active, Coming Soon, Back on Market, Price Change, Extended
+  const [statuses, setStatuses] = useState<string[]>(["new", "active", "coming_soon", "back_on_market", "price_changed", "extended"]);
   
   // Initialize filters from URL params on mount
   useEffect(() => {
@@ -433,7 +434,7 @@ const BrowseProperties = () => {
                         checked={statuses.length >= 14}
                         onCheckedChange={(checked) => {
                           if (checked) {
-                            setStatuses(["new", "active", "price_changed", "back_on_market", "extended", "reactivated", "contingent", "pending", "sold", "rented", "temporarily_withdrawn", "expired", "cancelled", "coming_soon"]);
+                            setStatuses(["new", "active", "coming_soon", "back_on_market", "price_changed", "extended", "reactivated", "contingent", "pending", "sold", "rented", "temporarily_withdrawn", "expired", "cancelled"]);
                           } else {
                             setStatuses([]);
                           }
@@ -441,12 +442,13 @@ const BrowseProperties = () => {
                       />
                       <label htmlFor="status-select-all" className="text-xs cursor-pointer">Select All</label>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pr-2">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                       {[
                         { value: "new", label: "New" },
                         { value: "active", label: "Active" },
-                        { value: "price_changed", label: "Price Changed" },
+                        { value: "coming_soon", label: "Coming Soon" },
                         { value: "back_on_market", label: "Back on Market" },
+                        { value: "price_changed", label: "Price Changed" },
                         { value: "extended", label: "Extended" },
                         { value: "reactivated", label: "Reactivated" },
                         { value: "contingent", label: "Contingent" },
@@ -456,7 +458,6 @@ const BrowseProperties = () => {
                         { value: "temporarily_withdrawn", label: "Temporarily Withdrawn" },
                         { value: "expired", label: "Expired" },
                         { value: "cancelled", label: "Canceled" },
-                        { value: "coming_soon", label: "Coming Soon" },
                       ].map((status, idx) => (
                         <div key={idx} className="flex items-center space-x-2">
                           <Checkbox
@@ -464,7 +465,7 @@ const BrowseProperties = () => {
                             checked={statuses.includes(status.value)}
                             onCheckedChange={() => handleStatusToggle(status.value)}
                           />
-                          <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer leading-tight whitespace-normal break-words">{status.label}</label>
+                          <label htmlFor={`status-${idx}`} className="text-xs cursor-pointer leading-tight">{status.label}</label>
                         </div>
                       ))}
                     </div>
@@ -727,6 +728,18 @@ const BrowseProperties = () => {
                   </div>
                 </div>
                 <div className="p-4 pt-0 space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Search by Address or Location</Label>
+                    <AddressAutocomplete
+                      placeholder="Enter address, city, state, or zip code"
+                      onPlaceSelect={(place) => {
+                        if (place.address) setStreetName(place.address);
+                        if (place.city) setState(place.state || "MA");
+                        if (place.zipCode) setZipCode(place.zipCode);
+                      }}
+                    />
+                  </div>
+                  
                   <RadioGroup value={addressType} onValueChange={setAddressType}>
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center space-x-2">
@@ -739,6 +752,7 @@ const BrowseProperties = () => {
                       </div>
                     </div>
                   </RadioGroup>
+                  
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <Label className="text-xs">Street #</Label>
