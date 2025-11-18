@@ -81,6 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
       const { data: allPrefs } = await query;
       
       if (!allPrefs || allPrefs.length === 0) {
+        console.log("No agents found with buyer_need/renter_need preference enabled");
         return new Response(
           JSON.stringify({ 
             success: true, 
@@ -95,6 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       const agentIds = allPrefs.map(p => p.user_id);
+      console.log(`Initial agents with ${category} enabled: ${agentIds.length}`);
 
       // Filter by geographic preferences if state is provided
       let matchingAgentIds = agentIds;
@@ -109,8 +111,10 @@ const handler = async (req: Request): Promise<Response> => {
           console.error("Error fetching geographic preferences:", geoError);
         } else if (geoPrefs && geoPrefs.length > 0) {
           matchingAgentIds = geoPrefs.map(g => g.agent_id);
+          console.log(`Agents covering state ${criteria.state}: ${matchingAgentIds.length}`);
         } else {
           // No agents match the state criteria
+          console.log(`No agents found covering state: ${criteria.state}`);
           return new Response(
             JSON.stringify({ 
               success: true, 
@@ -135,11 +139,14 @@ const handler = async (req: Request): Promise<Response> => {
             .in("agent_id", matchingAgentIds);
 
           // Build an OR condition for cities and neighborhoods
-          const orConditions: string[] = [];
+          // CRITICAL: Include agents with NULL city (meaning "all cities" coverage)
+          const orConditions: string[] = ["city.is.null"];
           
           if (hasCities && criteria.cities) {
             criteria.cities.forEach(city => {
               orConditions.push(`city.eq.${city}`);
+              // Also include agents who cover this city but have NULL neighborhood (all neighborhoods in that city)
+              orConditions.push(`and(city.eq.${city},neighborhood.is.null)`);
             });
           }
           
@@ -150,6 +157,8 @@ const handler = async (req: Request): Promise<Response> => {
               if (parts.length === 2) {
                 const [city, nbhd] = parts;
                 orConditions.push(`and(city.eq.${city},neighborhood.eq.${nbhd})`);
+                // Also include agents who cover this city with NULL neighborhood
+                orConditions.push(`and(city.eq.${city},neighborhood.is.null)`);
               }
             });
           }
@@ -161,8 +170,10 @@ const handler = async (req: Request): Promise<Response> => {
           const { data: detailedGeoPrefs } = await geoQuery;
           if (detailedGeoPrefs && detailedGeoPrefs.length > 0) {
             matchingAgentIds = detailedGeoPrefs.map(g => g.agent_id);
+            console.log(`Agents after city/neighborhood filter: ${matchingAgentIds.length}`);
           } else {
             // No agents match the detailed location criteria
+            console.log("No agents found covering the specified cities/neighborhoods");
             return new Response(
               JSON.stringify({ 
                 success: true, 
@@ -180,7 +191,8 @@ const handler = async (req: Request): Promise<Response> => {
         // Also filter by counties if provided and no cities/neighborhoods specified
         const hasCounties = criteria.counties && criteria.counties.length > 0;
         if (hasCounties && !hasCities && !hasNeighborhoods && matchingAgentIds.length > 0) {
-          const countyOrConditions = criteria.counties!.map(county => `county.eq.${county}`).join(',');
+          // CRITICAL: Include agents with NULL county (meaning "all counties" coverage)
+          const countyOrConditions = ["county.is.null", ...criteria.counties!.map(county => `county.eq.${county}`)].join(',');
           const { data: countyPrefs } = await supabase
             .from("agent_buyer_coverage_areas")
             .select("agent_id")
@@ -189,6 +201,7 @@ const handler = async (req: Request): Promise<Response> => {
 
           if (countyPrefs && countyPrefs.length > 0) {
             matchingAgentIds = countyPrefs.map(c => c.agent_id);
+            console.log(`Agents after county filter: ${matchingAgentIds.length}`);
           }
         }
       }
@@ -256,6 +269,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       if (!agents || agents.length === 0) {
+        console.log("No agents found after all filters");
         return new Response(
           JSON.stringify({ 
             success: true, 
@@ -268,6 +282,8 @@ const handler = async (req: Request): Promise<Response> => {
           }
         );
       }
+
+      console.log(`Final recipient count: ${agents.length} agents`);
 
       // Early return for preview-only requests
       if (previewOnly) {
