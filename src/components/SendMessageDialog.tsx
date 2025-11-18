@@ -236,8 +236,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       if (error) throw error;
       setRecipientCount(data?.recipientCount ?? 0);
 
-      // Fetch listing count (properties matching this criteria) - only if state is selected
-      if (state) {
+      // Fetch listing count (properties matching this criteria) - only for buyer_need and renter_need
+      if (state && (category === "buyer_need" || category === "renter_need")) {
         let listingsQuery = supabase
           .from("listings")
           .select('*', { count: 'exact', head: true })
