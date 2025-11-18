@@ -12,8 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Users, ArrowLeft, Loader2 } from "lucide-react";
+import { Send, Users, ArrowLeft, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { US_STATES } from "@/data/usStatesCountiesData";
 
@@ -33,13 +34,20 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [loadingCount, setLoadingCount] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   
-  // Simplified fields for buyer_need and renter_need
+  // Detailed geographic fields for buyer_need and renter_need
   const [state, setState] = useState("");
+  const [counties, setCounties] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [noMinPrice, setNoMinPrice] = useState(false);
   const [noMaxPrice, setNoMaxPrice] = useState(false);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
+  
+  // Input states for adding items
+  const [countyInput, setCountyInput] = useState("");
+  const [cityInput, setCityInput] = useState("");
 
   // Set default subject when dialog opens
   useEffect(() => {
@@ -88,7 +96,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     if (open && showLocationFields) {
       fetchRecipientCount();
     }
-  }, [open, state, propertyTypes, minPrice, maxPrice, noMinPrice, noMaxPrice]);
+  }, [open, state, counties, cities, neighborhoods, propertyTypes, minPrice, maxPrice, noMinPrice, noMaxPrice]);
 
   const fetchRecipientCount = async () => {
     if (!state) {
@@ -108,6 +116,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       if (showLocationFields) {
         requestBody.criteria = {
           state: state || undefined,
+          counties: counties.length > 0 ? counties : undefined,
+          cities: cities.length > 0 ? cities : undefined,
+          neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
           minPrice: !noMinPrice && minPrice ? parseFloat(minPrice) : undefined,
           maxPrice: !noMaxPrice && maxPrice ? parseFloat(maxPrice) : undefined,
           propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
@@ -193,6 +204,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     setSubject("");
     setMessage("");
     setState("");
+    setCounties([]);
+    setCities([]);
+    setNeighborhoods([]);
     setMinPrice("");
     setMaxPrice("");
     setNoMinPrice(false);
@@ -234,8 +248,17 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   <Label className="text-sm font-semibold">Criteria</Label>
                   <div className="mt-1 text-sm space-y-1">
                     <p><strong>State:</strong> {state}</p>
+                    {counties.length > 0 && (
+                      <p><strong>Counties:</strong> {counties.length} selected</p>
+                    )}
+                    {cities.length > 0 && (
+                      <p><strong>Towns/Cities:</strong> {cities.length} selected</p>
+                    )}
+                    {neighborhoods.length > 0 && (
+                      <p><strong>Neighborhoods:</strong> {neighborhoods.length} selected</p>
+                    )}
                     {propertyTypes.length > 0 && (
-                      <p><strong>Property Types:</strong> {propertyTypes.join(", ")}</p>
+                      <p><strong>Property Types:</strong> {propertyTypes.map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ")}</p>
                     )}
                     {minPrice && !noMinPrice && (
                       <p><strong>Min Price:</strong> ${parseFloat(minPrice).toLocaleString()}</p>
@@ -344,6 +367,80 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Counties (Optional) */}
+                  {state && (
+                    <div className="space-y-2">
+                      <Label htmlFor="countyInput">Counties (Optional)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="countyInput"
+                          value={countyInput}
+                          onChange={(e) => setCountyInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && countyInput.trim()) {
+                              e.preventDefault();
+                              if (!counties.includes(countyInput.trim())) {
+                                setCounties([...counties, countyInput.trim()]);
+                              }
+                              setCountyInput("");
+                            }
+                          }}
+                          placeholder="Type county name and press Enter"
+                        />
+                      </div>
+                      {counties.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {counties.map((county) => (
+                            <Badge key={county} variant="secondary" className="gap-1">
+                              {county}
+                              <X
+                                className="h-3 w-3 cursor-pointer"
+                                onClick={() => setCounties(counties.filter(c => c !== county))}
+                              />
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Cities/Towns (Optional) */}
+                  {state && (
+                    <div className="space-y-2">
+                      <Label htmlFor="cityInput">Cities/Towns (Optional)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="cityInput"
+                          value={cityInput}
+                          onChange={(e) => setCityInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && cityInput.trim()) {
+                              e.preventDefault();
+                              if (!cities.includes(cityInput.trim())) {
+                                setCities([...cities, cityInput.trim()]);
+                              }
+                              setCityInput("");
+                            }
+                          }}
+                          placeholder="Type city/town name and press Enter"
+                        />
+                      </div>
+                      {cities.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {cities.map((city) => (
+                            <Badge key={city} variant="secondary" className="gap-1">
+                              {city}
+                              <X
+                                className="h-3 w-3 cursor-pointer"
+                                onClick={() => setCities(cities.filter(c => c !== city))}
+                              />
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Property Types */}
                   <div className="space-y-2">

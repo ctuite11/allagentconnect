@@ -19,6 +19,9 @@ interface SendNotificationRequest {
   previewOnly?: boolean;
   criteria?: {
     state?: string;
+    counties?: string[];
+    cities?: string[];
+    neighborhoods?: string[];
     minPrice?: number;
     maxPrice?: number;
     propertyTypes?: string[];
@@ -95,22 +98,44 @@ const handler = async (req: Request): Promise<Response> => {
       const agentIds = allPrefs.map(p => p.user_id);
       console.log(`Initial agents with ${category} enabled: ${agentIds.length}`);
 
-      // Filter by state preferences (simplified from complex geography)
+      // Filter by detailed geographic preferences using agent_buyer_coverage_areas
       let matchingAgentIds = agentIds;
-      if (criteria.state) {
-        const { data: statePrefs, error: stateError } = await supabase
-          .from("agent_state_preferences")
+      if (criteria.state || criteria.cities || criteria.counties || criteria.neighborhoods) {
+        let geoQuery = supabase
+          .from("agent_buyer_coverage_areas")
           .select("agent_id")
-          .in("agent_id", agentIds)
-          .eq("state", criteria.state);
+          .in("agent_id", agentIds);
 
-        if (stateError) {
-          console.error("Error fetching state preferences:", stateError);
-        } else if (statePrefs && statePrefs.length > 0) {
-          matchingAgentIds = statePrefs.map(p => p.agent_id);
-          console.log(`After state filtering: ${matchingAgentIds.length} agents`);
+        // Filter by state
+        if (criteria.state) {
+          geoQuery = geoQuery.eq("state", criteria.state);
+        }
+
+        // Filter by counties if provided
+        if (criteria.counties && criteria.counties.length > 0) {
+          geoQuery = geoQuery.in("county", criteria.counties);
+        }
+
+        // Filter by cities if provided
+        if (criteria.cities && criteria.cities.length > 0) {
+          geoQuery = geoQuery.in("city", criteria.cities);
+        }
+
+        // Filter by neighborhoods if provided
+        if (criteria.neighborhoods && criteria.neighborhoods.length > 0) {
+          geoQuery = geoQuery.in("neighborhood", criteria.neighborhoods);
+        }
+
+        const { data: geoPrefs, error: geoError } = await geoQuery;
+
+        if (geoError) {
+          console.error("Error fetching geographic preferences:", geoError);
+        } else if (geoPrefs && geoPrefs.length > 0) {
+          // Get unique agent IDs
+          matchingAgentIds = [...new Set(geoPrefs.map(p => p.agent_id))];
+          console.log(`After geographic filtering: ${matchingAgentIds.length} agents`);
         } else {
-          console.log("No agents found matching state criteria");
+          console.log("No agents found matching geographic criteria");
           matchingAgentIds = [];
         }
       }
