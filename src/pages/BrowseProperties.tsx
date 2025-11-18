@@ -431,10 +431,10 @@ const BrowseProperties = () => {
                     <div className="flex items-center space-x-2 mb-1">
                       <Checkbox
                         id="status-select-all"
-                        checked={statuses.length >= 14}
+                        checked={statuses.length >= 13}
                         onCheckedChange={(checked) => {
                           if (checked) {
-                            setStatuses(["new", "active", "coming_soon", "back_on_market", "price_changed", "extended", "reactivated", "contingent", "pending", "sold", "rented", "temporarily_withdrawn", "expired", "cancelled"]);
+                            setStatuses(["new", "active", "coming_soon", "price_changed", "back_on_market", "extended", "contingent", "pending", "sold", "expired", "temporarily_withdrawn", "cancelled", "rented"]);
                           } else {
                             setStatuses([]);
                           }
@@ -447,17 +447,16 @@ const BrowseProperties = () => {
                         { value: "new", label: "New" },
                         { value: "active", label: "Active" },
                         { value: "coming_soon", label: "Coming Soon" },
+                        { value: "price_changed", label: "Price Change" },
                         { value: "back_on_market", label: "Back on Market" },
-                        { value: "price_changed", label: "Price Changed" },
                         { value: "extended", label: "Extended" },
-                        { value: "reactivated", label: "Reactivated" },
                         { value: "contingent", label: "Contingent" },
                         { value: "pending", label: "Under Agreement" },
                         { value: "sold", label: "Sold" },
-                        { value: "rented", label: "Rented" },
-                        { value: "temporarily_withdrawn", label: "Temporarily Withdrawn" },
                         { value: "expired", label: "Expired" },
+                        { value: "temporarily_withdrawn", label: "Temp Withdrawn" },
                         { value: "cancelled", label: "Canceled" },
+                        { value: "rented", label: "Rented" },
                       ].map((status, idx) => (
                         <div key={idx} className="flex items-center space-x-2">
                           <Checkbox
