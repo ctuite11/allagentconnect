@@ -1380,7 +1380,6 @@ const AddListing = () => {
                   {/* Unit Number - for properties with units */}
                   {(formData.property_type === "Condominium" || 
                     formData.property_type === "Townhouse" || 
-                    formData.property_type === "Multi Family" || 
                     formData.property_type === "Residential Rental" ||
                     formData.listing_type === "for_rent") && (
                     <div className="space-y-2">
