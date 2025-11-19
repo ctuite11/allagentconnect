@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
 import GeographicPreferencesManager from "@/components/GeographicPreferencesManager";
@@ -127,8 +128,15 @@ const ClientNeedsDashboard = () => {
       <main className="container mx-auto px-4 py-8 pt-24 pb-16 max-w-6xl">
         {/* Hero Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Connect . Communicate . Collaborate</h1>
-          <p className="text-lg text-muted-foreground mb-4">Turning relationships into results</p>
+          <div className="flex items-center gap-4 mb-4">
+            <Button variant="outline" size="icon" onClick={() => navigate("/agent-dashboard")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Connect . Communicate . Collaborate</h1>
+              <p className="text-lg text-muted-foreground">Turning relationships into results</p>
+            </div>
+          </div>
           <p className="text-base text-muted-foreground max-w-3xl">
             Share your active client needs and receive targeted matches from other agents. Customize your alerts by market and property type for insider-level visibility.
           </p>
