@@ -23,6 +23,7 @@ import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
 
 import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
+import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
 
 interface SocialLinks {
   linkedin: string;
@@ -993,14 +994,22 @@ const AgentProfileEditor = () => {
                           setNewCoverageCity(value);
                           setSuggestedZips([]);
                           if (!newCoverageState) return;
+                          
+                          setSuggestedZipsLoading(true);
                           try {
-                            setSuggestedZipsLoading(true);
-                            const { data, error } = await supabase.functions.invoke('get-city-zips', {
-                              body: { state: newCoverageState, city: value }
-                            });
-                            if (error) throw error;
-                            const zips: string[] = data?.zips || [];
-                            setSuggestedZips(zips);
+                            // First, try to get zip codes from static data
+                            if (hasZipCodeData(value, newCoverageState)) {
+                              const staticZips = getZipCodesForCity(value, newCoverageState);
+                              setSuggestedZips(staticZips);
+                            } else {
+                              // Fallback to API if city not in static data
+                              const { data, error } = await supabase.functions.invoke('get-city-zips', {
+                                body: { state: newCoverageState, city: value }
+                              });
+                              if (error) throw error;
+                              const zips: string[] = data?.zips || [];
+                              setSuggestedZips(zips);
+                            }
                           } catch (err) {
                             console.error('[AgentProfileEditor] ZIP lookup failed', err);
                             setSuggestedZips([]);
