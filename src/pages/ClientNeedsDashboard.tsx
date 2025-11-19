@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -30,11 +30,6 @@ const ClientNeedsDashboard = () => {
   const [hasFilters, setHasFilters] = useState(false);
   const [filtersLocallySet, setFiltersLocallySet] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
-
-  // Immediately scroll to top on mount to prevent visual blip
-  useLayoutEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, []);
 
   useEffect(() => {
     checkAuth();
@@ -130,7 +125,7 @@ const ClientNeedsDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto px-4 py-8 pt-24 pb-16 max-w-6xl">
+      <main className="container mx-auto px-4 py-8 pt-24 pb-16 max-w-6xl min-h-[600px]">
         {/* Hero Section */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">

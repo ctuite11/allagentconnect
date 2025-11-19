@@ -46,17 +46,19 @@ import NotFound from "./pages/NotFound";
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
 import ScrollToTop from "./components/ScrollToTop";
+import ScrollRestoration from "./components/ScrollRestoration";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <BrowserRouter>
+  <BrowserRouter future={{ v7_startTransition: true }}>
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <TooltipProvider>
             <Sonner />
             <ScrollToTop />
+            <ScrollRestoration />
             <Routes>
           {/* Coming Soon landing page - public homepage */}
           <Route path="/" element={<ComingSoon />} />
