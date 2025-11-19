@@ -28,6 +28,7 @@ const ClientNeedsDashboard = () => {
   const [hasNotificationsEnabled, setHasNotificationsEnabled] = useState(false);
   const [hasFilters, setHasFilters] = useState(false);
   const [filtersLocallySet, setFiltersLocallySet] = useState(false);
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -41,10 +42,22 @@ const ClientNeedsDashboard = () => {
 
   // Show warning dialog when notifications enabled without filters
   useEffect(() => {
-    if (hasNotificationsEnabled && !(hasFilters || filtersLocallySet)) {
-      setShowWarning(true);
+    // Don't show warning until preferences are loaded
+    if (!preferencesLoaded) return;
+
+    // If notifications are off, ensure the warning is hidden
+    if (!hasNotificationsEnabled) {
+      setShowWarning(false);
+      return;
     }
-  }, [hasNotificationsEnabled, hasFilters, filtersLocallySet]);
+
+    // Notifications are on: show warning only if no filters exist
+    if (!(hasFilters || filtersLocallySet)) {
+      setShowWarning(true);
+    } else {
+      setShowWarning(false);
+    }
+  }, [hasNotificationsEnabled, hasFilters, filtersLocallySet, preferencesLoaded]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -90,6 +103,8 @@ const ClientNeedsDashboard = () => {
       }
     } catch (error) {
       console.error("Error checking preferences:", error);
+    } finally {
+      setPreferencesLoaded(true);
     }
   };
 
