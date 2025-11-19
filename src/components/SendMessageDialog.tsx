@@ -172,6 +172,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         };
       }
 
+      console.log("Fetching recipient count with criteria:", JSON.stringify(requestBody, null, 2));
+      
       const { data, error } = await supabase.functions.invoke(
         "send-client-need-notification",
         { body: requestBody }
@@ -437,15 +439,23 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         ) : (
           /* Form View */
           <>
-            {/* Agent Counter */}
-            {!loadingCount && recipientCount !== null && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg mb-6">
-                <Users className="h-4 w-4 text-muted-foreground" />
+            {/* Agent Counter - Always show to prevent layout shift */}
+            <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg mb-6">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              {loadingCount ? (
+                <span className="text-sm text-muted-foreground">
+                  Calculating recipients...
+                </span>
+              ) : recipientCount !== null ? (
                 <span className="text-sm">
                   Sending to <strong className="text-foreground">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
                 </span>
-              </div>
-            )}
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  Select criteria to see recipient count
+                </span>
+              )}
+            </div>
 
             <div className="space-y-6">
               {/* Simplified Location & Criteria */}
@@ -516,7 +526,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           format="currency"
                           value={minPrice}
                           onChange={handleMinPriceChange}
-                          placeholder="500,000"
+                          placeholder="$500,000"
                           disabled={noMinPrice}
                         />
                         <div className="flex items-center space-x-2 mt-1">
@@ -542,7 +552,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           format="currency"
                           value={maxPrice}
                           onChange={handleMaxPriceChange}
-                          placeholder="500,000"
+                          placeholder="$500,000"
                           disabled={noMaxPrice}
                         />
                         <div className="flex items-center space-x-2 mt-1">

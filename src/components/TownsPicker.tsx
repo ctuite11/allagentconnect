@@ -109,21 +109,28 @@ export function TownsPicker({
   // Checkbox variant (BrowseProperties style)
   return (
     <div className="space-y-1">
-      {showSelectAll && onSelectAll && (
-        <div className="flex items-center space-x-2 p-2 pl-1">
-          <Checkbox
-            id="select-all-towns"
-            checked={selectedTowns.length === towns.length}
-            onCheckedChange={onSelectAll}
-          />
-          <label
-            htmlFor="select-all-towns"
-            className="text-sm font-normal cursor-pointer"
-          >
-            Select All
-          </label>
-        </div>
-      )}
+      {showSelectAll && onSelectAll && (() => {
+        // Check if all top-level towns (non-hyphenated) are selected
+        const allTopLevelSelected = towns
+          .filter(t => !t.includes('-'))
+          .every(t => selectedTowns.includes(t));
+        
+        return (
+          <div className="flex items-center space-x-2 p-2 pl-1">
+            <Checkbox
+              id="select-all-towns"
+              checked={allTopLevelSelected}
+              onCheckedChange={onSelectAll}
+            />
+            <label
+              htmlFor="select-all-towns"
+              className="text-sm font-normal cursor-pointer"
+            >
+              Select All
+            </label>
+          </div>
+        );
+      })()}
       {filteredTowns.map((town) => {
         // Check if this is a neighborhood entry (contains hyphen)
         if (town.includes('-')) return null;
