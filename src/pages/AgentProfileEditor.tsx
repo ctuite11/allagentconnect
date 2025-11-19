@@ -1046,12 +1046,44 @@ const AgentProfileEditor = () => {
                       )}
                     </div>
 
-                    {/* Suggested Zip Codes - Disabled for now */}
-                    {/* {(suggestedZipsLoading || suggestedZips.length > 0) && (
-                      <div className="border-2 border-primary/20 rounded-xl p-4 bg-primary/5">
-                        ...
+                    {/* Suggested Zip Codes */}
+                    {suggestedZipsLoading && (
+                      <div className="border rounded-lg p-4 bg-muted/50">
+                        <p className="text-sm text-muted-foreground">Loading zip codes for {newCoverageCity}...</p>
                       </div>
-                    )} */}
+                    )}
+                    {!suggestedZipsLoading && suggestedZips.length > 0 && (
+                      <div className="border rounded-lg p-4 bg-muted/50 space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium">Available Zip Codes for {newCoverageCity}</Label>
+                          <p className="text-xs text-muted-foreground mt-1">Click a zip code to add it to your coverage areas</p>
+                        </div>
+                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-48 overflow-y-auto">
+                          {suggestedZips.map((zip) => (
+                            <Button
+                              key={zip}
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const emptyIndex = newCoverageZips.findIndex(z => !z.trim());
+                                if (emptyIndex !== -1) {
+                                  const newZips = [...newCoverageZips];
+                                  newZips[emptyIndex] = zip;
+                                  setNewCoverageZips(newZips);
+                                } else {
+                                  toast.error("All zip code slots are filled. Please clear one first.");
+                                }
+                              }}
+                              className="justify-center text-xs"
+                              disabled={newCoverageZips.includes(zip)}
+                            >
+                              {zip}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Zip Codes Input - Multiple */}
                     <div>
