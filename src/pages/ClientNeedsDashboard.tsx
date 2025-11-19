@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -32,7 +32,7 @@ const ClientNeedsDashboard = () => {
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
 
   // Immediately scroll to top on mount to prevent visual blip
-  useEffect(() => {
+  useLayoutEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
