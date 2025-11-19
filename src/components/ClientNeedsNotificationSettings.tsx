@@ -86,7 +86,11 @@ export const ClientNeedsNotificationSettings = () => {
   };
 
   if (loading) {
-    return null;
+    return (
+      <div className="mb-8">
+        <div className="h-32 rounded-md bg-muted/40 animate-pulse" />
+      </div>
+    );
   }
 
   return (
