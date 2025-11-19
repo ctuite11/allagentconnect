@@ -46,6 +46,14 @@ const GeographicPreferencesManager = ({
   useEffect(() => {
     loadPreferences();
   }, [agentId]);
+
+  // Auto-save whenever selectedTowns changes
+  useEffect(() => {
+    // Only auto-save if we're not in the initial loading state
+    if (!loading && agentId) {
+      autoSave(selectedTowns);
+    }
+  }, [selectedTowns]);
   const loadPreferences = async () => {
     try {
       setLoading(true);
@@ -78,8 +86,6 @@ const GeographicPreferencesManager = ({
     }
   };
   const autoSave = async (towns: string[]) => {
-    if (towns.length === 0) return;
-    
     try {
       // Delete all existing preferences for this agent
       const { error: deleteError } = await supabase
@@ -88,35 +94,38 @@ const GeographicPreferencesManager = ({
         .eq("agent_id", agentId);
       if (deleteError) throw deleteError;
 
-      // Insert new preferences (remove duplicates before saving)
-      const uniqueTowns = [...new Set(towns)];
-      const preferencesToInsert = uniqueTowns.map((town) => {
-        // Check if it's a neighborhood (contains hyphen)
-        if (town.includes('-')) {
-          const [city, neighborhood] = town.split('-');
-          return {
-            agent_id: agentId,
-            state,
-            county: county === "all" ? null : county,
-            city,
-            neighborhood,
-            zip_code: "00000"
-          };
-        } else {
-          return {
-            agent_id: agentId,
-            state,
-            county: county === "all" ? null : county,
-            city: town,
-            neighborhood: null,
-            zip_code: "00000"
-          };
-        }
-      });
-      const { error: insertError } = await supabase
-        .from("agent_buyer_coverage_areas")
-        .insert(preferencesToInsert);
-      if (insertError) throw insertError;
+      // Only insert if there are towns to save
+      if (towns.length > 0) {
+        // Insert new preferences (remove duplicates before saving)
+        const uniqueTowns = [...new Set(towns)];
+        const preferencesToInsert = uniqueTowns.map((town) => {
+          // Check if it's a neighborhood (contains hyphen)
+          if (town.includes('-')) {
+            const [city, neighborhood] = town.split('-');
+            return {
+              agent_id: agentId,
+              state,
+              county: county === "all" ? null : county,
+              city,
+              neighborhood,
+              zip_code: "00000"
+            };
+          } else {
+            return {
+              agent_id: agentId,
+              state,
+              county: county === "all" ? null : county,
+              city: town,
+              neighborhood: null,
+              zip_code: "00000"
+            };
+          }
+        });
+        const { error: insertError } = await supabase
+          .from("agent_buyer_coverage_areas")
+          .insert(preferencesToInsert);
+        if (insertError) throw insertError;
+      }
     } catch (error: any) {
       console.error("Error saving preferences:", error);
     }
