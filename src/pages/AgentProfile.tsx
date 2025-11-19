@@ -212,7 +212,7 @@ const AgentProfile = () => {
         </Button>
 
         {/* Hero Section with Agent Contact Information */}
-        <div className="bg-secondary/30 rounded-xl p-8 mb-8">
+        <div className="bg-card rounded-xl p-8 mb-8 border border-border">
           <div className="flex flex-col md:flex-row gap-8 items-start mb-8">
             {/* Headshot and Agent ID */}
             <div className="flex-shrink-0">
@@ -224,8 +224,8 @@ const AgentProfile = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-6xl font-bold text-primary">
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <span className="text-6xl font-bold text-foreground">
                       {agent.first_name[0]}{agent.last_name[0]}
                     </span>
                   </div>
