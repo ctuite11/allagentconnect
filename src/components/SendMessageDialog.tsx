@@ -20,7 +20,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
-import { FormattedInput } from "@/components/ui/formatted-input";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
 
 interface SendMessageDialogProps {
@@ -48,6 +47,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [minPriceDisplay, setMinPriceDisplay] = useState("");
+  const [maxPriceDisplay, setMaxPriceDisplay] = useState("");
   const [noMinPrice, setNoMinPrice] = useState(false);
   const [noMaxPrice, setNoMaxPrice] = useState(false);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
@@ -115,13 +116,17 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   };
 
   const handleMinPriceChange = (value: string) => {
-    setMinPrice(value);
-    if (value) setNoMinPrice(false);
+    const sanitized = value.replace(/[^\d]/g, '');
+    setMinPrice(sanitized);
+    setMinPriceDisplay(sanitized);
+    if (sanitized) setNoMinPrice(false);
   };
 
   const handleMaxPriceChange = (value: string) => {
-    setMaxPrice(value);
-    if (value) setNoMaxPrice(false);
+    const sanitized = value.replace(/[^\d]/g, '');
+    setMaxPrice(sanitized);
+    setMaxPriceDisplay(sanitized);
+    if (sanitized) setNoMaxPrice(false);
   };
 
   // Fetch recipient count when criteria changes
@@ -521,21 +526,35 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         <Label htmlFor="minPrice" className="text-xs text-muted-foreground">
                           Minimum Price
                         </Label>
-                        <FormattedInput
-                          id="minPrice"
-                          format="currency"
-                          value={minPrice}
-                          onChange={handleMinPriceChange}
-                          placeholder="500,000"
-                          disabled={noMinPrice}
-                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                          <Input
+                            id="minPrice"
+                            type="text"
+                            inputMode="numeric"
+                            value={minPriceDisplay}
+                            onChange={(e) => handleMinPriceChange(e.target.value)}
+                            onFocus={() => setMinPriceDisplay(minPrice)}
+                            onBlur={() => {
+                              if (minPrice) {
+                                setMinPriceDisplay(minPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+                              }
+                            }}
+                            placeholder="500,000"
+                            className="pl-7"
+                            disabled={noMinPrice}
+                          />
+                        </div>
                         <div className="flex items-center space-x-2 mt-1">
                           <Checkbox
                             id="noMinPrice"
                             checked={noMinPrice}
                             onCheckedChange={(checked) => {
                               setNoMinPrice(checked as boolean);
-                              if (checked) setMinPrice("");
+                              if (checked) {
+                                setMinPrice("");
+                                setMinPriceDisplay("");
+                              }
                             }}
                           />
                           <label htmlFor="noMinPrice" className="text-xs text-muted-foreground cursor-pointer">
@@ -547,24 +566,38 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         <Label htmlFor="maxPrice" className="text-xs text-muted-foreground">
                           Maximum Price
                         </Label>
-                        <FormattedInput
-                          id="maxPrice"
-                          format="currency"
-                          value={maxPrice}
-                          onChange={handleMaxPriceChange}
-                          placeholder="500,000"
-                          disabled={noMaxPrice}
-                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                          <Input
+                            id="maxPrice"
+                            type="text"
+                            inputMode="numeric"
+                            value={maxPriceDisplay}
+                            onChange={(e) => handleMaxPriceChange(e.target.value)}
+                            onFocus={() => setMaxPriceDisplay(maxPrice)}
+                            onBlur={() => {
+                              if (maxPrice) {
+                                setMaxPriceDisplay(maxPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+                              }
+                            }}
+                            placeholder="500,000"
+                            className="pl-7"
+                            disabled={noMaxPrice}
+                          />
+                        </div>
                         <div className="flex items-center space-x-2 mt-1">
                           <Checkbox
                             id="noMaxPrice"
                             checked={noMaxPrice}
                             onCheckedChange={(checked) => {
                               setNoMaxPrice(checked as boolean);
-                              if (checked) setMaxPrice("");
+                              if (checked) {
+                                setMaxPrice("");
+                                setMaxPriceDisplay("");
+                              }
                             }}
                           />
-                          <label htmlFor="noMaxPrice" className="text-xs text-muted-foreground cursor-pointer">
+                          <label htmlFor="maxMaxPrice" className="text-xs text-muted-foreground cursor-pointer">
                             No maximum
                           </label>
                         </div>
