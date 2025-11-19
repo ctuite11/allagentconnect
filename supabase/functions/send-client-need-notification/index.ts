@@ -188,7 +188,9 @@ const handler = async (req: Request): Promise<Response> => {
           matchingAgentIds = propertyTypePrefs
             .filter(pref => {
               const agentTypes = (pref.property_types as string[]) || [];
-              // Agent must have at least one matching property type
+              // If agent has no property type restrictions, they match everything
+              if (agentTypes.length === 0) return true;
+              // Otherwise, agent must have at least one matching property type
               return criteria.propertyTypes!.some(type => agentTypes.includes(type));
             })
             .map(p => p.user_id);
