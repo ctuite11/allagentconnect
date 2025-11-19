@@ -43,27 +43,22 @@ const ClientNeedsDashboard = () => {
     }
   }, [user]);
 
-  // Show warning banner with debounce when notifications enabled without filters
+  // Show warning banner when notifications enabled without filters
   useEffect(() => {
     if (!preferencesLoaded) return;
     if (warningDismissed) return;
 
-    // Debounce to avoid flash during load (wait for all filters to be checked)
-    const timeoutId = setTimeout(() => {
-      if (!hasNotificationsEnabled) {
-        setShowWarningBanner(false);
-        return;
-      }
+    if (!hasNotificationsEnabled) {
+      setShowWarningBanner(false);
+      return;
+    }
 
-      // Show banner only if notifications are on and no filters exist
-      if (!(hasFilters || filtersLocallySet)) {
-        setShowWarningBanner(true);
-      } else {
-        setShowWarningBanner(false);
-      }
-    }, 1000); // 1 second debounce
-
-    return () => clearTimeout(timeoutId);
+    // Show banner only if notifications are on and no filters exist
+    if (!(hasFilters || filtersLocallySet)) {
+      setShowWarningBanner(true);
+    } else {
+      setShowWarningBanner(false);
+    }
   }, [hasNotificationsEnabled, hasFilters, filtersLocallySet, preferencesLoaded, warningDismissed]);
 
   const checkAuth = async () => {
