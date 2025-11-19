@@ -31,6 +31,11 @@ const ClientNeedsDashboard = () => {
   const [filtersLocallySet, setFiltersLocallySet] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
 
+  // Immediately scroll to top on mount to prevent visual blip
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   useEffect(() => {
     checkAuth();
   }, []);
