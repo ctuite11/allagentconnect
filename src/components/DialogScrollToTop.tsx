@@ -50,6 +50,7 @@ const DialogScrollToTop = ({
         <Button
           onClick={scrollToTop}
           size="icon"
+          variant="secondary"
           className="fixed bottom-20 right-8 z-50 h-10 w-10 rounded-full shadow-lg animate-fade-in hover-scale"
           aria-label="Scroll to top"
         >
