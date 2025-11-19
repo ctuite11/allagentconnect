@@ -35,6 +35,11 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated }: PropertyTypePref
   }, [agentId]);
 
   const fetchPreferences = async () => {
+    if (!agentId) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       const { data, error } = await supabase
         .from("notification_preferences")

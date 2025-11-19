@@ -72,6 +72,11 @@ const GeographicPreferencesManager = ({
     }
   }, [selectedTowns, agentId, loading]);
   const loadPreferences = async () => {
+    if (!agentId) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
 
@@ -104,7 +109,7 @@ const GeographicPreferencesManager = ({
   };
   const autoSave = async (towns: string[]) => {
     // Early guard - don't save without agent ID
-    if (!agentId) return;
+    if (!agentId || agentId === "") return;
     
     // Prevent overlapping saves
     if (saving) return;
