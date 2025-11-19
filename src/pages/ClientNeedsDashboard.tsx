@@ -38,6 +38,21 @@ const ClientNeedsDashboard = () => {
     }
   }, [user]);
 
+  // Show warning dialog when notifications enabled without filters
+  useEffect(() => {
+    if (hasNotificationsEnabled && !hasFilters) {
+      setShowWarning(true);
+    }
+  }, [hasNotificationsEnabled, hasFilters]);
+
+  // Block navigation when leaving without filters
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      hasNotificationsEnabled && 
+      !hasFilters && 
+      currentLocation.pathname !== nextLocation.pathname
+  );
+
   // Check before unload (closing tab/browser)
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -127,7 +142,7 @@ const ClientNeedsDashboard = () => {
         <Separator className="my-8" />
 
         {/* My Preferences Section */}
-        <div className="mb-8">
+        <div className="mb-8" data-preferences-section>
           <div className="mb-6">
             <h2 className="text-2xl font-semibold">Set My Preferences</h2>
             <p className="text-sm text-muted-foreground mt-1">(For receiving email notifications only)</p>
@@ -160,6 +175,57 @@ const ClientNeedsDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* Warning Dialog - Must Set Preferences */}
+        <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Set Your Notification Preferences</AlertDialogTitle>
+              <AlertDialogDescription>
+                In order to receive email notifications, you must select your preferences.
+                Please set at least one filter: price range, property types, or geographic areas.
+                Without filters, you'll receive notifications for ALL client needs.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={async () => {
+                setHasNotificationsEnabled(false);
+                await supabase.from("notification_preferences")
+                  .upsert({ user_id: user.id, client_needs_enabled: false }, { onConflict: 'user_id' });
+              }}>
+                Disable Notifications
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                setShowWarning(false);
+                document.querySelector('[data-preferences-section]')?.scrollIntoView({ behavior: 'smooth' });
+              }}>
+                Set Preferences Now
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Navigation Blocker Dialog */}
+        <AlertDialog open={blocker.state === "blocked"}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Leaving Without Saving?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You have email notifications enabled but haven't set any preferences.
+                This means you'll receive notifications for ALL client needs submitted by other agents.
+                Are you sure you want to leave without setting filters?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => blocker.reset?.()}>
+                Stay and Set Preferences
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => blocker.proceed?.()}>
+                Leave Anyway
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );
