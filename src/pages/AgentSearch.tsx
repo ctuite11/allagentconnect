@@ -127,7 +127,7 @@ const AgentSearch = () => {
       
       <main className="flex-1 pt-20">
         {/* Header */}
-        <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-12">
+        <section className="bg-secondary/30 py-12">
           <div className="container mx-auto px-4">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Agent Search
