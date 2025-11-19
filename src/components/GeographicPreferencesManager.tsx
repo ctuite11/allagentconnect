@@ -318,6 +318,18 @@ const GeographicPreferencesManager = ({
           </div>
         </div>
 
+        {selectedTowns.length === 0 && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg mt-4">
+            <p className="text-sm text-blue-900 dark:text-blue-100">
+              <span className="font-medium">No geographic areas selected.</span>
+              <br />
+              <span className="text-blue-700 dark:text-blue-300">
+                You will receive notifications for client needs in all areas.
+              </span>
+            </p>
+          </div>
+        )}
+
         <div className="pt-4 border-t">
           <p className="text-sm text-muted-foreground">
             {selectedTowns.length} {selectedTowns.length === 1 ? 'town' : 'towns'} selected
