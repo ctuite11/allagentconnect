@@ -27,6 +27,7 @@ const ClientNeedsDashboard = () => {
   const [showWarning, setShowWarning] = useState(false);
   const [hasNotificationsEnabled, setHasNotificationsEnabled] = useState(false);
   const [hasFilters, setHasFilters] = useState(false);
+  const [filtersLocallySet, setFiltersLocallySet] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -40,10 +41,10 @@ const ClientNeedsDashboard = () => {
 
   // Show warning dialog when notifications enabled without filters
   useEffect(() => {
-    if (hasNotificationsEnabled && !hasFilters) {
+    if (hasNotificationsEnabled && !(hasFilters || filtersLocallySet)) {
       setShowWarning(true);
     }
-  }, [hasNotificationsEnabled, hasFilters]);
+  }, [hasNotificationsEnabled, hasFilters, filtersLocallySet]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -53,6 +54,10 @@ const ClientNeedsDashboard = () => {
     }
     setUser(session.user);
     setLoading(false);
+  };
+
+  const handleFiltersUpdated = (hasFilters: boolean) => {
+    setFiltersLocallySet(hasFilters);
   };
 
   const checkPreferences = async () => {
@@ -127,9 +132,18 @@ const ClientNeedsDashboard = () => {
             <p className="text-sm text-muted-foreground mt-1">(For receiving email notifications only)</p>
           </div>
           <div className="space-y-6">
-            <PriceRangePreferences agentId={user?.id || ""} />
-            <PropertyTypePreferences agentId={user?.id || ""} />
-            <GeographicPreferencesManager agentId={user?.id || ""} />
+            <PriceRangePreferences 
+              agentId={user?.id || ""} 
+              onFiltersUpdated={handleFiltersUpdated}
+            />
+            <PropertyTypePreferences 
+              agentId={user?.id || ""} 
+              onFiltersUpdated={handleFiltersUpdated}
+            />
+            <GeographicPreferencesManager 
+              agentId={user?.id || ""} 
+              onFiltersUpdated={handleFiltersUpdated}
+            />
           </div>
         </div>
 

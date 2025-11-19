@@ -17,9 +17,11 @@ import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 interface GeographicPreferencesManagerProps {
   agentId: string;
+  onFiltersUpdated?: (hasFilters: boolean) => void;
 }
 const GeographicPreferencesManager = ({
-  agentId
+  agentId,
+  onFiltersUpdated
 }: GeographicPreferencesManagerProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -53,7 +55,7 @@ const GeographicPreferencesManager = ({
     if (!loading && agentId) {
       autoSave(selectedTowns);
     }
-  }, [selectedTowns]);
+  }, [selectedTowns, agentId, loading]);
   const loadPreferences = async () => {
     try {
       setLoading(true);
@@ -86,6 +88,9 @@ const GeographicPreferencesManager = ({
     }
   };
   const autoSave = async (towns: string[]) => {
+    // Early guard - don't save without agent ID
+    if (!agentId) return;
+    
     try {
       // Delete all existing preferences for this agent
       const { error: deleteError } = await supabase
@@ -128,10 +133,20 @@ const GeographicPreferencesManager = ({
           .from("agent_buyer_coverage_areas")
           .insert(preferencesToInsert);
         if (insertError) throw insertError;
+        
+        // Notify parent that filters have been updated
+        onFiltersUpdated?.(true);
+      } else {
+        // Empty selection means no filters
+        onFiltersUpdated?.(false);
       }
     } catch (error: any) {
       console.error("Error saving preferences:", error);
-      toast.error("There was a problem saving your coverage areas. Please try again.");
+      toast.error(
+        `There was a problem saving your coverage areas: ${
+          error?.message || error?.code || "Unknown error"
+        }`
+      );
     }
   };
   const selectAllCountiesAndTowns = () => {

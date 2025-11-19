@@ -12,6 +12,7 @@ import { z } from "zod";
 
 interface PriceRangePreferencesProps {
   agentId: string;
+  onFiltersUpdated?: (hasFilters: boolean) => void;
 }
 
 // Validation schema with security in mind
@@ -50,7 +51,7 @@ const priceSchema = z.object({
   path: ["maxPrice"]
 });
 
-const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
+const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferencesProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [minPrice, setMinPrice] = useState("");
@@ -135,6 +136,10 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
         });
 
       if (error) throw error;
+      
+      // Notify parent that filters have been updated
+      const hasFilter = minPriceValue !== null || maxPriceValue !== null;
+      onFiltersUpdated?.(hasFilter);
     } catch (error) {
       console.error("Error saving price preferences:", error);
     }

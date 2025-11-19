@@ -10,6 +10,7 @@ import { Loader2, Home, ChevronDown, ChevronUp } from "lucide-react";
 
 interface PropertyTypePreferencesProps {
   agentId: string;
+  onFiltersUpdated?: (hasFilters: boolean) => void;
 }
 
 const PROPERTY_TYPES = [
@@ -23,7 +24,7 @@ const PROPERTY_TYPES = [
   { value: "commercial_rental", label: "Commercial Rental" },
 ] as const;
 
-const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
+const PropertyTypePreferences = ({ agentId, onFiltersUpdated }: PropertyTypePreferencesProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -74,6 +75,9 @@ const PropertyTypePreferences = ({ agentId }: PropertyTypePreferencesProps) => {
         });
 
       if (error) throw error;
+      
+      // Notify parent that filters have been updated
+      onFiltersUpdated?.(types.length > 0);
     } catch (error) {
       console.error("Error saving property type preferences:", error);
     }
