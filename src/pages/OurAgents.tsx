@@ -63,7 +63,7 @@ const OurAgents = () => {
       
       <main className="flex-1 pt-20">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-16">
+        <section className="bg-secondary/30 py-16">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Meet Our Professional Agents

@@ -479,7 +479,7 @@ const AgentDashboard = () => {
                 Welcome to your success hub – let's make it an amazing day
               </p>
             </div>
-            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-l-4 border-primary rounded-lg max-w-2xl shadow-sm">
+            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-secondary/30 border-l-4 border-accent rounded-lg max-w-2xl shadow-sm">
               <p className="text-xs sm:text-sm italic text-foreground/90 leading-relaxed">
                 "{getDailyQuote()}"
               </p>

@@ -288,7 +288,7 @@ const ListingIntel = () => {
         </Card>
 
         {/* Results - Prominent Count */}
-        <Card className="mb-6 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 border-l-4 border-l-primary">
+        <Card className="mb-6 bg-secondary/30 border-l-4 border-accent">
           <CardContent className="py-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
