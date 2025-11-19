@@ -526,7 +526,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           format="currency"
                           value={minPrice}
                           onChange={handleMinPriceChange}
-                          placeholder="$500,000"
+                          placeholder="500,000"
                           disabled={noMinPrice}
                         />
                         <div className="flex items-center space-x-2 mt-1">
@@ -552,7 +552,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           format="currency"
                           value={maxPrice}
                           onChange={handleMaxPriceChange}
-                          placeholder="$500,000"
+                          placeholder="500,000"
                           disabled={noMaxPrice}
                         />
                         <div className="flex items-center space-x-2 mt-1">
