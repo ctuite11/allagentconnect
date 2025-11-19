@@ -468,6 +468,26 @@ const AgentProfileEditor = () => {
     }
   };
 
+  const handleClearAllCoverageAreas = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { error } = await supabase
+        .from("agent_buyer_coverage_areas")
+        .delete()
+        .eq("agent_id", session.user.id);
+
+      if (error) throw error;
+
+      setCoverageAreas([]);
+      toast.success("All coverage areas cleared");
+    } catch (error: any) {
+      console.error("Error clearing coverage areas:", error);
+      toast.error("Failed to clear coverage areas");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -1109,7 +1129,18 @@ const AgentProfileEditor = () => {
 
                 {/* Existing Coverage Areas */}
                 <div className="space-y-4">
-                  <h3 className="font-semibold">Your Coverage Areas</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">Your Coverage Areas</h3>
+                    {coverageAreas.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleClearAllCoverageAreas}
+                      >
+                        Clear all coverage areas
+                      </Button>
+                    )}
+                  </div>
                   {coverageAreas.length === 0 ? (
                     <div className="text-center py-8 border-2 border-dashed rounded-2xl">
                       <MapPin className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />

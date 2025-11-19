@@ -8,8 +8,18 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { X, ArrowUp, Loader2, MapPin, ChevronDown, ChevronUp } from "lucide-react";
+import { X, ArrowUp, Loader2, MapPin, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
@@ -34,6 +44,7 @@ const GeographicPreferencesManager = ({
   const [townSearch, setTownSearch] = useState("");
   const [manualTowns, setManualTowns] = useState("");
   const [isOpen, setIsOpen] = useState(true);
+  const [confirmSelectAllOpen, setConfirmSelectAllOpen] = useState(false);
   const {
     townsList,
     expandedCities,
@@ -308,14 +319,41 @@ const GeographicPreferencesManager = ({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-3">
-            {/* Prominent Add All Button */}
+            {/* IMPORTANT: Confirmation required to prevent accidental mass-selection of 300+ towns
+                This is tightly coupled to agent_buyer_coverage_areas and should not be removed */}
             <Button 
-              onClick={addAllTowns}
-              variant="default"
-              className="w-full h-12 text-base font-bold"
+              onClick={() => setConfirmSelectAllOpen(true)}
+              variant="outline"
+              size="sm"
+              className="w-full"
             >
-              ✓ Select All Towns & Neighborhoods
+              Select All Towns & Neighborhoods
             </Button>
+            
+            <AlertDialog open={confirmSelectAllOpen} onOpenChange={setConfirmSelectAllOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Select all towns & neighborhoods?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will add every town (and available neighborhoods) in {state} as coverage areas. 
+                    This can be 300+ locations and will replace your current selection.
+                    <br /><br />
+                    Consider selecting specific counties or towns instead for more focused buyer alerts.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      addAllTowns();
+                      setConfirmSelectAllOpen(false);
+                    }}
+                  >
+                    Yes, select all
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             
             <div className="max-h-96 overflow-y-auto border rounded bg-background relative z-10">
               <div className="p-2">
@@ -353,6 +391,23 @@ const GeographicPreferencesManager = ({
             </div>
           </div>
         </div>
+
+        {selectedTowns.length > 100 && (
+          <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg mt-4">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-amber-900 dark:text-amber-100 font-medium">
+                  You have selected {selectedTowns.length} areas
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                  Consider narrowing your coverage for more focused alerts and a cleaner profile display. 
+                  You can use the "Clear All" button to start over.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {selectedTowns.length === 0 && (
           <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg mt-4">
