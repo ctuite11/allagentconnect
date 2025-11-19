@@ -667,7 +667,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         value={townSearch}
                         onChange={(e) => setTownSearch(e.target.value)}
                       />
-                      <ScrollArea className="h-48 border rounded-md p-2">
+                      <ScrollArea className="h-48 border rounded-md py-2 px-4">
                         <TownsPicker
                           towns={townsList}
                           selectedTowns={selectedTowns}
