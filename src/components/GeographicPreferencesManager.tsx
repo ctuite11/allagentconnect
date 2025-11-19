@@ -98,7 +98,10 @@ const GeographicPreferencesManager = ({
       if (towns.length > 0) {
         // Insert new preferences (remove duplicates before saving)
         const uniqueTowns = [...new Set(towns)];
-        const preferencesToInsert = uniqueTowns.map((town) => {
+        const preferencesToInsert = uniqueTowns.map((town, index) => {
+          // Generate unique synthetic zip code for each town
+          const syntheticZip = String(index).padStart(5, "0");
+          
           // Check if it's a neighborhood (contains hyphen)
           if (town.includes('-')) {
             const [city, neighborhood] = town.split('-');
@@ -108,7 +111,7 @@ const GeographicPreferencesManager = ({
               county: county === "all" ? null : county,
               city,
               neighborhood,
-              zip_code: "00000"
+              zip_code: syntheticZip
             };
           } else {
             return {
@@ -117,7 +120,7 @@ const GeographicPreferencesManager = ({
               county: county === "all" ? null : county,
               city: town,
               neighborhood: null,
-              zip_code: "00000"
+              zip_code: syntheticZip
             };
           }
         });
@@ -128,6 +131,7 @@ const GeographicPreferencesManager = ({
       }
     } catch (error: any) {
       console.error("Error saving preferences:", error);
+      toast.error("There was a problem saving your coverage areas. Please try again.");
     }
   };
   const selectAllCountiesAndTowns = () => {
