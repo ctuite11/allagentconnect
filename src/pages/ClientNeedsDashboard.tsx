@@ -25,7 +25,8 @@ const ClientNeedsDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showWarning, setShowWarning] = useState(false);
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [showWarningBanner, setShowWarningBanner] = useState(false);
   const [hasNotificationsEnabled, setHasNotificationsEnabled] = useState(false);
   const [hasFilters, setHasFilters] = useState(false);
   const [filtersLocallySet, setFiltersLocallySet] = useState(false);
@@ -42,25 +43,27 @@ const ClientNeedsDashboard = () => {
     }
   }, [user]);
 
-  // Show warning dialog when notifications enabled without filters
+  // Show warning banner with debounce when notifications enabled without filters
   useEffect(() => {
-    // Don't show warning until preferences are loaded
     if (!preferencesLoaded) return;
-    // Don't re-show if user dismissed it
     if (warningDismissed) return;
 
-    // If notifications are off, ensure the warning is hidden
-    if (!hasNotificationsEnabled) {
-      setShowWarning(false);
-      return;
-    }
+    // Debounce to avoid flash during load (wait for all filters to be checked)
+    const timeoutId = setTimeout(() => {
+      if (!hasNotificationsEnabled) {
+        setShowWarningBanner(false);
+        return;
+      }
 
-    // Notifications are on: show warning only if no filters exist
-    if (!(hasFilters || filtersLocallySet)) {
-      setShowWarning(true);
-    } else {
-      setShowWarning(false);
-    }
+      // Show banner only if notifications are on and no filters exist
+      if (!(hasFilters || filtersLocallySet)) {
+        setShowWarningBanner(true);
+      } else {
+        setShowWarningBanner(false);
+      }
+    }, 1000); // 1 second debounce
+
+    return () => clearTimeout(timeoutId);
   }, [hasNotificationsEnabled, hasFilters, filtersLocallySet, preferencesLoaded, warningDismissed]);
 
   const checkAuth = async () => {
@@ -79,11 +82,17 @@ const ClientNeedsDashboard = () => {
 
   const checkPreferences = async () => {
     try {
-      const { data: prefs } = await supabase
+      const { data: prefs, error: prefsError } = await supabase
         .from("notification_preferences")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
+
+      if (prefsError && prefsError.code !== 'PGRST116') {
+        console.error("Error fetching preferences:", prefsError);
+        setPreferencesLoaded(true);
+        return;
+      }
 
       if (prefs) {
         // Check if notifications are enabled
@@ -93,14 +102,18 @@ const ClientNeedsDashboard = () => {
         const hasPriceFilter = prefs.min_price != null || prefs.max_price != null;
         const hasPropertyTypes = prefs.property_types && Array.isArray(prefs.property_types) && prefs.property_types.length > 0;
         
-        // Check geographic preferences
-        const { data: geoPrefs } = await supabase
+        // Check geographic preferences (must complete before deciding hasAnyFilters)
+        const { data: geoPrefs, error: geoError } = await supabase
           .from("agent_buyer_coverage_areas")
           .select("id")
           .eq("agent_id", user.id)
           .limit(1);
 
-        const hasGeographicFilter = geoPrefs && geoPrefs.length > 0;
+        if (geoError) {
+          console.error("Error fetching geographic preferences:", geoError);
+        }
+
+        const hasGeographicFilter = !geoError && geoPrefs && geoPrefs.length > 0;
         const hasAnyFilters = hasPriceFilter || hasPropertyTypes || hasGeographicFilter;
         
         // Temporary logging for debugging
@@ -118,6 +131,8 @@ const ClientNeedsDashboard = () => {
         setPreferencesLoaded(true);
       } else {
         // No preferences found
+        setHasNotificationsEnabled(false);
+        setHasFilters(false);
         setPreferencesLoaded(true);
       }
     } catch (error) {
@@ -194,19 +209,39 @@ const ClientNeedsDashboard = () => {
 
         {/* Warning Banner Region - reserve space to prevent layout shift */}
         <div className="mt-8 min-h-[120px]">
-          {hasNotificationsEnabled && !(hasFilters || filtersLocallySet) && (
+          {showWarningBanner && (
             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg">
               <div className="flex items-start gap-3">
                 <div className="text-yellow-600 dark:text-yellow-400 text-2xl">⚠️</div>
-                <div>
+                <div className="flex-1">
                   <h3 className="font-bold text-yellow-900 dark:text-yellow-100 mb-1">
                     Important: You'll Receive All Notifications
                   </h3>
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
                     You have email notifications enabled but haven't set any filters (price range, property types, or locations). 
                     This means you will receive notifications for <strong>ALL</strong> client needs submitted by other agents. 
                     Consider setting some preferences above to filter the notifications you receive.
                   </p>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-white dark:bg-gray-800"
+                      onClick={() => {
+                        document.querySelector('[data-preferences-section]')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                    >
+                      Set Preferences
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-white dark:bg-gray-800"
+                      onClick={() => setShowWarningDialog(true)}
+                    >
+                      Review Options
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -214,7 +249,7 @@ const ClientNeedsDashboard = () => {
         </div>
 
         {/* Warning Dialog - Must Set Preferences */}
-        <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+        <AlertDialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Set Your Notification Preferences</AlertDialogTitle>
@@ -226,7 +261,11 @@ const ClientNeedsDashboard = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={async () => {
+                const key = `clientNeedsWarningDismissed:${user.id}`;
+                localStorage.setItem(key, "true");
                 setWarningDismissed(true);
+                setShowWarningBanner(false);
+                setShowWarningDialog(false);
                 setHasNotificationsEnabled(false);
                 await supabase.from("notification_preferences")
                   .upsert({ user_id: user.id, client_needs_enabled: false }, { onConflict: 'user_id' });
@@ -234,8 +273,11 @@ const ClientNeedsDashboard = () => {
                 Disable Notifications
               </AlertDialogCancel>
               <AlertDialogAction onClick={() => {
+                const key = `clientNeedsWarningDismissed:${user.id}`;
+                localStorage.setItem(key, "true");
                 setWarningDismissed(true);
-                setShowWarning(false);
+                setShowWarningBanner(false);
+                setShowWarningDialog(false);
                 document.querySelector('[data-preferences-section]')?.scrollIntoView({ behavior: 'smooth' });
               }}>
                 Set Preferences Now
