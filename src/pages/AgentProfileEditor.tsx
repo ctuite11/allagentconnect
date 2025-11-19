@@ -1058,7 +1058,7 @@ const AgentProfileEditor = () => {
                           <Label className="text-sm font-medium">Available Zip Codes for {newCoverageCity}</Label>
                           <p className="text-xs text-muted-foreground mt-1">Click a zip code to add it to your coverage areas</p>
                         </div>
-                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-48 overflow-y-auto">
+                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                           {suggestedZips.map((zip) => (
                             <Button
                               key={zip}
