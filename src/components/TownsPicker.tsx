@@ -108,7 +108,7 @@ export function TownsPicker({
 
   // Checkbox variant (BrowseProperties style)
   return (
-    <div className="space-y-1">
+    <div className="space-y-1 p-2 pl-1">
       {showSelectAll && onSelectAll && (() => {
         // Check if all top-level towns (non-hyphenated) are selected
         const allTopLevelSelected = towns
@@ -116,7 +116,7 @@ export function TownsPicker({
           .every(t => selectedTowns.includes(t));
         
         return (
-          <div className="flex items-center space-x-2 p-2 pl-1">
+          <div className="flex items-center space-x-2 py-0.5 pl-0">
             <Checkbox
               id="select-all-towns"
               checked={allTopLevelSelected}
