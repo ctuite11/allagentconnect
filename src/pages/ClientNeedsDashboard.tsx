@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useBlocker } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Loader2 } from "lucide-react";
@@ -44,14 +44,6 @@ const ClientNeedsDashboard = () => {
       setShowWarning(true);
     }
   }, [hasNotificationsEnabled, hasFilters]);
-
-  // Block navigation when leaving without filters
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      hasNotificationsEnabled && 
-      !hasFilters && 
-      currentLocation.pathname !== nextLocation.pathname
-  );
 
   // Check before unload (closing tab/browser)
   useEffect(() => {
@@ -200,28 +192,6 @@ const ClientNeedsDashboard = () => {
                 document.querySelector('[data-preferences-section]')?.scrollIntoView({ behavior: 'smooth' });
               }}>
                 Set Preferences Now
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Navigation Blocker Dialog */}
-        <AlertDialog open={blocker.state === "blocked"}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Leaving Without Saving?</AlertDialogTitle>
-              <AlertDialogDescription>
-                You have email notifications enabled but haven't set any preferences.
-                This means you'll receive notifications for ALL client needs submitted by other agents.
-                Are you sure you want to leave without setting filters?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => blocker.reset?.()}>
-                Stay and Set Preferences
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={() => blocker.proceed?.()}>
-                Leave Anyway
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
