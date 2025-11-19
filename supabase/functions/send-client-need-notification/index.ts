@@ -320,7 +320,7 @@ const handler = async (req: Request): Promise<Response> => {
         `;
 
         await resend.emails.send({
-          from: "AgentConnect <notifications@agentconnect.ai>",
+          from: "All Agent Connect <hello@allagentconnect.com>",
           to: agent.email,
           subject: `[${getCategoryLabel(category)}] ${subject}`,
           html,
