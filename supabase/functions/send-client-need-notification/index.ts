@@ -101,29 +101,39 @@ const handler = async (req: Request): Promise<Response> => {
       // Filter by detailed geographic preferences using agent_buyer_coverage_areas
       let matchingAgentIds = agentIds;
       if (criteria.state || criteria.cities || criteria.counties || criteria.neighborhoods) {
+        // Start with state filter
         let geoQuery = supabase
           .from("agent_buyer_coverage_areas")
           .select("agent_id")
-          .in("agent_id", agentIds);
+          .in("agent_id", agentIds)
+          .eq("state", criteria.state);
 
-        // Filter by state
-        if (criteria.state) {
-          geoQuery = geoQuery.eq("state", criteria.state);
-        }
+        // If ANY geographic criteria are provided, use OR logic across them
+        const hasGeoCriteria = 
+          (criteria.counties && criteria.counties.length > 0) ||
+          (criteria.cities && criteria.cities.length > 0) ||
+          (criteria.neighborhoods && criteria.neighborhoods.length > 0);
 
-        // Filter by counties if provided
-        if (criteria.counties && criteria.counties.length > 0) {
-          geoQuery = geoQuery.in("county", criteria.counties);
-        }
+        if (hasGeoCriteria) {
+          // Build OR conditions: match if county OR city OR neighborhood matches
+          const orConditions: string[] = [];
+          
+          if (criteria.counties && criteria.counties.length > 0) {
+            orConditions.push(`county.in.(${criteria.counties.join(',')})`);
+          }
+          
+          if (criteria.cities && criteria.cities.length > 0) {
+            orConditions.push(`city.in.(${criteria.cities.join(',')})`);
+          }
+          
+          if (criteria.neighborhoods && criteria.neighborhoods.length > 0) {
+            orConditions.push(`neighborhood.in.(${criteria.neighborhoods.join(',')})`);
+          }
 
-        // Filter by cities if provided
-        if (criteria.cities && criteria.cities.length > 0) {
-          geoQuery = geoQuery.in("city", criteria.cities);
-        }
-
-        // Filter by neighborhoods if provided
-        if (criteria.neighborhoods && criteria.neighborhoods.length > 0) {
-          geoQuery = geoQuery.in("neighborhood", criteria.neighborhoods);
+          // Apply OR filter using PostgREST syntax
+          if (orConditions.length > 0) {
+            geoQuery = geoQuery.or(orConditions.join(','));
+          }
         }
 
         const { data: geoPrefs, error: geoError } = await geoQuery;
