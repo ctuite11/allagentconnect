@@ -151,7 +151,7 @@ const ClientNeedsDashboard = () => {
         <ClientNeedsNotificationSettings />
 
         {/* Warning Banner */}
-        {hasNotificationsEnabled && !hasFilters && (
+        {hasNotificationsEnabled && !(hasFilters || filtersLocallySet) && (
           <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg">
             <div className="flex items-start gap-3">
               <div className="text-yellow-600 dark:text-yellow-400 text-2xl">⚠️</div>

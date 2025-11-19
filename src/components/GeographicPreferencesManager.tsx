@@ -49,11 +49,15 @@ const GeographicPreferencesManager = ({
     loadPreferences();
   }, [agentId]);
 
-  // Auto-save whenever selectedTowns changes
+  // Auto-save whenever selectedTowns changes (debounced)
   useEffect(() => {
     // Only auto-save if we're not in the initial loading state
     if (!loading && agentId) {
-      autoSave(selectedTowns);
+      const handle = setTimeout(() => {
+        autoSave(selectedTowns);
+      }, 400);
+
+      return () => clearTimeout(handle);
     }
   }, [selectedTowns, agentId, loading]);
   const loadPreferences = async () => {
@@ -91,6 +95,10 @@ const GeographicPreferencesManager = ({
     // Early guard - don't save without agent ID
     if (!agentId) return;
     
+    // Prevent overlapping saves
+    if (saving) return;
+    
+    setSaving(true);
     try {
       // Delete all existing preferences for this agent
       const { error: deleteError } = await supabase
@@ -147,6 +155,8 @@ const GeographicPreferencesManager = ({
           error?.message || error?.code || "Unknown error"
         }`
       );
+    } finally {
+      setSaving(false);
     }
   };
   const selectAllCountiesAndTowns = () => {
@@ -173,11 +183,9 @@ const GeographicPreferencesManager = ({
       });
       const newTowns = Array.from(new Set(withNeighborhoods));
       setSelectedTowns(newTowns);
-      autoSave(newTowns);
     } else {
       const newTowns = Array.from(new Set(baseCities));
       setSelectedTowns(newTowns);
-      autoSave(newTowns);
     }
 
     // Reflect UI that we're on "All Counties"
