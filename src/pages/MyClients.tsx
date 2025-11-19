@@ -385,38 +385,44 @@ const MyClients = () => {
           </div>
 
           {/* Action Buttons */}
-          {clients.length > 0 && (
-            <div className="mb-4 flex gap-2 justify-end flex-wrap">
-              {selectedClients.size > 0 && (
-                <Button variant="default" onClick={handleBulkEmail}>
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Email ({selectedClients.size})
+          <div className="mb-4 flex gap-2 justify-end flex-wrap">
+            {/* Buttons that only show when clients exist */}
+            {clients.length > 0 && (
+              <>
+                {selectedClients.size > 0 && (
+                  <Button variant="default" onClick={handleBulkEmail}>
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Email ({selectedClients.size})
+                  </Button>
+                )}
+                <Button variant="outline" onClick={() => setAnalyticsDialogOpen(true)}>
+                  <Mail className="h-4 w-4 mr-2" />
+                  Email Analytics
                 </Button>
-              )}
-              <Button variant="outline" onClick={() => setAnalyticsDialogOpen(true)}>
-                <Mail className="h-4 w-4 mr-2" />
-                Email Analytics
-              </Button>
-              {clients.length > 0 && (
                 <Button variant="outline" onClick={handleExportCSV}>
                   <Download className="h-4 w-4 mr-2" />
                   Export CSV
                 </Button>
-              )}
-              <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
-                <Upload className="h-4 w-4 mr-2" />
-                Import CSV
-              </Button>
-              <Dialog open={addDialogOpen} onOpenChange={(open) => {
-                setAddDialogOpen(open);
-                if (!open) resetForm();
-              }}>
-                <DialogTrigger asChild>
-                  <Button onClick={handleAddClient}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Contact
-                  </Button>
-                </DialogTrigger>
+              </>
+            )}
+            
+            {/* Import CSV - always visible so users can import their first contacts */}
+            <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Import CSV
+            </Button>
+            
+            {/* Add Contact Dialog - always visible */}
+            <Dialog open={addDialogOpen} onOpenChange={(open) => {
+              setAddDialogOpen(open);
+              if (!open) resetForm();
+            }}>
+              <DialogTrigger asChild>
+                <Button onClick={handleAddClient}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Contact
+                </Button>
+              </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle>{editingClient ? "Edit Contact" : "Add New Contact"}</DialogTitle>
@@ -513,7 +519,6 @@ const MyClients = () => {
               </DialogContent>
             </Dialog>
           </div>
-          )}
 
           {clients.length === 0 ? (
             <Card className="p-12 border-l-4 border-l-primary">
