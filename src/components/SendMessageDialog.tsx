@@ -455,18 +455,24 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                   {/* Property Types */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label>Property Types (Optional)</Label>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={selectAllPropertyTypes}
-                      >
-                        {propertyTypes.length === 6 ? "Deselect All" : "Select All"}
-                      </Button>
-                    </div>
+                    <Label>Property Types (Optional)</Label>
                     <div className="grid grid-cols-2 gap-3">
+                      {/* Select All Option */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="select-all-property-types"
+                          checked={propertyTypes.length === 6}
+                          onCheckedChange={selectAllPropertyTypes}
+                        />
+                        <Label
+                          htmlFor="select-all-property-types"
+                          className="font-normal cursor-pointer"
+                        >
+                          Select All
+                        </Label>
+                      </div>
+                      
+                      {/* Individual Options */}
                       {[
                         { value: "single_family", label: "Single Family" },
                         { value: "condo", label: "Condo" },
@@ -510,9 +516,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           format="currency"
                           value={minPrice}
                           onChange={handleMinPriceChange}
-                          placeholder="0"
+                          placeholder="500,000"
                           disabled={noMinPrice}
-                          className="text-right"
                         />
                         <div className="flex items-center space-x-2 mt-1">
                           <Checkbox
@@ -537,9 +542,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           format="currency"
                           value={maxPrice}
                           onChange={handleMaxPriceChange}
-                          placeholder="0"
+                          placeholder="500,000"
                           disabled={noMaxPrice}
-                          className="text-right"
                         />
                         <div className="flex items-center space-x-2 mt-1">
                           <Checkbox
@@ -579,19 +583,25 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     <div className="grid grid-cols-2 gap-4">
                       {/* Counties Section (Left) */}
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label>Counties (Optional)</Label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={selectAllCounties}
-                          >
-                            {selectedCounties.length === currentStateCounties.length ? "Deselect All" : "Select All"}
-                          </Button>
-                        </div>
+                        <Label>Counties (Optional)</Label>
                         <ScrollArea className="h-32 border rounded-md">
                           <div className="space-y-2 p-2 pl-1">
+                            {/* Select All Option */}
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="select-all-counties"
+                                checked={selectedCounties.length === currentStateCounties.length}
+                                onCheckedChange={selectAllCounties}
+                              />
+                              <Label
+                                htmlFor="select-all-counties"
+                                className="font-normal cursor-pointer"
+                              >
+                                Select All
+                              </Label>
+                            </div>
+                            
+                            {/* Individual County Options */}
                             {currentStateCounties.map((countyName) => (
                               <div key={countyName} className="flex items-center space-x-2">
                                 <Checkbox
@@ -617,7 +627,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       </div>
 
                       {/* Include Neighborhoods Section (Right) */}
-                      <div className="space-y-2">
+                      <div className="space-y-2 pt-8">
                         <Label>Include Neighborhoods?</Label>
                         <RadioGroup value={showAreas} onValueChange={setShowAreas}>
                           <div className="flex items-center space-x-2">
@@ -640,17 +650,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   {/* Town/City Selection */}
                   {state && (
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="townSearch">Cities/Towns (Optional)</Label>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={selectAllTowns}
-                        >
-                          {selectedTowns.length === townsList.length ? "Deselect All" : "Select All"}
-                        </Button>
-                      </div>
+                      <Label htmlFor="townSearch">Cities/Towns (Optional)</Label>
                       <Input
                         id="townSearch"
                         placeholder="Search cities..."
@@ -668,6 +668,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           searchQuery={townSearch}
                           variant="checkbox"
                           showAreas={showAreas === "yes"}
+                          showSelectAll={true}
+                          onSelectAll={selectAllTowns}
                         />
                       </ScrollArea>
                       {selectedTowns.length > 0 && (

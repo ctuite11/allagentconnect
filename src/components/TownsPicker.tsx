@@ -14,6 +14,8 @@ interface TownsPickerProps {
   searchQuery?: string;
   variant?: "checkbox" | "button";
   showAreas?: boolean;
+  showSelectAll?: boolean;
+  onSelectAll?: () => void;
 }
 
 export function TownsPicker({
@@ -25,7 +27,9 @@ export function TownsPicker({
   state,
   searchQuery = "",
   variant = "checkbox",
-  showAreas = false
+  showAreas = false,
+  showSelectAll = false,
+  onSelectAll
 }: TownsPickerProps) {
   const rawState = (state || "").trim();
   const stateKey = rawState && rawState.length > 2 
@@ -105,6 +109,21 @@ export function TownsPicker({
   // Checkbox variant (BrowseProperties style)
   return (
     <div className="space-y-1">
+      {showSelectAll && onSelectAll && (
+        <div className="flex items-center space-x-2 p-2 pl-1">
+          <Checkbox
+            id="select-all-towns"
+            checked={selectedTowns.length === towns.length}
+            onCheckedChange={onSelectAll}
+          />
+          <label
+            htmlFor="select-all-towns"
+            className="text-sm font-normal cursor-pointer"
+          >
+            Select All
+          </label>
+        </div>
+      )}
       {filteredTowns.map((town) => {
         // Check if this is a neighborhood entry (contains hyphen)
         if (town.includes('-')) return null;
