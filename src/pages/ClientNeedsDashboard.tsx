@@ -24,7 +24,6 @@ import {
 const ClientNeedsDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [showWarningBanner, setShowWarningBanner] = useState(false);
   const [hasNotificationsEnabled, setHasNotificationsEnabled] = useState(false);
@@ -68,7 +67,6 @@ const ClientNeedsDashboard = () => {
       return;
     }
     setUser(session.user);
-    setLoading(false);
   };
 
   const handleFiltersUpdated = (hasFilters: boolean) => {
@@ -135,19 +133,6 @@ const ClientNeedsDashboard = () => {
       setPreferencesLoaded(true);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 pt-24">
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
