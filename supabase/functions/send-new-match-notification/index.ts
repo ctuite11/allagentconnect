@@ -107,7 +107,7 @@ serve(async (req) => {
 
         try {
           await resend.emails.send({
-            from: "All Agent Connect <hello@allagentconnect.com>",
+            from: "All Agent Connect <noreply@mail.allagentconnect.com>",
             to: [hotSheet.user.email],
             subject: `New Match Alert: ${listings.length} new ${listings.length === 1 ? 'property matches' : 'properties match'} your search "${hotSheet.name}"`,
             html: `

@@ -133,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "All Agent Connect <hello@allagentconnect.com>",
+            from: "All Agent Connect <noreply@mail.allagentconnect.com>",
             to: [recipient.email],
             reply_to: agentEmail,
             subject: `New Property Match: ${listingAddress || "Property Available"}`,

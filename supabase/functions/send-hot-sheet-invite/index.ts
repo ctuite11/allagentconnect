@@ -31,7 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending hot sheet invite to:", invitedEmail);
 
     const { data, error: emailError } = await resend.emails.send({
-      from: "AAC Worldwide <hello@allagentconnect.com>",
+      from: "All Agent Connect <noreply@mail.allagentconnect.com>",
       to: [invitedEmail],
       subject: `${inviterName} shared a Hot Sheet with you`,
       html: `

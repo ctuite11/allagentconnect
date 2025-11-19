@@ -128,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "Property Listings <hello@allagentconnect.com>",
+      from: "All Agent Connect <noreply@mail.allagentconnect.com>",
       to: [recipientEmail],
       subject: `${agentName} shared ${listings.length} property listing${listings.length > 1 ? 's' : ''} with you`,
       html: emailHtml,
