@@ -151,7 +151,21 @@ export const NotificationPreferenceCards = () => {
   ];
 
   if (loading) {
-    return null;
+    return (
+      <div className="mb-8">
+        {/* Skeleton for Select All button */}
+        <div className="w-full h-12 mb-4 bg-muted/40 rounded-md animate-pulse" />
+        {/* Skeleton for 4 cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="h-[140px] rounded-md bg-muted/40 animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   const allEnabled = Object.values(preferences).every(v => v);
