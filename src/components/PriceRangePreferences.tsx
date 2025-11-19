@@ -360,6 +360,18 @@ const PriceRangePreferences = ({ agentId }: PriceRangePreferencesProps) => {
           </div>
         )}
 
+        {!minPrice && !maxPrice && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p className="text-sm text-blue-900 dark:text-blue-100">
+              <span className="font-medium">No price range set.</span>
+              <br />
+              <span className="text-blue-700 dark:text-blue-300">
+                You will receive notifications for all price ranges.
+              </span>
+            </p>
+          </div>
+        )}
+
         <div className="pt-4 border-t">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
