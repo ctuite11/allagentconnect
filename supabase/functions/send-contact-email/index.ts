@@ -37,7 +37,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending contact email to agent:", agentEmail);
 
     const { data, error: emailError } = await resend.emails.send({
-      from: "AAC Worldwide <hello@allagentconnect.com>",
+      from: "All Agent Connect <noreply@mail.allagentconnect.com>",
       to: [agentEmail],
       replyTo: senderEmail,
       subject: `New inquiry about ${listingAddress}`,

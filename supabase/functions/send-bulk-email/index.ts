@@ -93,7 +93,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Send single email to all recipients
       const emailResponse = await resend.emails.send({
-        from: "All Agent Connect <hello@allagentconnect.com>",
+        from: "All Agent Connect <noreply@mail.allagentconnect.com>",
         to: recipients.map(r => r.email),
         subject: subject,
         html: `
@@ -209,7 +209,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
 
         const emailResponse = await resend.emails.send({
-          from: "All Agent Connect <hello@allagentconnect.com>",
+          from: "All Agent Connect <noreply@mail.allagentconnect.com>",
           to: [recipient.email],
           subject: subject,
           html: `
