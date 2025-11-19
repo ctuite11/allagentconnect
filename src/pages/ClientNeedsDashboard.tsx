@@ -45,19 +45,6 @@ const ClientNeedsDashboard = () => {
     }
   }, [hasNotificationsEnabled, hasFilters]);
 
-  // Check before unload (closing tab/browser)
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasNotificationsEnabled && !hasFilters) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasNotificationsEnabled, hasFilters]);
-
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
