@@ -229,8 +229,10 @@ const PropertyDetail = () => {
       </div>;
   }
   const mainPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[currentPhotoIndex].url : '/placeholder.svg';
+  const canonicalUrl = `${window.location.origin}/property/${id}`;
+  
   return <div className="min-h-screen bg-background">
-      <PropertyMetaTags address={listing.address} city={listing.city} state={listing.state} price={listing.price} bedrooms={listing.bedrooms} bathrooms={listing.bathrooms} description={listing.description} photo={mainPhoto} listingType={listing.listing_type} />
+      <PropertyMetaTags address={listing.address} city={listing.city} state={listing.state} price={listing.price} bedrooms={listing.bedrooms} bathrooms={listing.bathrooms} description={listing.description} photo={mainPhoto} listingType={listing.listing_type} url={canonicalUrl} />
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="max-w-7xl mx-auto">
@@ -254,7 +256,7 @@ const PropertyDetail = () => {
                   {cameFromAgentDashboard || isAgent && listing && listing.agent_id === currentUser?.id ? 'Back to My Listings' : 'Back to Search'}
                 </Button>
                 <div className="flex gap-2">
-                  <SocialShareMenu url={window.location.href} title={`${listing.address}, ${listing.city}, ${listing.state}`} description={`$${listing.price.toLocaleString()} - ${listing.bedrooms} bed, ${listing.bathrooms} bath`} />
+                  <SocialShareMenu url={canonicalUrl} title={`${listing.address}, ${listing.city}, ${listing.state}`} description={`$${listing.price.toLocaleString()} - ${listing.bedrooms} bed, ${listing.bathrooms} bath`} />
                   <FavoriteButton listingId={listing.id} />
                   <SaveToHotSheetDialog currentSearch={{
                   min_price: listing.price * 0.8,
