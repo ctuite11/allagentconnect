@@ -10,6 +10,7 @@ interface PropertyMetaTagsProps {
   description: string | null;
   photo: string | null;
   listingType: string;
+  url?: string;
 }
 
 export const PropertyMetaTags = ({
@@ -22,6 +23,7 @@ export const PropertyMetaTags = ({
   description,
   photo,
   listingType,
+  url,
 }: PropertyMetaTagsProps) => {
   const title = `${address}, ${city}, ${state} - All Agent Connect`;
   const priceText = listingType === 'for_rent' 
@@ -33,17 +35,17 @@ export const PropertyMetaTags = ({
     : `${priceText} - ${bedrooms} bed, ${bathrooms} bath property in ${city}, ${state}`;
 
   const imageUrl = photo || 'https://lovable.dev/opengraph-image-p98pqg.png';
-  const url = window.location.href;
+  const canonicalUrl = url || `${window.location.origin}${window.location.pathname}`;
 
   return (
     <Helmet>
       <title>{title}</title>
       <meta name="description" content={metaDescription} />
-      <link rel="canonical" href={url} />
+      <link rel="canonical" href={canonicalUrl} />
       
       {/* Open Graph / Facebook */}
       <meta property="og:type" content="website" />
-      <meta property="og:url" content={url} />
+      <meta property="og:url" content={canonicalUrl} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={metaDescription} />
       <meta property="og:image" content={imageUrl} />
@@ -53,11 +55,10 @@ export const PropertyMetaTags = ({
       <meta property="og:image:alt" content={`Photo of ${address}`} />
       <meta property="og:site_name" content="All Agent Connect" />
       <meta property="og:locale" content="en_US" />
-      <meta property="fb:app_id" content="758660681756022" />
       
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:url" content={url} />
+      <meta name="twitter:url" content={canonicalUrl} />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={metaDescription} />
       <meta name="twitter:image" content={imageUrl} />

@@ -182,6 +182,7 @@ const ConsumerPropertyDetail = () => {
   }
 
   const mainPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[currentPhotoIndex].url : '/placeholder.svg';
+  const canonicalUrl = `${window.location.origin}/property/${id}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -195,6 +196,7 @@ const ConsumerPropertyDetail = () => {
         description={listing.description}
         photo={mainPhoto}
         listingType={listing.listing_type}
+        url={canonicalUrl}
       />
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
@@ -221,7 +223,7 @@ const ConsumerPropertyDetail = () => {
                 </Button>
                 <div className="flex gap-2">
                   <SocialShareMenu
-                    url={window.location.href}
+                    url={canonicalUrl}
                     title={`${listing.address}, ${listing.city}, ${listing.state}`}
                     description={`$${listing.price.toLocaleString()} - ${listing.bedrooms} bed, ${listing.bathrooms} bath`}
                   />
