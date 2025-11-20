@@ -331,7 +331,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         `;
 
-        await resend.emails.send({
+        const result = await resend.emails.send({
           from: "All Agent Connect <noreply@mail.allagentconnect.com>",
           to: agent.email,
           subject: `[${getCategoryLabel(category)}] ${subject}`,
@@ -339,8 +339,16 @@ const handler = async (req: Request): Promise<Response> => {
           reply_to: senderEmail,
         });
 
-        emailResults.sent++;
-        console.log(`Email sent successfully to ${agent.email}`);
+        // Check if Resend accepted the email
+        if (result.error) {
+          emailResults.failed++;
+          const errorMsg = `Resend rejected email to ${agent.email}: ${result.error.message}`;
+          emailResults.errors.push(errorMsg);
+          console.error(errorMsg);
+        } else {
+          emailResults.sent++;
+          console.log(`Email sent successfully to ${agent.email} (Resend ID: ${result.data?.id})`);
+        }
       } catch (error: any) {
         emailResults.failed++;
         const errorMsg = `Failed to send to ${agent.email}: ${error.message}`;
