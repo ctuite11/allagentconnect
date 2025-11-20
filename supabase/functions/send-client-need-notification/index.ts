@@ -12,6 +12,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper function to add delay for rate limiting
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 interface SendNotificationRequest {
   category: "buyer_need" | "sales_intel" | "renter_need" | "general_discussion";
   subject: string;
@@ -304,8 +307,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
     };
 
+    let index = 0;
     for (const agent of agentProfiles) {
       try {
+        index++;
+        
         const html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #333;">${subject}</h2>
@@ -331,7 +337,8 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         `;
 
-        const result = await resend.emails.send({
+        // Send email with retry logic for rate limiting
+        const sendEmail = async () => await resend.emails.send({
           from: "All Agent Connect <noreply@mail.allagentconnect.com>",
           to: agent.email,
           subject: `[${getCategoryLabel(category)}] ${subject}`,
@@ -339,15 +346,31 @@ const handler = async (req: Request): Promise<Response> => {
           reply_to: senderEmail,
         });
 
+        let result = await sendEmail();
+
+        // If rate limited, wait and retry once
+        if (result.error && (result.error.message.includes("Too many requests") || result.error.message.includes("429"))) {
+          console.warn(`Rate limited for ${agent.email}, retrying after 1.5s...`);
+          await sleep(1500);
+          result = await sendEmail();
+        }
+
         // Check if Resend accepted the email
         if (result.error) {
           emailResults.failed++;
-          const errorMsg = `Resend rejected email to ${agent.email}: ${result.error.message}`;
+          const errorMsg = result.error.message.includes("Too many requests") 
+            ? `Rate limited by Resend for ${agent.email} — ${result.error.message}`
+            : `Resend rejected email to ${agent.email}: ${result.error.message}`;
           emailResults.errors.push(errorMsg);
           console.error(errorMsg);
         } else {
           emailResults.sent++;
           console.log(`Email sent successfully to ${agent.email} (Resend ID: ${result.data?.id})`);
+        }
+
+        // Throttle: after every 2 sends, pause 1 second to respect Resend's rate limit
+        if (index % 2 === 0) {
+          await sleep(1000);
         }
       } catch (error: any) {
         emailResults.failed++;
