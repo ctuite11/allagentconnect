@@ -136,6 +136,7 @@ const AddListing = () => {
   const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
   const [fetchingData, setFetchingData] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
 
   // Sale listing criteria
   const [listingAgreementTypes, setListingAgreementTypes] = useState<string[]>([]);
@@ -469,9 +470,27 @@ const AddListing = () => {
     });
   };
 
-  const handleCitySelect = (city: string) => {
-    setSelectedCity(city);
-    setFormData(prev => ({ ...prev, city, neighborhood: "" }));
+  const handleCitySelect = (value: string) => {
+    if (value.includes('-')) {
+      // It's a neighborhood selection
+      const [city, neighborhood] = value.split('-');
+      setSelectedCity(city);
+      setFormData(prev => ({ 
+        ...prev, 
+        city,
+        neighborhood,
+        zip_code: '' // Clear ZIP when changing location
+      }));
+    } else {
+      // It's a city selection
+      setSelectedCity(value);
+      setFormData(prev => ({ 
+        ...prev, 
+        city: value,
+        neighborhood: '',
+        zip_code: ''
+      }));
+    }
     setValidationErrors([]);
   };
 
@@ -1594,98 +1613,126 @@ const AddListing = () => {
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="county">County</Label>
-                    <Select
-                      value={selectedCounty}
-                      onValueChange={setSelectedCounty}
-                      disabled={!selectedState || availableCounties.length === 0}
-                    >
-                      <SelectTrigger className={cn(
-                        "bg-background",
-                        (!selectedState || availableCounties.length === 0) ? "cursor-not-allowed opacity-50" : ""
-                      )}>
-                        <SelectValue placeholder={selectedState ? "All Counties" : "Select state first"} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50 max-h-[300px]">
-                        <SelectItem value="all">All Counties</SelectItem>
-                        {availableCounties.map((county) => (
-                          <SelectItem key={county} value={county}>
-                            {county}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+  <div className="space-y-2">
+                    <Label>County (Optional)</Label>
+                    {!selectedState || availableCounties.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        {!selectedState ? "Select a state first" : "No counties available"}
+                      </p>
+                    ) : (
+                      <RadioGroup value={selectedCounty} onValueChange={setSelectedCounty}>
+                        <div className="space-y-2 border rounded-lg p-3 max-h-[200px] overflow-y-auto bg-background">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="all" id="county-all" />
+                            <Label htmlFor="county-all" className="cursor-pointer flex-1 font-normal">
+                              All Counties
+                            </Label>
+                          </div>
+                          {availableCounties.map((county) => (
+                            <div key={county} className="flex items-center space-x-2">
+                              <RadioGroupItem value={county} id={`county-${county}`} />
+                              <Label htmlFor={`county-${county}`} className="cursor-pointer flex-1 font-normal">
+                                {county}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    )}
                   </div>
                 </div>
 
                 {/* City with Neighborhoods */}
                 <div className="space-y-2">
                   <Label htmlFor="city" className={validationErrors.includes("City") ? "text-destructive" : ""}>
-                    City *
+                    City/Town *
                   </Label>
-                  <ScrollArea className="h-[200px] w-full border rounded-md p-4">
-                    <div className="space-y-2">
-                      {availableCities.map((city) => {
-                        const neighborhoods = getAreasForCity(city, selectedState);
-                        const hasNeighborhoods = neighborhoods && neighborhoods.length > 0;
-                        const isExpanded = expandedCities.has(city);
-                        
-                        return (
-                          <div key={city}>
-                            <div className="flex items-center gap-2">
-                              {hasNeighborhoods && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleCityExpansion(city)}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <ChevronDown 
-                                    className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-                                  />
-                                </Button>
-                              )}
-                              <Button
-                                type="button"
-                                variant={selectedCity === city && !formData.neighborhood ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => handleCitySelect(city)}
-                                className={!hasNeighborhoods ? "ml-8" : ""}
-                              >
-                                {city}
-                              </Button>
-                            </div>
-                            
-                            {hasNeighborhoods && isExpanded && (
-                              <div className="ml-14 mt-2 space-y-1">
-                                {neighborhoods.map((neighborhood) => (
-                                  <Button
-                                    key={neighborhood}
-                                    type="button"
-                                    variant={
-                                      selectedCity === city && formData.neighborhood === neighborhood
-                                        ? "default"
-                                        : "outline"
-                                    }
-                                    size="sm"
-                                    onClick={() => {
-                                      handleCitySelect(city);
-                                      handleNeighborhoodSelect(neighborhood);
-                                    }}
-                                    className="text-xs"
-                                  >
-                                    {neighborhood}
-                                  </Button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
+                  
+                  {/* Search Input */}
+                  <div className="relative">
+                    <Input
+                      value={citySearch}
+                      onChange={(e) => setCitySearch(e.target.value)}
+                      placeholder="Search cities..."
+                      className="pr-8"
+                    />
+                    {citySearch && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                        onClick={() => setCitySearch("")}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  {availableCities.length > 0 ? (
+                    <ScrollArea className="h-[300px] border rounded-lg p-3 bg-background">
+                      <RadioGroup value={formData.neighborhood ? `${selectedCity}-${formData.neighborhood}` : selectedCity} onValueChange={handleCitySelect}>
+                        <div className="space-y-2">
+                          {availableCities
+                            .filter(city => city.toLowerCase().includes(citySearch.toLowerCase()))
+                            .map((city) => {
+                              const neighborhoods = getAreasForCity(city, selectedState);
+                              const hasNeighborhoods = neighborhoods && neighborhoods.length > 0;
+                              const isExpanded = expandedCities.has(city);
+                              
+                              return (
+                                <div key={city} className="space-y-1">
+                                  <div className="flex items-center space-x-2">
+                                    {hasNeighborhoods && (
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => toggleCityExpansion(city)}
+                                        className="h-6 w-6 p-0"
+                                      >
+                                        <ChevronDown 
+                                          className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                        />
+                                      </Button>
+                                    )}
+                                    <RadioGroupItem value={city} id={`city-${city}`} />
+                                    <Label 
+                                      htmlFor={`city-${city}`} 
+                                      className={`cursor-pointer flex-1 font-normal ${!hasNeighborhoods ? 'ml-8' : ''}`}
+                                    >
+                                      {city}
+                                    </Label>
+                                  </div>
+                                  
+                                  {hasNeighborhoods && isExpanded && (
+                                    <div className="ml-8 border-l-2 border-muted pl-3 space-y-2 bg-muted/30 rounded-r py-2">
+                                      {neighborhoods.map((neighborhood) => (
+                                        <div key={neighborhood} className="flex items-center space-x-2">
+                                          <RadioGroupItem 
+                                            value={`${city}-${neighborhood}`} 
+                                            id={`neighborhood-${city}-${neighborhood}`}
+                                          />
+                                          <Label 
+                                            htmlFor={`neighborhood-${city}-${neighborhood}`}
+                                            className="cursor-pointer flex-1 text-sm text-muted-foreground font-normal"
+                                          >
+                                            {neighborhood}
+                                          </Label>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </RadioGroup>
+                    </ScrollArea>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {selectedState ? "Select a county or state to see cities" : "Select a state first"}
+                    </p>
+                  )}
                   {validationErrors.includes("City") && (
                     <p className="text-sm text-destructive">City is required</p>
                   )}
