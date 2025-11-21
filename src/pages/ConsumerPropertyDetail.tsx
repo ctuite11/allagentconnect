@@ -183,6 +183,7 @@ const ConsumerPropertyDetail = () => {
 
   const mainPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[currentPhotoIndex].url : '/placeholder.svg';
   const canonicalUrl = `${window.location.origin}/property/${id}`;
+  const sharePreviewUrl = `https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/${id}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -223,7 +224,7 @@ const ConsumerPropertyDetail = () => {
                 </Button>
                 <div className="flex gap-2">
                   <SocialShareMenu
-                    url={canonicalUrl}
+                    url={sharePreviewUrl}
                     title={`${listing.address}, ${listing.city}, ${listing.state}`}
                     description={`$${listing.price.toLocaleString()} - ${listing.bedrooms} bed, ${listing.bathrooms} bath`}
                   />
