@@ -11,6 +11,7 @@ import MarketInsightsDialog from "./MarketInsightsDialog";
 import FavoriteButton from "./FavoriteButton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { buildDisplayAddress } from "@/lib/utils";
 interface ListingCardProps {
   listing: {
     id: string;
@@ -335,44 +336,8 @@ const ListingCard = ({
   };
   const daysOnMarket = calculateDaysOnMarket();
 
-  // Build display address, avoid duplicate unit and strip country
-  const getDisplayAddress = () => {
-    const city = listing.city || '';
-    const state = listing.state || '';
-    const zip = listing.zip_code || '';
-    const removeCountry = (s: string) => s.replace(/\s*,?\s*(USA|United States)$/i, '');
-    let base = (listing.address || '').trim();
-    base = removeCountry(base);
-    if (!base) {
-      // Construct from parts
-      base = listing.address ? listing.address.trim() : '';
-      const tail = [city && `${city}, ${state} ${zip}`].filter(Boolean).join(', ');
-      base = [base, tail].filter(Boolean).join(', ');
-    }
-    const unit = unitNumber ? String(unitNumber) : null;
-    if (unit) {
-      const hasHash = new RegExp(`#\s*${unit}\\b`, 'i').test(base);
-      const hasWord = new RegExp(`\\bUnit\\s*${unit}\\b`, 'i').test(base);
-      if (!hasHash && !hasWord) {
-        const cityIndex = city ? base.indexOf(`, ${city}`) : -1;
-        if (cityIndex > -1) {
-          base = `${base.slice(0, cityIndex)} #${unit}${base.slice(cityIndex)}`;
-        } else {
-          base = `${base} #${unit}`;
-        }
-      }
-    }
-    // Append city/state/zip if missing in base
-    const lowerBase = base.toLowerCase();
-    const hasCity = city && lowerBase.includes(city.toLowerCase());
-    const hasState = state && new RegExp(`\\b${state}\\b`, 'i').test(base);
-    const hasZip = zip && base.includes(zip);
-    if (!hasCity && !hasState && !hasZip) {
-      const tail = [city && `${city}, ${state} ${zip}`].filter(Boolean).join(', ');
-      if (tail) base = [base, tail].filter(Boolean).join(', ');
-    }
-    return base;
-  };
+  // Use shared display address helper
+  const displayAddress = buildDisplayAddress(listing);
 
   // Compact view (for HotSheets and search results)
   if (viewMode === 'compact') {
@@ -443,7 +408,7 @@ const ListingCard = ({
           <div className="flex items-center gap-1 mb-1.5 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <p className="font-medium text-sm">
-              {getDisplayAddress() || `${listing.address}${listing.city ? `, ${listing.city}` : ''}${listing.state ? `, ${listing.state}` : ''}${listing.zip_code ? ` ${listing.zip_code}` : ''}`}
+              {displayAddress}
             </p>
           </div>
           
