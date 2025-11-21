@@ -1871,27 +1871,6 @@ const AddListing = () => {
                   </div>
                 </div>
                 <Progress value={overallProgress} className="h-2" />
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mt-4">
-                  {Object.entries(sectionProgress).map(([key, section]) => {
-                    const isComplete = section.completed === section.total;
-                    const percentage = Math.round((section.completed / section.total) * 100);
-                    return (
-                      <div 
-                        key={key}
-                        className={cn(
-                          "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border transition-colors",
-                          isComplete 
-                            ? "bg-primary/10 border-primary/20 text-primary" 
-                            : "bg-muted/50 border-border text-muted-foreground"
-                        )}
-                      >
-                        {isComplete && <CheckCircle2 className="h-3 w-3 flex-shrink-0" />}
-                        <span className="truncate">{section.name}</span>
-                        <span className="ml-auto font-medium">{percentage}%</span>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
               
               <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
