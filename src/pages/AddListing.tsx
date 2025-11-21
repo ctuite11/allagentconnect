@@ -703,6 +703,93 @@ const AddListing = () => {
       setBeachNearby(data.beach_nearby);
       setBasement(data.has_basement);
       
+      // Parse all additional fields from additional_notes
+      if (data.additional_notes) {
+        const notes = String(data.additional_notes);
+        
+        // Extract each field using regex patterns
+        const extractField = (pattern: string) => {
+          const match = notes.match(new RegExp(pattern + ': ([^\\n]+)', 'i'));
+          return match ? match[1].trim() : null;
+        };
+        
+        // Parse simple text fields
+        const extractedAssessed = extractField('Assessed Value');
+        if (extractedAssessed) setAssessedValue(extractedAssessed);
+        
+        const extractedFiscal = extractField('Fiscal Year');
+        if (extractedFiscal) setFiscalYear(extractedFiscal);
+        
+        const extractedResExemption = extractField('Residential Exemption');
+        if (extractedResExemption) setResidentialExemption(extractedResExemption);
+        
+        const extractedFloors = extractField('Floors');
+        if (extractedFloors) setFloors(extractedFloors);
+        
+        const extractedLeadPaint = extractField('Lead Paint');
+        if (extractedLeadPaint) setLeadPaint(extractedLeadPaint);
+        
+        const extractedHandicap = extractField('Handicap Access');
+        if (extractedHandicap) setHandicapAccess(extractedHandicap);
+        
+        const extractedParkingComments = extractField('Parking Comments');
+        if (extractedParkingComments) setParkingComments(extractedParkingComments);
+        
+        const extractedGarageComments = extractField('Garage Comments');
+        if (extractedGarageComments) setGarageComments(extractedGarageComments);
+        
+        // Parse array fields (comma-separated values)
+        const extractArrayField = (pattern: string) => {
+          const match = notes.match(new RegExp(pattern + ': ([^\\n]+)', 'i'));
+          if (match) {
+            return match[1].split(',').map(item => item.trim()).filter(Boolean);
+          }
+          return [];
+        };
+        
+        const extractedFoundation = extractArrayField('Foundation');
+        if (extractedFoundation.length > 0) setFoundation(extractedFoundation);
+        
+        const extractedBasementType = extractArrayField('Basement Type');
+        if (extractedBasementType.length > 0) setBasementType(extractedBasementType);
+        
+        const extractedBasementFeatures = extractArrayField('Basement Features');
+        if (extractedBasementFeatures.length > 0) setBasementFeatures(extractedBasementFeatures);
+        
+        const extractedBasementFloor = extractArrayField('Basement Floor');
+        if (extractedBasementFloor.length > 0) setBasementFloorType(extractedBasementFloor);
+        
+        const extractedParkingFeatures = extractArrayField('Parking Features');
+        if (extractedParkingFeatures.length > 0) setParkingFeatures(extractedParkingFeatures);
+        
+        const extractedGarageFeatures = extractArrayField('Garage Features');
+        if (extractedGarageFeatures.length > 0) setGarageFeatures(extractedGarageFeatures);
+        
+        const extractedGarageAdditional = extractArrayField('Garage Additional');
+        if (extractedGarageAdditional.length > 0) setGarageAdditionalFeatures(extractedGarageAdditional);
+        
+        const extractedLotSource = extractArrayField('Lot Source');
+        if (extractedLotSource.length > 0) setLotSizeSource(extractedLotSource);
+        
+        const extractedLotDesc = extractArrayField('Lot Description');
+        if (extractedLotDesc.length > 0) setLotDescription(extractedLotDesc);
+      }
+      
+      // Parse disclosure fields from disclosures array
+      if (Array.isArray(data.disclosures) && data.disclosures.length > 0) {
+        data.disclosures.forEach((disclosure: string) => {
+          if (disclosure === "Seller Disclosure") {
+            setSellerDisclosure("Yes");
+          } else if (disclosure.startsWith("Custom: ")) {
+            setDisclosuresText(disclosure.replace("Custom: ", ""));
+          } else if (disclosure.startsWith("Exclusions: ")) {
+            setExclusions(disclosure.replace("Exclusions: ", ""));
+          } else if (disclosure.startsWith("Broker Comments: ")) {
+            setBrokerComments(disclosure.replace("Broker Comments: ", ""));
+          }
+        });
+      }
+      
       // Numbers
       if (data.num_fireplaces) setMinFireplaces(data.num_fireplaces.toString());
       if (data.garage_spaces) setGarageSpaces(data.garage_spaces.toString());
