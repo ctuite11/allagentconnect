@@ -2188,27 +2188,29 @@ const AddListing = () => {
                     </div>
                   )}
                   
-                  {/* Search Input */}
-                  <div className="relative">
-                    <Input
-                      value={citySearch}
-                      onChange={(e) => setCitySearch(e.target.value)}
-                      placeholder="Search cities..."
-                      className="pr-8"
-                    />
-                    {citySearch && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                        onClick={() => setCitySearch("")}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                  {/* Search Input - Only show if no city selected */}
+                  {!selectedCity && (
+                    <div className="relative">
+                      <Input
+                        value={citySearch}
+                        onChange={(e) => setCitySearch(e.target.value)}
+                        placeholder="Search cities..."
+                        className="pr-8"
+                      />
+                      {citySearch && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                          onClick={() => setCitySearch("")}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
 
-                  {availableCities.length > 0 ? (
+                  {availableCities.length > 0 && !selectedCity ? (
                     <ScrollArea className="h-[300px] border rounded-lg p-3 bg-background">
                       <RadioGroup value={formData.neighborhood ? `${selectedCity}-${formData.neighborhood}` : selectedCity} onValueChange={handleCitySelect}>
                         <div className="space-y-2">
@@ -2281,7 +2283,7 @@ const AddListing = () => {
                         </div>
                       </RadioGroup>
                     </ScrollArea>
-                  ) : (
+                  ) : availableCities.length > 0 && selectedCity ? null : (
                     <p className="text-sm text-muted-foreground">
                       {selectedState ? "Select a county or state to see cities" : "Select a state first"}
                     </p>
