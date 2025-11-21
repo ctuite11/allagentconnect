@@ -137,12 +137,20 @@ const ListingCard = ({
   };
   
   const handleDelete = async () => {
+    console.log("Delete clicked for listing", listing.id, "status", listing.status);
+    
+    // Safety check: only allow deleting drafts
+    if (listing.status !== 'draft') {
+      toast.error("Only draft listings can be deleted.");
+      return;
+    }
+    
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from('listings')
-        .delete()
-        .eq('id', listing.id);
+      // Use backend function that handles cascading deletes and RLS
+      const { error } = await supabase.rpc('delete_draft_listing', {
+        p_listing_id: listing.id,
+      });
       
       if (error) throw error;
 
@@ -557,7 +565,10 @@ const ListingCard = ({
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
-              {listing.status === 'draft' && <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)} className="w-full">
+              {listing.status === 'draft' && <Button variant="destructive" size="sm" onClick={(e) => {
+                e.stopPropagation();
+                setDeleteDialogOpen(true);
+              }} className="w-full">
                   <Trash2 className="w-3 h-3 mr-1" />
                   Delete
                 </Button>}
@@ -728,7 +739,10 @@ const ListingCard = ({
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
-          {listing.status === 'draft' && <Button variant="destructive" size="sm" className="flex-1" onClick={() => setDeleteDialogOpen(true)}>
+          {listing.status === 'draft' && <Button variant="destructive" size="sm" className="flex-1" onClick={(e) => {
+            e.stopPropagation();
+            setDeleteDialogOpen(true);
+          }}>
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
             </Button>}
