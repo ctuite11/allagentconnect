@@ -77,7 +77,11 @@ export function TownsPicker({
                 )}
                 <button
                   type="button"
-                  onClick={() => onToggleTown(town)}
+                  onClick={() => {
+                    onToggleTown(town);
+                    // Close dropdown by triggering a blur or click outside
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
                   className="flex-1 text-left px-2 py-1.5 text-sm hover:bg-muted rounded"
                 >
                   {town}, {state}
@@ -91,7 +95,11 @@ export function TownsPicker({
                     <button
                       key={`${town}-${neighborhood}`}
                       type="button"
-                      onClick={() => onToggleTown(`${town}-${neighborhood}`)}
+                      onClick={() => {
+                        onToggleTown(`${town}-${neighborhood}`);
+                        // Close dropdown by triggering a blur or click outside
+                        (document.activeElement as HTMLElement)?.blur();
+                      }}
                       className="w-full text-left px-2 py-1 text-xs hover:bg-muted rounded text-muted-foreground"
                     >
                       {neighborhood}
