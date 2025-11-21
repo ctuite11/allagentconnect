@@ -60,7 +60,7 @@ const listingSchema = z.object({
   bathrooms: z.number().min(0, "Bathrooms must be 0 or more").max(50, "Bathrooms must be 50 or less").optional(),
   square_feet: z.number().int().min(1, "Square feet must be at least 1").max(100000, "Square feet must be less than 100,000").optional(),
   year_built: z.number().int().min(1800, "Year built must be 1800 or later").max(new Date().getFullYear() + 1, "Year built cannot be in the future").optional(),
-  lot_size: z.number().min(0, "Lot size must be 0 or more").max(10000, "Lot size must be less than 10,000 acres").optional(),
+  lot_size: z.number().min(0, "Lot size must be 0 or more").optional(),
   description: z.string().max(5000, "Description must be less than 5,000 characters").optional(),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),
@@ -2300,7 +2300,7 @@ const AddListing = () => {
                   ) : suggestedZips.length > 0 ? (
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">
-                        Click a button below to select a ZIP code:
+                        Click a button below to select a ZIP code (required - even if there's only one option):
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {suggestedZips.map((zip) => (
@@ -4438,7 +4438,7 @@ const AddListing = () => {
                   </div>
                   <Button variant="outline" size="lg" onClick={() => handleSaveDraft(false)} type="button" disabled={submitting || autoSaving} className="gap-2">
                     <Save className="w-5 h-5" />
-                    Save Draft
+                    {isEditMode && originalStatus && originalStatus !== "draft" ? "Save Changes" : "Save Draft"}
                   </Button>
                   <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
                     <Eye className="w-5 h-5" />
