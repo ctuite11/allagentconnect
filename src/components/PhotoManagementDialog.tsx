@@ -71,7 +71,7 @@ export function PhotoManagementDialog({ photos, onPhotosChange, trigger }: Photo
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Property Photos</DialogTitle>
           <p className="text-sm text-muted-foreground">
@@ -104,7 +104,7 @@ export function PhotoManagementDialog({ photos, onPhotosChange, trigger }: Photo
           </div>
 
           {photos.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {photos.map((photo, index) => (
                 <div
                   key={photo.id}
@@ -125,7 +125,7 @@ export function PhotoManagementDialog({ photos, onPhotosChange, trigger }: Photo
                   <img
                     src={photo.preview}
                     alt={`Property ${index + 1}`}
-                    className="w-full h-40 object-cover"
+                    className="w-full h-32 object-cover"
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-background/90 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
