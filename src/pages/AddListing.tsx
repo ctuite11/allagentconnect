@@ -1862,7 +1862,7 @@ const AddListing = () => {
             </div>
             <Button variant="outline" size="lg" onClick={() => handleSaveDraft(false)} type="button" disabled={submitting || autoSaving} className="gap-2">
               <Save className="w-5 h-5" />
-              {isEditMode && originalStatus && originalStatus !== "draft" ? "Save Changes" : "Save Draft"}
+              {isEditMode ? "Save Changes" : "Save Draft"}
             </Button>
             <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
               <Eye className="w-5 h-5" />
@@ -4438,7 +4438,7 @@ const AddListing = () => {
                   </div>
                   <Button variant="outline" size="lg" onClick={() => handleSaveDraft(false)} type="button" disabled={submitting || autoSaving} className="gap-2">
                     <Save className="w-5 h-5" />
-                    {isEditMode && originalStatus && originalStatus !== "draft" ? "Save Changes" : "Save Draft"}
+                    {isEditMode ? "Save Changes" : "Save Draft"}
                   </Button>
                   <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
                     <Eye className="w-5 h-5" />
