@@ -1397,13 +1397,19 @@ const AddListing = () => {
         documents: [],
       };
 
-      if (draftId) {
-        // Update existing draft
+      // Check if we're editing an existing listing (from URL) or using draftId
+      const listingId = id || draftId;
+      
+      if (listingId) {
+        // Update existing draft/listing
         const { error } = await supabase
           .from("listings")
           .update(payload)
-          .eq("id", draftId);
+          .eq("id", listingId);
         if (error) throw error;
+        
+        // Set draftId if not already set
+        if (!draftId) setDraftId(listingId);
       } else {
         // Create new draft
         const { data, error } = await supabase
@@ -2222,6 +2228,9 @@ const AddListing = () => {
                     </div>
                   ) : suggestedZips.length > 0 ? (
                     <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Click a button below to select a ZIP code:
+                      </p>
                       <div className="flex flex-wrap gap-2">
                         {suggestedZips.map((zip) => (
                           <Button
