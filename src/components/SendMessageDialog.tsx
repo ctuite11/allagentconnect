@@ -118,14 +118,18 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const handleMinPriceChange = (value: string) => {
     const sanitized = value.replace(/[^\d]/g, '');
     setMinPrice(sanitized);
-    setMinPriceDisplay(sanitized);
+    // Format as user types
+    const formatted = sanitized ? sanitized.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
+    setMinPriceDisplay(formatted);
     if (sanitized) setNoMinPrice(false);
   };
 
   const handleMaxPriceChange = (value: string) => {
     const sanitized = value.replace(/[^\d]/g, '');
     setMaxPrice(sanitized);
-    setMaxPriceDisplay(sanitized);
+    // Format as user types
+    const formatted = sanitized ? sanitized.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
+    setMaxPriceDisplay(formatted);
     if (sanitized) setNoMaxPrice(false);
   };
 
@@ -534,13 +538,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                             inputMode="numeric"
                             value={minPriceDisplay}
                             onChange={(e) => handleMinPriceChange(e.target.value)}
-                            onFocus={() => setMinPriceDisplay(minPrice)}
-                            onBlur={() => {
-                              if (minPrice) {
-                                setMinPriceDisplay(minPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ","));
-                              }
-                            }}
-                            placeholder="500,000"
+                            placeholder={category === "renter_need" ? "1,000" : "500,000"}
                             className="pl-7"
                             disabled={noMinPrice}
                           />
@@ -574,13 +572,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                             inputMode="numeric"
                             value={maxPriceDisplay}
                             onChange={(e) => handleMaxPriceChange(e.target.value)}
-                            onFocus={() => setMaxPriceDisplay(maxPrice)}
-                            onBlur={() => {
-                              if (maxPrice) {
-                                setMaxPriceDisplay(maxPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ","));
-                              }
-                            }}
-                            placeholder="500,000"
+                            placeholder={category === "renter_need" ? "20,000" : "500,000"}
                             className="pl-7"
                             disabled={noMaxPrice}
                           />
