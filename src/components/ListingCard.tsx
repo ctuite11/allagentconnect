@@ -147,10 +147,10 @@ const ListingCard = ({
     
     setDeleting(true);
     try {
-      // Use backend function that handles cascading deletes and RLS
-      const { error } = await supabase.rpc('delete_draft_listing', {
-        p_listing_id: listing.id,
-      });
+      const { error } = await supabase
+        .from("listings")
+        .delete()
+        .eq("id", listing.id);
       
       if (error) throw error;
 
