@@ -72,11 +72,13 @@ const ListingCard = ({
   const [prospectDialogOpen, setProspectDialogOpen] = useState(false);
   const [marketInsightsOpen, setMarketInsightsOpen] = useState(false);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
+  const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [deleting, setDeleting] = useState(false);
   useEffect(() => {
     loadMatchCount();
     loadStatusHistory();
+    loadPriceHistory();
   }, [listing.id]);
   const loadStatusHistory = async () => {
     try {
@@ -90,6 +92,24 @@ const ListingCard = ({
       }
     } catch (error) {
       console.error("Error loading status history:", error);
+    }
+  };
+
+  const loadPriceHistory = async () => {
+    try {
+      // Check if there are any favorites for this listing with price history
+      const { data } = await supabase
+        .from("favorite_price_history")
+        .select("*")
+        .eq("listing_id", listing.id)
+        .order("changed_at", { ascending: false })
+        .limit(1);
+      
+      if (data) {
+        setPriceHistory(data);
+      }
+    } catch (error) {
+      console.error("Error loading price history:", error);
     }
   };
   const loadMatchCount = async () => {
@@ -243,6 +263,15 @@ const ListingCard = ({
     if (statusHistory.length === 0) return null;
     const currentStatus = statusHistory[0]?.new_status;
 
+    // Check for Coming Soon status
+    if (currentStatus === 'coming_soon') {
+      return {
+        text: "COMING SOON",
+        color: "bg-indigo-600",
+        iconType: "sparkles" as const
+      };
+    }
+
     // Check if listing is new (not a relisting and active within last 7 days)
     // NEW shows if: first time active OR relisted after 30 days OR relisted with different agent
     const allActiveStatuses = statusHistory.filter(h => h.new_status === 'active');
@@ -280,6 +309,26 @@ const ListingCard = ({
     }
     return null;
   };
+
+  const getPriceChangeBanner = () => {
+    if (priceHistory.length === 0) return null;
+    
+    const recentPriceChange = priceHistory[0];
+    const changeDate = new Date(recentPriceChange.changed_at);
+    const daysSinceChange = Math.ceil((Date.now() - changeDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Show price change banner for 14 days
+    if (daysSinceChange <= 14) {
+      const priceDirection = recentPriceChange.new_price < recentPriceChange.old_price ? 'reduced' : 'increased';
+      return {
+        text: priceDirection === 'reduced' ? "PRICE REDUCED" : "PRICE CHANGE",
+        color: priceDirection === 'reduced' ? "bg-red-600" : "bg-amber-600",
+        iconType: "trendingDown" as const
+      };
+    }
+    
+    return null;
+  };
   const getOpenHouseBanner = () => {
     const nextOH = getNextOpenHouse();
     if (!nextOH) return null;
@@ -295,6 +344,7 @@ const ListingCard = ({
   const photoUrl = getFirstPhoto();
   const nextOpenHouse = getNextOpenHouse();
   const statusBanner = getStatusChangeBanner();
+  const priceChangeBanner = getPriceChangeBanner();
   const openHouseBanner = getOpenHouseBanner();
 
   // Color coding for match count
@@ -400,6 +450,23 @@ const ListingCard = ({
           {currentPhoto ? <img src={currentPhoto} alt={listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`} className="w-full h-48 object-cover cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)} /> : <div className="w-full h-48 bg-muted flex items-center justify-center">
               <Home className="h-12 w-12 text-muted-foreground" />
             </div>}
+          
+          {/* Status Change Banner (top priority) */}
+          {statusBanner && <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+              {statusBanner.iconType === 'sparkles' ? <Sparkles className="w-3 h-3" /> : <RefreshCw className="w-3 h-3" />}
+              {statusBanner.text}
+            </div>}
+          
+          {/* Price Change Banner (second priority) */}
+          {priceChangeBanner && !statusBanner && <div className={`absolute top-0 left-0 right-0 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+              <TrendingDown className="w-3 h-3" />
+              {priceChangeBanner.text}
+            </div>}
+          
+          {/* Open House Banner (third priority) */}
+          {openHouseBanner && !statusBanner && !priceChangeBanner && <div className={`absolute top-0 left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}>
+              {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text}
+            </div>}
         </div>
         <CardContent className="p-2.5">
           <div className="flex items-start justify-between mb-1.5">
@@ -467,8 +534,14 @@ const ListingCard = ({
                 {statusBanner.text}
               </div>}
             
-            {/* Open House Banner (secondary priority) */}
-            {openHouseBanner && !statusBanner && <div className={`absolute top-0 left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}>
+            {/* Price Change Banner (second priority) */}
+            {priceChangeBanner && !statusBanner && <div className={`absolute top-0 left-0 right-0 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+                <TrendingDown className="w-3 h-3" />
+                {priceChangeBanner.text}
+              </div>}
+            
+            {/* Open House Banner (third priority) */}
+            {openHouseBanner && !statusBanner && !priceChangeBanner && <div className={`absolute top-0 left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}>
                 {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text}
               </div>}
             
@@ -635,8 +708,14 @@ const ListingCard = ({
             {statusBanner.text}
           </div>}
         
-        {/* Open House Banner (secondary priority, positioned below status banner if both exist) */}
-        {openHouseBanner && <div className={`absolute ${statusBanner ? 'top-10' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-sm font-bold px-3 py-2 text-center`}>
+        {/* Price Change Banner (second priority, positioned below status banner if both exist) */}
+        {priceChangeBanner && <div className={`absolute ${statusBanner ? 'top-10' : 'top-0'} left-0 right-0 ${priceChangeBanner.color} text-white text-sm font-bold px-3 py-2 text-center flex items-center justify-center gap-2`}>
+            <TrendingDown className="w-4 h-4" />
+            {priceChangeBanner.text}
+          </div>}
+        
+        {/* Open House Banner (third priority, positioned below previous banners if they exist) */}
+        {openHouseBanner && <div className={`absolute ${statusBanner && priceChangeBanner ? 'top-20' : statusBanner || priceChangeBanner ? 'top-10' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-sm font-bold px-3 py-2 text-center`}>
             {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text} - {openHouseBanner.date}
           </div>}
         
