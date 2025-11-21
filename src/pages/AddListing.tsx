@@ -141,6 +141,12 @@ const AddListing = () => {
   const [fetchingData, setFetchingData] = useState(false);
   const [citySearch, setCitySearch] = useState("");
 
+  // Normalize state to 2-letter code for neighborhood lookups
+  const rawState = (selectedState || "").trim();
+  const stateKey = rawState && rawState.length > 2
+    ? (US_STATES.find(s => s.name.toLowerCase() === rawState.toLowerCase())?.code ?? rawState)
+    : rawState.toUpperCase();
+
   // Sale listing criteria
   const [listingAgreementTypes, setListingAgreementTypes] = useState<string[]>([]);
   const [entryOnly, setEntryOnly] = useState<boolean | null>(null);
@@ -463,6 +469,42 @@ const AddListing = () => {
 
     fetchZipCodes();
   }, [selectedState, selectedCity]);
+
+  // Auto-expand cities with neighborhoods
+  useEffect(() => {
+    if (selectedState && availableCities.length > 0) {
+      const citiesToExpand = new Set<string>();
+
+      availableCities.forEach((city) => {
+        if (city.includes("-")) return; // skip neighborhood-like entries
+
+        const hasNeighborhoodsFromData =
+          getAreasForCity(city, stateKey || selectedState).length > 0;
+
+        const hasHyphenatedAreas = availableCities.some((t) =>
+          t.startsWith(`${city}-`)
+        );
+
+        if (hasNeighborhoodsFromData || hasHyphenatedAreas) {
+          citiesToExpand.add(city);
+        }
+      });
+
+      // Also ensure the currently selected city is expanded, if it has areas
+      if (selectedCity && availableCities.includes(selectedCity)) {
+        const hasNeighborhoodsForSelected =
+          getAreasForCity(selectedCity, stateKey || selectedState).length > 0 ||
+          availableCities.some((t) => t.startsWith(`${selectedCity}-`));
+        if (hasNeighborhoodsForSelected) {
+          citiesToExpand.add(selectedCity);
+        }
+      }
+
+      setExpandedCities(citiesToExpand);
+    } else {
+      setExpandedCities(new Set());
+    }
+  }, [selectedState, stateKey, availableCities.length, selectedCity]);
 
   const toggleCityExpansion = (city: string) => {
     setExpandedCities(prev => {
@@ -1988,7 +2030,7 @@ const AddListing = () => {
                           {availableCities
                             .filter(city => city.toLowerCase().includes(citySearch.toLowerCase()))
                             .map((city) => {
-                              const neighborhoods = getAreasForCity(city, selectedState);
+                              const neighborhoods = getAreasForCity(city, stateKey || selectedState);
                               
                               // Add fallback: check for hyphenated entries if no data from usNeighborhoodsData
                               let neighborhoodsList = neighborhoods;
