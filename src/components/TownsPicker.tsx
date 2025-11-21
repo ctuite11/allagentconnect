@@ -157,6 +157,7 @@ export function TownsPicker({
                   type="button"
                   onClick={() => onToggleCityExpansion(town)}
                   className="p-1 hover:bg-muted rounded"
+                  disabled={!selectedTowns.includes(town)}
                 >
                   {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
                 </button>
@@ -168,8 +169,14 @@ export function TownsPicker({
               />
               <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">{town}</label>
             </div>
+            
+            {town === "Boston" && (
+              <div className="ml-6 text-xs text-muted-foreground italic mt-1">
+                💡 Selecting Boston alone includes all neighborhoods
+              </div>
+            )}
             {showNeighborhoods && isExpanded && (
-              <div className="ml-8 border-l-2 border-muted pl-2 space-y-1 bg-muted/30 rounded-r py-1">
+              <div className={`ml-8 border-l-2 border-muted pl-2 space-y-1 rounded-r py-1 ${selectedTowns.includes(town) ? "bg-muted/30" : "bg-muted/10"}`}>
                 {neighborhoods
                   .filter((n) => !topCities.has(n))
                   .map((neighborhood) => (
@@ -178,8 +185,13 @@ export function TownsPicker({
                       id={`neighborhood-${town}-${neighborhood}`}
                       checked={selectedTowns.includes(`${town}-${neighborhood}`)}
                       onCheckedChange={() => onToggleTown(`${town}-${neighborhood}`)}
+                      disabled={!selectedTowns.includes(town)}
+                      className={!selectedTowns.includes(town) ? "opacity-50 cursor-not-allowed" : ""}
                     />
-                    <label htmlFor={`neighborhood-${town}-${neighborhood}`} className="text-xs cursor-pointer flex-1 text-muted-foreground">
+                    <label 
+                      htmlFor={`neighborhood-${town}-${neighborhood}`} 
+                      className={`text-xs cursor-pointer flex-1 ${!selectedTowns.includes(town) ? "text-muted-foreground/50 cursor-not-allowed" : "text-muted-foreground"}`}
+                    >
                       {neighborhood}
                     </label>
                   </div>
