@@ -712,27 +712,59 @@ const AddRentalListing = () => {
                   <div className="space-y-2">
                     <Label htmlFor="city">City/Town *</Label>
                     
-                    {/* Search Input */}
-                    <div className="relative">
-                      <Input
-                        value={citySearch}
-                        onChange={(e) => setCitySearch(e.target.value)}
-                        placeholder="Search cities..."
-                        className="pr-8"
-                      />
-                      {citySearch && (
+                    {/* Selected City Display */}
+                    {selectedCity && (
+                      <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                        <Home className="h-4 w-4 text-primary" />
+                        <div className="flex-1">
+                          <div className="font-medium text-primary">
+                            {selectedCity}
+                            {formData.neighborhood && ` - ${formData.neighborhood}`}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {selectedState && US_STATES.find(s => s.code === selectedState)?.name}
+                          </div>
+                        </div>
                         <Button
+                          type="button"
                           variant="ghost"
                           size="sm"
-                          className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                          onClick={() => setCitySearch("")}
+                          onClick={() => {
+                            setSelectedCity("");
+                            setFormData(prev => ({ ...prev, city: "", neighborhood: "" }));
+                            setCitySearch("");
+                          }}
+                          className="h-8 gap-1"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-3 w-3" />
+                          Change
                         </Button>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                    
+                    {/* Search Input - Only show if no city selected */}
+                    {!selectedCity && (
+                      <div className="relative">
+                        <Input
+                          value={citySearch}
+                          onChange={(e) => setCitySearch(e.target.value)}
+                          placeholder="Search cities..."
+                          className="pr-8"
+                        />
+                        {citySearch && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                            onClick={() => setCitySearch("")}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
 
-                    {availableCities.length > 0 ? (
+                    {availableCities.length > 0 && !selectedCity ? (
                       <ScrollArea className="h-[300px] border rounded-lg p-3 bg-background">
                         <RadioGroup value={formData.neighborhood ? `${selectedCity}-${formData.neighborhood}` : selectedCity} onValueChange={handleCitySelect}>
                           <div className="space-y-2">
@@ -792,7 +824,7 @@ const AddRentalListing = () => {
                           </div>
                         </RadioGroup>
                       </ScrollArea>
-                    ) : (
+                    ) : availableCities.length > 0 && selectedCity ? null : (
                       <p className="text-sm text-muted-foreground">
                         {selectedState ? "Select a county or state to see cities" : "Select a state first"}
                       </p>
@@ -841,13 +873,8 @@ const AddRentalListing = () => {
                         />
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Select a city to see available ZIP codes
-                      </p>
+                      <p className="text-sm text-muted-foreground">Select a city to see ZIP code options</p>
                     )}
-                  </div>
-
-                  {/* Street Address */}
                   <div className="space-y-2">
                     <Label htmlFor="address">Street Address *</Label>
                     <Input
