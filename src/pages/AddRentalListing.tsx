@@ -14,9 +14,10 @@ import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertic
 import { z } from "zod";
 import { bostonNeighborhoods, bostonNeighborhoodsWithAreas } from "@/data/bostonNeighborhoods";
 import listingIcon from "@/assets/listing-creation-icon.png";
-import { US_STATES } from "@/data/usStatesCountiesData";
+import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
-import { zipCodesByCityState } from "@/data/usZipCodesByCity";
+import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
+import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
 import { cn } from "@/lib/utils";
 
 interface FileWithPreview {
@@ -94,39 +95,72 @@ const AddRentalListing = () => {
 
   // Address dropdown state
   const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedCounty, setSelectedCounty] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("");
+  const [availableCounties, setAvailableCounties] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [availableZips, setAvailableZips] = useState<string[]>([]);
 
-  // Update available cities when state changes
+  // Update available counties when state changes
   useEffect(() => {
     if (selectedState) {
-      const stateCode = US_STATES.find(s => s.code === selectedState)?.code;
-      if (stateCode && usCitiesByState[stateCode]) {
-        setAvailableCities(usCitiesByState[stateCode]);
+      const counties = getCountiesForState(selectedState);
+      setAvailableCounties(counties);
+      setSelectedCounty("all");
+      setSelectedCity("");
+      setAvailableCities([]);
+      setAvailableZips([]);
+      setFormData(prev => ({ ...prev, city: "", state: selectedState, zip_code: "" }));
+    }
+  }, [selectedState]);
+
+  // Update available cities when county changes
+  useEffect(() => {
+    if (selectedState && selectedCounty) {
+      const hasCountyData = hasCountyCityMapping(selectedState);
+      let cities: string[] = [];
+      
+      if (hasCountyData && selectedCounty !== "all") {
+        cities = getCitiesForCounty(selectedState, selectedCounty);
       } else {
-        setAvailableCities([]);
+        cities = usCitiesByState[selectedState] || [];
       }
-      // Clear city and zip when state changes
+      
+      setAvailableCities(cities);
       setSelectedCity("");
       setAvailableZips([]);
       setFormData(prev => ({ ...prev, city: "", zip_code: "" }));
     }
-  }, [selectedState]);
-  
-  // Update available ZIP codes when city changes
+  }, [selectedState, selectedCounty]);
+
+  // Fetch ZIP codes when city changes
   useEffect(() => {
-    if (selectedCity && selectedState) {
-      const key = `${selectedCity}-${selectedState}`;
-      if (zipCodesByCityState[key]) {
-        setAvailableZips(zipCodesByCityState[key]);
-      } else {
-        setAvailableZips([]);
+    const fetchZipCodes = async () => {
+      if (selectedState && selectedCity) {
+        try {
+          // Try static data first
+          if (hasZipCodeData(selectedCity, selectedState)) {
+            const staticZips = getZipCodesForCity(selectedCity, selectedState);
+            setAvailableZips(staticZips);
+          } else {
+            // Fallback to edge function
+            const { data, error } = await supabase.functions.invoke('get-city-zips', {
+              body: { state: selectedState, city: selectedCity }
+            });
+            if (error) throw error;
+            setAvailableZips(data?.zips || []);
+          }
+          setFormData(prev => ({ ...prev, city: selectedCity, zip_code: "" }));
+        } catch (error) {
+          console.error("Error fetching ZIP codes:", error);
+          toast.error("Could not load ZIP codes for this city");
+          setAvailableZips([]);
+        }
       }
-      // Clear zip when city changes
-      setFormData(prev => ({ ...prev, zip_code: "" }));
-    }
-  }, [selectedCity, selectedState]);
+    };
+
+    fetchZipCodes();
+  }, [selectedState, selectedCity]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -464,8 +498,8 @@ const AddRentalListing = () => {
                 <div className="space-y-4">
                   <Label className="text-lg font-semibold">Property Location</Label>
                   
-                  {/* Row 1: State, City, ZIP */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Row 1: State, County */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="state">State *</Label>
                       <Select
@@ -488,6 +522,33 @@ const AddRentalListing = () => {
                       </Select>
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="county">County</Label>
+                      <Select
+                        value={selectedCounty}
+                        onValueChange={setSelectedCounty}
+                        disabled={!selectedState || availableCounties.length === 0}
+                      >
+                        <SelectTrigger className={cn(
+                          "bg-background",
+                          (!selectedState || availableCounties.length === 0) ? "cursor-not-allowed opacity-50" : ""
+                        )}>
+                          <SelectValue placeholder={selectedState ? "All Counties" : "Select state first"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50 max-h-[300px]">
+                          <SelectItem value="all">All Counties</SelectItem>
+                          {availableCounties.map((county) => (
+                            <SelectItem key={county} value={county}>
+                              {county}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Row 2: City, ZIP */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="city">City *</Label>
                       <Select
