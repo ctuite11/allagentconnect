@@ -3897,6 +3897,69 @@ const AddListing = () => {
 
 
                 {/* ========================================
+                    SECTION 11: OPEN HOUSE SCHEDULING
+                    ======================================== */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Open House Scheduling</Label>
+                  
+                  <div className="flex gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setOpenHouseDialogType('public');
+                        setOpenHouseDialogOpen(true);
+                      }}
+                    >
+                      🎈 Schedule Public Open House
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setOpenHouseDialogType('broker');
+                        setOpenHouseDialogOpen(true);
+                      }}
+                    >
+                      🚗 Schedule Broker Open House
+                    </Button>
+                  </div>
+                  
+                  {openHouses.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">Scheduled Open Houses</Label>
+                      {openHouses.map((oh, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div>
+                            <div className="font-medium">
+                              {oh.type === 'public' ? '🎈 Public' : '🚗 Broker'} Open House
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {format(new Date(oh.date), 'MMMM d, yyyy')} • {oh.start_time} - {oh.end_time}
+                            </div>
+                            {oh.notes && (
+                              <div className="text-sm text-muted-foreground mt-1">{oh.notes}</div>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setOpenHouses(openHouses.filter((_, i) => i !== index));
+                              toast.success('Open house removed');
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+
+                {/* ========================================
                     SECTION 13: DISCLOSURES & LEGAL
                     ======================================== */}
 
