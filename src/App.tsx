@@ -15,7 +15,7 @@ import ClientNeedsDashboard from "./pages/ClientNeedsDashboard";
 import ListingIntel from "./pages/ListingIntel";
 import AddListing from "./pages/AddListing";
 import AddRentalListing from "./pages/AddRentalListing";
-import EditListing from "./pages/EditListing";
+// EditListing removed - now handled by AddListing with :id param
 import PropertyDetail from "./pages/PropertyDetail";
 import ConsumerPropertyDetail from "./pages/ConsumerPropertyDetail";
 import AgentProfile from "./pages/AgentProfile";
@@ -72,8 +72,9 @@ const App = () => (
           <Route path="/client-needs" element={<ClientNeedsDashboard />} />
           <Route path="/listing-intel" element={<ListingIntel />} />
           <Route path="/add-listing" element={<AddListing />} />
+          <Route path="/add-listing/:id" element={<AddListing />} />
           <Route path="/add-rental-listing" element={<AddRentalListing />} />
-          <Route path="/edit-listing/:id" element={<EditListing />} />
+          <Route path="/edit-listing/:id" element={<Navigate to="/add-listing/:id" replace />} />
           <Route path="/property/:id" element={<PropertyDetail />} />
           <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
           <Route path="/agent/:id" element={<AgentProfile />} />
