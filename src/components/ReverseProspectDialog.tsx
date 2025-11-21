@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { propertyTypeToEnum } from "@/lib/utils";
 import { Loader2, MapPin, DollarSign, Home } from "lucide-react";
 
 interface ReverseProspectDialogProps {
@@ -100,7 +101,8 @@ export function ReverseProspectDialog({
 
       // Match by property type
       if (listing.property_type) {
-        query = query.eq("property_type", listing.property_type as any);
+        const enumValue = propertyTypeToEnum(listing.property_type);
+        query = query.eq("property_type", enumValue as any);
       }
 
       // Match by price (listing price should be at or below max_price)

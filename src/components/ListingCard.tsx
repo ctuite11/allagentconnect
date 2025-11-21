@@ -11,7 +11,7 @@ import MarketInsightsDialog from "./MarketInsightsDialog";
 import FavoriteButton from "./FavoriteButton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { buildDisplayAddress } from "@/lib/utils";
+import { buildDisplayAddress, propertyTypeToEnum } from "@/lib/utils";
 interface ListingCardProps {
   listing: {
     id: string;
@@ -112,7 +112,8 @@ const ListingCard = ({
 
       // Match by property type
       if (listing.property_type) {
-        query = query.eq("property_type", listing.property_type as any);
+        const enumValue = propertyTypeToEnum(listing.property_type);
+        query = query.eq("property_type", enumValue as any);
       }
 
       // Match by price (listing price should be at or below max_price)
