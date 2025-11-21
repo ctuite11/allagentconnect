@@ -210,6 +210,7 @@ export type Database = {
           created_at: string | null
           id: string
           neighborhood: string | null
+          source: string
           state: string | null
           zip_code: string
         }
@@ -220,6 +221,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           neighborhood?: string | null
+          source?: string
           state?: string | null
           zip_code: string
         }
@@ -230,6 +232,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           neighborhood?: string | null
+          source?: string
           state?: string | null
           zip_code?: string
         }

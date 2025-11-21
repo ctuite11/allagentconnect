@@ -80,11 +80,11 @@ const GeographicPreferencesManager = ({
     try {
       setLoading(true);
 
-      // Load agent's current preferences
+      // Load agent's current preferences (notifications only)
       const {
         data: prefsData,
         error: prefsError
-      } = await supabase.from("agent_buyer_coverage_areas").select("*").eq("agent_id", agentId);
+      } = await supabase.from("agent_buyer_coverage_areas").select("*").eq("agent_id", agentId).eq("source", "notifications");
       if (prefsError) throw prefsError;
       if (prefsData && prefsData.length > 0) {
         // Extract state from first preference
@@ -116,11 +116,12 @@ const GeographicPreferencesManager = ({
     
     setSaving(true);
     try {
-      // Delete all existing preferences for this agent
+      // Delete all existing notification preferences for this agent
       const { error: deleteError } = await supabase
         .from("agent_buyer_coverage_areas")
         .delete()
-        .eq("agent_id", agentId);
+        .eq("agent_id", agentId)
+        .eq("source", "notifications");
       if (deleteError) throw deleteError;
 
       // Only insert if there are towns to save
@@ -140,7 +141,8 @@ const GeographicPreferencesManager = ({
               county: county === "all" ? null : county,
               city,
               neighborhood,
-              zip_code: syntheticZip
+              zip_code: syntheticZip,
+              source: "notifications",
             };
           } else {
             return {
@@ -149,7 +151,8 @@ const GeographicPreferencesManager = ({
               county: county === "all" ? null : county,
               city: town,
               neighborhood: null,
-              zip_code: syntheticZip
+              zip_code: syntheticZip,
+              source: "notifications",
             };
           }
         });

@@ -179,11 +179,12 @@ const AgentProfileEditor = () => {
       if (testimonialError) throw testimonialError;
       setTestimonials(testimonialData || []);
 
-      // Load coverage areas
+      // Load coverage areas (profile only)
       const { data: coverageData, error: coverageError } = await supabase
         .from("agent_buyer_coverage_areas")
         .select("*")
         .eq("agent_id", userId)
+        .eq("source", "profile")
         .order("created_at", { ascending: false });
 
       if (coverageError) throw coverageError;
@@ -411,7 +412,7 @@ const AgentProfileEditor = () => {
         return;
       }
 
-      // Insert all valid zip codes
+      // Insert all valid zip codes (as profile coverage)
       const insertPromises = validZips.map(zip => 
         supabase
           .from("agent_buyer_coverage_areas")
@@ -421,6 +422,7 @@ const AgentProfileEditor = () => {
             city: newCoverageCity,
             state: newCoverageState,
             county: newCoverageCounty || null,
+            source: "profile",
           })
           .select()
           .single()
@@ -457,7 +459,8 @@ const AgentProfileEditor = () => {
       const { error } = await supabase
         .from("agent_buyer_coverage_areas")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .eq("source", "profile");
 
       if (error) throw error;
       
@@ -477,7 +480,8 @@ const AgentProfileEditor = () => {
       const { error } = await supabase
         .from("agent_buyer_coverage_areas")
         .delete()
-        .eq("agent_id", session.user.id);
+        .eq("agent_id", session.user.id)
+        .eq("source", "profile");
 
       if (error) throw error;
 
