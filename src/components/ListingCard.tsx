@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReverseProspectDialog } from "./ReverseProspectDialog";
 import MarketInsightsDialog from "./MarketInsightsDialog";
 import FavoriteButton from "./FavoriteButton";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { buildDisplayAddress } from "@/lib/utils";
 interface ListingCardProps {
@@ -73,7 +73,6 @@ const ListingCard = ({
   const [marketInsightsOpen, setMarketInsightsOpen] = useState(false);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   useEffect(() => {
     loadMatchCount();
@@ -163,7 +162,6 @@ const ListingCard = ({
 
       console.log("Draft deleted successfully:", listing.id);
       toast.success("Draft listing deleted successfully");
-      setDeleteDialogOpen(false);
       onDelete?.(listing.id);
     } catch (error: any) {
       console.error("Error deleting draft listing:", error);
@@ -573,13 +571,30 @@ const ListingCard = ({
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
-              {listing.status === 'draft' && <Button variant="destructive" size="sm" onClick={(e) => {
-                e.stopPropagation();
-                setDeleteDialogOpen(true);
-              }} className="w-full">
-                  <Trash2 className="w-3 h-3 mr-1" />
-                  Delete
-                </Button>}
+              {listing.status === 'draft' && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" onClick={(e) => e.stopPropagation()} className="w-full">
+                      <Trash2 className="w-3 h-3 mr-1" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Draft Listing</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this draft listing? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        {deleting ? 'Deleting...' : 'Delete'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               {listing.status === 'cancelled' && onReactivate && <Button variant="default" size="sm" onClick={() => onReactivate(listing.id)} className="w-full bg-green-600 hover:bg-green-700">
                   <RefreshCw className="w-3 h-3 mr-1" />
                   Reactivate
@@ -747,13 +762,30 @@ const ListingCard = ({
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
-          {listing.status === 'draft' && <Button variant="destructive" size="sm" className="flex-1" onClick={(e) => {
-            e.stopPropagation();
-            setDeleteDialogOpen(true);
-          }}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </Button>}
+          {listing.status === 'draft' && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="flex-1" onClick={(e) => e.stopPropagation()}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Draft Listing</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this draft listing? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    {deleting ? 'Deleting...' : 'Delete'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           {listing.status === 'cancelled' && onReactivate && <Button variant="default" size="sm" onClick={() => onReactivate(listing.id)} className="bg-green-600 hover:bg-green-700">
               <RefreshCw className="w-4 h-4 mr-1" />
               Reactivate
@@ -769,22 +801,6 @@ const ListingCard = ({
       price: listing.price,
       property_type: listing.property_type
     }} />
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Draft Listing</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this draft listing? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {deleting ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Card>;
 };
 export default ListingCard;
