@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud, Lock, Unlock, AlertCircle, ArrowLeft } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud, AlertCircle, ArrowLeft } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -27,6 +27,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { US_STATES } from "@/data/usStatesCountiesData";
+import { usCitiesByState } from "@/data/usCitiesData";
+import { zipCodesByCityState } from "@/data/usZipCodesByCity";
 
 interface FileWithPreview {
   file: File;
@@ -109,25 +112,19 @@ const AddListing = () => {
   const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
   const [amenities, setAmenities] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [manualAddressDialogOpen, setManualAddressDialogOpen] = useState(false);
-  const addressLockedRef = useRef(false);
-  const addressLockUntilRef = useRef(0);
-  // Cache last non-empty location to prevent accidental clearing
-  const cachedLocationRef = useRef({ city: "", state: "", zip_code: "" });
-  const [locationLocked, setLocationLocked] = useState(false);
   
   // Store fetched property data
   const [attomData, setAttomData] = useState<any>(null);
   const [walkScoreData, setWalkScoreData] = useState<any>(null);
   const [schoolsData, setSchoolsData] = useState<any>(null);
   const [valueEstimate, setValueEstimate] = useState<any>(null);
-
-  useEffect(() => {
-    if (manualAddressDialogOpen) {
-      addressLockedRef.current = false;
-      addressLockUntilRef.current = 0;
-    }
-  }, [manualAddressDialogOpen]);
+  
+  // Address dropdown state
+  const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [availableZips, setAvailableZips] = useState<string[]>([]);
+  const [fetchingData, setFetchingData] = useState(false);
 
   // Sale listing criteria
   const [listingAgreementTypes, setListingAgreementTypes] = useState<string[]>([]);
@@ -342,16 +339,35 @@ const AddListing = () => {
   const totalFields = Object.values(sectionProgress).reduce((sum, section) => sum + section.total, 0);
   const overallProgress = Math.round((totalCompleted / totalFields) * 100);
 
-  // Keep a cached copy of location when set, to restore if UI clears it unintentionally
+  // Update available cities when state changes
   useEffect(() => {
-    if (formData.city && formData.state && formData.zip_code) {
-      cachedLocationRef.current = {
-        city: formData.city,
-        state: formData.state,
-        zip_code: formData.zip_code,
-      };
+    if (selectedState) {
+      const stateCode = US_STATES.find(s => s.code === selectedState)?.code;
+      if (stateCode && usCitiesByState[stateCode]) {
+        setAvailableCities(usCitiesByState[stateCode]);
+      } else {
+        setAvailableCities([]);
+      }
+      // Clear city and zip when state changes
+      setSelectedCity("");
+      setAvailableZips([]);
+      setFormData(prev => ({ ...prev, city: "", zip_code: "" }));
     }
-  }, [formData.city, formData.state, formData.zip_code]);
+  }, [selectedState]);
+  
+  // Update available ZIP codes when city changes
+  useEffect(() => {
+    if (selectedCity && selectedState) {
+      const key = `${selectedCity}-${selectedState}`;
+      if (zipCodesByCityState[key]) {
+        setAvailableZips(zipCodesByCityState[key]);
+      } else {
+        setAvailableZips([]);
+      }
+      // Clear zip when city changes
+      setFormData(prev => ({ ...prev, zip_code: "" }));
+    }
+  }, [selectedCity, selectedState]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -385,11 +401,11 @@ const AddListing = () => {
     return { street: streetLine.trim(), unit: "" };
   };
 
-  const handleVerifyAndLock = useCallback(async () => {
+  const handleFetchPropertyData = useCallback(async () => {
     const { address, city, state, zip_code } = formData;
     
     if (!address || !city || !state || !zip_code) {
-      toast.error("Please fill in all address fields before verifying");
+      toast.error("Please fill in all address fields before fetching property data");
       return;
     }
 
@@ -399,8 +415,8 @@ const AddListing = () => {
       return;
     }
 
-    toast.info("Verifying address and fetching property data...");
-    setLocationLocked(true);
+    setFetchingData(true);
+    toast.info("Fetching property data...");
     
     // Extract unit number if present in address
     const { street, unit } = extractUnitFromAddress(address);
@@ -422,6 +438,9 @@ const AddListing = () => {
         latitude = geocodeData.results[0].geometry.location.lat;
         longitude = geocodeData.results[0].geometry.location.lng;
         console.log("[AddListing] Geocoded address:", { latitude, longitude });
+        
+        // Update form with coordinates
+        setFormData(prev => ({ ...prev, latitude, longitude }));
       } else {
         console.warn("[AddListing] Geocoding failed:", geocodeData.status);
         toast.warning("Could not verify exact coordinates, but will still fetch available property data");
@@ -442,6 +461,8 @@ const AddListing = () => {
       unit || unitNumber, 
       formData.property_type
     );
+    
+    setFetchingData(false);
   }, [formData, unitNumber]);
   
   const fetchPropertyData = async (lat: number | undefined, lng: number | undefined, address: string, city: string, state: string, zip: string, unit_number?: string, property_type?: string) => {
@@ -1342,68 +1363,176 @@ const AddListing = () => {
                     SECTION 2: PROPERTY LOCATION  
                     ======================================== */}
 
-                {/* Location Details Header with Lock/Unlock */}
+                {/* Location Details Header */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between">
                     <Label className="text-lg font-semibold">Location Details</Label>
-                    {!locationLocked && (
-                      <Button
-                        type="button"
-                        variant="default"
-                        size="default"
-                        onClick={handleVerifyAndLock}
-                        className="gap-2"
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        Verify & Lock
-                      </Button>
+                    <Button
+                      type="button"
+                      variant="default"
+                      size="default"
+                      onClick={handleFetchPropertyData}
+                      disabled={!formData.address || !formData.city || !formData.state || !formData.zip_code || fetchingData}
+                      className="gap-2"
+                    >
+                      {fetchingData ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Fetching...
+                        </>
+                      ) : (
+                        <>
+                          <Cloud className="h-4 w-4" />
+                          Fetch Property Data
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Row 1: State, City, ZIP */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="state" className={validationErrors.includes("State") ? "text-destructive" : ""}>
+                      State *
+                    </Label>
+                    <Select
+                      value={selectedState}
+                      onValueChange={(value) => {
+                        setSelectedState(value);
+                        setFormData(prev => ({ ...prev, state: value }));
+                        setValidationErrors(errors => errors.filter(e => e !== "State"));
+                      }}
+                    >
+                      <SelectTrigger className={cn(
+                        "bg-background",
+                        validationErrors.includes("State") ? "border-destructive ring-2 ring-destructive" : ""
+                      )}>
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50 max-h-[300px]">
+                        {US_STATES.map((state) => (
+                          <SelectItem key={state.code} value={state.code}>
+                            {state.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {validationErrors.includes("State") && (
+                      <p className="text-sm text-destructive">State is required</p>
                     )}
-                    {locationLocked && (
-                      <>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="default"
-                          onClick={() => setLocationLocked(false)}
-                          className="gap-2 border-primary text-primary hover:bg-primary/10"
-                        >
-                          <Unlock className="h-4 w-4" />
-                          Edit Location
-                        </Button>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Lock className="h-3 w-3 text-primary" />
-                          Location locked. Click "Edit Location" to modify.
-                        </p>
-                      </>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="city" className={validationErrors.includes("City") ? "text-destructive" : ""}>
+                      City *
+                    </Label>
+                    <Select
+                      value={selectedCity}
+                      onValueChange={(value) => {
+                        setSelectedCity(value);
+                        setFormData(prev => ({ ...prev, city: value }));
+                        setValidationErrors(errors => errors.filter(e => e !== "City"));
+                      }}
+                      disabled={!selectedState}
+                    >
+                      <SelectTrigger className={cn(
+                        "bg-background",
+                        validationErrors.includes("City") ? "border-destructive ring-2 ring-destructive" : "",
+                        !selectedState ? "cursor-not-allowed opacity-50" : ""
+                      )}>
+                        <SelectValue placeholder={selectedState ? "Select city" : "Select state first"} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50 max-h-[300px]">
+                        {availableCities.map((city) => (
+                          <SelectItem key={city} value={city}>
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {validationErrors.includes("City") && (
+                      <p className="text-sm text-destructive">City is required</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="zip_code" className={validationErrors.includes("ZIP Code") ? "text-destructive" : ""}>
+                      ZIP Code *
+                    </Label>
+                    <Select
+                      value={formData.zip_code}
+                      onValueChange={(value) => {
+                        setFormData(prev => ({ ...prev, zip_code: value }));
+                        setValidationErrors(errors => errors.filter(e => e !== "ZIP Code"));
+                      }}
+                      disabled={!selectedCity || availableZips.length === 0}
+                    >
+                      <SelectTrigger className={cn(
+                        "bg-background",
+                        validationErrors.includes("ZIP Code") ? "border-destructive ring-2 ring-destructive" : "",
+                        (!selectedCity || availableZips.length === 0) ? "cursor-not-allowed opacity-50" : ""
+                      )}>
+                        <SelectValue placeholder={selectedCity ? "Select ZIP" : "Select city first"} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50 max-h-[300px]">
+                        {availableZips.map((zip) => (
+                          <SelectItem key={zip} value={zip}>
+                            {zip}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {validationErrors.includes("ZIP Code") && (
+                      <p className="text-sm text-destructive">ZIP Code is required</p>
+                    )}
+                    {selectedCity && availableZips.length === 0 && (
+                      <p className="text-xs text-muted-foreground">Enter ZIP manually below if not in list</p>
                     )}
                   </div>
                 </div>
 
-                {/* Row 2: Enter Address and Unit Number */}
+                {/* Manual ZIP entry when not available in dropdown */}
+                {selectedCity && availableZips.length === 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="zip_code_manual" className={validationErrors.includes("ZIP Code") ? "text-destructive" : ""}>
+                      Enter ZIP Code Manually *
+                    </Label>
+                    <Input
+                      id="zip_code_manual"
+                      value={formData.zip_code}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, zip_code: e.target.value }));
+                        setValidationErrors(errors => errors.filter(e => e !== "ZIP Code"));
+                      }}
+                      placeholder="02134"
+                      className={cn(
+                        validationErrors.includes("ZIP Code") ? "border-destructive ring-2 ring-destructive" : ""
+                      )}
+                    />
+                  </div>
+                )}
+
+                {/* Row 2: Street Address and Unit Number */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="address" className={validationErrors.includes("Address") ? "text-destructive" : ""}>
-                        Enter Address *
-                      </Label>
-                    </div>
-                    <div className={validationErrors.includes("Address") ? "ring-2 ring-destructive rounded-md" : ""}>
-                      <Input
-                        value={formData.address}
-                        onChange={(e) => {
-                          setFormData(prev => ({ ...prev, address: e.target.value }));
-                          setValidationErrors(errors => errors.filter(e => e !== "Address"));
-                        }}
-                        readOnly={locationLocked}
-                        placeholder="123 Main Street"
-                        className={cn(
-                          validationErrors.includes("Address") ? "border-destructive ring-2 ring-destructive" : "",
-                          locationLocked ? "bg-muted cursor-not-allowed" : ""
-                        )}
-                      />
-                    </div>
+                    <Label htmlFor="address" className={validationErrors.includes("Address") ? "text-destructive" : ""}>
+                      Street Address *
+                    </Label>
+                    <Input
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, address: e.target.value }));
+                        setValidationErrors(errors => errors.filter(e => e !== "Address"));
+                      }}
+                      placeholder="123 Main Street"
+                      className={cn(
+                        validationErrors.includes("Address") ? "border-destructive ring-2 ring-destructive" : ""
+                      )}
+                    />
                     {validationErrors.includes("Address") && (
-                      <p className="text-sm text-destructive">Address is required</p>
+                      <p className="text-sm text-destructive">Street address is required</p>
                     )}
                   </div>
                   
@@ -1413,100 +1542,57 @@ const AddListing = () => {
                     formData.property_type === "Residential Rental" ||
                     formData.listing_type === "for_rent") && (
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="unit_number">
-                          Unit/Apartment Number
-                          {(formData.property_type === "Condominium" || formData.property_type === "Townhouse") && (
-                            <span className="text-destructive ml-1">*</span>
-                          )}
-                        </Label>
-                        {formData.address && formData.latitude && formData.longitude && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              if (formData.latitude && formData.longitude) {
-                                fetchPropertyData(
-                                  formData.latitude, 
-                                  formData.longitude, 
-                                  formData.address, 
-                                  formData.city, 
-                                  formData.state, 
-                                  formData.zip_code, 
-                                  unitNumber,
-                                  formData.property_type
-                                );
-                              }
-                            }}
-                            className="text-xs text-primary hover:text-primary/80"
-                          >
-                            Refetch with Unit #
-                          </Button>
+                      <Label htmlFor="unit_number">
+                        Unit/Apartment Number
+                        {(formData.property_type === "Condominium" || formData.property_type === "Townhouse") && (
+                          <span className="text-destructive ml-1">*</span>
                         )}
-                      </div>
+                      </Label>
                       <Input
                         id="unit_number"
                         value={unitNumber}
                         onChange={(e) => setUnitNumber(e.target.value)}
-                        onBlur={() => {
-                          // Auto-refetch when unit number is entered
-                          if (unitNumber && formData.address && formData.latitude && formData.longitude) {
-                            fetchPropertyData(
-                              formData.latitude, 
-                              formData.longitude, 
-                              formData.address, 
-                              formData.city, 
-                              formData.state, 
-                              formData.zip_code, 
-                              unitNumber,
-                              formData.property_type
-                            );
-                          }
-                        }}
                         placeholder="e.g., 3B, 205, Apt 4"
                         required={formData.property_type === "Condominium" || formData.property_type === "Townhouse"}
                       />
                       <p className="text-xs text-muted-foreground">
                         {(formData.property_type === "Condominium" || formData.property_type === "Townhouse") 
-                          ? "Required - Enter unit number and property data will be fetched automatically"
+                          ? "Required - Enter unit number for accurate property data"
                           : "Enter unit number for accurate property data lookup"}
                       </p>
                     </div>
                   )}
                 </div>
 
-                {/* Notification to lock address and import data */}
-                {!locationLocked && formData.address && formData.city && formData.state && formData.zip_code && (
+                {/* Info Alert */}
+                {formData.address && formData.city && formData.state && formData.zip_code && !attomData && (
                   <Alert className="border-primary/50 bg-primary/5">
                     <AlertCircle className="h-4 w-4 text-primary" />
-                    <AlertTitle>Ready to Import Property Data</AlertTitle>
+                    <AlertTitle>Ready to Fetch Property Data</AlertTitle>
                     <AlertDescription className="space-y-2">
-                      <p>Click "Verify & Lock" below to geocode this address and automatically import public records data including:</p>
+                      <p>Click "Fetch Property Data" to automatically import public records including:</p>
                       <ul className="list-disc list-inside text-sm space-y-1 ml-2">
                         <li>Property details (bedrooms, bathrooms, square feet)</li>
                         <li>Tax assessment value and year</li>
                         <li>School ratings and walk scores</li>
                         <li>Property characteristics and features</li>
                       </ul>
-                      <p className="text-sm font-medium mt-2">After locking, you can still edit any imported values.</p>
                     </AlertDescription>
                   </Alert>
                 )}
 
                 <div className="space-y-4">
-                  {/* County Field - Before City/State/Zip */}
+                  {/* County Field */}
                   <div className="space-y-2">
                     <Label htmlFor="county">County</Label>
                     <Select
                       value={formData.county}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, county: value }))}
-                      disabled={locationLocked}
                     >
-                      <SelectTrigger className={locationLocked ? "bg-muted cursor-not-allowed" : ""}>
+                      <SelectTrigger className="bg-background">
                         <SelectValue placeholder="Select county" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-popover z-50">
                         {MA_COUNTIES.map((county) => (
                           <SelectItem key={county} value={county}>
                             {county}
@@ -1516,93 +1602,21 @@ const AddListing = () => {
                     </Select>
                   </div>
                   
-                  {/* City, State, ZIP Row */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="city" className={validationErrors.includes("City") ? "text-destructive" : ""}>
-                        City *
-                      </Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => {
-                          setFormData(prev => ({ ...prev, city: e.target.value }));
-                          setValidationErrors(errors => errors.filter(e => e !== "City"));
-                        }}
-                        readOnly={locationLocked}
-                        placeholder="Boston"
-                        className={cn(
-                          validationErrors.includes("City") ? "border-destructive ring-2 ring-destructive" : "",
-                          locationLocked ? "bg-muted cursor-not-allowed" : ""
-                        )}
-                      />
-                      {validationErrors.includes("City") && (
-                        <p className="text-sm text-destructive">City is required</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="state" className={validationErrors.includes("State") ? "text-destructive" : ""}>
-                        State *
-                      </Label>
-                      <Input
-                        id="state"
-                        value={formData.state}
-                        onChange={(e) => {
-                          setFormData(prev => ({ ...prev, state: e.target.value }));
-                          setValidationErrors(errors => errors.filter(e => e !== "State"));
-                        }}
-                        readOnly={locationLocked}
-                        placeholder="MA"
-                        maxLength={2}
-                        className={cn(
-                          validationErrors.includes("State") ? "border-destructive ring-2 ring-destructive" : "",
-                          locationLocked ? "bg-muted cursor-not-allowed" : ""
-                        )}
-                      />
-                      {validationErrors.includes("State") && (
-                        <p className="text-sm text-destructive">State is required</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="zip_code" className={validationErrors.includes("ZIP Code") ? "text-destructive" : ""}>
-                        ZIP Code *
-                      </Label>
-                      <Input
-                        id="zip_code"
-                        value={formData.zip_code}
-                        onChange={(e) => {
-                          setFormData(prev => ({ ...prev, zip_code: e.target.value }));
-                          setValidationErrors(errors => errors.filter(e => e !== "ZIP Code"));
-                        }}
-                        readOnly={locationLocked}
-                        placeholder="02134"
-                        className={cn(
-                          validationErrors.includes("ZIP Code") ? "border-destructive ring-2 ring-destructive" : "",
-                          locationLocked ? "bg-muted cursor-not-allowed" : ""
-                        )}
-                      />
-                      {validationErrors.includes("ZIP Code") && (
-                        <p className="text-sm text-destructive">ZIP Code is required</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Neighborhood - After Zip Code */}
+                  {/* Neighborhood */}
                   <div className="space-y-2">
                     <Label htmlFor="neighborhood">Area/Neighborhood</Label>
                     <Select
                       value={formData.neighborhood || "__none__"}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value === "__none__" ? "" : value }))}
                       disabled={
-                        locationLocked ||
                         !((formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
                           (formData.county ?? '').toLowerCase().includes('suffolk'))
                       }
                     >
-                      <SelectTrigger className={locationLocked ? "bg-muted cursor-not-allowed" : ""}>
+                      <SelectTrigger className="bg-background">
                         <SelectValue placeholder="Please Select" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-popover z-50">
                         <SelectItem value="__none__">Please Select</SelectItem>
                         {formData.city && formData.state && getAreasForCity(formData.city, formData.state).map((area) => (
                           <SelectItem key={area} value={area}>
@@ -3732,233 +3746,6 @@ const AddListing = () => {
               className="bg-green-600 hover:bg-green-700"
             >
               Add Open House(s)
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Manual Address Entry Dialog */}
-      <Dialog open={manualAddressDialogOpen} onOpenChange={setManualAddressDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Enter Address Manually</DialogTitle>
-            <DialogDescription>
-              Fill in the address details below if autocomplete didn't find your property.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="manual-address">Street Address *</Label>
-                <Input
-                  id="manual-address"
-                  placeholder="123 Main Street"
-                  value={formData.address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="manual-city">City</Label>
-                <Input
-                  id="manual-city"
-                  placeholder="Boston"
-                  value={formData.city}
-                  onChange={(e) => {
-                    const newCity = e.target.value;
-                    setFormData(prev => ({ 
-                      ...prev, 
-                      city: newCity,
-                      // Clear neighborhood if city is not Boston
-                      neighborhood: newCity === "Boston" ? prev.neighborhood : ""
-                    }));
-                  }}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="manual-state">State</Label>
-                <Input
-                  id="manual-state"
-                  placeholder="MA"
-                  value={formData.state}
-                  onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
-                />
-              </div>
-            </div>
-            
-            {/* Boston Neighborhood Selector */}
-            {formData.city === "Boston" && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="boston-neighborhood">Boston Neighborhood *</Label>
-                  <Select
-                    value={formData.neighborhood}
-                    onValueChange={(value) => {
-                      setFormData(prev => ({ ...prev, neighborhood: value }));
-                    }}
-                  >
-                    <SelectTrigger id="boston-neighborhood" className="bg-background">
-                      <SelectValue placeholder="Select neighborhood" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      {bostonNeighborhoods.map((neighborhood) => (
-                        <SelectItem key={neighborhood} value={neighborhood}>
-                          {neighborhood}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Boston Area Selector (sub-neighborhood) */}
-                {formData.neighborhood && 
-                 bostonNeighborhoodsWithAreas[formData.neighborhood as keyof typeof bostonNeighborhoodsWithAreas]?.length > 0 && (
-                  <div className="space-y-2">
-                    <Label htmlFor="boston-area">Specific Area</Label>
-                    <Select
-                      value={formData.town || "__none__"}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, town: value === "__none__" ? "" : value }))}
-                    >
-                      <SelectTrigger id="boston-area" className="bg-background">
-                        <SelectValue placeholder="Please Select" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        <SelectItem value="__none__">Please Select</SelectItem>
-                        {bostonNeighborhoodsWithAreas[formData.neighborhood as keyof typeof bostonNeighborhoodsWithAreas].map((area) => (
-                          <SelectItem key={area} value={area}>
-                            {area}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </>
-            )}
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="manual-zip">ZIP Code</Label>
-                <Input
-                  id="manual-zip"
-                  placeholder="02101"
-                  value={formData.zip_code}
-                  onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="manual-county">County</Label>
-                <Select
-                  value={formData.county}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, county: value }))}
-                >
-                  <SelectTrigger id="manual-county">
-                    <SelectValue placeholder="Select county" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MA_COUNTIES.map((county) => (
-                      <SelectItem key={county} value={county}>
-                        {county}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="manual-neighborhood">Neighborhood (Optional)</Label>
-              <Select
-                value={formData.neighborhood}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
-              >
-                <SelectTrigger id="manual-neighborhood">
-                  <SelectValue placeholder="Select neighborhood" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getAreasForCity(formData.city, formData.state).length > 0 ? (
-                    getAreasForCity(formData.city, formData.state).map((neighborhood) => (
-                      <SelectItem key={neighborhood} value={neighborhood}>
-                        {neighborhood}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="" disabled>
-                      No neighborhoods available for this city
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setManualAddressDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={async () => {
-                if (!formData.address.trim()) {
-                  toast.error("Street address is required");
-                  return;
-                }
-                setValidationErrors(errors => errors.filter(e => e !== "Address"));
-                
-                // Lock location fields if all required fields are present
-                if (formData.city && formData.state && formData.zip_code) {
-                  setLocationLocked(true);
-                }
-                
-                setManualAddressDialogOpen(false);
-                toast.success("Address details saved");
-                
-                // Trigger property data fetch even for manual addresses
-                if (formData.city && formData.state && formData.zip_code) {
-                  try {
-                    // Try to geocode the manual address to get coordinates
-                    const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zip_code}`;
-                    const geocoder = new google.maps.Geocoder();
-                    
-                    geocoder.geocode({ address: fullAddress }, async (results, status) => {
-                      if (status === 'OK' && results && results[0]) {
-                        const location = results[0].geometry.location;
-                        const lat = location.lat();
-                        const lng = location.lng();
-                        
-                        // Update form data with coordinates
-                        setFormData(prev => ({
-                          ...prev,
-                          latitude: lat,
-                          longitude: lng
-                        }));
-                        
-                        // Fetch property data
-                        await fetchPropertyData(
-                          lat,
-                          lng,
-                          formData.address,
-                          formData.city,
-                          formData.state,
-                          formData.zip_code,
-                          unitNumber,
-                          formData.property_type
-                        );
-                      } else {
-                        console.warn("Geocoding failed:", status);
-                        toast.info("Address saved, but property data could not be fetched automatically");
-                      }
-                    });
-                  } catch (error) {
-                    console.error("Error geocoding address:", error);
-                  }
-                }
-              }}
-            >
-              Save Address
             </Button>
           </DialogFooter>
         </DialogContent>

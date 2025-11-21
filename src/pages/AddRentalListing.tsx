@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
-import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,10 +10,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud } from "lucide-react";
 import { z } from "zod";
 import { bostonNeighborhoods, bostonNeighborhoodsWithAreas } from "@/data/bostonNeighborhoods";
 import listingIcon from "@/assets/listing-creation-icon.png";
+import { US_STATES } from "@/data/usStatesCountiesData";
+import { usCitiesByState } from "@/data/usCitiesData";
+import { zipCodesByCityState } from "@/data/usZipCodesByCity";
+import { cn } from "@/lib/utils";
 
 interface FileWithPreview {
   file: File;
@@ -89,6 +92,42 @@ const AddRentalListing = () => {
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
+  // Address dropdown state
+  const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [availableZips, setAvailableZips] = useState<string[]>([]);
+
+  // Update available cities when state changes
+  useEffect(() => {
+    if (selectedState) {
+      const stateCode = US_STATES.find(s => s.code === selectedState)?.code;
+      if (stateCode && usCitiesByState[stateCode]) {
+        setAvailableCities(usCitiesByState[stateCode]);
+      } else {
+        setAvailableCities([]);
+      }
+      // Clear city and zip when state changes
+      setSelectedCity("");
+      setAvailableZips([]);
+      setFormData(prev => ({ ...prev, city: "", zip_code: "" }));
+    }
+  }, [selectedState]);
+  
+  // Update available ZIP codes when city changes
+  useEffect(() => {
+    if (selectedCity && selectedState) {
+      const key = `${selectedCity}-${selectedState}`;
+      if (zipCodesByCityState[key]) {
+        setAvailableZips(zipCodesByCityState[key]);
+      } else {
+        setAvailableZips([]);
+      }
+      // Clear zip when city changes
+      setFormData(prev => ({ ...prev, zip_code: "" }));
+    }
+  }, [selectedCity, selectedState]);
+
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -112,30 +151,6 @@ const AddRentalListing = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleAddressSelect = async (place: google.maps.places.PlaceResult) => {
-    const addressComponents = place.address_components || [];
-    const getComponent = (type: string) => {
-      const component = addressComponents.find((c) => c.types.includes(type));
-      return component?.long_name || "";
-    };
-
-    const address = place.formatted_address?.split(",")[0] || "";
-    const city = getComponent("locality") || getComponent("sublocality");
-    const state = getComponent("administrative_area_level_1");
-    const zip_code = getComponent("postal_code");
-    const latitude = place.geometry?.location?.lat() || null;
-    const longitude = place.geometry?.location?.lng() || null;
-
-    setFormData({
-      ...formData,
-      address,
-      city,
-      state,
-      zip_code,
-      latitude,
-      longitude,
-    });
-  };
 
   const handleFileSelect = (files: FileList | null, type: 'photos' | 'floorplans' | 'documents') => {
     if (!files) return;
@@ -445,13 +460,110 @@ const AddRentalListing = () => {
               <h2 className="text-2xl font-bold mb-6">Listing Details</h2>
               
               <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
-                {/* Enter Address */}
-                <div className="space-y-2">
-                  <Label htmlFor="address">Enter Address</Label>
-                  <AddressAutocomplete
-                    onPlaceSelect={handleAddressSelect}
-                    placeholder="Listing Address"
-                  />
+                {/* Address Section */}
+                <div className="space-y-4">
+                  <Label className="text-lg font-semibold">Property Location</Label>
+                  
+                  {/* Row 1: State, City, ZIP */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State *</Label>
+                      <Select
+                        value={selectedState}
+                        onValueChange={(value) => {
+                          setSelectedState(value);
+                          setFormData(prev => ({ ...prev, state: value }));
+                        }}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50 max-h-[300px]">
+                          {US_STATES.map((state) => (
+                            <SelectItem key={state.code} value={state.code}>
+                              {state.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City *</Label>
+                      <Select
+                        value={selectedCity}
+                        onValueChange={(value) => {
+                          setSelectedCity(value);
+                          setFormData(prev => ({ ...prev, city: value }));
+                        }}
+                        disabled={!selectedState}
+                      >
+                        <SelectTrigger className={cn(
+                          "bg-background",
+                          !selectedState ? "cursor-not-allowed opacity-50" : ""
+                        )}>
+                          <SelectValue placeholder={selectedState ? "Select city" : "Select state first"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50 max-h-[300px]">
+                          {availableCities.map((city) => (
+                            <SelectItem key={city} value={city}>
+                              {city}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="zip_code">ZIP Code *</Label>
+                      <Select
+                        value={formData.zip_code}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, zip_code: value }))}
+                        disabled={!selectedCity || availableZips.length === 0}
+                      >
+                        <SelectTrigger className={cn(
+                          "bg-background",
+                          (!selectedCity || availableZips.length === 0) ? "cursor-not-allowed opacity-50" : ""
+                        )}>
+                          <SelectValue placeholder={selectedCity ? "Select ZIP" : "Select city first"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50 max-h-[300px]">
+                          {availableZips.map((zip) => (
+                            <SelectItem key={zip} value={zip}>
+                              {zip}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {selectedCity && availableZips.length === 0 && (
+                        <p className="text-xs text-muted-foreground">Enter ZIP manually below if not in list</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Manual ZIP entry when not available in dropdown */}
+                  {selectedCity && availableZips.length === 0 && (
+                    <div className="space-y-2">
+                      <Label htmlFor="zip_code_manual">Enter ZIP Code Manually *</Label>
+                      <Input
+                        id="zip_code_manual"
+                        value={formData.zip_code}
+                        onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
+                        placeholder="02134"
+                      />
+                    </div>
+                  )}
+
+                  {/* Street Address */}
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Street Address *</Label>
+                    <Input
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                      placeholder="123 Main Street"
+                    />
+                  </div>
                 </div>
 
                 {/* Row: Property Type, Status */}
