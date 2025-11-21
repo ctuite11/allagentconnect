@@ -2077,6 +2077,36 @@ const AddListing = () => {
                     City/Town *
                   </Label>
                   
+                  {/* Selected City Display */}
+                  {selectedCity && (
+                    <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                      <Home className="h-4 w-4 text-primary" />
+                      <div className="flex-1">
+                        <div className="font-medium text-primary">
+                          {selectedCity}
+                          {formData.neighborhood && ` - ${formData.neighborhood}`}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {selectedState && US_STATES.find(s => s.code === selectedState)?.name}
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCity("");
+                          setFormData(prev => ({ ...prev, city: "", neighborhood: "" }));
+                          setCitySearch("");
+                        }}
+                        className="h-8 gap-1"
+                      >
+                        <X className="h-3 w-3" />
+                        Change
+                      </Button>
+                    </div>
+                  )}
+                  
                   {/* Search Input */}
                   <div className="relative">
                     <Input
@@ -2262,7 +2292,7 @@ const AddListing = () => {
                         ) : (
                           <>
                             <Cloud className="h-3 w-3" />
-                            Lock & Fetch Data
+                            Fetch Property Data
                           </>
                         )}
                       </Button>
@@ -2287,7 +2317,7 @@ const AddListing = () => {
                       <p className="text-sm text-destructive">Street address is required</p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      Complete all address fields above, then click "Lock & Fetch Data" to auto-fill property details
+                      Complete all address fields above, then click "Fetch Property Data" to auto-fill property details
                     </p>
                   </div>
                   
