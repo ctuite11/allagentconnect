@@ -74,6 +74,7 @@ interface Listing {
   num_fireplaces?: number | null;
   garage_spaces?: number | null;
   total_parking_spaces?: number | null;
+  neighborhood?: string | null;
 }
 const PropertyDetail = () => {
   const {
@@ -306,6 +307,13 @@ const PropertyDetail = () => {
                 <p className="text-xl text-muted-foreground">
                   {listing.city}, {listing.state} {listing.zip_code}
                 </p>
+                {(listing.neighborhood || listing.attom_data?.neighborhood) && (
+                  <div className="mt-1">
+                    <Badge variant="secondary" className="text-sm">
+                      {listing.neighborhood || listing.attom_data?.neighborhood}
+                    </Badge>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 mt-1">
                   {listing.listing_number && <p className="text-sm text-muted-foreground font-mono">
                       Listing #{listing.listing_number}

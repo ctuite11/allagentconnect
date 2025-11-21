@@ -514,6 +514,11 @@ const ListingCard = ({
               <div className="flex items-center text-muted-foreground text-xs mb-1">
                 <MapPin className="w-3 h-3 mr-1" />
                 {listing.city}, {listing.state} {listing.zip_code}
+                {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    {listing.neighborhood || (listing as any).attom_data?.neighborhood}
+                  </Badge>
+                )}
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 {listing.listing_number && <span>Listing #{listing.listing_number}</span>}
@@ -657,6 +662,13 @@ const ListingCard = ({
               <MapPin className="w-3 h-3 mr-1" />
               {listing.city}, {listing.state} {listing.zip_code}
             </div>
+            {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
+              <div className="text-xs text-muted-foreground mb-1.5">
+                <Badge variant="secondary" className="text-xs">
+                  {listing.neighborhood || (listing as any).attom_data?.neighborhood}
+                </Badge>
+              </div>
+            )}
             <div className="flex flex-col gap-0.5">
               {listing.listing_number && <div className="text-xs text-muted-foreground">
                   Listing #{listing.listing_number}
