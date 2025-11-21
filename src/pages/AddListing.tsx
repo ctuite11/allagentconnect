@@ -140,6 +140,7 @@ const AddListing = () => {
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
   const [fetchingData, setFetchingData] = useState(false);
   const [citySearch, setCitySearch] = useState("");
+  const [waterViewType, setWaterViewType] = useState<string | null>(null);
 
   // Normalize state to 2-letter code for neighborhood lookups
   const rawState = (selectedState || "").trim();
@@ -681,13 +682,24 @@ const AddListing = () => {
       setShortSale(data.short_sale);
       setWaterfront(data.waterfront);
       setWaterView(data.water_view);
+      // Parse water view type from additional_notes if present
+      if (data.additional_notes) {
+        const match = String(data.additional_notes).match(/Water View Type: ([^\n]+)/);
+        if (match) setWaterViewType(match[1]);
+      }
       setBeachNearby(data.beach_nearby);
       setBasement(data.has_basement);
       
       // Numbers
       if (data.num_fireplaces) setMinFireplaces(data.num_fireplaces.toString());
       if (data.garage_spaces) setGarageSpaces(data.garage_spaces.toString());
-      if (data.total_parking_spaces) setParkingSpaces(data.total_parking_spaces.toString());
+      // Note: total_parking_spaces is now auto-calculated, so we extract parking from it
+      if (data.total_parking_spaces && data.garage_spaces) {
+        const calculatedParking = data.total_parking_spaces - (data.garage_spaces || 0);
+        setParkingSpaces(calculatedParking > 0 ? calculatedParking.toString() : "0");
+      } else if (data.total_parking_spaces) {
+        setParkingSpaces(data.total_parking_spaces.toString());
+      }
       
       // Condo details
       if (data.condo_details && typeof data.condo_details === 'object') {
@@ -1430,6 +1442,7 @@ const AddListing = () => {
         amenities: amenities,
         additional_notes: [
           formData.additional_notes || "",
+          waterViewType ? `Water View Type: ${waterViewType}` : "",
           assessedValue ? `Assessed Value: ${assessedValue}` : "",
           fiscalYear ? `Fiscal Year: ${fiscalYear}` : "",
           residentialExemption !== "Unknown" ? `Residential Exemption: ${residentialExemption}` : "",
@@ -1474,7 +1487,7 @@ const AddListing = () => {
         num_fireplaces: minFireplaces ? parseInt(minFireplaces) : null,
         has_basement: basement,
         garage_spaces: garageSpaces ? parseInt(garageSpaces) : null,
-        total_parking_spaces: parkingSpaces ? parseInt(parkingSpaces) : null,
+        total_parking_spaces: (parseInt(parkingSpaces) || 0) + (parseInt(garageSpaces) || 0),
         construction_features: constructionFeatures.length > 0 ? constructionFeatures : null,
         roof_materials: roofMaterials.length > 0 ? roofMaterials : null,
         exterior_features_list: exteriorFeatures.length > 0 ? exteriorFeatures : null,
@@ -1561,6 +1574,7 @@ const AddListing = () => {
         amenities: amenities,
         additional_notes: [
           formData.additional_notes || "",
+          waterViewType ? `Water View Type: ${waterViewType}` : "",
           assessedValue ? `Assessed Value: ${assessedValue}` : "",
           fiscalYear ? `Fiscal Year: ${fiscalYear}` : "",
           residentialExemption !== "Unknown" ? `Residential Exemption: ${residentialExemption}` : "",
@@ -1605,7 +1619,7 @@ const AddListing = () => {
         num_fireplaces: minFireplaces ? parseInt(minFireplaces) : null,
         has_basement: basement,
         garage_spaces: garageSpaces ? parseInt(garageSpaces) : null,
-        total_parking_spaces: parkingSpaces ? parseInt(parkingSpaces) : null,
+        total_parking_spaces: (parseInt(parkingSpaces) || 0) + (parseInt(garageSpaces) || 0),
         construction_features: constructionFeatures.length > 0 ? constructionFeatures : null,
         roof_materials: roofMaterials.length > 0 ? roofMaterials : null,
         exterior_features_list: exteriorFeatures.length > 0 ? exteriorFeatures : null,
@@ -1910,29 +1924,7 @@ const AddListing = () => {
 
                 {/* Location Details Header */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-lg font-semibold">Location Details</Label>
-                    <Button
-                      type="button"
-                      variant="default"
-                      size="default"
-                      onClick={handleFetchPropertyData}
-                      disabled={!formData.address || !formData.city || !formData.state || !formData.zip_code || fetchingData}
-                      className="gap-2"
-                    >
-                      {fetchingData ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Fetching...
-                        </>
-                      ) : (
-                        <>
-                          <Cloud className="h-4 w-4" />
-                          Fetch Property Data
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                  <Label className="text-lg font-semibold">Location Details</Label>
                 </div>
 
                 {/* Row 1: State, County */}
@@ -2168,9 +2160,31 @@ const AddListing = () => {
                 {/* Row 2: Street Address and Unit Number */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="address" className={validationErrors.includes("Address") ? "text-destructive" : ""}>
-                      Street Address *
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="address" className={validationErrors.includes("Address") ? "text-destructive" : ""}>
+                        Street Address *
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleFetchPropertyData}
+                        disabled={!formData.address || !formData.city || !formData.state || !formData.zip_code || fetchingData}
+                        className="gap-2 h-7 text-xs"
+                      >
+                        {fetchingData ? (
+                          <>
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            Fetching...
+                          </>
+                        ) : (
+                          <>
+                            <Cloud className="h-3 w-3" />
+                            Lock & Fetch Data
+                          </>
+                        )}
+                      </Button>
+                    </div>
                     <Input
                       id="address"
                       value={formData.address}
@@ -2186,6 +2200,9 @@ const AddListing = () => {
                     {validationErrors.includes("Address") && (
                       <p className="text-sm text-destructive">Street address is required</p>
                     )}
+                    <p className="text-xs text-muted-foreground">
+                      Complete all address fields above, then click "Lock & Fetch Data" to auto-fill property details
+                    </p>
                   </div>
                   
                   {/* Unit Number - for properties with units */}
@@ -3074,26 +3091,67 @@ const AddListing = () => {
                           </Button>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between p-3 border rounded-lg">
-                        <label className="text-sm font-medium">Water View</label>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={waterView === true ? "default" : "outline"}
-                            onClick={() => setWaterView(waterView === true ? null : true)}
-                          >
-                            Yes
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={waterView === false ? "default" : "outline"}
-                            onClick={() => setWaterView(waterView === false ? null : false)}
-                          >
-                            No
-                          </Button>
+                      <div className="space-y-3 p-3 border rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-medium">Water View</label>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={waterView === true ? "default" : "outline"}
+                              onClick={() => {
+                                setWaterView(waterView === true ? null : true);
+                                if (waterView === true) setWaterViewType(null);
+                              }}
+                            >
+                              Yes
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={waterView === false ? "default" : "outline"}
+                              onClick={() => {
+                                setWaterView(waterView === false ? null : false);
+                                setWaterViewType(null);
+                              }}
+                            >
+                              No
+                            </Button>
+                          </div>
                         </div>
+                        {waterView === true && (
+                          <div className="space-y-2 pt-2 border-t">
+                            <Label className="text-xs font-medium">Type of Water View</Label>
+                            <RadioGroup value={waterViewType || ""} onValueChange={setWaterViewType}>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="Ocean" id="view-ocean" />
+                                  <Label htmlFor="view-ocean" className="text-sm font-normal cursor-pointer">Ocean</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="River" id="view-river" />
+                                  <Label htmlFor="view-river" className="text-sm font-normal cursor-pointer">River</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="Lake" id="view-lake" />
+                                  <Label htmlFor="view-lake" className="text-sm font-normal cursor-pointer">Lake</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="Pond" id="view-pond" />
+                                  <Label htmlFor="view-pond" className="text-sm font-normal cursor-pointer">Pond</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="Bay" id="view-bay" />
+                                  <Label htmlFor="view-bay" className="text-sm font-normal cursor-pointer">Bay</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="Harbor" id="view-harbor" />
+                                  <Label htmlFor="view-harbor" className="text-sm font-normal cursor-pointer">Harbor</Label>
+                                </div>
+                              </div>
+                            </RadioGroup>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center justify-between p-3 border rounded-lg">
                         <label className="text-sm font-medium">Beach Nearby</label>
@@ -3396,16 +3454,19 @@ const AddListing = () => {
                     </div>
                   </div>
 
-                  {/* Total Parking */}
+                  {/* Total Parking - Auto-calculated */}
                   <div className="space-y-2">
-                    <Label htmlFor="total_parking">Total Parking</Label>
+                    <Label htmlFor="total_parking">Total Parking (Auto-calculated)</Label>
                     <Input
                       id="total_parking"
                       type="number"
-                      value={parkingSpaces}
-                      onChange={(e) => setParkingSpaces(e.target.value)}
-                      placeholder="0"
+                      value={((parseInt(parkingSpaces) || 0) + (parseInt(garageSpaces) || 0)).toString()}
+                      disabled
+                      className="bg-muted"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Automatically calculated from Parking # ({parkingSpaces || 0}) + Garage # ({garageSpaces || 0})
+                    </p>
                   </div>
 
                   {/* Exterior Features */}
