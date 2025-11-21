@@ -212,7 +212,34 @@ const GeographicPreferencesManager = ({
   };
 
   const toggleTown = (town: string) => {
-    setSelectedTowns(prev => prev.includes(town) ? prev.filter(t => t !== town) : [...prev, town]);
+    setSelectedTowns(prev => {
+      if (town.includes('-')) {
+        // It's a neighborhood selection
+        const [city] = town.split('-');
+        
+        // If adding a neighborhood, ensure parent city is selected
+        if (!prev.includes(town)) {
+          if (!prev.includes(city)) {
+            // Add both city and neighborhood
+            return [...prev, city, town];
+          }
+          // Just add neighborhood
+          return [...prev, town];
+        } else {
+          // Removing a neighborhood
+          return prev.filter(t => t !== town);
+        }
+      } else {
+        // It's a city selection
+        if (prev.includes(town)) {
+          // Removing city - also remove all its neighborhoods
+          return prev.filter(t => !t.startsWith(`${town}-`) && t !== town);
+        } else {
+          // Adding city
+          return [...prev, town];
+        }
+      }
+    });
   };
   const addAllTowns = () => {
     const selection = new Set<string>(townsList);
