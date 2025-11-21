@@ -533,7 +533,7 @@ const AddListing = () => {
 
   // Load existing listing if in edit mode
   useEffect(() => {
-    if (id && user?.id && !isLoadingExisting) {
+    if (id && user?.id) {
       loadExistingListing(id);
     }
   }, [id, user?.id]);
