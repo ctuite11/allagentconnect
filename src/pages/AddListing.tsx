@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,8 +68,11 @@ const listingSchema = z.object({
 
 const AddListing = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -224,8 +227,11 @@ const AddListing = () => {
   const [brokerComments, setBrokerComments] = useState("");
 
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
+  const [floorPlanUrls, setFloorPlanUrls] = useState<string[]>([]);
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
+  const [documentUrls, setDocumentUrls] = useState<string[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   
   const [openHouses, setOpenHouses] = useState<Array<{
@@ -524,6 +530,173 @@ const AddListing = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Load existing listing if in edit mode
+  useEffect(() => {
+    if (id && user?.id && !isLoadingExisting) {
+      loadExistingListing(id);
+    }
+  }, [id, user?.id]);
+
+  const loadExistingListing = async (listingId: string) => {
+    setIsLoadingExisting(true);
+    try {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("id", listingId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (!data) {
+        toast.error("Listing not found");
+        navigate("/add-listing");
+        return;
+      }
+      
+      // Check ownership
+      if (data.agent_id !== user.id) {
+        toast.error("You don't have permission to edit this listing");
+        navigate("/agent-dashboard");
+        return;
+      }
+      
+      // Populate form data from loaded listing
+      setFormData({
+        status: data.status || "active",
+        listing_type: data.listing_type || "for_sale",
+        address: data.address || "",
+        city: data.city || "",
+        state: data.state || "",
+        zip_code: data.zip_code || "",
+        county: "",
+        town: "",
+        neighborhood: data.neighborhood || "",
+        latitude: data.latitude,
+        longitude: data.longitude,
+        property_type: data.property_type || "Single Family",
+        bedrooms: data.bedrooms?.toString() || "",
+        bathrooms: data.bathrooms?.toString() || "",
+        square_feet: data.square_feet?.toString() || "",
+        lot_size: data.lot_size?.toString() || "",
+        year_built: data.year_built?.toString() || "",
+        price: data.price?.toString() || "",
+        list_date: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+        expiration_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        activation_date: data.activation_date || "",
+        description: data.description || "",
+        commission_rate: data.commission_rate?.toString() || "",
+        commission_type: data.commission_type || "percentage",
+        commission_notes: data.commission_notes || "",
+        showing_instructions: data.showing_instructions || "",
+        lockbox_code: data.lockbox_code || "",
+        virtual_tour_url: data.virtual_tour_url || "",
+        appointment_required: data.appointment_required || false,
+        showing_contact_name: data.showing_contact_name || "",
+        showing_contact_phone: data.showing_contact_phone || "",
+        additional_notes: data.additional_notes || "",
+        annual_property_tax: data.annual_property_tax?.toString() || "",
+        tax_year: data.tax_year?.toString() || new Date().getFullYear().toString(),
+        tax_assessment_value: data.tax_assessment_value?.toString() || "",
+      });
+      
+      // Set location state variables
+      setSelectedState(data.state || "");
+      setSelectedCity(data.city || "");
+      
+      // Set features and amenities
+      if (Array.isArray(data.property_features)) setPropertyFeatures(data.property_features as string[]);
+      if (Array.isArray(data.amenities)) setAmenities(data.amenities as string[]);
+      if (Array.isArray(data.disclosures)) setDisclosures(data.disclosures as string[]);
+      
+      // Load existing media URLs
+      if (Array.isArray(data.photos)) setPhotoUrls(data.photos as string[]);
+      if (Array.isArray(data.floor_plans)) setFloorPlanUrls(data.floor_plans as string[]);
+      if (Array.isArray(data.documents)) setDocumentUrls(data.documents as string[]);
+      
+      // Load other data
+      if (data.attom_data) setAttomData(data.attom_data);
+      if (data.walk_score_data) setWalkScoreData(data.walk_score_data);
+      if (data.schools_data) setSchoolsData(data.schools_data);
+      if (data.value_estimate) setValueEstimate(data.value_estimate);
+      if (Array.isArray(data.open_houses)) setOpenHouses(data.open_houses as any[]);
+      
+      // Load property-specific details
+      if (Array.isArray(data.listing_agreement_types)) setListingAgreementTypes(data.listing_agreement_types as string[]);
+      if (Array.isArray(data.property_styles)) setPropertyStyles(data.property_styles as string[]);
+      if (Array.isArray(data.construction_features)) setConstructionFeatures(data.construction_features as string[]);
+      if (Array.isArray(data.roof_materials)) setRoofMaterials(data.roof_materials as string[]);
+      if (Array.isArray(data.exterior_features_list)) setExteriorFeatures(data.exterior_features_list as string[]);
+      if (Array.isArray(data.heating_types)) setHeatingTypes(data.heating_types as string[]);
+      if (Array.isArray(data.cooling_types)) setCoolingTypes(data.cooling_types as string[]);
+      if (Array.isArray(data.green_features)) setGreenFeatures(data.green_features as string[]);
+      if (Array.isArray(data.facing_direction)) setFacingDirection(data.facing_direction as string[]);
+      
+      // Booleans
+      setEntryOnly(data.entry_only);
+      setLenderOwned(data.lender_owned);
+      setShortSale(data.short_sale);
+      setWaterfront(data.waterfront);
+      setWaterView(data.water_view);
+      setBeachNearby(data.beach_nearby);
+      setBasement(data.has_basement);
+      
+      // Numbers
+      if (data.num_fireplaces) setMinFireplaces(data.num_fireplaces.toString());
+      if (data.garage_spaces) setGarageSpaces(data.garage_spaces.toString());
+      if (data.total_parking_spaces) setParkingSpaces(data.total_parking_spaces.toString());
+      
+      // Condo details
+      if (data.condo_details && typeof data.condo_details === 'object') {
+        const condo = data.condo_details as any;
+        if (condo.unit_number) setCondoUnitNumber(condo.unit_number);
+        if (condo.floor_level) setCondoFloorLevel(condo.floor_level.toString());
+        if (condo.hoa_fee) setCondoHoaFee(condo.hoa_fee.toString());
+        if (condo.hoa_fee_frequency) setCondoHoaFeeFrequency(condo.hoa_fee_frequency);
+        if (Array.isArray(condo.building_amenities)) setCondoBuildingAmenities(condo.building_amenities);
+        if (condo.pet_policy) setCondoPetPolicy(condo.pet_policy);
+        if (condo.pet_policy_comments) setCondoPetPolicyComments(condo.pet_policy_comments);
+        if (condo.total_units) setCondoTotalUnits(condo.total_units.toString());
+      }
+      
+      // Multi-family details
+      if (data.multi_family_details && typeof data.multi_family_details === 'object') {
+        const multi = data.multi_family_details as any;
+        if (multi.number_of_units) setMultiFamilyUnits(multi.number_of_units.toString());
+        if (multi.unit_breakdown) setMultiFamilyUnitBreakdown(multi.unit_breakdown);
+        if (multi.current_monthly_income) setMultiFamilyCurrentIncome(multi.current_monthly_income.toString());
+        if (multi.potential_monthly_income) setMultiFamilyPotentialIncome(multi.potential_monthly_income.toString());
+        if (multi.occupancy_status) setMultiFamilyOccupancyStatus(multi.occupancy_status);
+        if (multi.laundry_type) setMultiFamilyLaundryType(multi.laundry_type);
+        if (Array.isArray(multi.separate_utilities)) setMultiFamilySeparateUtilities(multi.separate_utilities);
+        if (multi.parking_per_unit) setMultiFamilyParkingPerUnit(multi.parking_per_unit.toString());
+      }
+      
+      // Commercial details
+      if (data.commercial_details && typeof data.commercial_details === 'object') {
+        const comm = data.commercial_details as any;
+        if (comm.space_type) setCommercialSpaceType(comm.space_type);
+        if (comm.lease_type) setCommercialLeaseType(comm.lease_type);
+        if (comm.lease_rate) setCommercialLeaseRate(comm.lease_rate.toString());
+        if (comm.lease_rate_per) setCommercialLeaseRatePer(comm.lease_rate_per);
+        if (comm.lease_term_min) setCommercialLeaseTermMin(comm.lease_term_min.toString());
+        if (comm.lease_term_max) setCommercialLeaseTermMax(comm.lease_term_max.toString());
+        if (comm.zoning) setCommercialZoning(comm.zoning);
+        if (Array.isArray(comm.allowed_business_types)) setCommercialBusinessTypes(comm.allowed_business_types);
+        if (Array.isArray(comm.tenant_responsibilities)) setCommercialTenantResponsibilities(comm.tenant_responsibilities);
+      }
+      
+      toast.success("Listing loaded for editing");
+      
+    } catch (error) {
+      console.error("Error loading listing:", error);
+      toast.error("Failed to load listing");
+      navigate("/add-listing");
+    } finally {
+      setIsLoadingExisting(false);
+    }
+  };
 
   // Parse unit from a street line like "123 Main St Apt 4B" or "123 Main St #4B"
   const extractUnitFromAddress = (streetLine: string) => {
@@ -1166,11 +1339,18 @@ const AddListing = () => {
       // Validate data with Zod
       const validatedData = listingSchema.parse(dataToValidate);
 
-      // Upload files first
+      // Upload files first (only new files if editing)
       toast.info("Uploading files...");
       const uploadedFiles = await uploadFiles();
+      
+      // Combine existing URLs with newly uploaded files
+      const finalPhotos = [...photoUrls, ...uploadedFiles.photos];
+      const finalFloorPlans = [...floorPlanUrls, ...uploadedFiles.floorPlans];
+      const finalDocuments = [...documentUrls, ...uploadedFiles.documents];
 
-      const { data: insertedListing, error } = await supabase.from("listings").insert({
+      if (isEditMode && id) {
+        // UPDATE existing listing
+        const { error } = await supabase.from("listings").update({
         agent_id: user.id,
         status: publishNow ? formData.status : "draft",
         listing_type: formData.listing_type,
@@ -1226,9 +1406,140 @@ const AddListing = () => {
           lotSizeSource.length > 0 ? `Lot Source: ${lotSizeSource.join(", ")}` : "",
           lotDescription.length > 0 ? `Lot Description: ${lotDescription.join(", ")}` : "",
         ].filter(Boolean).join("\n"),
-        photos: uploadedFiles.photos,
-        floor_plans: uploadedFiles.floorPlans,
-        documents: uploadedFiles.documents,
+        photos: finalPhotos,
+        floor_plans: finalFloorPlans,
+        documents: finalDocuments,
+        open_houses: openHouses,
+        // Property tax information
+        annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
+        tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
+        tax_assessment_value: formData.tax_assessment_value ? parseFloat(formData.tax_assessment_value) : null,
+        // ATTOM and third-party data
+        attom_data: attomData,
+        walk_score_data: walkScoreData,
+        schools_data: schoolsData,
+        value_estimate: valueEstimate,
+        // Sale listing criteria
+        listing_agreement_types: listingAgreementTypes.length > 0 ? listingAgreementTypes : null,
+        entry_only: entryOnly,
+        lender_owned: lenderOwned,
+        short_sale: shortSale,
+        property_styles: propertyStyles.length > 0 ? propertyStyles : null,
+        waterfront: waterfront,
+        water_view: waterView,
+        beach_nearby: beachNearby,
+        facing_direction: facingDirection.length > 0 ? facingDirection : null,
+        num_fireplaces: minFireplaces ? parseInt(minFireplaces) : null,
+        has_basement: basement,
+        garage_spaces: garageSpaces ? parseInt(garageSpaces) : null,
+        total_parking_spaces: parkingSpaces ? parseInt(parkingSpaces) : null,
+        construction_features: constructionFeatures.length > 0 ? constructionFeatures : null,
+        roof_materials: roofMaterials.length > 0 ? roofMaterials : null,
+        exterior_features_list: exteriorFeatures.length > 0 ? exteriorFeatures : null,
+        heating_types: heatingTypes.length > 0 ? heatingTypes : null,
+        cooling_types: coolingTypes.length > 0 ? coolingTypes : null,
+        green_features: greenFeatures.length > 0 ? greenFeatures : null,
+        // Condominium-specific details
+        condo_details: formData.property_type === "Condominium" ? {
+          unit_number: unitNumber || condoUnitNumber || null,
+          floor_level: condoFloorLevel ? parseInt(condoFloorLevel) : null,
+          hoa_fee: condoHoaFee ? parseFloat(condoHoaFee) : null,
+          hoa_fee_frequency: condoHoaFeeFrequency,
+          building_amenities: condoBuildingAmenities.length > 0 ? condoBuildingAmenities : null,
+          pet_policy: condoPetPolicy || null,
+          pet_policy_comments: condoPetPolicyComments || null,
+          total_units: condoTotalUnits ? parseInt(condoTotalUnits) : null,
+        } : null,
+        // Multi-family specific details
+        multi_family_details: formData.property_type === "Multi-Family" ? {
+          number_of_units: multiFamilyUnits ? parseInt(multiFamilyUnits) : null,
+          unit_breakdown: multiFamilyUnitBreakdown || null,
+          current_monthly_income: multiFamilyCurrentIncome ? parseFloat(multiFamilyCurrentIncome) : null,
+          potential_monthly_income: multiFamilyPotentialIncome ? parseFloat(multiFamilyPotentialIncome) : null,
+          occupancy_status: multiFamilyOccupancyStatus || null,
+          laundry_type: multiFamilyLaundryType || null,
+          separate_utilities: multiFamilySeparateUtilities.length > 0 ? multiFamilySeparateUtilities : null,
+          parking_per_unit: multiFamilyParkingPerUnit ? parseFloat(multiFamilyParkingPerUnit) : null,
+        } : null,
+        // Commercial property specific details
+        commercial_details: formData.property_type === "Commercial" ? {
+          space_type: commercialSpaceType || null,
+          lease_type: commercialLeaseType || null,
+          lease_rate: commercialLeaseRate ? parseFloat(commercialLeaseRate) : null,
+          lease_rate_per: commercialLeaseRatePer || null,
+          lease_term_min: commercialLeaseTermMin ? parseInt(commercialLeaseTermMin) : null,
+          lease_term_max: commercialLeaseTermMax ? parseInt(commercialLeaseTermMax) : null,
+          zoning: commercialZoning || null,
+          allowed_business_types: commercialBusinessTypes.length > 0 ? commercialBusinessTypes : null,
+          tenant_responsibilities: commercialTenantResponsibilities.length > 0 ? commercialTenantResponsibilities : null,
+        } : null,
+      }).eq("id", id);
+
+        if (error) throw error;
+
+        toast.success("Listing updated successfully!");
+        navigate(`/property/${id}`);
+      } else {
+        // INSERT new listing
+        const { data: insertedListing, error } = await supabase.from("listings").insert({
+        agent_id: user.id,
+        status: publishNow ? formData.status : "draft",
+        listing_type: formData.listing_type,
+        address: validatedData.address,
+        city: validatedData.city,
+        state: validatedData.state,
+        zip_code: validatedData.zip_code,
+        latitude: validatedData.latitude,
+        longitude: validatedData.longitude,
+        property_type: validatedData.property_type || null,
+        bedrooms: validatedData.bedrooms || null,
+        bathrooms: validatedData.bathrooms || null,
+        square_feet: validatedData.square_feet || null,
+        lot_size: validatedData.lot_size || null,
+        year_built: validatedData.year_built || null,
+        price: validatedData.price,
+        description: validatedData.description || null,
+        activation_date: formData.status === "coming_soon" && formData.activation_date ? formData.activation_date : null,
+        commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
+        commission_type: formData.commission_type,
+        commission_notes: formData.commission_notes || null,
+        showing_instructions: formData.showing_instructions || null,
+        lockbox_code: formData.lockbox_code || null,
+        virtual_tour_url: formData.virtual_tour_url || null,
+        appointment_required: formData.appointment_required,
+        showing_contact_name: formData.showing_contact_name || null,
+        showing_contact_phone: formData.showing_contact_phone || null,
+        disclosures: [
+          ...(sellerDisclosure === "Yes" ? ["Seller Disclosure"] : []),
+          ...(disclosuresText ? [`Custom: ${disclosuresText}`] : []),
+          ...(exclusions ? [`Exclusions: ${exclusions}`] : []),
+          ...(brokerComments ? [`Broker Comments: ${brokerComments}`] : [])
+        ],
+        property_features: propertyFeatures,
+        amenities: amenities,
+        additional_notes: [
+          formData.additional_notes || "",
+          assessedValue ? `Assessed Value: ${assessedValue}` : "",
+          fiscalYear ? `Fiscal Year: ${fiscalYear}` : "",
+          residentialExemption !== "Unknown" ? `Residential Exemption: ${residentialExemption}` : "",
+          floors ? `Floors: ${floors}` : "",
+          leadPaint !== "Unknown" ? `Lead Paint: ${leadPaint}` : "",
+          handicapAccess !== "Unknown" ? `Handicap Access: ${handicapAccess}` : "",
+          foundation.length > 0 ? `Foundation: ${foundation.join(", ")}` : "",
+          basementType.length > 0 ? `Basement Type: ${basementType.join(", ")}` : "",
+          basementFeatures.length > 0 ? `Basement Features: ${basementFeatures.join(", ")}` : "",
+          basementFloorType.length > 0 ? `Basement Floor: ${basementFloorType.join(", ")}` : "",
+          parkingComments ? `Parking Comments: ${parkingComments}` : "",
+          parkingFeatures.length > 0 ? `Parking Features: ${parkingFeatures.join(", ")}` : "",
+          garageComments ? `Garage Comments: ${garageComments}` : "",
+          garageFeatures.length > 0 ? `Garage Features: ${garageFeatures.join(", ")}` : "",
+          garageAdditionalFeatures.length > 0 ? `Garage Additional: ${garageAdditionalFeatures.join(", ")}` : "",
+          lotSizeSource.length > 0 ? `Lot Source: ${lotSizeSource.join(", ")}` : "",
+          lotDescription.length > 0 ? `Lot Description: ${lotDescription.join(", ")}` : "",
+        ].filter(Boolean).join("\n"),
+        photos: finalPhotos,
+        floor_plans: finalFloorPlans,
+        documents: finalDocuments,
         open_houses: openHouses,
         // Property tax information
         annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
@@ -1295,10 +1606,10 @@ const AddListing = () => {
         } : null,
       }).select('id').single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Automatically fetch ATTOM data (walk score and schools) after listing is created
-      if (insertedListing?.id) {
+        // Automatically fetch ATTOM data (walk score and schools) after listing is created
+        if (insertedListing?.id) {
         try {
           console.log("[AddListing] Triggering auto-fetch-property-data for listing:", insertedListing.id);
           await supabase.functions.invoke('auto-fetch-property-data', {
@@ -1311,8 +1622,9 @@ const AddListing = () => {
         }
       }
 
-      toast.success("Listing created successfully!");
-      navigate("/agent-dashboard", { state: { reload: true } });
+        toast.success("Listing created successfully!");
+        navigate("/agent-dashboard", { state: { reload: true } });
+      }
     } catch (error: any) {
       console.error("Error creating listing:", error);
       
@@ -1328,10 +1640,11 @@ const AddListing = () => {
     }
   };
 
-  if (loading) {
+  if (loading || isLoadingExisting) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
+        {isLoadingExisting && <p className="ml-3">Loading listing...</p>}
       </div>
     );
   }
@@ -1342,7 +1655,7 @@ const AddListing = () => {
       <div className="container mx-auto px-4 py-8 pt-24">
         {/* Header Section */}
         <div className="flex items-center gap-4 mb-8">
-          <h1 className="text-4xl font-bold">Create a new listing for sale.</h1>
+          <h1 className="text-4xl font-bold">{isEditMode ? "Edit Listing" : "Create a new listing for sale."}</h1>
           <img src={listingIcon} alt="Listing creation" className="w-16 h-16" />
         </div>
 
@@ -3819,7 +4132,7 @@ const AddListing = () => {
                   </Button>
                   <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
                     <Upload className="w-5 h-5" />
-                    {submitting ? "Publishing..." : "Publish"}
+                    {submitting ? (isEditMode ? "Saving..." : "Publishing...") : (isEditMode ? "Save Changes" : "Publish")}
                   </Button>
                 </div>
               </form>

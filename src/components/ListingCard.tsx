@@ -587,7 +587,7 @@ const ListingCard = ({
                 <TrendingDown className="w-3 h-3 mr-1" />
                 Market
               </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate(`/edit-listing/${listing.id}`)} className="w-full">
+              <Button variant="outline" size="sm" onClick={() => navigate(`/add-listing/${listing.id}`)} className="w-full">
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
@@ -751,7 +751,7 @@ const ListingCard = ({
             <TrendingDown className="w-4 h-4 mr-2" />
             Market
           </Button>
-          <Button variant="default" size="sm" className="flex-1" onClick={() => navigate(`/edit-listing/${listing.id}`)}>
+          <Button variant="default" size="sm" className="flex-1" onClick={() => navigate(`/add-listing/${listing.id}`)}>
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
