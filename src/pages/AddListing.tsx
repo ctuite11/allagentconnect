@@ -72,6 +72,10 @@ const AddListing = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [autoSaving, setAutoSaving] = useState(false);
   const [formData, setFormData] = useState({
     status: "active",
     listing_type: "for_sale",
@@ -345,6 +349,42 @@ const AddListing = () => {
   const totalCompleted = Object.values(sectionProgress).reduce((sum, section) => sum + section.completed, 0);
   const totalFields = Object.values(sectionProgress).reduce((sum, section) => sum + section.total, 0);
   const overallProgress = Math.round((totalCompleted / totalFields) * 100);
+
+  // Track form changes for unsaved changes warning
+  useEffect(() => {
+    // Skip if it's the initial mount (no changes yet)
+    if (!user) return;
+    
+    const hasContent = formData.address || formData.city || formData.price || 
+                       formData.bedrooms || formData.description;
+    if (hasContent) {
+      setHasUnsavedChanges(true);
+    }
+  }, [formData, user]);
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (!user || !hasUnsavedChanges) return;
+
+    const autoSaveInterval = setInterval(() => {
+      handleSaveDraft(true);
+    }, 30000); // Auto-save every 30 seconds
+
+    return () => clearInterval(autoSaveInterval);
+  }, [user, hasUnsavedChanges, formData]);
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // Update available counties when state changes
   useEffect(() => {
@@ -974,14 +1014,21 @@ const AddListing = () => {
     return { photos: uploadedPhotos, floorPlans: uploadedFloorPlans, documents: uploadedDocuments };
   };
 
-  const handleSaveDraft = async () => {
+  const handleSaveDraft = async (isAutoSave = false) => {
     try {
       if (!user) {
-        toast.error("Please sign in to save drafts");
-        navigate("/auth");
+        if (!isAutoSave) {
+          toast.error("Please sign in to save drafts");
+          navigate("/auth");
+        }
         return;
       }
-      setSubmitting(true);
+      
+      if (isAutoSave) {
+        setAutoSaving(true);
+      } else {
+        setSubmitting(true);
+      }
 
       const payload: any = {
         agent_id: user.id,
@@ -996,20 +1043,50 @@ const AddListing = () => {
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
         square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
+        lot_size: formData.lot_size ? parseFloat(formData.lot_size) : null,
+        year_built: formData.year_built ? parseInt(formData.year_built) : null,
+        description: formData.description || null,
         photos: [],
         floor_plans: [],
         documents: [],
       };
 
-      const { error } = await supabase.from("listings").insert(payload);
-      if (error) throw error;
+      if (draftId) {
+        // Update existing draft
+        const { error } = await supabase
+          .from("listings")
+          .update(payload)
+          .eq("id", draftId);
+        if (error) throw error;
+      } else {
+        // Create new draft
+        const { data, error } = await supabase
+          .from("listings")
+          .insert(payload)
+          .select()
+          .single();
+        if (error) throw error;
+        if (data) setDraftId(data.id);
+      }
 
-      toast.success("Draft saved successfully!");
-      navigate("/agent-dashboard", { state: { reload: true } });
+      setHasUnsavedChanges(false);
+      setLastAutoSave(new Date());
+      
+      if (!isAutoSave) {
+        toast.success("Draft saved successfully!");
+        navigate("/agent-dashboard", { state: { reload: true } });
+      }
     } catch (error: any) {
-      toast.error(error.message || "Failed to save draft");
+      console.error("Error saving draft:", error);
+      if (!isAutoSave) {
+        toast.error(error.message || "Failed to save draft");
+      }
     } finally {
-      setSubmitting(false);
+      if (isAutoSave) {
+        setAutoSaving(false);
+      } else {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -1251,14 +1328,33 @@ const AddListing = () => {
         </div>
 
         {/* Action Buttons - Sticky */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-8 -mx-4 px-4 py-4">
-          <div className="flex flex-wrap gap-4">
+                <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-8 -mx-4 px-4 py-4">
+          <div className="flex flex-wrap gap-4 items-center">
             <Button variant="ghost" size="lg" onClick={() => navigate("/agent-dashboard")} type="button" className="gap-2">
               <ArrowLeft className="w-5 h-5" />
               Back
             </Button>
-            <div className="flex-1" />
-            <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
+            <div className="flex-1 flex items-center gap-2">
+              {autoSaving && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Auto-saving...</span>
+                </div>
+              )}
+              {!autoSaving && lastAutoSave && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <span>Last saved {lastAutoSave.toLocaleTimeString()}</span>
+                </div>
+              )}
+              {!autoSaving && !lastAutoSave && hasUnsavedChanges && (
+                <div className="flex items-center gap-2 text-sm text-amber-600">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Unsaved changes</span>
+                </div>
+              )}
+            </div>
+            <Button variant="outline" size="lg" onClick={() => handleSaveDraft(false)} type="button" disabled={submitting || autoSaving} className="gap-2">
               <Save className="w-5 h-5" />
               Save Draft
             </Button>
@@ -3641,13 +3737,32 @@ const AddListing = () => {
                 </div>
 
                 {/* Action Buttons - Bottom */}
-                <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t">
+                <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t items-center">
                   <Button variant="ghost" size="lg" onClick={() => navigate("/agent-dashboard")} type="button" className="gap-2">
                     <ArrowLeft className="w-5 h-5" />
                     Back
                   </Button>
-                  <div className="flex-1" />
-                  <Button variant="outline" size="lg" onClick={handleSaveDraft} type="button" disabled={submitting} className="gap-2">
+                  <div className="flex-1 flex items-center gap-2">
+                    {autoSaving && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Auto-saving...</span>
+                      </div>
+                    )}
+                    {!autoSaving && lastAutoSave && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <span>Last saved {lastAutoSave.toLocaleTimeString()}</span>
+                      </div>
+                    )}
+                    {!autoSaving && !lastAutoSave && hasUnsavedChanges && (
+                      <div className="flex items-center gap-2 text-sm text-amber-600">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Unsaved changes</span>
+                      </div>
+                    )}
+                  </div>
+                  <Button variant="outline" size="lg" onClick={() => handleSaveDraft(false)} type="button" disabled={submitting || autoSaving} className="gap-2">
                     <Save className="w-5 h-5" />
                     Save Draft
                   </Button>
