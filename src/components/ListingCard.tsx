@@ -137,28 +137,37 @@ const ListingCard = ({
   };
   
   const handleDelete = async () => {
-    console.log("Delete clicked for listing", listing.id, "status", listing.status);
-    
-    // Safety check: only allow deleting drafts
-    if (listing.status !== 'draft') {
-      toast.error("Only draft listings can be deleted.");
-      return;
-    }
+    console.log("Delete clicked for listing:", {
+      id: listing.id,
+      status: listing.status,
+      address: listing.address,
+      agent_id: listing.agent_id
+    });
     
     setDeleting(true);
     try {
       // Use backend function that handles cascading deletes and RLS
-      const { error } = await supabase.rpc('delete_draft_listing', {
+      const { data, error } = await supabase.rpc('delete_draft_listing', {
         p_listing_id: listing.id,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("RPC error details:", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw error;
+      }
 
+      console.log("Draft deleted successfully:", listing.id);
       toast.success("Draft listing deleted successfully");
       setDeleteDialogOpen(false);
       onDelete?.(listing.id);
     } catch (error: any) {
       console.error("Error deleting draft listing:", error);
+      // Show the specific error message from the backend
       toast.error(error?.message || "Failed to delete draft listing");
     } finally {
       setDeleting(false);
