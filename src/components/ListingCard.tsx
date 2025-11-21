@@ -147,10 +147,10 @@ const ListingCard = ({
     
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from("listings")
-        .delete()
-        .eq("id", listing.id);
+      // Use backend function that handles cascading deletes and RLS
+      const { error } = await supabase.rpc('delete_draft_listing', {
+        p_listing_id: listing.id,
+      });
       
       if (error) throw error;
 
@@ -158,13 +158,12 @@ const ListingCard = ({
       setDeleteDialogOpen(false);
       onDelete?.(listing.id);
     } catch (error: any) {
-      console.error("Error deleting draft:", error);
+      console.error("Error deleting draft listing:", error);
       toast.error(error?.message || "Failed to delete draft listing");
     } finally {
       setDeleting(false);
     }
   };
-
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
