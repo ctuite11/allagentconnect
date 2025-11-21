@@ -1939,12 +1939,16 @@ const AddListing = () => {
                       onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="active">New</SelectItem>
                         <SelectItem value="coming_soon">Coming Soon</SelectItem>
                         <SelectItem value="off_market">Off Market</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="sold">Sold</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
