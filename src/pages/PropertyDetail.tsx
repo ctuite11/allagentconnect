@@ -230,6 +230,7 @@ const PropertyDetail = () => {
   }
   const mainPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[currentPhotoIndex].url : '/placeholder.svg';
   const canonicalUrl = `${window.location.origin}/property/${id}`;
+  const sharePreviewUrl = `https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/${id}`;
   
   return <div className="min-h-screen bg-background">
       <PropertyMetaTags address={listing.address} city={listing.city} state={listing.state} price={listing.price} bedrooms={listing.bedrooms} bathrooms={listing.bathrooms} description={listing.description} photo={mainPhoto} listingType={listing.listing_type} url={canonicalUrl} />
@@ -256,7 +257,7 @@ const PropertyDetail = () => {
                   {cameFromAgentDashboard || isAgent && listing && listing.agent_id === currentUser?.id ? 'Back to My Listings' : 'Back to Search'}
                 </Button>
                 <div className="flex gap-2">
-                  <SocialShareMenu url={canonicalUrl} title={`${listing.address}, ${listing.city}, ${listing.state}`} description={`$${listing.price.toLocaleString()} - ${listing.bedrooms} bed, ${listing.bathrooms} bath`} />
+                  <SocialShareMenu url={sharePreviewUrl} title={`${listing.address}, ${listing.city}, ${listing.state}`} description={`$${listing.price.toLocaleString()} - ${listing.bedrooms} bed, ${listing.bathrooms} bath`} />
                   <FavoriteButton listingId={listing.id} />
                   <SaveToHotSheetDialog currentSearch={{
                   min_price: listing.price * 0.8,

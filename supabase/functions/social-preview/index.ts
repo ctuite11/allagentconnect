@@ -23,15 +23,34 @@ serve(async (req) => {
   const url = new URL(req.url);
 
   try {
-    if (!isCrawler(ua)) {
-      return new Response("Not a crawler", { status: 400, headers: corsHeaders });
-    }
-
     // Extract listing id from paths like /property/:id or query ?id=...
     const match = url.pathname.match(/\/property\/([^\/?#]+)/);
     const listingId = match?.[1] || url.searchParams.get("id");
     if (!listingId) {
       return new Response("Missing listing id", { status: 400, headers: corsHeaders });
+    }
+
+    // Determine the canonical URL for the property page
+    const xfHostHeader = req.headers.get("x-forwarded-host") || req.headers.get("x-original-host") || "";
+    let host = xfHostHeader || "allagentconnect.com";
+    
+    // If called via the Supabase functions domain, force our real domain
+    if (host.endsWith(".supabase.co")) {
+      host = "allagentconnect.com";
+    }
+    
+    const xfProto = req.headers.get("x-forwarded-proto") || "https";
+    const pageUrl = `${xfProto}://${host}/property/${listingId}`;
+
+    // If not a crawler, redirect to the actual property page
+    if (!isCrawler(ua)) {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          Location: pageUrl,
+        },
+      });
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -66,10 +85,6 @@ serve(async (req) => {
       ? `${priceText} - ${listing.bedrooms ?? "?"} bed, ${listing.bathrooms ?? "?"} bath. ${String(listing.description).substring(0, 120)}...`
       : `${priceText} - ${listing.bedrooms ?? "?"} bed, ${listing.bathrooms ?? "?"} bath in ${listing.city}, ${listing.state}`;
 
-    // Try to reconstruct public URL
-    const xfHost = req.headers.get("x-forwarded-host") || req.headers.get("x-original-host") || "allagentconnect.com";
-    const xfProto = req.headers.get("x-forwarded-proto") || "https";
-    const pageUrl = `${xfProto}://${xfHost}/property/${listingId}`;
     const fbAppId = Deno.env.get("FACEBOOK_APP_ID") || Deno.env.get("FB_APP_ID") || "";
 
     const html = `<!DOCTYPE html>
@@ -101,13 +116,12 @@ serve(async (req) => {
   <meta name="twitter:image" content="${photoUrl}" />
   <meta name="twitter:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
 
-  <meta http-equiv="refresh" content="0;url=${pageUrl}" />
   <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;padding:24px;}</style>
 </head>
 <body>
   <h1>${escapeHtml(title)}</h1>
   <p>${escapeHtml(description)}</p>
-  <p>Redirecting to <a href="${pageUrl}">${pageUrl}</a>…</p>
+  <p><a href="${pageUrl}">View this listing on All Agent Connect</a></p>
 </body>
 </html>`;
 
