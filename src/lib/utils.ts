@@ -58,3 +58,20 @@ export function buildDisplayAddress(
 
   return base;
 }
+
+/**
+ * Convert human-readable property type to database enum format
+ */
+export function propertyTypeToEnum(displayType: string): string {
+  const mapping: Record<string, string> = {
+    "Single Family": "single_family",
+    "Condo": "condo",
+    "Townhouse": "townhouse",
+    "Multi Family": "multi_family",
+    "Land": "land",
+    "Commercial": "commercial",
+    "Residential Rental": "residential_rental",
+    "Commercial Rental": "commercial_rental",
+  };
+  return mapping[displayType] || displayType.toLowerCase().replace(/\s+/g, '_');
+}
