@@ -1989,7 +1989,20 @@ const AddListing = () => {
                             .filter(city => city.toLowerCase().includes(citySearch.toLowerCase()))
                             .map((city) => {
                               const neighborhoods = getAreasForCity(city, selectedState);
-                              const hasNeighborhoods = neighborhoods && neighborhoods.length > 0;
+                              
+                              // Add fallback: check for hyphenated entries if no data from usNeighborhoodsData
+                              let neighborhoodsList = neighborhoods;
+                              if (!neighborhoods || neighborhoods.length === 0) {
+                                // Derive neighborhoods from availableCities list (e.g., "Boston-Allston" format)
+                                const derivedNeighborhoods = Array.from(new Set(
+                                  availableCities
+                                    .filter((t) => t.startsWith(`${city}-`))
+                                    .map((t) => t.split('-').slice(1).join('-'))
+                                ));
+                                neighborhoodsList = derivedNeighborhoods;
+                              }
+                              
+                              const hasNeighborhoods = neighborhoodsList.length > 0;
                               const isExpanded = expandedCities.has(city);
                               
                               return (
@@ -2019,7 +2032,7 @@ const AddListing = () => {
                                   
                                   {hasNeighborhoods && isExpanded && (
                                     <div className="ml-8 border-l-2 border-muted pl-3 space-y-2 bg-muted/30 rounded-r py-2">
-                                      {neighborhoods.map((neighborhood) => (
+                                      {neighborhoodsList.map((neighborhood) => (
                                         <div key={neighborhood} className="flex items-center space-x-2">
                                           <RadioGroupItem 
                                             value={`${city}-${neighborhood}`} 
