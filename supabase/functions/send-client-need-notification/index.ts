@@ -15,6 +15,11 @@ const corsHeaders = {
 // Helper function to add delay for rate limiting
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Helper function to validate email format
+const isValidEmail = (email: string): boolean => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
 interface SendNotificationRequest {
   category: "buyer_need" | "sales_intel" | "renter_need" | "general_discussion";
   subject: string;
@@ -68,6 +73,11 @@ const handler = async (req: Request): Promise<Response> => {
       : "An Agent";
     const senderEmail = senderProfile?.email || user.email;
     const senderCompany = senderProfile?.company || "";
+    
+    // Validate and format reply_to email
+    const validReplyTo = senderEmail && isValidEmail(senderEmail) 
+      ? (senderName !== "An Agent" ? `${senderName} <${senderEmail}>` : senderEmail)
+      : undefined;
 
     // Query for agents who have this notification preference enabled
     let query = supabase
@@ -338,13 +348,18 @@ const handler = async (req: Request): Promise<Response> => {
         `;
 
         // Send email with retry logic for rate limiting
-        const sendEmail = async () => await resend.emails.send({
+        const emailPayload: any = {
           from: "All Agent Connect <noreply@mail.allagentconnect.com>",
           to: agent.email,
           subject: `[${getCategoryLabel(category)}] ${subject}`,
           html,
-          reply_to: senderEmail,
-        });
+        };
+        
+        if (validReplyTo) {
+          emailPayload.reply_to = validReplyTo;
+        }
+        
+        const sendEmail = async () => await resend.emails.send(emailPayload);
 
         let result = await sendEmail();
 
