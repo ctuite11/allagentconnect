@@ -92,6 +92,7 @@ const AddListing = () => {
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [autoSaving, setAutoSaving] = useState(false);
+  const [originalStatus, setOriginalStatus] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     status: "active",
     listing_type: "for_sale",
@@ -617,6 +618,9 @@ const AddListing = () => {
         navigate("/agent-dashboard");
         return;
       }
+      
+      // Store original status for comparison
+      setOriginalStatus(data.status || "active");
       
       // Populate form data from loaded listing
       setFormData({
@@ -1378,7 +1382,9 @@ const AddListing = () => {
 
       const payload: any = {
         agent_id: user.id,
-        status: "draft",
+        status: (isEditMode && originalStatus && originalStatus !== "draft") 
+          ? originalStatus 
+          : "draft",
         listing_type: formData.listing_type,
         address: (formData.address || "Draft").trim(),
         city: formData.city?.trim() || "",
@@ -1425,7 +1431,10 @@ const AddListing = () => {
       setLastAutoSave(new Date());
       
       if (!isAutoSave) {
-        toast.success("Draft saved successfully!");
+        const successMessage = (isEditMode && originalStatus && originalStatus !== "draft")
+          ? "Changes saved successfully!"
+          : "Draft saved successfully!";
+        toast.success(successMessage);
         navigate("/agent-dashboard", { state: { reload: true } });
       }
     } catch (error: any) {
@@ -1853,7 +1862,7 @@ const AddListing = () => {
             </div>
             <Button variant="outline" size="lg" onClick={() => handleSaveDraft(false)} type="button" disabled={submitting || autoSaving} className="gap-2">
               <Save className="w-5 h-5" />
-              Save Draft
+              {isEditMode && originalStatus && originalStatus !== "draft" ? "Save Changes" : "Save Draft"}
             </Button>
             <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
               <Eye className="w-5 h-5" />
