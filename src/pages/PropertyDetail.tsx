@@ -22,6 +22,7 @@ import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import AdBanner from "@/components/AdBanner";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 interface Listing {
@@ -303,7 +304,7 @@ const PropertyDetail = () => {
             <div className="flex items-start gap-3">
               <MapPin className="w-6 h-6 text-primary mt-1" />
               <div>
-                <h1 className="font-bold mb-1 text-xl">{listing.address}</h1>
+                <h1 className="font-bold mb-1 text-xl">{buildDisplayAddress(listing)}</h1>
                 <p className="text-xl text-muted-foreground">
                   {listing.city}, {listing.state} {listing.zip_code}
                 </p>

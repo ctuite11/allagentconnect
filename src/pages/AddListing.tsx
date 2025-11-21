@@ -64,7 +64,20 @@ const listingSchema = z.object({
   description: z.string().max(5000, "Description must be less than 5,000 characters").optional(),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),
+  neighborhood: z.string().optional().nullable(),
 });
+
+const toTitleCase = (value: string) => {
+  return value
+    .toLowerCase()
+    .split(' ')
+    .filter(Boolean)
+    .map(word => {
+      if (word.length === 0) return word;
+      return word[0].toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+};
 
 const AddListing = () => {
   const navigate = useNavigate();
@@ -526,8 +539,8 @@ const AddListing = () => {
       setSelectedCity(city);
       setFormData(prev => ({ 
         ...prev, 
-        city,
-        neighborhood,
+        city: toTitleCase(city),
+        neighborhood: toTitleCase(neighborhood),
         zip_code: '' // Clear ZIP when changing location
       }));
     } else {
@@ -535,7 +548,7 @@ const AddListing = () => {
       setSelectedCity(value);
       setFormData(prev => ({ 
         ...prev, 
-        city: value,
+        city: toTitleCase(value),
         neighborhood: '',
         zip_code: ''
       }));
@@ -544,7 +557,7 @@ const AddListing = () => {
   };
 
   const handleNeighborhoodSelect = (neighborhood: string) => {
-    setFormData(prev => ({ ...prev, neighborhood }));
+    setFormData(prev => ({ ...prev, neighborhood: toTitleCase(neighborhood) }));
   };
 
   const handleZipSelect = (zip: string) => {
@@ -1388,6 +1401,7 @@ const AddListing = () => {
         description: formData.description || undefined,
         latitude: formData.latitude,
         longitude: formData.longitude,
+        neighborhood: formData.neighborhood || undefined,
       };
 
       // Validate data with Zod
@@ -1412,6 +1426,7 @@ const AddListing = () => {
         city: validatedData.city,
         state: validatedData.state,
         zip_code: validatedData.zip_code,
+        neighborhood: validatedData.neighborhood || null,
         latitude: validatedData.latitude,
         longitude: validatedData.longitude,
         property_type: validatedData.property_type || null,
@@ -1544,6 +1559,7 @@ const AddListing = () => {
         city: validatedData.city,
         state: validatedData.state,
         zip_code: validatedData.zip_code,
+        neighborhood: validatedData.neighborhood || null,
         latitude: validatedData.latitude,
         longitude: validatedData.longitude,
         property_type: validatedData.property_type || null,
@@ -2191,6 +2207,10 @@ const AddListing = () => {
                       onChange={(e) => {
                         setFormData(prev => ({ ...prev, address: e.target.value }));
                         setValidationErrors(errors => errors.filter(e => e !== "Address"));
+                      }}
+                      onBlur={(e) => {
+                        const formatted = toTitleCase(e.target.value.trim());
+                        setFormData(prev => ({ ...prev, address: formatted }));
                       }}
                       placeholder="123 Main Street"
                       className={cn(

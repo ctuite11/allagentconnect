@@ -17,6 +17,7 @@ import ContactAgentDialog from "@/components/ContactAgentDialog";
 import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo";
 import PropertyMap from "@/components/PropertyMap";
 import AdBanner from "@/components/AdBanner";
+import { buildDisplayAddress } from "@/lib/utils";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -264,7 +265,7 @@ const ConsumerPropertyDetail = () => {
             <div className="flex items-start gap-3">
               <MapPin className="w-6 h-6 text-primary mt-1" />
               <div>
-                <h1 className="text-3xl font-bold mb-1">{listing.address}</h1>
+                <h1 className="text-3xl font-bold mb-1">{buildDisplayAddress(listing)}</h1>
                 <p className="text-xl text-muted-foreground">
                   {listing.city}, {listing.state} {listing.zip_code}
                 </p>
