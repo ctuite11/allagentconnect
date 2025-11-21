@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud, AlertCircle, ArrowLeft } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, CalendarIcon, Home, CheckCircle2, Cloud, AlertCircle, ArrowLeft, ChevronDown } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -127,6 +128,9 @@ const AddListing = () => {
   const [availableCounties, setAvailableCounties] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [availableZips, setAvailableZips] = useState<string[]>([]);
+  const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
+  const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
+  const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
   const [fetchingData, setFetchingData] = useState(false);
 
   // Sale listing criteria
@@ -378,10 +382,12 @@ const AddListing = () => {
   useEffect(() => {
     const fetchZipCodes = async () => {
       if (selectedState && selectedCity) {
+        setSuggestedZipsLoading(true);
         try {
           // Try static data first
           if (hasZipCodeData(selectedCity, selectedState)) {
             const staticZips = getZipCodesForCity(selectedCity, selectedState);
+            setSuggestedZips(staticZips);
             setAvailableZips(staticZips);
           } else {
             // Fallback to edge function
@@ -389,19 +395,54 @@ const AddListing = () => {
               body: { state: selectedState, city: selectedCity }
             });
             if (error) throw error;
-            setAvailableZips(data?.zips || []);
+            const zips = data?.zips || [];
+            setSuggestedZips(zips);
+            setAvailableZips(zips);
           }
           setFormData(prev => ({ ...prev, city: selectedCity, zip_code: "" }));
         } catch (error) {
           console.error("Error fetching ZIP codes:", error);
           toast.error("Could not load ZIP codes for this city");
+          setSuggestedZips([]);
           setAvailableZips([]);
+        } finally {
+          setSuggestedZipsLoading(false);
         }
+      } else {
+        setSuggestedZips([]);
+        setFormData(prev => ({ ...prev, zip_code: "" }));
       }
     };
 
     fetchZipCodes();
   }, [selectedState, selectedCity]);
+
+  const toggleCityExpansion = (city: string) => {
+    setExpandedCities(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(city)) {
+        newSet.delete(city);
+      } else {
+        newSet.add(city);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCitySelect = (city: string) => {
+    setSelectedCity(city);
+    setFormData(prev => ({ ...prev, city, neighborhood: "" }));
+    setValidationErrors([]);
+  };
+
+  const handleNeighborhoodSelect = (neighborhood: string) => {
+    setFormData(prev => ({ ...prev, neighborhood }));
+  };
+
+  const handleZipSelect = (zip: string) => {
+    setFormData(prev => ({ ...prev, zip_code: zip }));
+    setValidationErrors([]);
+  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -1482,97 +1523,136 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Row 2: City, ZIP */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="city" className={validationErrors.includes("City") ? "text-destructive" : ""}>
-                      City *
-                    </Label>
-                    <Select
-                      value={selectedCity}
-                      onValueChange={(value) => {
-                        setSelectedCity(value);
-                        setFormData(prev => ({ ...prev, city: value }));
-                        setValidationErrors(errors => errors.filter(e => e !== "City"));
-                      }}
-                      disabled={!selectedState}
-                    >
-                      <SelectTrigger className={cn(
-                        "bg-background",
-                        validationErrors.includes("City") ? "border-destructive ring-2 ring-destructive" : "",
-                        !selectedState ? "cursor-not-allowed opacity-50" : ""
-                      )}>
-                        <SelectValue placeholder={selectedState ? "Select city" : "Select state first"} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50 max-h-[300px]">
-                        {availableCities.map((city) => (
-                          <SelectItem key={city} value={city}>
-                            {city}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {validationErrors.includes("City") && (
-                      <p className="text-sm text-destructive">City is required</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="zip_code" className={validationErrors.includes("ZIP Code") ? "text-destructive" : ""}>
-                      ZIP Code *
-                    </Label>
-                    <Select
-                      value={formData.zip_code}
-                      onValueChange={(value) => {
-                        setFormData(prev => ({ ...prev, zip_code: value }));
-                        setValidationErrors(errors => errors.filter(e => e !== "ZIP Code"));
-                      }}
-                      disabled={!selectedCity || availableZips.length === 0}
-                    >
-                      <SelectTrigger className={cn(
-                        "bg-background",
-                        validationErrors.includes("ZIP Code") ? "border-destructive ring-2 ring-destructive" : "",
-                        (!selectedCity || availableZips.length === 0) ? "cursor-not-allowed opacity-50" : ""
-                      )}>
-                        <SelectValue placeholder={selectedCity ? "Select ZIP" : "Select city first"} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50 max-h-[300px]">
-                        {availableZips.map((zip) => (
-                          <SelectItem key={zip} value={zip}>
-                            {zip}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {validationErrors.includes("ZIP Code") && (
-                      <p className="text-sm text-destructive">ZIP Code is required</p>
-                    )}
-                    {selectedCity && availableZips.length === 0 && (
-                      <p className="text-xs text-muted-foreground">Enter ZIP manually below if not in list</p>
-                    )}
-                  </div>
+                {/* City with Neighborhoods */}
+                <div className="space-y-2">
+                  <Label htmlFor="city" className={validationErrors.includes("City") ? "text-destructive" : ""}>
+                    City *
+                  </Label>
+                  <ScrollArea className="h-[200px] w-full border rounded-md p-4">
+                    <div className="space-y-2">
+                      {availableCities.map((city) => {
+                        const neighborhoods = getAreasForCity(city, selectedState);
+                        const hasNeighborhoods = neighborhoods && neighborhoods.length > 0;
+                        const isExpanded = expandedCities.has(city);
+                        
+                        return (
+                          <div key={city}>
+                            <div className="flex items-center gap-2">
+                              {hasNeighborhoods && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleCityExpansion(city)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <ChevronDown 
+                                    className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                  />
+                                </Button>
+                              )}
+                              <Button
+                                type="button"
+                                variant={selectedCity === city && !formData.neighborhood ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => handleCitySelect(city)}
+                                className={!hasNeighborhoods ? "ml-8" : ""}
+                              >
+                                {city}
+                              </Button>
+                            </div>
+                            
+                            {hasNeighborhoods && isExpanded && (
+                              <div className="ml-14 mt-2 space-y-1">
+                                {neighborhoods.map((neighborhood) => (
+                                  <Button
+                                    key={neighborhood}
+                                    type="button"
+                                    variant={
+                                      selectedCity === city && formData.neighborhood === neighborhood
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    size="sm"
+                                    onClick={() => {
+                                      handleCitySelect(city);
+                                      handleNeighborhoodSelect(neighborhood);
+                                    }}
+                                    className="text-xs"
+                                  >
+                                    {neighborhood}
+                                  </Button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                  {validationErrors.includes("City") && (
+                    <p className="text-sm text-destructive">City is required</p>
+                  )}
                 </div>
 
-                {/* Manual ZIP entry when not available in dropdown */}
-                {selectedCity && availableZips.length === 0 && (
-                  <div className="space-y-2">
-                    <Label htmlFor="zip_code_manual" className={validationErrors.includes("ZIP Code") ? "text-destructive" : ""}>
-                      Enter ZIP Code Manually *
-                    </Label>
-                    <Input
-                      id="zip_code_manual"
-                      value={formData.zip_code}
-                      onChange={(e) => {
-                        setFormData(prev => ({ ...prev, zip_code: e.target.value }));
-                        setValidationErrors(errors => errors.filter(e => e !== "ZIP Code"));
-                      }}
-                      placeholder="02134"
-                      className={cn(
-                        validationErrors.includes("ZIP Code") ? "border-destructive ring-2 ring-destructive" : ""
+                {/* ZIP Code Picker */}
+                <div className="space-y-2">
+                  <Label htmlFor="zip_code" className={validationErrors.includes("ZIP Code") ? "text-destructive" : ""}>
+                    ZIP Code *
+                  </Label>
+                  {suggestedZipsLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading ZIP codes...
+                    </div>
+                  ) : suggestedZips.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        {suggestedZips.map((zip) => (
+                          <Button
+                            key={zip}
+                            type="button"
+                            variant={formData.zip_code === zip ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handleZipSelect(zip)}
+                          >
+                            {zip}
+                          </Button>
+                        ))}
+                      </div>
+                      {formData.zip_code && (
+                        <p className="text-sm text-muted-foreground">
+                          Selected: <span className="font-medium">{formData.zip_code}</span>
+                        </p>
                       )}
-                    />
-                  </div>
-                )}
+                    </div>
+                  ) : selectedCity ? (
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        No ZIP codes available for this city - enter manually below
+                      </p>
+                      <Input
+                        id="zip_code_manual"
+                        value={formData.zip_code}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, zip_code: e.target.value }));
+                          setValidationErrors(errors => errors.filter(e => e !== "ZIP Code"));
+                        }}
+                        placeholder="02134"
+                        className={cn(
+                          validationErrors.includes("ZIP Code") ? "border-destructive ring-2 ring-destructive" : ""
+                        )}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Select a city to see available ZIP codes
+                    </p>
+                  )}
+                  {validationErrors.includes("ZIP Code") && (
+                    <p className="text-sm text-destructive">ZIP Code is required</p>
+                  )}
+                </div>
 
                 {/* Row 2: Street Address and Unit Number */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1641,75 +1721,6 @@ const AddListing = () => {
                     </AlertDescription>
                   </Alert>
                 )}
-
-                <div className="space-y-4">
-                  {/* County Field */}
-                  <div className="space-y-2">
-                    <Label htmlFor="county">County</Label>
-                    <Select
-                      value={formData.county}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, county: value }))}
-                    >
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Select county" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        {MA_COUNTIES.map((county) => (
-                          <SelectItem key={county} value={county}>
-                            {county}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Neighborhood */}
-                  <div className="space-y-2">
-                    <Label htmlFor="neighborhood">Area/Neighborhood</Label>
-                    <Select
-                      value={formData.neighborhood || "__none__"}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value === "__none__" ? "" : value }))}
-                      disabled={
-                        !((formData.city && formData.state && getAreasForCity(formData.city, formData.state).length > 0) ||
-                          (formData.county ?? '').toLowerCase().includes('suffolk'))
-                      }
-                    >
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Please Select" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        <SelectItem value="__none__">Please Select</SelectItem>
-                        {formData.city && formData.state && getAreasForCity(formData.city, formData.state).map((area) => (
-                          <SelectItem key={area} value={area}>
-                            {area}
-                          </SelectItem>
-                        ))}
-                        {(formData.county ?? '').toLowerCase().includes('suffolk') && (
-                          <>
-                            <SelectItem value="Back Bay">Back Bay</SelectItem>
-                            <SelectItem value="Beacon Hill">Beacon Hill</SelectItem>
-                            <SelectItem value="North End">North End</SelectItem>
-                            <SelectItem value="South End">South End</SelectItem>
-                            <SelectItem value="Charlestown">Charlestown</SelectItem>
-                            <SelectItem value="Jamaica Plain">Jamaica Plain</SelectItem>
-                            <SelectItem value="Roxbury">Roxbury</SelectItem>
-                            <SelectItem value="Dorchester">Dorchester</SelectItem>
-                            <SelectItem value="Mattapan">Mattapan</SelectItem>
-                            <SelectItem value="Hyde Park">Hyde Park</SelectItem>
-                            <SelectItem value="Roslindale">Roslindale</SelectItem>
-                            <SelectItem value="West Roxbury">West Roxbury</SelectItem>
-                            <SelectItem value="Allston">Allston</SelectItem>
-                            <SelectItem value="Brighton">Brighton</SelectItem>
-                            <SelectItem value="East Boston">East Boston</SelectItem>
-                            <SelectItem value="South Boston">South Boston</SelectItem>
-                            <SelectItem value="Fenway">Fenway</SelectItem>
-                            <SelectItem value="Mission Hill">Mission Hill</SelectItem>
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
 
                 {/* List Price - placed after location */}
                 <div className="space-y-2">

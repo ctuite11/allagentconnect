@@ -8,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown } from "lucide-react";
 import { z } from "zod";
 import { bostonNeighborhoods, bostonNeighborhoodsWithAreas } from "@/data/bostonNeighborhoods";
+import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
@@ -100,6 +102,10 @@ const AddRentalListing = () => {
   const [availableCounties, setAvailableCounties] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [availableZips, setAvailableZips] = useState<string[]>([]);
+  const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
+  const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
+  const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   // Update available counties when state changes
   useEffect(() => {
@@ -137,10 +143,12 @@ const AddRentalListing = () => {
   useEffect(() => {
     const fetchZipCodes = async () => {
       if (selectedState && selectedCity) {
+        setSuggestedZipsLoading(true);
         try {
           // Try static data first
           if (hasZipCodeData(selectedCity, selectedState)) {
             const staticZips = getZipCodesForCity(selectedCity, selectedState);
+            setSuggestedZips(staticZips);
             setAvailableZips(staticZips);
           } else {
             // Fallback to edge function
@@ -148,19 +156,54 @@ const AddRentalListing = () => {
               body: { state: selectedState, city: selectedCity }
             });
             if (error) throw error;
-            setAvailableZips(data?.zips || []);
+            const zips = data?.zips || [];
+            setSuggestedZips(zips);
+            setAvailableZips(zips);
           }
           setFormData(prev => ({ ...prev, city: selectedCity, zip_code: "" }));
         } catch (error) {
           console.error("Error fetching ZIP codes:", error);
           toast.error("Could not load ZIP codes for this city");
+          setSuggestedZips([]);
           setAvailableZips([]);
+        } finally {
+          setSuggestedZipsLoading(false);
         }
+      } else {
+        setSuggestedZips([]);
+        setFormData(prev => ({ ...prev, zip_code: "" }));
       }
     };
 
     fetchZipCodes();
   }, [selectedState, selectedCity]);
+
+  const toggleCityExpansion = (city: string) => {
+    setExpandedCities(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(city)) {
+        newSet.delete(city);
+      } else {
+        newSet.add(city);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCitySelect = (city: string) => {
+    setSelectedCity(city);
+    setFormData(prev => ({ ...prev, city, neighborhood: "" }));
+    setValidationErrors([]);
+  };
+
+  const handleNeighborhoodSelect = (neighborhood: string) => {
+    setFormData(prev => ({ ...prev, neighborhood }));
+  };
+
+  const handleZipSelect = (zip: string) => {
+    setFormData(prev => ({ ...prev, zip_code: zip }));
+    setValidationErrors([]);
+  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -547,73 +590,120 @@ const AddRentalListing = () => {
                     </div>
                   </div>
 
-                  {/* Row 2: City, ZIP */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="city">City *</Label>
-                      <Select
-                        value={selectedCity}
-                        onValueChange={(value) => {
-                          setSelectedCity(value);
-                          setFormData(prev => ({ ...prev, city: value }));
-                        }}
-                        disabled={!selectedState}
-                      >
-                        <SelectTrigger className={cn(
-                          "bg-background",
-                          !selectedState ? "cursor-not-allowed opacity-50" : ""
-                        )}>
-                          <SelectValue placeholder={selectedState ? "Select city" : "Select state first"} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover z-50 max-h-[300px]">
-                          {availableCities.map((city) => (
-                            <SelectItem key={city} value={city}>
-                              {city}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="zip_code">ZIP Code *</Label>
-                      <Select
-                        value={formData.zip_code}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, zip_code: value }))}
-                        disabled={!selectedCity || availableZips.length === 0}
-                      >
-                        <SelectTrigger className={cn(
-                          "bg-background",
-                          (!selectedCity || availableZips.length === 0) ? "cursor-not-allowed opacity-50" : ""
-                        )}>
-                          <SelectValue placeholder={selectedCity ? "Select ZIP" : "Select city first"} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover z-50 max-h-[300px]">
-                          {availableZips.map((zip) => (
-                            <SelectItem key={zip} value={zip}>
-                              {zip}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {selectedCity && availableZips.length === 0 && (
-                        <p className="text-xs text-muted-foreground">Enter ZIP manually below if not in list</p>
-                      )}
-                    </div>
+                  {/* City with Neighborhoods */}
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City *</Label>
+                    <ScrollArea className="h-[200px] w-full border rounded-md p-4">
+                      <div className="space-y-2">
+                        {availableCities.map((city) => {
+                          const neighborhoods = getAreasForCity(city, selectedState);
+                          const hasNeighborhoods = neighborhoods && neighborhoods.length > 0;
+                          const isExpanded = expandedCities.has(city);
+                          
+                          return (
+                            <div key={city}>
+                              <div className="flex items-center gap-2">
+                                {hasNeighborhoods && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => toggleCityExpansion(city)}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <ChevronDown 
+                                      className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                    />
+                                  </Button>
+                                )}
+                                <Button
+                                  type="button"
+                                  variant={selectedCity === city && !formData.neighborhood ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => handleCitySelect(city)}
+                                  className={!hasNeighborhoods ? "ml-8" : ""}
+                                >
+                                  {city}
+                                </Button>
+                              </div>
+                              
+                              {hasNeighborhoods && isExpanded && (
+                                <div className="ml-14 mt-2 space-y-1">
+                                  {neighborhoods.map((neighborhood) => (
+                                    <Button
+                                      key={neighborhood}
+                                      type="button"
+                                      variant={
+                                        selectedCity === city && formData.neighborhood === neighborhood
+                                          ? "default"
+                                          : "outline"
+                                      }
+                                      size="sm"
+                                      onClick={() => {
+                                        handleCitySelect(city);
+                                        handleNeighborhoodSelect(neighborhood);
+                                      }}
+                                      className="text-xs"
+                                    >
+                                      {neighborhood}
+                                    </Button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
                   </div>
 
-                  {/* Manual ZIP entry when not available in dropdown */}
-                  {selectedCity && availableZips.length === 0 && (
-                    <div className="space-y-2">
-                      <Label htmlFor="zip_code_manual">Enter ZIP Code Manually *</Label>
-                      <Input
-                        id="zip_code_manual"
-                        value={formData.zip_code}
-                        onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
-                        placeholder="02134"
-                      />
-                    </div>
-                  )}
+                  {/* ZIP Code Picker */}
+                  <div className="space-y-2">
+                    <Label htmlFor="zip_code">ZIP Code *</Label>
+                    {suggestedZipsLoading ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading ZIP codes...
+                      </div>
+                    ) : suggestedZips.length > 0 ? (
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          {suggestedZips.map((zip) => (
+                            <Button
+                              key={zip}
+                              type="button"
+                              variant={formData.zip_code === zip ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handleZipSelect(zip)}
+                            >
+                              {zip}
+                            </Button>
+                          ))}
+                        </div>
+                        {formData.zip_code && (
+                          <p className="text-sm text-muted-foreground">
+                            Selected: <span className="font-medium">{formData.zip_code}</span>
+                          </p>
+                        )}
+                      </div>
+                    ) : selectedCity ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          No ZIP codes available for this city - enter manually below
+                        </p>
+                        <Input
+                          id="zip_code_manual"
+                          value={formData.zip_code}
+                          onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
+                          placeholder="02134"
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Select a city to see available ZIP codes
+                      </p>
+                    )}
+                  </div>
 
                   {/* Street Address */}
                   <div className="space-y-2">
@@ -687,95 +777,18 @@ const AddRentalListing = () => {
                   </div>
                 </div>
 
-                {/* Row: Monthly Rent, Zip Code, City */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Monthly Rent *</Label>
-                    <FormattedInput
-                      id="price"
-                      format="currency"
-                      placeholder="2000"
-                      value={formData.price}
-                      onChange={(value) => setFormData({ ...formData, price: value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="zip_code">Zip Code *</Label>
-                    <Input
-                      id="zip_code"
-                      value={formData.zip_code}
-                      onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="city">City *</Label>
-                    <Input
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) => {
-                        const newCity = e.target.value;
-                        setFormData({ 
-                          ...formData, 
-                          city: newCity,
-                          // Clear neighborhood if city is not Boston
-                          neighborhood: newCity === "Boston" ? formData.neighborhood : ""
-                        });
-                      }}
-                      required
-                    />
-                  </div>
+                {/* Monthly Rent */}
+                <div className="space-y-2">
+                  <Label htmlFor="price">Monthly Rent *</Label>
+                  <FormattedInput
+                    id="price"
+                    format="currency"
+                    placeholder="2000"
+                    value={formData.price}
+                    onChange={(value) => setFormData({ ...formData, price: value })}
+                    required
+                  />
                 </div>
-
-                {/* Boston Neighborhood Selector */}
-                {formData.city === "Boston" && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="boston-neighborhood">Boston Neighborhood *</Label>
-                      <Select
-                        value={formData.neighborhood}
-                        onValueChange={(value) => {
-                          setFormData({ ...formData, neighborhood: value, town: "" });
-                        }}
-                      >
-                        <SelectTrigger id="boston-neighborhood" className="bg-background">
-                          <SelectValue placeholder="Select neighborhood" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover z-50">
-                          {bostonNeighborhoods.map((neighborhood) => (
-                            <SelectItem key={neighborhood} value={neighborhood}>
-                              {neighborhood}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    {/* Boston Area Selector (sub-neighborhood) */}
-                    {formData.neighborhood && 
-                     bostonNeighborhoodsWithAreas[formData.neighborhood as keyof typeof bostonNeighborhoodsWithAreas]?.length > 0 && (
-                      <div className="space-y-2">
-                        <Label htmlFor="boston-area">Specific Area</Label>
-                        <Select
-                          value={formData.town || ""}
-                          onValueChange={(value) => setFormData({ ...formData, town: value })}
-                        >
-                          <SelectTrigger id="boston-area" className="bg-background">
-                            <SelectValue placeholder="Select specific area (optional)" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover z-50">
-                            {bostonNeighborhoodsWithAreas[formData.neighborhood as keyof typeof bostonNeighborhoodsWithAreas].map((area) => (
-                              <SelectItem key={area} value={area}>
-                                {area}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </>
-                )}
 
                 {/* Row: State, County, Town, Neighborhood (for non-Boston) */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
