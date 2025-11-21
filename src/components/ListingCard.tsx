@@ -139,17 +139,13 @@ const ListingCard = ({
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      // Try RPC first (handles RLS and cascades)
-      const { error: rpcError } = await supabase.rpc('delete_draft_listing', { p_listing_id: listing.id });
-      if (rpcError) {
-        console.warn("RPC delete_draft_listing failed, falling back to direct delete:", rpcError);
-        const { error: directError } = await supabase
-          .from('listings')
-          .delete()
-          .eq('id', listing.id)
-          .eq('status', 'draft');
-        if (directError) throw directError;
-      }
+      const { error } = await supabase
+        .from('listings')
+        .delete()
+        .eq('id', listing.id);
+      
+      if (error) throw error;
+
       toast.success("Draft listing deleted successfully");
       setDeleteDialogOpen(false);
       onDelete?.(listing.id);
