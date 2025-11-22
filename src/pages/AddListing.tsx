@@ -789,7 +789,83 @@ const AddListing = () => {
         if (comm.zoning) setCommercialZoning(comm.zoning);
         if (Array.isArray(comm.allowed_business_types)) setCommercialBusinessTypes(comm.allowed_business_types);
         if (Array.isArray(comm.tenant_responsibilities)) setCommercialTenantResponsibilities(comm.tenant_responsibilities);
+        if (comm.current_tenant) setCommercialCurrentTenant(comm.current_tenant);
+        if (comm.lease_expiration) setCommercialLeaseExpiration(comm.lease_expiration);
+        if (comm.ceiling_height) setCommercialCeilingHeight(comm.ceiling_height.toString());
+        if (comm.loading_docks) setCommercialLoadingDocks(comm.loading_docks.toString());
+        if (comm.power_available) setCommercialPowerAvailable(comm.power_available);
+        if (Array.isArray(comm.additional_features)) setCommercialAdditionalFeatures(comm.additional_features);
       }
+      
+      // Condo details
+      if (data.condo_details && typeof data.condo_details === 'object') {
+        const condo = data.condo_details as any;
+        if (condo.unit_number) setCondoUnitNumber(condo.unit_number);
+        if (condo.floor_level) setCondoFloorLevel(condo.floor_level.toString());
+        if (typeof condo.hoa_fee === 'number') setCondoHoaFee(condo.hoa_fee.toString());
+        if (condo.hoa_fee_frequency) setCondoHoaFeeFrequency(condo.hoa_fee_frequency);
+        if (Array.isArray(condo.building_amenities)) setCondoBuildingAmenities(condo.building_amenities);
+        if (condo.pet_policy) setCondoPetPolicy(condo.pet_policy);
+        if (condo.pet_policy_comments) setCondoPetPolicyComments(condo.pet_policy_comments);
+        if (typeof condo.total_units === 'number') setCondoTotalUnits(condo.total_units.toString());
+        if (typeof condo.year_built === 'number') setCondoYearBuilt(condo.year_built.toString());
+      }
+      
+      // Sale listing criteria
+      if (Array.isArray(data.listing_agreement_types)) {
+        setListingAgreementTypes(data.listing_agreement_types as string[]);
+      }
+      setEntryOnly(data.entry_only ?? null);
+      setLenderOwned(data.lender_owned ?? null);
+      setShortSale(data.short_sale ?? null);
+      
+      if (Array.isArray(data.property_styles)) {
+        setPropertyStyles(data.property_styles as string[]);
+      }
+      setWaterfront(data.waterfront ?? null);
+      setWaterView(data.water_view ?? null);
+      setBeachNearby(data.beach_nearby ?? null);
+      if (Array.isArray(data.facing_direction)) {
+        setFacingDirection(data.facing_direction as string[]);
+      }
+      
+      // Building / systems / feature fields
+      setMinFireplaces(typeof data.num_fireplaces === 'number' ? data.num_fireplaces.toString() : '');
+      setBasement(typeof data.has_basement === 'boolean' ? data.has_basement : null);
+      setGarageSpaces(typeof data.garage_spaces === 'number' ? data.garage_spaces.toString() : '');
+      
+      const totalParking = typeof data.total_parking_spaces === 'number' ? data.total_parking_spaces : 0;
+      const garage = typeof data.garage_spaces === 'number' ? data.garage_spaces : 0;
+      const surfaceParking = totalParking - garage;
+      setParkingSpaces(surfaceParking > 0 ? surfaceParking.toString() : '');
+      
+      if (Array.isArray(data.construction_features)) setConstructionFeatures(data.construction_features as string[]);
+      if (Array.isArray(data.roof_materials)) setRoofMaterials(data.roof_materials as string[]);
+      if (Array.isArray(data.exterior_features_list)) setExteriorFeatures(data.exterior_features_list as string[]);
+      if (Array.isArray(data.heating_types)) setHeatingTypes(data.heating_types as string[]);
+      if (Array.isArray(data.cooling_types)) setCoolingTypes(data.cooling_types as string[]);
+      if (Array.isArray(data.green_features)) setGreenFeatures(data.green_features as string[]);
+      
+      // Open houses
+      if (Array.isArray(data.open_houses)) {
+        setOpenHouses(data.open_houses as any[]);
+      }
+      
+      // Disclosure helpers
+      if (Array.isArray(data.disclosures) && data.disclosures.includes('Seller Disclosure')) {
+        setSellerDisclosure('Yes');
+      } else {
+        setSellerDisclosure('No');
+      }
+      
+      const notesText = (data.additional_notes as string) || '';
+      const customMatch = notesText.match(/Custom:\s*(.*?)(?=\n|Exclusions:|Broker Comments:|$)/s);
+      const exclusionsMatch = notesText.match(/Exclusions:\s*(.*?)(?=\n|Broker Comments:|$)/s);
+      const brokerMatch = notesText.match(/Broker Comments:\s*(.*?)$/s);
+      
+      if (customMatch) setDisclosuresText(customMatch[1].trim());
+      if (exclusionsMatch) setExclusions(exclusionsMatch[1].trim());
+      if (brokerMatch) setBrokerComments(brokerMatch[1].trim());
       
       toast.success("Listing loaded for editing");
       
