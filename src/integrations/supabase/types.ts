@@ -1744,6 +1744,41 @@ export type Database = {
         }
         Relationships: []
       }
+      share_tokens: {
+        Row: {
+          agent_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          payload: Json | null
+          token: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payload?: Json | null
+          token: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payload?: Json | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_tokens_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       showing_requests: {
         Row: {
           created_at: string
@@ -2075,6 +2110,7 @@ export type Database = {
           listing_id: string
         }[]
       }
+      cleanup_expired_share_tokens: { Args: never; Returns: undefined }
       delete_draft_listing: {
         Args: { p_listing_id: string }
         Returns: undefined
