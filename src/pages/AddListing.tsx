@@ -4783,7 +4783,7 @@ const AddListing = () => {
                   </Button>
                   <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
                     <Upload className="w-5 h-5" />
-                    {submitting ? (isEditMode ? "Saving..." : "Publishing...") : (isEditMode ? "Save Changes" : "Publish")}
+                    {submitting ? (isEditMode ? "Updating..." : "Publishing...") : (isEditMode ? "Update Listing" : "Publish")}
                   </Button>
                 </div>
               </form>
