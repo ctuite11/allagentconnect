@@ -1,0 +1,20 @@
+-- Add proper columns for assessed value, floors, foundation, basement, and parking/garage details
+ALTER TABLE public.listings
+  ADD COLUMN IF NOT EXISTS assessed_value numeric,
+  ADD COLUMN IF NOT EXISTS fiscal_year integer,
+  ADD COLUMN IF NOT EXISTS residential_exemption text,
+  ADD COLUMN IF NOT EXISTS floors numeric,
+  ADD COLUMN IF NOT EXISTS water_view_type text,
+  ADD COLUMN IF NOT EXISTS lead_paint text,
+  ADD COLUMN IF NOT EXISTS handicap_access text,
+  ADD COLUMN IF NOT EXISTS foundation_types jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS basement_types jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS basement_features_list jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS basement_floor_types jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS parking_comments text,
+  ADD COLUMN IF NOT EXISTS parking_features_list jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS garage_comments text,
+  ADD COLUMN IF NOT EXISTS garage_features_list jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS garage_additional_features_list jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS broker_comments text,
+  ADD COLUMN IF NOT EXISTS listing_exclusions text;
