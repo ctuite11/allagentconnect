@@ -271,6 +271,8 @@ const AddListing = () => {
   const [dialogStartTime, setDialogStartTime] = useState('');
   const [dialogEndTime, setDialogEndTime] = useState('');
   const [dialogComments, setDialogComments] = useState('');
+  const [showOpenHouseConfirm, setShowOpenHouseConfirm] = useState(false);
+  const [pendingOpenHouses, setPendingOpenHouses] = useState<any[]>([]);
 
   // Progress tracking
   const calculateSectionProgress = () => {
@@ -4918,7 +4920,7 @@ const AddListing = () => {
               Cancel
             </Button>
             <Button
-              onClick={async () => {
+              onClick={() => {
                 if (selectedDates.length === 0) {
                   toast.error("Please select at least one date");
                   return;
@@ -4936,23 +4938,9 @@ const AddListing = () => {
                   notes: dialogComments
                 }));
                 
-                const updatedOpenHouses = [...openHouses, ...newOpenHouses];
-                setOpenHouses(updatedOpenHouses);
-                
-                // Save to database before navigating
-                try {
-                  await handleSaveDraft(false);
-                  setOpenHouseDialogOpen(false);
-                  setSelectedDates([]);
-                  setDialogStartTime('');
-                  setDialogEndTime('');
-                  setDialogComments('');
-                  toast.success(`Added ${newOpenHouses.length} open house(s)`);
-                  navigate('/agent-dashboard');
-                } catch (error) {
-                  console.error('Error saving open houses:', error);
-                  toast.error('Failed to save open houses');
-                }
+                setPendingOpenHouses(newOpenHouses);
+                setOpenHouseDialogOpen(false);
+                setShowOpenHouseConfirm(true);
               }}
               className="bg-green-600 hover:bg-green-700"
             >
@@ -4961,6 +4949,49 @@ const AddListing = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirmation Dialog for Open Houses */}
+      <AlertDialog open={showOpenHouseConfirm} onOpenChange={setShowOpenHouseConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Open Houses and Return to Dashboard?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You've added {pendingOpenHouses.length} open house{pendingOpenHouses.length !== 1 ? 's' : ''}. 
+              Would you like to save {pendingOpenHouses.length !== 1 ? 'them' : 'it'} and return to your dashboard?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setOpenHouses([...openHouses, ...pendingOpenHouses]);
+              setPendingOpenHouses([]);
+              toast.success(`Added ${pendingOpenHouses.length} open house(s)`);
+            }}>
+              Stay on This Page
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={async () => {
+              try {
+                const updatedOpenHouses = [...openHouses, ...pendingOpenHouses];
+                setOpenHouses(updatedOpenHouses);
+                await handleSaveDraft(false);
+                
+                setSelectedDates([]);
+                setDialogStartTime('');
+                setDialogEndTime('');
+                setDialogComments('');
+                setPendingOpenHouses([]);
+                
+                toast.success(`Added and saved ${pendingOpenHouses.length} open house(s)`);
+                navigate('/agent-dashboard');
+              } catch (error) {
+                console.error('Error saving open houses:', error);
+                toast.error('Failed to save open houses');
+              }
+            }}>
+              Save and Go to Dashboard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
