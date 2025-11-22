@@ -603,7 +603,7 @@ const ListingCard = ({
                     Unit {unitNumber}
                   </Badge>}
               </h3>
-              <div className="flex items-center text-muted-foreground text-xs mb-1">
+              <div className="flex items-center text-muted-foreground text-xs mb-2">
                 <MapPin className="w-3 h-3 mr-1" />
                 {listing.city}, {listing.state} {listing.zip_code}
                 {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
@@ -612,7 +612,7 @@ const ListingCard = ({
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 {listing.listing_number && <span>Listing #{listing.listing_number}</span>}
                 {listing.is_relisting && <>
                     {listing.listing_number && <span>•</span>}
@@ -631,7 +631,7 @@ const ListingCard = ({
                     </Badge>
                   </>}
               </div>
-              <div className="flex gap-2 text-xs text-muted-foreground mb-1">
+              <div className="flex gap-2 text-xs text-muted-foreground mb-3">
                 {listing.bedrooms && <span><Bed className="w-3 h-3 inline mr-0.5" />{listing.bedrooms}</span>}
                 {listing.bathrooms && <span><Bath className="w-3 h-3 inline mr-0.5" />{listing.bathrooms}</span>}
                 {listing.square_feet && <span><Home className="w-3 h-3 inline mr-0.5" />{listing.square_feet.toLocaleString()} sqft</span>}
@@ -639,7 +639,7 @@ const ListingCard = ({
               
               {/* Open House Info */}
               {nextOpenHouse && (
-                <div className={`flex items-center gap-1.5 text-xs p-2 rounded-md mb-1.5 ${nextOpenHouse.type === 'broker' ? 'bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800' : 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'}`}>
+                <div className={`flex items-center gap-1.5 text-xs p-2 rounded-md mb-2 ${nextOpenHouse.type === 'broker' ? 'bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800' : 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'}`}>
                   <Calendar className={`h-4 w-4 ${nextOpenHouse.type === 'broker' ? 'text-purple-600 dark:text-purple-400' : 'text-green-600 dark:text-green-400'}`} />
                   <div className="flex-1">
                     <div className={`font-semibold ${nextOpenHouse.type === 'broker' ? 'text-purple-700 dark:text-purple-300' : 'text-green-700 dark:text-green-300'}`}>
@@ -652,10 +652,18 @@ const ListingCard = ({
                 </div>
               )}
               
-              {(listing.status === 'active' || listing.status === 'coming_soon') && <Button size="sm" variant={matchButtonStyle.variant} onClick={() => setProspectDialogOpen(true)} disabled={matchCount === 0 || loadingMatches} className={`mt-1 text-xs h-6 ${matchButtonStyle.className}`}>
+              {(listing.status === 'active' || listing.status === 'coming_soon') && matchCount > 0 && (
+                <Button 
+                  size="sm" 
+                  variant={matchButtonStyle.variant} 
+                  onClick={() => setProspectDialogOpen(true)} 
+                  disabled={loadingMatches} 
+                  className={`w-full text-xs ${matchButtonStyle.className}`}
+                >
                   <Users className="w-3 h-3 mr-1" />
-                  {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
-                </Button>}
+                  {loadingMatches ? "Loading..." : `${matchCount} ${matchCount === 1 ? 'match' : 'matches'}`}
+                </Button>
+              )}
             </div>
 
             <div className="col-span-2">
