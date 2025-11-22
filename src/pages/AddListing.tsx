@@ -150,6 +150,7 @@ const AddListing = () => {
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [availableZips, setAvailableZips] = useState<string[]>([]);
   const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
+  const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
   const [fetchingData, setFetchingData] = useState(false);
   const [citySearch, setCitySearch] = useState("");
