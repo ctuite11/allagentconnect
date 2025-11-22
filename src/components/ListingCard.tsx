@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, PartyPopper } from "lucide-react";
+import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -606,8 +606,8 @@ const ListingCard = ({
                 <Users className="h-3.5 w-3.5 mr-1.5" />
                 {loadingMatches ? "..." : `${matchCount} Match${matchCount !== 1 ? "es" : ""}`}
               </Button>
-              <div className="flex items-center gap-2">
-                <PartyPopper className="h-4 w-4 text-primary animate-pulse" />
+              <div className="flex items-center gap-2 w-full">
+                <span className="text-2xl animate-pulse">🎈</span>
                 <Button size="sm" variant="outline" className="flex-1" onClick={(e) => {
                   e.stopPropagation();
                   setQuickOpenHouseDialogOpen(true);
@@ -787,9 +787,9 @@ const ListingCard = ({
                   </AlertDialogContent>
                 </AlertDialog>
               )}
-              <div className="flex items-center gap-2">
-                <PartyPopper className="h-4 w-4 text-primary animate-pulse" />
-                <Button size="sm" variant="outline" onClick={(e) => {
+              <div className="flex items-center gap-2 w-full">
+                <span className="text-2xl animate-pulse">🎈</span>
+                <Button size="sm" variant="outline" className="flex-1" onClick={(e) => {
                   e.stopPropagation();
                   setQuickOpenHouseDialogOpen(true);
                 }}>
@@ -976,7 +976,7 @@ const ListingCard = ({
             Market
           </Button>
           <div className="flex items-center gap-2 flex-1">
-            <PartyPopper className="h-4 w-4 text-primary animate-pulse flex-shrink-0" />
+            <span className="text-2xl animate-pulse flex-shrink-0">🎈</span>
             <Button variant="outline" size="sm" className="flex-1" onClick={(e) => {
               e.stopPropagation();
               setQuickOpenHouseDialogOpen(true);
