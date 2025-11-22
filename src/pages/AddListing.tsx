@@ -800,7 +800,10 @@ const AddListing = () => {
       // Condo details
       if (data.condo_details && typeof data.condo_details === 'object') {
         const condo = data.condo_details as any;
-        if (condo.unit_number) setCondoUnitNumber(condo.unit_number);
+        if (condo.unit_number) {
+          setCondoUnitNumber(condo.unit_number);
+          setUnitNumber(condo.unit_number); // Sync generic unit state for UI
+        }
         if (condo.floor_level) setCondoFloorLevel(condo.floor_level.toString());
         if (typeof condo.hoa_fee === 'number') setCondoHoaFee(condo.hoa_fee.toString());
         if (condo.hoa_fee_frequency) setCondoHoaFeeFrequency(condo.hoa_fee_frequency);
@@ -2638,7 +2641,14 @@ const AddListing = () => {
                       <Input
                         id="unit_number"
                         value={unitNumber}
-                        onChange={(e) => setUnitNumber(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setUnitNumber(value);
+                          // Keep condo-specific state in sync
+                          if (formData.property_type === "Condominium") {
+                            setCondoUnitNumber(value);
+                          }
+                        }}
                         placeholder="e.g., 3B, 205, Apt 4"
                         required={formData.property_type === "Condominium" || formData.property_type === "Townhouse"}
                       />
