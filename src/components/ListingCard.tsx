@@ -550,8 +550,8 @@ const ListingCard = ({
               </div>}
             
             {/* Open House Banner (third priority) */}
-            {openHouseBanner && !statusBanner && !priceChangeBanner && <div className={`absolute top-0 left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}>
-                {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text}
+            {openHouseBanner && <div className={`absolute ${statusBanner && priceChangeBanner ? 'top-6' : statusBanner || priceChangeBanner ? 'top-5' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}>
+                {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.date} • {openHouseBanner.time}
               </div>}
             
             {/* Photo count badge */}
@@ -725,7 +725,7 @@ const ListingCard = ({
         
         {/* Open House Banner (third priority, positioned below previous banners if they exist) */}
         {openHouseBanner && <div className={`absolute ${statusBanner && priceChangeBanner ? 'top-20' : statusBanner || priceChangeBanner ? 'top-10' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-sm font-bold px-3 py-2 text-center`}>
-            {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text} - {openHouseBanner.date}
+            {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.date} • {openHouseBanner.time}
           </div>}
         
         {/* Photo count badge */}
