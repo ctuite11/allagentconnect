@@ -115,49 +115,64 @@ const ListingCard = ({
   const loadMatchCount = async () => {
     try {
       setLoadingMatches(true);
-      let query = supabase.from("client_needs").select("id", {
-        count: "exact",
-        head: true
+      
+      // Fetch all active hot sheets
+      const { data: hotSheets, error } = await supabase
+        .from("hot_sheets")
+        .select("id, criteria")
+        .eq("is_active", true);
+
+      if (error) throw error;
+      
+      if (!hotSheets || hotSheets.length === 0) {
+        setMatchCount(0);
+        return;
+      }
+
+      // Filter hot sheets using JavaScript matching logic
+      const matchingSheets = hotSheets.filter((sheet) => {
+        const criteria = sheet.criteria as any;
+        if (!criteria) return false;
+
+        // Price matching: listing price must fall within hot sheet min/max range
+        if (criteria.min_price && listing.price < criteria.min_price) return false;
+        if (criteria.max_price && listing.price > criteria.max_price) return false;
+
+        // Bedrooms: listing must have >= hot sheet minimum (if specified)
+        if (criteria.bedrooms !== null && criteria.bedrooms !== undefined) {
+          if (listing.bedrooms === null || listing.bedrooms < criteria.bedrooms) return false;
+        }
+
+        // Bathrooms: listing must have >= hot sheet minimum (if specified)
+        if (criteria.bathrooms !== null && criteria.bathrooms !== undefined) {
+          if (listing.bathrooms === null || listing.bathrooms < criteria.bathrooms) return false;
+        }
+
+        // City matching: only if specified in hot sheet criteria
+        if (criteria.city && criteria.city.trim() !== "") {
+          if (!listing.city || listing.city.toLowerCase() !== criteria.city.toLowerCase()) return false;
+        }
+
+        // State matching: only if specified in hot sheet criteria
+        if (criteria.state && criteria.state.trim() !== "") {
+          if (!listing.state || listing.state.toLowerCase() !== criteria.state.toLowerCase()) return false;
+        }
+
+        // Property type matching: if specified in hot sheet
+        if (criteria.property_type && criteria.property_type.trim() !== "") {
+          const listingType = propertyTypeToEnum(listing.property_type || "");
+          if (!listingType || listingType !== criteria.property_type) return false;
+        }
+
+        // Listing type matching: if specified (for_sale vs for_rent)
+        if (criteria.listing_type && criteria.listing_type.trim() !== "") {
+          if (!listing.listing_type || listing.listing_type !== criteria.listing_type) return false;
+        }
+
+        return true;
       });
 
-      // Match by state
-      if (listing.state) {
-        query = query.eq("state", listing.state);
-      }
-
-      // Match by city
-      if (listing.city) {
-        query = query.ilike("city", `%${listing.city}%`);
-      }
-
-      // Match by property type
-      if (listing.property_type) {
-        const enumValue = propertyTypeToEnum(listing.property_type);
-        // Only add to query if we got a valid enum value
-        if (enumValue) {
-          query = query.eq("property_type", enumValue as any);
-        }
-      }
-
-      // Match by price (listing price should be at or below max_price)
-      if (listing.price) {
-        query = query.gte("max_price", listing.price);
-      }
-
-      // Match by bedrooms - special handling for studios
-      if (listing.bedrooms !== null && listing.bedrooms !== undefined) {
-        if (listing.bedrooms === 0) {
-          // Studio listings should ONLY match clients specifically looking for studios
-          query = query.eq("bedrooms", 0);
-        } else {
-          // Regular listings match clients wanting that many or fewer bedrooms
-          query = query.gte("bedrooms", 0).lte("bedrooms", listing.bedrooms);
-        }
-      }
-      const {
-        count
-      } = await query;
-      setMatchCount(count || 0);
+      setMatchCount(matchingSheets.length);
     } catch (error) {
       console.error("Error loading match count:", error);
     } finally {
@@ -525,6 +540,25 @@ const ListingCard = ({
                 {agentInfo.company && <span className="text-muted-foreground"> • {agentInfo.company}</span>}
               </div>}
           </div>
+          
+          {/* Open House Info */}
+          {nextOpenHouse && (
+            <div className={`flex items-center gap-2 text-sm p-2 rounded-md mt-2 ${nextOpenHouse.type === 'broker' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300'}`}>
+              <Calendar className="h-4 w-4" />
+              <span className="font-medium">
+                {nextOpenHouse.type === 'broker' ? 'Broker Tour' : 'Open House'}: {format(new Date(nextOpenHouse.date), "MMM d")} • {nextOpenHouse.start_time} - {nextOpenHouse.end_time}
+              </span>
+            </div>
+          )}
+          
+          {showActions && (listing.status === 'active' || listing.status === 'coming_soon') && (
+            <div className="pt-2 border-t mt-2">
+              <Button size="sm" variant={matchButtonStyle.variant} className={`w-full ${matchButtonStyle.className}`} onClick={() => setProspectDialogOpen(true)} disabled={loadingMatches}>
+                <Users className="h-3.5 w-3.5 mr-1.5" />
+                {loadingMatches ? "..." : `${matchCount} Match${matchCount !== 1 ? "es" : ""}`}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>;
   }
@@ -602,7 +636,23 @@ const ListingCard = ({
                 {listing.bathrooms && <span><Bath className="w-3 h-3 inline mr-0.5" />{listing.bathrooms}</span>}
                 {listing.square_feet && <span><Home className="w-3 h-3 inline mr-0.5" />{listing.square_feet.toLocaleString()} sqft</span>}
               </div>
-              {listing.status === 'active' && <Button size="sm" variant={matchButtonStyle.variant} onClick={() => setProspectDialogOpen(true)} disabled={matchCount === 0 || loadingMatches} className={`mt-1 text-xs h-6 ${matchButtonStyle.className}`}>
+              
+              {/* Open House Info */}
+              {nextOpenHouse && (
+                <div className={`flex items-center gap-1.5 text-xs p-2 rounded-md mb-1.5 ${nextOpenHouse.type === 'broker' ? 'bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800' : 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'}`}>
+                  <Calendar className={`h-4 w-4 ${nextOpenHouse.type === 'broker' ? 'text-purple-600 dark:text-purple-400' : 'text-green-600 dark:text-green-400'}`} />
+                  <div className="flex-1">
+                    <div className={`font-semibold ${nextOpenHouse.type === 'broker' ? 'text-purple-700 dark:text-purple-300' : 'text-green-700 dark:text-green-300'}`}>
+                      {nextOpenHouse.type === 'broker' ? 'Broker Tour' : 'Open House'}
+                    </div>
+                    <div className={`${nextOpenHouse.type === 'broker' ? 'text-purple-600 dark:text-purple-400' : 'text-green-600 dark:text-green-400'}`}>
+                      {format(new Date(nextOpenHouse.date), "EEE, MMM d")} • {nextOpenHouse.start_time} - {nextOpenHouse.end_time}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {(listing.status === 'active' || listing.status === 'coming_soon') && <Button size="sm" variant={matchButtonStyle.variant} onClick={() => setProspectDialogOpen(true)} disabled={matchCount === 0 || loadingMatches} className={`mt-1 text-xs h-6 ${matchButtonStyle.className}`}>
                   <Users className="w-3 h-3 mr-1" />
                   {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
                 </Button>}
@@ -794,8 +844,18 @@ const ListingCard = ({
               {listing.square_feet.toLocaleString()} sqft
             </div>}
         </div>
+        
+        {/* Open House Info */}
+        {nextOpenHouse && (
+          <div className={`flex items-center gap-2 text-xs p-2 rounded-md mb-2 ${nextOpenHouse.type === 'broker' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300'}`}>
+            <Calendar className="h-3.5 w-3.5" />
+            <span className="font-medium">
+              {nextOpenHouse.type === 'broker' ? 'Broker' : 'Open'}: {format(new Date(nextOpenHouse.date), "MMM d")} • {nextOpenHouse.start_time}
+            </span>
+          </div>
+        )}
 
-        {listing.status === 'active' && <Button size="sm" variant={matchButtonStyle.variant} onClick={() => setProspectDialogOpen(true)} disabled={matchCount === 0 || loadingMatches} className={`mb-2 w-full text-xs h-7 ${matchButtonStyle.className}`}>
+        {(listing.status === 'active' || listing.status === 'coming_soon') && <Button size="sm" variant={matchButtonStyle.variant} onClick={() => setProspectDialogOpen(true)} disabled={matchCount === 0 || loadingMatches} className={`mb-2 w-full text-xs h-7 ${matchButtonStyle.className}`}>
             <Users className="w-3 h-3 mr-1" />
             {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
           </Button>}
