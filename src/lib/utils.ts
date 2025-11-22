@@ -65,9 +65,12 @@ export function buildDisplayAddress(
 export function propertyTypeToEnum(displayType: string): string {
   const mapping: Record<string, string> = {
     "Single Family": "single_family",
+    "Single-Family": "single_family",
     "Condo": "condo",
+    "Condominium": "condo",
     "Townhouse": "townhouse",
     "Multi Family": "multi_family",
+    "Multi-Family": "multi_family",
     "Land": "land",
     "Commercial": "commercial",
     "Residential Rental": "residential_rental",

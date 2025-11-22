@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home } from "lucide-react";
 import { z } from "zod";
 import { bostonNeighborhoods, bostonNeighborhoodsWithAreas } from "@/data/bostonNeighborhoods";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
@@ -875,6 +875,9 @@ const AddRentalListing = () => {
                     ) : (
                       <p className="text-sm text-muted-foreground">Select a city to see ZIP code options</p>
                     )}
+                  </div>
+
+                  {/* Street Address */}
                   <div className="space-y-2">
                     <Label htmlFor="address">Street Address *</Label>
                     <Input

@@ -133,7 +133,10 @@ const ListingCard = ({
       // Match by property type
       if (listing.property_type) {
         const enumValue = propertyTypeToEnum(listing.property_type);
-        query = query.eq("property_type", enumValue as any);
+        // Only add to query if we got a valid enum value
+        if (enumValue) {
+          query = query.eq("property_type", enumValue as any);
+        }
       }
 
       // Match by price (listing price should be at or below max_price)
@@ -141,9 +144,15 @@ const ListingCard = ({
         query = query.gte("max_price", listing.price);
       }
 
-      // Match by bedrooms
-      if (listing.bedrooms) {
-        query = query.lte("bedrooms", listing.bedrooms);
+      // Match by bedrooms - special handling for studios
+      if (listing.bedrooms !== null && listing.bedrooms !== undefined) {
+        if (listing.bedrooms === 0) {
+          // Studio listings should ONLY match clients specifically looking for studios
+          query = query.eq("bedrooms", 0);
+        } else {
+          // Regular listings match clients wanting that many or fewer bedrooms
+          query = query.gte("bedrooms", 0).lte("bedrooms", listing.bedrooms);
+        }
       }
       const {
         count
