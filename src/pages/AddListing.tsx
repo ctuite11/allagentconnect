@@ -1468,9 +1468,7 @@ const AddListing = () => {
 
       const payload: any = {
         agent_id: user.id,
-        status: (isEditMode && originalStatus && originalStatus !== "draft") 
-          ? originalStatus 
-          : "draft",
+        status: isEditMode ? formData.status : "draft",
         listing_type: formData.listing_type,
         address: (formData.address || "Draft").trim(),
         city: formData.city?.trim() || "",
@@ -1541,8 +1539,8 @@ const AddListing = () => {
       setLastAutoSave(new Date());
       
       if (!isAutoSave) {
-        const successMessage = (isEditMode && originalStatus && originalStatus !== "draft")
-          ? "Changes saved successfully!"
+        const successMessage = isEditMode 
+          ? "Changes saved successfully!" 
           : "Draft saved successfully!";
         toast.success(successMessage);
         navigate("/agent-dashboard", { state: { reload: true } });
