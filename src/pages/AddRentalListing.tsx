@@ -112,6 +112,7 @@ const AddRentalListing = () => {
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [citySearch, setCitySearch] = useState("");
+  const [showCityList, setShowCityList] = useState(true);
 
   // Update available counties when state changes
   useEffect(() => {
@@ -253,6 +254,7 @@ const AddRentalListing = () => {
         zip_code: ''
       }));
     }
+    setShowCityList(false);
     setValidationErrors([]);
   };
 
@@ -765,7 +767,7 @@ const AddRentalListing = () => {
                       </div>
                     )}
 
-                    {availableCities.length > 0 && !selectedCity ? (
+                    {availableCities.length > 0 && !selectedCity && showCityList ? (
                       <ScrollArea className="h-[300px] border rounded-lg p-3 bg-background">
                         <RadioGroup value={formData.neighborhood ? `${selectedCity}-${formData.neighborhood}` : selectedCity} onValueChange={handleCitySelect}>
                           <div className="space-y-2">
