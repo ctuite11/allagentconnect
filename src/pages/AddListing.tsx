@@ -706,11 +706,6 @@ const AddListing = () => {
       if (Array.isArray(data.floor_plans)) setFloorPlanUrls(data.floor_plans as string[]);
       if (Array.isArray(data.documents)) setDocumentUrls(data.documents as string[]);
       
-      // ... keep existing code (other data loading and parsing)
-
-        // (condo total_units handling preserved in earlier condo_details block)
-      }
-      
       // Multi-family details
       if (data.multi_family_details && typeof data.multi_family_details === 'object') {
         const multi = data.multi_family_details as any;
