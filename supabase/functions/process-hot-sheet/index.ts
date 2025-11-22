@@ -238,6 +238,28 @@ const handler = async (req: Request): Promise<Response> => {
       schedule: hotSheet.notification_schedule 
     });
 
+    // Create share token BEFORE sending email if client_id exists
+    let clientHotsheetUrl = "";
+    if (hotSheet.client_id) {
+      const shareToken = crypto.randomUUID();
+      await adminClient
+        .from("share_tokens")
+        .insert({
+          token: shareToken,
+          agent_id: hotSheet.user_id,
+          payload: {
+            type: "client_hotsheet_invite",
+            client_id: hotSheet.client_id,
+            hot_sheet_id: hotSheetId
+          },
+          expires_at: null
+        });
+      
+      const publicSiteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.com";
+      clientHotsheetUrl = `${publicSiteUrl}/client/hotsheet/${shareToken}`;
+      console.log("✅ Created share token for client hot sheet invite:", shareToken);
+    }
+
     if (shouldSendEmail) {
       const recipientSet = new Set<string>();
       
@@ -340,6 +362,13 @@ const handler = async (req: Request): Promise<Response> => {
                    style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
                   View Hot Sheet
                 </a>
+                ${clientHotsheetUrl ? `
+                  <p style="margin: 16px 0 8px 0; color: #1f2937; font-weight: 500;">Client Access:</p>
+                  <a href="${clientHotsheetUrl}" 
+                     style="display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+                    View Your Hotsheet
+                  </a>
+                ` : ''}
               </div>
             </div>
           `,
@@ -378,25 +407,6 @@ const handler = async (req: Request): Promise<Response> => {
       .from("hot_sheets")
       .update({ last_sent_at: new Date().toISOString() })
       .eq("id", hotSheetId);
-
-    // Create share token if client_id exists
-    if (hotSheet.client_id) {
-      const shareToken = crypto.randomUUID();
-      await adminClient
-        .from("share_tokens")
-        .insert({
-          token: shareToken,
-          agent_id: hotSheet.user_id,
-          payload: {
-            type: "client_hotsheet_invite",
-            client_id: hotSheet.client_id,
-            hot_sheet_id: hotSheetId
-          },
-          expires_at: null
-        });
-      
-      console.log("✅ Created share token for client hot sheet invite:", shareToken);
-    }
 
     return new Response(
       JSON.stringify({ 

@@ -32,6 +32,7 @@ import HotSheets from "./pages/HotSheets";
 import HotSheetReview from "./pages/HotSheetReview";
 import MyClients from "./pages/MyClients";
 import ClientHotSheet from "./pages/ClientHotSheet";
+import ClientHotsheetPage from "./pages/ClientHotsheetPage";
 import ListingAnalytics from "./pages/ListingAnalytics";
 import MarketInsights from "./pages/MarketInsights";
 import VendorDashboard from "./pages/VendorDashboard";
@@ -92,6 +93,7 @@ const App = () => (
           <Route path="/hot-sheets/:id/review" element={<HotSheetReview />} />
           <Route path="/my-clients" element={<MyClients />} />
           <Route path="/client-hot-sheet/:id" element={<ClientHotSheet />} />
+          <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
           <Route path="/analytics" element={<ListingAnalytics />} />
           <Route path="/analytics/:id" element={<ListingAnalytics />} />
           <Route path="/market-insights" element={<MarketInsights />} />
