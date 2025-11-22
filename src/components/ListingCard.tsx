@@ -8,7 +8,6 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { ReverseProspectDialog } from "./ReverseProspectDialog";
 import MarketInsightsDialog from "./MarketInsightsDialog";
-import FavoriteButton from "./FavoriteButton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -491,9 +490,6 @@ const ListingCard = ({
                   </svg>}
               </div>
             </div>}
-          <div className="absolute top-2 right-2 z-10">
-            <FavoriteButton listingId={listing.id} size="icon" variant="secondary" className="h-7 w-7 rounded-md bg-background/90 backdrop-blur-sm hover:bg-background shadow-md" />
-          </div>
           {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && <div className="absolute bottom-2 right-2 z-10">
               <span className="inline-flex items-center rounded-full bg-background/90 text-foreground px-3 py-1.5 text-sm font-medium shadow-md backdrop-blur-sm">
                 {listing.neighborhood || (listing as any).attom_data?.neighborhood}
