@@ -311,7 +311,7 @@ const SearchResults = () => {
                   onClick={handleSaveToWishList}
                   disabled={selectedListings.size === 0}
                 >
-                  Save To Wish Lists
+                  Add to Favorites
                 </Button>
               </div>
 
