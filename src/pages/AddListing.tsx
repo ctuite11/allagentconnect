@@ -156,6 +156,7 @@ const AddListing = () => {
   const [citySearch, setCitySearch] = useState("");
   const [showCityList, setShowCityList] = useState(true);
   const [waterViewType, setWaterViewType] = useState<string | null>(null);
+  const [addressLocked, setAddressLocked] = useState(false);
   const suppressLocationEffects = useRef(false);
 
   // Normalize state to 2-letter code for neighborhood lookups
@@ -2058,7 +2059,24 @@ const AddListing = () => {
 
                 {/* Location Details Header */}
                 <div className="space-y-4">
-                  <Label className="text-lg font-semibold">Location Details</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-lg font-semibold">Location Details</Label>
+                    <Button
+                      type="button"
+                      variant={addressLocked ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setAddressLocked(!addressLocked);
+                        toast.success(addressLocked 
+                          ? "Address unlocked - you can now edit location fields" 
+                          : "✓ Address locked - fields are now protected"
+                        );
+                      }}
+                      disabled={!formData.state || !formData.city || !formData.zip_code || !formData.address}
+                    >
+                      {addressLocked ? "🔒 Unlock Address" : "🔓 Lock In Address"}
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Row 1: State, County, Open House */}
@@ -2076,6 +2094,7 @@ const AddListing = () => {
                         setFormData(prev => ({ ...prev, state: value }));
                         setValidationErrors(errors => errors.filter(e => e !== "State"));
                       }}
+                      disabled={addressLocked}
                     >
                       <SelectTrigger className={cn(
                         "bg-background",
@@ -2107,7 +2126,7 @@ const AddListing = () => {
                           // User changed county manually; enable location effects
                           suppressLocationEffects.current = false;
                           setSelectedCounty(value);
-                        }}>
+                        }} disabled={addressLocked}>
                           <div className="space-y-2 border rounded-lg p-3 max-h-[200px] overflow-y-auto bg-background">
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="all" id="county-all" />
@@ -2221,6 +2240,7 @@ const AddListing = () => {
                           setShowCityList(true);
                         }}
                         className="h-8 gap-1"
+                        disabled={addressLocked}
                       >
                         <X className="h-3 w-3" />
                         Change
@@ -2356,6 +2376,7 @@ const AddListing = () => {
                             variant={formData.zip_code === zip ? "default" : "outline"}
                             size="sm"
                             onClick={() => handleZipSelect(zip)}
+                            disabled={addressLocked}
                           >
                             {zip}
                           </Button>
@@ -2383,6 +2404,7 @@ const AddListing = () => {
                         className={cn(
                           validationErrors.includes("ZIP Code") ? "border-destructive ring-2 ring-destructive" : ""
                         )}
+                        disabled={addressLocked}
                       />
                     </div>
                   ) : (
@@ -2438,6 +2460,7 @@ const AddListing = () => {
                       className={cn(
                         validationErrors.includes("Address") ? "border-destructive ring-2 ring-destructive" : ""
                       )}
+                      disabled={addressLocked}
                     />
                     {validationErrors.includes("Address") && (
                       <p className="text-sm text-destructive">Street address is required</p>
