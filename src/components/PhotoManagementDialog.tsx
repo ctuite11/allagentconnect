@@ -260,20 +260,19 @@ export function PhotoManagementDialog({ photos, onPhotosChange, trigger }: Photo
                     <GripVertical className="w-4 h-4" />
                   </div>
                   
-                  <div 
-                    className="absolute top-2 right-2 z-10 cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleSelection(photo.id);
-                    }}
-                  >
-                    <div className="bg-background/90 rounded p-1">
-                      <Checkbox
-                        checked={selectedIds.has(photo.id)}
-                        onCheckedChange={() => toggleSelection(photo.id)}
-                      />
-                    </div>
+                <div 
+                  className="absolute top-2 right-2 z-10 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleSelection(photo.id);
+                  }}
+                >
+                  <div className="bg-background/90 rounded p-1">
+                    <Checkbox
+                      checked={selectedIds.has(photo.id)}
+                    />
                   </div>
+                </div>
                   
                   {index === 0 && (
                     <div className="absolute top-12 right-2 z-10 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
