@@ -457,22 +457,33 @@ const AddListing = () => {
       if (selectedState && selectedCity) {
         setSuggestedZipsLoading(true);
         try {
+          let zips: string[] = [];
           // Try static data first
           if (hasZipCodeData(selectedCity, selectedState)) {
             const staticZips = getZipCodesForCity(selectedCity, selectedState);
-            setSuggestedZips(staticZips);
-            setAvailableZips(staticZips);
+            zips = staticZips;
           } else {
             // Fallback to edge function
             const { data, error } = await supabase.functions.invoke('get-city-zips', {
               body: { state: selectedState, city: selectedCity }
             });
             if (error) throw error;
-            const zips = data?.zips || [];
-            setSuggestedZips(zips);
-            setAvailableZips(zips);
+            zips = data?.zips || [];
           }
-          setFormData(prev => ({ ...prev, city: selectedCity, zip_code: prev.city === selectedCity && prev.zip_code ? prev.zip_code : "" }));
+
+          setSuggestedZips(zips);
+          setAvailableZips(zips);
+          setFormData(prev => {
+            const keepExistingZip =
+              prev.city === selectedCity &&
+              prev.zip_code &&
+              zips.includes(prev.zip_code);
+            return {
+              ...prev,
+              city: selectedCity,
+              zip_code: keepExistingZip ? prev.zip_code : "",
+            };
+          });
         } catch (error) {
           console.error("Error fetching ZIP codes:", error);
           toast.error("Could not load ZIP codes for this city");
@@ -701,10 +712,56 @@ const AddListing = () => {
       if (Array.isArray(data.amenities)) setAmenities(data.amenities as string[]);
       if (Array.isArray(data.disclosures)) setDisclosures(data.disclosures as string[]);
       
-      // Load existing media URLs
-      if (Array.isArray(data.photos)) setPhotoUrls(data.photos as string[]);
-      if (Array.isArray(data.floor_plans)) setFloorPlanUrls(data.floor_plans as string[]);
-      if (Array.isArray(data.documents)) setDocumentUrls(data.documents as string[]);
+      // Load existing media and hydrate UI states
+      const extractMediaUrls = (items: any): string[] => {
+        if (!Array.isArray(items)) return [];
+        return items
+          .map((item) => (typeof item === "string" ? item : item?.url))
+          .filter((url): url is string => Boolean(url));
+      };
+
+      const loadedPhotoUrls = extractMediaUrls(data.photos);
+      const loadedFloorPlanUrls = extractMediaUrls(data.floor_plans);
+      const loadedDocumentUrls = extractMediaUrls(data.documents);
+
+      if (loadedPhotoUrls.length > 0) {
+        setPhotoUrls(loadedPhotoUrls);
+        setPhotos(
+          loadedPhotoUrls.map((url, index) => ({
+            file: new File([], `photo-${index + 1}`),
+            preview: url,
+            id: `${Date.now()}-photo-${index}`,
+            uploaded: true,
+            url,
+          }))
+        );
+      }
+
+      if (loadedFloorPlanUrls.length > 0) {
+        setFloorPlanUrls(loadedFloorPlanUrls);
+        setFloorPlans(
+          loadedFloorPlanUrls.map((url, index) => ({
+            file: new File([], `floorplan-${index + 1}`),
+            preview: url,
+            id: `${Date.now()}-floor-${index}`,
+            uploaded: true,
+            url,
+          }))
+        );
+      }
+
+      if (loadedDocumentUrls.length > 0) {
+        setDocumentUrls(loadedDocumentUrls);
+        setDocuments(
+          loadedDocumentUrls.map((url, index) => ({
+            file: new File([], `document-${index + 1}`),
+            preview: "",
+            id: `${Date.now()}-doc-${index}`,
+            uploaded: true,
+            url,
+          }))
+        );
+      }
       
       // Multi-family details
       if (data.multi_family_details && typeof data.multi_family_details === 'object') {
@@ -1145,6 +1202,7 @@ const AddListing = () => {
       file,
       preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
       id: Math.random().toString(36).substr(2, 9),
+      uploaded: false,
     }));
 
     if (type === 'photos') {
@@ -1161,16 +1219,28 @@ const AddListing = () => {
       setPhotos(prev => {
         const file = prev.find(f => f.id === id);
         if (file?.preview) URL.revokeObjectURL(file.preview);
+        if (file?.url) {
+          setPhotoUrls(urls => urls.filter(u => u !== file.url));
+        }
         return prev.filter(f => f.id !== id);
       });
     } else if (type === 'floorplans') {
       setFloorPlans(prev => {
         const file = prev.find(f => f.id === id);
         if (file?.preview) URL.revokeObjectURL(file.preview);
+        if (file?.url) {
+          setFloorPlanUrls(urls => urls.filter(u => u !== file.url));
+        }
         return prev.filter(f => f.id !== id);
       });
     } else {
-      setDocuments(prev => prev.filter(f => f.id !== id));
+      setDocuments(prev => {
+        const file = prev.find(f => f.id === id);
+        if (file?.url) {
+          setDocumentUrls(urls => urls.filter(u => u !== file.url));
+        }
+        return prev.filter(f => f.id !== id);
+      });
     }
   };
 
@@ -1196,13 +1266,14 @@ const AddListing = () => {
     setDraggedIndex(null);
   };
 
-  const uploadFiles = async (): Promise<{ photos: any[], floorPlans: any[], documents: any[] }> => {
+  const uploadFiles = async (): Promise<{ photos: any[]; floorPlans: any[]; documents: any[] }> => {
     const uploadedPhotos: any[] = [];
     const uploadedFloorPlans: any[] = [];
     const uploadedDocuments: any[] = [];
 
-    // Upload photos
+    // Upload photos (only new ones)
     for (const photo of photos) {
+      if (photo.uploaded) continue;
       const filePath = `${user.id}/${Date.now()}_${photo.file.name}`;
       const { error } = await supabase.storage
         .from('listing-photos')
@@ -1217,8 +1288,9 @@ const AddListing = () => {
       uploadedPhotos.push({ url: publicUrl, name: photo.file.name });
     }
 
-    // Upload floor plans
+    // Upload floor plans (only new ones)
     for (const plan of floorPlans) {
+      if (plan.uploaded) continue;
       const filePath = `${user.id}/${Date.now()}_${plan.file.name}`;
       const { error } = await supabase.storage
         .from('listing-floorplans')
@@ -1233,8 +1305,9 @@ const AddListing = () => {
       uploadedFloorPlans.push({ url: publicUrl, name: plan.file.name });
     }
 
-    // Upload documents
+    // Upload documents (only new ones)
     for (const doc of documents) {
+      if (doc.uploaded) continue;
       const filePath = `${user.id}/${Date.now()}_${doc.file.name}`;
       const { error } = await supabase.storage
         .from('listing-documents')
@@ -1277,19 +1350,43 @@ const AddListing = () => {
         const uploadResult = await uploadFiles();
         
         // Merge uploaded files with existing URLs
-        uploadedPhotos = [...photoUrls, ...uploadResult.photos.map(p => p.url)];
-        uploadedFloorPlans = [...floorPlanUrls, ...uploadResult.floorPlans.map(f => f.url)];
-        uploadedDocuments = [...documentUrls, ...uploadResult.documents.map(d => d.url)];
+        uploadedPhotos = [...photoUrls, ...uploadResult.photos.map((p) => p.url)];
+        uploadedFloorPlans = [...floorPlanUrls, ...uploadResult.floorPlans.map((f) => f.url)];
+        uploadedDocuments = [...documentUrls, ...uploadResult.documents.map((d) => d.url)];
         
         // Update state with new URLs
         setPhotoUrls(uploadedPhotos);
         setFloorPlanUrls(uploadedFloorPlans);
         setDocumentUrls(uploadedDocuments);
         
-        // Clear the file arrays
-        setPhotos([]);
-        setFloorPlans([]);
-        setDocuments([]);
+        // Rebuild file arrays to reflect all uploaded media (marked as uploaded)
+        setPhotos(
+          uploadedPhotos.map((url, index) => ({
+            file: new File([], `photo-${index + 1}`),
+            preview: url,
+            id: `${Date.now()}-photo-${index}`,
+            uploaded: true,
+            url,
+          }))
+        );
+        setFloorPlans(
+          uploadedFloorPlans.map((url, index) => ({
+            file: new File([], `floorplan-${index + 1}`),
+            preview: url,
+            id: `${Date.now()}-floor-${index}`,
+            uploaded: true,
+            url,
+          }))
+        );
+        setDocuments(
+          uploadedDocuments.map((url, index) => ({
+            file: new File([], `document-${index + 1}`),
+            preview: "",
+            id: `${Date.now()}-doc-${index}`,
+            uploaded: true,
+            url,
+          }))
+        );
       }
 
       const payload: any = {
@@ -1450,9 +1547,9 @@ const AddListing = () => {
       const uploadedFiles = await uploadFiles();
       
       // Combine existing URLs with newly uploaded files
-      const finalPhotos = [...photoUrls, ...uploadedFiles.photos];
-      const finalFloorPlans = [...floorPlanUrls, ...uploadedFiles.floorPlans];
-      const finalDocuments = [...documentUrls, ...uploadedFiles.documents];
+      const finalPhotos = [...photoUrls, ...uploadedFiles.photos.map((p) => p.url)];
+      const finalFloorPlans = [...floorPlanUrls, ...uploadedFiles.floorPlans.map((f) => f.url)];
+      const finalDocuments = [...documentUrls, ...uploadedFiles.documents.map((d) => d.url)];
 
       if (isEditMode && id) {
         // UPDATE existing listing
