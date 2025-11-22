@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, PartyPopper } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -606,10 +606,15 @@ const ListingCard = ({
                 <Users className="h-3.5 w-3.5 mr-1.5" />
                 {loadingMatches ? "..." : `${matchCount} Match${matchCount !== 1 ? "es" : ""}`}
               </Button>
-              <Button size="sm" variant="outline" className="w-full" onClick={() => setQuickOpenHouseDialogOpen(true)}>
-                <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                Schedule Open House
-              </Button>
+              <div className="flex items-center gap-2">
+                <PartyPopper className="h-4 w-4 text-primary animate-pulse" />
+                <Button size="sm" variant="outline" className="flex-1" onClick={(e) => {
+                  e.stopPropagation();
+                  setQuickOpenHouseDialogOpen(true);
+                }}>
+                  Schedule Open House
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -782,10 +787,15 @@ const ListingCard = ({
                   </AlertDialogContent>
                 </AlertDialog>
               )}
-              <Button size="sm" variant="outline" onClick={() => setQuickOpenHouseDialogOpen(true)}>
-                <Calendar className="h-4 w-4 mr-1" />
-                Schedule OH
-              </Button>
+              <div className="flex items-center gap-2">
+                <PartyPopper className="h-4 w-4 text-primary animate-pulse" />
+                <Button size="sm" variant="outline" onClick={(e) => {
+                  e.stopPropagation();
+                  setQuickOpenHouseDialogOpen(true);
+                }}>
+                  Schedule OH
+                </Button>
+              </div>
               {listing.status === 'cancelled' && onReactivate && <Button variant="default" size="sm" onClick={() => onReactivate(listing.id)} className="w-full bg-green-600 hover:bg-green-700">
                   <RefreshCw className="w-3 h-3 mr-1" />
                   Reactivate
@@ -965,10 +975,15 @@ const ListingCard = ({
             <TrendingDown className="w-4 h-4 mr-2" />
             Market
           </Button>
-          <Button variant="outline" size="sm" className="flex-1" onClick={() => setQuickOpenHouseDialogOpen(true)}>
-            <Calendar className="w-4 h-4 mr-2" />
-            Schedule
-          </Button>
+          <div className="flex items-center gap-2 flex-1">
+            <PartyPopper className="h-4 w-4 text-primary animate-pulse flex-shrink-0" />
+            <Button variant="outline" size="sm" className="flex-1" onClick={(e) => {
+              e.stopPropagation();
+              setQuickOpenHouseDialogOpen(true);
+            }}>
+              Schedule
+            </Button>
+          </div>
           <Button variant="default" size="sm" className="flex-1" onClick={() => navigate(`/add-listing/${listing.id}`)}>
             <Edit className="w-4 h-4 mr-2" />
             Edit
