@@ -38,6 +38,7 @@ interface HotSheet {
   id: string;
   name: string;
   criteria: any;
+  last_sent_at?: string | null;
 }
 
 const HotSheetReview = () => {
@@ -381,13 +382,15 @@ if (agentIds.length > 0) {
                   <SelectItem value="price-low">Price: Low to High</SelectItem>
                 </SelectContent>
               </Select>
-              <Button
-                onClick={handleSendFirstBatch}
-                disabled={sending || selectedListings.size === 0}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Send First Batch ({selectedListings.size})
-              </Button>
+              {!hotSheet?.last_sent_at && (
+                <Button
+                  onClick={handleSendFirstBatch}
+                  disabled={sending || selectedListings.size === 0}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Send First Batch ({selectedListings.size})
+                </Button>
+              )}
             </div>
           </div>
 
