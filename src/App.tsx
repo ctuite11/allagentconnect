@@ -63,11 +63,8 @@ const App = () => (
             <ScrollRestoration />
             <ActiveAgentBanner />
             <Routes>
-          {/* Coming Soon landing page - public homepage */}
-          <Route path="/" element={<ComingSoon />} />
-          
-          {/* All other routes accessible for development */}
-          <Route path="/home" element={<Index />} />
+          <Route path="/" element={<Index />} />
+          <Route path="/coming-soon" element={<ComingSoon />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/agent-dashboard" element={<AgentDashboard />} />
           <Route path="/buyer/auth" element={<BuyerAuth />} />
