@@ -45,6 +45,7 @@ import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
+import ShareLinkHandler from "./pages/ShareLinkHandler";
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
 
@@ -104,6 +105,7 @@ const App = () => (
           <Route path="/consumer/auth" element={<ConsumerAuth />} />
           <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/seed-test-data" element={<SeedTestData />} />
+          <Route path="/link/:token" element={<ShareLinkHandler />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
           </TooltipProvider>
