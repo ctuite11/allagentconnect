@@ -395,14 +395,14 @@ const AddListing = () => {
 
   // Auto-save functionality
   useEffect(() => {
-    if (!user || !hasUnsavedChanges) return;
+    if (!user || !hasUnsavedChanges || isLoadingExisting) return;
 
     const autoSaveInterval = setInterval(() => {
       handleSaveDraft(true);
     }, 30000); // Auto-save every 30 seconds
 
     return () => clearInterval(autoSaveInterval);
-  }, [user, hasUnsavedChanges, formData]);
+  }, [user, hasUnsavedChanges, isLoadingExisting]);
 
   // Warn before leaving with unsaved changes
   useEffect(() => {
@@ -871,6 +871,7 @@ const AddListing = () => {
       if (brokerMatch) setBrokerComments(brokerMatch[1].trim());
       
       toast.success("Listing loaded for editing");
+      setHasUnsavedChanges(false); // Clear unsaved changes after successful load
       
     } catch (error) {
       console.error("Error loading listing:", error);
@@ -1406,6 +1407,11 @@ const AddListing = () => {
   };
 
   const handleSaveDraft = async (isAutoSave = false) => {
+    // Prevent auto-save during initial load or if no changes
+    if (isAutoSave && (isLoadingExisting || !hasUnsavedChanges)) {
+      return;
+    }
+
     try {
       if (!user) {
         if (!isAutoSave) {
@@ -1567,6 +1573,7 @@ const AddListing = () => {
           pet_policy: condoPetPolicy || null,
           pet_policy_comments: condoPetPolicyComments || null,
           total_units: condoTotalUnits ? parseInt(condoTotalUnits) : null,
+          year_built: condoYearBuilt ? parseInt(condoYearBuilt) : null,
         } : null,
         multi_family_details: formData.property_type === "Multi-Family" ? {
           number_of_units: multiFamilyUnits ? parseInt(multiFamilyUnits) : null,
@@ -1588,8 +1595,23 @@ const AddListing = () => {
           zoning: commercialZoning || null,
           allowed_business_types: commercialBusinessTypes.length > 0 ? commercialBusinessTypes : null,
           tenant_responsibilities: commercialTenantResponsibilities.length > 0 ? commercialTenantResponsibilities : null,
+          current_tenant: commercialCurrentTenant || null,
+          lease_expiration: commercialLeaseExpiration || null,
+          ceiling_height: commercialCeilingHeight ? parseFloat(commercialCeilingHeight) : null,
+          loading_docks: commercialLoadingDocks ? parseInt(commercialLoadingDocks) : null,
+          power_available: commercialPowerAvailable || null,
+          additional_features: commercialAdditionalFeatures.length > 0 ? commercialAdditionalFeatures : null,
         } : null,
       };
+
+      console.log("[AddListing] handleSaveDraft payload", {
+        isAutoSave,
+        listingId: id || draftId,
+        condo_details: payload.condo_details,
+        commercial_details: payload.commercial_details,
+        disclosures: payload.disclosures,
+        additional_notes: payload.additional_notes,
+      });
 
       // Check if we're editing an existing listing (from URL) or using draftId
       const listingId = id || draftId;
@@ -1810,6 +1832,7 @@ const AddListing = () => {
           pet_policy: condoPetPolicy || null,
           pet_policy_comments: condoPetPolicyComments || null,
           total_units: condoTotalUnits ? parseInt(condoTotalUnits) : null,
+          year_built: condoYearBuilt ? parseInt(condoYearBuilt) : null,
         } : null,
         // Multi-family specific details
         multi_family_details: formData.property_type === "Multi-Family" ? {
@@ -1833,8 +1856,46 @@ const AddListing = () => {
           zoning: commercialZoning || null,
           allowed_business_types: commercialBusinessTypes.length > 0 ? commercialBusinessTypes : null,
           tenant_responsibilities: commercialTenantResponsibilities.length > 0 ? commercialTenantResponsibilities : null,
+          current_tenant: commercialCurrentTenant || null,
+          lease_expiration: commercialLeaseExpiration || null,
+          ceiling_height: commercialCeilingHeight ? parseFloat(commercialCeilingHeight) : null,
+          loading_docks: commercialLoadingDocks ? parseInt(commercialLoadingDocks) : null,
+          power_available: commercialPowerAvailable || null,
+          additional_features: commercialAdditionalFeatures.length > 0 ? commercialAdditionalFeatures : null,
         } : null,
       }).eq("id", id);
+
+      console.log("[AddListing] handleSubmit UPDATE payload", {
+        listingId: id,
+        condo_details: formData.property_type === "Condominium" ? {
+          unit_number: unitNumber || condoUnitNumber || null,
+          floor_level: condoFloorLevel ? parseInt(condoFloorLevel) : null,
+          hoa_fee: condoHoaFee ? parseFloat(condoHoaFee) : null,
+          hoa_fee_frequency: condoHoaFeeFrequency,
+          building_amenities: condoBuildingAmenities.length > 0 ? condoBuildingAmenities : null,
+          pet_policy: condoPetPolicy || null,
+          pet_policy_comments: condoPetPolicyComments || null,
+          total_units: condoTotalUnits ? parseInt(condoTotalUnits) : null,
+          year_built: condoYearBuilt ? parseInt(condoYearBuilt) : null,
+        } : null,
+        commercial_details: formData.property_type === "Commercial" ? {
+          space_type: commercialSpaceType || null,
+          lease_type: commercialLeaseType || null,
+          lease_rate: commercialLeaseRate ? parseFloat(commercialLeaseRate) : null,
+          lease_rate_per: commercialLeaseRatePer || null,
+          lease_term_min: commercialLeaseTermMin ? parseInt(commercialLeaseTermMin) : null,
+          lease_term_max: commercialLeaseTermMax ? parseInt(commercialLeaseTermMax) : null,
+          zoning: commercialZoning || null,
+          allowed_business_types: commercialBusinessTypes.length > 0 ? commercialBusinessTypes : null,
+          tenant_responsibilities: commercialTenantResponsibilities.length > 0 ? commercialTenantResponsibilities : null,
+          current_tenant: commercialCurrentTenant || null,
+          lease_expiration: commercialLeaseExpiration || null,
+          ceiling_height: commercialCeilingHeight ? parseFloat(commercialCeilingHeight) : null,
+          loading_docks: commercialLoadingDocks ? parseInt(commercialLoadingDocks) : null,
+          power_available: commercialPowerAvailable || null,
+          additional_features: commercialAdditionalFeatures.length > 0 ? commercialAdditionalFeatures : null,
+        } : null,
+      });
 
         if (error) throw error;
 
@@ -1944,6 +2005,7 @@ const AddListing = () => {
           pet_policy: condoPetPolicy || null,
           pet_policy_comments: condoPetPolicyComments || null,
           total_units: condoTotalUnits ? parseInt(condoTotalUnits) : null,
+          year_built: condoYearBuilt ? parseInt(condoYearBuilt) : null,
         } : null,
         // Multi-family specific details
         multi_family_details: formData.property_type === "Multi-Family" ? {
@@ -1967,8 +2029,45 @@ const AddListing = () => {
           zoning: commercialZoning || null,
           allowed_business_types: commercialBusinessTypes.length > 0 ? commercialBusinessTypes : null,
           tenant_responsibilities: commercialTenantResponsibilities.length > 0 ? commercialTenantResponsibilities : null,
+          current_tenant: commercialCurrentTenant || null,
+          lease_expiration: commercialLeaseExpiration || null,
+          ceiling_height: commercialCeilingHeight ? parseFloat(commercialCeilingHeight) : null,
+          loading_docks: commercialLoadingDocks ? parseInt(commercialLoadingDocks) : null,
+          power_available: commercialPowerAvailable || null,
+          additional_features: commercialAdditionalFeatures.length > 0 ? commercialAdditionalFeatures : null,
         } : null,
       }).select('id').single();
+
+      console.log("[AddListing] handleSubmit INSERT payload", {
+        condo_details: formData.property_type === "Condominium" ? {
+          unit_number: unitNumber || condoUnitNumber || null,
+          floor_level: condoFloorLevel ? parseInt(condoFloorLevel) : null,
+          hoa_fee: condoHoaFee ? parseFloat(condoHoaFee) : null,
+          hoa_fee_frequency: condoHoaFeeFrequency,
+          building_amenities: condoBuildingAmenities.length > 0 ? condoBuildingAmenities : null,
+          pet_policy: condoPetPolicy || null,
+          pet_policy_comments: condoPetPolicyComments || null,
+          total_units: condoTotalUnits ? parseInt(condoTotalUnits) : null,
+          year_built: condoYearBuilt ? parseInt(condoYearBuilt) : null,
+        } : null,
+        commercial_details: formData.property_type === "Commercial" ? {
+          space_type: commercialSpaceType || null,
+          lease_type: commercialLeaseType || null,
+          lease_rate: commercialLeaseRate ? parseFloat(commercialLeaseRate) : null,
+          lease_rate_per: commercialLeaseRatePer || null,
+          lease_term_min: commercialLeaseTermMin ? parseInt(commercialLeaseTermMin) : null,
+          lease_term_max: commercialLeaseTermMax ? parseInt(commercialLeaseTermMax) : null,
+          zoning: commercialZoning || null,
+          allowed_business_types: commercialBusinessTypes.length > 0 ? commercialBusinessTypes : null,
+          tenant_responsibilities: commercialTenantResponsibilities.length > 0 ? commercialTenantResponsibilities : null,
+          current_tenant: commercialCurrentTenant || null,
+          lease_expiration: commercialLeaseExpiration || null,
+          ceiling_height: commercialCeilingHeight ? parseFloat(commercialCeilingHeight) : null,
+          loading_docks: commercialLoadingDocks ? parseInt(commercialLoadingDocks) : null,
+          power_available: commercialPowerAvailable || null,
+          additional_features: commercialAdditionalFeatures.length > 0 ? commercialAdditionalFeatures : null,
+        } : null,
+      });
 
         if (error) throw error;
 
