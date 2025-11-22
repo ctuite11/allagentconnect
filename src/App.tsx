@@ -48,6 +48,7 @@ import SeedTestData from "./pages/SeedTestData";
 import ShareLinkHandler from "./pages/ShareLinkHandler";
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
+import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
             <Sonner />
             <ScrollToTop />
             <ScrollRestoration />
+            <ActiveAgentBanner />
             <Routes>
           {/* Coming Soon landing page - public homepage */}
           <Route path="/" element={<ComingSoon />} />
