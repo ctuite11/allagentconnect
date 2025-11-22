@@ -684,7 +684,7 @@ const AgentDashboard = () => {
             <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               {/* Status Filter Buttons */}
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {['active', 'draft', 'coming_soon', 'new', 'back_on_market', 'expired', 'contingent', 'cancelled', 'under_agreement', 'temp_withdrawn', 'sold'].map(status => <Button key={status} variant={statusFilters.includes(status) ? 'default' : 'outline'} size="sm" onClick={() => toggleStatusFilter(status)} className="rounded-lg capitalize text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-4 shadow-sm hover:shadow transition-all touch-manipulation">
+                {['active', 'draft', 'coming_soon', 'new', 'back_on_market', 'expired', 'pending', 'cancelled', 'temp_withdrawn', 'sold'].map(status => <Button key={status} variant={statusFilters.includes(status) ? 'default' : 'outline'} size="sm" onClick={() => toggleStatusFilter(status)} className="rounded-lg capitalize text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-4 shadow-sm hover:shadow transition-all touch-manipulation">
                     {status.replace(/_/g, ' ')}
                   </Button>)}
               </div>

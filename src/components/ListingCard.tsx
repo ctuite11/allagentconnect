@@ -10,6 +10,10 @@ import { ReverseProspectDialog } from "./ReverseProspectDialog";
 import MarketInsightsDialog from "./MarketInsightsDialog";
 import FavoriteButton from "./FavoriteButton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { buildDisplayAddress, propertyTypeToEnum } from "@/lib/utils";
 interface ListingCardProps {
@@ -75,6 +79,12 @@ const ListingCard = ({
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [deleting, setDeleting] = useState(false);
+  const [quickOpenHouseDialogOpen, setQuickOpenHouseDialogOpen] = useState(false);
+  const [quickOHType, setQuickOHType] = useState<'public' | 'broker'>('public');
+  const [quickOHDate, setQuickOHDate] = useState('');
+  const [quickOHStartTime, setQuickOHStartTime] = useState('');
+  const [quickOHEndTime, setQuickOHEndTime] = useState('');
+  const [quickOHNotes, setQuickOHNotes] = useState('');
   useEffect(() => {
     loadMatchCount();
     loadStatusHistory();
@@ -180,6 +190,45 @@ const ListingCard = ({
     }
   };
   
+  const handleQuickAddOpenHouse = async () => {
+    if (!quickOHDate || !quickOHStartTime || !quickOHEndTime) {
+      toast.error("Please fill in date and time");
+      return;
+    }
+    
+    try {
+      const newOpenHouse = {
+        type: quickOHType,
+        date: quickOHDate,
+        start_time: quickOHStartTime,
+        end_time: quickOHEndTime,
+        notes: quickOHNotes
+      };
+      
+      const currentOpenHouses = listing.open_houses || [];
+      const updatedOpenHouses = [...currentOpenHouses, newOpenHouse];
+      
+      const { error } = await supabase
+        .from('listings')
+        .update({ open_houses: updatedOpenHouses })
+        .eq('id', listing.id);
+      
+      if (error) throw error;
+      
+      setQuickOHDate('');
+      setQuickOHStartTime('');
+      setQuickOHEndTime('');
+      setQuickOHNotes('');
+      setQuickOpenHouseDialogOpen(false);
+      
+      toast.success("Open house added successfully!");
+      window.location.reload();
+    } catch (error) {
+      console.error('Error adding open house:', error);
+      toast.error('Failed to add open house');
+    }
+  };
+
   const handleDelete = async () => {
     console.log("Delete clicked for listing:", {
       id: listing.id,
@@ -552,10 +601,14 @@ const ListingCard = ({
           )}
           
           {showActions && (listing.status === 'active' || listing.status === 'coming_soon') && (
-            <div className="pt-2 border-t mt-2">
+            <div className="pt-2 border-t mt-2 space-y-2">
               <Button size="sm" variant={matchButtonStyle.variant} className={`w-full ${matchButtonStyle.className}`} onClick={() => setProspectDialogOpen(true)} disabled={loadingMatches}>
                 <Users className="h-3.5 w-3.5 mr-1.5" />
                 {loadingMatches ? "..." : `${matchCount} Match${matchCount !== 1 ? "es" : ""}`}
+              </Button>
+              <Button size="sm" variant="outline" className="w-full" onClick={() => setQuickOpenHouseDialogOpen(true)}>
+                <Calendar className="h-3.5 w-3.5 mr-1.5" />
+                Schedule Open House
               </Button>
             </div>
           )}
@@ -729,6 +782,10 @@ const ListingCard = ({
                   </AlertDialogContent>
                 </AlertDialog>
               )}
+              <Button size="sm" variant="outline" onClick={() => setQuickOpenHouseDialogOpen(true)}>
+                <Calendar className="h-4 w-4 mr-1" />
+                Schedule OH
+              </Button>
               {listing.status === 'cancelled' && onReactivate && <Button variant="default" size="sm" onClick={() => onReactivate(listing.id)} className="w-full bg-green-600 hover:bg-green-700">
                   <RefreshCw className="w-3 h-3 mr-1" />
                   Reactivate
@@ -908,6 +965,10 @@ const ListingCard = ({
             <TrendingDown className="w-4 h-4 mr-2" />
             Market
           </Button>
+          <Button variant="outline" size="sm" className="flex-1" onClick={() => setQuickOpenHouseDialogOpen(true)}>
+            <Calendar className="w-4 h-4 mr-2" />
+            Schedule
+          </Button>
           <Button variant="default" size="sm" className="flex-1" onClick={() => navigate(`/add-listing/${listing.id}`)}>
             <Edit className="w-4 h-4 mr-2" />
             Edit
@@ -951,6 +1012,93 @@ const ListingCard = ({
       price: listing.price,
       property_type: listing.property_type
     }} />
+      
+      <Dialog open={quickOpenHouseDialogOpen} onOpenChange={setQuickOpenHouseDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Open House</DialogTitle>
+            <DialogDescription>
+              Add an open house for {listing.address}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={quickOHType === 'public' ? 'default' : 'outline'}
+                  onClick={() => setQuickOHType('public')}
+                  className="flex-1"
+                >
+                  Public Open House
+                </Button>
+                <Button
+                  type="button"
+                  variant={quickOHType === 'broker' ? 'default' : 'outline'}
+                  onClick={() => setQuickOHType('broker')}
+                  className="flex-1"
+                >
+                  Broker Open House
+                </Button>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="quick-oh-date">Date</Label>
+              <Input
+                id="quick-oh-date"
+                type="date"
+                value={quickOHDate}
+                onChange={(e) => setQuickOHDate(e.target.value)}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="quick-oh-start">Start Time</Label>
+                <Input
+                  id="quick-oh-start"
+                  type="time"
+                  value={quickOHStartTime}
+                  onChange={(e) => setQuickOHStartTime(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="quick-oh-end">End Time</Label>
+                <Input
+                  id="quick-oh-end"
+                  type="time"
+                  value={quickOHEndTime}
+                  onChange={(e) => setQuickOHEndTime(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="quick-oh-notes">Notes (optional)</Label>
+              <Textarea
+                id="quick-oh-notes"
+                value={quickOHNotes}
+                onChange={(e) => setQuickOHNotes(e.target.value)}
+                placeholder="Any special instructions..."
+                rows={3}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuickOpenHouseDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleQuickAddOpenHouse}>
+              Add Open House
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>;
 };
 export default ListingCard;
