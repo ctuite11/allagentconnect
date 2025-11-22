@@ -658,7 +658,7 @@ const ListingCard = ({
                   variant={matchButtonStyle.variant} 
                   onClick={() => setProspectDialogOpen(true)} 
                   disabled={loadingMatches} 
-                  className={`w-full text-xs ${matchButtonStyle.className}`}
+                  className={`text-xs ${matchButtonStyle.className}`}
                 >
                   <Users className="w-3 h-3 mr-1" />
                   {loadingMatches ? "Loading..." : `${matchCount} ${matchCount === 1 ? 'match' : 'matches'}`}
@@ -686,6 +686,10 @@ const ListingCard = ({
             </div>
 
             <div className="col-span-2 flex flex-col gap-1 justify-center">
+              <Button variant="outline" size="sm" onClick={() => navigate(`/add-listing/${listing.id}`)} className="w-full">
+                <Edit className="w-3 h-3 mr-1" />
+                Edit
+              </Button>
               <Button variant="outline" size="sm" onClick={() => {
               sessionStorage.setItem('fromAgentDashboard', 'true');
               navigate(`/property/${listing.id}?from=my-listings`, {
@@ -700,17 +704,6 @@ const ListingCard = ({
               <Button variant="outline" size="sm" onClick={() => navigate(`/analytics/${listing.id}`)} className="w-full">
                 <BarChart3 className="w-3 h-3 mr-1" />
                 Stats
-              </Button>
-              <Button variant="outline" size="sm" onClick={e => {
-              e.stopPropagation();
-              setMarketInsightsOpen(true);
-            }} className="w-full">
-                <TrendingDown className="w-3 h-3 mr-1" />
-                Market
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate(`/add-listing/${listing.id}`)} className="w-full">
-                <Edit className="w-3 h-3 mr-1" />
-                Edit
               </Button>
               {listing.status === 'draft' && (
                 <AlertDialog>
