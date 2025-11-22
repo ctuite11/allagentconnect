@@ -1268,6 +1268,30 @@ const AddListing = () => {
         setSubmitting(true);
       }
 
+      // Upload any new files before saving draft
+      let uploadedPhotos: string[] = [...photoUrls];
+      let uploadedFloorPlans: string[] = [...floorPlanUrls];
+      let uploadedDocuments: string[] = [...documentUrls];
+
+      if (photos.length > 0 || floorPlans.length > 0 || documents.length > 0) {
+        const uploadResult = await uploadFiles();
+        
+        // Merge uploaded files with existing URLs
+        uploadedPhotos = [...photoUrls, ...uploadResult.photos.map(p => p.url)];
+        uploadedFloorPlans = [...floorPlanUrls, ...uploadResult.floorPlans.map(f => f.url)];
+        uploadedDocuments = [...documentUrls, ...uploadResult.documents.map(d => d.url)];
+        
+        // Update state with new URLs
+        setPhotoUrls(uploadedPhotos);
+        setFloorPlanUrls(uploadedFloorPlans);
+        setDocumentUrls(uploadedDocuments);
+        
+        // Clear the file arrays
+        setPhotos([]);
+        setFloorPlans([]);
+        setDocuments([]);
+      }
+
       const payload: any = {
         agent_id: user.id,
         status: (isEditMode && originalStatus && originalStatus !== "draft") 
@@ -1278,6 +1302,7 @@ const AddListing = () => {
         city: formData.city?.trim() || "",
         state: formData.state?.trim() || "",
         zip_code: formData.zip_code?.trim() || "",
+        town: formData.town?.trim() || null,
         neighborhood: formData.neighborhood?.trim() || null,
         latitude: formData.latitude,
         longitude: formData.longitude,
@@ -1302,9 +1327,9 @@ const AddListing = () => {
         annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
         tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
         tax_assessment_value: formData.tax_assessment_value ? parseFloat(formData.tax_assessment_value) : null,
-        photos: photoUrls,
-        floor_plans: floorPlanUrls,
-        documents: documentUrls,
+        photos: uploadedPhotos,
+        floor_plans: uploadedFloorPlans,
+        documents: uploadedDocuments,
         property_features: propertyFeatures,
         amenities: amenities,
         open_houses: openHouses,
@@ -1948,6 +1973,8 @@ const AddListing = () => {
                     <Select
                       value={selectedState}
                       onValueChange={(value) => {
+                        // User is actively changing state; enable location effects
+                        suppressLocationEffects.current = false;
                         setSelectedState(value);
                         setFormData(prev => ({ ...prev, state: value }));
                         setValidationErrors(errors => errors.filter(e => e !== "State"));
