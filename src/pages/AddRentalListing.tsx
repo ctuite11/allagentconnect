@@ -729,11 +729,12 @@ const AddRentalListing = () => {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
-                            setSelectedCity("");
-                            setFormData(prev => ({ ...prev, city: "", neighborhood: "" }));
-                            setCitySearch("");
-                          }}
+                        onClick={() => {
+                          setSelectedCity("");
+                          setFormData(prev => ({ ...prev, city: "", neighborhood: "" }));
+                          setCitySearch("");
+                          setShowCityList(true);
+                        }}
                           className="h-8 gap-1"
                         >
                           <X className="h-3 w-3" />

@@ -150,10 +150,10 @@ const AddListing = () => {
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [availableZips, setAvailableZips] = useState<string[]>([]);
   const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
-  const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
   const [fetchingData, setFetchingData] = useState(false);
   const [citySearch, setCitySearch] = useState("");
+  const [showCityList, setShowCityList] = useState(true);
   const [waterViewType, setWaterViewType] = useState<string | null>(null);
 
   // Normalize state to 2-letter code for neighborhood lookups
@@ -554,6 +554,7 @@ const AddListing = () => {
         zip_code: ''
       }));
     }
+    setShowCityList(false);
     setValidationErrors([]);
   };
 
@@ -2202,6 +2203,7 @@ const AddListing = () => {
                           setSelectedCity("");
                           setFormData(prev => ({ ...prev, city: "", neighborhood: "" }));
                           setCitySearch("");
+                          setShowCityList(true);
                         }}
                         className="h-8 gap-1"
                       >
