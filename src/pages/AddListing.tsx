@@ -861,14 +861,33 @@ const AddListing = () => {
         setSellerDisclosure('No');
       }
       
-      const notesText = (data.additional_notes as string) || '';
-      const customMatch = notesText.match(/Custom:\s*(.*?)(?=\n|Exclusions:|Broker Comments:|$)/s);
-      const exclusionsMatch = notesText.match(/Exclusions:\s*(.*?)(?=\n|Broker Comments:|$)/s);
-      const brokerMatch = notesText.match(/Broker Comments:\s*(.*?)$/s);
+      // Parse disclosures from array
+      if (Array.isArray(data.disclosures)) {
+        const customDisclosure = data.disclosures.find((d: any) => typeof d === 'string' && d.startsWith('Custom:'));
+        if (customDisclosure && typeof customDisclosure === 'string') {
+          setDisclosuresText(customDisclosure.replace('Custom:', '').trim());
+        }
+      }
       
-      if (customMatch) setDisclosuresText(customMatch[1].trim());
-      if (exclusionsMatch) setExclusions(exclusionsMatch[1].trim());
-      if (brokerMatch) setBrokerComments(brokerMatch[1].trim());
+      // Load from dedicated columns
+      if (data.assessed_value) setAssessedValue(data.assessed_value.toString());
+      if (data.fiscal_year) setFiscalYear(data.fiscal_year.toString());
+      if (data.residential_exemption) setResidentialExemption(data.residential_exemption);
+      if (data.floors) setFloors(data.floors.toString());
+      if (data.water_view_type) setWaterViewType(data.water_view_type);
+      if (data.lead_paint) setLeadPaint(data.lead_paint);
+      if (data.handicap_access) setHandicapAccess(data.handicap_access);
+      if (Array.isArray(data.foundation_types)) setFoundation(data.foundation_types as string[]);
+      if (Array.isArray(data.basement_types)) setBasementType(data.basement_types as string[]);
+      if (Array.isArray(data.basement_features_list)) setBasementFeatures(data.basement_features_list as string[]);
+      if (Array.isArray(data.basement_floor_types)) setBasementFloorType(data.basement_floor_types as string[]);
+      if (data.parking_comments) setParkingComments(data.parking_comments);
+      if (Array.isArray(data.parking_features_list)) setParkingFeatures(data.parking_features_list as string[]);
+      if (data.garage_comments) setGarageComments(data.garage_comments);
+      if (Array.isArray(data.garage_features_list)) setGarageFeatures(data.garage_features_list as string[]);
+      if (Array.isArray(data.garage_additional_features_list)) setGarageAdditionalFeatures(data.garage_additional_features_list as string[]);
+      if (data.broker_comments) setBrokerComments(data.broker_comments);
+      if (data.listing_exclusions) setExclusions(data.listing_exclusions);
       
       toast.success("Listing loaded for editing");
       setHasUnsavedChanges(false); // Clear unsaved changes after successful load
@@ -1521,30 +1540,31 @@ const AddListing = () => {
         disclosures: [
           ...(sellerDisclosure === "Yes" ? ["Seller Disclosure"] : []),
           ...(disclosuresText ? [`Custom: ${disclosuresText}`] : []),
-          ...(exclusions ? [`Exclusions: ${exclusions}`] : []),
-          ...(brokerComments ? [`Broker Comments: ${brokerComments}`] : [])
         ],
         additional_notes: [
           formData.additional_notes || "",
-          waterViewType ? `Water View Type: ${waterViewType}` : "",
-          assessedValue ? `Assessed Value: ${assessedValue}` : "",
-          fiscalYear ? `Fiscal Year: ${fiscalYear}` : "",
-          residentialExemption !== "Unknown" ? `Residential Exemption: ${residentialExemption}` : "",
-          floors ? `Floors: ${floors}` : "",
-          leadPaint !== "Unknown" ? `Lead Paint: ${leadPaint}` : "",
-          handicapAccess !== "Unknown" ? `Handicap Access: ${handicapAccess}` : "",
-          foundation.length > 0 ? `Foundation: ${foundation.join(", ")}` : "",
-          basementType.length > 0 ? `Basement Type: ${basementType.join(", ")}` : "",
-          basementFeatures.length > 0 ? `Basement Features: ${basementFeatures.join(", ")}` : "",
-          basementFloorType.length > 0 ? `Basement Floor: ${basementFloorType.join(", ")}` : "",
-          parkingComments ? `Parking Comments: ${parkingComments}` : "",
-          parkingFeatures.length > 0 ? `Parking Features: ${parkingFeatures.join(", ")}` : "",
-          garageComments ? `Garage Comments: ${garageComments}` : "",
-          garageFeatures.length > 0 ? `Garage Features: ${garageFeatures.join(", ")}` : "",
-          garageAdditionalFeatures.length > 0 ? `Garage Additional: ${garageAdditionalFeatures.join(", ")}` : "",
           lotSizeSource.length > 0 ? `Lot Source: ${lotSizeSource.join(", ")}` : "",
           lotDescription.length > 0 ? `Lot Description: ${lotDescription.join(", ")}` : "",
         ].filter(Boolean).join("\n"),
+        // Property details now in dedicated columns
+        assessed_value: assessedValue ? parseFloat(assessedValue) : null,
+        fiscal_year: fiscalYear ? parseInt(fiscalYear) : null,
+        residential_exemption: residentialExemption !== "Unknown" ? residentialExemption : null,
+        floors: floors ? parseFloat(floors) : null,
+        water_view_type: waterViewType || null,
+        lead_paint: leadPaint !== "Unknown" ? leadPaint : null,
+        handicap_access: handicapAccess !== "Unknown" ? handicapAccess : null,
+        foundation_types: foundation.length > 0 ? foundation : [],
+        basement_types: basementType.length > 0 ? basementType : [],
+        basement_features_list: basementFeatures.length > 0 ? basementFeatures : [],
+        basement_floor_types: basementFloorType.length > 0 ? basementFloorType : [],
+        parking_comments: parkingComments || null,
+        parking_features_list: parkingFeatures.length > 0 ? parkingFeatures : [],
+        garage_comments: garageComments || null,
+        garage_features_list: garageFeatures.length > 0 ? garageFeatures : [],
+        garage_additional_features_list: garageAdditionalFeatures.length > 0 ? garageAdditionalFeatures : [],
+        broker_comments: brokerComments || null,
+        listing_exclusions: exclusions || null,
         listing_agreement_types: listingAgreementTypes.length > 0 ? listingAgreementTypes : null,
         entry_only: entryOnly,
         lender_owned: lenderOwned,
@@ -1763,32 +1783,33 @@ const AddListing = () => {
         disclosures: [
           ...(sellerDisclosure === "Yes" ? ["Seller Disclosure"] : []),
           ...(disclosuresText ? [`Custom: ${disclosuresText}`] : []),
-          ...(exclusions ? [`Exclusions: ${exclusions}`] : []),
-          ...(brokerComments ? [`Broker Comments: ${brokerComments}`] : [])
         ],
         property_features: propertyFeatures,
         amenities: amenities,
         additional_notes: [
           formData.additional_notes || "",
-          waterViewType ? `Water View Type: ${waterViewType}` : "",
-          assessedValue ? `Assessed Value: ${assessedValue}` : "",
-          fiscalYear ? `Fiscal Year: ${fiscalYear}` : "",
-          residentialExemption !== "Unknown" ? `Residential Exemption: ${residentialExemption}` : "",
-          floors ? `Floors: ${floors}` : "",
-          leadPaint !== "Unknown" ? `Lead Paint: ${leadPaint}` : "",
-          handicapAccess !== "Unknown" ? `Handicap Access: ${handicapAccess}` : "",
-          foundation.length > 0 ? `Foundation: ${foundation.join(", ")}` : "",
-          basementType.length > 0 ? `Basement Type: ${basementType.join(", ")}` : "",
-          basementFeatures.length > 0 ? `Basement Features: ${basementFeatures.join(", ")}` : "",
-          basementFloorType.length > 0 ? `Basement Floor: ${basementFloorType.join(", ")}` : "",
-          parkingComments ? `Parking Comments: ${parkingComments}` : "",
-          parkingFeatures.length > 0 ? `Parking Features: ${parkingFeatures.join(", ")}` : "",
-          garageComments ? `Garage Comments: ${garageComments}` : "",
-          garageFeatures.length > 0 ? `Garage Features: ${garageFeatures.join(", ")}` : "",
-          garageAdditionalFeatures.length > 0 ? `Garage Additional: ${garageAdditionalFeatures.join(", ")}` : "",
           lotSizeSource.length > 0 ? `Lot Source: ${lotSizeSource.join(", ")}` : "",
           lotDescription.length > 0 ? `Lot Description: ${lotDescription.join(", ")}` : "",
         ].filter(Boolean).join("\n"),
+        // Property details in dedicated columns
+        assessed_value: assessedValue ? parseFloat(assessedValue) : null,
+        fiscal_year: fiscalYear ? parseInt(fiscalYear) : null,
+        residential_exemption: residentialExemption !== "Unknown" ? residentialExemption : null,
+        floors: floors ? parseFloat(floors) : null,
+        water_view_type: waterViewType || null,
+        lead_paint: leadPaint !== "Unknown" ? leadPaint : null,
+        handicap_access: handicapAccess !== "Unknown" ? handicapAccess : null,
+        foundation_types: foundation.length > 0 ? foundation : [],
+        basement_types: basementType.length > 0 ? basementType : [],
+        basement_features_list: basementFeatures.length > 0 ? basementFeatures : [],
+        basement_floor_types: basementFloorType.length > 0 ? basementFloorType : [],
+        parking_comments: parkingComments || null,
+        parking_features_list: parkingFeatures.length > 0 ? parkingFeatures : [],
+        garage_comments: garageComments || null,
+        garage_features_list: garageFeatures.length > 0 ? garageFeatures : [],
+        garage_additional_features_list: garageAdditionalFeatures.length > 0 ? garageAdditionalFeatures : [],
+        broker_comments: brokerComments || null,
+        listing_exclusions: exclusions || null,
         photos: finalPhotos,
         floor_plans: finalFloorPlans,
         documents: finalDocuments,
@@ -1936,32 +1957,33 @@ const AddListing = () => {
         disclosures: [
           ...(sellerDisclosure === "Yes" ? ["Seller Disclosure"] : []),
           ...(disclosuresText ? [`Custom: ${disclosuresText}`] : []),
-          ...(exclusions ? [`Exclusions: ${exclusions}`] : []),
-          ...(brokerComments ? [`Broker Comments: ${brokerComments}`] : [])
         ],
         property_features: propertyFeatures,
         amenities: amenities,
         additional_notes: [
           formData.additional_notes || "",
-          waterViewType ? `Water View Type: ${waterViewType}` : "",
-          assessedValue ? `Assessed Value: ${assessedValue}` : "",
-          fiscalYear ? `Fiscal Year: ${fiscalYear}` : "",
-          residentialExemption !== "Unknown" ? `Residential Exemption: ${residentialExemption}` : "",
-          floors ? `Floors: ${floors}` : "",
-          leadPaint !== "Unknown" ? `Lead Paint: ${leadPaint}` : "",
-          handicapAccess !== "Unknown" ? `Handicap Access: ${handicapAccess}` : "",
-          foundation.length > 0 ? `Foundation: ${foundation.join(", ")}` : "",
-          basementType.length > 0 ? `Basement Type: ${basementType.join(", ")}` : "",
-          basementFeatures.length > 0 ? `Basement Features: ${basementFeatures.join(", ")}` : "",
-          basementFloorType.length > 0 ? `Basement Floor: ${basementFloorType.join(", ")}` : "",
-          parkingComments ? `Parking Comments: ${parkingComments}` : "",
-          parkingFeatures.length > 0 ? `Parking Features: ${parkingFeatures.join(", ")}` : "",
-          garageComments ? `Garage Comments: ${garageComments}` : "",
-          garageFeatures.length > 0 ? `Garage Features: ${garageFeatures.join(", ")}` : "",
-          garageAdditionalFeatures.length > 0 ? `Garage Additional: ${garageAdditionalFeatures.join(", ")}` : "",
           lotSizeSource.length > 0 ? `Lot Source: ${lotSizeSource.join(", ")}` : "",
           lotDescription.length > 0 ? `Lot Description: ${lotDescription.join(", ")}` : "",
         ].filter(Boolean).join("\n"),
+        // Property details in dedicated columns
+        assessed_value: assessedValue ? parseFloat(assessedValue) : null,
+        fiscal_year: fiscalYear ? parseInt(fiscalYear) : null,
+        residential_exemption: residentialExemption !== "Unknown" ? residentialExemption : null,
+        floors: floors ? parseFloat(floors) : null,
+        water_view_type: waterViewType || null,
+        lead_paint: leadPaint !== "Unknown" ? leadPaint : null,
+        handicap_access: handicapAccess !== "Unknown" ? handicapAccess : null,
+        foundation_types: foundation.length > 0 ? foundation : [],
+        basement_types: basementType.length > 0 ? basementType : [],
+        basement_features_list: basementFeatures.length > 0 ? basementFeatures : [],
+        basement_floor_types: basementFloorType.length > 0 ? basementFloorType : [],
+        parking_comments: parkingComments || null,
+        parking_features_list: parkingFeatures.length > 0 ? parkingFeatures : [],
+        garage_comments: garageComments || null,
+        garage_features_list: garageFeatures.length > 0 ? garageFeatures : [],
+        garage_additional_features_list: garageAdditionalFeatures.length > 0 ? garageAdditionalFeatures : [],
+        broker_comments: brokerComments || null,
+        listing_exclusions: exclusions || null,
         photos: finalPhotos,
         floor_plans: finalFloorPlans,
         documents: finalDocuments,

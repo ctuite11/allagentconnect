@@ -1374,10 +1374,15 @@ export type Database = {
           amenities: Json | null
           annual_property_tax: number | null
           appointment_required: boolean | null
+          assessed_value: number | null
           attom_data: Json | null
+          basement_features_list: Json | null
+          basement_floor_types: Json | null
+          basement_types: Json | null
           bathrooms: number | null
           beach_nearby: boolean | null
           bedrooms: number | null
+          broker_comments: string | null
           cancelled_at: string | null
           city: string
           commercial_details: Json | null
@@ -1394,16 +1399,25 @@ export type Database = {
           entry_only: boolean | null
           exterior_features_list: Json | null
           facing_direction: Json | null
+          fiscal_year: number | null
           floor_plans: Json | null
+          floors: number | null
+          foundation_types: Json | null
+          garage_additional_features_list: Json | null
+          garage_comments: string | null
+          garage_features_list: Json | null
           garage_spaces: number | null
           green_features: Json | null
+          handicap_access: string | null
           has_basement: boolean | null
           heating_types: Json | null
           id: string
           is_relisting: boolean | null
           latitude: number | null
+          lead_paint: string | null
           lender_owned: boolean | null
           listing_agreement_types: Json | null
+          listing_exclusions: string | null
           listing_number: string
           listing_type: string | null
           lockbox_code: string | null
@@ -1414,11 +1428,14 @@ export type Database = {
           num_fireplaces: number | null
           open_houses: Json | null
           original_listing_id: string | null
+          parking_comments: string | null
+          parking_features_list: Json | null
           photos: Json | null
           price: number
           property_features: Json | null
           property_styles: Json | null
           property_type: string | null
+          residential_exemption: string | null
           roof_materials: Json | null
           schools_data: Json | null
           short_sale: boolean | null
@@ -1437,6 +1454,7 @@ export type Database = {
           virtual_tour_url: string | null
           walk_score_data: Json | null
           water_view: boolean | null
+          water_view_type: string | null
           waterfront: boolean | null
           year_built: number | null
           zip_code: string
@@ -1450,10 +1468,15 @@ export type Database = {
           amenities?: Json | null
           annual_property_tax?: number | null
           appointment_required?: boolean | null
+          assessed_value?: number | null
           attom_data?: Json | null
+          basement_features_list?: Json | null
+          basement_floor_types?: Json | null
+          basement_types?: Json | null
           bathrooms?: number | null
           beach_nearby?: boolean | null
           bedrooms?: number | null
+          broker_comments?: string | null
           cancelled_at?: string | null
           city: string
           commercial_details?: Json | null
@@ -1470,16 +1493,25 @@ export type Database = {
           entry_only?: boolean | null
           exterior_features_list?: Json | null
           facing_direction?: Json | null
+          fiscal_year?: number | null
           floor_plans?: Json | null
+          floors?: number | null
+          foundation_types?: Json | null
+          garage_additional_features_list?: Json | null
+          garage_comments?: string | null
+          garage_features_list?: Json | null
           garage_spaces?: number | null
           green_features?: Json | null
+          handicap_access?: string | null
           has_basement?: boolean | null
           heating_types?: Json | null
           id?: string
           is_relisting?: boolean | null
           latitude?: number | null
+          lead_paint?: string | null
           lender_owned?: boolean | null
           listing_agreement_types?: Json | null
+          listing_exclusions?: string | null
           listing_number?: string
           listing_type?: string | null
           lockbox_code?: string | null
@@ -1490,11 +1522,14 @@ export type Database = {
           num_fireplaces?: number | null
           open_houses?: Json | null
           original_listing_id?: string | null
+          parking_comments?: string | null
+          parking_features_list?: Json | null
           photos?: Json | null
           price: number
           property_features?: Json | null
           property_styles?: Json | null
           property_type?: string | null
+          residential_exemption?: string | null
           roof_materials?: Json | null
           schools_data?: Json | null
           short_sale?: boolean | null
@@ -1513,6 +1548,7 @@ export type Database = {
           virtual_tour_url?: string | null
           walk_score_data?: Json | null
           water_view?: boolean | null
+          water_view_type?: string | null
           waterfront?: boolean | null
           year_built?: number | null
           zip_code: string
@@ -1526,10 +1562,15 @@ export type Database = {
           amenities?: Json | null
           annual_property_tax?: number | null
           appointment_required?: boolean | null
+          assessed_value?: number | null
           attom_data?: Json | null
+          basement_features_list?: Json | null
+          basement_floor_types?: Json | null
+          basement_types?: Json | null
           bathrooms?: number | null
           beach_nearby?: boolean | null
           bedrooms?: number | null
+          broker_comments?: string | null
           cancelled_at?: string | null
           city?: string
           commercial_details?: Json | null
@@ -1546,16 +1587,25 @@ export type Database = {
           entry_only?: boolean | null
           exterior_features_list?: Json | null
           facing_direction?: Json | null
+          fiscal_year?: number | null
           floor_plans?: Json | null
+          floors?: number | null
+          foundation_types?: Json | null
+          garage_additional_features_list?: Json | null
+          garage_comments?: string | null
+          garage_features_list?: Json | null
           garage_spaces?: number | null
           green_features?: Json | null
+          handicap_access?: string | null
           has_basement?: boolean | null
           heating_types?: Json | null
           id?: string
           is_relisting?: boolean | null
           latitude?: number | null
+          lead_paint?: string | null
           lender_owned?: boolean | null
           listing_agreement_types?: Json | null
+          listing_exclusions?: string | null
           listing_number?: string
           listing_type?: string | null
           lockbox_code?: string | null
@@ -1566,11 +1616,14 @@ export type Database = {
           num_fireplaces?: number | null
           open_houses?: Json | null
           original_listing_id?: string | null
+          parking_comments?: string | null
+          parking_features_list?: Json | null
           photos?: Json | null
           price?: number
           property_features?: Json | null
           property_styles?: Json | null
           property_type?: string | null
+          residential_exemption?: string | null
           roof_materials?: Json | null
           schools_data?: Json | null
           short_sale?: boolean | null
@@ -1589,6 +1642,7 @@ export type Database = {
           virtual_tour_url?: string | null
           walk_score_data?: Json | null
           water_view?: boolean | null
+          water_view_type?: string | null
           waterfront?: boolean | null
           year_built?: number | null
           zip_code?: string
