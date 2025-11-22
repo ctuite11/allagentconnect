@@ -4972,7 +4972,14 @@ const AddListing = () => {
               try {
                 const updatedOpenHouses = [...openHouses, ...pendingOpenHouses];
                 setOpenHouses(updatedOpenHouses);
-                await handleSaveDraft(false);
+                
+                // Directly update the listing with the new open houses
+                const { error } = await supabase
+                  .from('listings')
+                  .update({ open_houses: updatedOpenHouses })
+                  .eq('id', id);
+                
+                if (error) throw error;
                 
                 setSelectedDates([]);
                 setDialogStartTime('');
