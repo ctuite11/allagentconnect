@@ -37,6 +37,9 @@ const ShareLinkHandler = () => {
 
         // Set cookie for 90 days (7776000 seconds)
         document.cookie = `primary_agent_id=${data.agent_id}; path=/; max-age=7776000`;
+        
+        // Also store in localStorage
+        localStorage.setItem("primary_agent_id", data.agent_id);
 
         // Redirect to main page
         navigate("/");
