@@ -379,6 +379,25 @@ const handler = async (req: Request): Promise<Response> => {
       .update({ last_sent_at: new Date().toISOString() })
       .eq("id", hotSheetId);
 
+    // Create share token if client_id exists
+    if (hotSheet.client_id) {
+      const shareToken = crypto.randomUUID();
+      await adminClient
+        .from("share_tokens")
+        .insert({
+          token: shareToken,
+          agent_id: hotSheet.user_id,
+          payload: {
+            type: "client_hotsheet_invite",
+            client_id: hotSheet.client_id,
+            hot_sheet_id: hotSheetId
+          },
+          expires_at: null
+        });
+      
+      console.log("✅ Created share token for client hot sheet invite:", shareToken);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
