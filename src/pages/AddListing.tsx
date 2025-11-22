@@ -125,7 +125,6 @@ const AddListing = () => {
     appointment_required: false,
     showing_contact_name: "",
     showing_contact_phone: "",
-    additional_notes: "",
     annual_property_tax: "",
     tax_year: new Date().getFullYear().toString(),
     tax_assessment_value: "",
@@ -676,7 +675,6 @@ const AddListing = () => {
         appointment_required: data.appointment_required || false,
         showing_contact_name: data.showing_contact_name || "",
         showing_contact_phone: data.showing_contact_phone || "",
-        additional_notes: data.additional_notes || "",
         annual_property_tax: data.annual_property_tax?.toString() || "",
         tax_year: data.tax_year?.toString() || new Date().getFullYear().toString(),
         tax_assessment_value: data.tax_assessment_value?.toString() || "",
@@ -1542,10 +1540,9 @@ const AddListing = () => {
           ...(disclosuresText ? [`Custom: ${disclosuresText}`] : []),
         ],
         additional_notes: [
-          formData.additional_notes || "",
           lotSizeSource.length > 0 ? `Lot Source: ${lotSizeSource.join(", ")}` : "",
           lotDescription.length > 0 ? `Lot Description: ${lotDescription.join(", ")}` : "",
-        ].filter(Boolean).join("\n"),
+        ].filter(Boolean).join("\n") || null,
         // Property details now in dedicated columns
         assessed_value: assessedValue ? parseFloat(assessedValue) : null,
         fiscal_year: fiscalYear ? parseInt(fiscalYear) : null,
@@ -1787,10 +1784,9 @@ const AddListing = () => {
         property_features: propertyFeatures,
         amenities: amenities,
         additional_notes: [
-          formData.additional_notes || "",
           lotSizeSource.length > 0 ? `Lot Source: ${lotSizeSource.join(", ")}` : "",
           lotDescription.length > 0 ? `Lot Description: ${lotDescription.join(", ")}` : "",
-        ].filter(Boolean).join("\n"),
+        ].filter(Boolean).join("\n") || null,
         // Property details in dedicated columns
         assessed_value: assessedValue ? parseFloat(assessedValue) : null,
         fiscal_year: fiscalYear ? parseInt(fiscalYear) : null,
@@ -1961,10 +1957,9 @@ const AddListing = () => {
         property_features: propertyFeatures,
         amenities: amenities,
         additional_notes: [
-          formData.additional_notes || "",
           lotSizeSource.length > 0 ? `Lot Source: ${lotSizeSource.join(", ")}` : "",
           lotDescription.length > 0 ? `Lot Description: ${lotDescription.join(", ")}` : "",
-        ].filter(Boolean).join("\n"),
+        ].filter(Boolean).join("\n") || null,
         // Property details in dedicated columns
         assessed_value: assessedValue ? parseFloat(assessedValue) : null,
         fiscal_year: fiscalYear ? parseInt(fiscalYear) : null,
@@ -4611,17 +4606,6 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Additional Notes */}
-                <div className="space-y-2 border-t pt-6">
-                  <Label htmlFor="additional_notes">Additional Notes</Label>
-                  <Textarea
-                    id="additional_notes"
-                    placeholder="Any other important information about the property..."
-                    value={formData.additional_notes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, additional_notes: e.target.value }))}
-                    rows={4}
-                  />
-                </div>
 
                 {/* ========================================
                     SECTION 5: PHOTOS & MEDIA
