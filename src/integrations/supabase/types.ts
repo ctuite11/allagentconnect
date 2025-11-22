@@ -1431,6 +1431,7 @@ export type Database = {
           tax_assessment_value: number | null
           tax_year: number | null
           total_parking_spaces: number | null
+          town: string | null
           updated_at: string
           value_estimate: Json | null
           virtual_tour_url: string | null
@@ -1506,6 +1507,7 @@ export type Database = {
           tax_assessment_value?: number | null
           tax_year?: number | null
           total_parking_spaces?: number | null
+          town?: string | null
           updated_at?: string
           value_estimate?: Json | null
           virtual_tour_url?: string | null
@@ -1581,6 +1583,7 @@ export type Database = {
           tax_assessment_value?: number | null
           tax_year?: number | null
           total_parking_spaces?: number | null
+          town?: string | null
           updated_at?: string
           value_estimate?: Json | null
           virtual_tour_url?: string | null
