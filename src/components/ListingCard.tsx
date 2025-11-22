@@ -618,7 +618,93 @@ const ListingCard = ({
             </div>
           )}
         </CardContent>
-      </Card>;
+        <Dialog open={quickOpenHouseDialogOpen} onOpenChange={setQuickOpenHouseDialogOpen}>
+          <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Schedule Open House</DialogTitle>
+                <DialogDescription>
+                  Add an open house for {listing.address}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Type</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={quickOHType === 'public' ? 'default' : 'outline'}
+                      onClick={() => setQuickOHType('public')}
+                      className="flex-1"
+                    >
+                      Public Open House
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={quickOHType === 'broker' ? 'default' : 'outline'}
+                      onClick={() => setQuickOHType('broker')}
+                      className="flex-1"
+                    >
+                      Broker Open House
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quick-oh-date">Date</Label>
+                  <Input
+                    id="quick-oh-date"
+                    type="date"
+                    value={quickOHDate}
+                    onChange={(e) => setQuickOHDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="quick-oh-start">Start Time</Label>
+                    <Input
+                      id="quick-oh-start"
+                      type="time"
+                      value={quickOHStartTime}
+                      onChange={(e) => setQuickOHStartTime(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="quick-oh-end">End Time</Label>
+                    <Input
+                      id="quick-oh-end"
+                      type="time"
+                      value={quickOHEndTime}
+                      onChange={(e) => setQuickOHEndTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quick-oh-notes">Notes (optional)</Label>
+                  <Textarea
+                    id="quick-oh-notes"
+                    value={quickOHNotes}
+                    onChange={(e) => setQuickOHNotes(e.target.value)}
+                    placeholder="Any special instructions..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setQuickOpenHouseDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleQuickAddOpenHouse}>
+                  Add Open House
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </Card>;
   }
   if (viewMode === 'list') {
     return <Card className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-primary">
@@ -819,7 +905,102 @@ const ListingCard = ({
         price: listing.price,
         property_type: listing.property_type
       }} />
-      </Card>;
+      <ReverseProspectDialog open={prospectDialogOpen} onOpenChange={setProspectDialogOpen} listing={listing} matchCount={matchCount} />
+      <MarketInsightsDialog open={marketInsightsOpen} onOpenChange={setMarketInsightsOpen} listing={{
+      address: listing.address,
+      city: listing.city,
+      state: listing.state,
+      zip_code: listing.zip_code,
+      price: listing.price,
+      property_type: listing.property_type
+    }} />
+      <Dialog open={quickOpenHouseDialogOpen} onOpenChange={setQuickOpenHouseDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Open House</DialogTitle>
+            <DialogDescription>
+              Add an open house for {listing.address}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={quickOHType === 'public' ? 'default' : 'outline'}
+                  onClick={() => setQuickOHType('public')}
+                  className="flex-1"
+                >
+                  Public Open House
+                </Button>
+                <Button
+                  type="button"
+                  variant={quickOHType === 'broker' ? 'default' : 'outline'}
+                  onClick={() => setQuickOHType('broker')}
+                  className="flex-1"
+                >
+                  Broker Open House
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quick-oh-date">Date</Label>
+              <Input
+                id="quick-oh-date"
+                type="date"
+                value={quickOHDate}
+                onChange={(e) => setQuickOHDate(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="quick-oh-start">Start Time</Label>
+                <Input
+                  id="quick-oh-start"
+                  type="time"
+                  value={quickOHStartTime}
+                  onChange={(e) => setQuickOHStartTime(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="quick-oh-end">End Time</Label>
+                <Input
+                  id="quick-oh-end"
+                  type="time"
+                  value={quickOHEndTime}
+                  onChange={(e) => setQuickOHEndTime(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quick-oh-notes">Notes (optional)</Label>
+              <Textarea
+                id="quick-oh-notes"
+                value={quickOHNotes}
+                onChange={(e) => setQuickOHNotes(e.target.value)}
+                placeholder="Any special instructions..."
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuickOpenHouseDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleQuickAddOpenHouse}>
+              Add Open House
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>;
   }
 
   // Grid view
