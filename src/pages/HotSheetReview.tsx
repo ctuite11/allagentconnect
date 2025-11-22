@@ -350,26 +350,25 @@ if (agentIds.length > 0) {
                 Select All ({listings.length} listings)
               </label>
               {selectedListings.size > 0 && (
-                <>
-                  <span className="text-sm text-muted-foreground">
-                    {selectedListings.size} selected
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleKeepSelected}
-                  >
-                    Keep Selected
-                  </Button>
-                </>
+                <span className="text-sm text-muted-foreground">
+                  {selectedListings.size} selected
+                </span>
               )}
             </div>
             <div className="flex items-center gap-4">
               {selectedListings.size > 0 && (
-                <BulkShareListingsDialog 
-                  listingIds={Array.from(selectedListings)}
-                  listingCount={selectedListings.size}
-                />
+                <>
+                  <Button
+                    onClick={handleKeepSelected}
+                    disabled={selectedListings.size === 0}
+                  >
+                    Keep Selected ({selectedListings.size})
+                  </Button>
+                  <BulkShareListingsDialog 
+                    listingIds={Array.from(selectedListings)}
+                    listingCount={selectedListings.size}
+                  />
+                </>
               )}
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-[200px]">
