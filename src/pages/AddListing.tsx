@@ -390,7 +390,7 @@ const AddListing = () => {
     if (hasContent) {
       setHasUnsavedChanges(true);
     }
-  }, [formData, user]);
+  }, [formData, openHouses, user]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -4918,7 +4918,7 @@ const AddListing = () => {
               Cancel
             </Button>
             <Button
-              onClick={() => {
+              onClick={async () => {
                 if (selectedDates.length === 0) {
                   toast.error("Please select at least one date");
                   return;
@@ -4936,14 +4936,23 @@ const AddListing = () => {
                   notes: dialogComments
                 }));
                 
-                setOpenHouses([...openHouses, ...newOpenHouses]);
-                setOpenHouseDialogOpen(false);
-                setSelectedDates([]);
-                setDialogStartTime('');
-                setDialogEndTime('');
-                setDialogComments('');
-                toast.success(`Added ${newOpenHouses.length} open house(s)`);
-                navigate('/agent-dashboard');
+                const updatedOpenHouses = [...openHouses, ...newOpenHouses];
+                setOpenHouses(updatedOpenHouses);
+                
+                // Save to database before navigating
+                try {
+                  await handleSaveDraft(false);
+                  setOpenHouseDialogOpen(false);
+                  setSelectedDates([]);
+                  setDialogStartTime('');
+                  setDialogEndTime('');
+                  setDialogComments('');
+                  toast.success(`Added ${newOpenHouses.length} open house(s)`);
+                  navigate('/agent-dashboard');
+                } catch (error) {
+                  console.error('Error saving open houses:', error);
+                  toast.error('Failed to save open houses');
+                }
               }}
               className="bg-green-600 hover:bg-green-700"
             >
