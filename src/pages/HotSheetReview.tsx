@@ -46,8 +46,9 @@ const HotSheetReview = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [hotSheet, setHotSheet] = useState<HotSheet | null>(null);
-const [listings, setListings] = useState<Listing[]>([]);
-const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [allListings, setAllListings] = useState<Listing[]>([]);
+  const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
 const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
 const [sortBy, setSortBy] = useState("newest");
 
@@ -95,8 +96,9 @@ const [sortBy, setSortBy] = useState("newest");
 
       const { data: listingsData, error: listingsError } = await query;
 
-if (listingsError) throw listingsError;
-setListings(listingsData || []);
+      if (listingsError) throw listingsError;
+      setListings(listingsData || []);
+      setAllListings(listingsData || []);
 
 // Load listing agents for display
 const agentIds = Array.from(new Set((listingsData || []).map((l: any) => l.agent_id).filter(Boolean)));
@@ -147,9 +149,20 @@ if (agentIds.length > 0) {
   const toggleSelectAll = () => {
     if (selectedListings.size === listings.length) {
       setSelectedListings(new Set());
+      setListings(allListings);
     } else {
       setSelectedListings(new Set(listings.map((l) => l.id)));
     }
+  };
+
+  const handleKeepSelected = () => {
+    if (selectedListings.size === 0) {
+      toast.error("No listings selected");
+      return;
+    }
+    const filtered = listings.filter(l => selectedListings.has(l.id));
+    setListings(filtered);
+    toast.success(`Showing ${filtered.length} selected listings`);
   };
 
   const handleSendFirstBatch = async () => {
@@ -337,9 +350,18 @@ if (agentIds.length > 0) {
                 Select All ({listings.length} listings)
               </label>
               {selectedListings.size > 0 && (
-                <span className="text-sm text-muted-foreground">
-                  {selectedListings.size} selected
-                </span>
+                <>
+                  <span className="text-sm text-muted-foreground">
+                    {selectedListings.size} selected
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleKeepSelected}
+                  >
+                    Keep Selected
+                  </Button>
+                </>
               )}
             </div>
             <div className="flex items-center gap-4">
