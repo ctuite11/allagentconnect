@@ -27,6 +27,7 @@ const SearchResults = () => {
     const params = new URLSearchParams(search);
     const get = (k: string) => params.get(k) || undefined;
     const getList = (k: string, sep = ",") => (params.get(k)?.split(sep).filter(Boolean) || undefined);
+    const getBool = (k: string) => params.get(k) === "true";
 
     return {
       statuses: getList("status"),
@@ -48,6 +49,9 @@ const SearchResults = () => {
       keywords: get("keywords"),
       keywordMatch: get("keywordMatch"),
       keywordType: get("keywordType"),
+      openHouses: getBool("openHouses"),
+      brokerTours: getBool("brokerTours"),
+      eventTimeframe: get("eventTimeframe") || "next_3_days",
     };
   }, [search]);
 
@@ -73,8 +77,45 @@ const SearchResults = () => {
         const { data, error } = await buildListingsQuery(supabase, criteria).limit(200);
         if (error) throw error;
 
-        // Fetch agent profiles in batch and attach to listings
+        // Filter for open houses or broker tours if selected
         let finalListings = data || [];
+        if ((filters.openHouses || filters.brokerTours) && finalListings) {
+          const now = new Date();
+          let endDate = new Date();
+          
+          // Calculate end date based on timeframe
+          switch (filters.eventTimeframe) {
+            case "next_3_days":
+              endDate.setDate(now.getDate() + 3);
+              break;
+            case "next_7_days":
+              endDate.setDate(now.getDate() + 7);
+              break;
+            case "next_14_days":
+              endDate.setDate(now.getDate() + 14);
+              break;
+          }
+          
+          finalListings = finalListings.filter((listing: any) => {
+            if (!listing.open_houses || !Array.isArray(listing.open_houses)) return false;
+            
+            return listing.open_houses.some((oh: any) => {
+              const ohEndDateTime = new Date(`${oh.date}T${oh.end_time}`);
+              const isUpcoming = ohEndDateTime > now && ohEndDateTime <= endDate;
+              
+              if (filters.openHouses && filters.brokerTours) {
+                return isUpcoming; // Show both types
+              } else if (filters.openHouses) {
+                return isUpcoming && oh.type !== 'broker';
+              } else if (filters.brokerTours) {
+                return isUpcoming && oh.type === 'broker';
+              }
+              return false;
+            });
+          });
+        }
+
+        // Fetch agent profiles in batch and attach to listings
         const agentIds = Array.from(new Set((finalListings as any[]).map(l => l.agent_id).filter(Boolean)));
         if (agentIds.length > 0) {
           const { data: profiles } = await supabase
