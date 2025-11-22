@@ -2174,10 +2174,12 @@ const AddListing = () => {
               <Eye className="w-5 h-5" />
               Preview
             </Button>
-            <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
-              <Upload className="w-5 h-5" />
-              {submitting ? "Publishing..." : "Publish"}
-            </Button>
+              {!isEditMode && (
+                <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
+                  <Upload className="w-5 h-5" />
+                  {submitting ? "Publishing..." : "Publish"}
+                </Button>
+              )}
           </div>
         </div>
 
@@ -4781,10 +4783,12 @@ const AddListing = () => {
                     <Eye className="w-5 h-5" />
                     Preview
                   </Button>
-                  <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
-                    <Upload className="w-5 h-5" />
-                    {submitting ? (isEditMode ? "Updating..." : "Publishing...") : (isEditMode ? "Update Listing" : "Publish")}
-                  </Button>
+            {!isEditMode && (
+              <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
+                <Upload className="w-5 h-5" />
+                {submitting ? "Publishing..." : "Publish"}
+              </Button>
+            )}
                 </div>
               </form>
             </CardContent>
