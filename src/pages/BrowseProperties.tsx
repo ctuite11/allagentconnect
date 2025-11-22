@@ -115,7 +115,7 @@ const BrowseProperties = () => {
 
   useEffect(() => {
     fetchListings();
-  }, [statuses, propertyTypes, minPrice, maxPrice, bedrooms, bathrooms, county, selectedTowns, zipCode, listingNumber]);
+  }, [statuses, propertyTypes, minPrice, maxPrice, bedrooms, bathrooms, county, selectedTowns, zipCode, listingNumber, openHouses, brokerTours, eventTimeframe]);
 
   // Reset selected towns when county changes
   useEffect(() => {
@@ -175,7 +175,44 @@ const BrowseProperties = () => {
         query = query.ilike("listing_number", `%${listingNumber}%`);
       }
 
-      const { data, error } = await query.limit(100);
+      let { data, error } = await query.limit(100);
+      
+      // Filter for open houses or broker tours if selected
+      if ((openHouses || brokerTours) && data) {
+        const now = new Date();
+        let endDate = new Date();
+        
+        // Calculate end date based on timeframe
+        switch (eventTimeframe) {
+          case "next_3_days":
+            endDate.setDate(now.getDate() + 3);
+            break;
+          case "next_7_days":
+            endDate.setDate(now.getDate() + 7);
+            break;
+          case "next_14_days":
+            endDate.setDate(now.getDate() + 14);
+            break;
+        }
+        
+        data = data.filter((listing: any) => {
+          if (!listing.open_houses || !Array.isArray(listing.open_houses)) return false;
+          
+          return listing.open_houses.some((oh: any) => {
+            const ohEndDateTime = new Date(`${oh.date}T${oh.end_time}`);
+            const isUpcoming = ohEndDateTime > now && ohEndDateTime <= endDate;
+            
+            if (openHouses && brokerTours) {
+              return isUpcoming; // Show both types
+            } else if (openHouses) {
+              return isUpcoming && oh.type !== 'broker';
+            } else if (brokerTours) {
+              return isUpcoming && oh.type === 'broker';
+            }
+            return false;
+          });
+        });
+      }
 
       if (error) throw error;
       setListings(data || []);
