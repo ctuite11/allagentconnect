@@ -3,6 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
@@ -37,6 +40,13 @@ const ClientHotsheetPage = () => {
   const [agent, setAgent] = useState<any>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
+  const [editableCriteria, setEditableCriteria] = useState<any>({
+    minPrice: "",
+    maxPrice: "",
+    bedrooms: "",
+    bathrooms: "",
+    cities: "",
+  });
 
   useEffect(() => {
     if (token) {
@@ -114,6 +124,16 @@ const ClientHotsheetPage = () => {
       if (hotSheetError) throw hotSheetError;
       setHotSheet(hotSheetData);
 
+      // Initialize editable criteria from hotsheet
+      const loadedCriteria = hotSheetData.criteria as any || {};
+      setEditableCriteria({
+        minPrice: loadedCriteria.minPrice || "",
+        maxPrice: loadedCriteria.maxPrice || "",
+        bedrooms: loadedCriteria.bedrooms || "",
+        bathrooms: loadedCriteria.bathrooms || "",
+        cities: loadedCriteria.cities ? loadedCriteria.cities.join(", ") : "",
+      });
+
       // Fetch matching listings using hot sheet criteria
       const criteria = hotSheetData.criteria as any || {};
       const query = buildListingsQuery(supabase, criteria).limit(200);
@@ -147,6 +167,51 @@ const ClientHotsheetPage = () => {
       console.error("Error loading hotsheet:", err);
       setError("Failed to load hotsheet. Please try again.");
       setLoading(false);
+    }
+  };
+
+  const handleSaveCriteria = async () => {
+    if (!hotSheet?.id) return;
+
+    try {
+      // Build updated criteria object
+      const updatedCriteria: any = { ...hotSheet.criteria };
+      
+      if (editableCriteria.minPrice) updatedCriteria.minPrice = Number(editableCriteria.minPrice);
+      if (editableCriteria.maxPrice) updatedCriteria.maxPrice = Number(editableCriteria.maxPrice);
+      if (editableCriteria.bedrooms) updatedCriteria.bedrooms = Number(editableCriteria.bedrooms);
+      if (editableCriteria.bathrooms) updatedCriteria.bathrooms = Number(editableCriteria.bathrooms);
+      
+      // Handle cities as comma-separated string
+      if (editableCriteria.cities) {
+        updatedCriteria.cities = editableCriteria.cities
+          .split(",")
+          .map((c: string) => c.trim())
+          .filter(Boolean);
+      }
+
+      // Update hot_sheets row
+      const { error: updateError } = await supabase
+        .from("hot_sheets")
+        .update({ criteria: updatedCriteria })
+        .eq("id", hotSheet.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setHotSheet({ ...hotSheet, criteria: updatedCriteria });
+
+      // Refresh listings with new criteria
+      const query = buildListingsQuery(supabase, updatedCriteria as any).limit(200);
+      const { data: listingsData, error: listingsError } = await query;
+
+      if (listingsError) throw listingsError;
+      setListings(listingsData || []);
+
+      toast.success("Your search criteria has been updated.");
+    } catch (err: any) {
+      console.error("Error saving criteria:", err);
+      toast.error("Failed to save criteria. Please try again.");
     }
   };
 
@@ -231,50 +296,67 @@ const ClientHotsheetPage = () => {
             )}
           </div>
 
-          {/* Search Criteria Summary */}
+          {/* Editable Search Criteria */}
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Search Criteria</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                {criteria.minPrice && (
-                  <div>
-                    <span className="font-medium">Min Price:</span> ${criteria.minPrice.toLocaleString()}
-                  </div>
-                )}
-                {criteria.maxPrice && (
-                  <div>
-                    <span className="font-medium">Max Price:</span> ${criteria.maxPrice.toLocaleString()}
-                  </div>
-                )}
-                {criteria.bedrooms && (
-                  <div>
-                    <span className="font-medium">Bedrooms:</span> {criteria.bedrooms}+
-                  </div>
-                )}
-                {criteria.bathrooms && (
-                  <div>
-                    <span className="font-medium">Bathrooms:</span> {criteria.bathrooms}+
-                  </div>
-                )}
-                {criteria.propertyTypes && criteria.propertyTypes.length > 0 && (
-                  <div>
-                    <span className="font-medium">Property Types:</span>{" "}
-                    {criteria.propertyTypes.join(", ")}
-                  </div>
-                )}
-                {criteria.cities && criteria.cities.length > 0 && (
-                  <div>
-                    <span className="font-medium">Cities:</span> {criteria.cities.join(", ")}
-                  </div>
-                )}
-                {criteria.state && (
-                  <div>
-                    <span className="font-medium">State:</span> {criteria.state}
-                  </div>
-                )}
+              <div className="flex flex-wrap gap-4 mb-4">
+                <div className="flex-1 min-w-[200px]">
+                  <Label htmlFor="minPrice">Price Min</Label>
+                  <Input
+                    id="minPrice"
+                    type="number"
+                    placeholder="Min Price"
+                    value={editableCriteria.minPrice}
+                    onChange={(e) => setEditableCriteria({ ...editableCriteria, minPrice: e.target.value })}
+                  />
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <Label htmlFor="maxPrice">Price Max</Label>
+                  <Input
+                    id="maxPrice"
+                    type="number"
+                    placeholder="Max Price"
+                    value={editableCriteria.maxPrice}
+                    onChange={(e) => setEditableCriteria({ ...editableCriteria, maxPrice: e.target.value })}
+                  />
+                </div>
+                <div className="flex-1 min-w-[150px]">
+                  <Label htmlFor="bedrooms">Beds Min</Label>
+                  <Input
+                    id="bedrooms"
+                    type="number"
+                    placeholder="Beds"
+                    value={editableCriteria.bedrooms}
+                    onChange={(e) => setEditableCriteria({ ...editableCriteria, bedrooms: e.target.value })}
+                  />
+                </div>
+                <div className="flex-1 min-w-[150px]">
+                  <Label htmlFor="bathrooms">Baths Min</Label>
+                  <Input
+                    id="bathrooms"
+                    type="number"
+                    placeholder="Baths"
+                    value={editableCriteria.bathrooms}
+                    onChange={(e) => setEditableCriteria({ ...editableCriteria, bathrooms: e.target.value })}
+                  />
+                </div>
+                <div className="flex-1 min-w-[250px]">
+                  <Label htmlFor="cities">Cities (comma-separated)</Label>
+                  <Input
+                    id="cities"
+                    type="text"
+                    placeholder="Boston, Cambridge, Somerville"
+                    value={editableCriteria.cities}
+                    onChange={(e) => setEditableCriteria({ ...editableCriteria, cities: e.target.value })}
+                  />
+                </div>
               </div>
+              <Button onClick={handleSaveCriteria}>
+                Save Criteria
+              </Button>
             </CardContent>
           </Card>
 
