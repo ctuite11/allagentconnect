@@ -40,6 +40,7 @@ const ClientHotSheet = () => {
   const { token } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [hotSheet, setHotSheet] = useState<any>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
@@ -60,21 +61,62 @@ const ClientHotSheet = () => {
   useEffect(() => {
     if (token) {
       fetchHotSheet();
+    } else {
+      setError("No token provided");
+      setLoading(false);
     }
   }, [token]);
 
   const fetchHotSheet = async () => {
     try {
       setLoading(true);
+      setError(null);
 
-      // Get hot sheet by access token
+      // Step 1: Look up the share token
+      const { data: tokenData, error: tokenError } = await supabase
+        .from("share_tokens")
+        .select("*")
+        .eq("token", token)
+        .maybeSingle();
+
+      console.log("Client hotsheet share token", tokenData);
+
+      if (tokenError || !tokenData) {
+        console.error("Client hotsheet load error", tokenError);
+        setError("We couldn't load this hotsheet. Please contact your agent or try the link again.");
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Parse payload to get hot_sheet_id
+      const payload = tokenData.payload as any;
+      console.log("Client hotsheet payload", payload);
+
+      if (!payload || !payload.hot_sheet_id) {
+        console.error("Client hotsheet load error", "Invalid token payload");
+        setError("We couldn't load this hotsheet. Please contact your agent or try the link again.");
+        setLoading(false);
+        return;
+      }
+
+      const hotSheetId = payload.hot_sheet_id;
+
+      // Step 3: Load the hot sheet
       const { data: hotSheetData, error: hotSheetError } = await supabase
         .from("hot_sheets")
-        .select("*, clients(*)")
-        .eq("access_token", token)
+        .select("*")
+        .eq("id", hotSheetId)
         .single();
 
-      if (hotSheetError) throw hotSheetError;
+      console.log("Client hotsheet hotSheet", hotSheetData);
+
+      if (hotSheetError || !hotSheetData) {
+        console.error("Client hotsheet load error", hotSheetError);
+        setError("We couldn't load this hotsheet. Please contact your agent or try the link again.");
+        setLoading(false);
+        return;
+      }
+
       setHotSheet(hotSheetData);
 
       // Load criteria into form
@@ -87,12 +129,19 @@ const ClientHotSheet = () => {
       setCity(criteria.city || "");
       setZipCode(criteria.zipCode || "");
 
-      // Build query using unified search utility
+      // Step 4: Build and fetch listings
       const query = buildListingsQuery(supabase, criteria).limit(200);
-
       const { data: listingsData, error: listingsError } = await query;
 
-      if (listingsError) throw listingsError;
+      console.log("Client hotsheet listings", listingsData);
+
+      if (listingsError) {
+        console.error("Client hotsheet load error", listingsError);
+        setError("We couldn't load properties. Please contact your agent or try the link again.");
+        setLoading(false);
+        return;
+      }
+
       setListings(listingsData || []);
 
       // Load listing agents for display
@@ -128,10 +177,12 @@ const ClientHotSheet = () => {
         commentsMap[c.listing_id] = c.comment;
       });
       setComments(commentsMap);
+
+      // Success - all data loaded
+      setLoading(false);
     } catch (error: any) {
-      console.error("Error loading hot sheet:", error);
-      toast.error("Failed to load hot sheet");
-    } finally {
+      console.error("Client hotsheet load error", error);
+      setError("We couldn't load this hotsheet. Please contact your agent or try the link again.");
       setLoading(false);
     }
   };
@@ -266,7 +317,21 @@ const ClientHotSheet = () => {
       <div className="min-h-screen flex flex-col">
         <Navigation />
         <main className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading hot sheet...</p>
+          <p className="text-muted-foreground">Loading your hotsheet…</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <main className="flex-1 flex items-center justify-center">
+          <Card className="p-8 max-w-md text-center">
+            <p className="text-destructive font-medium mb-2">Unable to Load Hotsheet</p>
+            <p className="text-muted-foreground">{error}</p>
+          </Card>
         </main>
       </div>
     );
