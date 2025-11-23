@@ -189,8 +189,18 @@ if (agentIds.length > 0) {
 
       toast.success(`Sent ${selectedListings.size} listings to client`);
 
-      // Automatically create share token if client is attached
-      if (hotSheet?.client_id) {
+      // Automatically create share token if client is attached via hot_sheet_clients
+      const { data: hscRows, error: hscError } = await supabase
+        .from("hot_sheet_clients")
+        .select("client_id")
+        .eq("hot_sheet_id", hotSheet.id)
+        .limit(1);
+
+      if (hscError || !hscRows || hscRows.length === 0) {
+        console.warn("No client attached in hot_sheet_clients for this hotsheet");
+      } else {
+        const client_id = hscRows[0].client_id;
+        
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (!user || userError) {
           console.error("No authenticated user for share token", userError);
@@ -204,7 +214,7 @@ if (agentIds.length > 0) {
               agent_id: user.id,
               payload: {
                 type: "client_hotsheet_invite",
-                client_id: hotSheet.client_id,
+                client_id,
                 hot_sheet_id: hotSheet.id,
               },
             })
