@@ -380,7 +380,16 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("id", hotSheetId);
 
     // Create share token AFTER successful email send and last_sent_at update
-    if (hotSheet.client_id) {
+    console.log("Checking if hotsheet has client_id:", { 
+      hot_sheet_id: hotSheet.id, 
+      client_id: hotSheet.client_id,
+      has_client: !!hotSheet.client_id 
+    });
+    
+    if (!hotSheet.client_id) {
+      console.log("No client attached to this hotsheet, skipping token creation");
+    } else {
+      console.log("Creating share token for client hotsheet invite...");
       const token = crypto.randomUUID();
       const { data: tokenRow, error: tokenError } = await adminClient
         .from("share_tokens")
@@ -397,10 +406,12 @@ const handler = async (req: Request): Promise<Response> => {
         .select()
         .single();
 
+      console.log("share_tokens insert result:", { tokenRow, tokenError });
+
       if (tokenError) {
-        console.error("Error creating client hotsheet share token", tokenError);
+        console.error("❌ Error inserting share token:", tokenError);
       } else {
-        console.log("Created client hotsheet share token", tokenRow);
+        console.log("✅ Successfully created share token:", tokenRow);
       }
     }
 
