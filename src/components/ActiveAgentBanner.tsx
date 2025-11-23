@@ -6,10 +6,27 @@ export function ActiveAgentBanner() {
   const [agent, setAgent] = useState<any | null>(null);
 
   useEffect(() => {
-    const agentId = getPrimaryAgentId();
-    if (!agentId) return;
-
     const load = async () => {
+      // Check if current user is an agent
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: agentProfile } = await supabase
+          .from("agent_profiles")
+          .select("*")
+          .eq("id", user.id)
+          .maybeSingle();
+        
+        // If logged-in user is an agent, don't show banner
+        if (agentProfile) {
+          return;
+        }
+      }
+
+      // Proceed with existing logic for non-agent users
+      const agentId = getPrimaryAgentId();
+      if (!agentId) return;
+
       const { data, error } = await supabase
         .from("agent_profiles")
         .select("*")
