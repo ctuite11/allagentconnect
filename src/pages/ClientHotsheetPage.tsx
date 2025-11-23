@@ -34,6 +34,7 @@ const ClientHotsheetPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [hotSheet, setHotSheet] = useState<any>(null);
   const [agentProfile, setAgentProfile] = useState<any>(null);
+  const [agent, setAgent] = useState<any>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
 
@@ -101,6 +102,7 @@ const ClientHotsheetPage = () => {
         .single();
 
       setAgentProfile(agentData);
+      setAgent(agentData);
 
       // Fetch hot sheet details
       const { data: hotSheetData, error: hotSheetError } = await supabase
@@ -189,6 +191,34 @@ const ClientHotsheetPage = () => {
       <Navigation />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
+          {/* Agent Header */}
+          {agent && (
+            <div className="mb-6 p-4 border rounded-lg bg-muted flex items-center gap-4">
+              {agent.headshot_url && (
+                <img
+                  src={agent.headshot_url}
+                  alt={`${agent.first_name} ${agent.last_name}`}
+                  className="h-12 w-12 rounded-full object-cover"
+                />
+              )}
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground mb-1">
+                  Your custom hotsheet from
+                </p>
+                <h2 className="text-lg font-semibold mb-1">
+                  {agent.first_name} {agent.last_name}
+                </h2>
+                <div className="text-sm text-muted-foreground flex flex-wrap gap-2">
+                  {agent.email && <span>{agent.email}</span>}
+                  {agent.email && agent.phone && <span>·</span>}
+                  {agent.phone && <span>{agent.phone}</span>}
+                  {(agent.email || agent.phone) && agent.company && <span>·</span>}
+                  {agent.company && <span>{agent.company}</span>}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">
               {hotSheet?.name || "Your Custom Hotsheet"}
