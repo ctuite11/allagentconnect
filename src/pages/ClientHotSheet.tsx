@@ -69,6 +69,10 @@ const ClientHotSheet = () => {
 
   const fetchHotSheet = async () => {
     try {
+      if (!token) {
+        throw new Error("Missing token in URL params");
+      }
+
       setLoading(true);
       setError(null);
 
@@ -77,26 +81,20 @@ const ClientHotSheet = () => {
         .from("share_tokens")
         .select("*")
         .eq("token", token)
-        .maybeSingle();
-
-      console.log("Client hotsheet share token", tokenData);
+        .single();
 
       if (tokenError || !tokenData) {
-        console.error("Client hotsheet load error", tokenError);
-        setError("We couldn't load this hotsheet. Please contact your agent or try the link again.");
-        setLoading(false);
-        return;
+        throw tokenError || new Error("Share token not found");
       }
+
+      console.log("Client hotsheet share token", tokenData);
 
       // Step 2: Parse payload to get hot_sheet_id
       const payload = tokenData.payload as any;
       console.log("Client hotsheet payload", payload);
 
       if (!payload || !payload.hot_sheet_id) {
-        console.error("Client hotsheet load error", "Invalid token payload");
-        setError("We couldn't load this hotsheet. Please contact your agent or try the link again.");
-        setLoading(false);
-        return;
+        throw new Error("No hotsheet id found in payload");
       }
 
       const hotSheetId = payload.hot_sheet_id;
@@ -108,15 +106,11 @@ const ClientHotSheet = () => {
         .eq("id", hotSheetId)
         .single();
 
-      console.log("Client hotsheet hotSheet", hotSheetData);
-
       if (hotSheetError || !hotSheetData) {
-        console.error("Client hotsheet load error", hotSheetError);
-        setError("We couldn't load this hotsheet. Please contact your agent or try the link again.");
-        setLoading(false);
-        return;
+        throw hotSheetError || new Error("Hotsheet not found");
       }
 
+      console.log("Client hotsheet hotSheet", hotSheetData);
       setHotSheet(hotSheetData);
 
       // Load criteria into form
@@ -133,15 +127,11 @@ const ClientHotSheet = () => {
       const query = buildListingsQuery(supabase, criteria).limit(200);
       const { data: listingsData, error: listingsError } = await query;
 
-      console.log("Client hotsheet listings", listingsData);
-
       if (listingsError) {
-        console.error("Client hotsheet load error", listingsError);
-        setError("We couldn't load properties. Please contact your agent or try the link again.");
-        setLoading(false);
-        return;
+        throw listingsError;
       }
 
+      console.log("Client hotsheet listings", listingsData);
       setListings(listingsData || []);
 
       // Load listing agents for display
@@ -314,25 +304,21 @@ const ClientHotSheet = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <main className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading your hotsheet…</p>
-        </main>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground text-lg">Loading your hotsheet…</p>
       </div>
     );
   }
 
-  if (error) {
+  if (!loading && error) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <main className="flex-1 flex items-center justify-center">
-          <Card className="p-8 max-w-md text-center">
-            <p className="text-destructive font-medium mb-2">Unable to Load Hotsheet</p>
-            <p className="text-muted-foreground">{error}</p>
-          </Card>
-        </main>
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <Card className="max-w-md w-full p-6 text-center">
+          <h1 className="text-xl font-semibold mb-2">We hit a snag</h1>
+          <p className="text-muted-foreground">
+            We couldn't load this hotsheet. Please contact your agent or try the link again.
+          </p>
+        </Card>
       </div>
     );
   }
