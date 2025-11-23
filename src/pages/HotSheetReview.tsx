@@ -39,6 +39,7 @@ interface HotSheet {
   name: string;
   criteria: any;
   last_sent_at?: string | null;
+  client_id?: string | null;
 }
 
 const HotSheetReview = () => {
@@ -84,7 +85,7 @@ const [sortBy, setSortBy] = useState("newest");
       // Fetch hot sheet
       const { data: hotSheetData, error: hotSheetError } = await supabase
         .from("hot_sheets")
-        .select("*")
+        .select("id, name, criteria, last_sent_at, client_id")
         .eq("id", id)
         .maybeSingle();
 
@@ -193,6 +194,56 @@ if (agentIds.length > 0) {
       toast.error("Failed to send listings");
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleGenerateClientHotsheetLink = async () => {
+    if (!hotSheet?.client_id) {
+      toast.error("This hot sheet is not attached to a client yet.");
+      return;
+    }
+
+    try {
+      // Get current authenticated user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        toast.error("You must be signed in as an agent to generate a client link.");
+        return;
+      }
+
+      // Generate token
+      const token = crypto.randomUUID();
+
+      // Insert into share_tokens
+      const { data, error } = await supabase
+        .from("share_tokens")
+        .insert({
+          token,
+          agent_id: user.id,
+          payload: {
+            type: "client_hotsheet_invite",
+            client_id: hotSheet.client_id,
+            hot_sheet_id: hotSheet.id,
+          },
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating share token", error);
+        toast.error("Failed to create client link.");
+        return;
+      }
+
+      // Build URL and copy to clipboard
+      const url = `${window.location.origin}/client/hotsheet/${data.token}`;
+      await navigator.clipboard.writeText(url);
+      
+      toast.success("Client hotsheet link copied to clipboard.");
+    } catch (error: any) {
+      console.error("Error generating client link:", error);
+      toast.error("Failed to generate client link.");
     }
   };
 
@@ -382,6 +433,14 @@ if (agentIds.length > 0) {
                   <SelectItem value="price-low">Price: Low to High</SelectItem>
                 </SelectContent>
               </Select>
+              {hotSheet?.client_id && (
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateClientHotsheetLink}
+                >
+                  Copy Client Hotsheet Link
+                </Button>
+              )}
               {!hotSheet?.last_sent_at && (
                 <Button
                   onClick={handleSendFirstBatch}
