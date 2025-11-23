@@ -58,40 +58,38 @@ const ClientHotsheetPage = () => {
     try {
       setLoading(true);
 
-      // Validate token from share_tokens table
-      const { data: tokenData, error: tokenError } = await supabase
-        .from("share_tokens")
-        .select("*")
-        .eq("token", token)
-        .maybeSingle();
+    // Validate token from share_tokens table
+    const { data: tokenData, error: tokenError } = await supabase
+      .from("share_tokens")
+      .select("*")
+      .eq("token", token)
+      .maybeSingle();
 
-      if (tokenError) {
-        console.error("Token validation error:", tokenError);
-        setError("This hotsheet link is invalid or has expired.");
-        setLoading(false);
-        return;
-      }
+    if (tokenError) {
+      console.error("Token validation error:", tokenError);
+      setError("This hotsheet link is invalid or has expired.");
+      setLoading(false);
+      return;
+    }
 
-      if (!tokenData) {
-        setError("This hotsheet link is invalid or has expired.");
-        setLoading(false);
-        return;
-      }
+    // Token is invalid if no data returned
+    if (!tokenData) {
+      setError("This hotsheet link is invalid or has expired.");
+      setLoading(false);
+      return;
+    }
 
-      // Check if token is expired
-      if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
-        setError("This hotsheet link has expired.");
-        setLoading(false);
-        return;
-      }
+    console.log("share token data", tokenData);
 
-      // Parse and validate payload
-      const payload = tokenData.payload as any;
-      if (!payload || payload.type !== "client_hotsheet_invite") {
-        setError("This hotsheet link is invalid.");
-        setLoading(false);
-        return;
-      }
+    // Check if token is expired (only if expires_at is set and in the past)
+    if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
+      setError("This hotsheet link has expired.");
+      setLoading(false);
+      return;
+    }
+
+    // Parse payload - assume it contains hot_sheet_id and optional client_id
+    const payload = tokenData.payload as any;
 
       // Set primary_agent_id cookie (same pattern as ShareLinkHandler)
       document.cookie = `primary_agent_id=${tokenData.agent_id}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
