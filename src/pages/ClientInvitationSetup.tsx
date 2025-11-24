@@ -15,18 +15,19 @@ const ClientInvitationSetup = () => {
   const navigate = useNavigate();
   
   const invitationToken = searchParams.get("invitation_token") || "";
-  const clientEmail = searchParams.get("email") || "";
+  const initialEmail = searchParams.get("email") || "";
   const agentId = searchParams.get("agent_id") || "";
   const clientId = searchParams.get("client_id") || "";
   
   const [phase, setPhase] = useState<"form" | "success">("form");
-  const [email, setEmail] = useState(clientEmail);
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
   const [agentFirstName, setAgentFirstName] = useState<string>("");
+  const isEmailLocked = !!initialEmail;
 
   // Validate token and fetch agent info on mount
   useEffect(() => {
@@ -81,7 +82,7 @@ const ClientInvitationSetup = () => {
   const handleActivation = async () => {
     // Validation
     if (!email || !email.trim()) {
-      toast.error("We couldn't detect your email from the invite. Please enter it to continue.");
+      toast.error("Please enter your email to continue.");
       return;
     }
 
@@ -237,13 +238,16 @@ const ClientInvitationSetup = () => {
                       id="email"
                       type="email"
                       value={email}
-                      readOnly={true}
-                      className="bg-muted"
+                      readOnly={isEmailLocked}
+                      className={isEmailLocked ? "bg-muted" : ""}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Email provided by {agentFirstName || "your agent"}
-                    </p>
+                    {isEmailLocked && (
+                      <p className="text-xs text-muted-foreground">
+                        Email provided by {agentFirstName || "your agent"}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -289,6 +293,15 @@ const ClientInvitationSetup = () => {
                       "Activate My Account"
                     )}
                   </Button>
+
+                  <p className="mt-4 text-xs text-muted-foreground text-center">
+                    By clicking Activate My Account, you agree to All Agent Connect's{" "}
+                    <a href="/terms" className="underline">Terms of Use</a> and{" "}
+                    <a href="/privacy" className="underline">Privacy Policy</a> and consent to
+                    receive communications about your home search from {agentFirstName || "your agent"} and All
+                    Agent Connect. You can opt out at any time. Property information is deemed
+                    reliable but not guaranteed and is subject to change without notice.
+                  </p>
                 </form>
               </CardContent>
             </Card>
