@@ -285,6 +285,18 @@ const handler = async (req: Request): Promise<Response> => {
           client_id: hotSheet.client_id
         });
         
+        // Get client email from hot_sheet_clients junction table
+        let clientEmail = null;
+        if (hotSheetClients && hotSheetClients.length > 0) {
+          const firstClient = Array.isArray(hotSheetClients[0].clients)
+            ? hotSheetClients[0].clients[0]
+            : hotSheetClients[0].clients;
+          if (firstClient && firstClient.email) {
+            clientEmail = firstClient.email;
+            console.log("Found client email for invite:", clientEmail);
+          }
+        }
+        
         const { data: tokenRow, error: tokenError } = await adminClient
           .from("share_tokens")
           .insert({
@@ -293,7 +305,8 @@ const handler = async (req: Request): Promise<Response> => {
             payload: {
               type: "client_hotsheet_invite",
               client_id: hotSheet.client_id || null,
-              hot_sheet_id: hotSheet.id
+              hot_sheet_id: hotSheet.id,
+              client_email: clientEmail  // Add client email to payload
             },
             expires_at: null
           })
