@@ -22,6 +22,7 @@ import { TownsPicker } from "@/components/TownsPicker";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
+import { AgentChoiceDialog } from "@/components/AgentChoiceDialog";
 
 interface Listing {
   id: string;
@@ -91,6 +92,13 @@ const ClientHotSheet = () => {
   // Auth and login prompt state
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  
+  // Agent choice dialog state (for handling conflicts)
+  const [showAgentChoiceDialog, setShowAgentChoiceDialog] = useState(false);
+  const [existingAgent, setExistingAgent] = useState<any>(null);
+  const [newAgent, setNewAgent] = useState<any>(null);
+  const [existingRelationshipId, setExistingRelationshipId] = useState<string>("");
+  const [newRelationshipId, setNewRelationshipId] = useState<string>("");
 
   // Use the TownsPicker hook
   const { townsList, expandedCities, toggleCityExpansion, hasCountyData } = useTownsPicker({
@@ -247,6 +255,39 @@ const ClientHotSheet = () => {
           .maybeSingle();
         
         if (agentData) {
+          // Check for existing active relationship if user is logged in
+          if (currentUser) {
+            const { data: existingRel } = await supabase
+              .from("client_agent_relationships")
+              .select("id, agent_id, agent_profiles(*)")
+              .eq("client_id", currentUser.id)
+              .eq("status", "active")
+              .maybeSingle();
+            
+            // If there's an active relationship with a DIFFERENT agent
+            if (existingRel && existingRel.agent_id !== resolvedAgentId) {
+              // Find the pending relationship for the new agent
+              const { data: pendingRel } = await supabase
+                .from("client_agent_relationships")
+                .select("id")
+                .eq("client_id", currentUser.id)
+                .eq("agent_id", resolvedAgentId)
+                .eq("status", "pending")
+                .maybeSingle();
+              
+              if (pendingRel) {
+                // Show choice dialog
+                setExistingAgent(Array.isArray(existingRel.agent_profiles) ? existingRel.agent_profiles[0] : existingRel.agent_profiles);
+                setNewAgent(agentData);
+                setExistingRelationshipId(existingRel.id);
+                setNewRelationshipId(pendingRel.id);
+                setShowAgentChoiceDialog(true);
+                setLoading(false);
+                return; // Stop here until user makes choice
+              }
+            }
+          }
+          
           setAgentProfile(agentData);
         }
       }
@@ -1127,6 +1168,27 @@ const ClientHotSheet = () => {
       </Dialog>
 
       <Footer />
+      
+      {/* Agent Choice Dialog for handling conflicts */}
+      {showAgentChoiceDialog && existingAgent && newAgent && (
+        <AgentChoiceDialog
+          open={showAgentChoiceDialog}
+          existingAgent={existingAgent}
+          newAgent={newAgent}
+          clientId={currentUser?.id || ""}
+          existingRelationshipId={existingRelationshipId}
+          newRelationshipId={newRelationshipId}
+          onChoice={(switchedToNew) => {
+            setShowAgentChoiceDialog(false);
+            if (switchedToNew) {
+              setAgentProfile(newAgent);
+            } else {
+              setAgentProfile(existingAgent);
+            }
+            fetchHotSheet();
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -43,6 +43,7 @@ import VendorDirectory from "./pages/VendorDirectory";
 import ConsumerHome from "./pages/ConsumerHome";
 import ConsumerDashboard from "./pages/ConsumerDashboard";
 import ConsumerAuth from "./pages/ConsumerAuth";
+import ClientAgentSettings from "./pages/ClientAgentSettings";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
 import ComingSoon from "./pages/ComingSoon";
@@ -106,6 +107,7 @@ const App = () => (
           <Route path="/consumer/home" element={<ConsumerHome />} />
           <Route path="/consumer/dashboard" element={<ConsumerDashboard />} />
           <Route path="/consumer/auth" element={<ConsumerAuth />} />
+          <Route path="/client-agent-settings" element={<ClientAgentSettings />} />
           <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/seed-test-data" element={<SeedTestData />} />
           <Route path="/link/:token" element={<ShareLinkHandler />} />

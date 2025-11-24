@@ -128,14 +128,23 @@ const ClientInvitationSetup = () => {
         throw new Error("Account creation failed");
       }
 
-      // Create client-agent relationship
+      // Check for existing active relationship
       if (agentId) {
+        const { data: existingRel } = await supabase
+          .from("client_agent_relationships")
+          .select("agent_id")
+          .eq("client_id", authData.user.id)
+          .eq("status", "active")
+          .maybeSingle();
+
+        // Create relationship with appropriate status
         const { error: relationshipError } = await supabase
           .from("client_agent_relationships")
           .insert({
             client_id: authData.user.id,
             agent_id: agentId,
             invitation_token: invitationToken,
+            status: existingRel ? "pending" : "active",
           });
 
         if (relationshipError) {
