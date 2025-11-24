@@ -17,6 +17,7 @@ import { Heart, MessageSquare, ChevronDown, ChevronUp, Settings, Send, Bed, Bath
 import { toast } from "sonner";
 import { getPrimaryAgentId } from "@/utils/agentTracking";
 import FavoriteButton from "@/components/FavoriteButton";
+import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { TownsPicker } from "@/components/TownsPicker";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
@@ -123,12 +124,6 @@ const ClientHotSheet = () => {
 
   // Check authentication status
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
-    };
-    checkAuth();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setCurrentUser(session?.user ?? null);
     });
@@ -136,13 +131,20 @@ const ClientHotSheet = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Show required onboarding modal for anonymous users after data loads
+  // Enforce client identity after token data is loaded
   useEffect(() => {
-    if (!currentUser && agentProfile && hotSheet && !loading) {
-      console.log("ClientHotSheet onboarding modal shown for token", token);
-      setShowLoginPrompt(true);
-    }
-  }, [currentUser, agentProfile, hotSheet, loading, token]);
+    if (!tokenData || !tokenData.payload) return;
+
+    const payload = tokenData.payload as any;
+    const clientEmailFromToken = payload?.client_email || payload?.email || null;
+
+    enforceClientIdentity({
+      supabase,
+      clientEmailFromToken,
+      setCurrentUser,
+      setShowLoginPrompt,
+    });
+  }, [tokenData]);
 
   const fetchHotSheet = async () => {
     try {
