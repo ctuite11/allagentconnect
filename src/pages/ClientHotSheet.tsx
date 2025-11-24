@@ -609,7 +609,9 @@ const ClientHotSheet = () => {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Want full control? Create a free account to unlock advanced filters and save your searches
+                          {currentUser 
+                            ? "Explore your personalized property recommendations" 
+                            : "Set up your account to unlock advanced filters and save your searches"}
                         </p>
                       </div>
                       <div className="hidden md:flex items-center gap-3">
@@ -623,18 +625,6 @@ const ClientHotSheet = () => {
                         >
                           <MessageSquare className="w-4 h-4 mr-2" />
                           Contact {agentProfile.first_name}
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          onClick={() => {
-                            const params = new URLSearchParams();
-                            if (agentProfile?.id) params.set('primary_agent_id', agentProfile.id);
-                            if (hotSheet?.id) params.set('hot_sheet_id', hotSheet.id);
-                            navigate(`/auth?${params.toString()}`);
-                          }}
-                          className="shrink-0"
-                        >
-                          Create Free Account
                         </Button>
                       </div>
                     </div>
