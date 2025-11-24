@@ -88,14 +88,19 @@ const ClientHotSheet = () => {
       setError(null);
 
       // Step 1: Look up the share token
-      const { data: tokenData, error: tokenError } = await supabase
+      const { data: tokenDataResult, error: tokenError } = await supabase
         .from("share_tokens")
         .select("*")
-        .eq("token", token)
-        .single();
+        .eq("token", token);
 
-      if (tokenError || !tokenData) {
-        throw tokenError || new Error("Share token not found");
+      if (tokenError) throw tokenError;
+
+      console.log("Client hotsheet share token data", tokenDataResult);
+
+      const tokenData = Array.isArray(tokenDataResult) ? tokenDataResult[0] : tokenDataResult;
+
+      if (!tokenData) {
+        throw new Error("Share token not found");
       }
 
       console.log("Client hotsheet share token", tokenData);
@@ -111,14 +116,19 @@ const ClientHotSheet = () => {
       const hotSheetId = payload.hot_sheet_id;
 
       // Step 3: Load the hot sheet
-      const { data: hotSheetData, error: hotSheetError } = await supabase
+      const { data: hotSheetDataResult, error: hotSheetError } = await supabase
         .from("hot_sheets")
         .select("*")
-        .eq("id", hotSheetId)
-        .single();
+        .eq("id", hotSheetId);
 
-      if (hotSheetError || !hotSheetData) {
-        throw hotSheetError || new Error("Hotsheet not found");
+      if (hotSheetError) throw hotSheetError;
+
+      console.log("Client hotsheet data result", hotSheetDataResult);
+
+      const hotSheetData = Array.isArray(hotSheetDataResult) ? hotSheetDataResult[0] : hotSheetDataResult;
+
+      if (!hotSheetData) {
+        throw new Error("Hotsheet not found");
       }
 
       console.log("Client hotsheet hotSheet", hotSheetData);
