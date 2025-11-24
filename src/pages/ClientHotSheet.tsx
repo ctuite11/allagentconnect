@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { supabase } from "@/integrations/supabase/client";
 import { Heart, MessageSquare, ChevronDown, ChevronUp, Settings, Send, Bed, Bath, Maximize, Home, MapPin, Image as ImageIcon, Mail, Phone, Building2, UserCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import FavoriteButton from "@/components/FavoriteButton";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { TownsPicker } from "@/components/TownsPicker";
@@ -85,6 +85,10 @@ const ClientHotSheet = () => {
   // Contact agent modal state
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [contactMessage, setContactMessage] = useState("");
+  
+  // Auth and login prompt state
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   // Use the TownsPicker hook
   const { townsList, expandedCities, toggleCityExpansion, hasCountyData } = useTownsPicker({
@@ -106,6 +110,34 @@ const ClientHotSheet = () => {
       setLoading(false);
     }
   }, [token]);
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Show login prompt for anonymous users after data loads
+  useEffect(() => {
+    if (!currentUser && agentProfile && hotSheet && !loading) {
+      const dismissedKey = `client_hotsheet_login_prompt_dismissed_${token}`;
+      const wasDismissed = localStorage.getItem(dismissedKey);
+      
+      if (!wasDismissed) {
+        console.log("ClientHotSheet login setup prompt shown for token", token);
+        setShowLoginPrompt(true);
+      }
+    }
+  }, [currentUser, agentProfile, hotSheet, loading, token]);
 
   const fetchHotSheet = async () => {
     try {
@@ -443,6 +475,18 @@ const ClientHotSheet = () => {
       console.error("Contact agent error", error);
       toast.error("We couldn't send your message. Please try again.");
     }
+  };
+
+  const handleDismissLoginPrompt = () => {
+    const dismissedKey = `client_hotsheet_login_prompt_dismissed_${token}`;
+    localStorage.setItem(dismissedKey, "true");
+    setShowLoginPrompt(false);
+  };
+
+  const handleSetupLogin = () => {
+    const clientId = (hotSheet?.client_id) || "";
+    const signupUrl = `/auth?invitation_token=${token}&primary_agent_id=${agentProfile?.id}&client_id=${clientId}`;
+    navigate(signupUrl);
   };
 
   // Sort listings
@@ -947,6 +991,44 @@ const ClientHotSheet = () => {
         </div>
       </main>
 
+      {/* Login Setup Prompt Modal */}
+      <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              Welcome{hotSheet?.client_id ? `, ${(hotSheet as any).client_first_name || ""}` : ""}
+            </DialogTitle>
+            <DialogDescription className="pt-3 space-y-3 text-base">
+              <p>
+                Your agent {agentProfile?.first_name} created this custom search for you. 
+                You can keep using this email link, but if you'd like to:
+              </p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>See all your hotsheets in one place</li>
+                <li>Save favorites and messages</li>
+                <li>Log in from any device</li>
+              </ul>
+              <p>take a moment to set up a username and password.</p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={handleDismissLoginPrompt}
+              className="flex-1"
+            >
+              Not now
+            </Button>
+            <Button
+              onClick={handleSetupLogin}
+              className="flex-1"
+            >
+              Set up my login
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Contact Agent Modal */}
       <Dialog open={isContactModalOpen} onOpenChange={setIsContactModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -958,25 +1040,24 @@ const ClientHotSheet = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <Textarea
-              placeholder="Type your message here..."
               value={contactMessage}
               onChange={(e) => setContactMessage(e.target.value)}
-              rows={6}
-              className="resize-none"
+              placeholder="Type your message here..."
+              className="min-h-[150px]"
             />
           </div>
-          <div className="flex justify-end gap-3">
+          <div className="flex gap-3">
             <Button
               variant="outline"
-              onClick={() => {
-                setIsContactModalOpen(false);
-                setContactMessage("");
-              }}
+              onClick={() => setIsContactModalOpen(false)}
+              className="flex-1"
             >
               Cancel
             </Button>
-            <Button onClick={handleSendMessage}>
-              <Send className="w-4 h-4 mr-2" />
+            <Button
+              onClick={handleSendMessage}
+              className="flex-1"
+            >
               Send Message
             </Button>
           </div>
