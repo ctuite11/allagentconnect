@@ -126,16 +126,11 @@ const ClientHotSheet = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Show login prompt for anonymous users after data loads
+  // Show required onboarding modal for anonymous users after data loads
   useEffect(() => {
     if (!currentUser && agentProfile && hotSheet && !loading) {
-      const dismissedKey = `client_hotsheet_login_prompt_dismissed_${token}`;
-      const wasDismissed = localStorage.getItem(dismissedKey);
-      
-      if (!wasDismissed) {
-        console.log("ClientHotSheet login setup prompt shown for token", token);
-        setShowLoginPrompt(true);
-      }
+      console.log("ClientHotSheet onboarding modal shown for token", token);
+      setShowLoginPrompt(true);
     }
   }, [currentUser, agentProfile, hotSheet, loading, token]);
 
@@ -477,16 +472,14 @@ const ClientHotSheet = () => {
     }
   };
 
-  const handleDismissLoginPrompt = () => {
-    const dismissedKey = `client_hotsheet_login_prompt_dismissed_${token}`;
-    localStorage.setItem(dismissedKey, "true");
-    setShowLoginPrompt(false);
-  };
-
   const handleSetupLogin = () => {
-    const clientId = (hotSheet?.client_id) || "";
-    const signupUrl = `/auth?invitation_token=${token}&primary_agent_id=${agentProfile?.id}&client_id=${clientId}`;
-    navigate(signupUrl);
+    // Extract client email if available from hotsheet
+    const clientEmail = (hotSheet as any)?.client_email || "";
+    const clientId = hotSheet?.client_id || "";
+    
+    // Navigate to luxury onboarding page with all necessary params
+    const inviteUrl = `/client-invite?invitation_token=${token}&email=${encodeURIComponent(clientEmail)}&agent_id=${agentProfile?.id}&client_id=${clientId}`;
+    navigate(inviteUrl);
   };
 
   // Sort listings
@@ -991,39 +984,48 @@ const ClientHotSheet = () => {
         </div>
       </main>
 
-      {/* Login Setup Prompt Modal */}
-      <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
-        <DialogContent className="sm:max-w-[500px]">
+      {/* Required Onboarding Modal - Luxury Design */}
+      <Dialog open={showLoginPrompt} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-[600px]" hideCloseButton>
           <DialogHeader>
-            <DialogTitle>
-              Welcome{hotSheet?.client_id ? `, ${(hotSheet as any).client_first_name || ""}` : ""}
+            <DialogTitle className="text-2xl">
+              Secure Your Access to All Agent Connect
             </DialogTitle>
-            <DialogDescription className="pt-3 space-y-3 text-base">
-              <p>
-                Your agent {agentProfile?.first_name} created this custom search for you. 
-                You can keep using this email link, but if you'd like to:
+            <DialogDescription className="pt-4 space-y-4 text-base leading-relaxed">
+              <p className="text-foreground/90">
+                Your agent has curated a personalized collection of homes for you. 
+                To continue exploring your private hot sheet, please set up your All Agent Connect login.
               </p>
-              <ul className="list-disc list-inside space-y-1 ml-2">
-                <li>See all your hotsheets in one place</li>
-                <li>Save favorites and messages</li>
-                <li>Log in from any device</li>
-              </ul>
-              <p>take a moment to set up a username and password.</p>
+              <div className="pt-2">
+                <p className="font-medium text-foreground/90 mb-3">Creating your login ensures you can:</p>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-3">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span className="text-foreground/80">View your homes anytime</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span className="text-foreground/80">Save and organize your favorites</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span className="text-foreground/80">Message your agent directly</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span className="text-foreground/80">Access your search securely from any device</span>
+                  </li>
+                </ul>
+              </div>
             </DialogDescription>
           </DialogHeader>
-          <div className="flex gap-3 mt-4">
-            <Button
-              variant="outline"
-              onClick={handleDismissLoginPrompt}
-              className="flex-1"
-            >
-              Not now
-            </Button>
+          <div className="pt-4">
             <Button
               onClick={handleSetupLogin}
-              className="flex-1"
+              className="w-full h-11"
+              size="lg"
             >
-              Set up my login
+              Set Up My Login
             </Button>
           </div>
         </DialogContent>

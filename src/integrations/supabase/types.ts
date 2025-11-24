@@ -506,6 +506,38 @@ export type Database = {
         }
         Relationships: []
       }
+      client_agent_relationships: {
+        Row: {
+          agent_id: string
+          client_id: string
+          created_at: string | null
+          id: string
+          invitation_token: string | null
+        }
+        Insert: {
+          agent_id: string
+          client_id: string
+          created_at?: string | null
+          id?: string
+          invitation_token?: string | null
+        }
+        Update: {
+          agent_id?: string
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          invitation_token?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_agent_relationships_invitation_token_fkey"
+            columns: ["invitation_token"]
+            isOneToOne: false
+            referencedRelation: "share_tokens"
+            referencedColumns: ["token"]
+          },
+        ]
+      }
       client_needs: {
         Row: {
           bathrooms: number | null
@@ -1746,6 +1778,8 @@ export type Database = {
       }
       share_tokens: {
         Row: {
+          accepted_at: string | null
+          accepted_by_user_id: string | null
           agent_id: string
           created_at: string
           expires_at: string | null
@@ -1754,6 +1788,8 @@ export type Database = {
           token: string
         }
         Insert: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
           agent_id: string
           created_at?: string
           expires_at?: string | null
@@ -1762,6 +1798,8 @@ export type Database = {
           token: string
         }
         Update: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
           agent_id?: string
           created_at?: string
           expires_at?: string | null
