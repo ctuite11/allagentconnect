@@ -984,10 +984,33 @@ const ClientHotSheet = () => {
         </div>
       </main>
 
-      {/* Required Onboarding Modal - Luxury Design */}
+      {/* Required Onboarding Modal - Luxury Design with Agent Info */}
       <Dialog open={showLoginPrompt} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-[600px]" hideCloseButton>
           <DialogHeader>
+            {/* Agent Header Section */}
+            {agentProfile && (
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b">
+                <div className="relative h-12 w-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                  {agentProfile.headshot_url ? (
+                    <img 
+                      src={agentProfile.headshot_url} 
+                      alt={agentProfile.first_name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg font-semibold text-muted-foreground">
+                      {agentProfile.first_name?.charAt(0)}{agentProfile.last_name?.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <div className="text-left">
+                  <p className="text-sm text-muted-foreground">You're setting up your access with</p>
+                  <p className="font-semibold text-foreground">{agentProfile.first_name} {agentProfile.last_name}</p>
+                </div>
+              </div>
+            )}
+            
             <DialogTitle className="text-2xl">
               Secure Your Access to All Agent Connect
             </DialogTitle>

@@ -15,11 +15,12 @@ const ClientInvitationSetup = () => {
   const navigate = useNavigate();
   
   const invitationToken = searchParams.get("invitation_token") || "";
-  const email = searchParams.get("email") || "";
+  const initialEmail = searchParams.get("email") || "";
   const agentId = searchParams.get("agent_id") || "";
   const clientId = searchParams.get("client_id") || "";
   
   const [phase, setPhase] = useState<"welcome" | "form" | "success">("welcome");
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,8 +66,8 @@ const ClientInvitationSetup = () => {
 
   const handleActivation = async () => {
     // Validation
-    if (!email) {
-      toast.error("Email is required");
+    if (!email || !email.trim()) {
+      toast.error("We couldn't detect your email from the invite. Please enter it to continue.");
       return;
     }
 
@@ -276,9 +277,17 @@ const ClientInvitationSetup = () => {
                       id="email"
                       type="email"
                       value={email}
-                      readOnly
-                      className="bg-muted"
+                      onChange={(e) => setEmail(e.target.value)}
+                      readOnly={!!initialEmail}
+                      className={initialEmail ? "bg-muted" : ""}
+                      placeholder={!initialEmail ? "Enter your email address" : ""}
+                      required
                     />
+                    {initialEmail && (
+                      <p className="text-xs text-muted-foreground">
+                        Email provided by your agent
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
