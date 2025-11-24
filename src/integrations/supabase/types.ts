@@ -511,22 +511,28 @@ export type Database = {
           agent_id: string
           client_id: string
           created_at: string | null
+          ended_at: string | null
           id: string
           invitation_token: string | null
+          status: string
         }
         Insert: {
           agent_id: string
           client_id: string
           created_at?: string | null
+          ended_at?: string | null
           id?: string
           invitation_token?: string | null
+          status?: string
         }
         Update: {
           agent_id?: string
           client_id?: string
           created_at?: string | null
+          ended_at?: string | null
           id?: string
           invitation_token?: string | null
+          status?: string
         }
         Relationships: [
           {
