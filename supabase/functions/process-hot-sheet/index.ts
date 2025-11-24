@@ -276,8 +276,34 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("Final recipients (deduplicated):", recipients);
 
       if (recipients.length > 0) {
+        // Create share token BEFORE sending email
+        const token = crypto.randomUUID();
+        console.log("Creating share token for client hotsheet:", token);
+        
+        const { data: tokenRow, error: tokenError } = await adminClient
+          .from("share_tokens")
+          .insert({
+            token,
+            agent_id: hotSheet.user_id,
+            payload: {
+              type: "client_hotsheet_invite",
+              client_id: hotSheet.client_id || null,
+              hot_sheet_id: hotSheet.id
+            },
+            expires_at: null
+          })
+          .select()
+          .single();
+
+        if (tokenError) {
+          console.error("❌ Error creating share token:", tokenError);
+          throw new Error(`Failed to create share token: ${tokenError.message}`);
+        }
+        
+        console.log("✅ Share token created:", tokenRow);
+
         const baseUrl = req.headers.get("origin") || "http://localhost:5173";
-        const accessUrl = `${baseUrl}/client-hot-sheet/${hotSheet.access_token}`;
+        const accessUrl = `${baseUrl}/client-hot-sheet/${token}`;
         
         const listingsHtml = newListings.slice(0, 5).map(listing => {
           const photos = listing.photos || [];
@@ -378,42 +404,6 @@ const handler = async (req: Request): Promise<Response> => {
       .from("hot_sheets")
       .update({ last_sent_at: new Date().toISOString() })
       .eq("id", hotSheetId);
-
-    // Create share token AFTER successful email send and last_sent_at update
-    console.log("Checking if hotsheet has client_id:", { 
-      hot_sheet_id: hotSheet.id, 
-      client_id: hotSheet.client_id,
-      has_client: !!hotSheet.client_id 
-    });
-    
-    if (!hotSheet.client_id) {
-      console.log("No client attached to this hotsheet, skipping token creation");
-    } else {
-      console.log("Creating share token for client hotsheet invite...");
-      const token = crypto.randomUUID();
-      const { data: tokenRow, error: tokenError } = await adminClient
-        .from("share_tokens")
-        .insert({
-          token,
-          agent_id: hotSheet.user_id,
-          payload: {
-            type: "client_hotsheet_invite",
-            client_id: hotSheet.client_id,
-            hot_sheet_id: hotSheet.id
-          },
-          expires_at: null
-        })
-        .select()
-        .single();
-
-      console.log("share_tokens insert result:", { tokenRow, tokenError });
-
-      if (tokenError) {
-        console.error("❌ Error inserting share token:", tokenError);
-      } else {
-        console.log("✅ Successfully created share token:", tokenRow);
-      }
-    }
 
     return new Response(
       JSON.stringify({ 
