@@ -37,7 +37,7 @@ interface Listing {
 }
 
 const ClientHotSheet = () => {
-  const { token } = useParams();
+  const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
