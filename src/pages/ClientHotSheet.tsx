@@ -1016,7 +1016,7 @@ const ClientHotSheet = () => {
             </DialogTitle>
             <DialogDescription className="pt-4 space-y-4 text-base leading-relaxed">
               <p className="text-foreground/90">
-                Your agent has curated a personalized collection of homes for you. 
+                {agentProfile?.first_name} has curated a personalized collection of homes for you. 
                 To continue exploring your private hot sheet, please set up your All Agent Connect login.
               </p>
               <div className="pt-2">
@@ -1032,7 +1032,7 @@ const ClientHotSheet = () => {
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-primary mt-0.5">•</span>
-                    <span className="text-foreground/80">Message your agent directly</span>
+                    <span className="text-foreground/80">Message {agentProfile?.first_name} directly</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-primary mt-0.5">•</span>
@@ -1048,7 +1048,7 @@ const ClientHotSheet = () => {
               className="w-full h-11"
               size="lg"
             >
-              Set Up My Login
+              Set Up My Account
             </Button>
           </div>
         </DialogContent>
