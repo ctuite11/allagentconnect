@@ -9,8 +9,11 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
-import { Heart, Bed, Bath, Maximize, MapPin } from "lucide-react";
+import { Heart, Bed, Bath, Maximize, MapPin, UserCircle2, MessageSquare, Mail, Phone, Building2 } from "lucide-react";
 import FavoriteButton from "@/components/FavoriteButton";
+import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
+import { User } from "@supabase/supabase-js";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Listing {
   id: string;
@@ -47,12 +50,39 @@ const ClientHotsheetPage = () => {
     bathrooms: "",
     cities: "",
   });
+  const [tokenData, setTokenData] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   useEffect(() => {
     if (token) {
       validateAndLoadHotsheet();
     }
   }, [token]);
+
+  // Check authentication status
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Enforce client identity after token data is loaded
+  useEffect(() => {
+    if (!tokenData || !tokenData.payload) return;
+
+    const payload = tokenData.payload as any;
+    const clientEmailFromToken = payload?.client_email || payload?.email || null;
+
+    enforceClientIdentity({
+      supabase,
+      clientEmailFromToken,
+      setCurrentUser,
+      setShowLoginPrompt,
+    });
+  }, [tokenData]);
 
   const validateAndLoadHotsheet = async () => {
     try {
@@ -79,6 +109,9 @@ const ClientHotsheetPage = () => {
       }
 
       console.log("Client hotsheet share token", tokenData);
+      
+      // Store token data for identity enforcement
+      setTokenData(tokenData);
 
       // Check if token is expired (only if expires_at is set and in the past)
       if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
@@ -326,6 +359,26 @@ const ClientHotsheetPage = () => {
     }
   };
 
+  const handleSetupLogin = () => {
+    // Close the login prompt
+    setShowLoginPrompt(false);
+    
+    // Extract client email from token payload
+    const payload = tokenData?.payload as any;
+    const clientEmail = payload?.client_email || payload?.email || "";
+    const clientId = payload?.client_id || "";
+    
+    // Build query params
+    const params = new URLSearchParams();
+    params.set("invitation_token", token!);
+    if (clientEmail) params.set("email", clientEmail);
+    if (agentProfile?.id) params.set("agent_id", agentProfile.id);
+    if (clientId) params.set("client_id", clientId);
+    
+    // Navigate to client invitation setup page
+    navigate(`/client-invite?${params.toString()}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -357,6 +410,80 @@ const ClientHotsheetPage = () => {
   }
 
   const criteria = hotSheet?.criteria || {};
+
+  // Show luxury onboarding modal for anonymous users BEFORE rendering main content
+  if (showLoginPrompt && !currentUser && agentProfile) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Dialog open={true} onOpenChange={() => {}}>
+          <DialogContent className="sm:max-w-[600px]" hideCloseButton>
+            <DialogHeader>
+              {/* Agent Header Section */}
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b">
+                <div className="relative h-12 w-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                  {agentProfile.headshot_url ? (
+                    <img 
+                      src={agentProfile.headshot_url} 
+                      alt={agentProfile.first_name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg font-semibold text-muted-foreground">
+                      {agentProfile.first_name?.charAt(0)}{agentProfile.last_name?.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <div className="text-left">
+                  <p className="text-sm text-muted-foreground">You're setting up your access with</p>
+                  <p className="font-semibold text-foreground">{agentProfile.first_name} {agentProfile.last_name}</p>
+                </div>
+              </div>
+              
+              <DialogTitle className="text-2xl">
+                Secure Your Access to All Agent Connect
+              </DialogTitle>
+              <DialogDescription className="pt-4 space-y-4 text-base leading-relaxed">
+                <p className="text-foreground/90">
+                  {agentProfile.first_name} has curated a personalized collection of homes for you. 
+                  To continue exploring your private hot sheet, please set up your All Agent Connect login.
+                </p>
+                <div className="pt-2">
+                  <p className="font-medium text-foreground/90 mb-3">Creating your login ensures you can:</p>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-3">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-foreground/80">View your homes anytime</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-foreground/80">Save and organize your favorites</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-foreground/80">Message {agentProfile.first_name} directly</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-foreground/80">Access your search securely from any device</span>
+                    </li>
+                  </ul>
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="pt-4">
+              <Button
+                onClick={handleSetupLogin}
+                className="w-full h-11"
+                size="lg"
+              >
+                Set Up My Account
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -285,16 +285,29 @@ const handler = async (req: Request): Promise<Response> => {
           client_id: hotSheet.client_id
         });
         
-        // Get client email from hot_sheet_clients junction table
+        // Get client email from hot_sheet_clients junction table OR from criteria
         let clientEmail = null;
+        
+        // First try: Junction table
         if (hotSheetClients && hotSheetClients.length > 0) {
           const firstClient = Array.isArray(hotSheetClients[0].clients)
             ? hotSheetClients[0].clients[0]
             : hotSheetClients[0].clients;
           if (firstClient && firstClient.email) {
             clientEmail = firstClient.email;
-            console.log("Found client email for invite:", clientEmail);
+            console.log("Found client email from junction table:", clientEmail);
           }
+        }
+        
+        // Second try: Hot sheet criteria (legacy)
+        if (!clientEmail && hotSheet.criteria?.clientEmail) {
+          clientEmail = hotSheet.criteria.clientEmail;
+          console.log("Found client email from criteria:", clientEmail);
+        }
+        
+        // Log warning if no client email found (shouldn't happen but handle gracefully)
+        if (!clientEmail) {
+          console.warn("⚠️  No client email found for hotsheet. Token will have null client_email.");
         }
         
         const { data: tokenRow, error: tokenError } = await adminClient
@@ -306,7 +319,7 @@ const handler = async (req: Request): Promise<Response> => {
               type: "client_hotsheet_invite",
               client_id: hotSheet.client_id || null,
               hot_sheet_id: hotSheet.id,
-              client_email: clientEmail  // Add client email to payload
+              client_email: clientEmail  // CRITICAL: Always include client email in payload
             },
             expires_at: null
           })
