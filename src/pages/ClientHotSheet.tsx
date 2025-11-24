@@ -172,7 +172,16 @@ const ClientHotSheet = () => {
       setLoading(false);
     } catch (error: any) {
       console.error("Client hotsheet load error", error);
-      setError("We couldn't load this hotsheet. Please contact your agent or try the link again.");
+
+      const reason =
+        error?.message ||
+        error?.error_description ||
+        error?.hint ||
+        (typeof error === "string" ? error : JSON.stringify(error));
+
+      setError(
+        `We couldn't load this hotsheet. (${reason}) Please contact your agent or try the link again.`
+      );
       setLoading(false);
     }
   };
@@ -316,7 +325,7 @@ const ClientHotSheet = () => {
         <Card className="max-w-md w-full p-6 text-center">
           <h1 className="text-xl font-semibold mb-2">We hit a snag</h1>
           <p className="text-muted-foreground">
-            We couldn't load this hotsheet. Please contact your agent or try the link again.
+            {error}
           </p>
         </Card>
       </div>
