@@ -204,10 +204,17 @@ const ClientHotsheetPage = () => {
 
       // ✅ SUCCESS – stop loading
       setLoading(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Client hotsheet load error", err);
+
+      const reason =
+        err?.message ||
+        err?.error_description ||
+        err?.hint ||
+        (typeof err === "string" ? err : JSON.stringify(err));
+
       setError(
-        "We couldn't load this hotsheet. Please contact your agent or try the link again."
+        `We couldn't load this hotsheet. (${reason}) Please contact your agent or try the link again.`
       );
       setLoading(false);
     }
@@ -305,9 +312,16 @@ const ClientHotsheetPage = () => {
 
       toast.success("Updated search criteria for this hotsheet.");
       setLoading(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Client hotsheet criteria update error", err);
-      toast.error("Could not update listings. Please try again.");
+      
+      const reason =
+        err?.message ||
+        err?.error_description ||
+        err?.hint ||
+        (typeof err === "string" ? err : JSON.stringify(err));
+      
+      toast.error(`Could not update listings. (${reason})`);
       setLoading(false);
     }
   };
