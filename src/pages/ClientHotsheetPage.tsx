@@ -57,73 +57,97 @@ const ClientHotsheetPage = () => {
   const validateAndLoadHotsheet = async () => {
     try {
       setLoading(true);
+      setError(null);
 
-    // Validate token from share_tokens table
-    const { data: tokenData, error: tokenError } = await supabase
-      .from("share_tokens")
-      .select("*")
-      .eq("token", token)
-      .maybeSingle();
+      if (!token) {
+        throw new Error("Missing token in URL params");
+      }
 
-    if (tokenError) {
-      console.error("Token validation error:", tokenError);
-      setError("This hotsheet link is invalid or has expired.");
-      setLoading(false);
-      return;
-    }
+      // 1) Validate token from share_tokens table
+      const { data: tokenData, error: tokenError } = await supabase
+        .from("share_tokens")
+        .select("*")
+        .eq("token", token)
+        .maybeSingle();
 
-    // Token is invalid if no data returned
-    if (!tokenData) {
-      setError("This hotsheet link is invalid or has expired.");
-      setLoading(false);
-      return;
-    }
+      if (tokenError) {
+        throw tokenError;
+      }
 
-    console.log("share token data", tokenData);
+      if (!tokenData) {
+        throw new Error("Share token not found");
+      }
 
-    // Check if token is expired (only if expires_at is set and in the past)
-    if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
-      setError("This hotsheet link has expired.");
-      setLoading(false);
-      return;
-    }
+      console.log("Client hotsheet share token", tokenData);
 
-    // Parse payload - assume it contains hot_sheet_id and optional client_id
-    const payload = tokenData.payload as any;
+      // Check if token is expired (only if expires_at is set and in the past)
+      if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
+        throw new Error("Share token expired");
+      }
 
-      // Set primary_agent_id cookie (same pattern as ShareLinkHandler)
-      document.cookie = `primary_agent_id=${tokenData.agent_id}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-      
-      // Store in localStorage
-      localStorage.setItem("primary_agent_id", tokenData.agent_id);
-      
-      // Optionally store client_id
+      // 2) Parse payload - assume it contains hot_sheet_id and optional client_id
+      let payload: any = tokenData.payload;
+      if (typeof payload === "string") {
+        try {
+          payload = JSON.parse(payload);
+        } catch (parseError) {
+          throw new Error("Invalid payload JSON on share token");
+        }
+      }
+
+      console.log("Client hotsheet payload", payload);
+
+      const hotSheetId =
+        payload?.hot_sheet_id || payload?.hotSheetId || payload?.hotsheetId;
+
+      if (!hotSheetId) {
+        throw new Error("No hot_sheet_id found in share token payload");
+      }
+
+      // 3) Set agent + client context (cookie / localStorage)
+      if (tokenData.agent_id) {
+        document.cookie = `primary_agent_id=${tokenData.agent_id}; path=/; max-age=${
+          60 * 60 * 24 * 365
+        }; SameSite=Lax`;
+        localStorage.setItem("primary_agent_id", tokenData.agent_id);
+      }
+
       if (payload.client_id) {
         localStorage.setItem("client_id", payload.client_id);
       }
 
-      // Fetch agent profile
-      const { data: agentData } = await supabase
-        .from("agent_profiles")
-        .select("*")
-        .eq("id", tokenData.agent_id)
-        .single();
+      // 4) Fetch agent profile
+      if (tokenData.agent_id) {
+        const { data: agentData, error: agentError } = await supabase
+          .from("agent_profiles")
+          .select("*")
+          .eq("id", tokenData.agent_id)
+          .single();
 
-      setAgentProfile(agentData);
-      setAgent(agentData);
+        if (agentError) {
+          throw agentError;
+        }
 
-      // Fetch hot sheet details
+        setAgentProfile(agentData);
+        setAgent(agentData);
+      }
+
+      // 5) Fetch hot sheet details
       const { data: hotSheetData, error: hotSheetError } = await supabase
         .from("hot_sheets")
         .select("*")
-        .eq("id", payload.hot_sheet_id)
+        .eq("id", hotSheetId)
         .single();
 
-      if (hotSheetError) throw hotSheetError;
+      if (hotSheetError || !hotSheetData) {
+        throw hotSheetError || new Error("Hotsheet not found");
+      }
+
+      console.log("Client hotsheet hotSheet", hotSheetData);
       setHotSheet(hotSheetData);
 
       // Initialize editable criteria from hotsheet
-      const loadedCriteria = hotSheetData.criteria as any || {};
+      const loadedCriteria = (hotSheetData.criteria as any) || {};
       setEditableCriteria({
         minPrice: loadedCriteria.minPrice || "",
         maxPrice: loadedCriteria.maxPrice || "",
@@ -132,84 +156,159 @@ const ClientHotsheetPage = () => {
         cities: loadedCriteria.cities ? loadedCriteria.cities.join(", ") : "",
       });
 
-      // Fetch matching listings using hot sheet criteria
-      const criteria = hotSheetData.criteria as any || {};
-      const query = buildListingsQuery(supabase, criteria).limit(200);
+      // 6) Fetch matching listings using hot sheet criteria
+      const query = buildListingsQuery(supabase, loadedCriteria).limit(200);
       const { data: listingsData, error: listingsError } = await query;
 
-      if (listingsError) throw listingsError;
+      if (listingsError) {
+        throw listingsError;
+      }
+
+      console.log("Client hotsheet listings", listingsData);
       setListings(listingsData || []);
 
       // Load listing agents for display
-      const agentIds = Array.from(new Set((listingsData || []).map((l: any) => l.agent_id).filter(Boolean)));
+      const agentIds = Array.from(
+        new Set(
+          (listingsData || [])
+            .map((l: any) => l.agent_id)
+            .filter((id: string | null | undefined) => Boolean(id))
+        )
+      );
+
       if (agentIds.length > 0) {
-        const { data: agentsData } = await supabase
+        const { data: agentsData, error: agentsError } = await supabase
           .from("agent_profiles")
           .select("id, first_name, last_name, company")
           .in("id", agentIds);
 
-        if (agentsData) {
-          const agentMapping = agentsData.reduce((acc, agent) => {
-            acc[agent.id] = {
-              fullName: `${agent.first_name} ${agent.last_name}`,
-              company: agent.company,
-            };
-            return acc;
-          }, {} as Record<string, { fullName: string; company?: string | null }>);
+        if (agentsError) {
+          console.error("Failed to load listing agents for client hotsheet", agentsError);
+        } else if (agentsData) {
+          const agentMapping = agentsData.reduce(
+            (
+              acc: Record<string, { fullName: string; company?: string | null }>,
+              agent: any
+            ) => {
+              acc[agent.id] = {
+                fullName: `${agent.first_name} ${agent.last_name}`,
+                company: agent.company,
+              };
+              return acc;
+            },
+            {} as Record<string, { fullName: string; company?: string | null }>
+          );
           setAgentMap(agentMapping);
         }
       }
 
+      // ✅ SUCCESS – stop loading
       setLoading(false);
-    } catch (err: any) {
-      console.error("Error loading hotsheet:", err);
-      setError("Failed to load hotsheet. Please try again.");
+    } catch (err) {
+      console.error("Client hotsheet load error", err);
+      setError(
+        "We couldn't load this hotsheet. Please contact your agent or try the link again."
+      );
       setLoading(false);
     }
   };
 
   const handleSaveCriteria = async () => {
-    if (!hotSheet?.id) return;
+    if (!hotSheet) return;
 
     try {
-      // Build updated criteria object
-      const updatedCriteria: any = { ...hotSheet.criteria };
-      
-      if (editableCriteria.minPrice) updatedCriteria.minPrice = Number(editableCriteria.minPrice);
-      if (editableCriteria.maxPrice) updatedCriteria.maxPrice = Number(editableCriteria.maxPrice);
-      if (editableCriteria.bedrooms) updatedCriteria.bedrooms = Number(editableCriteria.bedrooms);
-      if (editableCriteria.bathrooms) updatedCriteria.bathrooms = Number(editableCriteria.bathrooms);
-      
-      // Handle cities as comma-separated string
+      setLoading(true);
+      setError(null);
+
+      const newCriteria: any = {
+        ...hotSheet.criteria,
+      };
+
+      if (editableCriteria.minPrice) {
+        newCriteria.minPrice = Number(editableCriteria.minPrice) || undefined;
+      } else {
+        delete newCriteria.minPrice;
+      }
+
+      if (editableCriteria.maxPrice) {
+        newCriteria.maxPrice = Number(editableCriteria.maxPrice) || undefined;
+      } else {
+        delete newCriteria.maxPrice;
+      }
+
+      if (editableCriteria.bedrooms) {
+        newCriteria.bedrooms = Number(editableCriteria.bedrooms) || undefined;
+      } else {
+        delete newCriteria.bedrooms;
+      }
+
+      if (editableCriteria.bathrooms) {
+        newCriteria.bathrooms = Number(editableCriteria.bathrooms) || undefined;
+      } else {
+        delete newCriteria.bathrooms;
+      }
+
       if (editableCriteria.cities) {
-        updatedCriteria.cities = editableCriteria.cities
+        newCriteria.cities = editableCriteria.cities
           .split(",")
           .map((c: string) => c.trim())
           .filter(Boolean);
+      } else {
+        delete newCriteria.cities;
       }
 
-      // Update hot_sheets row
-      const { error: updateError } = await supabase
-        .from("hot_sheets")
-        .update({ criteria: updatedCriteria })
-        .eq("id", hotSheet.id);
-
-      if (updateError) throw updateError;
-
-      // Update local state
-      setHotSheet({ ...hotSheet, criteria: updatedCriteria });
-
-      // Refresh listings with new criteria
-      const query = buildListingsQuery(supabase, updatedCriteria as any).limit(200);
+      // Reload listings with new criteria
+      const query = buildListingsQuery(supabase, newCriteria).limit(200);
       const { data: listingsData, error: listingsError } = await query;
 
-      if (listingsError) throw listingsError;
+      if (listingsError) {
+        throw listingsError;
+      }
+
+      console.log("Client hotsheet updated listings", listingsData);
       setListings(listingsData || []);
 
-      toast.success("Your search criteria has been updated.");
-    } catch (err: any) {
-      console.error("Error saving criteria:", err);
-      toast.error("Failed to save criteria. Please try again.");
+      // Load listing agents for display
+      const agentIds = Array.from(
+        new Set(
+          (listingsData || [])
+            .map((l: any) => l.agent_id)
+            .filter((id: string | null | undefined) => Boolean(id))
+        )
+      );
+
+      if (agentIds.length > 0) {
+        const { data: agentsData, error: agentsError } = await supabase
+          .from("agent_profiles")
+          .select("id, first_name, last_name, company")
+          .in("id", agentIds);
+
+        if (agentsError) {
+          console.error("Failed to load listing agents", agentsError);
+        } else if (agentsData) {
+          const agentMapping = agentsData.reduce(
+            (
+              acc: Record<string, { fullName: string; company?: string | null }>,
+              agent: any
+            ) => {
+              acc[agent.id] = {
+                fullName: `${agent.first_name} ${agent.last_name}`,
+                company: agent.company,
+              };
+              return acc;
+            },
+            {} as Record<string, { fullName: string; company?: string | null }>
+          );
+          setAgentMap(agentMapping);
+        }
+      }
+
+      toast.success("Updated search criteria for this hotsheet.");
+      setLoading(false);
+    } catch (err) {
+      console.error("Client hotsheet criteria update error", err);
+      toast.error("Could not update listings. Please try again.");
+      setLoading(false);
     }
   };
 
@@ -217,31 +316,27 @@ const ClientHotsheetPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading your hotsheet...</p>
-          </div>
-        </div>
+        <main className="flex-1 flex items-center justify-center px-4">
+          <p className="text-muted-foreground text-lg">Loading your hotsheet…</p>
+        </main>
         <Footer />
       </div>
     );
   }
 
-  if (error) {
+  if (!loading && error) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
-        <div className="flex-1 flex items-center justify-center">
-          <Card className="max-w-md mx-4">
-            <CardHeader>
-              <CardTitle className="text-destructive">Invalid Link</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{error}</p>
-            </CardContent>
+        <main className="flex-1 flex items-center justify-center px-4">
+          <Card className="max-w-md w-full p-6 text-center">
+            <h1 className="text-xl font-semibold mb-2">We hit a snag</h1>
+            <p className="text-muted-foreground mb-4">
+              We couldn't load this hotsheet. Please contact your agent or try the link again.
+            </p>
+            <Button onClick={() => navigate("/")}>Back to home</Button>
           </Card>
-        </div>
+        </main>
         <Footer />
       </div>
     );
