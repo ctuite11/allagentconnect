@@ -10,6 +10,7 @@ import RealtimeListingUpdates from "@/components/RealtimeListingUpdates";
 import Benefits from "@/components/Benefits";
 import CallToAction from "@/components/CallToAction";
 import Footer from "@/components/Footer";
+import { ActiveAgentBanner } from "@/components/ActiveAgentBanner";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <Navigation />
+      <ActiveAgentBanner />
       <PropertySearchHero />
       <FeaturedPropertyShowcase />
       <RecentlySold />

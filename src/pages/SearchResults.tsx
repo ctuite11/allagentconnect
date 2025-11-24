@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ListingCard from "@/components/ListingCard";
+import { ActiveAgentBanner } from "@/components/ActiveAgentBanner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
@@ -228,6 +229,7 @@ const SearchResults = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
+      <ActiveAgentBanner />
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-6">
