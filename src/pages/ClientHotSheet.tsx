@@ -58,6 +58,7 @@ const ClientHotSheet = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hotSheet, setHotSheet] = useState<any>(null);
+  const [tokenData, setTokenData] = useState<any>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -153,16 +154,19 @@ const ClientHotSheet = () => {
 
       console.log("Client hotsheet share token data", tokenDataResult);
 
-      const tokenData = Array.isArray(tokenDataResult) ? tokenDataResult[0] : tokenDataResult;
+      const tokenDataObj = Array.isArray(tokenDataResult) ? tokenDataResult[0] : tokenDataResult;
 
-      if (!tokenData) {
+      if (!tokenDataObj) {
         throw new Error("Share token not found");
       }
 
-      console.log("Client hotsheet share token", tokenData);
+      console.log("Client hotsheet share token", tokenDataObj);
+      
+      // Store token data in state for later use
+      setTokenData(tokenDataObj);
 
       // Step 2: Parse payload to get hot_sheet_id
-      const payload = tokenData.payload as any;
+      const payload = tokenDataObj.payload as any;
       console.log("Client hotsheet payload", payload);
 
       if (!payload || !payload.hot_sheet_id) {
@@ -473,13 +477,20 @@ const ClientHotSheet = () => {
   };
 
   const handleSetupLogin = () => {
-    // Extract client email if available from hotsheet
-    const clientEmail = (hotSheet as any)?.client_email || "";
-    const clientId = hotSheet?.client_id || "";
+    // Extract client email from token payload (NOT from agent profile or hotsheet)
+    const payload = tokenData?.payload as any;
+    const clientEmail = payload?.client_email || payload?.email || "";
+    const clientId = payload?.client_id || "";
     
-    // Navigate to luxury onboarding page with all necessary params
-    const inviteUrl = `/client-invite?invitation_token=${token}&email=${encodeURIComponent(clientEmail)}&agent_id=${agentProfile?.id}&client_id=${clientId}`;
-    navigate(inviteUrl);
+    // Build query params
+    const params = new URLSearchParams();
+    params.set("invitation_token", token);
+    if (clientEmail) params.set("email", clientEmail);
+    if (agentProfile?.id) params.set("agent_id", agentProfile.id);
+    if (clientId) params.set("client_id", clientId);
+    
+    // Navigate to client invitation setup page
+    navigate(`/client-invite?${params.toString()}`);
   };
 
   // Sort listings
