@@ -12,11 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, MessageSquare, ChevronDown, ChevronUp, Settings, Send, Bed, Bath, Maximize, Home, MapPin, Image as ImageIcon } from "lucide-react";
+import { Heart, MessageSquare, ChevronDown, ChevronUp, Settings, Send, Bed, Bath, Maximize, Home, MapPin, Image as ImageIcon, Mail, Phone, Building2, UserCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import FavoriteButton from "@/components/FavoriteButton";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { TownsPicker } from "@/components/TownsPicker";
+import { useTownsPicker } from "@/hooks/useTownsPicker";
+import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 
 interface Listing {
   id: string;
@@ -59,6 +62,7 @@ const ClientHotSheet = () => {
   const [comments, setComments] = useState<Record<string, string>>({});
   const [newComment, setNewComment] = useState<Record<string, string>>({});
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [agentProfile, setAgentProfile] = useState<any>(null);
   
   // Edit criteria state
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
@@ -66,8 +70,23 @@ const ClientHotSheet = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
-  const [city, setCity] = useState("");
-  const [zipCode, setZipCode] = useState("");
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [state, setState] = useState("MA");
+  const [selectedCountyId, setSelectedCountyId] = useState<string>("all");
+  const [showAreas, setShowAreas] = useState<boolean>(false);
+  const [citySearch, setCitySearch] = useState("");
+
+  // Use the TownsPicker hook
+  const { townsList, expandedCities, toggleCityExpansion, hasCountyData } = useTownsPicker({
+    state,
+    county: selectedCountyId,
+    showAreas,
+  });
+
+  // Get counties for the selected state from COUNTIES_BY_STATE
+  const counties = state && COUNTIES_BY_STATE[state]
+    ? COUNTIES_BY_STATE[state].map(name => ({ id: name, name, state }))
+    : [];
 
   useEffect(() => {
     if (token) {
@@ -145,8 +164,22 @@ const ClientHotSheet = () => {
       setMaxPrice(criteria.maxPrice?.toString() || "");
       setBedrooms(criteria.bedrooms?.toString() || "");
       setBathrooms(criteria.bathrooms?.toString() || "");
-      setCity(criteria.city || "");
-      setZipCode(criteria.zipCode || "");
+      setSelectedCities(criteria.cities || []);
+      setState(criteria.state || "MA");
+      setSelectedCountyId(criteria.countyId || "all");
+
+      // Load agent profile for banner
+      if (hotSheetData.user_id) {
+        const { data: agentData } = await supabase
+          .from("agent_profiles")
+          .select("*")
+          .eq("id", hotSheetData.user_id)
+          .maybeSingle();
+        
+        if (agentData) {
+          setAgentProfile(agentData);
+        }
+      }
 
       // Step 4: Build and fetch listings
       const query = buildListingsQuery(supabase, criteria).limit(200);
@@ -295,7 +328,7 @@ const ClientHotSheet = () => {
     }
   };
 
-  const handleUpdateCriteria = async () => {
+  const handleApplyCriteria = async () => {
     try {
       const updatedCriteria = {
         propertyTypes: propertyTypes.length > 0 ? propertyTypes : null,
@@ -303,24 +336,30 @@ const ClientHotSheet = () => {
         maxPrice: maxPrice ? parseFloat(maxPrice) : null,
         bedrooms: bedrooms ? parseInt(bedrooms) : null,
         bathrooms: bathrooms ? parseFloat(bathrooms) : null,
-        city: city || null,
-        zipCode: zipCode || null,
+        cities: selectedCities.length > 0 ? selectedCities : null,
+        state: state || null,
+        countyId: selectedCountyId !== "all" ? selectedCountyId : null,
       };
 
-      const { error } = await supabase
-        .from("hot_sheets")
-        .update({ criteria: updatedCriteria })
-        .eq("id", hotSheet.id);
+      // Build and fetch listings with updated criteria
+      const query = buildListingsQuery(supabase, updatedCriteria).limit(200);
+      const { data: listingsData, error: listingsError } = await query;
 
-      if (error) throw error;
+      if (listingsError) throw listingsError;
 
-      toast.success("Search criteria updated");
+      setListings(listingsData || []);
+      toast.success("Search updated");
       setEditDialogOpen(false);
-      fetchHotSheet(); // Refresh listings with new criteria
     } catch (error: any) {
       console.error("Error updating criteria:", error);
-      toast.error("Failed to update criteria");
+      toast.error("Failed to update search");
     }
+  };
+
+  const toggleCity = (city: string) => {
+    setSelectedCities(prev =>
+      prev.includes(city) ? prev.filter(c => c !== city) : [...prev, city]
+    );
   };
 
   const propertyTypeOptions = [
@@ -376,6 +415,56 @@ const ClientHotSheet = () => {
       
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
+          {/* Agent Banner */}
+          {agentProfile && (
+            <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  {agentProfile.headshot_url ? (
+                    <img 
+                      src={agentProfile.headshot_url} 
+                      alt={`${agentProfile.first_name} ${agentProfile.last_name}`}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
+                      <UserCircle2 className="w-10 h-10 text-primary" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-1">
+                          You're working with {agentProfile.first_name} {agentProfile.last_name}
+                        </h3>
+                        {agentProfile.company && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
+                            <Building2 className="w-4 h-4" />
+                            {agentProfile.company}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                          {agentProfile.email && (
+                            <a href={`mailto:${agentProfile.email}`} className="flex items-center gap-1 hover:text-primary transition-colors">
+                              <Mail className="w-3.5 h-3.5" />
+                              {agentProfile.email}
+                            </a>
+                          )}
+                          {(agentProfile.phone || agentProfile.cell_phone) && (
+                            <a href={`tel:${agentProfile.phone || agentProfile.cell_phone}`} className="flex items-center gap-1 hover:text-primary transition-colors">
+                              <Phone className="w-3.5 h-3.5" />
+                              {agentProfile.phone || agentProfile.cell_phone}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Header */}
           <div className="mb-8 flex justify-between items-start">
             <div>
@@ -394,14 +483,14 @@ const ClientHotSheet = () => {
                   Edit Search
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
+              <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Edit Search Criteria</DialogTitle>
                   <DialogDescription>
                     Update your search preferences to refine matching properties
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="space-y-2">
                     <Label>Property Types</Label>
                     <div className="grid grid-cols-2 gap-2">
@@ -467,33 +556,111 @@ const ClientHotSheet = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-city">City</Label>
-                      <Input
-                        id="edit-city"
-                        placeholder="Any"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                      />
+                  {/* Location selection matching agent's hotsheet builder */}
+                  <div className="space-y-3">
+                    <Label>Location</Label>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-state">State</Label>
+                        <Select value={state} onValueChange={setState}>
+                          <SelectTrigger id="edit-state">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {US_STATES.map((s) => (
+                              <SelectItem key={s.code} value={s.code}>
+                                {s.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {hasCountyData && (
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-county">County</Label>
+                          <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
+                            <SelectTrigger id="edit-county">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Counties</SelectItem>
+                              {counties.map((county) => (
+                                <SelectItem key={county.id} value={county.id}>
+                                  {county.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="edit-zip">Zip Code</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Towns / Cities ({selectedCities.length} selected)</Label>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="edit-show-areas"
+                            checked={showAreas}
+                            onCheckedChange={(checked) => setShowAreas(checked as boolean)}
+                          />
+                          <Label htmlFor="edit-show-areas" className="text-xs cursor-pointer">
+                            Show neighborhoods
+                          </Label>
+                        </div>
+                      </div>
                       <Input
-                        id="edit-zip"
-                        placeholder="Any"
-                        value={zipCode}
-                        onChange={(e) => setZipCode(e.target.value)}
+                        placeholder="Search towns..."
+                        value={citySearch}
+                        onChange={(e) => setCitySearch(e.target.value)}
                       />
+                      <div className="border rounded-md max-h-48 overflow-y-auto">
+                        <TownsPicker
+                          towns={townsList}
+                          selectedTowns={selectedCities}
+                          onToggleTown={toggleCity}
+                          expandedCities={expandedCities}
+                          onToggleCityExpansion={toggleCityExpansion}
+                          state={state}
+                          searchQuery={citySearch}
+                          variant="checkbox"
+                          showAreas={showAreas}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-3">
+                  {/* Create Account CTA */}
+                  <div className="border-t pt-4 mt-6">
+                    <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+                      <CardContent className="p-4">
+                        <h4 className="font-semibold text-sm mb-2">Want more control over your search?</h4>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Create a free account to unlock advanced filters, save searches, and manage all your hotsheets.
+                        </p>
+                        <Button
+                          onClick={() => {
+                            const params = new URLSearchParams();
+                            if (agentProfile?.id) params.set('primary_agent_id', agentProfile.id);
+                            if (hotSheet?.id) params.set('hot_sheet_id', hotSheet.id);
+                            navigate(`/auth?${params.toString()}`);
+                          }}
+                          className="w-full"
+                        >
+                          Create Free Account
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
                     <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={handleUpdateCriteria}>
-                      Update Search
+                    <Button onClick={handleApplyCriteria}>
+                      Apply Changes
                     </Button>
                   </div>
                 </div>
