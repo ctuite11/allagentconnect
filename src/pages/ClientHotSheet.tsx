@@ -81,6 +81,10 @@ const ClientHotSheet = () => {
   // Selection and sorting state
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState("newest");
+  
+  // Contact agent modal state
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [contactMessage, setContactMessage] = useState("");
 
   // Use the TownsPicker hook
   const { townsList, expandedCities, toggleCityExpansion, hasCountyData } = useTownsPicker({
@@ -410,6 +414,37 @@ const ClientHotSheet = () => {
     toast.success(`Showing ${filtered.length} selected listings`);
   };
 
+  const handleSendMessage = async () => {
+    const messageText = contactMessage.trim();
+    if (!messageText) {
+      toast.error("Please enter a message");
+      return;
+    }
+
+    try {
+      console.log("ClientHotSheet contact modal opened for agent:", agentProfile?.id);
+      
+      // Insert general message into hot_sheet_comments with listing_id as null
+      // Note: This may fail if schema doesn't allow null listing_id
+      const { error } = await supabase
+        .from("hot_sheet_comments")
+        .insert({
+          hot_sheet_id: hotSheet.id,
+          listing_id: null as any, // General message, not tied to a specific property
+          comment: `[General Inquiry] ${messageText}`,
+        });
+
+      if (error) throw error;
+
+      setContactMessage("");
+      setIsContactModalOpen(false);
+      toast.success(`Your message has been sent to ${agentProfile?.first_name || "your agent"}.`);
+    } catch (error: any) {
+      console.error("Contact agent error", error);
+      toast.error("We couldn't send your message. Please try again.");
+    }
+  };
+
   // Sort listings
   const sortedListings = [...listings].sort((a, b) => {
     switch (sortBy) {
@@ -488,6 +523,20 @@ const ClientHotSheet = () => {
                         <h3 className="text-lg font-semibold text-foreground mb-1">
                           You're working with {agentProfile.first_name} {agentProfile.last_name}
                         </h3>
+                        <div className="md:hidden mt-3">
+                          <Button 
+                            onClick={() => {
+                              console.log("ClientHotSheet contact modal opened for agent:", agentProfile?.id);
+                              setIsContactModalOpen(true);
+                            }}
+                            variant="default"
+                            size="sm"
+                            className="w-full"
+                          >
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            Contact {agentProfile.first_name}
+                          </Button>
+                        </div>
                         {agentProfile.company && (
                           <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
                             <Building2 className="w-4 h-4" />
@@ -512,18 +561,31 @@ const ClientHotSheet = () => {
                           Want full control? Create a free account to unlock advanced filters and save your searches
                         </p>
                       </div>
-                      <Button
-                        variant="secondary"
-                        onClick={() => {
-                          const params = new URLSearchParams();
-                          if (agentProfile?.id) params.set('primary_agent_id', agentProfile.id);
-                          if (hotSheet?.id) params.set('hot_sheet_id', hotSheet.id);
-                          navigate(`/auth?${params.toString()}`);
-                        }}
-                        className="shrink-0"
-                      >
-                        Create Free Account
-                      </Button>
+                      <div className="hidden md:flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            console.log("ClientHotSheet contact modal opened for agent:", agentProfile?.id);
+                            setIsContactModalOpen(true);
+                          }}
+                          className="shrink-0"
+                        >
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Contact {agentProfile.first_name}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            const params = new URLSearchParams();
+                            if (agentProfile?.id) params.set('primary_agent_id', agentProfile.id);
+                            if (hotSheet?.id) params.set('hot_sheet_id', hotSheet.id);
+                            navigate(`/auth?${params.toString()}`);
+                          }}
+                          className="shrink-0"
+                        >
+                          Create Free Account
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -884,6 +946,42 @@ const ClientHotSheet = () => {
           )}
         </div>
       </main>
+
+      {/* Contact Agent Modal */}
+      <Dialog open={isContactModalOpen} onOpenChange={setIsContactModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Contact {agentProfile?.first_name}</DialogTitle>
+            <DialogDescription>
+              Send a message to your agent about this search.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Textarea
+              placeholder="Type your message here..."
+              value={contactMessage}
+              onChange={(e) => setContactMessage(e.target.value)}
+              rows={6}
+              className="resize-none"
+            />
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsContactModalOpen(false);
+                setContactMessage("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSendMessage}>
+              <Send className="w-4 h-4 mr-2" />
+              Send Message
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
