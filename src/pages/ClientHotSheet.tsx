@@ -546,6 +546,80 @@ const ClientHotSheet = () => {
     );
   }
 
+  // Show luxury onboarding modal for anonymous users BEFORE rendering main content
+  if (showLoginPrompt && !currentUser && agentProfile) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Dialog open={true} onOpenChange={() => {}}>
+          <DialogContent className="sm:max-w-[600px]" hideCloseButton>
+            <DialogHeader>
+              {/* Agent Header Section */}
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b">
+                <div className="relative h-12 w-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                  {agentProfile.headshot_url ? (
+                    <img 
+                      src={agentProfile.headshot_url} 
+                      alt={agentProfile.first_name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg font-semibold text-muted-foreground">
+                      {agentProfile.first_name?.charAt(0)}{agentProfile.last_name?.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <div className="text-left">
+                  <p className="text-sm text-muted-foreground">You're setting up your access with</p>
+                  <p className="font-semibold text-foreground">{agentProfile.first_name} {agentProfile.last_name}</p>
+                </div>
+              </div>
+              
+              <DialogTitle className="text-2xl">
+                Secure Your Access to All Agent Connect
+              </DialogTitle>
+              <DialogDescription className="pt-4 space-y-4 text-base leading-relaxed">
+                <p className="text-foreground/90">
+                  {agentProfile.first_name} has curated a personalized collection of homes for you. 
+                  To continue exploring your private hot sheet, please set up your All Agent Connect login.
+                </p>
+                <div className="pt-2">
+                  <p className="font-medium text-foreground/90 mb-3">Creating your login ensures you can:</p>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-3">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-foreground/80">View your homes anytime</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-foreground/80">Save and organize your favorites</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-foreground/80">Message {agentProfile.first_name} directly</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-foreground/80">Access your search securely from any device</span>
+                    </li>
+                  </ul>
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="pt-4">
+              <Button
+                onClick={handleSetupLogin}
+                className="w-full h-11"
+                size="lg"
+              >
+                Set Up My Account
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
@@ -987,76 +1061,6 @@ const ClientHotSheet = () => {
           )}
         </div>
       </main>
-
-      {/* Required Onboarding Modal - Luxury Design with Agent Info */}
-      <Dialog open={showLoginPrompt} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-[600px]" hideCloseButton>
-          <DialogHeader>
-            {/* Agent Header Section */}
-            {agentProfile && (
-              <div className="flex items-center gap-3 mb-4 pb-4 border-b">
-                <div className="relative h-12 w-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                  {agentProfile.headshot_url ? (
-                    <img 
-                      src={agentProfile.headshot_url} 
-                      alt={agentProfile.first_name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-lg font-semibold text-muted-foreground">
-                      {agentProfile.first_name?.charAt(0)}{agentProfile.last_name?.charAt(0)}
-                    </span>
-                  )}
-                </div>
-                <div className="text-left">
-                  <p className="text-sm text-muted-foreground">You're setting up your access with</p>
-                  <p className="font-semibold text-foreground">{agentProfile.first_name} {agentProfile.last_name}</p>
-                </div>
-              </div>
-            )}
-            
-            <DialogTitle className="text-2xl">
-              Secure Your Access to All Agent Connect
-            </DialogTitle>
-            <DialogDescription className="pt-4 space-y-4 text-base leading-relaxed">
-              <p className="text-foreground/90">
-                {agentProfile?.first_name} has curated a personalized collection of homes for you. 
-                To continue exploring your private hot sheet, please set up your All Agent Connect login.
-              </p>
-              <div className="pt-2">
-                <p className="font-medium text-foreground/90 mb-3">Creating your login ensures you can:</p>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-3">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span className="text-foreground/80">View your homes anytime</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span className="text-foreground/80">Save and organize your favorites</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span className="text-foreground/80">Message {agentProfile?.first_name} directly</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span className="text-foreground/80">Access your search securely from any device</span>
-                  </li>
-                </ul>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="pt-4">
-            <Button
-              onClick={handleSetupLogin}
-              className="w-full h-11"
-              size="lg"
-            >
-              Set Up My Account
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Contact Agent Modal */}
       <Dialog open={isContactModalOpen} onOpenChange={setIsContactModalOpen}>
