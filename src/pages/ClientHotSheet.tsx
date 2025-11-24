@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { supabase } from "@/integrations/supabase/client";
 import { Heart, MessageSquare, ChevronDown, ChevronUp, Settings, Send, Bed, Bath, Maximize, Home, MapPin, Image as ImageIcon, Mail, Phone, Building2, UserCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { getPrimaryAgentId } from "@/utils/agentTracking";
 import FavoriteButton from "@/components/FavoriteButton";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { TownsPicker } from "@/components/TownsPicker";
@@ -209,12 +210,40 @@ const ClientHotSheet = () => {
       setState(criteria.state || "MA");
       setSelectedCountyId(criteria.countyId || "all");
 
-      // Load agent profile for banner
-      if (hotSheetData.user_id) {
+      // Resolve agent ID from multiple sources
+      let resolvedAgentId: string | null = null;
+      
+      // 1. Try from share token payload
+      if (payload?.agent_id) {
+        resolvedAgentId = payload.agent_id;
+      }
+      // 2. Try from hot sheet user_id
+      else if (hotSheetData.user_id) {
+        resolvedAgentId = hotSheetData.user_id;
+      }
+      // 3. Try from client_agent_relationships if user is logged in
+      else if (currentUser) {
+        const { data: relationship } = await supabase
+          .from("client_agent_relationships")
+          .select("agent_id")
+          .eq("client_id", currentUser.id)
+          .maybeSingle();
+        
+        if (relationship) {
+          resolvedAgentId = relationship.agent_id;
+        }
+      }
+      // 4. Try from cookie/localStorage
+      if (!resolvedAgentId) {
+        resolvedAgentId = getPrimaryAgentId();
+      }
+
+      // Load agent profile if we have an agent ID
+      if (resolvedAgentId) {
         const { data: agentData } = await supabase
           .from("agent_profiles")
           .select("*")
-          .eq("id", hotSheetData.user_id)
+          .eq("id", resolvedAgentId)
           .maybeSingle();
         
         if (agentData) {
