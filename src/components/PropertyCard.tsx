@@ -8,6 +8,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { MapPin, Bed, Bath, Square, Heart, Building2, Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getPrimaryAgentId } from "@/utils/agentTracking";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface PropertyCardProps {
   image: string;
@@ -32,28 +34,64 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
   const navigate = useNavigate();
   const [isFavorited, setIsFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [clientPrimaryAgent, setClientPrimaryAgent] = useState<any>(null);
+  const { role } = useUserRole(currentUser);
 
   useEffect(() => {
-    const checkFavoriteStatus = async () => {
-      if (!listingId) return;
+    const loadUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
       
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data } = await supabase
-          .from("favorites")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("listing_id", listingId)
-          .single();
-
-        setIsFavorited(!!data);
-      } catch (error) {
-        // Not favorited or error
+      // Check if user is a client with a primary agent
+      if (user && role !== 'agent') {
+        // Try to get agent from client_agent_relationships
+        const { data: relationship } = await supabase
+          .from("client_agent_relationships")
+          .select("agent_id")
+          .eq("client_id", user.id)
+          .maybeSingle();
+        
+        let resolvedAgentId = relationship?.agent_id || getPrimaryAgentId();
+        
+        if (resolvedAgentId) {
+          const { data: agentData } = await supabase
+            .from("agent_profiles")
+            .select("*")
+            .eq("id", resolvedAgentId)
+            .maybeSingle();
+          
+          if (agentData) {
+            setClientPrimaryAgent(agentData);
+          }
+        }
       }
     };
+    
+    loadUser();
+  }, [role]);
 
+  const checkFavoriteStatus = async () => {
+    if (!listingId) return;
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("favorites")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("listing_id", listingId)
+        .single();
+
+      setIsFavorited(!!data);
+    } catch (error) {
+      // Not favorited or error
+    }
+  };
+
+  useEffect(() => {
     checkFavoriteStatus();
   }, [listingId]);
 
@@ -137,7 +175,19 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
       <div className="p-6">
         <div className="flex items-start justify-between gap-4 mb-3">
           <h3 className="text-2xl font-bold text-primary">{price}</h3>
-          {(agentName || agentCompany) && (
+          {clientPrimaryAgent ? (
+            // Client with primary agent - show simplified contact button
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/agent/${clientPrimaryAgent.id}`);
+              }}
+            >
+              Ask {clientPrimaryAgent.first_name} about this home
+            </Button>
+          ) : (agentName || agentCompany) && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -203,6 +253,13 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
             </Badge>
           )}
         </div>
+        
+        {/* Listing broker attribution for compliance */}
+        {!clientPrimaryAgent && (agentName || agentCompany) && (
+          <p className="text-xs text-muted-foreground mb-3">
+            Listing courtesy of {agentName || agentCompany}
+          </p>
+        )}
         
         <div className="flex items-center gap-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">

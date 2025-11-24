@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
+import { ActiveAgentBanner } from "@/components/ActiveAgentBanner";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -374,6 +375,7 @@ const BrowseProperties = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
+      <ActiveAgentBanner />
       
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
