@@ -15,12 +15,12 @@ const ClientInvitationSetup = () => {
   const navigate = useNavigate();
   
   const invitationToken = searchParams.get("invitation_token") || "";
-  const initialEmail = searchParams.get("email") || "";
+  const clientEmail = searchParams.get("email") || "";
   const agentId = searchParams.get("agent_id") || "";
   const clientId = searchParams.get("client_id") || "";
   
-  const [phase, setPhase] = useState<"welcome" | "form" | "success">("welcome");
-  const [email, setEmail] = useState(initialEmail);
+  const [phase, setPhase] = useState<"form" | "success">("form");
+  const [email, setEmail] = useState(clientEmail);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -213,60 +213,6 @@ const ClientInvitationSetup = () => {
       
       <main className="container mx-auto px-4 py-16">
         <div className="max-w-2xl mx-auto">
-          {phase === "welcome" && (
-            <Card className="shadow-lg">
-              <CardHeader className="space-y-4 p-8">
-                <div className="text-center space-y-2">
-                  <CardTitle className="text-3xl font-bold">
-                    Welcome to All Agent Connect
-                  </CardTitle>
-                  <CardDescription className="text-base pt-2">
-                    {agentFirstName ? `${agentFirstName} has invited you` : "Your agent has invited you"} to a personalized home-search experience.
-                    To continue, please create your secure login.
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="p-8 pt-0 space-y-6">
-                <div className="bg-muted/50 rounded-lg p-6 space-y-4">
-                  <p className="font-medium text-foreground">
-                    With your All Agent Connect account, you can:
-                  </p>
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground/90">Browse your private hot sheets curated by {agentFirstName || "your agent"}</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground/90">Track properties and save the homes you love</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground/90">Stay updated with new matches instantly</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground/90">Communicate with {agentFirstName || "your agent"} directly</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground/90">Access your search experience from any device</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <Button
-                  onClick={() => setPhase("form")}
-                  size="lg"
-                  className="w-full h-12 text-base"
-                >
-                  Create My Login
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
           {phase === "form" && (
             <Card className="shadow-lg">
               <CardHeader className="p-8">
@@ -291,17 +237,13 @@ const ClientInvitationSetup = () => {
                       id="email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      readOnly={!!initialEmail}
-                      className={initialEmail ? "bg-muted" : ""}
-                      placeholder={!initialEmail ? "Enter your email address" : ""}
+                      readOnly={true}
+                      className="bg-muted"
                       required
                     />
-                    {initialEmail && (
-                      <p className="text-xs text-muted-foreground">
-                        Email provided by {agentFirstName || "your agent"}
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Email provided by {agentFirstName || "your agent"}
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -333,31 +275,20 @@ const ClientInvitationSetup = () => {
                     />
                   </div>
 
-                  <div className="flex gap-3 pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setPhase("welcome")}
-                      disabled={isSubmitting}
-                      className="flex-1"
-                    >
-                      Back
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="flex-1"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Activating...
-                        </>
-                      ) : (
-                        "Activate My Account"
-                      )}
-                    </Button>
-                  </div>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Activating...
+                      </>
+                    ) : (
+                      "Activate My Account"
+                    )}
+                  </Button>
                 </form>
               </CardContent>
             </Card>

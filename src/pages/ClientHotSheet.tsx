@@ -477,6 +477,9 @@ const ClientHotSheet = () => {
   };
 
   const handleSetupLogin = () => {
+    // Close the login prompt
+    setShowLoginPrompt(false);
+    
     // Extract client email from token payload (NOT from agent profile or hotsheet)
     const payload = tokenData?.payload as any;
     const clientEmail = payload?.client_email || payload?.email || "";
