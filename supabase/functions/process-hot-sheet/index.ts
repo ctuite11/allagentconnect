@@ -278,7 +278,12 @@ const handler = async (req: Request): Promise<Response> => {
       if (recipients.length > 0) {
         // Create share token BEFORE sending email
         const token = crypto.randomUUID();
-        console.log("Creating share token for client hotsheet:", token);
+        console.log("Creating share token for client hotsheet:", {
+          token,
+          hot_sheet_id: hotSheet.id,
+          agent_id: hotSheet.user_id,
+          client_id: hotSheet.client_id
+        });
         
         const { data: tokenRow, error: tokenError } = await adminClient
           .from("share_tokens")
@@ -300,7 +305,10 @@ const handler = async (req: Request): Promise<Response> => {
           throw new Error(`Failed to create share token: ${tokenError.message}`);
         }
         
-        console.log("✅ Share token created:", tokenRow);
+        console.log("✅ Share token created successfully:", {
+          token: tokenRow.token,
+          payload: tokenRow.payload
+        });
 
         const baseUrl = req.headers.get("origin") || "http://localhost:5173";
         const accessUrl = `${baseUrl}/client-hot-sheet/${token}`;

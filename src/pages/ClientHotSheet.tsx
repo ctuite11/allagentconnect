@@ -114,6 +114,7 @@ const ClientHotSheet = () => {
       }
 
       const hotSheetId = payload.hot_sheet_id;
+      console.log("ClientHotSheet attempting to load hot_sheet_id:", hotSheetId);
 
       // Step 3: Load the hot sheet
       const { data: hotSheetDataResult, error: hotSheetError } = await supabase
@@ -121,9 +122,12 @@ const ClientHotSheet = () => {
         .select("*")
         .eq("id", hotSheetId);
 
-      if (hotSheetError) throw hotSheetError;
+      if (hotSheetError) {
+        console.error("ClientHotSheet error loading hotsheet:", hotSheetError);
+        throw hotSheetError;
+      }
 
-      console.log("Client hotsheet data result", hotSheetDataResult);
+      console.log("ClientHotSheet data result from hot_sheets:", hotSheetDataResult);
 
       const hotSheetData = Array.isArray(hotSheetDataResult) ? hotSheetDataResult[0] : hotSheetDataResult;
 
