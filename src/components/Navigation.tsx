@@ -231,7 +231,7 @@ const Navigation = () => {
                 </DropdownMenu>
                 <Button variant="outline" onClick={() => navigate("/browse")}>
                   <Search className="w-4 h-4 mr-2" />
-                  Search
+                  Search Homes
                 </Button>
                 <Button variant="outline" onClick={handleLogout}>
                   <LogOut className="w-4 h-4 mr-2" />
@@ -275,7 +275,7 @@ const Navigation = () => {
               className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
             >
               <Search className="w-4 h-4" />
-              Search
+              Search Homes
             </button>
             <button
               onClick={() => {
