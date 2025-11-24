@@ -1,0 +1,378 @@
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import { CheckCircle2, Loader2 } from "lucide-react";
+
+const ClientInvitationSetup = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
+  const invitationToken = searchParams.get("invitation_token") || "";
+  const email = searchParams.get("email") || "";
+  const agentId = searchParams.get("agent_id") || "";
+  const clientId = searchParams.get("client_id") || "";
+  
+  const [phase, setPhase] = useState<"welcome" | "form" | "success">("welcome");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isValidatingToken, setIsValidatingToken] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
+
+  // Validate token on mount
+  useEffect(() => {
+    const validateToken = async () => {
+      if (!invitationToken) {
+        toast.error("Invalid invitation link");
+        setIsValidatingToken(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("share_tokens")
+          .select("*")
+          .eq("token", invitationToken)
+          .maybeSingle();
+
+        if (error || !data) {
+          toast.error("This invitation link is invalid or has expired");
+          setTokenValid(false);
+        } else if (data.accepted_at) {
+          toast.info("This invitation has already been used");
+          setTokenValid(false);
+        } else {
+          setTokenValid(true);
+        }
+      } catch (error) {
+        console.error("Token validation error:", error);
+        toast.error("Unable to validate invitation");
+        setTokenValid(false);
+      } finally {
+        setIsValidatingToken(false);
+      }
+    };
+
+    validateToken();
+  }, [invitationToken]);
+
+  const handleActivation = async () => {
+    // Validation
+    if (!email) {
+      toast.error("Email is required");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Check if email already exists
+      const { data: existingUser } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (existingUser) {
+        toast.error("An account with this email already exists. Please log in instead.");
+        setIsSubmitting(false);
+        navigate(`/auth?redirect=/client-hot-sheet/${invitationToken}`);
+        return;
+      }
+
+      // Create the account
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/client-hot-sheet/${invitationToken}`,
+        },
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (!authData.user) {
+        throw new Error("Account creation failed");
+      }
+
+      // Create client-agent relationship
+      if (agentId) {
+        const { error: relationshipError } = await supabase
+          .from("client_agent_relationships")
+          .insert({
+            client_id: authData.user.id,
+            agent_id: agentId,
+            invitation_token: invitationToken,
+          });
+
+        if (relationshipError) {
+          console.error("Error creating relationship:", relationshipError);
+          // Don't fail the whole process if this fails
+        }
+      }
+
+      // Mark token as accepted
+      const { error: tokenUpdateError } = await supabase
+        .from("share_tokens")
+        .update({
+          accepted_at: new Date().toISOString(),
+          accepted_by_user_id: authData.user.id,
+        })
+        .eq("token", invitationToken);
+
+      if (tokenUpdateError) {
+        console.error("Error updating token:", tokenUpdateError);
+        // Don't fail the whole process if this fails
+      }
+
+      // Show success phase
+      setPhase("success");
+      
+      // Auto-redirect after 2 seconds
+      setTimeout(() => {
+        navigate(`/client-hot-sheet/${invitationToken}`);
+      }, 2000);
+
+    } catch (error: any) {
+      console.error("Activation error:", error);
+      toast.error(error.message || "Failed to activate account. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isValidatingToken) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">Validating invitation...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!tokenValid) {
+    return (
+      <div className="min-h-screen">
+        <Navigation />
+        <main className="container mx-auto px-4 py-16">
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-2xl text-destructive">Invalid Invitation</CardTitle>
+              <CardDescription>
+                This invitation link is invalid, has expired, or has already been used.
+                Please contact your agent for a new invitation.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/")}>Return Home</Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <Navigation />
+      
+      <main className="container mx-auto px-4 py-16">
+        <div className="max-w-2xl mx-auto">
+          {phase === "welcome" && (
+            <Card className="shadow-lg">
+              <CardHeader className="space-y-4 p-8">
+                <div className="text-center space-y-2">
+                  <CardTitle className="text-3xl font-bold">
+                    Welcome to All Agent Connect
+                  </CardTitle>
+                  <CardDescription className="text-base pt-2">
+                    Your agent has invited you to a personalized home-search experience.
+                    To continue, please create your secure login.
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="p-8 pt-0 space-y-6">
+                <div className="bg-muted/50 rounded-lg p-6 space-y-4">
+                  <p className="font-medium text-foreground">
+                    With your All Agent Connect account, you can:
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground/90">Browse your private hot sheets curated by your agent</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground/90">Track properties and save the homes you love</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground/90">Stay updated with new matches instantly</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground/90">Communicate with your agent directly</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground/90">Access your search experience from any device</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <Button
+                  onClick={() => setPhase("form")}
+                  size="lg"
+                  className="w-full h-12 text-base"
+                >
+                  Create My Login
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {phase === "form" && (
+            <Card className="shadow-lg">
+              <CardHeader className="p-8">
+                <CardTitle className="text-2xl">Create Your Secure Login</CardTitle>
+                <CardDescription className="text-base pt-2">
+                  We've pre-loaded your account using your agent's invitation.
+                  All you need to do now is create a password to activate your access.
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent className="p-8 pt-0">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleActivation();
+                  }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      readOnly
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Create a secure password"
+                      minLength={6}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Must be at least 6 characters
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm your password"
+                      minLength={6}
+                      required
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setPhase("welcome")}
+                      disabled={isSubmitting}
+                      className="flex-1"
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex-1"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Activating...
+                        </>
+                      ) : (
+                        "Activate My Account"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {phase === "success" && (
+            <Card className="shadow-lg text-center">
+              <CardContent className="p-10 space-y-6">
+                <div className="flex justify-center">
+                  <div className="rounded-full bg-primary/10 p-4">
+                    <CheckCircle2 className="h-12 w-12 text-primary" />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-bold">You're All Set</h2>
+                  <p className="text-base text-muted-foreground max-w-md mx-auto">
+                    Your All Agent Connect account is now active.
+                    Your personalized home search is ready whenever you are.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={() => navigate(`/client-hot-sheet/${invitationToken}`)}
+                  size="lg"
+                  className="w-full max-w-xs mx-auto h-12"
+                >
+                  View My Hot Sheet
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </main>
+      
+      <Footer />
+    </div>
+  );
+};
+
+export default ClientInvitationSetup;
