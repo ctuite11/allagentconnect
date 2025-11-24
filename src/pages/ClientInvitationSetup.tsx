@@ -26,8 +26,9 @@ const ClientInvitationSetup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
+  const [agentFirstName, setAgentFirstName] = useState<string>("");
 
-  // Validate token on mount
+  // Validate token and fetch agent info on mount
   useEffect(() => {
     const validateToken = async () => {
       if (!invitationToken) {
@@ -51,6 +52,19 @@ const ClientInvitationSetup = () => {
           setTokenValid(false);
         } else {
           setTokenValid(true);
+          
+          // Fetch agent info
+          if (agentId) {
+            const { data: agentData } = await supabase
+              .from("agent_profiles")
+              .select("first_name")
+              .eq("id", agentId)
+              .maybeSingle();
+            
+            if (agentData) {
+              setAgentFirstName(agentData.first_name);
+            }
+          }
         }
       } catch (error) {
         console.error("Token validation error:", error);
@@ -62,7 +76,7 @@ const ClientInvitationSetup = () => {
     };
 
     validateToken();
-  }, [invitationToken]);
+  }, [invitationToken, agentId]);
 
   const handleActivation = async () => {
     // Validation
@@ -180,7 +194,7 @@ const ClientInvitationSetup = () => {
               <CardTitle className="text-2xl text-destructive">Invalid Invitation</CardTitle>
               <CardDescription>
                 This invitation link is invalid, has expired, or has already been used.
-                Please contact your agent for a new invitation.
+                {agentFirstName ? ` Please contact ${agentFirstName} for a new invitation.` : " Please contact your agent for a new invitation."}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -207,7 +221,7 @@ const ClientInvitationSetup = () => {
                     Welcome to All Agent Connect
                   </CardTitle>
                   <CardDescription className="text-base pt-2">
-                    Your agent has invited you to a personalized home-search experience.
+                    {agentFirstName ? `${agentFirstName} has invited you` : "Your agent has invited you"} to a personalized home-search experience.
                     To continue, please create your secure login.
                   </CardDescription>
                 </div>
@@ -221,7 +235,7 @@ const ClientInvitationSetup = () => {
                   <ul className="space-y-3">
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground/90">Browse your private hot sheets curated by your agent</span>
+                      <span className="text-foreground/90">Browse your private hot sheets curated by {agentFirstName || "your agent"}</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
@@ -233,7 +247,7 @@ const ClientInvitationSetup = () => {
                     </li>
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground/90">Communicate with your agent directly</span>
+                      <span className="text-foreground/90">Communicate with {agentFirstName || "your agent"} directly</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
@@ -258,7 +272,7 @@ const ClientInvitationSetup = () => {
               <CardHeader className="p-8">
                 <CardTitle className="text-2xl">Create Your Secure Login</CardTitle>
                 <CardDescription className="text-base pt-2">
-                  We've pre-loaded your account using your agent's invitation.
+                  We've pre-loaded your account using {agentFirstName ? `${agentFirstName}'s` : "your agent's"} invitation.
                   All you need to do now is create a password to activate your access.
                 </CardDescription>
               </CardHeader>
@@ -285,7 +299,7 @@ const ClientInvitationSetup = () => {
                     />
                     {initialEmail && (
                       <p className="text-xs text-muted-foreground">
-                        Email provided by your agent
+                        Email provided by {agentFirstName || "your agent"}
                       </p>
                     )}
                   </div>
