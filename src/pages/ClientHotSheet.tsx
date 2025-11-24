@@ -20,6 +20,7 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { TownsPicker } from "@/components/TownsPicker";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
+import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 
 interface Listing {
   id: string;
@@ -37,6 +38,7 @@ interface Listing {
   property_type: string | null;
   photos: any;
   description: string | null;
+  created_at?: string;
 }
 
 const ClientHotSheet = () => {
@@ -75,6 +77,10 @@ const ClientHotSheet = () => {
   const [selectedCountyId, setSelectedCountyId] = useState<string>("all");
   const [showAreas, setShowAreas] = useState<boolean>(false);
   const [citySearch, setCitySearch] = useState("");
+  
+  // Selection and sorting state
+  const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState("newest");
 
   // Use the TownsPicker hook
   const { townsList, expandedCities, toggleCityExpansion, hasCountyData } = useTownsPicker({
@@ -375,6 +381,51 @@ const ClientHotSheet = () => {
     );
   };
 
+  // Selection functions
+  const toggleListing = (listingId: string) => {
+    const newSelected = new Set(selectedListings);
+    if (newSelected.has(listingId)) {
+      newSelected.delete(listingId);
+    } else {
+      newSelected.add(listingId);
+    }
+    setSelectedListings(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedListings.size === listings.length) {
+      setSelectedListings(new Set());
+    } else {
+      setSelectedListings(new Set(listings.map(l => l.id)));
+    }
+  };
+
+  const handleKeepSelected = () => {
+    if (selectedListings.size === 0) {
+      toast.error("No listings selected");
+      return;
+    }
+    const filtered = listings.filter(l => selectedListings.has(l.id));
+    setListings(filtered);
+    toast.success(`Showing ${filtered.length} selected listings`);
+  };
+
+  // Sort listings
+  const sortedListings = [...listings].sort((a, b) => {
+    switch (sortBy) {
+      case "newest":
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      case "oldest":
+        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+      case "price-high":
+        return b.price - a.price;
+      case "price-low":
+        return a.price - b.price;
+      default:
+        return 0;
+    }
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -433,7 +484,7 @@ const ClientHotSheet = () => {
                   )}
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-4">
-                      <div>
+                      <div className="flex-1">
                         <h3 className="text-lg font-semibold text-foreground mb-1">
                           You're working with {agentProfile.first_name} {agentProfile.last_name}
                         </h3>
@@ -443,7 +494,7 @@ const ClientHotSheet = () => {
                             {agentProfile.company}
                           </p>
                         )}
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mb-2">
                           {agentProfile.email && (
                             <a href={`mailto:${agentProfile.email}`} className="flex items-center gap-1 hover:text-primary transition-colors">
                               <Mail className="w-3.5 h-3.5" />
@@ -457,7 +508,22 @@ const ClientHotSheet = () => {
                             </a>
                           )}
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                          Want full control? Create a free account to unlock advanced filters and save your searches
+                        </p>
                       </div>
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          const params = new URLSearchParams();
+                          if (agentProfile?.id) params.set('primary_agent_id', agentProfile.id);
+                          if (hotSheet?.id) params.set('hot_sheet_id', hotSheet.id);
+                          navigate(`/auth?${params.toString()}`);
+                        }}
+                        className="shrink-0"
+                      >
+                        Create Free Account
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -632,30 +698,7 @@ const ClientHotSheet = () => {
                     </div>
                   </div>
 
-                  {/* Create Account CTA */}
-                  <div className="border-t pt-4 mt-6">
-                    <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-                      <CardContent className="p-4">
-                        <h4 className="font-semibold text-sm mb-2">Want more control over your search?</h4>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          Create a free account to unlock advanced filters, save searches, and manage all your hotsheets.
-                        </p>
-                        <Button
-                          onClick={() => {
-                            const params = new URLSearchParams();
-                            if (agentProfile?.id) params.set('primary_agent_id', agentProfile.id);
-                            if (hotSheet?.id) params.set('hot_sheet_id', hotSheet.id);
-                            navigate(`/auth?${params.toString()}`);
-                          }}
-                          className="w-full"
-                        >
-                          Create Free Account
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-2">
+                  <div className="flex justify-end gap-3 pt-4 mt-2">
                     <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
                       Cancel
                     </Button>
@@ -667,6 +710,53 @@ const ClientHotSheet = () => {
               </DialogContent>
             </Dialog>
           </div>
+
+          {/* Action Buttons */}
+          {listings.length > 0 && (
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="select-all"
+                    checked={selectedListings.size === listings.length && listings.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+                    Select All ({listings.length} listings)
+                  </label>
+                </div>
+                {selectedListings.size > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    ({selectedListings.size} selected)
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {selectedListings.size > 0 && (
+                  <>
+                    <Button onClick={handleKeepSelected} variant="outline" size="sm">
+                      Keep Selected ({selectedListings.size})
+                    </Button>
+                    <BulkShareListingsDialog
+                      listingIds={Array.from(selectedListings)}
+                      listingCount={selectedListings.size}
+                    />
+                  </>
+                )}
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="price-high">Price High-Low</SelectItem>
+                    <SelectItem value="price-low">Price Low-High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
 
           {/* Listings Grid */}
           {listings.length === 0 ? (
@@ -680,9 +770,16 @@ const ClientHotSheet = () => {
             </Card>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {listings.map((listing) => (
+              {sortedListings.map((listing) => (
                 <Card key={listing.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
                   <div className="relative" onClick={() => navigate(`/consumer/property/${listing.id}`)}>
+                    <div className="absolute top-4 left-4 z-10" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedListings.has(listing.id)}
+                        onCheckedChange={() => toggleListing(listing.id)}
+                        className="bg-background/80 backdrop-blur-sm"
+                      />
+                    </div>
                     <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
                       <FavoriteButton listingId={listing.id} size="icon" variant="secondary" />
                     </div>
