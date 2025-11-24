@@ -37,7 +37,18 @@ interface Listing {
 }
 
 const ClientHotSheet = () => {
-  const { token } = useParams<{ token: string }>();
+  const params = useParams();
+  console.log("ClientHotSheet route params", params);
+
+  const token =
+    (params.token as string | undefined) ||
+    (params.id as string | undefined) ||
+    (params.shareToken as string | undefined);
+
+  if (!token) {
+    throw new Error("No token provided");
+  }
+
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

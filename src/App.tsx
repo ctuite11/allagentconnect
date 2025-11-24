@@ -92,7 +92,7 @@ const App = () => (
           <Route path="/hot-sheets" element={<HotSheets />} />
           <Route path="/hot-sheets/:id/review" element={<HotSheetReview />} />
           <Route path="/my-clients" element={<MyClients />} />
-          <Route path="/client-hot-sheet/:id" element={<ClientHotSheet />} />
+          <Route path="/client-hot-sheet/:token" element={<ClientHotSheet />} />
           <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
           <Route path="/analytics" element={<ListingAnalytics />} />
           <Route path="/analytics/:id" element={<ListingAnalytics />} />
