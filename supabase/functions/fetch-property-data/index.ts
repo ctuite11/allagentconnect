@@ -60,14 +60,15 @@ serve(async (req) => {
     const normalizedCity = city.toLowerCase();
     const mappedCity = neighborhoodToCityMap[normalizedCity] || city;
 
-    // Build ATTOM API URL - ATTOM uses address1 and address2, not separate city/state
-    const params = new URLSearchParams({
-      address1: address,
-      address2: `${mappedCity}, ${state}`,
-    });
+    // Build ATTOM API URL - ATTOM prefers a single address parameter with full address
+    let fullAddress = `${address}, ${mappedCity}, ${state}`;
     if (zip) {
-      params.append("postalcode", zip);
+      fullAddress += ` ${zip}`;
     }
+    
+    const params = new URLSearchParams({
+      address: fullAddress,
+    });
 
     const attomUrl = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/basicprofile?${params.toString()}`;
     console.log("[fetch-property-data] ATTOM request URL:", attomUrl);
