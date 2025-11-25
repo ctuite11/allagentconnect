@@ -226,6 +226,7 @@ export default function AgentSuccessHub() {
         criteria
       `)
       .eq("user_id", agentId)
+      .eq("is_active", true)
       .order("updated_at", { ascending: false });
     
     if (!hotsheetsData) {
@@ -233,7 +234,7 @@ export default function AgentSuccessHub() {
       return;
     }
     
-    // Get client info and share tokens
+    // Get client info
     const clientIds = hotsheetsData.map(h => h.client_id).filter(Boolean);
     
     const { data: clients } = await supabase
@@ -241,27 +242,48 @@ export default function AgentSuccessHub() {
       .select("id, email, first_name, last_name")
       .in("id", clientIds);
     
-    const { data: tokens } = await supabase
+    // Get share tokens - match by checking payload for hot_sheet_id
+    const { data: allTokens } = await supabase
       .from("share_tokens")
-      .select("id, token")
-      .eq("agent_id", agentId)
-      .in("id", hotsheetsData.map(h => h.id));
+      .select("token, payload")
+      .eq("agent_id", agentId);
     
-    const hotsheetsWithDetails: HotSheet[] = hotsheetsData.map(hs => {
-      const client = clients?.find(c => c.id === hs.client_id);
-      const token = tokens?.find(t => t.id === hs.id);
-      
-      return {
-        id: hs.id,
-        name: hs.name,
-        client_email: client?.email || null,
-        client_name: client ? `${client.first_name || ""} ${client.last_name || ""}`.trim() : null,
-        created_at: hs.created_at,
-        updated_at: hs.updated_at,
-        criteria: hs.criteria,
-        share_token: token?.token || undefined
-      };
-    });
+    // Build hotsheets with details and match counts
+    const hotsheetsWithDetails: HotSheet[] = await Promise.all(
+      hotsheetsData.map(async (hs) => {
+        const client = clients?.find(c => c.id === hs.client_id);
+        
+        // Find token by checking payload
+        const token = allTokens?.find(t => {
+          const payload = t.payload as any;
+          return payload?.hot_sheet_id === hs.id || payload?.hotsheet_id === hs.id;
+        });
+        
+        // Get match count using buildListingsQuery
+        let matchingCount = 0;
+        try {
+          const { count } = await supabase
+            .from("listings")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "active");
+          matchingCount = count || 0;
+        } catch (error) {
+          console.error("Error counting matches for hotsheet:", error);
+        }
+        
+        return {
+          id: hs.id,
+          name: hs.name,
+          client_email: client?.email || null,
+          client_name: client ? `${client.first_name || ""} ${client.last_name || ""}`.trim() : null,
+          created_at: hs.created_at,
+          updated_at: hs.updated_at,
+          criteria: hs.criteria,
+          matching_count: matchingCount,
+          share_token: token?.token || undefined
+        };
+      })
+    );
     
     setHotsheets(hotsheetsWithDetails);
   };
@@ -499,6 +521,11 @@ export default function AgentSuccessHub() {
                       {(hs.client_name || hs.client_email) && (
                         <p className="text-sm text-muted-foreground">
                           Client: {hs.client_name || hs.client_email}
+                        </p>
+                      )}
+                      {hs.matching_count !== undefined && (
+                        <p className="text-sm text-muted-foreground">
+                          {hs.matching_count} matching {hs.matching_count === 1 ? 'listing' : 'listings'}
                         </p>
                       )}
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
