@@ -1470,6 +1470,70 @@ const AddListing = () => {
                   </div>
                 </div>
 
+                {/* Property Features */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Property Features</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[
+                      'Hardwood floors', 'Granite countertops', 'Stainless appliances',
+                      'Updated kitchen', 'Updated bathrooms', 'Fireplace', 'Central air',
+                      'Forced air heating', 'Basement', 'Finished basement', 'Attic',
+                      'Garage', 'Carport', 'Energy efficient', 'Smart home features'
+                    ].map((feature) => (
+                      <div key={feature} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={feature}
+                          checked={propertyFeatures.includes(feature)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setPropertyFeatures([...propertyFeatures, feature]);
+                            } else {
+                              setPropertyFeatures(propertyFeatures.filter(f => f !== feature));
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor={feature} className="font-normal cursor-pointer">
+                          {feature}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Amenities */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Amenities</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[
+                      'Pool', 'Hot tub', 'Tennis court', 'Gym/Fitness center', 'Playground',
+                      'Clubhouse', 'Pet friendly', 'Gated community', 'Security system',
+                      'Concierge', 'Elevator', 'Storage units', 'Bike storage',
+                      'EV charging', 'Package room'
+                    ].map((amenity) => (
+                      <div key={amenity} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={amenity}
+                          checked={amenities.includes(amenity)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setAmenities([...amenities, amenity]);
+                            } else {
+                              setAmenities(amenities.filter(a => a !== amenity));
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor={amenity} className="font-normal cursor-pointer">
+                          {amenity}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Commission & Compensation */}
                 <div className="space-y-4 border-t pt-6">
                   <Label className="text-xl font-semibold">Commission & Compensation</Label>
@@ -1491,15 +1555,20 @@ const AddListing = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="commission_rate">
-                        {formData.commission_type === 'percentage' ? 'Rate' : 'Amount'}
+                        {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Amount ($)'}
                       </Label>
-                      <FormattedInput
+                      <Input
                         id="commission_rate"
-                        format={formData.commission_type === 'percentage' ? 'percentage' : 'currency'}
-                        decimals={2}
-                        placeholder={formData.commission_type === 'percentage' ? '2.5' : '500'}
+                        name="buyer_agent_commission_rate"
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        max={formData.commission_type === 'percentage' ? "100" : undefined}
+                        placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
                         value={formData.commission_rate}
-                        onChange={(value) => setFormData(prev => ({ ...prev, commission_rate: value }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
+                        autoComplete="off"
                       />
                     </div>
                     <div className="space-y-2">
@@ -1599,70 +1668,6 @@ const AddListing = () => {
                         />
                         <Label htmlFor={disclosure} className="font-normal cursor-pointer">
                           {disclosure}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Property Features */}
-                <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Property Features</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {[
-                      'Hardwood floors', 'Granite countertops', 'Stainless appliances',
-                      'Updated kitchen', 'Updated bathrooms', 'Fireplace', 'Central air',
-                      'Forced air heating', 'Basement', 'Finished basement', 'Attic',
-                      'Garage', 'Carport', 'Energy efficient', 'Smart home features'
-                    ].map((feature) => (
-                      <div key={feature} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={feature}
-                          checked={propertyFeatures.includes(feature)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setPropertyFeatures([...propertyFeatures, feature]);
-                            } else {
-                              setPropertyFeatures(propertyFeatures.filter(f => f !== feature));
-                            }
-                          }}
-                          className="rounded border-gray-300"
-                        />
-                        <Label htmlFor={feature} className="font-normal cursor-pointer">
-                          {feature}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Amenities */}
-                <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Amenities</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {[
-                      'Pool', 'Hot tub', 'Tennis court', 'Gym/Fitness center', 'Playground',
-                      'Clubhouse', 'Pet friendly', 'Gated community', 'Security system',
-                      'Concierge', 'Elevator', 'Storage units', 'Bike storage',
-                      'EV charging', 'Package room'
-                    ].map((amenity) => (
-                      <div key={amenity} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={amenity}
-                          checked={amenities.includes(amenity)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setAmenities([...amenities, amenity]);
-                            } else {
-                              setAmenities(amenities.filter(a => a !== amenity));
-                            }
-                          }}
-                          className="rounded border-gray-300"
-                        />
-                        <Label htmlFor={amenity} className="font-normal cursor-pointer">
-                          {amenity}
                         </Label>
                       </div>
                     ))}
