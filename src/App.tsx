@@ -9,7 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import { AgentProtectedRoute } from "./components/AgentProtectedRoute";
 import { ClientProtectedRoute } from "./components/ClientProtectedRoute";
-import AgentDashboard from "./pages/AgentDashboard";
+import AgentSuccessHub from "./pages/AgentSuccessHub";
 import BuyerAuth from "./pages/BuyerAuth";
 // import removed: AgentSearch (redirect to OurAgents)
 import SubmitClientNeed from "./pages/SubmitClientNeed";
@@ -74,7 +74,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/coming-soon" element={<ComingSoon />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/agent-dashboard" element={<AgentProtectedRoute><AgentDashboard /></AgentProtectedRoute>} />
+          <Route path="/agent-dashboard" element={<AgentProtectedRoute><AgentSuccessHub /></AgentProtectedRoute>} />
           <Route path="/buyer/auth" element={<BuyerAuth />} />
           <Route path="/submit-client-need" element={<SubmitClientNeed />} />
           <Route path="/client-needs" element={<AgentProtectedRoute><ClientNeedsDashboard /></AgentProtectedRoute>} />
