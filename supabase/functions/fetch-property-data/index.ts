@@ -60,11 +60,10 @@ serve(async (req) => {
     const normalizedCity = city.toLowerCase();
     const mappedCity = neighborhoodToCityMap[normalizedCity] || city;
 
-    // Build ATTOM API URL
+    // Build ATTOM API URL - ATTOM uses address1 and address2, not separate city/state
     const params = new URLSearchParams({
-      address: address,
-      city: mappedCity,
-      state: state,
+      address1: address,
+      address2: `${mappedCity}, ${state}`,
     });
     if (zip) {
       params.append("postalcode", zip);
