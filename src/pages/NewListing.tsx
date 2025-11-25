@@ -31,6 +31,19 @@ const NewListing: React.FC = () => {
   const [grossIncome, setGrossIncome] = useState<number | "">("");
   const [operatingExpenses, setOperatingExpenses] = useState<number | "">("");
   
+  // Auto-fill from public records
+  const [autoFillLoading, setAutoFillLoading] = useState(false);
+  const [attomId, setAttomId] = useState<string | null>(null);
+  const [bedrooms, setBedrooms] = useState<number | "">("");
+  const [bathrooms, setBathrooms] = useState<number | "">("");
+  const [squareFeet, setSquareFeet] = useState<number | "">("");
+  const [lotSize, setLotSize] = useState<number | "">("");
+  const [yearBuilt, setYearBuilt] = useState<number | "">("");
+  const [taxAmount, setTaxAmount] = useState<number | "">("");
+  const [taxYear, setTaxYear] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  
   const [saving, setSaving] = useState(false);
 
   if (!user) {
@@ -43,6 +56,45 @@ const NewListing: React.FC = () => {
       </div>
     );
   }
+
+  const handleAutoFillFromPublicRecords = async () => {
+    if (!address || !city || !state) {
+      toast.error("Please enter address, city, and state first.");
+      return;
+    }
+
+    setAutoFillLoading(true);
+
+    const { data, error } = await supabase.functions.invoke("fetch-property-data", {
+      body: {
+        address,
+        city,
+        state,
+        zip: zipCode,
+      },
+    });
+
+    setAutoFillLoading(false);
+
+    if (error || !data || data.error) {
+      toast.error("Could not fetch public record data.");
+      console.error(error || data);
+      return;
+    }
+
+    toast.success("Property data loaded from public records!");
+    
+    setAttomId(data.attomId ?? null);
+    if (data.beds) setBedrooms(data.beds);
+    if (data.baths) setBathrooms(data.baths);
+    if (data.sqft) setSquareFeet(data.sqft);
+    if (data.lotSizeSqft) setLotSize(data.lotSizeSqft);
+    if (data.yearBuilt) setYearBuilt(data.yearBuilt);
+    if (data.taxAmount) setTaxAmount(data.taxAmount);
+    if (data.taxYear) setTaxYear(data.taxYear.toString());
+    if (data.latitude) setLatitude(data.latitude);
+    if (data.longitude) setLongitude(data.longitude);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +120,16 @@ const NewListing: React.FC = () => {
       listing_type: listingType,
       property_type: propertyType,
       status: "draft",
+      attom_id: attomId,
+      bedrooms: bedrooms || null,
+      bathrooms: bathrooms || null,
+      square_feet: squareFeet || null,
+      lot_size: lotSize || null,
+      year_built: yearBuilt || null,
+      annual_property_tax: taxAmount || null,
+      tax_year: taxYear ? parseInt(taxYear) : null,
+      latitude,
+      longitude,
     };
 
     // Add type-specific fields
@@ -148,14 +210,25 @@ const NewListing: React.FC = () => {
 
                 <div>
                   <Label htmlFor="address">Street Address *</Label>
-                  <Input
-                    id="address"
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="e.g. 123 Main Street"
-                    required
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="address"
+                      type="text"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="e.g. 123 Main Street"
+                      required
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleAutoFillFromPublicRecords}
+                      disabled={autoFillLoading}
+                      variant="secondary"
+                    >
+                      {autoFillLoading ? "Fetching..." : "Auto-fill from Public Records"}
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -214,6 +287,63 @@ const NewListing: React.FC = () => {
                       }}
                       placeholder={listingType === "for_sale" ? "e.g. 995000" : "e.g. 2500"}
                       required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 border-t pt-4">
+                  <div>
+                    <Label htmlFor="bedrooms">Bedrooms</Label>
+                    <Input
+                      id="bedrooms"
+                      type="number"
+                      value={bedrooms}
+                      onChange={(e) => setBedrooms(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="e.g. 3"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="bathrooms">Bathrooms</Label>
+                    <Input
+                      id="bathrooms"
+                      type="number"
+                      step="0.5"
+                      value={bathrooms}
+                      onChange={(e) => setBathrooms(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="e.g. 2.5"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="squareFeet">Square Feet</Label>
+                    <Input
+                      id="squareFeet"
+                      type="number"
+                      value={squareFeet}
+                      onChange={(e) => setSquareFeet(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="e.g. 2000"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="lotSize">Lot Size (sq ft)</Label>
+                    <Input
+                      id="lotSize"
+                      type="number"
+                      value={lotSize}
+                      onChange={(e) => setLotSize(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="e.g. 5000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="yearBuilt">Year Built</Label>
+                    <Input
+                      id="yearBuilt"
+                      type="number"
+                      value={yearBuilt}
+                      onChange={(e) => setYearBuilt(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="e.g. 1990"
                     />
                   </div>
                 </div>
