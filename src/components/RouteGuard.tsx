@@ -2,6 +2,7 @@ import React from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { LoadingScreen } from "./LoadingScreen";
 
 type Props = {
   children: React.ReactElement;
@@ -17,14 +18,6 @@ export const RouteGuard: React.FC<Props> = ({
   const { user, role, loading } = useAuthRole();
   const location = useLocation();
   const navigate = useNavigate();
-
-  // TEMP debug – will remove later
-  console.log("AUTH DEBUG", {
-    loading,
-    hasUser: !!user,
-    role,
-    location: location.pathname,
-  });
 
   useEffect(() => {
     if (loading) return; // DO NOTHING WHILE LOADING
@@ -50,18 +43,14 @@ export const RouteGuard: React.FC<Props> = ({
     }
   }, [loading, user, role, requireAuth, requireRole, location.pathname, navigate]);
 
-  // While loading, show nothing or a spinner
+  // While loading, show loading screen
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingScreen message="Checking your session..." />;
   }
 
   // If route requires auth and no user -> we already navigated in useEffect
   if (requireAuth && !user) {
-    return null;
+    return <LoadingScreen message="Redirecting to sign in..." />;
   }
 
   // If role mismatch, we've already navigated; render nothing

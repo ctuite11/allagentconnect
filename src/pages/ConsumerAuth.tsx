@@ -12,6 +12,7 @@ import { z } from "zod";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 const signupSchema = z.object({
   email: z.string().trim().email("Invalid email address").max(255, "Email too long"),
@@ -268,11 +269,12 @@ const ConsumerAuth = () => {
 
   // If we have a user but role not yet loaded, show loading
   if (user && (authLoading || !role)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingScreen message="Loading your account..." />;
+  }
+
+  // If we have user + role, the effect above should be redirecting
+  if (user && role && !authLoading) {
+    return <LoadingScreen message="Redirecting to your dashboard..." />;
   }
 
   return (
