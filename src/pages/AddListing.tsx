@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,8 @@ const AddListing = () => {
   const [autoSaving, setAutoSaving] = useState(false);
   const [autoFillLoading, setAutoFillLoading] = useState(false);
   const [attomId, setAttomId] = useState<string | null>(null);
+  const [attomResults, setAttomResults] = useState<any[]>([]);
+  const [isAttomModalOpen, setIsAttomModalOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     status: "new",
@@ -297,26 +300,58 @@ const AddListing = () => {
     });
     setAutoFillLoading(false);
 
-    if (error || !data || data.error) {
+    if (error || !data) {
       toast.error("Could not fetch public record data.");
       console.error(error || data);
       return;
     }
 
-    toast.success("Property data loaded from public records!");
-    setAttomId(data.attomId ?? null);
+    const results = data.results || [];
+
+    if (results.length === 0) {
+      toast.error("No property records found for this address.");
+      return;
+    }
+
+    if (results.length === 1) {
+      // Auto-fill with the single result
+      applyAttomData(results[0]);
+      toast.success("Property data loaded from public records!");
+    } else {
+      // Show modal to let user choose
+      setAttomResults(results);
+      setIsAttomModalOpen(true);
+    }
+  };
+
+  const applyAttomData = (record: any) => {
+    setAttomId(record.attom_id ?? null);
     setFormData(prev => ({
       ...prev,
-      bedrooms: data.beds ? data.beds.toString() : prev.bedrooms,
-      bathrooms: data.baths ? data.baths.toString() : prev.bathrooms,
-      square_feet: data.sqft ? data.sqft.toString() : prev.square_feet,
-      lot_size: data.lotSizeSqft ? data.lotSizeSqft.toString() : prev.lot_size,
-      year_built: data.yearBuilt ? data.yearBuilt.toString() : prev.year_built,
-      annual_property_tax: data.taxAmount ? data.taxAmount.toString() : prev.annual_property_tax,
-      tax_year: data.taxYear ? data.taxYear.toString() : prev.tax_year,
-      latitude: data.latitude ?? prev.latitude,
-      longitude: data.longitude ?? prev.longitude,
+      bedrooms: record.beds ? record.beds.toString() : prev.bedrooms,
+      bathrooms: record.baths ? record.baths.toString() : prev.bathrooms,
+      square_feet: record.sqft ? record.sqft.toString() : prev.square_feet,
+      lot_size: record.lotSizeSqft ? record.lotSizeSqft.toString() : prev.lot_size,
+      year_built: record.yearBuilt ? record.yearBuilt.toString() : prev.year_built,
+      annual_property_tax: record.taxAmount ? record.taxAmount.toString() : prev.annual_property_tax,
+      tax_year: record.taxYear ? record.taxYear.toString() : prev.tax_year,
+      latitude: record.latitude ?? prev.latitude,
+      longitude: record.longitude ?? prev.longitude,
     }));
+
+    // Update property type if it's condo/co-op
+    if (record.property_type && (
+      record.property_type.toLowerCase().includes('condo') ||
+      record.property_type.toLowerCase().includes('co-op')
+    )) {
+      setFormData(prev => ({ ...prev, property_type: 'condo' }));
+    }
+  };
+
+  const handleImportAttomRecord = (record: any) => {
+    applyAttomData(record);
+    setIsAttomModalOpen(false);
+    toast.success("Property data imported from public records!");
   };
 
   const handleStatusChange = (value: string) => {
@@ -1577,6 +1612,54 @@ const AddListing = () => {
           </Card>
         </div>
       </div>
+
+      {/* ATTOM Records Selection Modal */}
+      <Dialog open={isAttomModalOpen} onOpenChange={setIsAttomModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Please choose a record to import</DialogTitle>
+          </DialogHeader>
+          <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-800 mb-4">
+            Please note that the property type of the listing will be updated with the property type of the public record that you select.
+          </div>
+          <div className="flex-1 overflow-auto">
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Address</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">City</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Owner</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Property Type</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attomResults.map((record, index) => (
+                    <tr key={record.attom_id || index} className="border-t hover:bg-muted/50">
+                      <td className="px-4 py-3 text-sm">{record.address || '—'}</td>
+                      <td className="px-4 py-3 text-sm">{record.city || '—'}</td>
+                      <td className="px-4 py-3 text-sm">{record.owner || '—'}</td>
+                      <td className="px-4 py-3 text-sm">{record.property_type || '—'}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          onClick={() => handleImportAttomRecord(record)}
+                          className="text-primary underline"
+                        >
+                          Import
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -91,59 +91,67 @@ serve(async (req) => {
 
     if (!attomData?.property?.length) {
       return new Response(
-        JSON.stringify({ error: true, message: "No property data found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ results: [] }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const property = attomData.property[0];
-    const building = property.building || {};
-    const lot = property.lot || {};
-    const summary = property.summary || {};
-    const assessment = property.assessment || {};
-    const address_info = property.address || {};
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Extract ATTOM ID
-    const attomId = property.identifier?.attomId || null;
+    // Process all properties from the response
+    const results = await Promise.all(
+      attomData.property.map(async (property: any) => {
+        const building = property.building || {};
+        const lot = property.lot || {};
+        const summary = property.summary || {};
+        const assessment = property.assessment || {};
+        const address_info = property.address || {};
+        const owner = property.owner || {};
+        const attomId = property.identifier?.attomId || null;
 
-    // Normalize response
-    const normalized = {
-      attomId,
-      beds: building.rooms?.beds || null,
-      baths: building.rooms?.bathsTotal || building.rooms?.bathsFull || null,
-      sqft: building.size?.bldgSize || building.size?.livingSize || null,
-      lotSizeSqft: lot.lotSize2 || lot.lotSize1 || null,
-      yearBuilt: summary.yearBuilt || null,
-      lastSaleDate: property.sale?.saleTransDate || null,
-      lastSalePrice: property.sale?.saleAmt || null,
-      taxYear: assessment.tax?.taxYear || null,
-      taxAmount: assessment.tax?.taxAmt || null,
-      latitude: address_info.latitude || null,
-      longitude: address_info.longitude || null,
-    };
+        // Cache the raw response for this property
+        if (attomId) {
+          try {
+            await supabase
+              .from("public_records_cache")
+              .upsert({
+                attom_id: attomId,
+                raw: { property: [property] }, // Store individual property
+              });
+            console.log("[fetch-property-data] Cached public record for ATTOM ID:", attomId);
+          } catch (cacheError) {
+            console.error("[fetch-property-data] Failed to cache record:", cacheError);
+          }
+        }
 
-    // Cache the raw response
-    if (attomId) {
-      try {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        // Build normalized result
+        return {
+          attom_id: attomId,
+          address: address_info.oneLine || `${address_info.line1 || ''} ${address_info.line2 || ''}`.trim(),
+          city: address_info.locality || city,
+          state: address_info.countrySubd || state,
+          zip: address_info.postal1 || zip || null,
+          owner: owner.owner1?.lastNameOrCorporation || owner.owner1?.companyName || null,
+          property_type: summary.propClass || summary.propType || null,
+          beds: building.rooms?.beds || null,
+          baths: building.rooms?.bathsTotal || building.rooms?.bathsFull || null,
+          sqft: building.size?.bldgSize || building.size?.livingSize || null,
+          lotSizeSqft: lot.lotSize2 || lot.lotSize1 || null,
+          yearBuilt: summary.yearBuilt || null,
+          lastSaleDate: property.sale?.saleTransDate || null,
+          lastSalePrice: property.sale?.saleAmt || null,
+          taxYear: assessment.tax?.taxYear || null,
+          taxAmount: assessment.tax?.taxAmt || null,
+          latitude: address_info.latitude || null,
+          longitude: address_info.longitude || null,
+          raw: property,
+        };
+      })
+    );
 
-        await supabase
-          .from("public_records_cache")
-          .upsert({
-            attom_id: attomId,
-            raw: attomData,
-          });
-
-        console.log("[fetch-property-data] Cached public record for ATTOM ID:", attomId);
-      } catch (cacheError) {
-        console.error("[fetch-property-data] Failed to cache record:", cacheError);
-        // Continue anyway - caching failure shouldn't block the response
-      }
-    }
-
-    return new Response(JSON.stringify(normalized), {
+    return new Response(JSON.stringify({ results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
