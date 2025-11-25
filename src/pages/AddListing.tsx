@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -568,15 +568,27 @@ const AddListing = () => {
   }, [formData.address, formData.state, selectedCounty, formData.city, formData.zip_code, hasAutoFetched, autoFillLoading]);
 
   // Reset auto-fetch flag when address changes significantly
+  const prevAddressRef = useRef({ address: "", city: "", zip: "" });
+  
   useEffect(() => {
-    if (formData.address || formData.city || formData.zip_code) {
-      // If any key field changes after we've already fetched, reset the flag
-      if (hasAutoFetched) {
-        setHasAutoFetched(false);
-        setAttomFetchStatus("");
-        setAttomNeighborhoods([]);
-      }
+    const currentAddress = formData.address;
+    const currentCity = formData.city;
+    const currentZip = formData.zip_code;
+    
+    // Only reset if values actually changed (not just set to same value)
+    const addressChanged = prevAddressRef.current.address !== currentAddress && prevAddressRef.current.address !== "";
+    const cityChanged = prevAddressRef.current.city !== currentCity && prevAddressRef.current.city !== "";
+    const zipChanged = prevAddressRef.current.zip !== currentZip && prevAddressRef.current.zip !== "";
+    
+    if ((addressChanged || cityChanged || zipChanged) && hasAutoFetched) {
+      console.log("[AddListing] Address changed, resetting auto-fetch flag");
+      setHasAutoFetched(false);
+      setAttomFetchStatus("");
+      setAttomNeighborhoods([]);
     }
+    
+    // Update refs
+    prevAddressRef.current = { address: currentAddress, city: currentCity, zip: currentZip };
   }, [formData.address, formData.city, formData.zip_code, hasAutoFetched]);
 
   const handleStatusChange = (value: string) => {
@@ -1287,9 +1299,18 @@ const AddListing = () => {
                           ))}
                         </div>
                         {formData.zip_code && (
-                          <div className="flex items-center gap-2 p-2 bg-primary/10 border border-primary/20 rounded text-sm text-primary">
-                            <CheckCircle2 className="h-4 w-4" />
-                            Selected: {formData.zip_code}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 p-2 bg-primary/10 border border-primary/20 rounded text-sm text-primary">
+                              <CheckCircle2 className="h-4 w-4" />
+                              Selected: {formData.zip_code}
+                            </div>
+                            <Input
+                              type="text"
+                              placeholder="Or type ZIP code manually"
+                              value={formData.zip_code}
+                              onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
+                              className="text-sm"
+                            />
                           </div>
                         )}
                       </div>
