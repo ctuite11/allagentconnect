@@ -27,6 +27,8 @@ const EditListing: React.FC = () => {
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [price, setPrice] = useState<number | "">("");
+  const [originalPrice, setOriginalPrice] = useState<number | null>(null);
+  const [originalStatus, setOriginalStatus] = useState<string | null>(null);
   
   // Rental-specific fields
   const [monthlyRent, setMonthlyRent] = useState<number | "">("");
@@ -93,6 +95,10 @@ const EditListing: React.FC = () => {
         setState(data.state || "");
         setZipCode(data.zip_code || "");
         setPrice(data.price || "");
+        
+        // Track original values for history
+        setOriginalPrice(data.price || null);
+        setOriginalStatus(rawStatus);
         
         // Load property details
         setBedrooms(data.bedrooms || "");
@@ -253,14 +259,54 @@ const EditListing: React.FC = () => {
       .update(listingData)
       .eq("id", id);
 
-    setSaving(false);
-
     if (error) {
+      setSaving(false);
       console.error("Error updating listing", error);
       toast.error(error.message);
       return;
     }
 
+    // Log price and status changes
+    const { data: userData } = await supabase.auth.getUser();
+    const currentUserId = userData?.user?.id ?? null;
+    const finalPrice = listingType === "for_sale" ? price : monthlyRent;
+    const numericPrice = finalPrice === "" ? null : Number(finalPrice);
+    
+    // Check if price changed
+    const priceChanged = 
+      originalPrice != null &&
+      numericPrice != null &&
+      Number(numericPrice) !== Number(originalPrice);
+
+    if (priceChanged && numericPrice != null) {
+      await (supabase as any).from("listing_price_history").insert({
+        listing_id: id,
+        old_price: originalPrice,
+        new_price: numericPrice,
+        changed_by: currentUserId,
+        note: "Price adjustment",
+      });
+      setOriginalPrice(numericPrice);
+    }
+
+    // Check if status changed
+    const dbStatus = status.toLowerCase().replace(" ", "_");
+    const statusChanged = 
+      originalStatus != null &&
+      dbStatus !== originalStatus;
+
+    if (statusChanged) {
+      await (supabase as any).from("listing_status_history").insert({
+        listing_id: id,
+        old_status: originalStatus,
+        new_status: dbStatus,
+        changed_by: currentUserId,
+        note: "Status updated",
+      });
+      setOriginalStatus(dbStatus);
+    }
+
+    setSaving(false);
     toast.success("Listing updated successfully!");
     navigate("/agent/listings");
   };
