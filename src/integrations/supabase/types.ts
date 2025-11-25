@@ -1412,6 +1412,7 @@ export type Database = {
           amenities: Json | null
           annual_property_tax: number | null
           appointment_required: boolean | null
+          area_amenities: string[] | null
           assessed_value: number | null
           attom_data: Json | null
           attom_id: string | null
@@ -1437,6 +1438,7 @@ export type Database = {
           created_at: string
           description: string | null
           disclosures: Json | null
+          disclosures_other: string | null
           documents: Json | null
           entry_only: boolean | null
           exterior_features_list: Json | null
@@ -1478,6 +1480,7 @@ export type Database = {
           property_features: Json | null
           property_styles: Json | null
           property_type: string | null
+          property_website_url: string | null
           residential_exemption: string | null
           roof_materials: Json | null
           schools_data: Json | null
@@ -1494,6 +1497,7 @@ export type Database = {
           town: string | null
           updated_at: string
           value_estimate: Json | null
+          video_url: string | null
           virtual_tour_url: string | null
           walk_score_data: Json | null
           water_view: boolean | null
@@ -1511,6 +1515,7 @@ export type Database = {
           amenities?: Json | null
           annual_property_tax?: number | null
           appointment_required?: boolean | null
+          area_amenities?: string[] | null
           assessed_value?: number | null
           attom_data?: Json | null
           attom_id?: string | null
@@ -1536,6 +1541,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           disclosures?: Json | null
+          disclosures_other?: string | null
           documents?: Json | null
           entry_only?: boolean | null
           exterior_features_list?: Json | null
@@ -1577,6 +1583,7 @@ export type Database = {
           property_features?: Json | null
           property_styles?: Json | null
           property_type?: string | null
+          property_website_url?: string | null
           residential_exemption?: string | null
           roof_materials?: Json | null
           schools_data?: Json | null
@@ -1593,6 +1600,7 @@ export type Database = {
           town?: string | null
           updated_at?: string
           value_estimate?: Json | null
+          video_url?: string | null
           virtual_tour_url?: string | null
           walk_score_data?: Json | null
           water_view?: boolean | null
@@ -1610,6 +1618,7 @@ export type Database = {
           amenities?: Json | null
           annual_property_tax?: number | null
           appointment_required?: boolean | null
+          area_amenities?: string[] | null
           assessed_value?: number | null
           attom_data?: Json | null
           attom_id?: string | null
@@ -1635,6 +1644,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           disclosures?: Json | null
+          disclosures_other?: string | null
           documents?: Json | null
           entry_only?: boolean | null
           exterior_features_list?: Json | null
@@ -1676,6 +1686,7 @@ export type Database = {
           property_features?: Json | null
           property_styles?: Json | null
           property_type?: string | null
+          property_website_url?: string | null
           residential_exemption?: string | null
           roof_materials?: Json | null
           schools_data?: Json | null
@@ -1692,6 +1703,7 @@ export type Database = {
           town?: string | null
           updated_at?: string
           value_estimate?: Json | null
+          video_url?: string | null
           virtual_tour_url?: string | null
           walk_score_data?: Json | null
           water_view?: boolean | null
