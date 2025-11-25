@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 const signupSchema = z.object({
   email: z.string().trim().email("Invalid email address").max(255, "Email too long"),
@@ -35,7 +36,8 @@ const passwordSchema = z.object({
 
 const ConsumerAuth = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const { user, role, loading: authLoading } = useAuthRole();
+  const [formLoading, setFormLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
@@ -53,95 +55,37 @@ const ConsumerAuth = () => {
   const [phone, setPhone] = useState("");
 
   useEffect(() => {
-    let mounted = true;
-    
-    // Check URL hash immediately to prevent premature navigation
+    // Check URL hash for password recovery
     const checkRecoveryFlow = () => {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       return hashParams.get('type') === 'recovery';
     };
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-      
-      const isRecovery = checkRecoveryFlow();
-      
-      if (isRecovery && session?.user) {
-        // User clicked reset link - show password reset form, don't redirect
-        setIsResettingPassword(true);
-        setShowForgotPassword(false);
-        setActiveTab("login");
-        return;
-      }
-      
-      if (event === 'SIGNED_IN' && session && !isRecovery) {
-        // Fetch role before redirecting
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        if (!mounted) return;
-        
-        const userRole = roleData?.role;
-        
-        if (userRole === 'agent') {
-          navigate('/agent-dashboard');
-        } else {
-          navigate('/client/dashboard');
-        }
-      }
-    });
-
-    // Check if user is already logged in
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!mounted) return;
-      
-      const isRecovery = checkRecoveryFlow();
-      
-      if (isRecovery && session?.user) {
-        // User clicked reset link - show password reset form, don't redirect
-        setIsResettingPassword(true);
-        setShowForgotPassword(false);
-        setActiveTab("login");
-        return;
-      }
-      
-      if (session && !isRecovery) {
-        // Fetch role before redirecting
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        if (!mounted) return;
-        
-        const userRole = roleData?.role;
-        
-        if (userRole === 'agent') {
-          navigate('/agent-dashboard');
-        } else {
-          navigate('/client/dashboard');
-        }
-      }
-    };
+    const isRecovery = checkRecoveryFlow();
     
-    checkSession();
+    if (isRecovery && user) {
+      // User clicked reset link - show password reset form, don't redirect
+      setIsResettingPassword(true);
+      setShowForgotPassword(false);
+      setActiveTab("login");
+      return;
+    }
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
+    // AFTER loading is done and we have user + role, redirect
+    if (authLoading) return; // DO NOTHING WHILE LOADING
+
+    if (user && role) {
+      if (role === "agent") {
+        navigate("/agent-dashboard", { replace: true });
+      } else if (role === "buyer") {
+        navigate("/client/dashboard", { replace: true });
+      }
+    }
+  }, [authLoading, user, role, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
 
     try {
       // Validate input
@@ -150,7 +94,7 @@ const ConsumerAuth = () => {
         password: loginPassword,
       });
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: validated.email,
         password: validated.password,
       });
@@ -166,24 +110,11 @@ const ConsumerAuth = () => {
         return;
       }
 
-      if (data.session) {
-        // Fetch role before redirecting
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.session.user.id)
-          .single();
-        
-        const userRole = roleData?.role;
-        
-        toast.success("Successfully logged in!");
-        
-        if (userRole === 'agent') {
-          navigate('/agent-dashboard');
-        } else {
-          navigate('/client/dashboard');
-        }
-      }
+      toast.success("Successfully logged in!");
+      
+      // Do NOT navigate here. The auth state listener in useAuthRole
+      // will re-run and then the useEffect above will redirect once
+      // we know the role.
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
@@ -191,13 +122,13 @@ const ConsumerAuth = () => {
         toast.error("An error occurred during login");
       }
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
 
     try {
       const emailSchema = z.string().trim().email("Invalid email address");
@@ -224,13 +155,13 @@ const ConsumerAuth = () => {
         toast.error("An error occurred sending reset email");
       }
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
 
     try {
       const validated = passwordSchema.parse({
@@ -262,13 +193,13 @@ const ConsumerAuth = () => {
         toast.error("An error occurred updating your password");
       }
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
 
     try {
       // Validate input
@@ -331,9 +262,18 @@ const ConsumerAuth = () => {
         toast.error("An error occurred during signup");
       }
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
+
+  // If we have a user but role not yet loaded, show loading
+  if (user && (authLoading || !role)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -374,7 +314,7 @@ const ConsumerAuth = () => {
                       value={signupPassword}
                       onChange={(e) => setSignupPassword(e.target.value)}
                       required
-                      disabled={loading}
+                      disabled={formLoading}
                     />
                     <p className="text-xs text-muted-foreground">
                       Password must be at least 6 characters
@@ -389,11 +329,11 @@ const ConsumerAuth = () => {
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
-                      disabled={loading}
+                      disabled={formLoading}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Updating password..." : "Update Password"}
+                  <Button type="submit" className="w-full" disabled={formLoading}>
+                    {formLoading ? "Updating password..." : "Update Password"}
                   </Button>
                 </form>
               </div>
@@ -422,11 +362,11 @@ const ConsumerAuth = () => {
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       required
-                      disabled={loading}
+                      disabled={formLoading}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Sending..." : "Send Reset Link"}
+                  <Button type="submit" className="w-full" disabled={formLoading}>
+                    {formLoading ? "Sending..." : "Send Reset Link"}
                   </Button>
                 </form>
               </div>
@@ -448,7 +388,7 @@ const ConsumerAuth = () => {
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       required
-                      disabled={loading}
+                      disabled={formLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -460,18 +400,18 @@ const ConsumerAuth = () => {
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
-                      disabled={loading}
+                      disabled={formLoading}
                     />
                   </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Logging in..." : "Login"}
+                    <Button type="submit" className="w-full" disabled={formLoading}>
+                      {formLoading ? "Logging in..." : "Login"}
                     </Button>
                     <Button
                       type="button"
                       variant="link"
                       className="w-full"
                       onClick={() => setShowForgotPassword(true)}
-                      disabled={loading}
+                      disabled={formLoading}
                     >
                       Forgot password?
                     </Button>
@@ -490,7 +430,7 @@ const ConsumerAuth = () => {
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                         required
-                        disabled={loading}
+                        disabled={formLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -502,7 +442,7 @@ const ConsumerAuth = () => {
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
                         required
-                        disabled={loading}
+                        disabled={formLoading}
                       />
                     </div>
                   </div>
@@ -515,7 +455,7 @@ const ConsumerAuth = () => {
                       value={signupEmail}
                       onChange={(e) => setSignupEmail(e.target.value)}
                       required
-                      disabled={loading}
+                      disabled={formLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -526,7 +466,7 @@ const ConsumerAuth = () => {
                       placeholder="1234567890"
                       value={phone}
                       onChange={(value) => setPhone(value)}
-                      disabled={loading}
+                      disabled={formLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -538,14 +478,14 @@ const ConsumerAuth = () => {
                       value={signupPassword}
                       onChange={(e) => setSignupPassword(e.target.value)}
                       required
-                      disabled={loading}
+                      disabled={formLoading}
                     />
                     <p className="text-xs text-muted-foreground">
                       Password must be at least 6 characters
                     </p>
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Creating account..." : "Create Account"}
+                  <Button type="submit" className="w-full" disabled={formLoading}>
+                    {formLoading ? "Creating account..." : "Create Account"}
                   </Button>
                   </form>
                 </TabsContent>
