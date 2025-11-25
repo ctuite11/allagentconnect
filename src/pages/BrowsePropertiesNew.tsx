@@ -10,12 +10,22 @@ import { Search } from "lucide-react";
 import { toast } from "sonner";
 import { UnifiedPropertySearch, SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const BrowsePropertiesNew = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
+  const [user, setUser] = useState<any>(null);
+
+  // Fetch current user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+  }, []);
+
+  const { role } = useUserRole(user);
+  const searchMode = role === "agent" ? "agent" : "consumer";
 
   const [criteria, setCriteria] = useState<SearchCriteria>({
     state: "MA",
@@ -154,6 +164,7 @@ const BrowsePropertiesNew = () => {
                   resultsCount={listings.length}
                   showResultsCount={true}
                   onSearch={fetchListings}
+                  mode={searchMode}
                 />
               </div>
             </div>
