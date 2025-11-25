@@ -51,12 +51,11 @@ export function AgentProtectedRoute({ children }: AgentProtectedRouteProps) {
 
   if (role === "agent") {
     // Confirmed agent, allow access
-}
+    return <>{children}</>;
+  }
 
   // User exists but role is null (should not happen after backfill, but handle gracefully)
   // Treat as unauthorized and redirect to auth
   console.warn("User has no role assigned, redirecting to auth");
   return <Navigate to="/auth" state={{ from: location }} replace />;
-
-  return <>{children}</>;
 }
