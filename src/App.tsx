@@ -7,6 +7,8 @@ import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import { AgentProtectedRoute } from "./components/AgentProtectedRoute";
+import { ClientProtectedRoute } from "./components/ClientProtectedRoute";
 import AgentDashboard from "./pages/AgentDashboard";
 import BuyerAuth from "./pages/BuyerAuth";
 // import removed: AgentSearch (redirect to OurAgents)
@@ -72,36 +74,36 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/coming-soon" element={<ComingSoon />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/agent-dashboard" element={<AgentDashboard />} />
+          <Route path="/agent-dashboard" element={<AgentProtectedRoute><AgentDashboard /></AgentProtectedRoute>} />
           <Route path="/buyer/auth" element={<BuyerAuth />} />
           <Route path="/submit-client-need" element={<SubmitClientNeed />} />
-          <Route path="/client-needs" element={<ClientNeedsDashboard />} />
-          <Route path="/listing-intel" element={<ListingIntel />} />
-          <Route path="/add-listing" element={<AddListing />} />
-          <Route path="/add-listing/:id" element={<AddListing />} />
-          <Route path="/add-rental-listing" element={<AddRentalListing />} />
+          <Route path="/client-needs" element={<AgentProtectedRoute><ClientNeedsDashboard /></AgentProtectedRoute>} />
+          <Route path="/listing-intel" element={<AgentProtectedRoute><ListingIntel /></AgentProtectedRoute>} />
+          <Route path="/add-listing" element={<AgentProtectedRoute><AddListing /></AgentProtectedRoute>} />
+          <Route path="/add-listing/:id" element={<AgentProtectedRoute><AddListing /></AgentProtectedRoute>} />
+          <Route path="/add-rental-listing" element={<AgentProtectedRoute><AddRentalListing /></AgentProtectedRoute>} />
           <Route path="/edit-listing/:id" element={<Navigate to="/add-listing/:id" replace />} />
           <Route path="/property/:id" element={<PropertyDetail />} />
           <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
           <Route path="/agent/:id" element={<AgentProfile />} />
-          <Route path="/agent-profile-editor" element={<AgentProfileEditor />} />
-          <Route path="/manage-team" element={<ManageTeam />} />
+          <Route path="/agent-profile-editor" element={<AgentProtectedRoute><AgentProfileEditor /></AgentProtectedRoute>} />
+          <Route path="/manage-team" element={<AgentProtectedRoute><ManageTeam /></AgentProtectedRoute>} />
           <Route path="/team/:id" element={<TeamProfile />} />
-          <Route path="/manage-coverage-areas" element={<ManageCoverageAreas />} />
+          <Route path="/manage-coverage-areas" element={<AgentProtectedRoute><ManageCoverageAreas /></AgentProtectedRoute>} />
           <Route path="/browse" element={<BrowseProperties />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/our-agents" element={<OurAgents />} />
           <Route path="/agent-search" element={<OurAgents />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/my-favorites" element={<MyFavorites />} />
-          <Route path="/hot-sheets" element={<HotSheets />} />
-          <Route path="/hot-sheets/:id/review" element={<HotSheetReview />} />
-          <Route path="/my-clients" element={<MyClients />} />
+          <Route path="/hot-sheets" element={<AgentProtectedRoute><HotSheets /></AgentProtectedRoute>} />
+          <Route path="/hot-sheets/:id/review" element={<AgentProtectedRoute><HotSheetReview /></AgentProtectedRoute>} />
+          <Route path="/my-clients" element={<AgentProtectedRoute><MyClients /></AgentProtectedRoute>} />
           <Route path="/client-invite" element={<ClientInvitationSetup />} />
           <Route path="/client-hot-sheet/:token" element={<ClientHotSheet />} />
           <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
-          <Route path="/analytics" element={<ListingAnalytics />} />
-          <Route path="/analytics/:id" element={<ListingAnalytics />} />
+          <Route path="/analytics" element={<AgentProtectedRoute><ListingAnalytics /></AgentProtectedRoute>} />
+          <Route path="/analytics/:id" element={<AgentProtectedRoute><ListingAnalytics /></AgentProtectedRoute>} />
           <Route path="/market-insights" element={<MarketInsights />} />
           <Route path="/vendor/dashboard" element={<VendorDashboard />} />
           <Route path="/vendor/setup" element={<VendorSetup />} />
@@ -110,10 +112,10 @@ const App = () => (
           <Route path="/consumer/home" element={<ConsumerHome />} />
           <Route path="/consumer/dashboard" element={<ConsumerDashboard />} />
           <Route path="/consumer/auth" element={<ConsumerAuth />} />
-          <Route path="/client-agent-settings" element={<ClientAgentSettings />} />
-          <Route path="/client/dashboard" element={<ClientDashboard />} />
-          <Route path="/client/hotsheets/new" element={<ClientCreateHotsheet />} />
-          <Route path="/client/favorites" element={<ClientFavoritesPage />} />
+          <Route path="/client-agent-settings" element={<ClientProtectedRoute><ClientAgentSettings /></ClientProtectedRoute>} />
+          <Route path="/client/dashboard" element={<ClientProtectedRoute><ClientDashboard /></ClientProtectedRoute>} />
+          <Route path="/client/hotsheets/new" element={<ClientProtectedRoute><ClientCreateHotsheet /></ClientProtectedRoute>} />
+          <Route path="/client/favorites" element={<ClientProtectedRoute><ClientFavoritesPage /></ClientProtectedRoute>} />
           <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/seed-test-data" element={<SeedTestData />} />
           <Route path="/link/:token" element={<ShareLinkHandler />} />

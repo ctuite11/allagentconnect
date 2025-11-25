@@ -234,7 +234,7 @@ const Navigation = () => {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </>
-                ) : (
+                ) : role === "buyer" ? (
                   <>
                     <Button variant="outline" onClick={() => navigate("/client/dashboard")}>
                       <LayoutDashboard className="w-4 h-4 mr-2" />
@@ -245,7 +245,7 @@ const Navigation = () => {
                       My Favorites
                     </Button>
                   </>
-                )}
+                ) : null}
                 <Button variant="outline" onClick={() => navigate("/browse")}>
                   <Search className="w-4 h-4 mr-2" />
                   Search Homes

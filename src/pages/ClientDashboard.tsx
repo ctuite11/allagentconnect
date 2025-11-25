@@ -35,6 +35,7 @@ interface HotSheet {
   criteria: any;
   created_at: string;
   is_active: boolean;
+  access_token: string | null;
 }
 
 interface Favorite {
@@ -99,7 +100,7 @@ export default function ClientDashboard() {
   const loadHotSheets = async (userId: string) => {
     const { data } = await supabase
       .from("hot_sheets")
-      .select("id, name, criteria, created_at, is_active")
+      .select("id, name, criteria, created_at, is_active, access_token")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
@@ -280,17 +281,14 @@ export default function ClientDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => navigate(`/hot-sheets/${sheet.id}/review`)}
+                          onClick={() => {
+                            if (sheet.access_token) {
+                              navigate(`/client-hot-sheet/${sheet.access_token}`);
+                            }
+                          }}
                         >
                           <Eye className="w-4 h-4 mr-2" />
                           View
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => navigate(`/hot-sheets/${sheet.id}/edit`)}
-                        >
-                          <Edit className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>

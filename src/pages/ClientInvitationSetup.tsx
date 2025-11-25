@@ -128,6 +128,19 @@ const ClientInvitationSetup = () => {
         throw new Error("Account creation failed");
       }
 
+      // Assign buyer role
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({
+          user_id: authData.user.id,
+          role: "buyer",
+        });
+
+      if (roleError) {
+        console.error("Error assigning buyer role:", roleError);
+        // Don't fail the whole process if this fails
+      }
+
       // Check for existing active relationship
       if (agentId) {
         const { data: existingRel } = await supabase
