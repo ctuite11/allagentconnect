@@ -78,6 +78,7 @@ interface FileWithPreview {
   id: string;
   uploaded?: boolean;
   url?: string;
+  documentType?: string;
 }
 
 // Zod validation schema
@@ -170,6 +171,7 @@ const AddListing = () => {
   const [disclosures, setDisclosures] = useState<string[]>([]);
   const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
   const [amenities, setAmenities] = useState<string[]>([]);
+  const [otherAmenity, setOtherAmenity] = useState<string>("");
   const [areaAmenities, setAreaAmenities] = useState<string[]>([]);
   const [otherAreaAmenity, setOtherAreaAmenity] = useState<string>("");
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
@@ -1516,9 +1518,9 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Amenities */}
+                {/* Property Amenities */}
                 <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Amenities</Label>
+                  <Label className="text-xl font-semibold">Property Amenities</Label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {[
                       'Pool', 'Hot tub', 'Tennis court', 'Gym/Fitness center', 'Playground',
@@ -1545,6 +1547,64 @@ const AddListing = () => {
                         </Label>
                       </div>
                     ))}
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <Label htmlFor="other_property_amenity">Other Property Amenity</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="other_property_amenity"
+                        placeholder="Enter custom property amenity..."
+                        value={otherAmenity}
+                        onChange={(e) => setOtherAmenity(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && otherAmenity.trim()) {
+                            e.preventDefault();
+                            if (!amenities.includes(otherAmenity.trim())) {
+                              setAmenities([...amenities, otherAmenity.trim()]);
+                              setOtherAmenity("");
+                            }
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          if (otherAmenity.trim() && !amenities.includes(otherAmenity.trim())) {
+                            setAmenities([...amenities, otherAmenity.trim()]);
+                            setOtherAmenity("");
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                    {amenities.some(a => ![
+                      'Pool', 'Hot tub', 'Tennis court', 'Gym/Fitness center', 'Playground',
+                      'Clubhouse', 'Pet friendly', 'Gated community', 'Security system',
+                      'Concierge', 'Elevator', 'Storage units', 'Bike storage',
+                      'EV charging', 'Package room'
+                    ].includes(a)) && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {amenities.filter(a => ![
+                          'Pool', 'Hot tub', 'Tennis court', 'Gym/Fitness center', 'Playground',
+                          'Clubhouse', 'Pet friendly', 'Gated community', 'Security system',
+                          'Concierge', 'Elevator', 'Storage units', 'Bike storage',
+                          'EV charging', 'Package room'
+                        ].includes(a)).map((customAmenity) => (
+                          <div key={customAmenity} className="flex items-center gap-2 bg-secondary px-3 py-1 rounded-full text-sm">
+                            <span>{customAmenity}</span>
+                            <button
+                              type="button"
+                              onClick={() => setAmenities(amenities.filter(a => a !== customAmenity))}
+                              className="hover:text-destructive"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1671,6 +1731,7 @@ const AddListing = () => {
                         value={formData.commission_rate}
                         onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
                         autoComplete="off"
+                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
                     <div className="space-y-2">
@@ -1987,19 +2048,61 @@ const AddListing = () => {
                     {documents.length > 0 && (
                       <div className="space-y-2">
                         {documents.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <FileText className="w-5 h-5 text-muted-foreground" />
-                              <span className="text-sm">{doc.file.name}</span>
+                          <div key={doc.id} className="space-y-2 p-3 border rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3 flex-1">
+                                <FileText className="w-5 h-5 text-muted-foreground" />
+                                <span className="text-sm">{doc.file.name}</span>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveFile(doc.id, 'documents')}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
                             </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveFile(doc.id, 'documents')}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
+                            <div className="flex gap-2 items-end">
+                              <div className="flex-1">
+                                <Select
+                                  value={doc.documentType || ''}
+                                  onValueChange={(value) => {
+                                    setDocuments(documents.map(d => 
+                                      d.id === doc.id ? { ...d, documentType: value } : d
+                                    ));
+                                  }}
+                                >
+                                  <SelectTrigger className="bg-background">
+                                    <SelectValue placeholder="Select document type..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="purchase_and_sale">Purchase & Sale Agreement</SelectItem>
+                                    <SelectItem value="lead_paint">Lead Paint Disclosure</SelectItem>
+                                    <SelectItem value="property_disclosure">Property Disclosure</SelectItem>
+                                    <SelectItem value="inspection_report">Inspection Report</SelectItem>
+                                    <SelectItem value="title_report">Title Report</SelectItem>
+                                    <SelectItem value="survey">Survey</SelectItem>
+                                    <SelectItem value="hoa_docs">HOA Documents</SelectItem>
+                                    <SelectItem value="deed">Deed</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              {doc.documentType === 'other' && (
+                                <div className="flex-1">
+                                  <Input
+                                    placeholder="Specify document type..."
+                                    value={(doc as any).customDocType || ''}
+                                    onChange={(e) => {
+                                      setDocuments(documents.map(d => 
+                                        d.id === doc.id ? { ...d, customDocType: e.target.value } as any : d
+                                      ));
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
