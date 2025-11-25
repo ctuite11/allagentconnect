@@ -14,6 +14,7 @@ type Listing = {
   zip_code: string;
   price: number;
   status: string;
+  listing_type: string | null;
   property_type: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -94,35 +95,44 @@ const MyListings: React.FC = () => {
                   <th className="px-4 py-3 text-left font-medium text-foreground">Address</th>
                   <th className="px-4 py-3 text-left font-medium text-foreground">City</th>
                   <th className="px-4 py-3 text-left font-medium text-foreground">Price</th>
-                  <th className="px-4 py-3 text-left font-medium text-foreground">Type</th>
+                  <th className="px-4 py-3 text-left font-medium text-foreground">Category</th>
+                  <th className="px-4 py-3 text-left font-medium text-foreground">Style</th>
                   <th className="px-4 py-3 text-left font-medium text-foreground">Beds/Baths</th>
-                  <th className="px-4 py-3 text-left font-medium text-foreground">Sq Ft</th>
                   <th className="px-4 py-3 text-left font-medium text-foreground">Status</th>
-                  <th className="px-4 py-3 text-left font-medium text-foreground">Created</th>
+                  <th className="px-4 py-3 text-left font-medium text-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {listings.map((listing) => (
                   <tr 
                     key={listing.id} 
-                    className="border-t hover:bg-muted/50 cursor-pointer"
-                    onClick={() => navigate(`/property/${listing.id}`)}
+                    className="border-t hover:bg-muted/50"
                   >
-                    <td className="px-4 py-3">{listing.address}</td>
-                    <td className="px-4 py-3">{listing.city}, {listing.state}</td>
-                    <td className="px-4 py-3 font-medium">
+                    <td className="px-4 py-3 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+                      {listing.address}
+                    </td>
+                    <td className="px-4 py-3 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+                      {listing.city}, {listing.state}
+                    </td>
+                    <td className="px-4 py-3 font-medium cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
                       ${listing.price.toLocaleString()}
                     </td>
-                    <td className="px-4 py-3 capitalize">
-                      {listing.property_type?.replace(/_/g, " ") ?? "-"}
+                    <td className="px-4 py-3 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+                      {listing.listing_type === "for_rent" ? "Rental" : "Sale"}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 capitalize cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+                      {listing.property_type === "condo"
+                        ? "Condo"
+                        : listing.property_type === "multi_family"
+                        ? "Multi-Family"
+                        : listing.property_type === "single_family"
+                        ? "Single Family"
+                        : listing.property_type?.replace(/_/g, " ") ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
                       {listing.bedrooms ?? "-"} / {listing.bathrooms ?? "-"}
                     </td>
-                    <td className="px-4 py-3">
-                      {listing.square_feet ? listing.square_feet.toLocaleString() : "-"}
-                    </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
                       <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                         listing.status === "active" 
                           ? "bg-green-100 text-green-800"
@@ -133,8 +143,17 @@ const MyListings: React.FC = () => {
                         {listing.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(listing.created_at).toLocaleDateString()}
+                    <td className="px-4 py-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/agent/listings/edit/${listing.id}`);
+                        }}
+                      >
+                        Edit
+                      </Button>
                     </td>
                   </tr>
                 ))}
