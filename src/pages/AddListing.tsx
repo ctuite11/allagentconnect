@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
 import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon } from "lucide-react";
 import { z } from "zod";
@@ -25,6 +26,21 @@ import { usCitiesByState } from "@/data/usCitiesData";
 import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
 import { cn } from "@/lib/utils";
+
+const SUPPORTED_CITIES = [
+  "Boston",
+  "Cambridge",
+  "Somerville",
+  "Brookline",
+  "Chelsea",
+  "Revere",
+  "Medford",
+  "Everett",
+  "Watertown",
+  "Newton",
+  "Quincy",
+  "Other"
+];
 
 interface FileWithPreview {
   file: File;
@@ -122,6 +138,9 @@ const AddListing = () => {
   const [selectedState, setSelectedState] = useState<string>("");
   const [selectedCounty, setSelectedCounty] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("");
+  const [cityChoice, setCityChoice] = useState<string>("");
+  const [customCity, setCustomCity] = useState<string>("");
+  const [openCityCombo, setOpenCityCombo] = useState(false);
   const [availableCounties, setAvailableCounties] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [availableZips, setAvailableZips] = useState<string[]>([]);
@@ -138,7 +157,8 @@ const AddListing = () => {
       const counties = getCountiesForState(selectedState);
       setAvailableCounties(counties);
       setSelectedCounty("all");
-      setSelectedCity("");
+      setCityChoice("");
+      setCustomCity("");
       setAvailableCities([]);
       setAvailableZips([]);
       setFormData(prev => ({ ...prev, city: "", state: selectedState, zip_code: "" }));
@@ -158,7 +178,8 @@ const AddListing = () => {
       }
       
       setAvailableCities(cities);
-      setSelectedCity("");
+      setCityChoice("");
+      setCustomCity("");
       setAvailableZips([]);
       setFormData(prev => ({ ...prev, city: "", zip_code: "" }));
     }
@@ -198,23 +219,26 @@ const AddListing = () => {
   // Fetch ZIP codes when city changes
   useEffect(() => {
     const fetchZipCodes = async () => {
-      if (selectedState && selectedCity) {
+      // Determine the actual city to use for ZIP lookup
+      const actualCity = cityChoice === "Other" ? customCity : cityChoice;
+      
+      if (selectedState && actualCity) {
         setSuggestedZipsLoading(true);
         try {
-          if (hasZipCodeData(selectedCity, selectedState)) {
-            const staticZips = getZipCodesForCity(selectedCity, selectedState);
+          if (hasZipCodeData(actualCity, selectedState)) {
+            const staticZips = getZipCodesForCity(actualCity, selectedState);
             setSuggestedZips(staticZips);
             setAvailableZips(staticZips);
           } else {
             const { data, error } = await supabase.functions.invoke('get-city-zips', {
-              body: { state: selectedState, city: selectedCity }
+              body: { state: selectedState, city: actualCity }
             });
             if (error) throw error;
             const zips = data?.zips || [];
             setSuggestedZips(zips);
             setAvailableZips(zips);
           }
-          setFormData(prev => ({ ...prev, city: selectedCity, zip_code: "" }));
+          setFormData(prev => ({ ...prev, city: actualCity, zip_code: "" }));
         } catch (error) {
           console.error("Error fetching ZIP codes:", error);
           toast.error("Could not load ZIP codes for this city");
@@ -229,7 +253,7 @@ const AddListing = () => {
       }
     };
     fetchZipCodes();
-  }, [selectedState, selectedCity]);
+  }, [selectedState, cityChoice, customCity]);
 
   const toggleCityExpansion = (city: string) => {
     setExpandedCities(prev => {
@@ -326,6 +350,21 @@ const AddListing = () => {
 
   const applyAttomData = (record: any) => {
     setAttomId(record.attom_id ?? null);
+    
+    // Handle city from ATTOM record
+    if (record.city) {
+      const normalizedCity = record.city.trim();
+      if (SUPPORTED_CITIES.includes(normalizedCity)) {
+        setCityChoice(normalizedCity);
+        setCustomCity("");
+        setFormData(prev => ({ ...prev, city: normalizedCity }));
+      } else {
+        setCityChoice("Other");
+        setCustomCity(normalizedCity);
+        setFormData(prev => ({ ...prev, city: normalizedCity }));
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       bedrooms: record.beds ? record.beds.toString() : prev.bedrooms,
@@ -972,125 +1011,66 @@ const AddListing = () => {
                     </div>
                   </div>
 
-                  {/* City with Neighborhoods */}
+                  {/* City/Town Dropdown */}
                   <div className="space-y-2">
                     <Label htmlFor="city">City/Town *</Label>
-                    
-                    {selectedCity && (
-                      <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
-                        <Home className="h-4 w-4 text-primary" />
-                        <div className="flex-1">
-                          <div className="font-medium text-primary">
-                            {selectedCity}
-                            {formData.neighborhood && ` - ${formData.neighborhood}`}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {selectedState && US_STATES.find(s => s.code === selectedState)?.name}
-                          </div>
-                        </div>
+                    <Popover open={openCityCombo} onOpenChange={setOpenCityCombo}>
+                      <PopoverTrigger asChild>
                         <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedCity("");
-                            setFormData(prev => ({ ...prev, city: "", neighborhood: "" }));
-                            setCitySearch("");
-                            setShowCityList(true);
-                          }}
-                          className="h-8 gap-1"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openCityCombo}
+                          className="w-full justify-between bg-background"
                         >
-                          <X className="h-3 w-3" />
-                          Change
+                          {cityChoice || "Select city..."}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
-                      </div>
-                    )}
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search city..." />
+                          <CommandList>
+                            <CommandEmpty>No city found.</CommandEmpty>
+                            <CommandGroup>
+                              {SUPPORTED_CITIES.map((city) => (
+                                <CommandItem
+                                  key={city}
+                                  value={city}
+                                  onSelect={(currentValue) => {
+                                    setCityChoice(currentValue === cityChoice ? "" : currentValue);
+                                    if (currentValue !== "Other") {
+                                      setFormData(prev => ({ ...prev, city: currentValue }));
+                                      setCustomCity("");
+                                    } else {
+                                      setFormData(prev => ({ ...prev, city: "" }));
+                                    }
+                                    setOpenCityCombo(false);
+                                  }}
+                                >
+                                  {city}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     
-                    {!selectedCity && (
-                      <div className="relative">
+                    {cityChoice === "Other" && (
+                      <div className="space-y-2 mt-2">
+                        <Label htmlFor="customCity">Specify City/Town</Label>
                         <Input
-                          value={citySearch}
-                          onChange={(e) => setCitySearch(e.target.value)}
-                          placeholder="Search cities..."
-                          className="pr-8"
+                          id="customCity"
+                          type="text"
+                          value={customCity}
+                          onChange={(e) => {
+                            setCustomCity(e.target.value);
+                            setFormData(prev => ({ ...prev, city: e.target.value }));
+                          }}
+                          placeholder="Enter city name"
+                          required
                         />
-                        {citySearch && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                            onClick={() => setCitySearch("")}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
                       </div>
-                    )}
-
-                    {availableCities.length > 0 && !selectedCity && showCityList ? (
-                      <ScrollArea className="h-[300px] border rounded-lg p-3 bg-background">
-                        <RadioGroup value={formData.neighborhood ? `${selectedCity}-${formData.neighborhood}` : selectedCity} onValueChange={handleCitySelect}>
-                          <div className="space-y-2">
-                            {availableCities
-                              .filter(city => city.toLowerCase().includes(citySearch.toLowerCase()))
-                              .map((city) => {
-                                const neighborhoods = getAreasForCity(city, selectedState);
-                                const hasNeighborhoods = neighborhoods && neighborhoods.length > 0;
-                                const isExpanded = expandedCities.has(city);
-                                
-                                return (
-                                  <div key={city} className="space-y-1">
-                                    <div className="flex items-center space-x-2">
-                                      {hasNeighborhoods && (
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => toggleCityExpansion(city)}
-                                          className="h-6 w-6 p-0"
-                                        >
-                                          <ChevronDown 
-                                            className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-                                          />
-                                        </Button>
-                                      )}
-                                      <RadioGroupItem value={city} id={`city-${city}`} />
-                                      <Label 
-                                        htmlFor={`city-${city}`} 
-                                        className={`cursor-pointer flex-1 font-normal ${!hasNeighborhoods ? 'ml-8' : ''}`}
-                                      >
-                                        {city}
-                                      </Label>
-                                    </div>
-                                    
-                                    {hasNeighborhoods && isExpanded && (
-                                      <div className="ml-8 border-l-2 border-muted pl-3 space-y-2 bg-muted/30 rounded-r py-2">
-                                        {neighborhoods.map((neighborhood) => (
-                                          <div key={neighborhood} className="flex items-center space-x-2">
-                                            <RadioGroupItem 
-                                              value={`${city}-${neighborhood}`} 
-                                              id={`neighborhood-${city}-${neighborhood}`}
-                                            />
-                                            <Label 
-                                              htmlFor={`neighborhood-${city}-${neighborhood}`}
-                                              className="cursor-pointer flex-1 text-sm text-muted-foreground font-normal"
-                                            >
-                                              {neighborhood}
-                                            </Label>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        </RadioGroup>
-                      </ScrollArea>
-                    ) : availableCities.length > 0 && selectedCity ? null : (
-                      <p className="text-sm text-muted-foreground">
-                        {selectedState ? "Select a county or state to see cities" : "Select a state first"}
-                      </p>
                     )}
                   </div>
 
