@@ -56,6 +56,7 @@ import ShareLinkHandler from "./pages/ShareLinkHandler";
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
 import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
+import Navigation from "./components/Navigation";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => (
             <ScrollToTop />
             <ScrollRestoration />
             <ActiveAgentBanner />
+            <Navigation />
             <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/coming-soon" element={<ComingSoon />} />
