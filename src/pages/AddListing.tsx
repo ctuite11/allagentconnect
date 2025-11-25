@@ -954,6 +954,9 @@ const AddListing = () => {
                   {/* Address with Auto-fill */}
                   <div className="space-y-2">
                     <Label htmlFor="address">Street Address *</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Enter Street, ZIP, City, and State, then click Auto-fill to pull Public Records.
+                    </p>
                     <div className="flex gap-2">
                       <Input
                         id="address"
@@ -1006,32 +1009,45 @@ const AddListing = () => {
                           {!selectedState ? "Select a state first" : "No counties available"}
                         </p>
                       ) : (
-                        <RadioGroup 
-                          value={selectedCounty} 
-                          onValueChange={(value) => {
-                            setSelectedCounty(value);
-                            setFormData(prev => ({ ...prev, county: value }));
-                          }}
-                        >
-                          <div className="space-y-2 border rounded-lg p-3 max-h-[200px] overflow-y-auto bg-background">
-                            {selectedState !== "MA" && (
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="all" id="county-all" />
-                                <Label htmlFor="county-all" className="cursor-pointer flex-1 font-normal">
-                                  All Counties
-                                </Label>
-                              </div>
-                            )}
-                            {availableCounties.map((county) => (
-                              <div key={county} className="flex items-center space-x-2">
-                                <RadioGroupItem value={county} id={`county-${county}`} />
-                                <Label htmlFor={`county-${county}`} className="cursor-pointer flex-1 font-normal">
+                        <>
+                          <Select
+                            value={selectedCounty}
+                            onValueChange={(value) => {
+                              setSelectedCounty(value);
+                              setFormData(prev => ({ ...prev, county: value }));
+                            }}
+                          >
+                            <SelectTrigger className="bg-background">
+                              <SelectValue placeholder={selectedState === "MA" ? "Select county..." : "All Counties"} />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover z-50 max-h-[300px]">
+                              {selectedState !== "MA" && (
+                                <SelectItem value="all">All Counties</SelectItem>
+                              )}
+                              {availableCounties.map((county) => (
+                                <SelectItem key={county} value={county}>
                                   {county}
-                                </Label>
-                              </div>
-                            ))}
-                          </div>
-                        </RadioGroup>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          {/* Show selected county as pill */}
+                          {selectedCounty && selectedCounty !== "all" && (
+                            <div className="flex gap-2 mt-2">
+                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">
+                                {selectedCounty}
+                                <X 
+                                  className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                                  onClick={() => {
+                                    setSelectedCounty(selectedState === "MA" ? "" : "all");
+                                    setFormData(prev => ({ ...prev, county: "" }));
+                                  }}
+                                />
+                              </span>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -1623,11 +1639,11 @@ const AddListing = () => {
       <Dialog open={isAttomModalOpen} onOpenChange={setIsAttomModalOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>Please choose a record to import</DialogTitle>
+            <DialogTitle>Multiple Public Records Found for This Address</DialogTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Please select the correct public record below. This will auto-fill property details based on official tax & assessment data.
+            </p>
           </DialogHeader>
-          <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-800 mb-4">
-            Please note that the property type of the listing will be updated with the property type of the public record that you select.
-          </div>
           <div className="flex-1 overflow-auto">
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full">
@@ -1650,10 +1666,9 @@ const AddListing = () => {
                       <td className="px-4 py-3 text-sm">
                         <Button
                           type="button"
-                          variant="link"
+                          variant="default"
                           size="sm"
                           onClick={() => handleImportAttomRecord(record)}
-                          className="text-primary underline"
                         >
                           Import
                         </Button>
