@@ -30,10 +30,37 @@ serve(async (req) => {
       );
     }
 
+    // Neighborhood to city mappings for common cases
+    const neighborhoodToCityMap: Record<string, string> = {
+      "charlestown": "Boston",
+      "southie": "Boston",
+      "south boston": "Boston",
+      "dorchester": "Boston",
+      "roxbury": "Boston",
+      "jamaica plain": "Boston",
+      "west roxbury": "Boston",
+      "roslindale": "Boston",
+      "mattapan": "Boston",
+      "hyde park": "Boston",
+      "allston": "Boston",
+      "brighton": "Boston",
+      "back bay": "Boston",
+      "beacon hill": "Boston",
+      "north end": "Boston",
+      "south end": "Boston",
+      "fenway": "Boston",
+      "mission hill": "Boston",
+      "east boston": "Boston",
+    };
+
+    // Try to map neighborhood to city
+    const normalizedCity = city.toLowerCase();
+    const mappedCity = neighborhoodToCityMap[normalizedCity] || city;
+
     // Build ATTOM API URL
     const params = new URLSearchParams({
       address: address,
-      city: city,
+      city: mappedCity,
       state: state,
     });
     if (zip) {
