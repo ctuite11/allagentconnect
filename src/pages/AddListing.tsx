@@ -435,40 +435,53 @@ const AddListing = () => {
     const oldZip = formData.zip_code;
     const newZip = record.zip;
     
-    // Handle city from ATTOM record - Check if it's a Boston neighborhood
+    // Handle city from ATTOM record - Check if it's a Boston neighborhood (case-insensitive)
     if (record.city) {
       const normalizedCity = record.city.trim();
+      const normalizedCityLower = normalizedCity.toLowerCase();
       
-      // Check if this is a Boston neighborhood (like Charlestown, Back Bay, etc.)
-      if (bostonNeighborhoods.includes(normalizedCity)) {
-        // Set city to Boston and neighborhood to the actual neighborhood
+      // Check if this is a Boston neighborhood (case-insensitive)
+      const matchedBoston = bostonNeighborhoods.find(
+        n => n.toLowerCase() === normalizedCityLower
+      );
+      
+      if (matchedBoston) {
+        // This is actually a Boston neighborhood, not a city - set city to Boston
         setCityChoice("Boston");
         setCustomCity("");
         setFormData(prev => ({ 
           ...prev, 
           city: "Boston",
-          neighborhood: normalizedCity 
+          neighborhood: matchedBoston  // Use proper case from our list
         }));
         
         // Get areas for Boston
         const areas = getAreasForCity("Boston", formData.state || record.state);
         setAttomNeighborhoods(areas);
-      } else if (SUPPORTED_CITIES.includes(normalizedCity)) {
-        setCityChoice(normalizedCity);
-        setCustomCity("");
-        setFormData(prev => ({ ...prev, city: normalizedCity }));
-        
-        // Get available neighborhoods for the city
-        const areas = getAreasForCity(normalizedCity, formData.state || record.state);
-        setAttomNeighborhoods(areas);
       } else {
-        setCityChoice("Other");
-        setCustomCity(normalizedCity);
-        setFormData(prev => ({ ...prev, city: normalizedCity }));
+        // Find matching city in SUPPORTED_CITIES (case-insensitive)
+        const matchedCity = SUPPORTED_CITIES.find(
+          c => c.toLowerCase() === normalizedCityLower && c !== "Other"
+        );
         
-        // Get available neighborhoods
-        const areas = getAreasForCity(normalizedCity, formData.state || record.state);
-        setAttomNeighborhoods(areas);
+        if (matchedCity) {
+          setCityChoice(matchedCity);  // Use proper case from our list
+          setCustomCity("");
+          setFormData(prev => ({ ...prev, city: matchedCity }));
+          
+          // Get available neighborhoods for the city
+          const areas = getAreasForCity(matchedCity, formData.state || record.state);
+          setAttomNeighborhoods(areas);
+        } else {
+          // Fall back to "Other" for unknown cities
+          setCityChoice("Other");
+          setCustomCity(normalizedCity);
+          setFormData(prev => ({ ...prev, city: normalizedCity }));
+          
+          // Get available neighborhoods
+          const areas = getAreasForCity(normalizedCity, formData.state || record.state);
+          setAttomNeighborhoods(areas);
+        }
       }
     } else {
       // No city from ATTOM, but still enable neighborhood dropdown
@@ -1257,6 +1270,9 @@ const AddListing = () => {
                       </div>
                     ) : suggestedZips.length > 0 ? (
                       <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Select a ZIP code below (even if there is only one option):
+                        </p>
                         <div className="flex flex-wrap gap-2">
                           {suggestedZips.map((zip) => (
                             <Button
