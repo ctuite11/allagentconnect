@@ -25,7 +25,7 @@ import AgentProfileEditor from "./pages/AgentProfileEditor";
 import ManageTeam from "./pages/ManageTeam";
 import TeamProfile from "./pages/TeamProfile";
 import ManageCoverageAreas from "./pages/ManageCoverageAreas";
-import BrowseProperties from "./pages/BrowseProperties";
+import BrowsePropertiesNew from "./pages/BrowsePropertiesNew";
 import SearchResults from "./pages/SearchResults";
 import OurAgents from "./pages/OurAgents";
 import Favorites from "./pages/Favorites";
@@ -47,7 +47,7 @@ import ConsumerDashboard from "./pages/ConsumerDashboard";
 import ConsumerAuth from "./pages/ConsumerAuth";
 import ClientAgentSettings from "./pages/ClientAgentSettings";
 import ClientDashboard from "./pages/ClientDashboard";
-import ClientCreateHotsheet from "./pages/ClientCreateHotsheet";
+import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
 import ClientFavoritesPage from "./pages/ClientFavoritesPage";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
@@ -90,7 +90,7 @@ const App = () => (
           <Route path="/manage-team" element={<AgentProtectedRoute><ManageTeam /></AgentProtectedRoute>} />
           <Route path="/team/:id" element={<TeamProfile />} />
           <Route path="/manage-coverage-areas" element={<AgentProtectedRoute><ManageCoverageAreas /></AgentProtectedRoute>} />
-          <Route path="/browse" element={<BrowseProperties />} />
+          <Route path="/browse" element={<BrowsePropertiesNew />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/our-agents" element={<OurAgents />} />
           <Route path="/agent-search" element={<OurAgents />} />
@@ -114,7 +114,7 @@ const App = () => (
           <Route path="/consumer/auth" element={<ConsumerAuth />} />
           <Route path="/client-agent-settings" element={<ClientProtectedRoute><ClientAgentSettings /></ClientProtectedRoute>} />
           <Route path="/client/dashboard" element={<ClientProtectedRoute><ClientDashboard /></ClientProtectedRoute>} />
-          <Route path="/client/hotsheets/new" element={<ClientProtectedRoute><ClientCreateHotsheet /></ClientProtectedRoute>} />
+          <Route path="/client/hotsheets/new" element={<ClientProtectedRoute><ClientCreateHotsheetNew /></ClientProtectedRoute>} />
           <Route path="/client/favorites" element={<ClientProtectedRoute><ClientFavoritesPage /></ClientProtectedRoute>} />
           <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/seed-test-data" element={<SeedTestData />} />
