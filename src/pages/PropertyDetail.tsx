@@ -100,6 +100,15 @@ const PropertyDetail = () => {
   const [schools, setSchools] = useState<any[]>([]);
   const [neighborhood, setNeighborhood] = useState<any>(null);
   const [showPublicRecord, setShowPublicRecord] = useState(false);
+  const [walkScoreData, setWalkScoreData] = useState<{
+    enabled: boolean;
+    walkScore: number | null;
+    walkDescription: string | null;
+    transitScore: number | null;
+    transitDescription: string | null;
+    bikeScore: number | null;
+    bikeDescription: string | null;
+  } | null>(null);
 
   // Track listing view
   useListingView(id);
@@ -211,6 +220,36 @@ const PropertyDetail = () => {
     };
 
     loadNeighborhoodData();
+  }, [listing]);
+
+  // Fetch Walk Score data
+  useEffect(() => {
+    const loadWalkScore = async () => {
+      if (!listing || !listing.latitude || !listing.longitude) return;
+
+      try {
+        const { data, error } = await supabase.functions.invoke("fetch-walkscore", {
+          body: {
+            latitude: listing.latitude,
+            longitude: listing.longitude,
+            address: listing.address,
+            city: listing.city,
+            state: listing.state,
+          },
+        });
+
+        if (error) {
+          console.error("Error fetching Walk Score", error);
+          return;
+        }
+
+        setWalkScoreData(data);
+      } catch (error) {
+        console.error("Error loading Walk Score:", error);
+      }
+    };
+
+    loadWalkScore();
   }, [listing]);
 
   const handleRefreshData = async () => {
@@ -1013,39 +1052,89 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Neighborhood */}
-              {neighborhood && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Footprints className="w-5 h-5" />
-                      Neighborhood
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
-                      {neighborhood.walkabilityIndex && (
-                        <div>
-                          <div className="text-xs text-muted-foreground uppercase mb-1">Walkability</div>
-                          <div className="text-2xl font-semibold">{neighborhood.walkabilityIndex}/100</div>
-                        </div>
-                      )}
-                      {neighborhood.transitScore && (
-                        <div>
-                          <div className="text-xs text-muted-foreground uppercase mb-1">Transit Score</div>
-                          <div className="text-2xl font-semibold">{neighborhood.transitScore}/100</div>
-                        </div>
-                      )}
-                      {neighborhood.crimeIndex && (
-                        <div>
-                          <div className="text-xs text-muted-foreground uppercase mb-1">Crime Index</div>
-                          <div className="text-2xl font-semibold">{neighborhood.crimeIndex}</div>
-                        </div>
-                      )}
+              {/* Walkability & Transit */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Footprints className="w-5 h-5" />
+                    Walkability & Transit
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Walk Score */}
+                    <div className="border rounded-xl p-4 flex flex-col gap-2">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Walk Score
+                      </div>
+                      <div className="text-3xl font-semibold">
+                        {walkScoreData?.enabled && walkScoreData.walkScore != null
+                          ? walkScoreData.walkScore
+                          : neighborhood?.walkabilityIndex != null
+                          ? neighborhood.walkabilityIndex
+                          : "—"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {walkScoreData?.enabled && walkScoreData.walkDescription
+                          ? walkScoreData.walkDescription
+                          : neighborhood?.walkabilityIndex != null
+                          ? "Walkability index (ATTOM)"
+                          : "Walkability data not available"}
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+
+                    {/* Transit */}
+                    <div className="border rounded-xl p-4 flex flex-col gap-2">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Transit
+                      </div>
+                      <div className="text-3xl font-semibold">
+                        {walkScoreData?.enabled && walkScoreData.transitScore != null
+                          ? walkScoreData.transitScore
+                          : neighborhood?.transitScore != null
+                          ? neighborhood.transitScore
+                          : "—"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {walkScoreData?.enabled && walkScoreData.transitDescription
+                          ? walkScoreData.transitDescription
+                          : neighborhood?.transitScore != null
+                          ? "Transit score (ATTOM)"
+                          : "Transit data not available"}
+                      </div>
+                    </div>
+
+                    {/* Bike */}
+                    <div className="border rounded-xl p-4 flex flex-col gap-2">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Bike
+                      </div>
+                      <div className="text-3xl font-semibold">
+                        {walkScoreData?.enabled && walkScoreData.bikeScore != null
+                          ? walkScoreData.bikeScore
+                          : "—"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {walkScoreData?.enabled && walkScoreData.bikeDescription
+                          ? walkScoreData.bikeDescription
+                          : "Bikeability data not available"}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-xs text-muted-foreground">
+                    Scores provided by Walk Score and public data sources; not guaranteed and
+                    subject to change.
+                  </p>
+
+                  {/* Crime Index */}
+                  {neighborhood?.crimeIndex && (
+                    <div className="mt-4 pt-4 border-t">
+                      <div className="text-xs text-muted-foreground uppercase mb-1">Crime Index</div>
+                      <div className="text-2xl font-semibold">{neighborhood.crimeIndex}</div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
             {/* Sidebar */}
