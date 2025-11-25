@@ -93,6 +93,7 @@ const AddListing = () => {
   const [draftId, setDraftId] = useState<string | null>(null);
   const [autoSaving, setAutoSaving] = useState(false);
   const [originalStatus, setOriginalStatus] = useState<string | null>(null);
+  const [originalPrice, setOriginalPrice] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     status: "active",
     listing_type: "for_sale",
@@ -641,8 +642,9 @@ const AddListing = () => {
         return;
       }
       
-      // Store original status for comparison
+      // Store original status and price for comparison
       setOriginalStatus(data.status || "active");
+      setOriginalPrice(data.price ?? null);
       
       // Populate form data from loaded listing
       setFormData({
@@ -1918,6 +1920,34 @@ const AddListing = () => {
 
         if (error) throw error;
 
+        // Log price and status changes if they occurred
+        const { data: userData } = await supabase.auth.getUser();
+        const currentUserId = userData?.user?.id ?? null;
+
+        const numericPrice = validatedData.price;
+        const priceChanged = originalPrice != null && numericPrice != null && Number(numericPrice) !== Number(originalPrice);
+        const statusChanged = originalStatus != null && formData.status !== originalStatus;
+
+        if (priceChanged && numericPrice != null) {
+          await supabase.from("listing_price_history" as any).insert({
+            listing_id: id,
+            old_price: originalPrice,
+            new_price: numericPrice,
+            changed_by: currentUserId,
+            note: "Price adjustment",
+          });
+        }
+
+        if (statusChanged) {
+          await supabase.from("listing_status_history" as any).insert({
+            listing_id: id,
+            old_status: originalStatus,
+            new_status: formData.status,
+            changed_by: currentUserId,
+            note: "Status updated",
+          });
+        }
+
         toast.success("Listing updated successfully!");
         navigate(`/property/${id}`);
       } else {
@@ -2089,6 +2119,34 @@ const AddListing = () => {
       });
 
         if (error) throw error;
+
+        // Log initial price and status history for new listing
+        if (insertedListing?.id) {
+          const { data: userData } = await supabase.auth.getUser();
+          const currentUserId = userData?.user?.id ?? null;
+
+          // Initial price history
+          if (validatedData.price != null) {
+            await supabase.from("listing_price_history" as any).insert({
+              listing_id: insertedListing.id,
+              old_price: null,
+              new_price: validatedData.price,
+              changed_by: currentUserId,
+              note: "Original list price",
+            });
+          }
+
+          // Initial status history
+          if (formData.status) {
+            await supabase.from("listing_status_history" as any).insert({
+              listing_id: insertedListing.id,
+              old_status: null,
+              new_status: formData.status,
+              changed_by: currentUserId,
+              note: "Initial listing status",
+            });
+          }
+        }
 
         // Automatically fetch ATTOM data (walk score and schools) after listing is created
         if (insertedListing?.id) {
