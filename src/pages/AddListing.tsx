@@ -2046,7 +2046,10 @@ const AddListing = () => {
                       className="hidden"
                     />
                     {documents.length > 0 && (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                          Select the document type for each uploaded file
+                        </p>
                         {documents.map((doc) => (
                           <div key={doc.id} className="space-y-2 p-3 border rounded-lg">
                             <div className="flex items-center justify-between">
@@ -2076,7 +2079,7 @@ const AddListing = () => {
                                   <SelectTrigger className="bg-background">
                                     <SelectValue placeholder="Select document type..." />
                                   </SelectTrigger>
-                                  <SelectContent>
+                                  <SelectContent className="bg-background z-50">
                                     <SelectItem value="purchase_and_sale">Purchase & Sale Agreement</SelectItem>
                                     <SelectItem value="lead_paint">Lead Paint Disclosure</SelectItem>
                                     <SelectItem value="property_disclosure">Property Disclosure</SelectItem>
