@@ -44,6 +44,8 @@ const BuyerAuth = () => {
   });
 
   useEffect(() => {
+    let mounted = true;
+    
     // Check URL hash immediately to prevent premature navigation
     const checkRecoveryFlow = () => {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -52,7 +54,9 @@ const BuyerAuth = () => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+      
       const isRecovery = checkRecoveryFlow();
       
       if (isRecovery && session?.user) {
@@ -65,12 +69,32 @@ const BuyerAuth = () => {
       }
       
       setUser(session?.user ?? null);
+      
       if (session?.user && !isRecovery) {
-        navigate("/");
+        // Fetch role before redirecting
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        if (!mounted) return;
+        
+        const userRole = roleData?.role;
+        
+        if (userRole === 'agent') {
+          navigate('/agent-dashboard');
+        } else {
+          navigate('/client/dashboard');
+        }
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!mounted) return;
+      
       const isRecovery = checkRecoveryFlow();
       
       if (isRecovery && session?.user) {
@@ -83,12 +107,33 @@ const BuyerAuth = () => {
       }
       
       setUser(session?.user ?? null);
+      
       if (session?.user && !isRecovery) {
-        navigate("/");
+        // Fetch role before redirecting
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        if (!mounted) return;
+        
+        const userRole = roleData?.role;
+        
+        if (userRole === 'agent') {
+          navigate('/agent-dashboard');
+        } else {
+          navigate('/client/dashboard');
+        }
       }
-    });
+    };
+    
+    checkSession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {

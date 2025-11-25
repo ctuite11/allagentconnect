@@ -53,6 +53,8 @@ const ConsumerAuth = () => {
   const [phone, setPhone] = useState("");
 
   useEffect(() => {
+    let mounted = true;
+    
     // Check URL hash immediately to prevent premature navigation
     const checkRecoveryFlow = () => {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -60,7 +62,9 @@ const ConsumerAuth = () => {
     };
 
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
       const isRecovery = checkRecoveryFlow();
       
       if (isRecovery && session?.user) {
@@ -72,12 +76,31 @@ const ConsumerAuth = () => {
       }
       
       if (event === 'SIGNED_IN' && session && !isRecovery) {
-        navigate("/consumer/dashboard");
+        // Fetch role before redirecting
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        if (!mounted) return;
+        
+        const userRole = roleData?.role;
+        
+        if (userRole === 'agent') {
+          navigate('/agent-dashboard');
+        } else {
+          navigate('/client/dashboard');
+        }
       }
     });
 
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!mounted) return;
+      
       const isRecovery = checkRecoveryFlow();
       
       if (isRecovery && session?.user) {
@@ -89,11 +112,31 @@ const ConsumerAuth = () => {
       }
       
       if (session && !isRecovery) {
-        navigate("/consumer/dashboard");
+        // Fetch role before redirecting
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        if (!mounted) return;
+        
+        const userRole = roleData?.role;
+        
+        if (userRole === 'agent') {
+          navigate('/agent-dashboard');
+        } else {
+          navigate('/client/dashboard');
+        }
       }
-    });
+    };
+    
+    checkSession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -124,8 +167,22 @@ const ConsumerAuth = () => {
       }
 
       if (data.session) {
+        // Fetch role before redirecting
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.session.user.id)
+          .single();
+        
+        const userRole = roleData?.role;
+        
         toast.success("Successfully logged in!");
-        navigate("/consumer/dashboard");
+        
+        if (userRole === 'agent') {
+          navigate('/agent-dashboard');
+        } else {
+          navigate('/client/dashboard');
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
