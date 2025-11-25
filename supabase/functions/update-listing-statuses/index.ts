@@ -46,19 +46,34 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${listingsToActivate.length} listing(s) to activate:`, listingsToActivate);
 
-    // Update all matching listings to Active
-    const listingIds = listingsToActivate.map(l => l.id);
-    const { error: updateError } = await supabase
-      .from('listings')
-      .update({ status: 'active' })
-      .in('id', listingIds);
+    // Update each listing to Active and log status history
+    const listingIds = [];
+    for (const listing of listingsToActivate) {
+      const { id, status: oldStatus } = listing;
 
-    if (updateError) {
-      console.error('Error updating listings:', updateError);
-      throw updateError;
+      const { error: updateError } = await supabase
+        .from('listings')
+        .update({ status: 'active' })
+        .eq('id', id);
+
+      if (updateError) {
+        console.error(`Error updating listing ${id}:`, updateError);
+        continue;
+      }
+
+      listingIds.push(id);
+
+      // Log status history for auto-activation
+      await supabase.from('listing_status_history').insert({
+        listing_id: id,
+        old_status: oldStatus,
+        new_status: 'active',
+        changed_by: null, // null = system
+        note: 'Auto-activated by schedule',
+      });
     }
 
-    console.log(`Successfully activated ${listingsToActivate.length} listing(s).`);
+    console.log(`Successfully activated ${listingIds.length} listing(s).`);
 
     return new Response(
       JSON.stringify({ 

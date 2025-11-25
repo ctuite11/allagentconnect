@@ -110,6 +110,26 @@ const PropertyDetail = () => {
     bikeDescription: string | null;
   } | null>(null);
 
+  type TimelineEvent =
+    | {
+        type: "price";
+        id: string;
+        at: string;
+        oldValue: number | null;
+        newValue: number;
+        note: string | null;
+      }
+    | {
+        type: "status";
+        id: string;
+        at: string;
+        oldValue: string | null;
+        newValue: string;
+        note: string | null;
+      };
+
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+
   // Track listing view
   useListingView(id);
 
@@ -250,6 +270,58 @@ const PropertyDetail = () => {
     };
 
     loadWalkScore();
+  }, [listing]);
+
+  // Load listing activity timeline
+  useEffect(() => {
+    const loadTimeline = async () => {
+      if (!listing?.id) return;
+
+      const [
+        { data: priceData, error: priceError },
+        { data: statusData, error: statusError },
+      ] = await Promise.all([
+        (supabase as any)
+          .from("listing_price_history")
+          .select("id, old_price, new_price, changed_at, note")
+          .eq("listing_id", listing.id)
+          .order("changed_at", { ascending: false }),
+        (supabase as any)
+          .from("listing_status_history")
+          .select("id, old_status, new_status, changed_at, note")
+          .eq("listing_id", listing.id)
+          .order("changed_at", { ascending: false }),
+      ]);
+
+      if (priceError) console.error("Price history error", priceError);
+      if (statusError) console.error("Status history error", statusError);
+
+      const priceEvents: TimelineEvent[] = (priceData || []).map((p: any) => ({
+        type: "price" as const,
+        id: p.id,
+        at: p.changed_at,
+        oldValue: p.old_price,
+        newValue: p.new_price,
+        note: p.note,
+      }));
+
+      const statusEvents: TimelineEvent[] = (statusData || []).map((s: any) => ({
+        type: "status" as const,
+        id: s.id,
+        at: s.changed_at,
+        oldValue: s.old_status,
+        newValue: s.new_status,
+        note: s.note,
+      }));
+
+      const combined = [...priceEvents, ...statusEvents].sort(
+        (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()
+      );
+
+      setTimelineEvents(combined);
+    };
+
+    loadTimeline();
   }, [listing]);
 
   const handleRefreshData = async () => {
@@ -1133,6 +1205,89 @@ const PropertyDetail = () => {
                       <div className="text-2xl font-semibold">{neighborhood.crimeIndex}</div>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Listing Activity Timeline */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Listing Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {timelineEvents.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No activity history available for this listing.
+                    </p>
+                  ) : (
+                    <ol className="space-y-4 border-l-2 border-border pl-6">
+                      {timelineEvents.map((event) => {
+                        const date = new Date(event.at).toLocaleString();
+
+                        if (event.type === "price") {
+                          const oldPrice =
+                            event.oldValue != null
+                              ? `$${Number(event.oldValue).toLocaleString()}`
+                              : null;
+                          const newPrice = `$${Number(event.newValue).toLocaleString()}`;
+
+                          return (
+                            <li key={event.id} className="flex gap-3 items-start relative">
+                              <div className="absolute -left-[29px] mt-1.5 h-3 w-3 rounded-full bg-primary border-2 border-background" />
+                              <div className="flex-1">
+                                <div className="text-xs text-muted-foreground mb-1">{date}</div>
+                                <div className="font-medium">
+                                  {oldPrice ? (
+                                    <>
+                                      Price changed from {oldPrice} to{" "}
+                                      <span className="text-primary">{newPrice}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      Listed at{" "}
+                                      <span className="text-primary">{newPrice}</span>
+                                    </>
+                                  )}
+                                </div>
+                                {event.note && (
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {event.note}
+                                  </div>
+                                )}
+                              </div>
+                            </li>
+                          );
+                        }
+
+                        // status event
+                        const oldStatus = event.oldValue ?? "No previous status";
+                        const newStatus = event.newValue;
+
+                        return (
+                          <li key={event.id} className="flex gap-3 items-start relative">
+                            <div className="absolute -left-[29px] mt-1.5 h-3 w-3 rounded-full bg-accent border-2 border-background" />
+                            <div className="flex-1">
+                              <div className="text-xs text-muted-foreground mb-1">{date}</div>
+                              <div className="font-medium">
+                                Status changed from{" "}
+                                <span className="capitalize">{oldStatus.replace(/_/g, " ")}</span> to{" "}
+                                <span className="text-accent capitalize">{newStatus.replace(/_/g, " ")}</span>
+                              </div>
+                              {event.note && (
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {event.note}
+                                </div>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  )}
+
+                  <p className="mt-4 text-xs text-muted-foreground">
+                    Activity reflects changes made within AllAgentConnect and scheduled status
+                    updates; may not include off-platform changes.
+                  </p>
                 </CardContent>
               </Card>
             </div>

@@ -184,16 +184,48 @@ const NewListing: React.FC = () => {
       if (operatingExpenses) listingData.operating_expenses = typeof operatingExpenses === "string" ? parseFloat(operatingExpenses) : operatingExpenses;
     }
 
-    const { error } = await supabase.from("listings").insert(listingData);
-
-    setSaving(false);
+    const { data: listingResult, error } = await supabase
+      .from("listings")
+      .insert(listingData)
+      .select("id")
+      .single();
 
     if (error) {
+      setSaving(false);
       console.error("Error creating listing", error);
       toast.error(error.message);
       return;
     }
 
+    // Log initial price and status history
+    if (listingResult?.id) {
+      const { data: userData } = await supabase.auth.getUser();
+      const currentUserId = userData?.user?.id ?? null;
+      const listingId = listingResult.id;
+      const finalPrice = listingType === "for_sale" ? price : monthlyRent;
+
+      // Initial price history
+      if (finalPrice != null) {
+        await (supabase as any).from("listing_price_history").insert({
+          listing_id: listingId,
+          old_price: null,
+          new_price: typeof finalPrice === "string" ? parseFloat(finalPrice) : finalPrice,
+          changed_by: currentUserId,
+          note: "Original list price",
+        });
+      }
+
+      // Initial status history
+      await (supabase as any).from("listing_status_history").insert({
+        listing_id: listingId,
+        old_status: null,
+        new_status: status.toLowerCase().replace(" ", "_"),
+        changed_by: currentUserId,
+        note: "Initial listing status",
+      });
+    }
+
+    setSaving(false);
     toast.success("Listing created successfully!");
     navigate("/agent/listings");
   };
