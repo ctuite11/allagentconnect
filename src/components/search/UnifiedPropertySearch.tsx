@@ -136,6 +136,7 @@ export const UnifiedPropertySearch = ({
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isKeywordsOpen, setIsKeywordsOpen] = useState(false);
   const [townSearchQuery, setTownSearchQuery] = useState("");
+  const [showAllTowns, setShowAllTowns] = useState(false);
 
   // Initialize default statuses if not set
   useEffect(() => {
@@ -214,6 +215,10 @@ export const UnifiedPropertySearch = ({
 
   // Check if Boston is selected and show neighborhood badge
   const isBostonSelected = selectedTowns.includes("Boston");
+
+  // Determine which towns to show based on search query or browse all state
+  const shouldShowTownsList = townSearchQuery.trim().length > 0 || showAllTowns;
+  const displayedTowns = shouldShowTownsList ? townsList : [];
 
   return (
     <div className="space-y-3">
@@ -327,57 +332,107 @@ export const UnifiedPropertySearch = ({
                   onChange={(e) => setTownSearchQuery(e.target.value)}
                   className="mb-2"
                 />
-                <div className="max-h-64 overflow-y-auto border rounded-lg">
-                  <TownsPicker
-                    towns={townsList}
-                    selectedTowns={selectedTowns}
-                    onToggleTown={toggleTown}
-                    expandedCities={expandedCities}
-                    onToggleCityExpansion={toggleCityExpansion}
-                    state={state}
-                    searchQuery={townSearchQuery}
-                    variant="checkbox"
-                    showAreas={criteria.showAreas !== false}
-                    showSelectAll={true}
-                    onSelectAll={() => {
-                      const allTopLevelTowns = townsList.filter(t => !t.includes('-'));
-                      const allSelected = allTopLevelTowns.every(t => selectedTowns.includes(t));
-                      updateCriteria({ towns: allSelected ? [] : allTopLevelTowns });
-                    }}
-                  />
-                </div>
                 
-                {/* Selected Towns Summary */}
-                {selectedTowns.length > 0 && (
-                  <div className="mt-3 p-3 bg-muted/50 rounded-lg border border-border">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-xs font-medium text-muted-foreground">
-                        Selected: {selectedTowns.length} location{selectedTowns.length !== 1 ? 's' : ''}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => updateCriteria({ towns: [] })}
-                        className="text-xs text-destructive hover:underline"
-                      >
-                        Remove All
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-                      {selectedTowns.map((town) => (
-                        <div
-                          key={town}
-                          className="inline-flex items-center gap-1 px-2 py-1 bg-background border border-border rounded text-xs"
+                {!shouldShowTownsList ? (
+                  <div className="text-center py-8 border rounded-lg bg-muted/30">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Start typing to search or browse all towns
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAllTowns(true)}
+                    >
+                      Browse All Towns
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    {showAllTowns && (
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-muted-foreground">
+                          Showing all towns in {state}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setShowAllTowns(false);
+                            setTownSearchQuery("");
+                          }}
                         >
-                          <span>{town.includes('-') ? town.split('-')[1] : town}</span>
-                          <button
-                            type="button"
-                            onClick={() => toggleTown(town)}
-                            className="hover:text-destructive ml-1"
+                          Hide List
+                        </Button>
+                      </div>
+                    )}
+                    <div className="max-h-64 overflow-y-auto border rounded-lg bg-background">
+                      <TownsPicker
+                        towns={displayedTowns}
+                        selectedTowns={selectedTowns}
+                        onToggleTown={toggleTown}
+                        expandedCities={expandedCities}
+                        onToggleCityExpansion={toggleCityExpansion}
+                        state={state}
+                        searchQuery={townSearchQuery}
+                        variant="checkbox"
+                        showAreas={criteria.showAreas !== false}
+                        showSelectAll={true}
+                        onSelectAll={() => {
+                          const allTopLevelTowns = displayedTowns.filter(t => !t.includes('-'));
+                          const allSelected = allTopLevelTowns.every(t => selectedTowns.includes(t));
+                          updateCriteria({ towns: allSelected ? [] : allTopLevelTowns });
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+                
+                {/* Selected Towns Summary with Chips */}
+                {selectedTowns.length > 0 && (
+                  <div className="mt-3 p-3 bg-card rounded-lg border border-border shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-foreground">Selected Towns</span>
+                        <Badge variant="secondary" className="text-xs">
+                          {selectedTowns.length}
+                        </Badge>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => updateCriteria({ towns: [] })}
+                        className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        Clear All
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                      {selectedTowns.map((town) => {
+                        const isNeighborhood = town.includes('-');
+                        const displayName = isNeighborhood 
+                          ? `${town.split('-')[0]} – ${town.split('-').slice(1).join('-')}`
+                          : town;
+                        
+                        return (
+                          <div
+                            key={town}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-xs font-medium hover:bg-primary/20 transition-colors"
                           >
-                            ×
-                          </button>
-                        </div>
-                      ))}
+                            <span className="text-primary">{displayName}</span>
+                            <button
+                              type="button"
+                              onClick={() => toggleTown(town)}
+                              className="hover:text-destructive transition-colors"
+                              aria-label={`Remove ${displayName}`}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
