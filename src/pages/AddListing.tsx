@@ -42,6 +42,24 @@ const SUPPORTED_CITIES = [
   "Other"
 ];
 
+// County to cities mapping for MA
+const CITY_OPTIONS_BY_COUNTY: Record<string, string[]> = {
+  Suffolk: ["Boston", "Chelsea", "Revere"],
+  Middlesex: ["Cambridge", "Somerville", "Medford", "Everett", "Watertown"],
+  Norfolk: ["Brookline", "Quincy"],
+  Other: ["Boston", "Cambridge", "Somerville", "Brookline", "Chelsea", "Revere", "Medford", "Everett", "Watertown", "Newton", "Quincy"]
+};
+
+// State name to abbreviation mapping
+const STATE_ABBREVIATIONS: Record<string, string> = {
+  Massachusetts: "MA",
+  "New Hampshire": "NH",
+  "Rhode Island": "RI",
+  Connecticut: "CT",
+  Vermont: "VT",
+  Maine: "ME",
+};
+
 interface FileWithPreview {
   file: File;
   preview: string;
@@ -167,21 +185,30 @@ const AddListing = () => {
 
   // Update available cities when county changes
   useEffect(() => {
-    if (selectedState && selectedCounty) {
-      const hasCountyData = hasCountyCityMapping(selectedState);
-      let cities: string[] = [];
+    if (selectedState) {
+      let cityOptions: string[] = [];
       
-      if (hasCountyData && selectedCounty !== "all") {
-        cities = getCitiesForCounty(selectedState, selectedCounty);
+      // For MA, use county-based filtering
+      if (selectedState === "MA" && selectedCounty && selectedCounty !== "all") {
+        cityOptions = CITY_OPTIONS_BY_COUNTY[selectedCounty] || CITY_OPTIONS_BY_COUNTY.Other;
       } else {
-        cities = usCitiesByState[selectedState] || [];
+        // For non-MA or "all" counties, show all supported cities
+        cityOptions = SUPPORTED_CITIES.filter(c => c !== "Other");
+        cityOptions.push("Other");
       }
       
-      setAvailableCities(cities);
-      setCityChoice("");
-      setCustomCity("");
+      // Clear city choice if it's not in the new filtered list
+      if (cityChoice && !cityOptions.includes(cityChoice)) {
+        setCityChoice("");
+        setCustomCity("");
+        setFormData(prev => ({ ...prev, city: "" }));
+      }
+      
+      setAvailableCities(cityOptions);
       setAvailableZips([]);
-      setFormData(prev => ({ ...prev, city: "", zip_code: "" }));
+      if (cityChoice && !cityOptions.includes(cityChoice)) {
+        setFormData(prev => ({ ...prev, zip_code: "" }));
+      }
     }
   }, [selectedState, selectedCounty]);
 
@@ -313,14 +340,21 @@ const AddListing = () => {
       return;
     }
 
+    // Normalize state to 2-letter code for ATTOM
+    const stateCode = STATE_ABBREVIATIONS[formData.state] || formData.state;
+    
+    const payload = {
+      address: formData.address,
+      city: formData.city,
+      state: stateCode,
+      zip: formData.zip_code,
+    };
+    
+    console.log("ATTOM REQUEST:", payload);
+
     setAutoFillLoading(true);
     const { data, error } = await supabase.functions.invoke("fetch-property-data", {
-      body: {
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        zip: formData.zip_code,
-      },
+      body: payload,
     });
     setAutoFillLoading(false);
 
@@ -527,6 +561,7 @@ const AddListing = () => {
         city: formData.city?.trim() || "",
         state: formData.state?.trim() || "",
         zip_code: formData.zip_code?.trim() || "",
+        county: selectedCounty !== "all" ? selectedCounty : null,
         price: formData.price ? parseFloat(formData.price) : 0,
         property_type: formData.property_type || null,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
@@ -595,6 +630,13 @@ const AddListing = () => {
         return;
       }
 
+      // Validate county for MA
+      if (formData.state === "MA" && (!selectedCounty || selectedCounty === "all")) {
+        toast.error("Please select a county for Massachusetts listings.");
+        setSubmitting(false);
+        return;
+      }
+
       // Validate Coming Soon go-live date
       if (formData.status === "coming_soon" && !formData.go_live_date) {
         toast.error("Please select a Go-Live date for Coming Soon listings.");
@@ -652,6 +694,7 @@ const AddListing = () => {
         city: validatedData.city,
         state: validatedData.state,
         zip_code: validatedData.zip_code,
+        county: selectedCounty !== "all" ? selectedCounty : null,
         neighborhood: formData.neighborhood || null,
         latitude: validatedData.latitude,
         longitude: validatedData.longitude,
@@ -876,7 +919,7 @@ const AddListing = () => {
                 {/* Coming Soon Date */}
                 {formData.status === "coming_soon" && (
                   <div className="border rounded-lg p-4 bg-muted/30">
-                    <Label htmlFor="go_live_date">Go-Live / Active On Date *</Label>
+                    <Label htmlFor="go_live_date">Choose the date your listing will become Active (on MLS) *</Label>
                     <Input
                       id="go_live_date"
                       type="date"
@@ -886,46 +929,7 @@ const AddListing = () => {
                       required
                     />
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Date this Coming Soon listing should automatically become Active.
-                    </p>
-                  </div>
-                )}
-
-                {/* Auto-activate Date Picker */}
-                {formData.status === "new" && (
-                  <div className="border rounded-lg p-4 bg-muted/30">
-                    <Label htmlFor="auto_activate_on">Auto-activate on</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          id="auto_activate_on"
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal mt-1",
-                            !formData.auto_activate_on && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.auto_activate_on ? (
-                            format(formData.auto_activate_on, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={formData.auto_activate_on || undefined}
-                          onSelect={(date) => setFormData(prev => ({ ...prev, auto_activate_on: date || null }))}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Optional. Listing will automatically become Active on this date.
+                      On this date, the system will automatically change the status from Coming Soon to Active.
                     </p>
                   </div>
                 )}
@@ -983,20 +987,28 @@ const AddListing = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>County (Optional)</Label>
+                      <Label>County {selectedState === "MA" && "*"}</Label>
                       {!selectedState || availableCounties.length === 0 ? (
                         <p className="text-sm text-muted-foreground">
                           {!selectedState ? "Select a state first" : "No counties available"}
                         </p>
                       ) : (
-                        <RadioGroup value={selectedCounty} onValueChange={setSelectedCounty}>
+                        <RadioGroup 
+                          value={selectedCounty} 
+                          onValueChange={(value) => {
+                            setSelectedCounty(value);
+                            setFormData(prev => ({ ...prev, county: value }));
+                          }}
+                        >
                           <div className="space-y-2 border rounded-lg p-3 max-h-[200px] overflow-y-auto bg-background">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="all" id="county-all" />
-                              <Label htmlFor="county-all" className="cursor-pointer flex-1 font-normal">
-                                All Counties
-                              </Label>
-                            </div>
+                            {selectedState !== "MA" && (
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="all" id="county-all" />
+                                <Label htmlFor="county-all" className="cursor-pointer flex-1 font-normal">
+                                  All Counties
+                                </Label>
+                              </div>
+                            )}
                             {availableCounties.map((county) => (
                               <div key={county} className="flex items-center space-x-2">
                                 <RadioGroupItem value={county} id={`county-${county}`} />
@@ -1021,8 +1033,9 @@ const AddListing = () => {
                           role="combobox"
                           aria-expanded={openCityCombo}
                           className="w-full justify-between bg-background"
+                          disabled={selectedState === "MA" && (!selectedCounty || selectedCounty === "all")}
                         >
-                          {cityChoice || "Select city..."}
+                          {cityChoice || (selectedState === "MA" && (!selectedCounty || selectedCounty === "all") ? "Select county first" : "Select city...")}
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
@@ -1032,7 +1045,7 @@ const AddListing = () => {
                           <CommandList>
                             <CommandEmpty>No city found.</CommandEmpty>
                             <CommandGroup>
-                              {SUPPORTED_CITIES.map((city) => (
+                              {availableCities.map((city) => (
                                 <CommandItem
                                   key={city}
                                   value={city}

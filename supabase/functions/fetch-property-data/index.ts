@@ -12,7 +12,10 @@ serve(async (req) => {
   }
 
   try {
-    const { address, city, state, zip } = await req.json();
+    const body = await req.json();
+    console.log("[fetch-property-data] Incoming payload:", JSON.stringify(body));
+    
+    const { address, city, state, zip } = body;
 
     if (!address || !city || !state) {
       return new Response(
@@ -68,7 +71,7 @@ serve(async (req) => {
     }
 
     const attomUrl = `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/basicprofile?${params.toString()}`;
-    console.log("[fetch-property-data] Calling ATTOM API:", attomUrl);
+    console.log("[fetch-property-data] ATTOM request URL:", attomUrl);
 
     const attomResponse = await fetch(attomUrl, {
       headers: {
@@ -76,6 +79,8 @@ serve(async (req) => {
         apikey: attomApiKey,
       },
     });
+
+    console.log("[fetch-property-data] ATTOM status:", attomResponse.status);
 
     if (!attomResponse.ok) {
       const errorText = await attomResponse.text();
@@ -87,7 +92,7 @@ serve(async (req) => {
     }
 
     const attomData = await attomResponse.json();
-    console.log("[fetch-property-data] ATTOM API response:", JSON.stringify(attomData));
+    console.log("[fetch-property-data] ATTOM API response properties count:", attomData?.property?.length || 0);
 
     if (!attomData?.property?.length) {
       return new Response(
