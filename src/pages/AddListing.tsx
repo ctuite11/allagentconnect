@@ -1123,22 +1123,6 @@ const AddListing = () => {
                               ))}
                             </SelectContent>
                           </Select>
-                          
-                          {/* Show selected county as pill */}
-                          {selectedCounty && selectedCounty !== "all" && (
-                            <div className="flex gap-2 mt-2">
-                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">
-                                {selectedCounty}
-                                <X 
-                                  className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                                  onClick={() => {
-                                    setSelectedCounty(selectedState === "MA" ? "" : "all");
-                                    setFormData(prev => ({ ...prev, county: "" }));
-                                  }}
-                                />
-                              </span>
-                            </div>
-                          )}
                         </>
                       )}
                     </div>
@@ -1219,7 +1203,7 @@ const AddListing = () => {
                       <SelectTrigger className="bg-background">
                         <SelectValue placeholder={
                           attomNeighborhoods.length === 0 
-                            ? "Complete address above to enable" 
+                            ? "Run public record lookup to enable Neighborhood/Area." 
                             : "Select neighborhood..."
                         } />
                       </SelectTrigger>
