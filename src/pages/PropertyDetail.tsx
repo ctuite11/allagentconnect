@@ -21,6 +21,7 @@ import PropertyMap from "@/components/PropertyMap";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import AdBanner from "@/components/AdBanner";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
+import { PublicRecordModal } from "@/components/PublicRecordModal";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
@@ -94,6 +95,11 @@ const PropertyDetail = () => {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [cameFromAgentDashboard, setCameFromAgentDashboard] = useState<boolean>(Boolean((location as any)?.state?.fromAgentDashboard) || sessionStorage.getItem('fromAgentDashboard') === 'true');
+
+  // Schools and neighborhood data
+  const [schools, setSchools] = useState<any[]>([]);
+  const [neighborhood, setNeighborhood] = useState<any>(null);
+  const [showPublicRecord, setShowPublicRecord] = useState(false);
 
   // Track listing view
   useListingView(id);
@@ -172,6 +178,41 @@ const PropertyDetail = () => {
       fetchListing();
     }
   }, [id]);
+
+  // Fetch schools and neighborhood data
+  useEffect(() => {
+    const loadNeighborhoodData = async () => {
+      if (!listing) return;
+      
+      const attomId = (listing as any).attom_id;
+      if (!attomId && !listing.latitude) return;
+
+      try {
+        const { data, error } = await supabase.functions.invoke("fetch-neighborhood-data", {
+          body: {
+            attomId,
+            latitude: listing.latitude,
+            longitude: listing.longitude,
+          }
+        });
+
+        if (error) {
+          console.error("Error loading neighborhood data:", error);
+          return;
+        }
+
+        if (data) {
+          setSchools(data.schools || []);
+          setNeighborhood(data.neighborhood || null);
+        }
+      } catch (error) {
+        console.error("Error fetching neighborhood data:", error);
+      }
+    };
+
+    loadNeighborhoodData();
+  }, [listing]);
+
   const handleRefreshData = async () => {
     if (!id) return;
     setRefreshing(true);
@@ -936,6 +977,75 @@ const PropertyDetail = () => {
                     <p className="text-muted-foreground whitespace-pre-wrap">{listing.additional_notes}</p>
                   </CardContent>
                 </Card>}
+
+              {/* Nearby Schools */}
+              {schools.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <GraduationCap className="w-5 h-5" />
+                      Nearby Schools
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {schools.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">School data not available.</p>
+                    ) : (
+                      <ul className="space-y-3">
+                        {schools.map((school: any, index: number) => (
+                          <li key={index} className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0">
+                            <div className="flex-1">
+                              <div className="font-medium">{school.name}</div>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                {school.type} {school.gradeRange && `• ${school.gradeRange}`} {school.distanceMiles && `• ${school.distanceMiles} mi`}
+                              </div>
+                            </div>
+                            {school.rating && (
+                              <Badge variant="secondary" className="ml-2">
+                                {school.rating}/10
+                              </Badge>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Neighborhood */}
+              {neighborhood && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Footprints className="w-5 h-5" />
+                      Neighborhood
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      {neighborhood.walkabilityIndex && (
+                        <div>
+                          <div className="text-xs text-muted-foreground uppercase mb-1">Walkability</div>
+                          <div className="text-2xl font-semibold">{neighborhood.walkabilityIndex}/100</div>
+                        </div>
+                      )}
+                      {neighborhood.transitScore && (
+                        <div>
+                          <div className="text-xs text-muted-foreground uppercase mb-1">Transit Score</div>
+                          <div className="text-2xl font-semibold">{neighborhood.transitScore}/100</div>
+                        </div>
+                      )}
+                      {neighborhood.crimeIndex && (
+                        <div>
+                          <div className="text-xs text-muted-foreground uppercase mb-1">Crime Index</div>
+                          <div className="text-2xl font-semibold">{neighborhood.crimeIndex}</div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Sidebar */}
@@ -999,6 +1109,20 @@ const PropertyDetail = () => {
                       <div className="pt-4">
                         <ContactAgentDialog listingId={listing.id} agentId={listing.agent_id} listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`} />
                       </div>
+
+                      {/* View Public Record Button */}
+                      {(listing as any).attom_id && (
+                        <div className="pt-2">
+                          <Button
+                            onClick={() => setShowPublicRecord(true)}
+                            variant="outline"
+                            className="w-full"
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            View Public Record
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </>}
@@ -1105,6 +1229,14 @@ const PropertyDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Public Record Modal */}
+      {showPublicRecord && (
+        <PublicRecordModal
+          attomId={(listing as any).attom_id}
+          onClose={() => setShowPublicRecord(false)}
+        />
+      )}
     </div>;
 };
 export default PropertyDetail;

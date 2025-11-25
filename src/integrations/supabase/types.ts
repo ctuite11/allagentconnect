@@ -1414,6 +1414,7 @@ export type Database = {
           appointment_required: boolean | null
           assessed_value: number | null
           attom_data: Json | null
+          attom_id: string | null
           basement_features_list: Json | null
           basement_floor_types: Json | null
           basement_types: Json | null
@@ -1508,6 +1509,7 @@ export type Database = {
           appointment_required?: boolean | null
           assessed_value?: number | null
           attom_data?: Json | null
+          attom_id?: string | null
           basement_features_list?: Json | null
           basement_floor_types?: Json | null
           basement_types?: Json | null
@@ -1602,6 +1604,7 @@ export type Database = {
           appointment_required?: boolean | null
           assessed_value?: number | null
           attom_data?: Json | null
+          attom_id?: string | null
           basement_features_list?: Json | null
           basement_floor_types?: Json | null
           basement_types?: Json | null
@@ -1779,6 +1782,24 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      public_records_cache: {
+        Row: {
+          attom_id: string
+          created_at: string
+          raw: Json
+        }
+        Insert: {
+          attom_id: string
+          created_at?: string
+          raw: Json
+        }
+        Update: {
+          attom_id?: string
+          created_at?: string
+          raw?: Json
         }
         Relationships: []
       }
