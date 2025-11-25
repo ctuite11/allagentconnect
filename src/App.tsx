@@ -44,6 +44,9 @@ import ConsumerHome from "./pages/ConsumerHome";
 import ConsumerDashboard from "./pages/ConsumerDashboard";
 import ConsumerAuth from "./pages/ConsumerAuth";
 import ClientAgentSettings from "./pages/ClientAgentSettings";
+import ClientDashboard from "./pages/ClientDashboard";
+import ClientCreateHotsheet from "./pages/ClientCreateHotsheet";
+import ClientFavoritesPage from "./pages/ClientFavoritesPage";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
 import ComingSoon from "./pages/ComingSoon";
@@ -108,6 +111,9 @@ const App = () => (
           <Route path="/consumer/dashboard" element={<ConsumerDashboard />} />
           <Route path="/consumer/auth" element={<ConsumerAuth />} />
           <Route path="/client-agent-settings" element={<ClientAgentSettings />} />
+          <Route path="/client/dashboard" element={<ClientDashboard />} />
+          <Route path="/client/hotsheets/new" element={<ClientCreateHotsheet />} />
+          <Route path="/client/favorites" element={<ClientFavoritesPage />} />
           <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/seed-test-data" element={<SeedTestData />} />
           <Route path="/link/:token" element={<ShareLinkHandler />} />
