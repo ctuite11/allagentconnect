@@ -44,9 +44,20 @@ const SUPPORTED_CITIES = [
 
 // County to cities mapping for MA
 const CITY_OPTIONS_BY_COUNTY: Record<string, string[]> = {
-  Suffolk: ["Boston", "Chelsea", "Revere"],
-  Middlesex: ["Cambridge", "Somerville", "Medford", "Everett", "Watertown"],
-  Norfolk: ["Brookline", "Quincy"],
+  Suffolk: ["Boston", "Chelsea", "Revere", "Winthrop"],
+  Middlesex: ["Cambridge", "Somerville", "Medford", "Everett", "Watertown", "Newton", "Arlington", "Belmont", "Lexington", "Waltham", "Malden", "Melrose", "Woburn", "Burlington"],
+  Norfolk: ["Brookline", "Quincy", "Milton", "Dedham", "Needham", "Wellesley", "Canton", "Randolph"],
+  Essex: ["Lynn", "Salem", "Peabody", "Beverly", "Gloucester", "Lawrence", "Haverhill", "Newburyport"],
+  Plymouth: ["Plymouth", "Brockton", "Marshfield", "Duxbury", "Hingham", "Weymouth"],
+  Bristol: ["New Bedford", "Fall River", "Taunton", "Attleboro"],
+  Worcester: ["Worcester", "Fitchburg", "Leominster", "Framingham", "Marlborough"],
+  Hampden: ["Springfield", "Holyoke", "Chicopee", "Westfield"],
+  Hampshire: ["Northampton", "Amherst", "Easthampton"],
+  Berkshire: ["Pittsfield", "North Adams", "Great Barrington"],
+  Franklin: ["Greenfield", "Deerfield"],
+  Barnstable: ["Barnstable", "Hyannis", "Falmouth", "Sandwich", "Provincetown"],
+  Dukes: ["Edgartown", "Oak Bluffs", "Vineyard Haven"],
+  Nantucket: ["Nantucket"],
   Other: ["Boston", "Cambridge", "Somerville", "Brookline", "Chelsea", "Revere", "Medford", "Everett", "Watertown", "Newton", "Quincy"]
 };
 
@@ -174,12 +185,17 @@ const AddListing = () => {
     if (selectedState) {
       const counties = getCountiesForState(selectedState);
       setAvailableCounties(counties);
-      setSelectedCounty("all");
+      // For MA, don't default to "all" since we require county selection
+      if (selectedState === "MA") {
+        setSelectedCounty("");
+      } else {
+        setSelectedCounty("all");
+      }
       setCityChoice("");
       setCustomCity("");
       setAvailableCities([]);
       setAvailableZips([]);
-      setFormData(prev => ({ ...prev, city: "", state: selectedState, zip_code: "" }));
+      setFormData(prev => ({ ...prev, city: "", state: selectedState, zip_code: "", county: "" }));
     }
   }, [selectedState]);
 
@@ -191,14 +207,14 @@ const AddListing = () => {
       // For MA, use county-based filtering
       if (selectedState === "MA" && selectedCounty && selectedCounty !== "all") {
         cityOptions = CITY_OPTIONS_BY_COUNTY[selectedCounty] || CITY_OPTIONS_BY_COUNTY.Other;
-      } else {
-        // For non-MA or "all" counties, show all supported cities
-        cityOptions = SUPPORTED_CITIES.filter(c => c !== "Other");
-        cityOptions.push("Other");
+        cityOptions = [...cityOptions, "Other"]; // Always allow "Other" as fallback
+      } else if (selectedState !== "MA") {
+        // For non-MA states, show all supported cities
+        cityOptions = SUPPORTED_CITIES;
       }
       
       // Clear city choice if it's not in the new filtered list
-      if (cityChoice && !cityOptions.includes(cityChoice)) {
+      if (cityChoice && !cityOptions.includes(cityChoice) && cityChoice !== "Other") {
         setCityChoice("");
         setCustomCity("");
         setFormData(prev => ({ ...prev, city: "" }));
@@ -206,9 +222,6 @@ const AddListing = () => {
       
       setAvailableCities(cityOptions);
       setAvailableZips([]);
-      if (cityChoice && !cityOptions.includes(cityChoice)) {
-        setFormData(prev => ({ ...prev, zip_code: "" }));
-      }
     }
   }, [selectedState, selectedCounty]);
 
@@ -1033,9 +1046,9 @@ const AddListing = () => {
                           role="combobox"
                           aria-expanded={openCityCombo}
                           className="w-full justify-between bg-background"
-                          disabled={selectedState === "MA" && (!selectedCounty || selectedCounty === "all")}
+                          disabled={selectedState === "MA" && !selectedCounty}
                         >
-                          {cityChoice || (selectedState === "MA" && (!selectedCounty || selectedCounty === "all") ? "Select county first" : "Select city...")}
+                          {cityChoice || (selectedState === "MA" && !selectedCounty ? "Select county first" : "Select city...")}
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
