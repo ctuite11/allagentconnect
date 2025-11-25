@@ -216,9 +216,25 @@ export const UnifiedPropertySearch = ({
   // Check if Boston is selected and show neighborhood badge
   const isBostonSelected = selectedTowns.includes("Boston");
 
-  // Determine which towns to show based on search query or browse all state
-  const shouldShowTownsList = townSearchQuery.trim().length > 0 || showAllTowns;
-  const displayedTowns = shouldShowTownsList ? townsList : [];
+  // Search-as-you-type: filter towns and neighborhoods when user types 2+ chars
+  const getFilteredTowns = () => {
+    const query = townSearchQuery.trim().toLowerCase();
+    
+    // No filtering if less than 2 characters
+    if (query.length < 2) return [];
+    
+    // Filter towns and neighborhoods that match the search
+    return townsList.filter(town => {
+      const townLower = town.toLowerCase();
+      return townLower.includes(query);
+    });
+  };
+
+  // Determine which towns to show
+  const shouldShowTownsList = townSearchQuery.trim().length >= 2 || showAllTowns;
+  const displayedTowns = townSearchQuery.trim().length >= 2 
+    ? getFilteredTowns() 
+    : (showAllTowns ? townsList : []);
 
   return (
     <div className="space-y-3">
@@ -327,7 +343,7 @@ export const UnifiedPropertySearch = ({
               <div className="space-y-2">
                 <Label>Towns & Cities</Label>
                 <Input
-                  placeholder="Type full or partial name to filter..."
+                  placeholder="Type town or neighborhood..."
                   value={townSearchQuery}
                   onChange={(e) => setTownSearchQuery(e.target.value)}
                   className="mb-2"
@@ -336,20 +352,28 @@ export const UnifiedPropertySearch = ({
                 {!shouldShowTownsList ? (
                   <div className="text-center py-8 border rounded-lg bg-muted/30">
                     <p className="text-sm text-muted-foreground mb-3">
-                      Start typing to search or browse all towns
+                      {townSearchQuery.trim().length === 1 
+                        ? "Type at least 2 characters to search"
+                        : "Start typing to search towns and neighborhoods"}
                     </p>
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="link"
                       size="sm"
                       onClick={() => setShowAllTowns(true)}
+                      className="text-primary underline"
                     >
-                      Browse All Towns
+                      Browse all towns
                     </Button>
                   </div>
                 ) : (
                   <>
-                    {showAllTowns && (
+                    {townSearchQuery.trim().length >= 2 && (
+                      <div className="text-xs text-muted-foreground mb-2">
+                        Found {displayedTowns.length} result{displayedTowns.length !== 1 ? 's' : ''} for "{townSearchQuery}"
+                      </div>
+                    )}
+                    {showAllTowns && townSearchQuery.trim().length < 2 && (
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs text-muted-foreground">
                           Showing all towns in {state}
@@ -378,7 +402,7 @@ export const UnifiedPropertySearch = ({
                         searchQuery={townSearchQuery}
                         variant="checkbox"
                         showAreas={criteria.showAreas !== false}
-                        showSelectAll={true}
+                        showSelectAll={displayedTowns.length > 0}
                         onSelectAll={() => {
                           const allTopLevelTowns = displayedTowns.filter(t => !t.includes('-'));
                           const allSelected = allTopLevelTowns.every(t => selectedTowns.includes(t));
