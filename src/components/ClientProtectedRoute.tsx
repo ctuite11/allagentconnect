@@ -51,12 +51,11 @@ export function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
 
   if (role === "buyer") {
     // Confirmed buyer, allow access
-}
+    return <>{children}</>;
+  }
 
   // User exists but role is null - treat as buyer (they were likely invited as a client)
   // This handles edge cases where role hasn't been assigned yet
   console.log("User has no role, treating as buyer");
-  return <>{children}</>;
-
   return <>{children}</>;
 }
