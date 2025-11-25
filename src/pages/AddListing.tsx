@@ -1,3 +1,4 @@
+// Force rebuild: 2025-01-28 - Full MLS Form v2 (5064 lines)
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -2192,6 +2193,12 @@ const AddListing = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
+      
+      {/* DEBUG BANNER - Remove after confirmation */}
+      <div className="bg-green-500 text-white p-4 text-center font-bold sticky top-16 z-50 shadow-lg">
+        ✅ FULL MLS FORM v2 - AddListing.tsx (5064 lines) - Built: {new Date().toLocaleString()}
+      </div>
+      
       <div className="container mx-auto px-4 py-8 pt-24">
         {/* Header Section */}
         <div className="flex items-center gap-4 mb-8">
