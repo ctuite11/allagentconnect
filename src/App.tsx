@@ -51,7 +51,7 @@ import ClientFavoritesPage from "./pages/ClientFavoritesPage";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
 import MyListings from "./pages/MyListings";
-import NewListing from "./pages/NewListing";
+
 import EditListing from "./pages/EditListing";
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
