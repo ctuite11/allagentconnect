@@ -12,6 +12,15 @@ verify_jwt = false
 [functions.fetch-property-data]
 verify_jwt = false
 
+[functions.fetch-neighborhood-data]
+verify_jwt = false
+
+[functions.fetch-walkscore]
+verify_jwt = false
+
+[functions.update-listing-statuses]
+verify_jwt = false
+
 [functions.send-price-change-notification]
 verify_jwt = false
 
