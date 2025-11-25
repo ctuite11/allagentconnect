@@ -1198,23 +1198,23 @@ const AddListing = () => {
                       />
                     </div>
                   </div>
+
+                  {/* Property Description */}
+                  <div className="space-y-2 mt-4">
+                    <Label htmlFor="description">Property Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      rows={6}
+                      placeholder="Describe the property features, location highlights, and any special details..."
+                    />
+                  </div>
                 </div>
 
-                {/* Property Description */}
-                <div className="space-y-2 border-t pt-6">
-                  <Label htmlFor="description">Property Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    rows={6}
-                    placeholder="Describe the property features, location highlights, and any special details..."
-                  />
-                </div>
-
-                {/* Commission Information */}
+                {/* Commission & Compensation */}
                 <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Commission Information</Label>
+                  <Label className="text-xl font-semibold">Commission & Compensation</Label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="commission_type">Commission Type</Label>
@@ -1423,149 +1423,154 @@ const AddListing = () => {
                   />
                 </div>
 
-                {/* Property Photos */}
-                <div className="space-y-4 border-t pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-xl font-semibold">Property Photos</Label>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Drag and drop to reorder. First photo will be the main image.
-                      </p>
+                {/* Media & Documents */}
+                <div className="space-y-6 border-t pt-6">
+                  <Label className="text-xl font-semibold">Media & Documents</Label>
+                  
+                  {/* Property Photos */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-lg font-medium">Property Photos</Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Drag and drop to reorder. First photo will be the main image.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('photo-upload')?.click()}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Photos
+                      </Button>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('photo-upload')?.click()}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Photos
-                    </Button>
-                  </div>
-                  <input
-                    id="photo-upload"
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={(e) => handleFileSelect(e.target.files, 'photos')}
-                    className="hidden"
-                  />
-                  {photos.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {photos.map((photo, index) => (
-                        <div
-                          key={photo.id}
-                          draggable
-                          onDragStart={() => handleDragStart(index)}
-                          onDragOver={(e) => handleDragOver(e, index)}
-                          onDragEnd={handleDragEnd}
-                          className="relative group cursor-move border rounded-lg overflow-hidden"
-                        >
-                          <img src={photo.preview} alt="Property" className="w-full h-40 object-cover" />
-                          <div className="absolute top-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
-                            {index === 0 ? 'Main' : `#${index + 1}`}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveFile(photo.id, 'photos')}
-                            className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    <input
+                      id="photo-upload"
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => handleFileSelect(e.target.files, 'photos')}
+                      className="hidden"
+                    />
+                    {photos.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {photos.map((photo, index) => (
+                          <div
+                            key={photo.id}
+                            draggable
+                            onDragStart={() => handleDragStart(index)}
+                            onDragOver={(e) => handleDragOver(e, index)}
+                            onDragEnd={handleDragEnd}
+                            className="relative group cursor-move border rounded-lg overflow-hidden"
                           >
-                            <X className="w-4 h-4" />
-                          </button>
-                          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <GripVertical className="w-5 h-5 text-white" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Floor Plans */}
-                <div className="space-y-4 border-t pt-6">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xl font-semibold">Floor Plans</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('floorplan-upload')?.click()}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Floor Plans
-                    </Button>
-                  </div>
-                  <input
-                    id="floorplan-upload"
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={(e) => handleFileSelect(e.target.files, 'floorplans')}
-                    className="hidden"
-                  />
-                  {floorPlans.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {floorPlans.map((plan) => (
-                        <div key={plan.id} className="relative group border rounded-lg overflow-hidden">
-                          {plan.preview ? (
-                            <img src={plan.preview} alt="Floor plan" className="w-full h-40 object-cover" />
-                          ) : (
-                            <div className="w-full h-40 bg-muted flex items-center justify-center">
-                              <FileText className="w-12 h-12 text-muted-foreground" />
+                            <img src={photo.preview} alt="Property" className="w-full h-40 object-cover" />
+                            <div className="absolute top-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
+                              {index === 0 ? 'Main' : `#${index + 1}`}
                             </div>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveFile(plan.id, 'floorplans')}
-                            className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Documents */}
-                <div className="space-y-4 border-t pt-6">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xl font-semibold">Documents</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('document-upload')?.click()}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Documents
-                    </Button>
-                  </div>
-                  <input
-                    id="document-upload"
-                    type="file"
-                    multiple
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => handleFileSelect(e.target.files, 'documents')}
-                    className="hidden"
-                  />
-                  {documents.length > 0 && (
-                    <div className="space-y-2">
-                      {documents.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <FileText className="w-5 h-5 text-muted-foreground" />
-                            <span className="text-sm">{doc.file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile(photo.id, 'photos')}
+                              className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <GripVertical className="w-5 h-5 text-white" />
+                            </div>
                           </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveFile(doc.id, 'documents')}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Floor Plans */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-lg font-medium">Floor Plans</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('floorplan-upload')?.click()}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Floor Plans
+                      </Button>
                     </div>
-                  )}
+                    <input
+                      id="floorplan-upload"
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => handleFileSelect(e.target.files, 'floorplans')}
+                      className="hidden"
+                    />
+                    {floorPlans.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {floorPlans.map((plan) => (
+                          <div key={plan.id} className="relative group border rounded-lg overflow-hidden">
+                            {plan.preview ? (
+                              <img src={plan.preview} alt="Floor plan" className="w-full h-40 object-cover" />
+                            ) : (
+                              <div className="w-full h-40 bg-muted flex items-center justify-center">
+                                <FileText className="w-12 h-12 text-muted-foreground" />
+                              </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile(plan.id, 'floorplans')}
+                              className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Documents */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-lg font-medium">Documents</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('document-upload')?.click()}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Documents
+                      </Button>
+                    </div>
+                    <input
+                      id="document-upload"
+                      type="file"
+                      multiple
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => handleFileSelect(e.target.files, 'documents')}
+                      className="hidden"
+                    />
+                    {documents.length > 0 && (
+                      <div className="space-y-2">
+                        {documents.map((doc) => (
+                          <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <FileText className="w-5 h-5 text-muted-foreground" />
+                              <span className="text-sm">{doc.file.name}</span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveFile(doc.id, 'documents')}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </form>
             </CardContent>
