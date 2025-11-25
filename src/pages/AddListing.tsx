@@ -25,6 +25,7 @@ import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
 import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
+import { bostonNeighborhoods } from "@/data/bostonNeighborhoods";
 import { cn } from "@/lib/utils";
 
 const SUPPORTED_CITIES = [
@@ -113,6 +114,8 @@ const AddListing = () => {
   const [hasAutoFetched, setHasAutoFetched] = useState(false);
   const [attomFetchStatus, setAttomFetchStatus] = useState<string>("");
   const [attomNeighborhoods, setAttomNeighborhoods] = useState<string[]>([]);
+  const [addressVerified, setAddressVerified] = useState<boolean>(false);
+  const [verificationMessage, setVerificationMessage] = useState<string>("");
   
   const [formData, setFormData] = useState({
     status: "new",
@@ -395,12 +398,18 @@ const AddListing = () => {
 
     if (results.length === 0) {
       setAttomFetchStatus("No matching public record found. You can enter details manually.");
-      if (!isAutoTrigger) {
-        toast.error("No property records found for this address.");
-      }
+      
+      // Set verification status - enable neighborhood even on failure
+      setAddressVerified(true);
+      setVerificationMessage("Public record not found – please verify address and choose Neighborhood/Area manually.");
+      
       // Enable neighborhood dropdown even on failure
       const areas = getAreasForCity(formData.city, formData.state);
       setAttomNeighborhoods(areas);
+      
+      if (!isAutoTrigger) {
+        toast.error("No property records found for this address.");
+      }
       return;
     }
 
@@ -423,33 +432,61 @@ const AddListing = () => {
   const applyAttomData = (record: any) => {
     setAttomId(record.attom_id ?? null);
     
-    // Handle city from ATTOM record
+    const oldZip = formData.zip_code;
+    const newZip = record.zip;
+    
+    // Handle city from ATTOM record - Check if it's a Boston neighborhood
     if (record.city) {
       const normalizedCity = record.city.trim();
-      if (SUPPORTED_CITIES.includes(normalizedCity)) {
+      
+      // Check if this is a Boston neighborhood (like Charlestown, Back Bay, etc.)
+      if (bostonNeighborhoods.includes(normalizedCity)) {
+        // Set city to Boston and neighborhood to the actual neighborhood
+        setCityChoice("Boston");
+        setCustomCity("");
+        setFormData(prev => ({ 
+          ...prev, 
+          city: "Boston",
+          neighborhood: normalizedCity 
+        }));
+        
+        // Get areas for Boston
+        const areas = getAreasForCity("Boston", formData.state || record.state);
+        setAttomNeighborhoods(areas);
+      } else if (SUPPORTED_CITIES.includes(normalizedCity)) {
         setCityChoice(normalizedCity);
         setCustomCity("");
         setFormData(prev => ({ ...prev, city: normalizedCity }));
+        
+        // Get available neighborhoods for the city
+        const areas = getAreasForCity(normalizedCity, formData.state || record.state);
+        setAttomNeighborhoods(areas);
       } else {
         setCityChoice("Other");
         setCustomCity(normalizedCity);
         setFormData(prev => ({ ...prev, city: normalizedCity }));
+        
+        // Get available neighborhoods
+        const areas = getAreasForCity(normalizedCity, formData.state || record.state);
+        setAttomNeighborhoods(areas);
+      }
+    } else {
+      // No city from ATTOM, but still enable neighborhood dropdown
+      const cityToUse = formData.city;
+      const stateToUse = formData.state || record.state;
+      if (cityToUse && stateToUse) {
+        const areas = getAreasForCity(cityToUse, stateToUse);
+        setAttomNeighborhoods(areas);
       }
     }
     
-    // Get available neighborhoods for the city and enable the dropdown
-    const cityToUse = formData.city || record.city;
-    const stateToUse = formData.state || record.state;
-    const areas = getAreasForCity(cityToUse, stateToUse);
-    setAttomNeighborhoods(areas);
-    
-    // If ATTOM provides neighborhood data, try to match and pre-select
-    if (record.raw?.area?.subdName && areas.length > 0) {
-      const attomNeighborhood = record.raw.area.subdName.trim();
-      const matchedArea = areas.find(area => 
+    // If ATTOM provides additional neighborhood data in other fields, try to match
+    if (record.raw?.address?.locality && attomNeighborhoods.length > 0) {
+      const attomNeighborhood = record.raw.address.locality.trim();
+      const matchedArea = attomNeighborhoods.find(area => 
         area.toLowerCase() === attomNeighborhood.toLowerCase()
       );
-      if (matchedArea) {
+      if (matchedArea && !formData.neighborhood) {
         setFormData(prev => ({ ...prev, neighborhood: matchedArea }));
       }
     }
@@ -465,6 +502,7 @@ const AddListing = () => {
       tax_year: record.taxYear ? record.taxYear.toString() : prev.tax_year,
       latitude: record.latitude ?? prev.latitude,
       longitude: record.longitude ?? prev.longitude,
+      zip_code: newZip || prev.zip_code,
     }));
 
     // Update property type if it's condo/co-op
@@ -473,6 +511,22 @@ const AddListing = () => {
       record.property_type.toLowerCase().includes('co-op')
     )) {
       setFormData(prev => ({ ...prev, property_type: 'condo' }));
+    }
+    
+    // Set address verification status
+    setAddressVerified(true);
+    setVerificationMessage("Address verified via public records.");
+    
+    // Show ZIP change notification if needed
+    if (newZip && oldZip && newZip !== oldZip) {
+      const isLeadingZeroFix = oldZip.length === 4 && newZip === `0${oldZip}`;
+      const message = isLeadingZeroFix
+        ? `We corrected your ZIP code from ${oldZip} to ${newZip} to match USPS formatting.`
+        : `Based on public records for this address, we updated the ZIP code from ${oldZip} to ${newZip}.`;
+      
+      toast.info("ZIP Code Updated", {
+        description: message,
+      });
     }
   };
 
@@ -1192,18 +1246,18 @@ const AddListing = () => {
                     )}
                   </div>
 
-                  {/* Neighborhood/Area - Enabled after ATTOM fetch */}
+                   {/* Neighborhood/Area - Enabled after ATTOM fetch */}
                   <div className="space-y-2">
                     <Label htmlFor="neighborhood">Neighborhood/Area</Label>
                     <Select
                       value={formData.neighborhood}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
-                      disabled={attomNeighborhoods.length === 0}
+                      disabled={!addressVerified}
                     >
                       <SelectTrigger className="bg-background">
                         <SelectValue placeholder={
-                          attomNeighborhoods.length === 0 
-                            ? "Run public record lookup to enable Neighborhood/Area." 
+                          !addressVerified
+                            ? "Run public record lookup to verify the address, then choose Neighborhood/Area." 
                             : "Select neighborhood..."
                         } />
                       </SelectTrigger>
@@ -1215,6 +1269,11 @@ const AddListing = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {verificationMessage && (
+                      <p className="text-sm text-muted-foreground">
+                        {verificationMessage}
+                      </p>
+                    )}
                   </div>
 
                   {/* ZIP Code Picker */}
