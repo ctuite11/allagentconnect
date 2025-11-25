@@ -92,6 +92,7 @@ export function EditHotsheetCriteriaDialog({
             criteria={criteria}
             onCriteriaChange={setCriteria}
             showResultsCount={false}
+            mode="consumer"
           />
         </div>
 

@@ -64,6 +64,7 @@ interface UnifiedPropertySearchProps {
   showResultsCount?: boolean;
   onSearch?: () => void;
   onClear?: () => void;
+  mode?: "agent" | "consumer";
 }
 
 const PROPERTY_TYPES = [
@@ -77,7 +78,7 @@ const PROPERTY_TYPES = [
   { value: "Residential Rental", label: "Residential Rental", icon: Home },
 ];
 
-const STATUSES = [
+const AGENT_STATUSES = [
   { value: "new", label: "New" },
   { value: "coming_soon", label: "Coming Soon" },
   { value: "active", label: "Active" },
@@ -90,6 +91,16 @@ const STATUSES = [
   { value: "price_changed", label: "Price Change" },
   { value: "temp_withdrawn", label: "Temp Withdrawn" },
   { value: "canceled", label: "Canceled" },
+];
+
+const CONSUMER_STATUSES = [
+  { value: "new", label: "New" },
+  { value: "coming_soon", label: "Coming Soon" },
+  { value: "active", label: "Active" },
+  { value: "back_on_market", label: "Back on Market" },
+  { value: "contingent", label: "Contingent" },
+  { value: "under_agreement", label: "Under Agreement" },
+  { value: "price_changed", label: "Price Change" },
 ];
 
 const DEFAULT_STATUSES = ["new", "coming_soon", "active", "back_on_market"];
@@ -113,7 +124,10 @@ export const UnifiedPropertySearch = ({
   showResultsCount = true,
   onSearch,
   onClear,
+  mode = "consumer",
 }: UnifiedPropertySearchProps) => {
+  const STATUSES = mode === "agent" ? AGENT_STATUSES : CONSUMER_STATUSES;
+  
   const [isLocationOpen, setIsLocationOpen] = useState(true);
   const [isPropertyTypeOpen, setIsPropertyTypeOpen] = useState(true);
   const [isPriceOpen, setIsPriceOpen] = useState(true);
@@ -254,8 +268,8 @@ export const UnifiedPropertySearch = ({
                 </Select>
               </div>
 
-              {/* County Selection */}
-              {hasCountyData && (
+              {/* County Selection - Agent mode only */}
+              {mode === "agent" && hasCountyData && (
                 <div className="space-y-2">
                   <Label>County</Label>
                   <Select value={county} onValueChange={(value) => updateCriteria({ county: value, towns: [] })}>
@@ -317,6 +331,32 @@ export const UnifiedPropertySearch = ({
                   showAreas={criteria.showAreas !== false}
                   showSelectAll={true}
                 />
+                
+                {/* Selected Towns Summary */}
+                {selectedTowns.length > 0 && (
+                  <div className="mt-3 p-3 bg-muted/50 rounded-lg border border-border">
+                    <div className="text-xs font-medium text-muted-foreground mb-2">
+                      Selected: {selectedTowns.length} location{selectedTowns.length !== 1 ? 's' : ''}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                      {selectedTowns.map((town) => (
+                        <div
+                          key={town}
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-background border border-border rounded text-xs"
+                        >
+                          <span>{town.includes('-') ? town.split('-')[1] : town}</span>
+                          <button
+                            type="button"
+                            onClick={() => toggleTown(town)}
+                            className="hover:text-destructive ml-1"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </CollapsibleContent>

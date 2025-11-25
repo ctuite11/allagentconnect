@@ -161,6 +161,7 @@ export default function ClientCreateHotsheetNew() {
                     criteria={criteria}
                     onCriteriaChange={setCriteria}
                     showResultsCount={false}
+                    mode="consumer"
                   />
                 </div>
 
