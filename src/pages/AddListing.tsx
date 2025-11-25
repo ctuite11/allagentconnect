@@ -110,6 +110,9 @@ const AddListing = () => {
   const [attomId, setAttomId] = useState<string | null>(null);
   const [attomResults, setAttomResults] = useState<any[]>([]);
   const [isAttomModalOpen, setIsAttomModalOpen] = useState(false);
+  const [hasAutoFetched, setHasAutoFetched] = useState(false);
+  const [attomFetchStatus, setAttomFetchStatus] = useState<string>("");
+  const [attomNeighborhoods, setAttomNeighborhoods] = useState<string[]>([]);
   
   const [formData, setFormData] = useState({
     status: "new",
@@ -347,9 +350,11 @@ const AddListing = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleAutoFillFromPublicRecords = async () => {
+  const handleAutoFillFromPublicRecords = async (isAutoTrigger = false) => {
     if (!formData.address || !formData.city || !formData.state) {
-      toast.error("Please enter address, city, and state first.");
+      if (!isAutoTrigger) {
+        toast.error("Please enter address, city, and state first.");
+      }
       return;
     }
 
@@ -366,32 +371,52 @@ const AddListing = () => {
     console.log("ATTOM REQUEST:", payload);
 
     setAutoFillLoading(true);
+    setAttomFetchStatus("Fetching public record data...");
+    
     const { data, error } = await supabase.functions.invoke("fetch-property-data", {
       body: payload,
     });
+    
     setAutoFillLoading(false);
 
     if (error || !data) {
-      toast.error("Could not fetch public record data.");
+      setAttomFetchStatus("No matching public record found. You can enter details manually.");
+      if (!isAutoTrigger) {
+        toast.error("Could not fetch public record data.");
+      }
       console.error(error || data);
+      // Enable neighborhood dropdown even on failure
+      const areas = getAreasForCity(formData.city, formData.state);
+      setAttomNeighborhoods(areas);
       return;
     }
 
     const results = data.results || [];
 
     if (results.length === 0) {
-      toast.error("No property records found for this address.");
+      setAttomFetchStatus("No matching public record found. You can enter details manually.");
+      if (!isAutoTrigger) {
+        toast.error("No property records found for this address.");
+      }
+      // Enable neighborhood dropdown even on failure
+      const areas = getAreasForCity(formData.city, formData.state);
+      setAttomNeighborhoods(areas);
       return;
     }
 
     if (results.length === 1) {
       // Auto-fill with the single result
       applyAttomData(results[0]);
-      toast.success("Property data loaded from public records!");
+      setAttomFetchStatus("Public record data loaded successfully.");
+      if (!isAutoTrigger) {
+        toast.success("Property data loaded from public records!");
+      }
+      setHasAutoFetched(true);
     } else {
       // Show modal to let user choose
       setAttomResults(results);
       setIsAttomModalOpen(true);
+      setAttomFetchStatus("Multiple records found - please select one.");
     }
   };
 
@@ -409,6 +434,23 @@ const AddListing = () => {
         setCityChoice("Other");
         setCustomCity(normalizedCity);
         setFormData(prev => ({ ...prev, city: normalizedCity }));
+      }
+    }
+    
+    // Get available neighborhoods for the city and enable the dropdown
+    const cityToUse = formData.city || record.city;
+    const stateToUse = formData.state || record.state;
+    const areas = getAreasForCity(cityToUse, stateToUse);
+    setAttomNeighborhoods(areas);
+    
+    // If ATTOM provides neighborhood data, try to match and pre-select
+    if (record.raw?.area?.subdName && areas.length > 0) {
+      const attomNeighborhood = record.raw.area.subdName.trim();
+      const matchedArea = areas.find(area => 
+        area.toLowerCase() === attomNeighborhood.toLowerCase()
+      );
+      if (matchedArea) {
+        setFormData(prev => ({ ...prev, neighborhood: matchedArea }));
       }
     }
     
@@ -437,8 +479,38 @@ const AddListing = () => {
   const handleImportAttomRecord = (record: any) => {
     applyAttomData(record);
     setIsAttomModalOpen(false);
+    setAttomFetchStatus("Public record data loaded successfully.");
+    setHasAutoFetched(true);
     toast.success("Property data imported from public records!");
   };
+
+  // Auto-fetch when all location fields are filled
+  useEffect(() => {
+    const hasAllLocationData = 
+      formData.address.trim() !== "" &&
+      formData.state.trim() !== "" &&
+      selectedCounty !== "" && selectedCounty !== "all" &&
+      formData.city.trim() !== "" &&
+      formData.zip_code.trim() !== "";
+
+    if (hasAllLocationData && !hasAutoFetched && !autoFillLoading) {
+      console.log("[AddListing] All location fields filled, triggering auto-fetch");
+      handleAutoFillFromPublicRecords(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.address, formData.state, selectedCounty, formData.city, formData.zip_code, hasAutoFetched, autoFillLoading]);
+
+  // Reset auto-fetch flag when address changes significantly
+  useEffect(() => {
+    if (formData.address || formData.city || formData.zip_code) {
+      // If any key field changes after we've already fetched, reset the flag
+      if (hasAutoFetched) {
+        setHasAutoFetched(false);
+        setAttomFetchStatus("");
+        setAttomNeighborhoods([]);
+      }
+    }
+  }, [formData.address, formData.city, formData.zip_code, hasAutoFetched]);
 
   const handleStatusChange = (value: string) => {
     setFormData(prev => ({ ...prev, status: value }));
@@ -951,31 +1023,51 @@ const AddListing = () => {
                 <div className="space-y-4">
                   <Label className="text-lg font-semibold">Property Location</Label>
                   
-                  {/* Address with Auto-fill */}
+                  {/* Get Public Data Button - Above everything */}
+                  <div className="space-y-2 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                    <Button
+                      type="button"
+                      onClick={() => handleAutoFillFromPublicRecords(false)}
+                      disabled={autoFillLoading}
+                      variant="default"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                      size="lg"
+                    >
+                      {autoFillLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Fetching...
+                        </>
+                      ) : (
+                        "Get Public Data (Tax & Assessment Records)"
+                      )}
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Enter Street, State, County, City/Town, and ZIP, then click this button to pull public record data.
+                    </p>
+                    {attomFetchStatus && (
+                      <p className={cn(
+                        "text-sm text-center",
+                        attomFetchStatus.includes("successfully") ? "text-green-600" : 
+                        attomFetchStatus.includes("Fetching") ? "text-muted-foreground" : 
+                        "text-orange-600"
+                      )}>
+                        {attomFetchStatus}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Address */}
                   <div className="space-y-2">
                     <Label htmlFor="address">Street Address *</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Enter Street, ZIP, City, and State, then click Auto-fill to pull Public Records.
-                    </p>
-                    <div className="flex gap-2">
-                      <Input
-                        id="address"
-                        type="text"
-                        value={formData.address}
-                        onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                        placeholder="e.g. 123 Main Street"
-                        required
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleAutoFillFromPublicRecords}
-                        disabled={autoFillLoading}
-                        variant="secondary"
-                      >
-                        {autoFillLoading ? "Fetching..." : "Auto-fill from Public Records"}
-                      </Button>
-                    </div>
+                    <Input
+                      id="address"
+                      type="text"
+                      value={formData.address}
+                      onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                      placeholder="e.g. 123 Main Street"
+                      required
+                    />
                   </div>
                   
                   {/* State, County */}
@@ -1114,6 +1206,31 @@ const AddListing = () => {
                         />
                       </div>
                     )}
+                  </div>
+
+                  {/* Neighborhood/Area - Enabled after ATTOM fetch */}
+                  <div className="space-y-2">
+                    <Label htmlFor="neighborhood">Neighborhood/Area</Label>
+                    <Select
+                      value={formData.neighborhood}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
+                      disabled={attomNeighborhoods.length === 0}
+                    >
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder={
+                          attomNeighborhoods.length === 0 
+                            ? "Complete address above to enable" 
+                            : "Select neighborhood..."
+                        } />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50 max-h-[300px]">
+                        {attomNeighborhoods.map((neighborhood) => (
+                          <SelectItem key={neighborhood} value={neighborhood}>
+                            {neighborhood}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* ZIP Code Picker */}
