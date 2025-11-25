@@ -1,17 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
-const NewListing: React.FC = () => {
+const EditListing: React.FC = () => {
   const { user } = useAuthRole();
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
   const [listingType, setListingType] = useState<"for_sale" | "for_rent">("for_sale");
   const [propertyType, setPropertyType] = useState<"single_family" | "condo" | "multi_family">("single_family");
   const [address, setAddress] = useState("");
@@ -30,19 +35,53 @@ const NewListing: React.FC = () => {
   const [numUnits, setNumUnits] = useState<number | "">("");
   const [grossIncome, setGrossIncome] = useState<number | "">("");
   const [operatingExpenses, setOperatingExpenses] = useState<number | "">("");
-  
-  const [saving, setSaving] = useState(false);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <div className="flex-1 flex items-center justify-center p-6">
-          <p className="text-muted-foreground">You must be signed in as an agent to create a listing.</p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!user || !id) return;
+
+    const loadListing = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("id", id)
+        .eq("agent_id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Error loading listing", error);
+        toast.error("Failed to load listing");
+        navigate("/agent/listings");
+        return;
+      }
+
+      if (data) {
+        setListingType((data.listing_type as "for_sale" | "for_rent") || "for_sale");
+        setPropertyType((data.property_type as any as "single_family" | "condo" | "multi_family") || "single_family");
+        setAddress(data.address || "");
+        setCity(data.city || "");
+        setState(data.state || "");
+        setZipCode(data.zip_code || "");
+        setPrice(data.price || "");
+        
+        // Load rental fields (safely access potentially non-existent properties)
+        const listing: any = data;
+        setMonthlyRent(listing.monthly_rent || "");
+        setSecurityDeposit(listing.security_deposit || "");
+        setLeaseTerm(listing.lease_term || "");
+        setAvailableDate(listing.available_date || "");
+        
+        // Load multi-family fields
+        setNumUnits(listing.num_units || "");
+        setGrossIncome(listing.gross_income || "");
+        setOperatingExpenses(listing.operating_expenses || "");
+      }
+
+      setLoading(false);
+    };
+
+    loadListing();
+  }, [user, id, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,14 +99,12 @@ const NewListing: React.FC = () => {
     setSaving(true);
 
     const listingData: any = {
-      agent_id: user.id,
       address,
       city,
       state,
       zip_code: zipCode,
       listing_type: listingType,
       property_type: propertyType,
-      status: "draft",
     };
 
     // Add type-specific fields
@@ -76,6 +113,7 @@ const NewListing: React.FC = () => {
     } else {
       listingData.listing_type = "for_rent";
       listingData.price = typeof monthlyRent === "string" ? parseFloat(monthlyRent) : monthlyRent;
+      listingData.monthly_rent = listingData.price;
       if (securityDeposit) listingData.security_deposit = typeof securityDeposit === "string" ? parseFloat(securityDeposit) : securityDeposit;
       if (leaseTerm) listingData.lease_term = leaseTerm;
       if (availableDate) listingData.available_date = availableDate;
@@ -88,19 +126,37 @@ const NewListing: React.FC = () => {
       if (operatingExpenses) listingData.operating_expenses = typeof operatingExpenses === "string" ? parseFloat(operatingExpenses) : operatingExpenses;
     }
 
-    const { error } = await supabase.from("listings").insert(listingData);
+    const { error } = await supabase
+      .from("listings")
+      .update(listingData)
+      .eq("id", id);
 
     setSaving(false);
 
     if (error) {
-      console.error("Error creating listing", error);
+      console.error("Error updating listing", error);
       toast.error(error.message);
       return;
     }
 
-    toast.success("Listing created successfully!");
+    toast.success("Listing updated successfully!");
     navigate("/agent/listings");
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <p className="text-muted-foreground">You must be signed in as an agent to edit listings.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <LoadingScreen message="Loading listing..." />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -110,9 +166,9 @@ const NewListing: React.FC = () => {
         <div className="max-w-2xl mx-auto">
           <Card>
             <CardHeader>
-              <CardTitle>Create New Listing</CardTitle>
+              <CardTitle>Edit Listing</CardTitle>
               <CardDescription>
-                Fill in the basic information to create a draft listing. You can add more details later.
+                Update the listing details below.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -298,7 +354,7 @@ const NewListing: React.FC = () => {
                     type="submit"
                     disabled={saving}
                   >
-                    {saving ? "Saving..." : "Save Listing"}
+                    {saving ? "Saving..." : "Save Changes"}
                   </Button>
                   <Button
                     type="button"
@@ -317,4 +373,4 @@ const NewListing: React.FC = () => {
   );
 };
 
-export default NewListing;
+export default EditListing;
