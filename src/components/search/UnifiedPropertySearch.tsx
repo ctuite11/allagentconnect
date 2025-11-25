@@ -135,6 +135,7 @@ export const UnifiedPropertySearch = ({
   const [isStatusOpen, setIsStatusOpen] = useState(true);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isKeywordsOpen, setIsKeywordsOpen] = useState(false);
+  const [townSearchQuery, setTownSearchQuery] = useState("");
 
   // Initialize default statuses if not set
   useEffect(() => {
@@ -320,23 +321,46 @@ export const UnifiedPropertySearch = ({
               {/* Towns Picker */}
               <div className="space-y-2">
                 <Label>Towns & Cities</Label>
-                <TownsPicker
-                  towns={townsList}
-                  selectedTowns={selectedTowns}
-                  onToggleTown={toggleTown}
-                  expandedCities={expandedCities}
-                  onToggleCityExpansion={toggleCityExpansion}
-                  state={state}
-                  variant="checkbox"
-                  showAreas={criteria.showAreas !== false}
-                  showSelectAll={true}
+                <Input
+                  placeholder="Type full or partial name to filter..."
+                  value={townSearchQuery}
+                  onChange={(e) => setTownSearchQuery(e.target.value)}
+                  className="mb-2"
                 />
+                <div className="max-h-64 overflow-y-auto border rounded-lg">
+                  <TownsPicker
+                    towns={townsList}
+                    selectedTowns={selectedTowns}
+                    onToggleTown={toggleTown}
+                    expandedCities={expandedCities}
+                    onToggleCityExpansion={toggleCityExpansion}
+                    state={state}
+                    searchQuery={townSearchQuery}
+                    variant="checkbox"
+                    showAreas={criteria.showAreas !== false}
+                    showSelectAll={true}
+                    onSelectAll={() => {
+                      const allTopLevelTowns = townsList.filter(t => !t.includes('-'));
+                      const allSelected = allTopLevelTowns.every(t => selectedTowns.includes(t));
+                      updateCriteria({ towns: allSelected ? [] : allTopLevelTowns });
+                    }}
+                  />
+                </div>
                 
                 {/* Selected Towns Summary */}
                 {selectedTowns.length > 0 && (
                   <div className="mt-3 p-3 bg-muted/50 rounded-lg border border-border">
-                    <div className="text-xs font-medium text-muted-foreground mb-2">
-                      Selected: {selectedTowns.length} location{selectedTowns.length !== 1 ? 's' : ''}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-xs font-medium text-muted-foreground">
+                        Selected: {selectedTowns.length} location{selectedTowns.length !== 1 ? 's' : ''}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => updateCriteria({ towns: [] })}
+                        className="text-xs text-destructive hover:underline"
+                      >
+                        Remove All
+                      </button>
                     </div>
                     <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
                       {selectedTowns.map((town) => (
