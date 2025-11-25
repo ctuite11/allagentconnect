@@ -1433,6 +1433,7 @@ export type Database = {
           condo_details: Json | null
           construction_features: Json | null
           cooling_types: Json | null
+          county: string | null
           created_at: string
           description: string | null
           disclosures: Json | null
@@ -1531,6 +1532,7 @@ export type Database = {
           condo_details?: Json | null
           construction_features?: Json | null
           cooling_types?: Json | null
+          county?: string | null
           created_at?: string
           description?: string | null
           disclosures?: Json | null
@@ -1629,6 +1631,7 @@ export type Database = {
           condo_details?: Json | null
           construction_features?: Json | null
           cooling_types?: Json | null
+          county?: string | null
           created_at?: string
           description?: string | null
           disclosures?: Json | null
