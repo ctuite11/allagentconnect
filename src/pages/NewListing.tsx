@@ -14,6 +14,9 @@ const NewListing: React.FC = () => {
   const navigate = useNavigate();
   const [listingType, setListingType] = useState<"for_sale" | "for_rent">("for_sale");
   const [propertyType, setPropertyType] = useState<"single_family" | "condo" | "multi_family">("single_family");
+  const [status, setStatus] = useState<"New" | "Coming Soon">("New");
+  const [goLiveDate, setGoLiveDate] = useState<string>("");
+  const [autoActivateDays, setAutoActivateDays] = useState<number | "">("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -96,6 +99,17 @@ const NewListing: React.FC = () => {
     if (data.longitude) setLongitude(data.longitude);
   };
 
+  const handleStatusChange = (value: string) => {
+    const newStatus = value as "New" | "Coming Soon";
+    setStatus(newStatus);
+
+    if (newStatus === "Coming Soon") {
+      setAutoActivateDays("");
+    } else if (newStatus === "New") {
+      setGoLiveDate("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -109,7 +123,24 @@ const NewListing: React.FC = () => {
       return;
     }
 
+    // Validate Coming Soon go-live date
+    if (status === "Coming Soon" && !goLiveDate) {
+      toast.error("Please select a Go-Live date for Coming Soon listings.");
+      return;
+    }
+
     setSaving(true);
+
+    // Compute auto_activate_on
+    let computedAutoActivateOn: string | null = null;
+    if (status === "Coming Soon" && goLiveDate) {
+      computedAutoActivateOn = new Date(goLiveDate + "T09:00:00").toISOString();
+    }
+    if (status === "New" && typeof autoActivateDays === "number") {
+      const base = new Date();
+      base.setDate(base.getDate() + autoActivateDays);
+      computedAutoActivateOn = base.toISOString();
+    }
 
     const listingData: any = {
       agent_id: user.id,
@@ -119,7 +150,7 @@ const NewListing: React.FC = () => {
       zip_code: zipCode,
       listing_type: listingType,
       property_type: propertyType,
-      status: "draft",
+      status: status.toLowerCase().replace(" ", "_"),
       attom_id: attomId,
       bedrooms: bedrooms || null,
       bathrooms: bathrooms || null,
@@ -130,6 +161,9 @@ const NewListing: React.FC = () => {
       tax_year: taxYear ? parseInt(taxYear) : null,
       latitude,
       longitude,
+      go_live_date: goLiveDate || null,
+      auto_activate_days: status === "New" && typeof autoActivateDays === "number" ? autoActivateDays : null,
+      auto_activate_on: computedAutoActivateOn,
     };
 
     // Add type-specific fields
@@ -179,7 +213,20 @@ const NewListing: React.FC = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="status">Status *</Label>
+                    <select
+                      id="status"
+                      value={status}
+                      onChange={(e) => handleStatusChange(e.target.value)}
+                      className="w-full border rounded-lg px-3 py-2 text-sm"
+                    >
+                      <option value="New">New</option>
+                      <option value="Coming Soon">Coming Soon</option>
+                    </select>
+                  </div>
+
                   <div>
                     <Label htmlFor="listingType">Listing Category *</Label>
                     <select
@@ -207,6 +254,41 @@ const NewListing: React.FC = () => {
                     </select>
                   </div>
                 </div>
+
+                {status === "Coming Soon" && (
+                  <div className="border rounded-lg p-4 bg-muted/30">
+                    <Label htmlFor="goLiveDate">Go-Live / Active On Date *</Label>
+                    <Input
+                      id="goLiveDate"
+                      type="date"
+                      value={goLiveDate}
+                      onChange={(e) => setGoLiveDate(e.target.value)}
+                      className="mt-1"
+                      required
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Date this Coming Soon listing should automatically become Active.
+                    </p>
+                  </div>
+                )}
+
+                {status === "New" && (
+                  <div className="border rounded-lg p-4 bg-muted/30">
+                    <Label htmlFor="autoActivateDays">Auto-activate after (days)</Label>
+                    <Input
+                      id="autoActivateDays"
+                      type="number"
+                      min={1}
+                      value={autoActivateDays}
+                      onChange={(e) => setAutoActivateDays(e.target.value === "" ? "" : Number(e.target.value))}
+                      className="mt-1"
+                      placeholder="e.g. 3"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Optional. If set, this listing will automatically move from New to Active after this many days.
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="address">Street Address *</Label>

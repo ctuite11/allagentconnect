@@ -1415,6 +1415,8 @@ export type Database = {
           assessed_value: number | null
           attom_data: Json | null
           attom_id: string | null
+          auto_activate_days: number | null
+          auto_activate_on: string | null
           basement_features_list: Json | null
           basement_floor_types: Json | null
           basement_types: Json | null
@@ -1446,6 +1448,7 @@ export type Database = {
           garage_comments: string | null
           garage_features_list: Json | null
           garage_spaces: number | null
+          go_live_date: string | null
           green_features: Json | null
           handicap_access: string | null
           has_basement: boolean | null
@@ -1510,6 +1513,8 @@ export type Database = {
           assessed_value?: number | null
           attom_data?: Json | null
           attom_id?: string | null
+          auto_activate_days?: number | null
+          auto_activate_on?: string | null
           basement_features_list?: Json | null
           basement_floor_types?: Json | null
           basement_types?: Json | null
@@ -1541,6 +1546,7 @@ export type Database = {
           garage_comments?: string | null
           garage_features_list?: Json | null
           garage_spaces?: number | null
+          go_live_date?: string | null
           green_features?: Json | null
           handicap_access?: string | null
           has_basement?: boolean | null
@@ -1605,6 +1611,8 @@ export type Database = {
           assessed_value?: number | null
           attom_data?: Json | null
           attom_id?: string | null
+          auto_activate_days?: number | null
+          auto_activate_on?: string | null
           basement_features_list?: Json | null
           basement_floor_types?: Json | null
           basement_types?: Json | null
@@ -1636,6 +1644,7 @@ export type Database = {
           garage_comments?: string | null
           garage_features_list?: Json | null
           garage_spaces?: number | null
+          go_live_date?: string | null
           green_features?: Json | null
           handicap_access?: string | null
           has_basement?: boolean | null

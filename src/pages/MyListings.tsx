@@ -20,6 +20,20 @@ type Listing = {
   bathrooms: number | null;
   square_feet: number | null;
   created_at: string;
+  go_live_date: string | null;
+  auto_activate_on: string | null;
+  auto_activate_days: number | null;
+};
+
+const formatAutoActivationInfo = (listing: Listing) => {
+  if (listing.status === "coming_soon" && listing.go_live_date) {
+    const date = new Date(listing.go_live_date).toLocaleDateString();
+    return `Will go Active on ${date}`;
+  }
+  if (listing.status === "new" && listing.auto_activate_days) {
+    return `Will auto-activate in ${listing.auto_activate_days} days`;
+  }
+  return null;
 };
 
 const MyListings: React.FC = () => {
@@ -133,15 +147,24 @@ const MyListings: React.FC = () => {
                       {listing.bedrooms ?? "-"} / {listing.bathrooms ?? "-"}
                     </td>
                     <td className="px-4 py-3 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                        listing.status === "active" 
-                          ? "bg-green-100 text-green-800"
-                          : listing.status === "draft"
-                          ? "bg-gray-100 text-gray-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}>
-                        {listing.status}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                          listing.status === "active" 
+                            ? "bg-green-100 text-green-800"
+                            : listing.status === "draft"
+                            ? "bg-gray-100 text-gray-800"
+                            : listing.status === "coming_soon"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}>
+                          {listing.status.replace("_", " ")}
+                        </span>
+                        {formatAutoActivationInfo(listing) && (
+                          <span className="text-xs text-muted-foreground">
+                            {formatAutoActivationInfo(listing)}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <Button
