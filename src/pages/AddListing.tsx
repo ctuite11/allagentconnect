@@ -1246,35 +1246,6 @@ const AddListing = () => {
                     )}
                   </div>
 
-                   {/* Neighborhood/Area - Enabled after ATTOM fetch */}
-                  <div className="space-y-2">
-                    <Label htmlFor="neighborhood">Neighborhood/Area</Label>
-                    <Select
-                      value={formData.neighborhood}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
-                      disabled={!addressVerified}
-                    >
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder={
-                          !addressVerified
-                            ? "Run public record lookup to verify the address, then choose Neighborhood/Area." 
-                            : "Select neighborhood..."
-                        } />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50 max-h-[300px]">
-                        {attomNeighborhoods.map((neighborhood) => (
-                          <SelectItem key={neighborhood} value={neighborhood}>
-                            {neighborhood}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {verificationMessage && (
-                      <p className="text-sm text-muted-foreground">
-                        {verificationMessage}
-                      </p>
-                    )}
-                  </div>
 
                   {/* ZIP Code Picker */}
                   <div className="space-y-2">
@@ -1306,7 +1277,7 @@ const AddListing = () => {
                           </div>
                         )}
                       </div>
-                    ) : (
+                     ) : (
                       <Input
                         id="zip_code"
                         type="text"
@@ -1316,6 +1287,31 @@ const AddListing = () => {
                         required
                       />
                     )}
+                  </div>
+
+                  {/* Neighborhood/Area - Enabled after ATTOM data is retrieved */}
+                  <div className="space-y-2">
+                    <Label htmlFor="neighborhood">Neighborhood/Area</Label>
+                    <Select
+                      value={formData.neighborhood}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
+                      disabled={attomNeighborhoods.length === 0}
+                    >
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder={
+                          attomNeighborhoods.length === 0
+                            ? "Enter address and run public data lookup to enable" 
+                            : "Select neighborhood..."
+                        } />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50 max-h-[300px]">
+                        {attomNeighborhoods.map((neighborhood) => (
+                          <SelectItem key={neighborhood} value={neighborhood}>
+                            {neighborhood}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
