@@ -11,9 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormattedInput } from "@/components/ui/formatted-input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon } from "lucide-react";
 import { z } from "zod";
+import { format, differenceInDays } from "date-fns";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
@@ -92,7 +95,7 @@ const AddListing = () => {
     annual_property_tax: "",
     tax_year: "",
     go_live_date: "",
-    auto_activate_days: "",
+    auto_activate_on: null as Date | null,
     // Rental-specific
     monthly_rent: "",
     security_deposit: "",
@@ -319,7 +322,7 @@ const AddListing = () => {
   const handleStatusChange = (value: string) => {
     setFormData(prev => ({ ...prev, status: value }));
     if (value === "coming_soon") {
-      setFormData(prev => ({ ...prev, auto_activate_days: "" }));
+      setFormData(prev => ({ ...prev, auto_activate_on: null }));
     } else if (value === "new" || value === "active") {
       setFormData(prev => ({ ...prev, go_live_date: "" }));
     }
@@ -525,15 +528,21 @@ const AddListing = () => {
         return;
       }
 
-      // Compute auto_activate_on
+      // Compute auto_activate_on and auto_activate_days
       let computedAutoActivateOn: string | null = null;
+      let computedAutoActivateDays: number | null = null;
+      
       if (formData.status === "coming_soon" && formData.go_live_date) {
         computedAutoActivateOn = new Date(formData.go_live_date + "T09:00:00").toISOString();
       }
-      if (formData.status === "new" && formData.auto_activate_days) {
-        const base = new Date();
-        base.setDate(base.getDate() + parseInt(formData.auto_activate_days));
-        computedAutoActivateOn = base.toISOString();
+      
+      if (formData.status === "new" && formData.auto_activate_on) {
+        computedAutoActivateOn = formData.auto_activate_on.toISOString();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const targetDate = new Date(formData.auto_activate_on);
+        targetDate.setHours(0, 0, 0, 0);
+        computedAutoActivateDays = differenceInDays(targetDate, today);
       }
 
       // Prepare data for validation
@@ -599,7 +608,7 @@ const AddListing = () => {
         annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
         tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
         go_live_date: formData.go_live_date || null,
-        auto_activate_days: formData.status === "new" && formData.auto_activate_days ? parseInt(formData.auto_activate_days) : null,
+        auto_activate_days: computedAutoActivateDays,
         auto_activate_on: computedAutoActivateOn,
       };
 
@@ -808,21 +817,41 @@ const AddListing = () => {
                   </div>
                 )}
 
-                {/* Auto-activate Days */}
+                {/* Auto-activate Date Picker */}
                 {formData.status === "new" && (
                   <div className="border rounded-lg p-4 bg-muted/30">
-                    <Label htmlFor="auto_activate_days">Auto-activate after (days)</Label>
-                    <Input
-                      id="auto_activate_days"
-                      type="number"
-                      min={1}
-                      value={formData.auto_activate_days}
-                      onChange={(e) => setFormData(prev => ({ ...prev, auto_activate_days: e.target.value }))}
-                      className="mt-1"
-                      placeholder="e.g. 3"
-                    />
+                    <Label htmlFor="auto_activate_on">Auto-activate on</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          id="auto_activate_on"
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal mt-1",
+                            !formData.auto_activate_on && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.auto_activate_on ? (
+                            format(formData.auto_activate_on, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={formData.auto_activate_on || undefined}
+                          onSelect={(date) => setFormData(prev => ({ ...prev, auto_activate_on: date || null }))}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Optional. If set, this listing will automatically move from New to Active after this many days.
+                      Optional. Listing will automatically become Active on this date.
                     </p>
                   </div>
                 )}
