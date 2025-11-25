@@ -159,11 +159,19 @@ const AddListing = () => {
     num_units: "",
     gross_income: "",
     operating_expenses: "",
+    // New fields
+    disclosures_other: "",
+    listing_exclusions: "",
+    property_website_url: "",
+    virtual_tour_url: "",
+    video_url: "",
   });
 
   const [disclosures, setDisclosures] = useState<string[]>([]);
   const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
   const [amenities, setAmenities] = useState<string[]>([]);
+  const [areaAmenities, setAreaAmenities] = useState<string[]>([]);
+  const [otherAreaAmenity, setOtherAreaAmenity] = useState<string>("");
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
@@ -881,6 +889,12 @@ const AddListing = () => {
         disclosures: disclosures,
         property_features: propertyFeatures,
         amenities: amenities,
+        area_amenities: areaAmenities.length > 0 ? areaAmenities : null,
+        disclosures_other: formData.disclosures_other || null,
+        listing_exclusions: formData.listing_exclusions || null,
+        property_website_url: formData.property_website_url || null,
+        virtual_tour_url: formData.virtual_tour_url || null,
+        video_url: formData.video_url || null,
         additional_notes: formData.additional_notes || null,
         photos: uploadedFiles.photos,
         floor_plans: uploadedFiles.floorPlans,
@@ -1534,6 +1548,94 @@ const AddListing = () => {
                   </div>
                 </div>
 
+                {/* Area Amenities */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Area Amenities</Label>
+                  <p className="text-sm text-muted-foreground">Select amenities near this property</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[
+                      'Public Transportation', 'Shopping', 'Marina', 'Tennis Court', 'Public School',
+                      'Private School', 'University', 'Hospital', 'Highway Access', 'Swimming Pool',
+                      'Park', 'Walk/Jog Trails', 'Bike Path', 'Golf Course', 'Beach'
+                    ].map((areaAmenity) => (
+                      <div key={areaAmenity} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`area-${areaAmenity}`}
+                          checked={areaAmenities.includes(areaAmenity)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setAreaAmenities([...areaAmenities, areaAmenity]);
+                            } else {
+                              setAreaAmenities(areaAmenities.filter(a => a !== areaAmenity));
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor={`area-${areaAmenity}`} className="font-normal cursor-pointer">
+                          {areaAmenity}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <Label htmlFor="other_area_amenity">Other Amenity</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="other_area_amenity"
+                        placeholder="Enter custom area amenity..."
+                        value={otherAreaAmenity}
+                        onChange={(e) => setOtherAreaAmenity(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && otherAreaAmenity.trim()) {
+                            e.preventDefault();
+                            if (!areaAmenities.includes(otherAreaAmenity.trim())) {
+                              setAreaAmenities([...areaAmenities, otherAreaAmenity.trim()]);
+                              setOtherAreaAmenity("");
+                            }
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          if (otherAreaAmenity.trim() && !areaAmenities.includes(otherAreaAmenity.trim())) {
+                            setAreaAmenities([...areaAmenities, otherAreaAmenity.trim()]);
+                            setOtherAreaAmenity("");
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                    {areaAmenities.some(a => ![
+                      'Public Transportation', 'Shopping', 'Marina', 'Tennis Court', 'Public School',
+                      'Private School', 'University', 'Hospital', 'Highway Access', 'Swimming Pool',
+                      'Park', 'Walk/Jog Trails', 'Bike Path', 'Golf Course', 'Beach'
+                    ].includes(a)) && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {areaAmenities.filter(a => ![
+                          'Public Transportation', 'Shopping', 'Marina', 'Tennis Court', 'Public School',
+                          'Private School', 'University', 'Hospital', 'Highway Access', 'Swimming Pool',
+                          'Park', 'Walk/Jog Trails', 'Bike Path', 'Golf Course', 'Beach'
+                        ].includes(a)).map((customAmenity) => (
+                          <div key={customAmenity} className="flex items-center gap-2 bg-secondary px-3 py-1 rounded-full text-sm">
+                            <span>{customAmenity}</span>
+                            <button
+                              type="button"
+                              onClick={() => setAreaAmenities(areaAmenities.filter(a => a !== customAmenity))}
+                              className="hover:text-destructive"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Commission & Compensation */}
                 <div className="space-y-4 border-t pt-6">
                   <Label className="text-xl font-semibold">Commission & Compensation</Label>
@@ -1672,6 +1774,29 @@ const AddListing = () => {
                       </div>
                     ))}
                   </div>
+                  <div className="space-y-2 mt-4">
+                    <Label htmlFor="disclosures_other">Other Disclosures</Label>
+                    <Textarea
+                      id="disclosures_other"
+                      placeholder="Describe any additional disclosures that aren't covered above..."
+                      value={formData.disclosures_other}
+                      onChange={(e) => setFormData(prev => ({ ...prev, disclosures_other: e.target.value }))}
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                {/* Exclusions */}
+                <div className="space-y-2 border-t pt-6">
+                  <Label htmlFor="listing_exclusions">Exclusions</Label>
+                  <p className="text-sm text-muted-foreground">Items excluded from the sale</p>
+                  <Textarea
+                    id="listing_exclusions"
+                    placeholder="Items excluded from the sale (e.g. dining room chandelier, washer/dryer)..."
+                    value={formData.listing_exclusions}
+                    onChange={(e) => setFormData(prev => ({ ...prev, listing_exclusions: e.target.value }))}
+                    rows={3}
+                  />
                 </div>
 
                 {/* Additional Notes */}
@@ -1689,6 +1814,52 @@ const AddListing = () => {
                 {/* Media & Documents */}
                 <div className="space-y-6 border-t pt-6">
                   <Label className="text-xl font-semibold">Media & Documents</Label>
+                  
+                  {/* Property Links */}
+                  <div className="space-y-4">
+                    <Label className="text-lg font-medium">Property Links</Label>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="property_website_url">Property Website URL</Label>
+                        <Input
+                          id="property_website_url"
+                          type="url"
+                          placeholder="https://www.example.com/listing/123"
+                          value={formData.property_website_url}
+                          onChange={(e) => setFormData(prev => ({ ...prev, property_website_url: e.target.value }))}
+                        />
+                        {formData.property_website_url && !/^https?:\/\/.+\..+/.test(formData.property_website_url) && (
+                          <p className="text-sm text-destructive">Please enter a valid URL</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="virtual_tour_url">Virtual Tour URL</Label>
+                        <Input
+                          id="virtual_tour_url"
+                          type="url"
+                          placeholder="https://vimeo.com/... or Matterport link"
+                          value={formData.virtual_tour_url}
+                          onChange={(e) => setFormData(prev => ({ ...prev, virtual_tour_url: e.target.value }))}
+                        />
+                        {formData.virtual_tour_url && !/^https?:\/\/.+\..+/.test(formData.virtual_tour_url) && (
+                          <p className="text-sm text-destructive">Please enter a valid URL</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="video_url">Video URL</Label>
+                        <Input
+                          id="video_url"
+                          type="url"
+                          placeholder="https://youtu.be/..."
+                          value={formData.video_url}
+                          onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
+                        />
+                        {formData.video_url && !/^https?:\/\/.+\..+/.test(formData.video_url) && (
+                          <p className="text-sm text-destructive">Please enter a valid URL</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   
                   {/* Property Photos */}
                   <div className="space-y-4">
