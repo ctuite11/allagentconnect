@@ -451,7 +451,15 @@ export default function AgentSuccessHub() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4">
-              <Button onClick={() => navigate("/hot-sheets")}>
+              <Button onClick={() => navigate("/agent/listings/new")}>
+                <FileText className="w-4 h-4 mr-2" />
+                Create New Listing
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/agent/listings")}>
+                <FileText className="w-4 h-4 mr-2" />
+                View My Listings
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/hot-sheets")}>
                 <Bell className="w-4 h-4 mr-2" />
                 Create New Hotsheet
               </Button>
