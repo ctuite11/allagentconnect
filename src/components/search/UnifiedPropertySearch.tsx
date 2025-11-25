@@ -45,11 +45,20 @@ export interface SearchCriteria {
   minYearBuilt?: string;
   maxYearBuilt?: string;
   maxCondoFee?: string;
+  maxPricePerSqft?: string;
   waterfront?: boolean;
   waterView?: boolean;
   hasBasement?: boolean;
   propertyStyle?: string;
   hasHOA?: string;
+  
+  // Agent-only filters
+  listDate?: string;
+  offMarketWindow?: string;
+  onlyOpenHouses?: boolean;
+  openHouseDays?: string;
+  onlyBrokerTours?: boolean;
+  brokerTourDays?: string;
   
   // Keywords
   keywords?: string;
@@ -95,11 +104,9 @@ const AGENT_STATUSES = [
 
 const CONSUMER_STATUSES = [
   { value: "new", label: "New" },
-  { value: "coming_soon", label: "Coming Soon" },
   { value: "active", label: "Active" },
+  { value: "coming_soon", label: "Coming Soon" },
   { value: "back_on_market", label: "Back on Market" },
-  { value: "contingent", label: "Contingent" },
-  { value: "under_agreement", label: "Under Agreement" },
   { value: "price_changed", label: "Price Change" },
 ];
 
@@ -671,6 +678,172 @@ export const UnifiedPropertySearch = ({
         </div>
       </Collapsible>
 
+      {/* Agent-Only: List Date */}
+      {mode === "agent" && (
+        <Collapsible defaultOpen={false}>
+          <div className="bg-card rounded-lg shadow-sm border">
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold text-sm">LIST DATE</h3>
+              </div>
+              <ChevronDown className="h-4 w-4" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-4 space-y-2 border-t">
+                <Label>Listed within</Label>
+                <Select
+                  value={criteria.listDate || "any"}
+                  onValueChange={(value) => updateCriteria({ listDate: value === "any" ? undefined : value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Any Time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any Time</SelectItem>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="7">Last 7 Days</SelectItem>
+                    <SelectItem value="30">Last 30 Days</SelectItem>
+                    <SelectItem value="90">Last 90 Days</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+      )}
+
+      {/* Agent-Only: Off-Market Window */}
+      {mode === "agent" && (
+        <Collapsible defaultOpen={false}>
+          <div className="bg-card rounded-lg shadow-sm border">
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold text-sm">OFF-MARKET WINDOW</h3>
+              </div>
+              <ChevronDown className="h-4 w-4" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-4 space-y-2 border-t">
+                <Label>Sold/Expired within</Label>
+                <Select
+                  value={criteria.offMarketWindow || "any"}
+                  onValueChange={(value) => updateCriteria({ offMarketWindow: value === "any" ? undefined : value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Any Time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any Time</SelectItem>
+                    <SelectItem value="30">Today – 30 Days</SelectItem>
+                    <SelectItem value="90">Today – 3 Months</SelectItem>
+                    <SelectItem value="180">Today – 6 Months</SelectItem>
+                    <SelectItem value="365">Today – 12 Months</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+      )}
+
+      {/* Agent-Only: Open Houses */}
+      {mode === "agent" && (
+        <Collapsible defaultOpen={false}>
+          <div className="bg-card rounded-lg shadow-sm border">
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <Home className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold text-sm">OPEN HOUSES</h3>
+              </div>
+              <ChevronDown className="h-4 w-4" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-4 space-y-3 border-t">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="onlyOpenHouses"
+                    checked={criteria.onlyOpenHouses || false}
+                    onCheckedChange={(checked) => updateCriteria({ onlyOpenHouses: !!checked })}
+                  />
+                  <label htmlFor="onlyOpenHouses" className="text-sm cursor-pointer">
+                    Only show listings with Open Houses
+                  </label>
+                </div>
+                
+                {criteria.onlyOpenHouses && (
+                  <div className="space-y-2">
+                    <Label>Time Window</Label>
+                    <Select
+                      value={criteria.openHouseDays || "7"}
+                      onValueChange={(value) => updateCriteria({ openHouseDays: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">Next 3 days</SelectItem>
+                        <SelectItem value="7">Next 7 days</SelectItem>
+                        <SelectItem value="14">Next 14 days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+      )}
+
+      {/* Agent-Only: Broker Tours */}
+      {mode === "agent" && (
+        <Collapsible defaultOpen={false}>
+          <div className="bg-card rounded-lg shadow-sm border">
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold text-sm">BROKER TOURS</h3>
+              </div>
+              <ChevronDown className="h-4 w-4" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-4 space-y-3 border-t">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="onlyBrokerTours"
+                    checked={criteria.onlyBrokerTours || false}
+                    onCheckedChange={(checked) => updateCriteria({ onlyBrokerTours: !!checked })}
+                  />
+                  <label htmlFor="onlyBrokerTours" className="text-sm cursor-pointer">
+                    Only show listings with Broker Tours
+                  </label>
+                </div>
+                
+                {criteria.onlyBrokerTours && (
+                  <div className="space-y-2">
+                    <Label>Time Window</Label>
+                    <Select
+                      value={criteria.brokerTourDays || "7"}
+                      onValueChange={(value) => updateCriteria({ brokerTourDays: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">Next 3 days</SelectItem>
+                        <SelectItem value="7">Next 7 days</SelectItem>
+                        <SelectItem value="14">Next 14 days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+      )}
+
       {/* Advanced Filters */}
       <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
         <div className="bg-card rounded-lg shadow-sm border">
@@ -784,6 +957,19 @@ export const UnifiedPropertySearch = ({
                   onChange={(e) => updateCriteria({ maxCondoFee: e.target.value })}
                 />
               </div>
+
+              {/* Price Per SqFt */}
+              {mode === "agent" && (
+                <div className="space-y-2">
+                  <Label>Max Price / SqFt</Label>
+                  <Input
+                    type="number"
+                    placeholder="No max"
+                    value={criteria.maxPricePerSqft || ""}
+                    onChange={(e) => updateCriteria({ maxPricePerSqft: e.target.value })}
+                  />
+                </div>
+              )}
 
               {/* Features */}
               <div className="space-y-3">
