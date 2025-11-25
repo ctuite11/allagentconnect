@@ -1118,7 +1118,7 @@ const AddListing = () => {
                           Fetching...
                         </>
                       ) : (
-                        "Get Public Data (Tax & Assessment Records)"
+                        "Click here to import public record data"
                       )}
                     </Button>
                     <p className="text-xs text-muted-foreground text-center">
@@ -1300,9 +1300,17 @@ const AddListing = () => {
                         </div>
                         {formData.zip_code && (
                           <div className="space-y-2">
-                            <div className="flex items-center gap-2 p-2 bg-primary/10 border border-primary/20 rounded text-sm text-primary">
-                              <CheckCircle2 className="h-4 w-4" />
-                              Selected: {formData.zip_code}
+                            <div className="flex items-center justify-between gap-2 p-2 bg-primary/10 border border-primary/20 rounded text-sm text-primary">
+                              <span>Selected: {formData.zip_code}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setFormData(prev => ({ ...prev, zip_code: "" }))}
+                                className="h-6 w-6 p-0 hover:bg-destructive/10"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
                             <Input
                               type="text"
