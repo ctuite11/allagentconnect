@@ -80,7 +80,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
           <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
-          <Route path="/agent/listings/new" element={<RouteGuard requireRole="agent"><NewListing /></RouteGuard>} />
+          <Route path="/agent/listings/new" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
           <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent"><EditListing /></RouteGuard>} />
           <Route path="/buyer/auth" element={<BuyerAuth />} />
           <Route path="/submit-client-need" element={<SubmitClientNeed />} />
