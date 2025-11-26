@@ -290,16 +290,49 @@ const PropertyDetail = () => {
                 <Share2 className="w-4 h-4" />
                 Share
               </Button>
+              {listing.video_url && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.open(listing.video_url, '_blank')}
+                  className="gap-2"
+                >
+                  <Video className="w-4 h-4" />
+                  Video
+                </Button>
+              )}
+              {listing.virtual_tour_url && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.open(listing.virtual_tour_url, '_blank')}
+                  className="gap-2"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                  3D Tour
+                </Button>
+              )}
+              {listing.property_website_url && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.open(listing.property_website_url, '_blank')}
+                  className="gap-2"
+                >
+                  <Globe className="w-4 h-4" />
+                  Website
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       <main className="flex-1">
-        {/* Hero Section - Full Width */}
-        <div className="container mx-auto px-4 py-6">
+        {/* Hero Section - Max Width 1600px */}
+        <div className="container mx-auto px-4 py-6" style={{ maxWidth: '1600px' }}>
           {/* Hero Photo with Carousel Controls */}
-          <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted max-w-6xl mx-auto group">
+          <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted mx-auto group">
             <img
               src={mainPhoto}
               alt={listing.address}
@@ -334,7 +367,7 @@ const PropertyDetail = () => {
 
           {/* Thumbnail Strip */}
           {listing.photos && listing.photos.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-2 mt-4 max-w-6xl mx-auto">
+            <div className="flex gap-2 overflow-x-auto pb-2 mt-4 mx-auto">
               {listing.photos.map((photo, index) => (
                 <button
                   key={index}
@@ -355,8 +388,8 @@ const PropertyDetail = () => {
             </div>
           )}
 
-          {/* Price & Address - Full Width */}
-          <div className="max-w-6xl mx-auto mt-6">
+          {/* Price & Address */}
+          <div className="mx-auto mt-6">
             <div className="flex items-start gap-2 mb-2">
               <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div className="flex-1">
@@ -373,53 +406,16 @@ const PropertyDetail = () => {
               )}
             </div>
 
-            {/* Action Bar */}
-            <div className="flex flex-wrap gap-2 mt-4">
-              <Button variant="outline" size="sm" onClick={handleCopyLink} className="gap-2">
-                <Share2 className="w-4 h-4" />
-                Share
-              </Button>
-              {listing.video_url && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.open(listing.video_url, '_blank')}
-                  className="gap-2"
-                >
-                  <Video className="w-4 h-4" />
-                  Video
-                </Button>
-              )}
-              {listing.virtual_tour_url && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.open(listing.virtual_tour_url, '_blank')}
-                  className="gap-2"
-                >
-                  <Maximize2 className="w-4 h-4" />
-                  Virtual Tour
-                </Button>
-              )}
-              {listing.property_website_url && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.open(listing.property_website_url, '_blank')}
-                  className="gap-2"
-                >
-                  <Globe className="w-4 h-4" />
-                  Property Website
-                </Button>
-              )}
-              {agentProfile && (
+            {/* Contact Agent Button */}
+            {agentProfile && (
+              <div className="mt-4">
                 <ContactAgentDialog
                   listingId={listing.id}
                   agentId={listing.agent_id}
                   listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
                 />
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Key Stats Row */}
             <div className="flex flex-wrap items-center gap-6 py-4 border-y mt-4">
@@ -471,8 +467,8 @@ const PropertyDetail = () => {
           </div>
         </div>
 
-        {/* Two-Column Layout for Details */}
-        <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Two-Column Layout for Details - Max Width 1600px */}
+        <div className="mx-auto px-4 py-6" style={{ maxWidth: '1600px' }}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* LEFT COLUMN - Main Content */}
             <div className="lg:col-span-2 space-y-6">
