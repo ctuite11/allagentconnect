@@ -27,6 +27,7 @@ import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
+import { ListingDetailSections } from "@/components/ListingDetailSections";
 
 interface Listing {
   id: string;
@@ -372,7 +373,12 @@ const PropertyDetail = () => {
               </Card>
             )}
 
-            {/* Additional property details can go here */}
+            {/* MLS-Style Detail Sections */}
+            <ListingDetailSections 
+              listing={listing} 
+              agent={agentProfile}
+              isAgentView={true}
+            />
           </div>
 
           {/* Right Column - Agent Card & Key Facts */}

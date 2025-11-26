@@ -23,6 +23,7 @@ import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
+import { ListingDetailSections } from "@/components/ListingDetailSections";
 
 interface AgentProfile {
   id: string;
@@ -183,7 +184,15 @@ const ConsumerPropertyDetail = () => {
     );
   }
 
-  const mainPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[currentPhotoIndex].url : '/placeholder.svg';
+  // Helper to handle both string and object photo formats
+  const getPhotoUrl = (photo: any): string => {
+    if (typeof photo === 'string') return photo;
+    return photo?.url || '/placeholder.svg';
+  };
+
+  const mainPhoto = listing.photos && listing.photos.length > 0 
+    ? getPhotoUrl(listing.photos[currentPhotoIndex]) 
+    : '/placeholder.svg';
   const canonicalUrl = `${window.location.origin}/property/${id}`;
   const sharePreviewUrl = `https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/${id}`;
 
@@ -1055,6 +1064,13 @@ const ConsumerPropertyDetail = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* MLS-Style Detail Sections */}
+              <ListingDetailSections 
+                listing={listing} 
+                agent={agent}
+                isAgentView={false}
+              />
 
               {/* Map */}
               <Card>
