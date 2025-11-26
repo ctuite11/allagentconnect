@@ -130,10 +130,16 @@ const AddListing = () => {
     security_deposit: "",
     lease_term: "",
     available_date: "",
-    // Multi-family specific
+    // Multi-family specific (FOR SALE)
     num_units: "",
     gross_income: "",
     operating_expenses: "",
+    total_rooms: "",
+    total_bedrooms: "",
+    total_full_baths: "",
+    total_half_baths: "",
+    total_fireplaces: "",
+    total_monthly_rent: "",
     // New fields
     disclosures_other: "",
     listing_exclusions: "",
@@ -147,6 +153,15 @@ const AddListing = () => {
     laundry_type: "none",
     pets_comment: "",
   });
+
+  // Multi-family units state
+  const [units, setUnits] = useState<Array<{
+    unit_number: string;
+    bedrooms: number;
+    full_baths: number;
+    half_baths: number;
+    rent: number;
+  }>>([]);
 
   // New state for rental multi-select fields
   const [depositRequirements, setDepositRequirements] = useState<string[]>([]);
@@ -1578,33 +1593,35 @@ const AddListing = () => {
                         </div>
                       </div>
 
-                      {/* Deposit Requirements (multi-select) */}
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Deposit Requirements</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {[
-                            { key: 'first_month', label: 'First Month' },
-                            { key: 'last_month', label: 'Last Month' },
-                            { key: 'security_deposit', label: 'Security Deposit' },
-                            { key: 'key_deposit', label: 'Key Deposit' },
-                            { key: 'move_in_out_fee', label: 'Move-in / Move-out Fee' },
-                          ].map(({ key, label }) => (
-                            <div key={key} className="flex items-center space-x-2">
-                              <Checkbox
-                                checked={depositRequirements.includes(key)}
-                                onCheckedChange={(isChecked) => {
-                                  if (isChecked === true) {
-                                    setDepositRequirements(prev => Array.from(new Set([...prev, key])));
-                                  } else {
-                                    setDepositRequirements(prev => prev.filter((v) => v !== key));
-                                  }
-                                }}
-                              />
-                              <Label className="text-sm font-normal cursor-pointer">{label}</Label>
-                            </div>
-                          ))}
+                      {/* Deposit Requirements (multi-select) - Only for rentals */}
+                      {formData.listing_type === "for_rent" && (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Deposit Requirements</Label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {[
+                              { key: 'first_month', label: 'First Month' },
+                              { key: 'last_month', label: 'Last Month' },
+                              { key: 'security_deposit', label: 'Security Deposit' },
+                              { key: 'key_deposit', label: 'Key Deposit' },
+                              { key: 'move_in_out_fee', label: 'Move-in / Move-out Fee' },
+                            ].map(({ key, label }) => (
+                              <div key={key} className="flex items-center space-x-2">
+                                <Checkbox
+                                  checked={depositRequirements.includes(key)}
+                                  onCheckedChange={(isChecked) => {
+                                    if (isChecked === true) {
+                                      setDepositRequirements(prev => Array.from(new Set([...prev, key])));
+                                    } else {
+                                      setDepositRequirements(prev => prev.filter((v) => v !== key));
+                                    }
+                                  }}
+                                />
+                                <Label className="text-sm font-normal cursor-pointer">{label}</Label>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1664,6 +1681,207 @@ const AddListing = () => {
                     />
                   </div>
                 </div>
+
+                {/* Multi-Family FOR SALE Fields */}
+                {formData.listing_type === "for_sale" && formData.property_type === "multi_family" && (
+                  <div className="space-y-6 border-t pt-6">
+                    <Label className="text-xl font-semibold">Multi-Family Building Details</Label>
+                    
+                    {/* Number of Units */}
+                    <div className="space-y-2 max-w-xs">
+                      <Label htmlFor="num_units">Number of Units *</Label>
+                      <Input
+                        id="num_units"
+                        type="number"
+                        min="2"
+                        value={formData.num_units}
+                        onChange={(e) => setFormData(prev => ({ ...prev, num_units: e.target.value }))}
+                        placeholder="e.g. 3"
+                        required
+                      />
+                    </div>
+
+                    {/* Building Totals */}
+                    <div className="space-y-4">
+                      <Label className="text-lg font-medium">Building Totals</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="total_rooms">Total Rooms</Label>
+                          <Input
+                            id="total_rooms"
+                            type="number"
+                            min="0"
+                            value={formData.total_rooms}
+                            onChange={(e) => setFormData(prev => ({ ...prev, total_rooms: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="total_bedrooms">Total Bedrooms</Label>
+                          <Input
+                            id="total_bedrooms"
+                            type="number"
+                            min="0"
+                            value={formData.total_bedrooms}
+                            onChange={(e) => setFormData(prev => ({ ...prev, total_bedrooms: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="total_full_baths">Total Full Baths</Label>
+                          <Input
+                            id="total_full_baths"
+                            type="number"
+                            min="0"
+                            value={formData.total_full_baths}
+                            onChange={(e) => setFormData(prev => ({ ...prev, total_full_baths: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="total_half_baths">Total Half Baths</Label>
+                          <Input
+                            id="total_half_baths"
+                            type="number"
+                            min="0"
+                            value={formData.total_half_baths}
+                            onChange={(e) => setFormData(prev => ({ ...prev, total_half_baths: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="total_fireplaces">Total Fireplaces</Label>
+                          <Input
+                            id="total_fireplaces"
+                            type="number"
+                            min="0"
+                            value={formData.total_fireplaces}
+                            onChange={(e) => setFormData(prev => ({ ...prev, total_fireplaces: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="total_monthly_rent">Total Monthly Rent</Label>
+                          <FormattedInput
+                            id="total_monthly_rent"
+                            format="currency"
+                            value={formData.total_monthly_rent}
+                            onChange={(value) => setFormData(prev => ({ ...prev, total_monthly_rent: value }))}
+                            decimals={0}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Unit Mix */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-lg font-medium">Unit Mix</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setUnits(prev => [...prev, {
+                            unit_number: '',
+                            bedrooms: 0,
+                            full_baths: 0,
+                            half_baths: 0,
+                            rent: 0
+                          }])}
+                        >
+                          Add Unit
+                        </Button>
+                      </div>
+                      
+                      {units.length === 0 && (
+                        <p className="text-sm text-muted-foreground">No units added yet. Click "Add Unit" to begin.</p>
+                      )}
+
+                      <div className="space-y-3">
+                        {units.map((unit, index) => (
+                          <Card key={index} className="p-4">
+                            <div className="grid grid-cols-5 gap-3 items-end">
+                              <div className="space-y-2">
+                                <Label htmlFor={`unit_${index}_number`}>Unit #</Label>
+                                <Input
+                                  id={`unit_${index}_number`}
+                                  placeholder="1A"
+                                  value={unit.unit_number}
+                                  onChange={(e) => {
+                                    const newUnits = [...units];
+                                    newUnits[index].unit_number = e.target.value;
+                                    setUnits(newUnits);
+                                  }}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`unit_${index}_bedrooms`}>Beds</Label>
+                                <Input
+                                  id={`unit_${index}_bedrooms`}
+                                  type="number"
+                                  min="0"
+                                  value={unit.bedrooms}
+                                  onChange={(e) => {
+                                    const newUnits = [...units];
+                                    newUnits[index].bedrooms = parseInt(e.target.value) || 0;
+                                    setUnits(newUnits);
+                                  }}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`unit_${index}_full_baths`}>Full Baths</Label>
+                                <Input
+                                  id={`unit_${index}_full_baths`}
+                                  type="number"
+                                  min="0"
+                                  value={unit.full_baths}
+                                  onChange={(e) => {
+                                    const newUnits = [...units];
+                                    newUnits[index].full_baths = parseInt(e.target.value) || 0;
+                                    setUnits(newUnits);
+                                  }}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`unit_${index}_half_baths`}>Half Baths</Label>
+                                <Input
+                                  id={`unit_${index}_half_baths`}
+                                  type="number"
+                                  min="0"
+                                  value={unit.half_baths}
+                                  onChange={(e) => {
+                                    const newUnits = [...units];
+                                    newUnits[index].half_baths = parseInt(e.target.value) || 0;
+                                    setUnits(newUnits);
+                                  }}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`unit_${index}_rent`}>Rent/Mo</Label>
+                                <div className="flex gap-2">
+                                  <FormattedInput
+                                    id={`unit_${index}_rent`}
+                                    format="currency"
+                                    value={unit.rent.toString()}
+                                    onChange={(value) => {
+                                      const newUnits = [...units];
+                                      newUnits[index].rent = parseFloat(value) || 0;
+                                      setUnits(newUnits);
+                                    }}
+                                    decimals={0}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setUnits(prev => prev.filter((_, i) => i !== index))}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Rental Features & Details Section - Only for rentals */}
                 {formData.listing_type === "for_rent" && (
@@ -2038,18 +2256,20 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Exclusions */}
-                <div className="space-y-2 border-t pt-6">
-                  <Label htmlFor="listing_exclusions">Exclusions</Label>
-                  <p className="text-sm text-muted-foreground">Items excluded from the sale</p>
-                  <Textarea
-                    id="listing_exclusions"
-                    placeholder="Items excluded from the sale (e.g. dining room chandelier, washer/dryer)..."
-                    value={formData.listing_exclusions}
-                    onChange={(e) => setFormData(prev => ({ ...prev, listing_exclusions: e.target.value }))}
-                    rows={3}
-                  />
-                </div>
+                {/* Exclusions - Not for Multi-Family FOR SALE */}
+                {!(formData.listing_type === "for_sale" && formData.property_type === "multi_family") && (
+                  <div className="space-y-2 border-t pt-6">
+                    <Label htmlFor="listing_exclusions">Exclusions</Label>
+                    <p className="text-sm text-muted-foreground">Items excluded from the sale</p>
+                    <Textarea
+                      id="listing_exclusions"
+                      placeholder="Items excluded from the sale (e.g. dining room chandelier, washer/dryer)..."
+                      value={formData.listing_exclusions}
+                      onChange={(e) => setFormData(prev => ({ ...prev, listing_exclusions: e.target.value }))}
+                      rows={3}
+                    />
+                  </div>
+                )}
 
                 {/* Showing Instructions */}
                 <div className="space-y-4 border-t pt-6">
@@ -2113,55 +2333,57 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Commission & Compensation */}
-                <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Commission & Compensation</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="commission_type">Commission Type</Label>
-                      <Select
-                        value={formData.commission_type}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="percentage">Percentage</SelectItem>
-                          <SelectItem value="flat_fee">Flat Fee</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="commission_rate">
-                        {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Amount ($)'}
-                      </Label>
-                      <Input
-                        id="commission_rate"
-                        name="buyer_agent_commission_rate"
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        min="0"
-                        max={formData.commission_type === 'percentage' ? "100" : undefined}
-                        placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
-                        value={formData.commission_rate}
-                        onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
-                        autoComplete="off"
-                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="commission_notes">Commission Notes</Label>
-                      <Input
-                        id="commission_notes"
-                        placeholder="Additional commission details"
-                        value={formData.commission_notes}
-                        onChange={(e) => setFormData(prev => ({ ...prev, commission_notes: e.target.value }))}
-                      />
+                {/* Commission & Compensation - Not for Multi-Family FOR SALE */}
+                {!(formData.listing_type === "for_sale" && formData.property_type === "multi_family") && (
+                  <div className="space-y-4 border-t pt-6">
+                    <Label className="text-xl font-semibold">Commission & Compensation</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="commission_type">Commission Type</Label>
+                        <Select
+                          value={formData.commission_type}
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percentage">Percentage</SelectItem>
+                            <SelectItem value="flat_fee">Flat Fee</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="commission_rate">
+                          {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Amount ($)'}
+                        </Label>
+                        <Input
+                          id="commission_rate"
+                          name="buyer_agent_commission_rate"
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          min="0"
+                          max={formData.commission_type === 'percentage' ? "100" : undefined}
+                          placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
+                          value={formData.commission_rate}
+                          onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
+                          autoComplete="off"
+                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="commission_notes">Commission Notes</Label>
+                        <Input
+                          id="commission_notes"
+                          placeholder="Additional commission details"
+                          value={formData.commission_notes}
+                          onChange={(e) => setFormData(prev => ({ ...prev, commission_notes: e.target.value }))}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Additional Notes */}
                 <div className="space-y-2 border-t pt-6">
