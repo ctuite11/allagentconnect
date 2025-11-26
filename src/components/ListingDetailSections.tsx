@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Home, DollarSign, Building2, FileText, Calendar, Info } from "lucide-react";
 
 interface ListingDetailSectionsProps {
@@ -15,7 +14,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
     return (
       <div className="flex justify-between py-2 border-b last:border-0">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium text-right">{value}</span>
+        <span className="font-medium text-right text-foreground">{value}</span>
       </div>
     );
   };
@@ -43,33 +42,6 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
 
   return (
     <>
-      {/* Property Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Home className="w-5 h-5" />
-            Property Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DetailGrid>
-            <DetailRow label="Property Type" value={listing.property_type} />
-            <DetailRow label="Living Area" value={listing.square_feet ? `${listing.square_feet.toLocaleString()} sq ft` : null} />
-            <DetailRow label="Lot Size" value={listing.lot_size ? `${listing.lot_size} acres` : null} />
-            <DetailRow label="Bedrooms" value={listing.bedrooms} />
-            <DetailRow label="Bathrooms" value={listing.bathrooms} />
-            <DetailRow label="Year Built" value={listing.year_built} />
-            <DetailRow label="Floors" value={listing.floors} />
-            <DetailRow label="Total Parking Spaces" value={listing.total_parking_spaces} />
-            <DetailRow label="Garage Spaces" value={listing.garage_spaces} />
-            <DetailRow label="Fireplaces" value={listing.num_fireplaces} />
-            {listing.unit_number && <DetailRow label="Unit Number" value={listing.unit_number} />}
-            {listing.building_name && <DetailRow label="Building Name" value={listing.building_name} />}
-            {listing.county && <DetailRow label="County" value={listing.county} />}
-          </DetailGrid>
-        </CardContent>
-      </Card>
-
       {/* Features & Amenities */}
       <Card>
         <CardHeader>
@@ -86,7 +58,6 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
             {listing.cooling_types && formatArray(listing.cooling_types) && (
               <DetailRow label="Cooling" value={formatArray(listing.cooling_types)} />
             )}
-            {listing.laundry_type && <DetailRow label="Laundry" value={listing.laundry_type} />}
             <DetailRow label="Basement" value={listing.has_basement ? 'Yes' : null} />
             {listing.basement_types && formatArray(listing.basement_types) && (
               <DetailRow label="Basement Type" value={formatArray(listing.basement_types)} />
@@ -94,11 +65,11 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
             {listing.basement_features_list && formatArray(listing.basement_features_list) && (
               <DetailRow label="Basement Features" value={formatArray(listing.basement_features_list)} />
             )}
-            {listing.foundation_types && formatArray(listing.foundation_types) && (
-              <DetailRow label="Foundation" value={formatArray(listing.foundation_types)} />
+            {listing.basement_floor_types && formatArray(listing.basement_floor_types) && (
+              <DetailRow label="Basement Flooring" value={formatArray(listing.basement_floor_types)} />
             )}
-            {listing.roof_materials && formatArray(listing.roof_materials) && (
-              <DetailRow label="Roof" value={formatArray(listing.roof_materials)} />
+            {listing.property_features && formatArray(listing.property_features) && (
+              <DetailRow label="Interior Features" value={formatArray(listing.property_features)} />
             )}
             {listing.exterior_features_list && formatArray(listing.exterior_features_list) && (
               <DetailRow label="Exterior Features" value={formatArray(listing.exterior_features_list)} />
@@ -112,27 +83,31 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
             {listing.garage_additional_features_list && formatArray(listing.garage_additional_features_list) && (
               <DetailRow label="Additional Garage Features" value={formatArray(listing.garage_additional_features_list)} />
             )}
-            {listing.green_features && formatArray(listing.green_features) && (
-              <DetailRow label="Green Features" value={formatArray(listing.green_features)} />
+            {listing.parking_comments && <DetailRow label="Parking Notes" value={listing.parking_comments} />}
+            {listing.garage_comments && <DetailRow label="Garage Notes" value={listing.garage_comments} />}
+            {listing.foundation_types && formatArray(listing.foundation_types) && (
+              <DetailRow label="Foundation" value={formatArray(listing.foundation_types)} />
+            )}
+            {listing.roof_materials && formatArray(listing.roof_materials) && (
+              <DetailRow label="Roof" value={formatArray(listing.roof_materials)} />
             )}
             {listing.construction_features && formatArray(listing.construction_features) && (
               <DetailRow label="Construction" value={formatArray(listing.construction_features)} />
             )}
-            {listing.property_features && formatArray(listing.property_features) && (
-              <DetailRow label="Property Features" value={formatArray(listing.property_features)} />
-            )}
-            {listing.property_styles && formatArray(listing.property_styles) && (
-              <DetailRow label="Property Style" value={formatArray(listing.property_styles)} />
+            {listing.green_features && formatArray(listing.green_features) && (
+              <DetailRow label="Green Features" value={formatArray(listing.green_features)} />
             )}
             <DetailRow label="Waterfront" value={listing.waterfront ? 'Yes' : null} />
             <DetailRow label="Water View" value={listing.water_view ? listing.water_view_type || 'Yes' : null} />
             <DetailRow label="Beach Nearby" value={listing.beach_nearby ? 'Yes' : null} />
             {listing.area_amenities && listing.area_amenities.length > 0 && (
-              <DetailRow label="Area Amenities" value={listing.area_amenities.join(', ')} />
+              <DetailRow label="Community Features" value={listing.area_amenities.join(', ')} />
             )}
             {listing.outdoor_space && formatArray(listing.outdoor_space) && (
               <DetailRow label="Outdoor Space" value={formatArray(listing.outdoor_space)} />
             )}
+            {listing.laundry_type && <DetailRow label="Laundry" value={listing.laundry_type} />}
+            <DetailRow label="Fireplaces" value={listing.num_fireplaces} />
             {listing.pet_options && formatArray(listing.pet_options) && (
               <DetailRow label="Pets" value={formatArray(listing.pet_options)} />
             )}
@@ -142,49 +117,46 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
             )}
             <DetailRow label="Handicap Accessible" value={listing.handicap_accessible} />
             {listing.handicap_access && <DetailRow label="Handicap Access Details" value={listing.handicap_access} />}
+            {listing.disclosures && formatArray(listing.disclosures) && (
+              <DetailRow label="Disclosures" value={formatArray(listing.disclosures)} />
+            )}
+            {listing.disclosures_other && <DetailRow label="Other Disclosures" value={listing.disclosures_other} />}
+            <DetailRow label="Lead Paint" value={listing.lead_paint} />
           </DetailGrid>
         </CardContent>
       </Card>
 
-      {/* Tax Information */}
+      {/* Property Information */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <DollarSign className="w-5 h-5" />
-            Tax Information
+            <Home className="w-5 h-5" />
+            Property Information
           </CardTitle>
         </CardHeader>
         <CardContent>
           <DetailGrid>
+            <DetailRow label="Property Type" value={listing.property_type} />
+            <DetailRow label="Living Area" value={listing.square_feet ? `${listing.square_feet.toLocaleString()} sq ft` : null} />
+            <DetailRow label="Lot Size" value={listing.lot_size ? `${listing.lot_size} acres` : null} />
+            <DetailRow label="Year Built" value={listing.year_built} />
+            <DetailRow label="Stories/Floors" value={listing.floors} />
+            <DetailRow label="Bedrooms" value={listing.bedrooms} />
+            <DetailRow label="Bathrooms" value={listing.bathrooms} />
+            <DetailRow label="Total Parking Spaces" value={listing.total_parking_spaces} />
+            <DetailRow label="Garage Spaces" value={listing.garage_spaces} />
+            {listing.unit_number && <DetailRow label="Unit Number" value={listing.unit_number} />}
+            {listing.building_name && <DetailRow label="Building Name" value={listing.building_name} />}
+            {listing.county && <DetailRow label="County" value={listing.county} />}
+            {listing.town && <DetailRow label="Town" value={listing.town} />}
+            {listing.neighborhood && <DetailRow label="Neighborhood" value={listing.neighborhood} />}
+            {listing.property_styles && formatArray(listing.property_styles) && (
+              <DetailRow label="Property Style" value={formatArray(listing.property_styles)} />
+            )}
             {listing.attom_id && <DetailRow label="Parcel ID / APN" value={listing.attom_id} />}
-            <DetailRow label="Annual Tax" value={listing.annual_property_tax ? `$${listing.annual_property_tax.toLocaleString()}` : null} />
-            <DetailRow label="Tax Year" value={listing.tax_year} />
-            <DetailRow label="Tax Assessment" value={listing.tax_assessment_value ? `$${listing.tax_assessment_value.toLocaleString()}` : null} />
-            <DetailRow label="Assessed Value" value={listing.assessed_value ? `$${listing.assessed_value.toLocaleString()}` : null} />
-            <DetailRow label="Fiscal Year" value={listing.fiscal_year} />
-            <DetailRow label="Residential Exemption" value={listing.residential_exemption} />
-          </DetailGrid>
-        </CardContent>
-      </Card>
-
-      {/* Market Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Market Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DetailGrid>
-            {listDate && <DetailRow label="Listing Date" value={new Date(listDate).toLocaleDateString()} />}
-            {daysOnMarket && <DetailRow label="Days on Market" value={daysOnMarket} />}
-            <DetailRow label="Status" value={listing.status.charAt(0).toUpperCase() + listing.status.slice(1)} />
-            <DetailRow label="Listing Type" value={listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'} />
-            {listing.listing_number && <DetailRow label="Listing Number" value={listing.listing_number} />}
-            {listing.go_live_date && <DetailRow label="Go Live Date" value={new Date(listing.go_live_date).toLocaleDateString()} />}
-            {listing.activation_date && <DetailRow label="Activation Date" value={new Date(listing.activation_date).toLocaleDateString()} />}
-            {listing.cancelled_at && <DetailRow label="Off Market Date" value={new Date(listing.cancelled_at).toLocaleDateString()} />}
+            {listing.facing_direction && formatArray(listing.facing_direction) && (
+              <DetailRow label="Facing Direction" value={formatArray(listing.facing_direction)} />
+            )}
           </DetailGrid>
         </CardContent>
       </Card>
@@ -238,6 +210,49 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
         </Card>
       )}
 
+      {/* Tax Information - MOVED HIGHER */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="w-5 h-5" />
+            Tax Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DetailGrid>
+            <DetailRow label="Annual Tax" value={listing.annual_property_tax ? `$${listing.annual_property_tax.toLocaleString()}` : null} />
+            <DetailRow label="Tax Year" value={listing.tax_year} />
+            <DetailRow label="Tax Assessment" value={listing.tax_assessment_value ? `$${listing.tax_assessment_value.toLocaleString()}` : null} />
+            <DetailRow label="Assessed Value" value={listing.assessed_value ? `$${listing.assessed_value.toLocaleString()}` : null} />
+            <DetailRow label="Fiscal Year" value={listing.fiscal_year} />
+            {listing.attom_id && <DetailRow label="Parcel ID / APN" value={listing.attom_id} />}
+            <DetailRow label="Residential Exemption" value={listing.residential_exemption} />
+          </DetailGrid>
+        </CardContent>
+      </Card>
+
+      {/* Market Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="w-5 h-5" />
+            Market Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DetailGrid>
+            {listDate && <DetailRow label="Listing Date" value={new Date(listDate).toLocaleDateString()} />}
+            {daysOnMarket !== null && <DetailRow label="Days on Market" value={daysOnMarket} />}
+            <DetailRow label="Status" value={listing.status.charAt(0).toUpperCase() + listing.status.slice(1)} />
+            <DetailRow label="Listing Type" value={listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'} />
+            {listing.listing_number && <DetailRow label="Listing Number (AAC ID)" value={listing.listing_number} />}
+            {listing.go_live_date && <DetailRow label="Go Live Date" value={new Date(listing.go_live_date).toLocaleDateString()} />}
+            {listing.activation_date && <DetailRow label="Activation Date" value={new Date(listing.activation_date).toLocaleDateString()} />}
+            {listing.cancelled_at && <DetailRow label="Off Market Date" value={new Date(listing.cancelled_at).toLocaleDateString()} />}
+          </DetailGrid>
+        </CardContent>
+      </Card>
+
       {/* Other Property Info */}
       <Card>
         <CardHeader>
@@ -248,97 +263,29 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
         </CardHeader>
         <CardContent>
           <DetailGrid>
-            {listing.disclosures && formatArray(listing.disclosures) && (
-              <DetailRow label="Disclosures" value={formatArray(listing.disclosures)} />
-            )}
-            {listing.disclosures_other && <DetailRow label="Other Disclosures" value={listing.disclosures_other} />}
-            <DetailRow label="Lead Paint" value={listing.lead_paint} />
             <DetailRow label="Short Sale" value={listing.short_sale ? 'Yes' : null} />
             <DetailRow label="Lender Owned" value={listing.lender_owned ? 'Yes' : null} />
             {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
               <DetailRow label="Agreement Type" value={formatArray(listing.listing_agreement_types)} />
             )}
             {listing.listing_exclusions && <DetailRow label="Exclusions" value={listing.listing_exclusions} />}
+            {listing.property_website_url && (
+              <DetailRow label="Property Website" value={listing.property_website_url} />
+            )}
+            {listing.video_url && <DetailRow label="Video Tour" value={listing.video_url} />}
+            {listing.virtual_tour_url && <DetailRow label="Virtual Tour" value={listing.virtual_tour_url} />}
           </DetailGrid>
         </CardContent>
       </Card>
 
-      {/* Buyer Agent Compensation */}
-      {(listing.commission_rate || listing.commission_type || listing.commission_notes) && (
+      {/* Additional Notes */}
+      {listing.additional_notes && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5" />
-              Buyer Agent Compensation
-            </CardTitle>
+            <CardTitle>Additional Information</CardTitle>
           </CardHeader>
           <CardContent>
-            <DetailGrid>
-              {listing.commission_rate && listing.commission_type && (
-                <DetailRow 
-                  label="Compensation" 
-                  value={listing.commission_type === 'percentage' 
-                    ? `${listing.commission_rate}% of sale price`
-                    : `$${listing.commission_rate.toLocaleString()} flat fee`
-                  } 
-                />
-              )}
-              {listing.commission_notes && (
-                <div className="py-2 border-t">
-                  <p className="text-sm font-medium mb-1 text-foreground">Notes:</p>
-                  <p className="text-sm text-foreground/90">{listing.commission_notes}</p>
-                </div>
-              )}
-            </DetailGrid>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Office/Agent Information */}
-      {agent && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Office & Agent Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DetailGrid>
-              <DetailRow label="Listing Agent" value={`${agent.first_name} ${agent.last_name}`} />
-              {agent.title && <DetailRow label="Title" value={agent.title} />}
-              {agent.company && <DetailRow label="Company" value={agent.company} />}
-              {agent.office_name && <DetailRow label="Office" value={agent.office_name} />}
-              {(agent.cell_phone || agent.phone) && (
-                <DetailRow label="Phone" value={agent.cell_phone || agent.phone} />
-              )}
-              {agent.email && <DetailRow label="Email" value={agent.email} />}
-            </DetailGrid>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Agent-Only: Showing Instructions */}
-      {isAgentView && (
-        <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
-              <Info className="w-5 h-5" />
-              Showing Instructions
-              <Badge variant="outline" className="ml-2">Agent Only</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DetailGrid>
-              {listing.showing_instructions && (
-                <div className="py-2 border-b">
-                  <p className="text-sm font-medium mb-1">Instructions:</p>
-                  <p className="text-sm whitespace-pre-wrap">{listing.showing_instructions}</p>
-                </div>
-              )}
-              <DetailRow label="Appointment Required" value={listing.appointment_required ? 'Yes' : 'No'} />
-              <DetailRow label="Entry Only" value={listing.entry_only ? 'Yes' : null} />
-              {listing.lockbox_code && <DetailRow label="Lockbox Code" value={listing.lockbox_code} />}
-              {listing.showing_contact_name && <DetailRow label="Contact Name" value={listing.showing_contact_name} />}
-              {listing.showing_contact_phone && <DetailRow label="Contact Phone" value={listing.showing_contact_phone} />}
-            </DetailGrid>
+            <p className="text-sm whitespace-pre-wrap text-foreground/90">{listing.additional_notes}</p>
           </CardContent>
         </Card>
       )}
@@ -358,19 +305,6 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
           </CardContent>
         </Card>
       )}
-
-      {/* Additional Notes */}
-      {listing.additional_notes && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Additional Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap text-foreground/90">{listing.additional_notes}</p>
-          </CardContent>
-        </Card>
-      )}
     </>
   );
 };
-

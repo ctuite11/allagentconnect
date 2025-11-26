@@ -24,6 +24,7 @@ import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
+import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColumn";
 
 interface AgentProfile {
   id: string;
@@ -1152,125 +1153,15 @@ const ConsumerPropertyDetail = () => {
               )}
             </div>
 
-            {/* Sidebar */}
+            {/* Sidebar - Right Column */}
+            <PropertyDetailRightColumn 
+              listing={listing} 
+              agent={agent}
+              isAgentView={false}
+            />
+            
+            {/* Additional Sidebar Items */}
             <div className="space-y-6">
-              {/* Listing Agent Card */}
-              {agent && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Listing Agent</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex gap-4">
-                      {agent.headshot_url && (
-                        <img 
-                          src={agent.headshot_url} 
-                          alt={`${agent.first_name} ${agent.last_name}`}
-                          className="w-32 h-40 rounded-lg object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1 space-y-3">
-                        <div className="space-y-1">
-                          <h3 className="font-semibold text-lg">{agent.first_name} {agent.last_name}</h3>
-                          {agent.title && (
-                            <p className="text-sm text-muted-foreground">{agent.title}</p>
-                          )}
-                          {agent.company && (
-                            <p className="text-sm text-muted-foreground">{agent.company}</p>
-                          )}
-                          {agent.office_name && (
-                            <p className="text-xs text-muted-foreground">{agent.office_name}</p>
-                          )}
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          {(agent.cell_phone || agent.phone) && (
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <a href={`tel:${agent.cell_phone || agent.phone}`} className="hover:underline">
-                                {formatPhoneNumber(agent.cell_phone || agent.phone)}
-                              </a>
-                            </div>
-                          )}
-                          {agent.email && (
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <a href={`mailto:${agent.email}`} className="hover:underline break-all">
-                                {agent.email}
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {agent.logo_url && (
-                        <img 
-                          src={agent.logo_url} 
-                          alt={`${agent.company || 'Company'} logo`}
-                          className="w-20 h-20 object-contain flex-shrink-0"
-                        />
-                      )}
-                    </div>
-                    <Button 
-                      className="w-full" 
-                      size="lg"
-                      onClick={() => navigate(`/agent/${agent.id}`)}
-                    >
-                      View Profile
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Commission Information */}
-              {listing.commission_rate && (
-                <Card className="border-primary/30 bg-primary/5">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-6 w-6" />
-                      Buyer Agent Compensation
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-col items-center justify-center">
-                    <div className="flex items-center justify-center gap-2 py-2">
-                      <p className="text-3xl font-bold text-primary">
-                        {listing.commission_type === 'flat_fee' 
-                          ? `$${listing.commission_rate.toLocaleString()}`
-                          : `${listing.commission_rate}%`
-                        }
-                      </p>
-                      <BuyerAgentCompensationInfo />
-                    </div>
-                    <p className="text-sm text-muted-foreground text-center">
-                      Offered to cooperating buyer agents
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Property Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Property Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Listing Type:</span>
-                    <span className="font-semibold">
-                      {listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Status:</span>
-                    <span className="font-semibold capitalize">{listing.status}</span>
-                  </div>
-                  {listing.property_type && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Property Type:</span>
-                      <span className="font-semibold">{listing.property_type}</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
               {/* Walk Score */}
               {listing.walk_score_data && (
                 <Card>

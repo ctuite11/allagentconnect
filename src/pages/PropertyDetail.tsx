@@ -28,6 +28,7 @@ import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
+import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColumn";
 
 interface Listing {
   id: string;
@@ -386,70 +387,12 @@ const PropertyDetail = () => {
               />
             </div>
 
-            {/* RIGHT COLUMN - Agent & Actions */}
-            <div className="space-y-6">
-              {/* Agent Contact Card */}
-              {agentProfile && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Listing Agent</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <Avatar className="w-12 h-12">
-                        {agentProfile.headshot_url ? (
-                          <AvatarImage src={agentProfile.headshot_url} />
-                        ) : (
-                          <AvatarFallback>
-                            {agentProfile.first_name[0]}{agentProfile.last_name[0]}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold">
-                          {agentProfile.first_name} {agentProfile.last_name}
-                        </p>
-                        {agentProfile.title && (
-                          <p className="text-sm text-muted-foreground">{agentProfile.title}</p>
-                        )}
-                        {agentProfile.company && (
-                          <p className="text-sm text-muted-foreground">{agentProfile.company}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-3">
-                      {(agentProfile.cell_phone || agentProfile.phone) && (
-                        <a
-                          href={`tel:${agentProfile.cell_phone || agentProfile.phone}`}
-                          className="flex items-center gap-3 text-sm hover:text-primary transition"
-                        >
-                          <Phone className="w-4 h-4 text-muted-foreground" />
-                          <span>
-                            {formatPhoneNumber(agentProfile.cell_phone || agentProfile.phone)}
-                          </span>
-                        </a>
-                      )}
-                      {agentProfile.email && (
-                        <a
-                          href={`mailto:${agentProfile.email}`}
-                          className="flex items-center gap-3 text-sm hover:text-primary transition break-all"
-                        >
-                          <Mail className="w-4 h-4 text-muted-foreground" />
-                          <span>{agentProfile.email}</span>
-                        </a>
-                      )}
-                    </div>
-
-                    <Button className="w-full" size="lg">
-                      Ask about this property
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            {/* RIGHT COLUMN - Agent Card, Compensation, Showing, Office Info */}
+            <PropertyDetailRightColumn 
+              listing={listing} 
+              agent={agentProfile}
+              isAgentView={true}
+            />
           </div>
         </div>
       </main>
