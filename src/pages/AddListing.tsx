@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { Calendar } from "@/components/ui/calendar";
@@ -1537,23 +1538,24 @@ const AddListing = () => {
                     {/* 1. Interior Amenities */}
                     <div className="space-y-3 mb-6">
                       <Label className="text-base font-medium">Interior Amenities</Label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Air Conditioning", "Central Air", "Window AC", "Ceiling Fans", "Fireplace", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Home Office", "Mudroom", "Laundry in Unit", "Laundry in Building", "Furnished (Rental)"].map((amenity) => (
-                          <Button
-                            key={amenity}
-                            type="button"
-                            variant={interiorAmenities.includes(amenity) ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => {
-                              if (interiorAmenities.includes(amenity)) {
-                                setInteriorAmenities(interiorAmenities.filter((a) => a !== amenity));
-                              } else {
-                                setInteriorAmenities([...interiorAmenities, amenity]);
-                              }
-                            }}
-                          >
-                            {amenity}
-                          </Button>
+                          <div key={amenity} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`interior-${amenity}`}
+                              checked={interiorAmenities.includes(amenity)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setInteriorAmenities([...interiorAmenities, amenity]);
+                                } else {
+                                  setInteriorAmenities(interiorAmenities.filter((a) => a !== amenity));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`interior-${amenity}`} className="font-normal cursor-pointer">
+                              {amenity}
+                            </Label>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -1561,23 +1563,24 @@ const AddListing = () => {
                     {/* 2. Exterior Amenities */}
                     <div className="space-y-3 mb-6">
                       <Label className="text-base font-medium">Exterior Amenities</Label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Deck", "Patio", "Porch", "Balcony", "Fenced Yard", "Private Yard", "Garden Area", "Sprinkler System", "Outdoor Shower", "Pool", "Hot Tub", "Shed", "Gazebo", "Playground", "Fire Pit", "Outdoor Kitchen", "Greenhouse", "Boat Dock (or Dock Rights)"].map((amenity) => (
-                          <Button
-                            key={amenity}
-                            type="button"
-                            variant={exteriorAmenities.includes(amenity) ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => {
-                              if (exteriorAmenities.includes(amenity)) {
-                                setExteriorAmenities(exteriorAmenities.filter((a) => a !== amenity));
-                              } else {
-                                setExteriorAmenities([...exteriorAmenities, amenity]);
-                              }
-                            }}
-                          >
-                            {amenity}
-                          </Button>
+                          <div key={amenity} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`exterior-${amenity}`}
+                              checked={exteriorAmenities.includes(amenity)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setExteriorAmenities([...exteriorAmenities, amenity]);
+                                } else {
+                                  setExteriorAmenities(exteriorAmenities.filter((a) => a !== amenity));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`exterior-${amenity}`} className="font-normal cursor-pointer">
+                              {amenity}
+                            </Label>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -1611,23 +1614,24 @@ const AddListing = () => {
                     {/* 4. Location Amenities */}
                     <div className="space-y-3 mb-6">
                       <Label className="text-base font-medium">Location Amenities</Label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Public Transportation", "Walk/Jog Trails", "Public Park", "Playground", "Water View", "Waterfront", "Beach Access", "Marina", "Golf Course", "University Nearby", "Public School Nearby", "Private School Nearby", "Shopping Nearby", "Highway Access"].map((amenity) => (
-                          <Button
-                            key={amenity}
-                            type="button"
-                            variant={locationAmenities.includes(amenity) ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => {
-                              if (locationAmenities.includes(amenity)) {
-                                setLocationAmenities(locationAmenities.filter((a) => a !== amenity));
-                              } else {
-                                setLocationAmenities([...locationAmenities, amenity]);
-                              }
-                            }}
-                          >
-                            {amenity}
-                          </Button>
+                          <div key={amenity} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`location-${amenity}`}
+                              checked={locationAmenities.includes(amenity)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setLocationAmenities([...locationAmenities, amenity]);
+                                } else {
+                                  setLocationAmenities(locationAmenities.filter((a) => a !== amenity));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`location-${amenity}`} className="font-normal cursor-pointer">
+                              {amenity}
+                            </Label>
+                          </div>
                         ))}
                       </div>
                     </div>
