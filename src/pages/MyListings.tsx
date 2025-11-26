@@ -38,6 +38,10 @@ interface Listing {
   photos: any;
   created_at: string;
   active_date: string | null;
+  list_date?: string | null;
+  expiration_date?: string | null;
+  hot_sheet_matches?: number | null;
+  views_count?: number | null;
 }
 
 type SortOption = "newest" | "oldest" | "priceHigh" | "priceLow" | "activeRecent";
@@ -79,6 +83,13 @@ function getThumbnailUrl(listing: Listing) {
   if (!listing.photos) return null;
   const photos = Array.isArray(listing.photos) ? listing.photos : [];
   return photos[0] || null;
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString();
 }
 
 /**
@@ -353,144 +364,219 @@ function MyListingsView({
         </div>
       )}
 
-      {/* LIST VIEW WITH QUICK EDIT */}
+      {/* LIST VIEW – with MLS-style quick tools + quick edit */}
       {view === "list" && (
         <div className="space-y-3">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             const isEditing = editingId === l.id;
+            const matchCount = l.hot_sheet_matches ?? 0;
+            const views = l.views_count ?? 0;
 
             return (
               <div
                 key={l.id}
-                className="flex items-center gap-4 border border-border rounded-xl bg-card p-4 shadow-sm hover:shadow-md transition"
+                className="border border-border rounded-xl bg-card p-4 shadow-sm hover:shadow-md transition"
               >
-                <div className="w-32 h-24 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer">
-                  <img
-                    src={thumbnail || "/placeholder.svg"}
-                    alt={l.address}
-                    className="w-full h-full object-cover"
-                    onClick={() => onPreview(l.id)}
-                  />
+                {/* Top tools row, MLS-style */}
+                <div className="flex flex-wrap items-center gap-3 text-xs border-b border-border pb-2 mb-3">
+                  <button
+                    className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
+                    onClick={() => onEdit(l.id)}
+                    title="Manage photos and details"
+                  >
+                    Photos
+                  </button>
+                  <button
+                    className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
+                    onClick={() =>
+                      toast.info("Open house scheduling coming soon.")
+                    }
+                  >
+                    Open House
+                  </button>
+                  <button
+                    className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
+                    onClick={() =>
+                      toast.info("Broker tour scheduling coming soon.")
+                    }
+                  >
+                    Broker Tour
+                  </button>
+                  <button
+                    className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
+                    onClick={() =>
+                      toast.info("Reverse prospecting matches coming soon.")
+                    }
+                    title="Reverse prospecting contact matches"
+                  >
+                    Matches ({matchCount})
+                  </button>
+                  <button
+                    className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
+                    onClick={() => onShare(l.id)}
+                    title="Social share this listing"
+                  >
+                    Social Share
+                  </button>
+
+                  <span className="ml-auto text-[11px] text-muted-foreground">
+                    Views: {views}
+                  </span>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-4">
+                  {/* Thumbnail */}
+                  <div className="w-32 h-24 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer">
+                    <img
+                      src={thumbnail || "/placeholder.svg"}
+                      alt={l.address}
+                      className="w-full h-full object-cover"
+                      onClick={() => onPreview(l.id)}
+                    />
+                  </div>
+
+                  {/* Main info */}
+                  <div className="flex-1 min-w-0">
                     <div className="font-semibold text-base truncate">
                       {l.address}, {l.city}
                     </div>
-                    {!isEditing && (
+
+                    {/* Price + MLS + Quick Edit aligned */}
+                    <div className="mt-1 flex flex-wrap items-center gap-3 justify-between">
+                      <div className="flex flex-wrap items-center gap-3">
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            className="border border-border rounded px-2 py-1 text-sm w-32 bg-background"
+                            value={editPrice}
+                            onChange={(e) =>
+                              setEditPrice(
+                                e.target.value === ""
+                                  ? ""
+                                  : Number(e.target.value)
+                              )
+                            }
+                          />
+                        ) : (
+                          <div className="text-muted-foreground text-sm">
+                            ${l.price.toLocaleString()}
+                          </div>
+                        )}
+
+                        {l.listing_number && (
+                          <div className="text-xs text-muted-foreground">
+                            MLS #{l.listing_number}
+                          </div>
+                        )}
+                      </div>
+
+                      {!isEditing && (
+                        <button
+                          className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition"
+                          onClick={() => startQuickEdit(l)}
+                          title="Quick edit price and status"
+                        >
+                          Quick Edit
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Status + dates + matches + views + save/cancel */}
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                      {isEditing ? (
+                        <select
+                          className="border border-border rounded px-2 py-1 bg-background capitalize"
+                          value={editStatus}
+                          onChange={(e) =>
+                            setEditStatus(e.target.value as ListingStatus)
+                          }
+                        >
+                          {STATUS_TABS.filter((t) => t.value !== "all").map(
+                            (tab) => (
+                              <option key={tab.value} value={tab.value}>
+                                {tab.label}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      ) : (
+                        <span
+                          className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(
+                            l.status
+                          )}`}
+                        >
+                          {l.status.replace("_", " ")}
+                        </span>
+                      )}
+
+                      {l.list_date && (
+                        <span className="text-muted-foreground">
+                          List: {formatDate(l.list_date)}
+                        </span>
+                      )}
+                      {l.expiration_date && (
+                        <span className="text-muted-foreground">
+                          Exp: {formatDate(l.expiration_date)}
+                        </span>
+                      )}
+                      {matchCount > 0 && (
+                        <span className="text-muted-foreground">
+                          Matches: {matchCount}
+                        </span>
+                      )}
+
+                      {isEditing && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90"
+                            onClick={saveQuickEdit}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="px-2 py-1 rounded border border-border text-muted-foreground hover:bg-accent"
+                            onClick={cancelQuickEdit}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right-side icons */}
+                  <div className="flex flex-col items-end gap-2 text-muted-foreground">
+                    <div className="flex items-center gap-3">
                       <button
-                        className="text-xs px-2 py-1 rounded border border-border text-muted-foreground hover:bg-accent"
-                        onClick={() => startQuickEdit(l)}
+                        className="hover:text-foreground transition"
+                        onClick={() => onEdit(l.id)}
+                        title="Full edit"
                       >
-                        Quick Edit
+                        <Pencil size={18} />
                       </button>
-                    )}
-                  </div>
-
-                  {/* Price + MLS */}
-                  <div className="mt-1 flex flex-wrap items-center gap-3">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        className="border border-border rounded px-2 py-1 text-sm w-32 bg-background"
-                        value={editPrice}
-                        onChange={(e) =>
-                          setEditPrice(
-                            e.target.value === "" ? "" : Number(e.target.value)
-                          )
-                        }
-                      />
-                    ) : (
-                      <div className="text-muted-foreground text-sm">
-                        ${l.price.toLocaleString()}
-                      </div>
-                    )}
-
-                    {l.listing_number && (
-                      <div className="text-xs text-muted-foreground">
-                        MLS #{l.listing_number}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Status pill / dropdown */}
-                  <div className="mt-2 flex items-center gap-2">
-                    {isEditing ? (
-                      <select
-                        className="border border-border rounded px-2 py-1 text-xs bg-background capitalize"
-                        value={editStatus}
-                        onChange={(e) =>
-                          setEditStatus(e.target.value as ListingStatus)
-                        }
+                      <button
+                        className="hover:text-foreground transition"
+                        onClick={() => onPreview(l.id)}
+                        title="Preview"
                       >
-                        {STATUS_TABS.filter((t) => t.value !== "all").map((tab) => (
-                          <option key={tab.value} value={tab.value}>
-                            {tab.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span
-                        className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(
-                          l.status
-                        )}`}
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        className="hover:text-foreground transition"
+                        onClick={() => onShare(l.id)}
+                        title="Share"
                       >
-                        {l.status.replace("_", " ")}
-                      </span>
-                    )}
-
-                    {isEditing && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <button
-                          className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90"
-                          onClick={saveQuickEdit}
-                        >
-                          Save
-                        </button>
-                        <button
-                          className="px-2 py-1 rounded border border-border text-muted-foreground hover:bg-accent"
-                          onClick={cancelQuickEdit}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Regular actions */}
-                <div className="flex flex-col items-end gap-2 text-muted-foreground">
-                  <div className="flex items-center gap-3">
-                    <button
-                      className="hover:text-foreground transition"
-                      onClick={() => onEdit(l.id)}
-                      title="Full Edit"
-                    >
-                      <Pencil size={18} />
-                    </button>
-                    <button
-                      className="hover:text-foreground transition"
-                      onClick={() => onPreview(l.id)}
-                      title="Preview"
-                    >
-                      <Eye size={18} />
-                    </button>
-                    <button
-                      className="hover:text-foreground transition"
-                      onClick={() => onShare(l.id)}
-                      title="Share"
-                    >
-                      <Share2 size={18} />
-                    </button>
-                    <button
-                      className="hover:text-destructive text-destructive/70 transition"
-                      onClick={() => onDelete(l.id)}
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                        <Share2 size={18} />
+                      </button>
+                      <button
+                        className="hover:text-destructive text-destructive/70 transition"
+                        onClick={() => onDelete(l.id)}
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
