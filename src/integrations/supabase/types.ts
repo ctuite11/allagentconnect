@@ -1425,6 +1425,7 @@ export type Database = {
           beach_nearby: boolean | null
           bedrooms: number | null
           broker_comments: string | null
+          building_name: string | null
           cancelled_at: string | null
           city: string
           commercial_details: Json | null
@@ -1436,6 +1437,7 @@ export type Database = {
           cooling_types: Json | null
           county: string | null
           created_at: string
+          deposit_requirements: Json | null
           description: string | null
           disclosures: Json | null
           disclosures_other: string | null
@@ -1455,10 +1457,12 @@ export type Database = {
           green_features: Json | null
           handicap_access: string | null
           has_basement: boolean | null
+          has_storage: boolean | null
           heating_types: Json | null
           id: string
           is_relisting: boolean | null
           latitude: number | null
+          laundry_type: string | null
           lead_paint: string | null
           lender_owned: boolean | null
           listing_agreement_types: Json | null
@@ -1473,14 +1477,17 @@ export type Database = {
           num_fireplaces: number | null
           open_houses: Json | null
           original_listing_id: string | null
+          outdoor_space: Json | null
           parking_comments: string | null
           parking_features_list: Json | null
+          pets_comment: string | null
           photos: Json | null
           price: number
           property_features: Json | null
           property_styles: Json | null
           property_type: string | null
           property_website_url: string | null
+          rental_fee: number | null
           residential_exemption: string | null
           roof_materials: Json | null
           schools_data: Json | null
@@ -1495,6 +1502,7 @@ export type Database = {
           tax_year: number | null
           total_parking_spaces: number | null
           town: string | null
+          unit_number: string | null
           updated_at: string
           value_estimate: Json | null
           video_url: string | null
@@ -1528,6 +1536,7 @@ export type Database = {
           beach_nearby?: boolean | null
           bedrooms?: number | null
           broker_comments?: string | null
+          building_name?: string | null
           cancelled_at?: string | null
           city: string
           commercial_details?: Json | null
@@ -1539,6 +1548,7 @@ export type Database = {
           cooling_types?: Json | null
           county?: string | null
           created_at?: string
+          deposit_requirements?: Json | null
           description?: string | null
           disclosures?: Json | null
           disclosures_other?: string | null
@@ -1558,10 +1568,12 @@ export type Database = {
           green_features?: Json | null
           handicap_access?: string | null
           has_basement?: boolean | null
+          has_storage?: boolean | null
           heating_types?: Json | null
           id?: string
           is_relisting?: boolean | null
           latitude?: number | null
+          laundry_type?: string | null
           lead_paint?: string | null
           lender_owned?: boolean | null
           listing_agreement_types?: Json | null
@@ -1576,14 +1588,17 @@ export type Database = {
           num_fireplaces?: number | null
           open_houses?: Json | null
           original_listing_id?: string | null
+          outdoor_space?: Json | null
           parking_comments?: string | null
           parking_features_list?: Json | null
+          pets_comment?: string | null
           photos?: Json | null
           price: number
           property_features?: Json | null
           property_styles?: Json | null
           property_type?: string | null
           property_website_url?: string | null
+          rental_fee?: number | null
           residential_exemption?: string | null
           roof_materials?: Json | null
           schools_data?: Json | null
@@ -1598,6 +1613,7 @@ export type Database = {
           tax_year?: number | null
           total_parking_spaces?: number | null
           town?: string | null
+          unit_number?: string | null
           updated_at?: string
           value_estimate?: Json | null
           video_url?: string | null
@@ -1631,6 +1647,7 @@ export type Database = {
           beach_nearby?: boolean | null
           bedrooms?: number | null
           broker_comments?: string | null
+          building_name?: string | null
           cancelled_at?: string | null
           city?: string
           commercial_details?: Json | null
@@ -1642,6 +1659,7 @@ export type Database = {
           cooling_types?: Json | null
           county?: string | null
           created_at?: string
+          deposit_requirements?: Json | null
           description?: string | null
           disclosures?: Json | null
           disclosures_other?: string | null
@@ -1661,10 +1679,12 @@ export type Database = {
           green_features?: Json | null
           handicap_access?: string | null
           has_basement?: boolean | null
+          has_storage?: boolean | null
           heating_types?: Json | null
           id?: string
           is_relisting?: boolean | null
           latitude?: number | null
+          laundry_type?: string | null
           lead_paint?: string | null
           lender_owned?: boolean | null
           listing_agreement_types?: Json | null
@@ -1679,14 +1699,17 @@ export type Database = {
           num_fireplaces?: number | null
           open_houses?: Json | null
           original_listing_id?: string | null
+          outdoor_space?: Json | null
           parking_comments?: string | null
           parking_features_list?: Json | null
+          pets_comment?: string | null
           photos?: Json | null
           price?: number
           property_features?: Json | null
           property_styles?: Json | null
           property_type?: string | null
           property_website_url?: string | null
+          rental_fee?: number | null
           residential_exemption?: string | null
           roof_materials?: Json | null
           schools_data?: Json | null
@@ -1701,6 +1724,7 @@ export type Database = {
           tax_year?: number | null
           total_parking_spaces?: number | null
           town?: string | null
+          unit_number?: string | null
           updated_at?: string
           value_estimate?: Json | null
           video_url?: string | null
