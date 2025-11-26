@@ -1696,116 +1696,6 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Commission & Compensation */}
-                <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Commission & Compensation</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="commission_type">Commission Type</Label>
-                      <Select
-                        value={formData.commission_type}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="percentage">Percentage</SelectItem>
-                          <SelectItem value="flat_fee">Flat Fee</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="commission_rate">
-                        {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Amount ($)'}
-                      </Label>
-                      <Input
-                        id="commission_rate"
-                        name="buyer_agent_commission_rate"
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        min="0"
-                        max={formData.commission_type === 'percentage' ? "100" : undefined}
-                        placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
-                        value={formData.commission_rate}
-                        onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
-                        autoComplete="off"
-                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="commission_notes">Commission Notes</Label>
-                      <Input
-                        id="commission_notes"
-                        placeholder="Additional commission details"
-                        value={formData.commission_notes}
-                        onChange={(e) => setFormData(prev => ({ ...prev, commission_notes: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Showing Instructions */}
-                <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Showing Instructions</Label>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="showing_instructions">Instructions</Label>
-                      <Textarea
-                        id="showing_instructions"
-                        placeholder="Please call 24 hours in advance. Remove shoes..."
-                        value={formData.showing_instructions}
-                        onChange={(e) => setFormData(prev => ({ ...prev, showing_instructions: e.target.value }))}
-                        rows={3}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="lockbox_code">Lockbox Code</Label>
-                        <Input
-                          id="lockbox_code"
-                          type="password"
-                          placeholder="1234"
-                          value={formData.lockbox_code}
-                          onChange={(e) => setFormData(prev => ({ ...prev, lockbox_code: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="showing_contact_name">Contact Name</Label>
-                        <Input
-                          id="showing_contact_name"
-                          placeholder="John Doe"
-                          value={formData.showing_contact_name}
-                          onChange={(e) => setFormData(prev => ({ ...prev, showing_contact_name: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="showing_contact_phone">Contact Phone</Label>
-                        <FormattedInput
-                          id="showing_contact_phone"
-                          format="phone"
-                          placeholder="1234567890"
-                          value={formData.showing_contact_phone}
-                          onChange={(value) => setFormData(prev => ({ ...prev, showing_contact_phone: value }))}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="appointment_required"
-                        checked={formData.appointment_required}
-                        onChange={(e) => setFormData(prev => ({ ...prev, appointment_required: e.target.checked }))}
-                        className="rounded border-gray-300"
-                      />
-                      <Label htmlFor="appointment_required" className="font-normal cursor-pointer">
-                        Appointment required for showing
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Disclosures */}
                 <div className="space-y-4 border-t pt-6">
                   <Label className="text-xl font-semibold">Disclosures</Label>
@@ -1858,6 +1748,118 @@ const AddListing = () => {
                     onChange={(e) => setFormData(prev => ({ ...prev, listing_exclusions: e.target.value }))}
                     rows={3}
                   />
+                </div>
+
+                {/* Showing Instructions */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Showing Instructions</Label>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="showing_instructions">Instructions</Label>
+                      <Textarea
+                        id="showing_instructions"
+                        placeholder="Please call 24 hours in advance. Remove shoes..."
+                        value={formData.showing_instructions}
+                        onChange={(e) => setFormData(prev => ({ ...prev, showing_instructions: e.target.value }))}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="lockbox_code">Lockbox Code</Label>
+                        <Input
+                          id="lockbox_code"
+                          type="text"
+                          placeholder="1234"
+                          value={formData.lockbox_code}
+                          onChange={(e) => setFormData(prev => ({ ...prev, lockbox_code: e.target.value }))}
+                          autoComplete="off"
+                          data-form-type="other"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="showing_contact_name">Contact Name</Label>
+                        <Input
+                          id="showing_contact_name"
+                          placeholder="John Doe"
+                          value={formData.showing_contact_name}
+                          onChange={(e) => setFormData(prev => ({ ...prev, showing_contact_name: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="showing_contact_phone">Contact Phone</Label>
+                        <FormattedInput
+                          id="showing_contact_phone"
+                          format="phone"
+                          placeholder="1234567890"
+                          value={formData.showing_contact_phone}
+                          onChange={(value) => setFormData(prev => ({ ...prev, showing_contact_phone: value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="appointment_required"
+                        checked={formData.appointment_required}
+                        onChange={(e) => setFormData(prev => ({ ...prev, appointment_required: e.target.checked }))}
+                        className="rounded border-gray-300"
+                      />
+                      <Label htmlFor="appointment_required" className="font-normal cursor-pointer">
+                        Appointment required for showing
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Commission & Compensation */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Commission & Compensation</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="commission_type">Commission Type</Label>
+                      <Select
+                        value={formData.commission_type}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="percentage">Percentage</SelectItem>
+                          <SelectItem value="flat_fee">Flat Fee</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="commission_rate">
+                        {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Amount ($)'}
+                      </Label>
+                      <Input
+                        id="commission_rate"
+                        name="buyer_agent_commission_rate"
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        max={formData.commission_type === 'percentage' ? "100" : undefined}
+                        placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
+                        value={formData.commission_rate}
+                        onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
+                        autoComplete="off"
+                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="commission_notes">Commission Notes</Label>
+                      <Input
+                        id="commission_notes"
+                        placeholder="Additional commission details"
+                        value={formData.commission_notes}
+                        onChange={(e) => setFormData(prev => ({ ...prev, commission_notes: e.target.value }))}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Additional Notes */}
