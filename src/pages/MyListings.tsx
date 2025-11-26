@@ -404,7 +404,7 @@ function MyListingsView({
                       {l.address}, {l.city}
                     </div>
 
-                    {/* Price + MLS + Quick Edit on same row */}
+                    {/* Price + AAC + Quick Edit OR Save/Cancel on same row */}
                     <div className="mt-1 flex flex-wrap items-center gap-3 justify-between">
                       <div className="flex flex-wrap items-center gap-3">
                         {isEditing ? (
@@ -419,11 +419,29 @@ function MyListingsView({
                         )}
 
                         {l.listing_number && (
-                          <div className="text-xs text-muted-foreground">AAC #L-{l.listing_number}</div>
+                          <div className="text-xs text-muted-foreground">AAC #{l.listing_number}</div>
+                        )}
+
+                        {/* Save/Cancel buttons - show when editing */}
+                        {isEditing && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
+                              onClick={saveQuickEdit}
+                            >
+                              Save
+                            </button>
+                            <button
+                              className="px-2 py-1 rounded border border-border text-muted-foreground hover:bg-accent text-xs"
+                              onClick={cancelQuickEdit}
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         )}
                       </div>
 
-                      {/* QUICK EDIT lives here now, near price/MLS */}
+                      {/* Quick Edit button - show when NOT editing */}
                       {!isEditing && (
                         <button
                           className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100 transition"
@@ -464,23 +482,6 @@ function MyListingsView({
                       {expDate && <span>Exp: {expDate}</span>}
                       <span>Matches: {matchCount}</span>
                       <span>Views: {views}</span>
-
-                      {isEditing && (
-                        <div className="flex items-center gap-2">
-                          <button
-                            className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
-                            onClick={saveQuickEdit}
-                          >
-                            Save
-                          </button>
-                          <button
-                            className="px-2 py-1 rounded border border-border text-muted-foreground hover:bg-accent text-xs"
-                            onClick={cancelQuickEdit}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
 
