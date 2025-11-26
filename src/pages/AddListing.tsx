@@ -21,48 +21,19 @@ import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertic
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
 import { format, differenceInDays } from "date-fns";
-import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
-import { usCitiesByState } from "@/data/usCitiesData";
-import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
 import { bostonNeighborhoods } from "@/data/bostonNeighborhoods";
+import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import { cn } from "@/lib/utils";
-
-const SUPPORTED_CITIES = [
-  "Boston",
-  "Brookline",
-  "Cambridge",
-  "Chelsea",
-  "Everett",
-  "Medford",
-  "Newton",
-  "Quincy",
-  "Revere",
-  "Somerville",
-  "Watertown",
-  "Other"
-];
-
-// County to cities mapping for MA
-const CITY_OPTIONS_BY_COUNTY: Record<string, string[]> = {
-  Suffolk: ["Boston", "Chelsea", "Revere", "Winthrop"],
-  Middlesex: ["Arlington", "Belmont", "Burlington", "Cambridge", "Everett", "Lexington", "Malden", "Medford", "Melrose", "Newton", "Somerville", "Waltham", "Watertown", "Woburn"],
-  Norfolk: ["Brookline", "Canton", "Dedham", "Milton", "Needham", "Quincy", "Randolph", "Wellesley"],
-  Essex: ["Beverly", "Gloucester", "Haverhill", "Lawrence", "Lynn", "Newburyport", "Peabody", "Salem"],
-  Plymouth: ["Brockton", "Duxbury", "Hingham", "Marshfield", "Plymouth", "Weymouth"],
-  Bristol: ["Attleboro", "Fall River", "New Bedford", "Taunton"],
-  Worcester: ["Fitchburg", "Framingham", "Leominster", "Marlborough", "Worcester"],
-  Hampden: ["Chicopee", "Holyoke", "Springfield", "Westfield"],
-  Hampshire: ["Amherst", "Easthampton", "Northampton"],
-  Berkshire: ["Great Barrington", "North Adams", "Pittsfield"],
-  Franklin: ["Deerfield", "Greenfield"],
-  Barnstable: ["Barnstable", "Falmouth", "Hyannis", "Provincetown", "Sandwich"],
-  Dukes: ["Edgartown", "Oak Bluffs", "Vineyard Haven"],
-  Nantucket: ["Nantucket"],
-  Other: ["Boston", "Brookline", "Cambridge", "Chelsea", "Everett", "Medford", "Newton", "Quincy", "Revere", "Somerville", "Watertown"]
-};
+import { 
+  getCitiesForStateAndCounty, 
+  getNeighborhoodsForLocation, 
+  validateAndNormalizeCity,
+  validateLocationCombo,
+  type CityOption 
+} from "@/lib/locationData";
 
 // State name to abbreviation mapping
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -200,11 +171,12 @@ const AddListing = () => {
   const [customCity, setCustomCity] = useState<string>("");
   const [openCityCombo, setOpenCityCombo] = useState(false);
   const [availableCounties, setAvailableCounties] = useState<string[]>([]);
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [availableCities, setAvailableCities] = useState<CityOption[]>([]);
   const [availableZips, setAvailableZips] = useState<string[]>([]);
   const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
   const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
+  const [locationValidation, setLocationValidation] = useState<{ isValid: boolean; message?: string }>({ isValid: true });
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [citySearch, setCitySearch] = useState("");
   const [showCityList, setShowCityList] = useState(true);
@@ -228,38 +200,36 @@ const AddListing = () => {
     }
   }, [selectedState]);
 
-  // Update available cities when county changes
+  // Update available cities when state or county changes
   useEffect(() => {
     if (selectedState) {
-      let cityOptions: string[] = [];
-      
-      // For MA, use county-based filtering
-      if (selectedState === "MA" && selectedCounty && selectedCounty !== "all") {
-        cityOptions = CITY_OPTIONS_BY_COUNTY[selectedCounty] || CITY_OPTIONS_BY_COUNTY.Other;
-        cityOptions = [...cityOptions, "Other"]; // Always allow "Other" as fallback
-      } else if (selectedState !== "MA") {
-        // For non-MA states, show all supported cities
-        cityOptions = SUPPORTED_CITIES;
-      }
+      const cityOptions = getCitiesForStateAndCounty(selectedState, selectedCounty);
       
       // Clear city choice if it's not in the new filtered list
-      if (cityChoice && !cityOptions.includes(cityChoice) && cityChoice !== "Other") {
+      const currentCityExists = cityOptions.some(
+        c => c.name.toLowerCase() === cityChoice?.toLowerCase()
+      );
+      
+      if (cityChoice && !currentCityExists && cityChoice !== "Other") {
         setCityChoice("");
         setCustomCity("");
         setFormData(prev => ({ ...prev, city: "" }));
       }
       
-      // Sort cities alphabetically, keeping "Other" at the end
-      const sortedCities = [...cityOptions].sort((a, b) => {
-        if (a === "Other") return 1;
-        if (b === "Other") return -1;
-        return a.localeCompare(b);
-      });
-      
-      setAvailableCities(sortedCities);
+      setAvailableCities(cityOptions);
       setAvailableZips([]);
     }
   }, [selectedState, selectedCounty]);
+
+  // Validate location combination whenever it changes
+  useEffect(() => {
+    const validation = validateLocationCombo({
+      state: selectedState,
+      county: selectedCounty !== 'all' ? selectedCounty : undefined,
+      city: formData.city
+    });
+    setLocationValidation(validation);
+  }, [selectedState, selectedCounty, formData.city]);
 
   // Track form changes
   useEffect(() => {
@@ -464,73 +434,55 @@ const AddListing = () => {
     
     const oldZip = formData.zip_code;
     const newZip = record.zip;
+    const currentCity = formData.city;
     
-    // Handle city from ATTOM record - Check if it's a Boston neighborhood (case-insensitive)
+    // Handle city from ATTOM record - NON-DESTRUCTIVE approach
     if (record.city) {
-      const normalizedCity = record.city.trim();
-      const normalizedCityLower = normalizedCity.toLowerCase();
+      const attomCity = record.city.trim();
+      const attomCityLower = attomCity.toLowerCase();
       
       // Check if this is a Boston neighborhood (case-insensitive)
       const matchedBoston = bostonNeighborhoods.find(
-        n => n.toLowerCase() === normalizedCityLower
+        n => n.toLowerCase() === attomCityLower
       );
       
       if (matchedBoston) {
-        // This is actually a Boston neighborhood, not a city - set city to Boston
-        setCityChoice("Boston");
-        setCustomCity("");
-        setFormData(prev => ({ 
-          ...prev, 
-          city: "Boston",
-          neighborhood: matchedBoston  // Use proper case from our list
-        }));
-        
-        // Get areas for Boston
-        const areas = getAreasForCity("Boston", formData.state || record.state);
-        setAttomNeighborhoods(areas);
+        // This is actually a Boston neighborhood, not a city
+        // Only update if no city is selected or if it matches
+        if (!currentCity || currentCity.toLowerCase() === 'boston') {
+          setCityChoice("Boston");
+          setCustomCity("");
+          setFormData(prev => ({ 
+            ...prev, 
+            city: "Boston",
+            neighborhood: matchedBoston
+          }));
+        } else {
+          // Keep current city, just set neighborhood
+          setFormData(prev => ({ ...prev, neighborhood: matchedBoston }));
+        }
       } else {
-        // Find matching city in SUPPORTED_CITIES (case-insensitive)
-        const matchedCity = SUPPORTED_CITIES.find(
-          c => c.toLowerCase() === normalizedCityLower && c !== "Other"
+        // Try to match city in available options
+        const normalizedCity = validateAndNormalizeCity(
+          attomCity,
+          formData.state || record.state,
+          selectedCounty !== 'all' ? selectedCounty : undefined
         );
         
-        if (matchedCity) {
-          setCityChoice(matchedCity);  // Use proper case from our list
-          setCustomCity("");
-          setFormData(prev => ({ ...prev, city: matchedCity }));
-          
-          // Get available neighborhoods for the city
-          const areas = getAreasForCity(matchedCity, formData.state || record.state);
-          setAttomNeighborhoods(areas);
-        } else {
-          // Fall back to "Other" for unknown cities
+        if (normalizedCity) {
+          // Found a matching city - only update if no city selected or exact match
+          if (!currentCity || currentCity.toLowerCase() === attomCityLower) {
+            setCityChoice(normalizedCity);
+            setCustomCity("");
+            setFormData(prev => ({ ...prev, city: normalizedCity }));
+          }
+        } else if (!currentCity) {
+          // No city selected and no match found - set as "Other" with custom name
           setCityChoice("Other");
-          setCustomCity(normalizedCity);
-          setFormData(prev => ({ ...prev, city: normalizedCity }));
-          
-          // Get available neighborhoods
-          const areas = getAreasForCity(normalizedCity, formData.state || record.state);
-          setAttomNeighborhoods(areas);
+          setCustomCity(attomCity);
+          setFormData(prev => ({ ...prev, city: attomCity }));
         }
-      }
-    } else {
-      // No city from ATTOM, but still enable neighborhood dropdown
-      const cityToUse = formData.city;
-      const stateToUse = formData.state || record.state;
-      if (cityToUse && stateToUse) {
-        const areas = getAreasForCity(cityToUse, stateToUse);
-        setAttomNeighborhoods(areas);
-      }
-    }
-    
-    // If ATTOM provides additional neighborhood data in other fields, try to match
-    if (record.raw?.address?.locality && attomNeighborhoods.length > 0) {
-      const attomNeighborhood = record.raw.address.locality.trim();
-      const matchedArea = attomNeighborhoods.find(area => 
-        area.toLowerCase() === attomNeighborhood.toLowerCase()
-      );
-      if (matchedArea && !formData.neighborhood) {
-        setFormData(prev => ({ ...prev, neighborhood: matchedArea }));
+        // else: keep current city selection unchanged
       }
     }
     
@@ -1343,10 +1295,10 @@ const AddListing = () => {
                           <CommandList>
                             <CommandEmpty>No city found.</CommandEmpty>
                             <CommandGroup>
-                              {availableCities.map((city) => (
+                              {availableCities.map((cityOption) => (
                                 <CommandItem
-                                  key={city}
-                                  value={city}
+                                  key={cityOption.name}
+                                  value={cityOption.name}
                                   onSelect={(currentValue) => {
                                     setCityChoice(currentValue === cityChoice ? "" : currentValue);
                                     if (currentValue !== "Other") {
@@ -1358,7 +1310,7 @@ const AddListing = () => {
                                     setOpenCityCombo(false);
                                   }}
                                 >
-                                  {city}
+                                  {cityOption.name}
                                 </CommandItem>
                               ))}
                             </CommandGroup>
@@ -1448,30 +1400,35 @@ const AddListing = () => {
                     )}
                   </div>
 
-                  {/* Neighborhood/Area - Enabled after ATTOM data is retrieved */}
-                  <div className="space-y-2">
-                    <Label htmlFor="neighborhood">Neighborhood/Area</Label>
-                    <Select
-                      value={formData.neighborhood}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
-                      disabled={attomNeighborhoods.length === 0}
-                    >
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder={
-                          attomNeighborhoods.length === 0
-                            ? "Enter address and run public data lookup to enable" 
-                            : "Select neighborhood..."
-                        } />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50 max-h-[300px]">
-                        {attomNeighborhoods.map((neighborhood) => (
-                          <SelectItem key={neighborhood} value={neighborhood}>
-                            {neighborhood}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* Neighborhood/Area - Enabled for all states with data */}
+                  {(() => {
+                    const neighborhoods = getNeighborhoodsForLocation({
+                      city: formData.city,
+                      state: formData.state,
+                      county: selectedCounty !== 'all' ? selectedCounty : undefined
+                    });
+                    
+                    return neighborhoods.length > 0 && (
+                      <div className="space-y-2">
+                        <Label htmlFor="neighborhood">Neighborhood/Area</Label>
+                        <Select
+                          value={formData.neighborhood}
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
+                        >
+                          <SelectTrigger className="bg-background">
+                            <SelectValue placeholder="Select neighborhood..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover z-50 max-h-[300px]">
+                            {neighborhoods.map((neighborhood) => (
+                              <SelectItem key={neighborhood} value={neighborhood}>
+                                {neighborhood}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Price Section */}
