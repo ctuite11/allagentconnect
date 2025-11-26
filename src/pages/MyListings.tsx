@@ -91,6 +91,7 @@ function MyListingsView({
   onShare,
   onDelete,
   onNewListing,
+  onQuickUpdate,
 }: {
   listings: Listing[];
   onEdit: (id: string) => void;
@@ -98,11 +99,17 @@ function MyListingsView({
   onShare: (id: string) => void;
   onDelete: (id: string) => void;
   onNewListing: () => void;
+  onQuickUpdate: (id: string, updates: Partial<Pick<Listing, "price" | "status">>) => Promise<void>;
 }) {
   const [activeStatus, setActiveStatus] = useState<ListingStatus | "all">("active");
-  const [view, setView] = useState<"grid" | "list">("grid");
+  const [view, setView] = useState<"grid" | "list">("list");
   const [search, setSearch] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("newest");
+
+  // Quick edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editPrice, setEditPrice] = useState<number | "">("");
+  const [editStatus, setEditStatus] = useState<ListingStatus | "">("");
 
   const filteredListings = useMemo(() => {
     let result = [...listings];
@@ -149,6 +156,29 @@ function MyListingsView({
   }, [listings, activeStatus, search, sortOption]);
 
   const showingLabel = `Showing ${filteredListings.length} of ${listings.length} listings`;
+
+  const startQuickEdit = (listing: Listing) => {
+    setEditingId(listing.id);
+    setEditPrice(listing.price);
+    setEditStatus(listing.status as ListingStatus);
+  };
+
+  const cancelQuickEdit = () => {
+    setEditingId(null);
+    setEditPrice("");
+    setEditStatus("");
+  };
+
+  const saveQuickEdit = async () => {
+    if (!editingId || editPrice === "" || editStatus === "") return;
+
+    await onQuickUpdate(editingId, {
+      price: Number(editPrice),
+      status: editStatus as ListingStatus,
+    });
+
+    cancelQuickEdit();
+  };
 
   return (
     <div className="flex-1 container mx-auto p-6 space-y-4">
@@ -323,74 +353,145 @@ function MyListingsView({
         </div>
       )}
 
-      {/* LIST VIEW */}
+      {/* LIST VIEW WITH QUICK EDIT */}
       {view === "list" && (
         <div className="space-y-3">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
+            const isEditing = editingId === l.id;
+
             return (
               <div
                 key={l.id}
                 className="flex items-center gap-4 border border-border rounded-xl bg-card p-4 shadow-sm hover:shadow-md transition"
               >
-                <div className="w-32 h-24 rounded-lg overflow-hidden bg-muted shrink-0">
+                <div className="w-32 h-24 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer">
                   <img
                     src={thumbnail || "/placeholder.svg"}
                     alt={l.address}
                     className="w-full h-full object-cover"
+                    onClick={() => onPreview(l.id)}
                   />
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-base truncate">
-                    {l.address}, {l.city}
-                  </div>
-                  <div className="text-muted-foreground text-sm">
-                    ${l.price.toLocaleString()}
-                  </div>
-                  {l.listing_number && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      MLS #{l.listing_number}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-semibold text-base truncate">
+                      {l.address}, {l.city}
                     </div>
-                  )}
-                  <span
-                    className={`inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(
-                      l.status
-                    )}`}
-                  >
-                    {l.status.replace("_", " ")}
-                  </span>
+                    {!isEditing && (
+                      <button
+                        className="text-xs px-2 py-1 rounded border border-border text-muted-foreground hover:bg-accent"
+                        onClick={() => startQuickEdit(l)}
+                      >
+                        Quick Edit
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Price + MLS */}
+                  <div className="mt-1 flex flex-wrap items-center gap-3">
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        className="border border-border rounded px-2 py-1 text-sm w-32 bg-background"
+                        value={editPrice}
+                        onChange={(e) =>
+                          setEditPrice(
+                            e.target.value === "" ? "" : Number(e.target.value)
+                          )
+                        }
+                      />
+                    ) : (
+                      <div className="text-muted-foreground text-sm">
+                        ${l.price.toLocaleString()}
+                      </div>
+                    )}
+
+                    {l.listing_number && (
+                      <div className="text-xs text-muted-foreground">
+                        MLS #{l.listing_number}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Status pill / dropdown */}
+                  <div className="mt-2 flex items-center gap-2">
+                    {isEditing ? (
+                      <select
+                        className="border border-border rounded px-2 py-1 text-xs bg-background capitalize"
+                        value={editStatus}
+                        onChange={(e) =>
+                          setEditStatus(e.target.value as ListingStatus)
+                        }
+                      >
+                        {STATUS_TABS.filter((t) => t.value !== "all").map((tab) => (
+                          <option key={tab.value} value={tab.value}>
+                            {tab.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span
+                        className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(
+                          l.status
+                        )}`}
+                      >
+                        {l.status.replace("_", " ")}
+                      </span>
+                    )}
+
+                    {isEditing && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <button
+                          className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90"
+                          onClick={saveQuickEdit}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="px-2 py-1 rounded border border-border text-muted-foreground hover:bg-accent"
+                          onClick={cancelQuickEdit}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <button
-                    className="hover:text-foreground transition"
-                    onClick={() => onEdit(l.id)}
-                    title="Edit"
-                  >
-                    <Pencil size={18} />
-                  </button>
-                  <button
-                    className="hover:text-foreground transition"
-                    onClick={() => onPreview(l.id)}
-                    title="Preview"
-                  >
-                    <Eye size={18} />
-                  </button>
-                  <button
-                    className="hover:text-foreground transition"
-                    onClick={() => onShare(l.id)}
-                    title="Share"
-                  >
-                    <Share2 size={18} />
-                  </button>
-                  <button
-                    className="hover:text-destructive text-destructive/70 transition"
-                    onClick={() => onDelete(l.id)}
-                    title="Delete"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                {/* Regular actions */}
+                <div className="flex flex-col items-end gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-3">
+                    <button
+                      className="hover:text-foreground transition"
+                      onClick={() => onEdit(l.id)}
+                      title="Full Edit"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                    <button
+                      className="hover:text-foreground transition"
+                      onClick={() => onPreview(l.id)}
+                      title="Preview"
+                    >
+                      <Eye size={18} />
+                    </button>
+                    <button
+                      className="hover:text-foreground transition"
+                      onClick={() => onShare(l.id)}
+                      title="Share"
+                    >
+                      <Share2 size={18} />
+                    </button>
+                    <button
+                      className="hover:text-destructive text-destructive/70 transition"
+                      onClick={() => onDelete(l.id)}
+                      title="Delete"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -475,6 +576,30 @@ const MyListings = () => {
     navigate("/new-listing");
   };
 
+  const handleQuickUpdate = async (
+    id: string,
+    updates: Partial<Pick<Listing, "price" | "status">>
+  ) => {
+    try {
+      const { data, error } = await supabase
+        .from("listings")
+        .update(updates)
+        .eq("id", id)
+        .select("*")
+        .single();
+
+      if (error) throw error;
+
+      setListings((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, ...(data as Listing) } : l))
+      );
+      toast.success("Listing updated");
+    } catch (error) {
+      console.error("Error updating listing:", error);
+      toast.error("Failed to update listing");
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -525,6 +650,7 @@ const MyListings = () => {
         onShare={handleShare}
         onDelete={handleDelete}
         onNewListing={handleNewListing}
+        onQuickUpdate={handleQuickUpdate}
       />
     </div>
   );
