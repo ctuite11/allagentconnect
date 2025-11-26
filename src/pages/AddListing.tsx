@@ -153,7 +153,7 @@ const AddListing = () => {
   // New organized amenity categories (4 groups)
   const [interiorAmenities, setInteriorAmenities] = useState<string[]>([]);
   const [exteriorAmenities, setExteriorAmenities] = useState<string[]>([]);
-  const [buildingPropertyAmenities, setBuildingPropertyAmenities] = useState<string[]>([]);
+  const [communityAmenities, setCommunityAmenities] = useState<string[]>([]);
   const [locationAmenities, setLocationAmenities] = useState<string[]>([]);
   const [otherAmenities, setOtherAmenities] = useState<string>("");
   const [multiFamilyFeatures, setMultiFamilyFeatures] = useState<string[]>([]);
@@ -1600,7 +1600,7 @@ const AddListing = () => {
                     <div className="space-y-3 mb-6">
                       <Label className="text-base font-medium">Interior Amenities</Label>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {["Air Conditioning", "Central Air", "Window AC", "Ceiling Fans", "Fireplace", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Home Office", "Mudroom", "Laundry in Unit", "Laundry in Building", "Furnished (Rental)"].map((amenity) => (
+                        {["Air Conditioning", "Central Air", "Window AC", "Ceiling Fans", "Fireplace", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Home Office", "Mudroom", "In-Home Laundry", "Shared Laundry"].map((amenity) => (
                           <div key={amenity} className="flex items-center space-x-2">
                             <input
                               type="checkbox"
@@ -1627,7 +1627,7 @@ const AddListing = () => {
                     <div className="space-y-3 mb-6">
                       <Label className="text-base font-medium">Exterior Amenities</Label>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {["Deck", "Patio", "Porch", "Balcony", "Fenced Yard", "Private Yard", "Garden Area", "Sprinkler System", "Outdoor Shower", "Pool", "Hot Tub", "Shed", "Gazebo", "Playground", "Fire Pit", "Outdoor Kitchen", "Greenhouse", "Boat Dock (or Dock Rights)"].map((amenity) => (
+                        {["Deck", "Patio", "Porch", "Balcony", "Fenced Yard", "Private Yard", "Garden Area", "Sprinkler System", "Outdoor Shower", "Pool", "Hot Tub", "Shed", "Gazebo", "Fire Pit", "Outdoor Kitchen", "Greenhouse", "Boat Dock (or Dock Rights)"].map((amenity) => (
                           <div key={amenity} className="flex items-center space-x-2">
                             <input
                               type="checkbox"
@@ -1650,27 +1650,27 @@ const AddListing = () => {
                       </div>
                     </div>
 
-                    {/* 3. Building & Property Amenities - Only for condo and multi_family */}
+                    {/* 3. Community Amenities - Only for condo and multi_family */}
                     {(formData.property_type === "condo" || formData.property_type === "multi_family") && (
                       <div className="space-y-3 mb-6">
-                        <Label className="text-base font-medium">Building & Property Amenities</Label>
+                        <Label className="text-base font-medium">Community Amenities</Label>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Pet Friendly", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room"].map((amenity) => (
+                          {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room"].map((amenity) => (
                             <div key={amenity} className="flex items-center space-x-2">
                               <input
                                 type="checkbox"
-                                id={`building-${amenity}`}
-                                checked={buildingPropertyAmenities.includes(amenity)}
+                                id={`community-${amenity}`}
+                                checked={communityAmenities.includes(amenity)}
                                 onChange={(e) => {
                                   if (e.target.checked) {
-                                    setBuildingPropertyAmenities([...buildingPropertyAmenities, amenity]);
+                                    setCommunityAmenities([...communityAmenities, amenity]);
                                   } else {
-                                    setBuildingPropertyAmenities(buildingPropertyAmenities.filter((a) => a !== amenity));
+                                    setCommunityAmenities(communityAmenities.filter((a) => a !== amenity));
                                   }
                                 }}
                                 className="rounded border-gray-300"
                               />
-                              <Label htmlFor={`building-${amenity}`} className="font-normal cursor-pointer">
+                              <Label htmlFor={`community-${amenity}`} className="font-normal cursor-pointer">
                                 {amenity}
                               </Label>
                             </div>
@@ -1752,7 +1752,7 @@ const AddListing = () => {
                       <div className="space-y-3 mb-6 border-t pt-6">
                         <Label className="text-base font-medium">Rental Features</Label>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          {["Heat Included", "Hot Water Included", "Electricity Included", "Internet Included", "Furnished", "Pet Friendly", "Cats OK", "Dogs OK", "No Smoking", "Short-Term Considered"].map((amenity) => (
+                          {["Heat Included", "Hot Water Included", "Electricity Included", "Internet Included", "Pet Friendly", "Cats OK", "Dogs OK", "No Smoking", "Short-Term Considered"].map((amenity) => (
                             <div key={amenity} className="flex items-center space-x-2">
                               <input
                                 type="checkbox"
