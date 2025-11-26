@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, MapPin, Bed, Bath, Square, Calendar, ArrowLeft, Home, FileText, Video, Globe, AlertCircle, DollarSign, Phone, Mail, GraduationCap, Footprints, ChevronLeft, ChevronRight, Maximize2, Share2 } from "lucide-react";
+import { Loader2, MapPin, Bed, Bath, Square, Calendar, ArrowLeft, Home, FileText, Video, Globe, AlertCircle, DollarSign, Phone, Mail, GraduationCap, Footprints, ChevronLeft, ChevronRight, Maximize2, Share2, Expand } from "lucide-react";
 import { toast } from "sonner";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -19,6 +19,7 @@ import PropertyMap from "@/components/PropertyMap";
 import AdBanner from "@/components/AdBanner";
 import { buildDisplayAddress } from "@/lib/utils";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
+import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useListingView } from "@/hooks/useListingView";
@@ -98,6 +99,7 @@ const ConsumerPropertyDetail = () => {
   const [loading, setLoading] = useState(true);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [isAgent, setIsAgent] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
 
   // Track listing view
   useListingView(id);
@@ -257,36 +259,48 @@ const ConsumerPropertyDetail = () => {
               <img 
                 src={mainPhoto} 
                 alt={listing.address} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover cursor-pointer"
+                onClick={() => setGalleryOpen(true)}
               />
               
-              {/* Carousel Arrow Controls */}
+              {/* Carousel Arrow Controls - Always Visible */}
               {listing.photos && listing.photos.length > 1 && (
                 <>
                   <button
                     onClick={handlePrevPhoto}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all z-10"
                     aria-label="Previous photo"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
                   <button
                     onClick={handleNextPhoto}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all z-10"
                     aria-label="Next photo"
                   >
                     <ChevronRight className="w-6 h-6" />
                   </button>
-                  
-                  {/* Photo Counter */}
-                  <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm z-10">
-                    {currentPhotoIndex + 1} / {listing.photos.length}
-                  </div>
                 </>
               )}
               
+              {/* Expand Button */}
+              <button
+                onClick={() => setGalleryOpen(true)}
+                className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all z-10"
+                aria-label="Expand gallery"
+              >
+                <Expand className="w-5 h-5" />
+              </button>
+              
+              {/* Photo Counter */}
+              {listing.photos && listing.photos.length > 0 && (
+                <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm z-10">
+                  {currentPhotoIndex + 1} / {listing.photos.length}
+                </div>
+              )}
+              
               {/* Overlay buttons */}
-              <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
+              <div className="absolute top-4 left-4 flex gap-2 z-10">
                 <Button 
                   variant="secondary" 
                   size="lg"
@@ -296,24 +310,6 @@ const ConsumerPropertyDetail = () => {
                   <ArrowLeft className="w-4 h-4" />
                   Search
                 </Button>
-                <div className="flex gap-2">
-                  <SocialShareMenu
-                    url={sharePreviewUrl}
-                    title={`${listing.address}, ${listing.city}, ${listing.state}`}
-                    description={`$${listing.price.toLocaleString()} - ${listing.bedrooms} bed, ${listing.bathrooms} bath`}
-                  />
-                  <FavoriteButton listingId={listing.id} />
-                  <SaveToHotSheetDialog
-                    currentSearch={{
-                      min_price: listing.price * 0.8,
-                      max_price: listing.price * 1.2,
-                      bedrooms: listing.bedrooms || undefined,
-                      bathrooms: listing.bathrooms || undefined,
-                      property_type: listing.property_type || undefined,
-                      listing_type: listing.listing_type,
-                    }}
-                  />
-                </div>
               </div>
 
               {/* Status and Property Type Badges */}
@@ -1308,6 +1304,17 @@ const ConsumerPropertyDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Photo Gallery Dialog */}
+      {listing && listing.photos && (
+        <PhotoGalleryDialog
+          open={galleryOpen}
+          onOpenChange={setGalleryOpen}
+          photos={listing.photos}
+          floorPlans={listing.floor_plans || []}
+          initialIndex={currentPhotoIndex}
+        />
+      )}
     </div>
   );
 };

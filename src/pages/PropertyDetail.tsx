@@ -25,7 +25,8 @@ import {
   ChevronRight,
   Video,
   Globe,
-  Maximize2
+  Maximize2,
+  Expand
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -35,6 +36,8 @@ import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColumn";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
+import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
+import SocialShareMenu from "@/components/SocialShareMenu";
 
 interface Listing {
   id: string;
@@ -90,6 +93,7 @@ const PropertyDetail = () => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [agentProfile, setAgentProfile] = useState<AgentProfile | null>(null);
   const [stats, setStats] = useState({ matches: 0, views: 0 });
+  const [galleryOpen, setGalleryOpen] = useState(false);
 
   // Track listing view
   useListingView(id);
@@ -174,6 +178,14 @@ const PropertyDetail = () => {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied to clipboard");
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleExpandGallery = () => {
+    setGalleryOpen(true);
   };
 
   const handlePrevPhoto = () => {
@@ -286,15 +298,11 @@ const PropertyDetail = () => {
               <Badge className={getStatusColor(listing.status)}>
                 {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
               </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShare}
-                className="gap-2"
-              >
-                <Share2 className="w-4 h-4" />
-                Share
-              </Button>
+              <SocialShareMenu
+                url={window.location.href}
+                title={`${listing.address}, ${listing.city}, ${listing.state}`}
+                description={listing.description || ''}
+              />
               <Button
                 variant="outline"
                 size="sm"
@@ -350,32 +358,44 @@ const PropertyDetail = () => {
             <img
               src={mainPhoto}
               alt={listing.address}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={handleExpandGallery}
             />
             
-            {/* Carousel Arrow Controls */}
+            {/* Carousel Arrow Controls - Always Visible */}
             {listing.photos && listing.photos.length > 1 && (
               <>
                 <button
                   onClick={handlePrevPhoto}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
                   aria-label="Previous photo"
                 >
                   <ChevronLeft className="w-6 h-6" />
                 </button>
                 <button
                   onClick={handleNextPhoto}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
                   aria-label="Next photo"
                 >
                   <ChevronRight className="w-6 h-6" />
                 </button>
-                
-                {/* Photo Counter */}
-                <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                  {currentPhotoIndex + 1} / {listing.photos.length}
-                </div>
               </>
+            )}
+            
+            {/* Expand Button */}
+            <button
+              onClick={handleExpandGallery}
+              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all"
+              aria-label="Expand gallery"
+            >
+              <Expand className="w-5 h-5" />
+            </button>
+            
+            {/* Photo Counter */}
+            {listing.photos && listing.photos.length > 0 && (
+              <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                {currentPhotoIndex + 1} / {listing.photos.length}
+              </div>
             )}
           </div>
 
@@ -520,6 +540,17 @@ const PropertyDetail = () => {
           </div>
         </div>
       </main>
+
+      {/* Photo Gallery Dialog */}
+      {listing && listing.photos && (
+        <PhotoGalleryDialog
+          open={galleryOpen}
+          onOpenChange={setGalleryOpen}
+          photos={listing.photos}
+          floorPlans={[]}
+          initialIndex={currentPhotoIndex}
+        />
+      )}
     </div>
   );
 };
