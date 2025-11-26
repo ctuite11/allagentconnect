@@ -20,7 +20,12 @@ import {
   Share2,
   Eye,
   Home,
-  FileText
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  Video,
+  Globe,
+  Maximize2
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -29,6 +34,7 @@ import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColumn";
+import ContactAgentDialog from "@/components/ContactAgentDialog";
 
 interface Listing {
   id: string;
@@ -53,6 +59,12 @@ interface Listing {
   listing_number?: string | null;
   created_at?: string;
   active_date?: string | null;
+  video_url?: string | null;
+  virtual_tour_url?: string | null;
+  property_website_url?: string | null;
+  commission_rate?: number | null;
+  commission_type?: string | null;
+  commission_notes?: string | null;
 }
 
 interface AgentProfile {
@@ -141,9 +153,38 @@ const PropertyDetail = () => {
     }
   }, [id]);
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: listing?.address || 'Property Listing',
+          text: `Check out this property: ${listing?.address}`,
+          url: window.location.href,
+        });
+        return;
+      } catch (error) {
+        // User cancelled or share failed, fall back to clipboard
+      }
+    }
+    
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied to clipboard");
+  };
+
+  const handlePrevPhoto = () => {
+    if (listing?.photos && listing.photos.length > 0) {
+      setCurrentPhotoIndex((prev) => 
+        prev === 0 ? listing.photos.length - 1 : prev - 1
+      );
+    }
+  };
+
+  const handleNextPhoto = () => {
+    if (listing?.photos && listing.photos.length > 0) {
+      setCurrentPhotoIndex((prev) => 
+        prev === listing.photos.length - 1 ? 0 : prev + 1
+      );
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -257,13 +298,38 @@ const PropertyDetail = () => {
       <main className="flex-1">
         {/* Hero Section - Full Width */}
         <div className="container mx-auto px-4 py-6">
-          {/* Hero Photo */}
-          <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted max-w-6xl mx-auto">
+          {/* Hero Photo with Carousel Controls */}
+          <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted max-w-6xl mx-auto group">
             <img
               src={mainPhoto}
               alt={listing.address}
               className="w-full h-full object-cover"
             />
+            
+            {/* Carousel Arrow Controls */}
+            {listing.photos && listing.photos.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrevPhoto}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="Previous photo"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={handleNextPhoto}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="Next photo"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+                
+                {/* Photo Counter */}
+                <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                  {currentPhotoIndex + 1} / {listing.photos.length}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Thumbnail Strip */}
@@ -304,6 +370,54 @@ const PropertyDetail = () => {
               ${listing.price.toLocaleString()}
               {listing.listing_type === 'for_rent' && (
                 <span className="text-xl text-muted-foreground">/month</span>
+              )}
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              <Button variant="outline" size="sm" onClick={handleCopyLink} className="gap-2">
+                <Share2 className="w-4 h-4" />
+                Share
+              </Button>
+              {listing.video_url && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.open(listing.video_url, '_blank')}
+                  className="gap-2"
+                >
+                  <Video className="w-4 h-4" />
+                  Video
+                </Button>
+              )}
+              {listing.virtual_tour_url && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.open(listing.virtual_tour_url, '_blank')}
+                  className="gap-2"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                  Virtual Tour
+                </Button>
+              )}
+              {listing.property_website_url && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.open(listing.property_website_url, '_blank')}
+                  className="gap-2"
+                >
+                  <Globe className="w-4 h-4" />
+                  Property Website
+                </Button>
+              )}
+              {agentProfile && (
+                <ContactAgentDialog
+                  listingId={listing.id}
+                  agentId={listing.agent_id}
+                  listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                />
               )}
             </div>
 

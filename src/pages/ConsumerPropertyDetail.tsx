@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, MapPin, Bed, Bath, Square, Calendar, ArrowLeft, Home, FileText, Video, Globe, AlertCircle, DollarSign, Phone, Mail, GraduationCap, Footprints } from "lucide-react";
+import { Loader2, MapPin, Bed, Bath, Square, Calendar, ArrowLeft, Home, FileText, Video, Globe, AlertCircle, DollarSign, Phone, Mail, GraduationCap, Footprints, ChevronLeft, ChevronRight, Maximize2, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -85,6 +85,9 @@ interface Listing {
   garage_spaces?: number | null;
   total_parking_spaces?: number | null;
   neighborhood?: string | null;
+  video_url?: string | null;
+  virtual_tour_url?: string | null;
+  property_website_url?: string | null;
 }
 
 const ConsumerPropertyDetail = () => {
@@ -158,6 +161,40 @@ const ConsumerPropertyDetail = () => {
     }
   }, [id]);
 
+  const handlePrevPhoto = () => {
+    if (listing?.photos && listing.photos.length > 0) {
+      setCurrentPhotoIndex((prev) => 
+        prev === 0 ? listing.photos.length - 1 : prev - 1
+      );
+    }
+  };
+
+  const handleNextPhoto = () => {
+    if (listing?.photos && listing.photos.length > 0) {
+      setCurrentPhotoIndex((prev) => 
+        prev === listing.photos.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const handleShareLink = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: listing?.address || 'Property Listing',
+          text: `Check out this property: ${listing?.address}`,
+          url: window.location.href,
+        });
+        return;
+      } catch (error) {
+        // User cancelled or share failed, fall back to clipboard
+      }
+    }
+    
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Link copied to clipboard");
+  };
+
 
   if (loading) {
     return (
@@ -214,17 +251,42 @@ const ConsumerPropertyDetail = () => {
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="max-w-7xl mx-auto">
-          {/* Hero Image Section */}
+          {/* Hero Image Section with Carousel Controls */}
           <div className="relative mb-6">
-            <div className="relative h-[500px] rounded-lg overflow-hidden">
+            <div className="relative h-[500px] rounded-lg overflow-hidden group">
               <img 
                 src={mainPhoto} 
                 alt={listing.address} 
                 className="w-full h-full object-cover"
               />
               
+              {/* Carousel Arrow Controls */}
+              {listing.photos && listing.photos.length > 1 && (
+                <>
+                  <button
+                    onClick={handlePrevPhoto}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    aria-label="Previous photo"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    onClick={handleNextPhoto}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    aria-label="Next photo"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                  
+                  {/* Photo Counter */}
+                  <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm z-10">
+                    {currentPhotoIndex + 1} / {listing.photos.length}
+                  </div>
+                </>
+              )}
+              
               {/* Overlay buttons */}
-              <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+              <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
                 <Button 
                   variant="secondary" 
                   size="lg"
@@ -265,13 +327,11 @@ const ConsumerPropertyDetail = () => {
                   </Badge>
                 )}
               </div>
-
             </div>
-
           </div>
 
           {/* Address and Price */}
-          <div className="flex justify-between items-start mb-6">
+          <div className="flex justify-between items-start mb-4">
             <div className="flex items-start gap-3">
               <MapPin className="w-6 h-6 text-primary mt-1" />
               <div>
@@ -320,6 +380,47 @@ const ConsumerPropertyDetail = () => {
                 <p className="text-muted-foreground">/month</p>
               )}
             </div>
+          </div>
+
+          {/* Action Bar */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            <Button variant="outline" size="sm" onClick={handleShareLink} className="gap-2">
+              <Share2 className="w-4 h-4" />
+              Share
+            </Button>
+            {listing.video_url && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => window.open(listing.video_url!, '_blank')}
+                className="gap-2"
+              >
+                <Video className="w-4 h-4" />
+                Video
+              </Button>
+            )}
+            {listing.virtual_tour_url && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => window.open(listing.virtual_tour_url!, '_blank')}
+                className="gap-2"
+              >
+                <Maximize2 className="w-4 h-4" />
+                Virtual Tour
+              </Button>
+            )}
+            {listing.property_website_url && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => window.open(listing.property_website_url!, '_blank')}
+                className="gap-2"
+              >
+                <Globe className="w-4 h-4" />
+                Property Website
+              </Button>
+            )}
           </div>
 
           {/* Call to Action Buttons */}

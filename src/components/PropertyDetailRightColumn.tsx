@@ -86,19 +86,12 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView }: Prope
                 </a>
               )}
               {agent.email && (
-                <a
-                  href={`mailto:${agent.email}`}
-                  className="flex items-center gap-3 text-sm hover:text-primary transition break-all"
-                >
+                <div className="flex items-center gap-3 text-sm">
                   <Mail className="w-4 h-4 text-muted-foreground" />
-                  <span>{agent.email}</span>
-                </a>
+                  <span className="break-all">{agent.email}</span>
+                </div>
               )}
             </div>
-
-            <Button className="w-full" size="lg">
-              Ask about this property
-            </Button>
           </CardContent>
         </Card>
       )}
@@ -113,29 +106,23 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView }: Prope
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <DetailGrid>
+            <div className="space-y-3">
               {listing.commission_rate && listing.commission_type && (
-                <DetailRow 
-                  label="Compensation" 
-                  value={listing.commission_type === 'percentage' 
-                    ? `${listing.commission_rate}%`
-                    : `$${listing.commission_rate.toLocaleString()}`
-                  } 
-                />
-              )}
-              {listing.commission_type && (
-                <DetailRow 
-                  label="Type" 
-                  value={listing.commission_type === 'percentage' ? 'Percentage' : 'Flat Fee'} 
-                />
+                <div>
+                  <p className="text-lg font-semibold text-foreground">
+                    {listing.commission_type === 'percentage' 
+                      ? `${listing.commission_rate}%`
+                      : `$${listing.commission_rate.toLocaleString()}`
+                    }
+                  </p>
+                </div>
               )}
               {listing.commission_notes && (
-                <div className="py-2 border-t mt-2">
-                  <p className="text-sm font-medium mb-1 text-foreground">Notes:</p>
+                <div className="pt-2 border-t">
                   <p className="text-sm text-foreground/90">{listing.commission_notes}</p>
                 </div>
               )}
-            </DetailGrid>
+            </div>
             {!isAgentView && (
               <p className="text-xs text-muted-foreground mt-3 italic">
                 Ask your agent for details
