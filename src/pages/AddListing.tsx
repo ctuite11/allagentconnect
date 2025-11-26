@@ -2099,12 +2099,12 @@ const AddListing = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         id="appointment_required"
                         checked={formData.appointment_required}
-                        onChange={(e) => setFormData(prev => ({ ...prev, appointment_required: e.target.checked }))}
-                        className="rounded border-gray-300"
+                        onCheckedChange={(isChecked) =>
+                          setFormData(prev => ({ ...prev, appointment_required: isChecked === true }))
+                        }
                       />
                       <Label htmlFor="appointment_required" className="font-normal cursor-pointer">
                         Appointment required for showing
