@@ -172,14 +172,14 @@ const ManageListingPhotos: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen pt-24">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl space-y-6">
+    <div className="container mx-auto p-6 pt-24 max-w-7xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
