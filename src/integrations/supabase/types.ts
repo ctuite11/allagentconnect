@@ -1456,6 +1456,7 @@ export type Database = {
           go_live_date: string | null
           green_features: Json | null
           handicap_access: string | null
+          handicap_accessible: string | null
           has_basement: boolean | null
           has_storage: boolean | null
           heating_types: Json | null
@@ -1499,6 +1500,7 @@ export type Database = {
           square_feet: number | null
           state: string
           status: string
+          storage_options: Json | null
           tax_assessment_value: number | null
           tax_year: number | null
           total_parking_spaces: number | null
@@ -1568,6 +1570,7 @@ export type Database = {
           go_live_date?: string | null
           green_features?: Json | null
           handicap_access?: string | null
+          handicap_accessible?: string | null
           has_basement?: boolean | null
           has_storage?: boolean | null
           heating_types?: Json | null
@@ -1611,6 +1614,7 @@ export type Database = {
           square_feet?: number | null
           state: string
           status?: string
+          storage_options?: Json | null
           tax_assessment_value?: number | null
           tax_year?: number | null
           total_parking_spaces?: number | null
@@ -1680,6 +1684,7 @@ export type Database = {
           go_live_date?: string | null
           green_features?: Json | null
           handicap_access?: string | null
+          handicap_accessible?: string | null
           has_basement?: boolean | null
           has_storage?: boolean | null
           heating_types?: Json | null
@@ -1723,6 +1728,7 @@ export type Database = {
           square_feet?: number | null
           state?: string
           status?: string
+          storage_options?: Json | null
           tax_assessment_value?: number | null
           tax_year?: number | null
           total_parking_spaces?: number | null

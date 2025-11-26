@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormattedInput } from "@/components/ui/formatted-input";
@@ -152,8 +151,10 @@ const AddListing = () => {
   // New state for rental multi-select fields
   const [depositRequirements, setDepositRequirements] = useState<string[]>([]);
   const [outdoorSpace, setOutdoorSpace] = useState<string[]>([]);
-  const [hasStorage, setHasStorage] = useState(false);
+  const [storageOptions, setStorageOptions] = useState<string[]>([]);
   const [petOptions, setPetOptions] = useState<string[]>([]);
+  const [leadPaint, setLeadPaint] = useState<string[]>([]);
+  const [handicapAccessible, setHandicapAccessible] = useState<string>("");
 
   const [disclosures, setDisclosures] = useState<string[]>([]);
   const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
@@ -831,11 +832,15 @@ const AddListing = () => {
         if (formData.rental_fee) payload.rental_fee = parseFloat(formData.rental_fee);
         payload.deposit_requirements = depositRequirements;
         payload.outdoor_space = outdoorSpace;
-        payload.has_storage = hasStorage;
+        payload.storage_options = storageOptions;
         payload.laundry_type = formData.laundry_type || null;
         payload.pets_comment = formData.pets_comment || null;
         payload.pet_options = petOptions;
       }
+
+      // Add disclosures
+      payload.lead_paint = leadPaint;
+      payload.handicap_accessible = handicapAccessible || null;
 
       if (draftId) {
         const { error } = await supabase
@@ -1013,11 +1018,15 @@ const AddListing = () => {
         if (formData.rental_fee) listingData.rental_fee = parseFloat(formData.rental_fee);
         listingData.deposit_requirements = depositRequirements;
         listingData.outdoor_space = outdoorSpace;
-        listingData.has_storage = hasStorage;
+        listingData.storage_options = storageOptions;
         listingData.laundry_type = formData.laundry_type || null;
         listingData.pets_comment = formData.pets_comment || null;
         listingData.pet_options = petOptions;
       }
+
+      // Add disclosures fields
+      listingData.lead_paint = leadPaint;
+      listingData.handicap_accessible = handicapAccessible || null;
 
       // Add multi-family fields if applicable
       if (formData.property_type === "multi_family") {
@@ -1295,18 +1304,6 @@ const AddListing = () => {
                     )}
                   </div>
 
-                  {/* Building / Complex Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="building_name">Building / Complex Name</Label>
-                    <Input
-                      id="building_name"
-                      type="text"
-                      value={formData.building_name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, building_name: e.target.value }))}
-                      placeholder="e.g. Harborview Towers"
-                    />
-                  </div>
-                  
                   {/* State, County */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -1519,8 +1516,20 @@ const AddListing = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                    );
+                      );
                   })()}
+
+                  {/* Building / Complex Name - moved to last */}
+                  <div className="space-y-2">
+                    <Label htmlFor="building_name">Building / Complex Name</Label>
+                    <Input
+                      id="building_name"
+                      type="text"
+                      value={formData.building_name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, building_name: e.target.value }))}
+                      placeholder="e.g. Harborview Towers"
+                    />
+                  </div>
                 </div>
 
                 {/* Price Section */}
@@ -1656,10 +1665,10 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Rental Details Section - Only for rentals */}
+                {/* Rental Features & Details Section - Only for rentals */}
                 {formData.listing_type === "for_rent" && (
                   <div className="space-y-4 border-t pt-6">
-                    <Label className="text-lg font-semibold">Rental Details</Label>
+                    <Label className="text-lg font-semibold">Rental Features & Details</Label>
 
                     {/* Private Outdoor Space (multi-select) */}
                     <div className="space-y-2">
@@ -1689,15 +1698,31 @@ const AddListing = () => {
                       </div>
                     </div>
 
-                    {/* Storage (single checkbox) */}
+                    {/* Storage (multi-select checkboxes) */}
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Storage</Label>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          checked={hasStorage}
-                          onCheckedChange={(isChecked) => setHasStorage(isChecked === true)}
-                        />
-                        <Label className="text-sm font-normal cursor-pointer">Storage available</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          { key: 'yes', label: 'Yes' },
+                          { key: 'no', label: 'No' },
+                          { key: 'private', label: 'Private' },
+                          { key: 'common', label: 'Common' },
+                          { key: 'available_for_rent', label: 'Available for rent' },
+                        ].map(({ key, label }) => (
+                          <div key={key} className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={storageOptions.includes(key)}
+                              onCheckedChange={(isChecked) => {
+                                if (isChecked === true) {
+                                  setStorageOptions(prev => Array.from(new Set([...prev, key])));
+                                } else {
+                                  setStorageOptions(prev => prev.filter((v) => v !== key));
+                                }
+                              }}
+                            />
+                            <Label className="text-sm font-normal cursor-pointer">{label}</Label>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -1757,6 +1782,31 @@ const AddListing = () => {
                         />
                       </div>
                     </div>
+
+                    {/* Rental Features (utility inclusions only) */}
+                    <div className="space-y-2">
+                      <Label className="text-base font-medium">Rental Features</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {["Heat Included", "Hot Water Included", "Electricity Included", "Internet Included", "No Smoking", "Short-Term Considered"].map((amenity) => (
+                          <div key={amenity} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`rental-${amenity}`}
+                              checked={rentalFeatures.includes(amenity)}
+                              onCheckedChange={(isChecked) => {
+                                if (isChecked === true) {
+                                  setRentalFeatures(prev => Array.from(new Set([...prev, amenity])));
+                                } else {
+                                  setRentalFeatures(prev => prev.filter((a) => a !== amenity));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`rental-${amenity}`} className="font-normal cursor-pointer">
+                              {amenity}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1771,18 +1821,16 @@ const AddListing = () => {
                       'Garage', 'Carport', 'Energy efficient', 'Smart home features'
                     ].map((feature) => (
                       <div key={feature} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           id={feature}
                           checked={propertyFeatures.includes(feature)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setPropertyFeatures([...propertyFeatures, feature]);
+                          onCheckedChange={(isChecked) => {
+                            if (isChecked === true) {
+                              setPropertyFeatures(prev => Array.from(new Set([...prev, feature])));
                             } else {
-                              setPropertyFeatures(propertyFeatures.filter(f => f !== feature));
+                              setPropertyFeatures(prev => prev.filter(f => f !== feature));
                             }
                           }}
-                          className="rounded border-gray-300"
                         />
                         <Label htmlFor={feature} className="font-normal cursor-pointer">
                           {feature}
@@ -1803,18 +1851,16 @@ const AddListing = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Air Conditioning", "Central Air", "Window AC", "Ceiling Fans", "Fireplace", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Home Office", "Mudroom", "In-Home Laundry", "Shared Laundry"].map((amenity) => (
                           <div key={amenity} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               id={`interior-${amenity}`}
                               checked={interiorAmenities.includes(amenity)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setInteriorAmenities([...interiorAmenities, amenity]);
+                              onCheckedChange={(isChecked) => {
+                                if (isChecked === true) {
+                                  setInteriorAmenities(prev => Array.from(new Set([...prev, amenity])));
                                 } else {
-                                  setInteriorAmenities(interiorAmenities.filter((a) => a !== amenity));
+                                  setInteriorAmenities(prev => prev.filter((a) => a !== amenity));
                                 }
                               }}
-                              className="rounded border-gray-300"
                             />
                             <Label htmlFor={`interior-${amenity}`} className="font-normal cursor-pointer">
                               {amenity}
@@ -1830,18 +1876,16 @@ const AddListing = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Deck", "Patio", "Porch", "Balcony", "Fenced Yard", "Private Yard", "Garden Area", "Sprinkler System", "Outdoor Shower", "Pool", "Hot Tub", "Shed", "Gazebo", "Fire Pit", "Outdoor Kitchen", "Greenhouse", "Boat Dock (or Dock Rights)"].map((amenity) => (
                           <div key={amenity} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               id={`exterior-${amenity}`}
                               checked={exteriorAmenities.includes(amenity)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setExteriorAmenities([...exteriorAmenities, amenity]);
+                              onCheckedChange={(isChecked) => {
+                                if (isChecked === true) {
+                                  setExteriorAmenities(prev => Array.from(new Set([...prev, amenity])));
                                 } else {
-                                  setExteriorAmenities(exteriorAmenities.filter((a) => a !== amenity));
+                                  setExteriorAmenities(prev => prev.filter((a) => a !== amenity));
                                 }
                               }}
-                              className="rounded border-gray-300"
                             />
                             <Label htmlFor={`exterior-${amenity}`} className="font-normal cursor-pointer">
                               {amenity}
@@ -1858,18 +1902,16 @@ const AddListing = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room"].map((amenity) => (
                             <div key={amenity} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
+                              <Checkbox
                                 id={`community-${amenity}`}
                                 checked={communityAmenities.includes(amenity)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setCommunityAmenities([...communityAmenities, amenity]);
+                                onCheckedChange={(isChecked) => {
+                                  if (isChecked === true) {
+                                    setCommunityAmenities(prev => Array.from(new Set([...prev, amenity])));
                                   } else {
-                                    setCommunityAmenities(communityAmenities.filter((a) => a !== amenity));
+                                    setCommunityAmenities(prev => prev.filter((a) => a !== amenity));
                                   }
                                 }}
-                                className="rounded border-gray-300"
                               />
                               <Label htmlFor={`community-${amenity}`} className="font-normal cursor-pointer">
                                 {amenity}
@@ -1886,18 +1928,16 @@ const AddListing = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Public Transportation", "Walk/Jog Trails", "Public Park", "Playground", "Water View", "Waterfront", "Beach Access", "Marina", "Golf Course", "University Nearby", "Public School Nearby", "Private School Nearby", "Shopping Nearby", "Highway Access"].map((amenity) => (
                           <div key={amenity} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               id={`location-${amenity}`}
                               checked={locationAmenities.includes(amenity)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setLocationAmenities([...locationAmenities, amenity]);
+                              onCheckedChange={(isChecked) => {
+                                if (isChecked === true) {
+                                  setLocationAmenities(prev => Array.from(new Set([...prev, amenity])));
                                 } else {
-                                  setLocationAmenities(locationAmenities.filter((a) => a !== amenity));
+                                  setLocationAmenities(prev => prev.filter((a) => a !== amenity));
                                 }
                               }}
-                              className="rounded border-gray-300"
                             />
                             <Label htmlFor={`location-${amenity}`} className="font-normal cursor-pointer">
                               {amenity}
@@ -1926,49 +1966,18 @@ const AddListing = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           {["Coin-Op Laundry", "Separate Utilities", "Owner's Unit", "Long-Term Tenant Opportunity", "Strong Rental History", "Lockable Storage Units", "Shared Yard", "Shared Patio/Deck"].map((amenity) => (
                             <div key={amenity} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
+                              <Checkbox
                                 id={`multifamily-${amenity}`}
                                 checked={multiFamilyFeatures.includes(amenity)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setMultiFamilyFeatures([...multiFamilyFeatures, amenity]);
+                                onCheckedChange={(isChecked) => {
+                                  if (isChecked === true) {
+                                    setMultiFamilyFeatures(prev => Array.from(new Set([...prev, amenity])));
                                   } else {
-                                    setMultiFamilyFeatures(multiFamilyFeatures.filter((a) => a !== amenity));
+                                    setMultiFamilyFeatures(prev => prev.filter((a) => a !== amenity));
                                   }
                                 }}
-                                className="rounded border-gray-300"
                               />
                               <Label htmlFor={`multifamily-${amenity}`} className="font-normal cursor-pointer">
-                                {amenity}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Rental Features - Only show for rentals */}
-                    {formData.listing_type === "for_rent" && (
-                      <div className="space-y-3 mb-6 border-t pt-6">
-                        <Label className="text-base font-medium">Rental Features</Label>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          {["Heat Included", "Hot Water Included", "Electricity Included", "Internet Included", "Pet Friendly", "Cats OK", "Dogs OK", "No Smoking", "Short-Term Considered"].map((amenity) => (
-                            <div key={amenity} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={`rental-${amenity}`}
-                                checked={rentalFeatures.includes(amenity)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setRentalFeatures([...rentalFeatures, amenity]);
-                                  } else {
-                                    setRentalFeatures(rentalFeatures.filter((a) => a !== amenity));
-                                  }
-                                }}
-                                className="rounded border-gray-300"
-                              />
-                              <Label htmlFor={`rental-${amenity}`} className="font-normal cursor-pointer">
                                 {amenity}
                               </Label>
                             </div>
@@ -1979,44 +1988,53 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Disclosures */}
+                {/* Disclosures - Simplified */}
                 <div className="space-y-4 border-t pt-6">
                   <Label className="text-xl font-semibold">Disclosures</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {[
-                      'Lead-based paint', 'Asbestos', 'Radon', 'Flood zone', 'HOA restrictions',
-                      'Previous damage/repairs', 'Environmental hazards', 'Easements',
-                      'Pending litigation', 'Property liens'
-                    ].map((disclosure) => (
-                      <div key={disclosure} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={disclosure}
-                          checked={disclosures.includes(disclosure)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setDisclosures([...disclosures, disclosure]);
-                            } else {
-                              setDisclosures(disclosures.filter(d => d !== disclosure));
-                            }
-                          }}
-                          className="rounded border-gray-300"
-                        />
-                        <Label htmlFor={disclosure} className="font-normal cursor-pointer">
-                          {disclosure}
-                        </Label>
-                      </div>
-                    ))}
+                  
+                  {/* Lead Paint (multi-select) */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Lead Paint</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {[
+                        { key: 'yes', label: 'Yes' },
+                        { key: 'no', label: 'No' },
+                        { key: 'unknown', label: 'Unknown' },
+                        { key: 'certified_lead_free', label: 'Certified lead free' },
+                      ].map(({ key, label }) => (
+                        <div key={key} className="flex items-center space-x-2">
+                          <Checkbox
+                            checked={leadPaint.includes(key)}
+                            onCheckedChange={(isChecked) => {
+                              if (isChecked === true) {
+                                setLeadPaint(prev => Array.from(new Set([...prev, key])));
+                              } else {
+                                setLeadPaint(prev => prev.filter((v) => v !== key));
+                              }
+                            }}
+                          />
+                          <Label className="text-sm font-normal cursor-pointer">{label}</Label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-2 mt-4">
-                    <Label htmlFor="disclosures_other">Other Disclosures</Label>
-                    <Textarea
-                      id="disclosures_other"
-                      placeholder="Describe any additional disclosures that aren't covered above..."
-                      value={formData.disclosures_other}
-                      onChange={(e) => setFormData(prev => ({ ...prev, disclosures_other: e.target.value }))}
-                      rows={3}
-                    />
+
+                  {/* Handicap Accessible (select) */}
+                  <div className="space-y-2 max-w-xs">
+                    <Label htmlFor="handicap_accessible">Handicap Accessible</Label>
+                    <Select
+                      value={handicapAccessible}
+                      onValueChange={(value) => setHandicapAccessible(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                        <SelectItem value="unknown">Unknown</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
