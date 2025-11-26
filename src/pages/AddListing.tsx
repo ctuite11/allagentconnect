@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -103,6 +103,7 @@ const listingSchema = z.object({
 
 const AddListing = () => {
   const navigate = useNavigate();
+  const { id: listingId } = useParams<{ id: string }>();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -1954,14 +1955,25 @@ const AddListing = () => {
                           Drag and drop to reorder. First photo will be the main image.
                         </p>
                       </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => document.getElementById('photo-upload')?.click()}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Photos
-                      </Button>
+                      <div className="flex gap-2">
+                        {listingId && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => navigate(`/agent/listings/${listingId}/photos`)}
+                          >
+                            Manage Photos
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => document.getElementById('photo-upload')?.click()}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Photos
+                        </Button>
+                      </div>
                     </div>
                     <input
                       id="photo-upload"
