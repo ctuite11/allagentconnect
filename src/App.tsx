@@ -51,6 +51,7 @@ import ClientFavoritesPage from "./pages/ClientFavoritesPage";
 import PasswordReset from "./pages/PasswordReset";
 import NotFound from "./pages/NotFound";
 import MyListings from "./pages/MyListings";
+import ManageListingPhotos from "./pages/ManageListingPhotos";
 
 import EditListing from "./pages/EditListing";
 import ComingSoon from "./pages/ComingSoon";
@@ -81,6 +82,7 @@ const App = () => (
           <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
           <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
           <Route path="/agent/listings/new" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
+          <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent"><ManageListingPhotos /></RouteGuard>} />
           <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent"><EditListing /></RouteGuard>} />
           <Route path="/buyer/auth" element={<BuyerAuth />} />
           <Route path="/submit-client-need" element={<SubmitClientNeed />} />
