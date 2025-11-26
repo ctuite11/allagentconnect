@@ -32,36 +32,36 @@ import { cn } from "@/lib/utils";
 
 const SUPPORTED_CITIES = [
   "Boston",
-  "Cambridge",
-  "Somerville",
   "Brookline",
+  "Cambridge",
   "Chelsea",
-  "Revere",
-  "Medford",
   "Everett",
-  "Watertown",
+  "Medford",
   "Newton",
   "Quincy",
+  "Revere",
+  "Somerville",
+  "Watertown",
   "Other"
 ];
 
 // County to cities mapping for MA
 const CITY_OPTIONS_BY_COUNTY: Record<string, string[]> = {
   Suffolk: ["Boston", "Chelsea", "Revere", "Winthrop"],
-  Middlesex: ["Cambridge", "Somerville", "Medford", "Everett", "Watertown", "Newton", "Arlington", "Belmont", "Lexington", "Waltham", "Malden", "Melrose", "Woburn", "Burlington"],
-  Norfolk: ["Brookline", "Quincy", "Milton", "Dedham", "Needham", "Wellesley", "Canton", "Randolph"],
-  Essex: ["Lynn", "Salem", "Peabody", "Beverly", "Gloucester", "Lawrence", "Haverhill", "Newburyport"],
-  Plymouth: ["Plymouth", "Brockton", "Marshfield", "Duxbury", "Hingham", "Weymouth"],
-  Bristol: ["New Bedford", "Fall River", "Taunton", "Attleboro"],
-  Worcester: ["Worcester", "Fitchburg", "Leominster", "Framingham", "Marlborough"],
-  Hampden: ["Springfield", "Holyoke", "Chicopee", "Westfield"],
-  Hampshire: ["Northampton", "Amherst", "Easthampton"],
-  Berkshire: ["Pittsfield", "North Adams", "Great Barrington"],
-  Franklin: ["Greenfield", "Deerfield"],
-  Barnstable: ["Barnstable", "Hyannis", "Falmouth", "Sandwich", "Provincetown"],
+  Middlesex: ["Arlington", "Belmont", "Burlington", "Cambridge", "Everett", "Lexington", "Malden", "Medford", "Melrose", "Newton", "Somerville", "Waltham", "Watertown", "Woburn"],
+  Norfolk: ["Brookline", "Canton", "Dedham", "Milton", "Needham", "Quincy", "Randolph", "Wellesley"],
+  Essex: ["Beverly", "Gloucester", "Haverhill", "Lawrence", "Lynn", "Newburyport", "Peabody", "Salem"],
+  Plymouth: ["Brockton", "Duxbury", "Hingham", "Marshfield", "Plymouth", "Weymouth"],
+  Bristol: ["Attleboro", "Fall River", "New Bedford", "Taunton"],
+  Worcester: ["Fitchburg", "Framingham", "Leominster", "Marlborough", "Worcester"],
+  Hampden: ["Chicopee", "Holyoke", "Springfield", "Westfield"],
+  Hampshire: ["Amherst", "Easthampton", "Northampton"],
+  Berkshire: ["Great Barrington", "North Adams", "Pittsfield"],
+  Franklin: ["Deerfield", "Greenfield"],
+  Barnstable: ["Barnstable", "Falmouth", "Hyannis", "Provincetown", "Sandwich"],
   Dukes: ["Edgartown", "Oak Bluffs", "Vineyard Haven"],
   Nantucket: ["Nantucket"],
-  Other: ["Boston", "Cambridge", "Somerville", "Brookline", "Chelsea", "Revere", "Medford", "Everett", "Watertown", "Newton", "Quincy"]
+  Other: ["Boston", "Brookline", "Cambridge", "Chelsea", "Everett", "Medford", "Newton", "Quincy", "Revere", "Somerville", "Watertown"]
 };
 
 // State name to abbreviation mapping
@@ -249,7 +249,14 @@ const AddListing = () => {
         setFormData(prev => ({ ...prev, city: "" }));
       }
       
-      setAvailableCities(cityOptions);
+      // Sort cities alphabetically, keeping "Other" at the end
+      const sortedCities = [...cityOptions].sort((a, b) => {
+        if (a === "Other") return 1;
+        if (b === "Other") return -1;
+        return a.localeCompare(b);
+      });
+      
+      setAvailableCities(sortedCities);
       setAvailableZips([]);
     }
   }, [selectedState, selectedCounty]);
