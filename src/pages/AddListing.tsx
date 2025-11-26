@@ -176,27 +176,14 @@ const AddListing = () => {
   const [areaAmenities, setAreaAmenities] = useState<string[]>([]);
   const [otherAreaAmenity, setOtherAreaAmenity] = useState<string>("");
   
-  // New organized amenity categories
-  const [interiorFeatures, setInteriorFeatures] = useState<string[]>([]);
-  const [interiorFeaturesOther, setInteriorFeaturesOther] = useState<string>("");
-  const [kitchenFeatures, setKitchenFeatures] = useState<string[]>([]);
-  const [kitchenFeaturesOther, setKitchenFeaturesOther] = useState<string>("");
-  const [bathroomFeatures, setBathroomFeatures] = useState<string[]>([]);
-  const [bathroomFeaturesOther, setBathroomFeaturesOther] = useState<string>("");
-  const [flooringFeatures, setFlooringFeatures] = useState<string[]>([]);
-  const [flooringFeaturesOther, setFlooringFeaturesOther] = useState<string>("");
-  const [exteriorFeatures, setExteriorFeatures] = useState<string[]>([]);
-  const [exteriorFeaturesOther, setExteriorFeaturesOther] = useState<string>("");
-  const [lotFeatures, setLotFeatures] = useState<string[]>([]);
-  const [lotFeaturesOther, setLotFeaturesOther] = useState<string>("");
-  const [parkingGarageFeatures, setParkingGarageFeatures] = useState<string[]>([]);
-  const [parkingGarageFeaturesOther, setParkingGarageFeaturesOther] = useState<string>("");
-  const [basementFeatures, setBasementFeatures] = useState<string[]>([]);
-  const [basementFeaturesOther, setBasementFeaturesOther] = useState<string>("");
+  // New organized amenity categories (4 groups)
+  const [interiorAmenities, setInteriorAmenities] = useState<string[]>([]);
+  const [exteriorAmenities, setExteriorAmenities] = useState<string[]>([]);
+  const [buildingPropertyAmenities, setBuildingPropertyAmenities] = useState<string[]>([]);
+  const [locationAmenities, setLocationAmenities] = useState<string[]>([]);
+  const [otherAmenities, setOtherAmenities] = useState<string>("");
   const [multiFamilyFeatures, setMultiFamilyFeatures] = useState<string[]>([]);
-  const [multiFamilyFeaturesOther, setMultiFamilyFeaturesOther] = useState<string>("");
   const [rentalFeatures, setRentalFeatures] = useState<string[]>([]);
-  const [rentalFeaturesOther, setRentalFeaturesOther] = useState<string>("");
   
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
@@ -1542,25 +1529,25 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Property Amenities - Organized by Category */}
+                {/* Property Amenities - Organized into 4 Main Groups */}
                 <div className="space-y-6 border-t pt-6">
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Property Amenities</h3>
                     
-                    {/* Interior Features */}
+                    {/* 1. Interior Amenities */}
                     <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Interior Features</Label>
+                      <Label className="text-base font-medium">Interior Amenities</Label>
                       <div className="flex flex-wrap gap-2">
-                        {["Central Air", "Gas Heat", "Electric Heat", "Oil Heat", "Radiant Heating", "Forced Air", "Steam Heat", "Mini-Split Systems", "Wood Stove", "Pellet Stove", "Fireplace", "High Ceilings", "Skylights", "Recessed Lighting", "Walk-in Closet", "Built-ins", "Home Office", "Sunroom", "Mudroom", "Pantry", "Laundry in Unit", "Laundry in Building", "Security System", "Smart Home Features", "Cable Ready", "Intercom System"].map((amenity) => (
+                        {["Air Conditioning", "Central Air", "Window AC", "Ceiling Fans", "Fireplace", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Home Office", "Mudroom", "Laundry in Unit", "Laundry in Building", "Furnished (Rental)"].map((amenity) => (
                           <Badge
                             key={amenity}
-                            variant={interiorFeatures.includes(amenity) ? "default" : "outline"}
+                            variant={interiorAmenities.includes(amenity) ? "default" : "outline"}
                             className="cursor-pointer"
                             onClick={() => {
-                              if (interiorFeatures.includes(amenity)) {
-                                setInteriorFeatures(interiorFeatures.filter((a) => a !== amenity));
+                              if (interiorAmenities.includes(amenity)) {
+                                setInteriorAmenities(interiorAmenities.filter((a) => a !== amenity));
                               } else {
-                                setInteriorFeatures([...interiorFeatures, amenity]);
+                                setInteriorAmenities([...interiorAmenities, amenity]);
                               }
                             }}
                           >
@@ -1568,27 +1555,22 @@ const AddListing = () => {
                           </Badge>
                         ))}
                       </div>
-                      <Input
-                        placeholder="Other interior features..."
-                        value={interiorFeaturesOther}
-                        onChange={(e) => setInteriorFeaturesOther(e.target.value)}
-                      />
                     </div>
 
-                    {/* Kitchen Features */}
+                    {/* 2. Exterior Amenities */}
                     <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Kitchen Features</Label>
+                      <Label className="text-base font-medium">Exterior Amenities</Label>
                       <div className="flex flex-wrap gap-2">
-                        {["Stainless Steel Appliances", "Granite Countertops", "Quartz Countertops", "Kitchen Island", "Breakfast Bar", "Gas Cooking", "Electric Cooking", "Double Oven", "Wine Fridge", "Custom Cabinets", "Pantry Closet"].map((amenity) => (
+                        {["Deck", "Patio", "Porch", "Balcony", "Fenced Yard", "Private Yard", "Garden Area", "Sprinkler System", "Outdoor Shower", "Pool", "Hot Tub", "Shed", "Gazebo", "Playground", "Fire Pit", "Outdoor Kitchen", "Greenhouse", "Boat Dock (or Dock Rights)"].map((amenity) => (
                           <Badge
                             key={amenity}
-                            variant={kitchenFeatures.includes(amenity) ? "default" : "outline"}
+                            variant={exteriorAmenities.includes(amenity) ? "default" : "outline"}
                             className="cursor-pointer"
                             onClick={() => {
-                              if (kitchenFeatures.includes(amenity)) {
-                                setKitchenFeatures(kitchenFeatures.filter((a) => a !== amenity));
+                              if (exteriorAmenities.includes(amenity)) {
+                                setExteriorAmenities(exteriorAmenities.filter((a) => a !== amenity));
                               } else {
-                                setKitchenFeatures([...kitchenFeatures, amenity]);
+                                setExteriorAmenities([...exteriorAmenities, amenity]);
                               }
                             }}
                           >
@@ -1596,27 +1578,22 @@ const AddListing = () => {
                           </Badge>
                         ))}
                       </div>
-                      <Input
-                        placeholder="Other kitchen features..."
-                        value={kitchenFeaturesOther}
-                        onChange={(e) => setKitchenFeaturesOther(e.target.value)}
-                      />
                     </div>
 
-                    {/* Bathroom Features */}
+                    {/* 3. Building & Property Amenities */}
                     <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Bathroom Features</Label>
+                      <Label className="text-base font-medium">Building & Property Amenities</Label>
                       <div className="flex flex-wrap gap-2">
-                        {["Updated Bathroom", "Double Vanity", "Soaking Tub", "Walk-in Shower", "Heated Floors", "Linen Closet"].map((amenity) => (
+                        {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Pet Friendly", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room"].map((amenity) => (
                           <Badge
                             key={amenity}
-                            variant={bathroomFeatures.includes(amenity) ? "default" : "outline"}
+                            variant={buildingPropertyAmenities.includes(amenity) ? "default" : "outline"}
                             className="cursor-pointer"
                             onClick={() => {
-                              if (bathroomFeatures.includes(amenity)) {
-                                setBathroomFeatures(bathroomFeatures.filter((a) => a !== amenity));
+                              if (buildingPropertyAmenities.includes(amenity)) {
+                                setBuildingPropertyAmenities(buildingPropertyAmenities.filter((a) => a !== amenity));
                               } else {
-                                setBathroomFeatures([...bathroomFeatures, amenity]);
+                                setBuildingPropertyAmenities([...buildingPropertyAmenities, amenity]);
                               }
                             }}
                           >
@@ -1624,27 +1601,22 @@ const AddListing = () => {
                           </Badge>
                         ))}
                       </div>
-                      <Input
-                        placeholder="Other bathroom features..."
-                        value={bathroomFeaturesOther}
-                        onChange={(e) => setBathroomFeaturesOther(e.target.value)}
-                      />
                     </div>
 
-                    {/* Flooring */}
+                    {/* 4. Location Amenities */}
                     <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Flooring</Label>
+                      <Label className="text-base font-medium">Location Amenities</Label>
                       <div className="flex flex-wrap gap-2">
-                        {["Hardwood Floors", "Tile", "Vinyl Plank", "Carpet", "Laminate"].map((amenity) => (
+                        {["Public Transportation", "Walk/Jog Trails", "Public Park", "Playground", "Water View", "Waterfront", "Beach Access", "Marina", "Golf Course", "University Nearby", "Public School Nearby", "Private School Nearby", "Shopping Nearby", "Highway Access"].map((amenity) => (
                           <Badge
                             key={amenity}
-                            variant={flooringFeatures.includes(amenity) ? "default" : "outline"}
+                            variant={locationAmenities.includes(amenity) ? "default" : "outline"}
                             className="cursor-pointer"
                             onClick={() => {
-                              if (flooringFeatures.includes(amenity)) {
-                                setFlooringFeatures(flooringFeatures.filter((a) => a !== amenity));
+                              if (locationAmenities.includes(amenity)) {
+                                setLocationAmenities(locationAmenities.filter((a) => a !== amenity));
                               } else {
-                                setFlooringFeatures([...flooringFeatures, amenity]);
+                                setLocationAmenities([...locationAmenities, amenity]);
                               }
                             }}
                           >
@@ -1652,128 +1624,23 @@ const AddListing = () => {
                           </Badge>
                         ))}
                       </div>
-                      <Input
-                        placeholder="Other flooring types..."
-                        value={flooringFeaturesOther}
-                        onChange={(e) => setFlooringFeaturesOther(e.target.value)}
-                      />
                     </div>
 
-                    {/* Exterior Features */}
-                    <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Exterior Features</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {["Deck", "Patio", "Porch", "Balcony", "Fenced Yard", "Shed", "Garden Area", "Outdoor Shower", "Irrigation System", "Professional Landscaping", "Private Entrance", "Stone Walls"].map((amenity) => (
-                          <Badge
-                            key={amenity}
-                            variant={exteriorFeatures.includes(amenity) ? "default" : "outline"}
-                            className="cursor-pointer"
-                            onClick={() => {
-                              if (exteriorFeatures.includes(amenity)) {
-                                setExteriorFeatures(exteriorFeatures.filter((a) => a !== amenity));
-                              } else {
-                                setExteriorFeatures([...exteriorFeatures, amenity]);
-                              }
-                            }}
-                          >
-                            {amenity}
-                          </Badge>
-                        ))}
-                      </div>
-                      <Input
-                        placeholder="Other exterior features..."
-                        value={exteriorFeaturesOther}
-                        onChange={(e) => setExteriorFeaturesOther(e.target.value)}
-                      />
-                    </div>
-
-                    {/* Lot Features */}
-                    <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Lot Features</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {["Corner Lot", "Wooded", "Cleared", "Level Lot", "Sloping Lot", "Garden Space", "Barn / Outbuilding", "Fruit Trees", "Conservation Land Abutting"].map((amenity) => (
-                          <Badge
-                            key={amenity}
-                            variant={lotFeatures.includes(amenity) ? "default" : "outline"}
-                            className="cursor-pointer"
-                            onClick={() => {
-                              if (lotFeatures.includes(amenity)) {
-                                setLotFeatures(lotFeatures.filter((a) => a !== amenity));
-                              } else {
-                                setLotFeatures([...lotFeatures, amenity]);
-                              }
-                            }}
-                          >
-                            {amenity}
-                          </Badge>
-                        ))}
-                      </div>
-                      <Input
-                        placeholder="Other lot features..."
-                        value={lotFeaturesOther}
-                        onChange={(e) => setLotFeaturesOther(e.target.value)}
-                      />
-                    </div>
-
-                    {/* Parking & Garage */}
-                    <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Parking & Garage</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {["Off-Street Parking", "Deeded Parking", "Assigned Parking", "Garage Parking", "Carport", "Driveway", "Heated Garage", "EV Charging", "Street Permit Parking"].map((amenity) => (
-                          <Badge
-                            key={amenity}
-                            variant={parkingGarageFeatures.includes(amenity) ? "default" : "outline"}
-                            className="cursor-pointer"
-                            onClick={() => {
-                              if (parkingGarageFeatures.includes(amenity)) {
-                                setParkingGarageFeatures(parkingGarageFeatures.filter((a) => a !== amenity));
-                              } else {
-                                setParkingGarageFeatures([...parkingGarageFeatures, amenity]);
-                              }
-                            }}
-                          >
-                            {amenity}
-                          </Badge>
-                        ))}
-                      </div>
-                      <Input
-                        placeholder="Other parking features..."
-                        value={parkingGarageFeaturesOther}
-                        onChange={(e) => setParkingGarageFeaturesOther(e.target.value)}
-                      />
-                    </div>
-
-                    {/* Basement Features */}
-                    <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Basement Features</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {["Full", "Partial", "Finished", "Partially Finished", "Unfinished", "Walkout", "Bulkhead", "Interior Access", "Sump Pump", "French Drain", "Workshop Area", "Storage"].map((amenity) => (
-                          <Badge
-                            key={amenity}
-                            variant={basementFeatures.includes(amenity) ? "default" : "outline"}
-                            className="cursor-pointer"
-                            onClick={() => {
-                              if (basementFeatures.includes(amenity)) {
-                                setBasementFeatures(basementFeatures.filter((a) => a !== amenity));
-                              } else {
-                                setBasementFeatures([...basementFeatures, amenity]);
-                              }
-                            }}
-                          >
-                            {amenity}
-                          </Badge>
-                        ))}
-                      </div>
-                      <Input
-                        placeholder="Other basement features..."
-                        value={basementFeaturesOther}
-                        onChange={(e) => setBasementFeaturesOther(e.target.value)}
+                    {/* Other Amenities Text Field */}
+                    <div className="space-y-2 mb-6">
+                      <Label htmlFor="other_amenities">Other Amenities (optional)</Label>
+                      <Textarea
+                        id="other_amenities"
+                        placeholder="List any additional amenities not covered above..."
+                        value={otherAmenities}
+                        onChange={(e) => setOtherAmenities(e.target.value)}
+                        rows={3}
                       />
                     </div>
 
                     {/* Multi-Family Features - Only show for multi_family */}
                     {formData.property_type === "multi_family" && (
-                      <div className="space-y-3 mb-6">
+                      <div className="space-y-3 mb-6 border-t pt-6">
                         <Label className="text-base font-medium">Multi-Family Features</Label>
                         <div className="flex flex-wrap gap-2">
                           {["Coin-Op Laundry", "Separate Utilities", "Owner's Unit", "Long-Term Tenant Opportunity", "Strong Rental History", "Lockable Storage Units", "Shared Yard", "Shared Patio/Deck"].map((amenity) => (
@@ -1793,17 +1660,12 @@ const AddListing = () => {
                             </Badge>
                           ))}
                         </div>
-                        <Input
-                          placeholder="Other multi-family features..."
-                          value={multiFamilyFeaturesOther}
-                          onChange={(e) => setMultiFamilyFeaturesOther(e.target.value)}
-                        />
                       </div>
                     )}
 
                     {/* Rental Features - Only show for rentals */}
                     {formData.listing_type === "for_rent" && (
-                      <div className="space-y-3 mb-6">
+                      <div className="space-y-3 mb-6 border-t pt-6">
                         <Label className="text-base font-medium">Rental Features</Label>
                         <div className="flex flex-wrap gap-2">
                           {["Heat Included", "Hot Water Included", "Electricity Included", "Internet Included", "Furnished", "Pet Friendly", "Cats OK", "Dogs OK", "No Smoking", "Short-Term Considered"].map((amenity) => (
@@ -1823,11 +1685,6 @@ const AddListing = () => {
                             </Badge>
                           ))}
                         </div>
-                        <Input
-                          placeholder="Other rental features..."
-                          value={rentalFeaturesOther}
-                          onChange={(e) => setRentalFeaturesOther(e.target.value)}
-                        />
                       </div>
                     )}
                   </div>
