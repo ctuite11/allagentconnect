@@ -449,52 +449,6 @@ const PropertyDetail = () => {
               </Card>
             )}
 
-            {/* Key Facts Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Key Facts</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Status</span>
-                  <span className="font-medium">
-                    {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
-                  </span>
-                </div>
-                {listing.listing_number && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">AAC #</span>
-                    <span className="font-medium font-mono">{listing.listing_number}</span>
-                  </div>
-                )}
-                {listDate && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Listed</span>
-                    <span className="font-medium">
-                      {new Date(listDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
-                {listing.year_built && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Year Built</span>
-                    <span className="font-medium">{listing.year_built}</span>
-                  </div>
-                )}
-                {listing.property_type && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Property Type</span>
-                    <span className="font-medium">{listing.property_type}</span>
-                  </div>
-                )}
-                {listing.lot_size && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Lot Size</span>
-                    <span className="font-medium">{listing.lot_size} acres</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
