@@ -4,27 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import {
-  Pencil,
-  Eye,
-  Share2,
-  Trash2,
-  Grid,
-  List as ListIcon,
-  Plus,
-  ChevronDown,
-} from "lucide-react";
+import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
-type ListingStatus =
-  | "active"
-  | "pending"
-  | "sold"
-  | "withdrawn"
-  | "expired"
-  | "cancelled"
-  | "draft"
-  | "coming_soon";
+type ListingStatus = "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon";
 
 interface Listing {
   id: string;
@@ -145,21 +128,12 @@ function MyListingsView({
         case "priceLow":
           return a.price - b.price;
         case "oldest":
-          return (
-            new Date(a.created_at ?? 0).getTime() -
-            new Date(b.created_at ?? 0).getTime()
-          );
+          return new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime();
         case "activeRecent":
-          return (
-            new Date(b.active_date ?? 0).getTime() -
-            new Date(a.active_date ?? 0).getTime()
-          );
+          return new Date(b.active_date ?? 0).getTime() - new Date(a.active_date ?? 0).getTime();
         case "newest":
         default:
-          return (
-            new Date(b.created_at ?? 0).getTime() -
-            new Date(a.created_at ?? 0).getTime()
-          );
+          return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
       }
     });
 
@@ -292,30 +266,19 @@ function MyListingsView({
                 key={l.id}
                 className="border border-border rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-lg transition"
               >
-                <div
-                  className="w-full h-48 bg-muted overflow-hidden cursor-pointer"
-                  onClick={() => onPreview(l.id)}
-                >
-                  <img
-                    src={thumbnail || "/placeholder.svg"}
-                    alt={l.address}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-full h-48 bg-muted overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
+                  <img src={thumbnail || "/placeholder.svg"} alt={l.address} className="w-full h-full object-cover" />
                 </div>
 
                 <div className="p-4">
                   <div className="font-semibold text-lg">
                     {l.address}, {l.city}
                   </div>
-                  <div className="text-muted-foreground text-sm mt-1">
-                    ${l.price.toLocaleString()}
-                  </div>
+                  <div className="text-muted-foreground text-sm mt-1">${l.price.toLocaleString()}</div>
 
                   <div className="mt-4 flex items-center justify-between">
                     <span
-                      className={`text-xs font-medium px-3 py-1 rounded-full capitalize ${statusBadgeClass(
-                        l.status
-                      )}`}
+                      className={`text-xs font-medium px-3 py-1 rounded-full capitalize ${statusBadgeClass(l.status)}`}
                     >
                       {l.status.replace("_", " ")}
                     </span>
@@ -389,25 +352,19 @@ function MyListingsView({
                   </button>
                   <button
                     className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
-                    onClick={() =>
-                      toast.info("Open house scheduling coming soon.")
-                    }
+                    onClick={() => toast.info("Open house scheduling coming soon.")}
                   >
                     Open House
                   </button>
                   <button
                     className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
-                    onClick={() =>
-                      toast.info("Broker tour scheduling coming soon.")
-                    }
+                    onClick={() => toast.info("Broker tour scheduling coming soon.")}
                   >
                     Broker Tour
                   </button>
                   <button
                     className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
-                    onClick={() =>
-                      toast.info("Reverse prospecting matches coming soon.")
-                    }
+                    onClick={() => toast.info("Reverse prospecting matches coming soon.")}
                     title="Reverse prospecting contact matches"
                   >
                     Matches ({matchCount})
@@ -420,9 +377,7 @@ function MyListingsView({
                     Social Share
                   </button>
 
-                  <span className="ml-auto text-[11px] text-muted-foreground">
-                    Views: {views}
-                  </span>
+                  <span className="ml-auto text-[11px] text-muted-foreground">Views: {views}</span>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -450,24 +405,14 @@ function MyListingsView({
                             type="number"
                             className="border border-border rounded px-2 py-1 text-sm w-32 bg-background"
                             value={editPrice}
-                            onChange={(e) =>
-                              setEditPrice(
-                                e.target.value === ""
-                                  ? ""
-                                  : Number(e.target.value)
-                              )
-                            }
+                            onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
                           />
                         ) : (
-                          <div className="text-muted-foreground text-sm">
-                            ${l.price.toLocaleString()}
-                          </div>
+                          <div className="text-muted-foreground text-sm">${l.price.toLocaleString()}</div>
                         )}
 
                         {l.listing_number && (
-                          <div className="text-xs text-muted-foreground">
-                            MLS #{l.listing_number}
-                          </div>
+                          <div className="text-xs text-muted-foreground">MLS #{l.listing_number}</div>
                         )}
                       </div>
 
@@ -488,43 +433,29 @@ function MyListingsView({
                         <select
                           className="border border-border rounded px-2 py-1 bg-background capitalize"
                           value={editStatus}
-                          onChange={(e) =>
-                            setEditStatus(e.target.value as ListingStatus)
-                          }
+                          onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
                         >
-                          {STATUS_TABS.filter((t) => t.value !== "all").map(
-                            (tab) => (
-                              <option key={tab.value} value={tab.value}>
-                                {tab.label}
-                              </option>
-                            )
-                          )}
+                          {STATUS_TABS.filter((t) => t.value !== "all").map((tab) => (
+                            <option key={tab.value} value={tab.value}>
+                              {tab.label}
+                            </option>
+                          ))}
                         </select>
                       ) : (
                         <span
                           className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(
-                            l.status
+                            l.status,
                           )}`}
                         >
                           {l.status.replace("_", " ")}
                         </span>
                       )}
 
-                      {l.list_date && (
-                        <span className="text-muted-foreground">
-                          List: {formatDate(l.list_date)}
-                        </span>
-                      )}
+                      {l.list_date && <span className="text-muted-foreground">List: {formatDate(l.list_date)}</span>}
                       {l.expiration_date && (
-                        <span className="text-muted-foreground">
-                          Exp: {formatDate(l.expiration_date)}
-                        </span>
+                        <span className="text-muted-foreground">Exp: {formatDate(l.expiration_date)}</span>
                       )}
-                      {matchCount > 0 && (
-                        <span className="text-muted-foreground">
-                          Matches: {matchCount}
-                        </span>
-                      )}
+                      {matchCount > 0 && <span className="text-muted-foreground">Matches: {matchCount}</span>}
 
                       {isEditing && (
                         <div className="flex items-center gap-2">
@@ -562,11 +493,7 @@ function MyListingsView({
                       >
                         <Eye size={18} />
                       </button>
-                      <button
-                        className="hover:text-foreground transition"
-                        onClick={() => onShare(l.id)}
-                        title="Share"
-                      >
+                      <button className="hover:text-foreground transition" onClick={() => onShare(l.id)} title="Share">
                         <Share2 size={18} />
                       </button>
                       <button
@@ -584,9 +511,7 @@ function MyListingsView({
           })}
 
           {filteredListings.length === 0 && (
-            <div className="text-center text-muted-foreground text-sm py-10">
-              No listings match your filters yet.
-            </div>
+            <div className="text-center text-muted-foreground text-sm py-10">No listings match your filters yet.</div>
           )}
         </div>
       )}
@@ -614,10 +539,7 @@ const MyListings = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("listings")
-        .select("*")
-        .eq("agent_id", user.id);
+      const { data, error } = await supabase.from("listings").select("*").eq("agent_id", user.id);
 
       if (error) throw error;
       setListings(data || []);
@@ -662,23 +584,13 @@ const MyListings = () => {
     navigate("/new-listing");
   };
 
-  const handleQuickUpdate = async (
-    id: string,
-    updates: Partial<Pick<Listing, "price" | "status">>
-  ) => {
+  const handleQuickUpdate = async (id: string, updates: Partial<Pick<Listing, "price" | "status">>) => {
     try {
-      const { data, error } = await supabase
-        .from("listings")
-        .update(updates)
-        .eq("id", id)
-        .select("*")
-        .single();
+      const { data, error } = await supabase.from("listings").update(updates).eq("id", id).select("*").single();
 
       if (error) throw error;
 
-      setListings((prev) =>
-        prev.map((l) => (l.id === id ? { ...l, ...(data as Listing) } : l))
-      );
+      setListings((prev) => prev.map((l) => (l.id === id ? { ...l, ...(data as Listing) } : l)));
       toast.success("Listing updated");
     } catch (error) {
       console.error("Error updating listing:", error);
@@ -691,9 +603,7 @@ const MyListings = () => {
       <div className="min-h-screen flex flex-col bg-background">
         <Navigation />
         <div className="flex-1 flex items-center justify-center p-6">
-          <p className="text-muted-foreground">
-            You must be signed in as an agent to view your listings.
-          </p>
+          <p className="text-muted-foreground">You must be signed in as an agent to view your listings.</p>
         </div>
       </div>
     );
@@ -710,9 +620,7 @@ const MyListings = () => {
         <div className="flex-1 container mx-auto p-6">
           <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
             <h1 className="text-3xl font-semibold mb-2">My Listings</h1>
-            <p className="text-muted-foreground mb-6">
-              You haven't created any listings yet.
-            </p>
+            <p className="text-muted-foreground mb-6">You haven't created any listings yet.</p>
             <button
               onClick={handleNewListing}
               className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition text-lg"
