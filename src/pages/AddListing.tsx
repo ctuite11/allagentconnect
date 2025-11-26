@@ -185,6 +185,7 @@ const AddListing = () => {
   const [locationAmenities, setLocationAmenities] = useState<string[]>([]);
   const [otherAmenities, setOtherAmenities] = useState<string>("");
   const [multiFamilyFeatures, setMultiFamilyFeatures] = useState<string[]>([]);
+  const [multiFamilyLaundry, setMultiFamilyLaundry] = useState<string[]>([]);
   const [rentalFeatures, setRentalFeatures] = useState<string[]>([]);
   
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
@@ -1626,6 +1627,58 @@ const AddListing = () => {
                   )}
                 </div>
 
+                {/* Commission & Compensation - For Sale only */}
+                {formData.listing_type === "for_sale" && (
+                  <div className="space-y-4 border-t pt-6">
+                    <Label className="text-xl font-semibold">Commission & Compensation</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="commission_type">Commission Type</Label>
+                        <Select
+                          value={formData.commission_type}
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percentage">Percentage</SelectItem>
+                            <SelectItem value="flat_fee">Flat Fee</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="commission_rate">
+                          {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Flat Amount ($)'}
+                        </Label>
+                        <Input
+                          id="commission_rate"
+                          name="buyer_agent_commission_rate"
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          min="0"
+                          max={formData.commission_type === 'percentage' ? "100" : undefined}
+                          placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
+                          value={formData.commission_rate}
+                          onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
+                          autoComplete="off"
+                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="commission_notes">Commission Notes</Label>
+                        <Input
+                          id="commission_notes"
+                          placeholder="Additional commission details"
+                          value={formData.commission_notes}
+                          onChange={(e) => setFormData(prev => ({ ...prev, commission_notes: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Property Details */}
                 <div className="space-y-4 border-t pt-6">
                   <Label className="text-lg font-semibold">Property Details</Label>
@@ -1765,6 +1818,38 @@ const AddListing = () => {
                             decimals={0}
                           />
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Laundry */}
+                    <div className="space-y-4">
+                      <Label className="text-lg font-medium">Laundry</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          { key: 'coin_op', label: 'Coin-Op Laundry' },
+                          { key: 'wd_in_unit', label: 'Washer/Dryer in Unit' },
+                          { key: 'wd_in_building', label: 'Washer/Dryer in Building' },
+                          { key: 'hookups', label: 'Hook-ups' },
+                          { key: 'none', label: 'None' },
+                        ].map(({ key, label }) => {
+                          const checked = multiFamilyLaundry.includes(key);
+
+                          return (
+                            <div key={key} className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={(isChecked) => {
+                                  const next =
+                                    isChecked === true
+                                      ? Array.from(new Set([...multiFamilyLaundry, key]))
+                                      : multiFamilyLaundry.filter(v => v !== key);
+                                  setMultiFamilyLaundry(next);
+                                }}
+                              />
+                              <span className="text-sm">{label}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -2333,57 +2418,6 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Commission & Compensation - Not for Multi-Family FOR SALE */}
-                {!(formData.listing_type === "for_sale" && formData.property_type === "multi_family") && (
-                  <div className="space-y-4 border-t pt-6">
-                    <Label className="text-xl font-semibold">Commission & Compensation</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="commission_type">Commission Type</Label>
-                        <Select
-                          value={formData.commission_type}
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="percentage">Percentage</SelectItem>
-                            <SelectItem value="flat_fee">Flat Fee</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="commission_rate">
-                          {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Amount ($)'}
-                        </Label>
-                        <Input
-                          id="commission_rate"
-                          name="buyer_agent_commission_rate"
-                          type="number"
-                          inputMode="decimal"
-                          step="0.01"
-                          min="0"
-                          max={formData.commission_type === 'percentage' ? "100" : undefined}
-                          placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
-                          value={formData.commission_rate}
-                          onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
-                          autoComplete="off"
-                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="commission_notes">Commission Notes</Label>
-                        <Input
-                          id="commission_notes"
-                          placeholder="Additional commission details"
-                          value={formData.commission_notes}
-                          onChange={(e) => setFormData(prev => ({ ...prev, commission_notes: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Additional Notes */}
                 <div className="space-y-2 border-t pt-6">
