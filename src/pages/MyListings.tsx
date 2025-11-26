@@ -165,6 +165,10 @@ function MyListingsView({
     cancelQuickEdit();
   };
 
+  const comingSoon = (feature: string) => {
+    toast.info(`${feature} is coming soon.`);
+  };
+
   return (
     <div className="flex-1 container mx-auto p-6 space-y-4">
       {/* Header */}
@@ -207,7 +211,7 @@ function MyListingsView({
         <div className="flex-1 min-w-[220px]">
           <input
             type="text"
-            placeholder="Search by address or MLS #"
+            placeholder="Search by address or AAC #"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full border border-border rounded-lg px-4 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -415,7 +419,7 @@ function MyListingsView({
                         )}
 
                         {l.listing_number && (
-                          <div className="text-xs text-muted-foreground">MLS #{l.listing_number}</div>
+                          <div className="text-xs text-muted-foreground">AAC #L-{l.listing_number}</div>
                         )}
                       </div>
 
