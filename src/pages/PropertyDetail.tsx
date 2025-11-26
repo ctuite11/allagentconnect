@@ -182,8 +182,14 @@ const PropertyDetail = () => {
     );
   }
 
+  // Helper to handle both string and object photo formats
+  const getPhotoUrl = (photo: any): string => {
+    if (typeof photo === 'string') return photo;
+    return photo?.url || '/placeholder.svg';
+  };
+
   const mainPhoto = listing.photos && listing.photos.length > 0 
-    ? listing.photos[currentPhotoIndex].url 
+    ? getPhotoUrl(listing.photos[currentPhotoIndex])
     : '/placeholder.svg';
 
   const canonicalUrl = `${window.location.origin}/property/${id}`;
@@ -273,7 +279,7 @@ const PropertyDetail = () => {
                     }`}
                   >
                     <img
-                      src={photo.url}
+                      src={getPhotoUrl(photo)}
                       alt={`Photo ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
