@@ -6,7 +6,6 @@ import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import {
   Select,
@@ -16,15 +15,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  LayoutGrid,
+  Grid,
   List as ListIcon,
   Pencil,
-  ImageIcon,
   Eye,
-  CalendarDays,
+  Share2,
+  Trash2,
   Plus,
 } from "lucide-react";
-import { format } from "date-fns";
+import { toast } from "sonner";
 
 type ListingStatus =
   | "active"
@@ -36,7 +35,7 @@ type ListingStatus =
   | "draft"
   | "coming_soon";
 
-type ViewMode = "table" | "grid";
+type ViewMode = "grid" | "list";
 
 interface Listing {
   id: string;
@@ -76,7 +75,7 @@ const MyListings = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<ListingStatus | "all">("active");
-  const [viewMode, setViewMode] = useState<ViewMode>("table");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("created_at_desc");
   const navigate = useNavigate();
@@ -216,24 +215,20 @@ const MyListings = () => {
               <Plus className="mr-2 h-4 w-4" />
               New Listing
             </Button>
-            <div className="hidden md:flex rounded-full border bg-muted p-1">
-              <Button
-                variant={viewMode === "table" ? "default" : "ghost"}
-                size="icon"
-                className="rounded-full h-8 w-8"
-                onClick={() => setViewMode("table")}
-              >
-                <ListIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "grid" ? "default" : "ghost"}
-                size="icon"
-                className="rounded-full h-8 w-8"
-                onClick={() => setViewMode("grid")}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button
+              variant={viewMode === "grid" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setViewMode("grid")}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setViewMode("list")}
+            >
+              <ListIcon className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
@@ -275,23 +270,6 @@ const MyListings = () => {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2 md:hidden">
-            {/* Mobile view toggle */}
-            <Button
-              variant={viewMode === "table" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("table")}
-            >
-              <ListIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "grid" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("grid")}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
 
         {/* Results count */}
@@ -299,223 +277,182 @@ const MyListings = () => {
           Showing {filtered.length} of {listings.length} listings
         </p>
 
-        {/* Table View */}
-        {viewMode === "table" && (
-          <div className="rounded-md border">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Property
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Status
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Price
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Type
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      DOM
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((listing) => {
-                    const thumbnail = getThumbnailUrl(listing);
-                    const dom = getDaysOnMarket(listing);
-                    
-                    return (
-                      <tr key={listing.id} className="border-b hover:bg-muted/50 transition-colors">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            {thumbnail ? (
-                              <img
-                                src={thumbnail}
-                                alt={listing.address}
-                                className="h-16 w-16 rounded-md object-cover"
-                              />
-                            ) : (
-                              <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center">
-                                <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                              </div>
-                            )}
-                            <div>
-                              <div className="font-medium">{listing.address}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {listing.city}, {listing.state} {listing.zip_code}
-                              </div>
-                              {listing.listing_number && (
-                                <div className="text-xs text-muted-foreground">
-                                  MLS# {listing.listing_number}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <Badge variant={getStatusBadgeVariant(listing.status)}>
-                            {listing.status.replace("_", " ")}
-                          </Badge>
-                        </td>
-                        <td className="p-4">
-                          <div className="font-medium">
-                            ${listing.price.toLocaleString()}
-                          </div>
-                          {listing.listing_type === "for_rent" && (
-                            <div className="text-xs text-muted-foreground">per month</div>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <div className="text-sm capitalize">
-                            {listing.property_type?.replace(/_/g, " ") || "N/A"}
-                          </div>
-                          {listing.bedrooms && listing.bathrooms && (
-                            <div className="text-xs text-muted-foreground">
-                              {listing.bedrooms} bd • {listing.bathrooms} ba
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <div className="text-sm">
-                            {dom !== null ? `${dom} days` : "—"}
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/property/${listing.id}`)}
-                              title="View"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/edit-listing/${listing.id}`)}
-                              title="Edit"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/manage-listing-photos/${listing.id}`)}
-                              title="Manage Photos"
-                            >
-                              <ImageIcon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+        {/* Grid View */}
+        {viewMode === "grid" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((listing) => {
+              const thumbnail = getThumbnailUrl(listing);
+              
+              return (
+                <div
+                  key={listing.id}
+                  className="border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition bg-card"
+                >
+                  <img
+                    src={thumbnail || "/placeholder.svg"}
+                    alt="Property"
+                    className="w-full h-48 object-cover cursor-pointer"
+                    onClick={() => navigate(`/property/${listing.id}`)}
+                  />
+
+                  <div className="p-4">
+                    <div className="font-semibold text-lg">
+                      {listing.address}, {listing.city}
+                    </div>
+                    <div className="text-muted-foreground">
+                      ${listing.price.toLocaleString()}
+                    </div>
+
+                    <div className="flex justify-between items-center mt-4">
+                      <Badge variant={getStatusBadgeVariant(listing.status)} className="capitalize">
+                        {listing.status.replace("_", " ")}
+                      </Badge>
+
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => navigate(`/edit-listing/${listing.id}`)}
+                          title="Edit"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => navigate(`/property/${listing.id}`)}
+                          title="View"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            const url = `${window.location.origin}/property/${listing.id}`;
+                            navigator.clipboard.writeText(url);
+                            toast.success("Link copied to clipboard!");
+                          }}
+                          title="Share"
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={async () => {
+                            if (!confirm("Are you sure you want to delete this listing?")) return;
+                            try {
+                              const { error } = await supabase
+                                .from("listings")
+                                .delete()
+                                .eq("id", listing.id);
+                              if (error) throw error;
+                              toast.success("Listing deleted successfully");
+                              fetchListings();
+                            } catch (error) {
+                              toast.error("Failed to delete listing");
+                            }
+                          }}
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
-        {/* Grid View */}
-        {viewMode === "grid" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* List View */}
+        {viewMode === "list" && (
+          <div className="space-y-4">
             {filtered.map((listing) => {
               const thumbnail = getThumbnailUrl(listing);
-              const dom = getDaysOnMarket(listing);
-              
+
               return (
-                <Card key={listing.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div 
-                    className="aspect-video bg-muted relative cursor-pointer"
-                    onClick={() => navigate(`/property/${listing.id}`)}
-                  >
-                    {thumbnail ? (
-                      <img
-                        src={thumbnail}
-                        alt={listing.address}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ImageIcon className="h-12 w-12 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div className="absolute top-2 right-2">
-                      <Badge variant={getStatusBadgeVariant(listing.status)}>
-                        {listing.status.replace("_", " ")}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <div>
-                      <div className="font-semibold text-lg">
-                        ${listing.price.toLocaleString()}
-                        {listing.listing_type === "for_rent" && (
-                          <span className="text-sm font-normal text-muted-foreground">/mo</span>
-                        )}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {listing.address}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {listing.city}, {listing.state} {listing.zip_code}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      {listing.bedrooms && (
-                        <span>{listing.bedrooms} bd</span>
-                      )}
-                      {listing.bathrooms && (
-                        <span>{listing.bathrooms} ba</span>
-                      )}
-                      {listing.square_feet && (
-                        <span>{listing.square_feet.toLocaleString()} sqft</span>
-                      )}
-                    </div>
+                <div
+                  key={listing.id}
+                  className="flex items-center border rounded-lg p-4 bg-card hover:shadow-md transition"
+                >
+                  <img
+                    src={thumbnail || "/placeholder.svg"}
+                    alt="Property"
+                    className="w-32 h-24 rounded-md object-cover mr-4"
+                  />
 
-                    {dom !== null && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CalendarDays className="h-4 w-4" />
-                        <span>{dom} days on market</span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2 pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => navigate(`/edit-listing/${listing.id}`)}
-                      >
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/manage-listing-photos/${listing.id}`)}
-                      >
-                        <ImageIcon className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/property/${listing.id}`)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                  <div className="flex-1">
+                    <div className="font-semibold text-lg">
+                      {listing.address}, {listing.city}
                     </div>
+                    <div className="text-muted-foreground">
+                      ${listing.price.toLocaleString()}
+                    </div>
+                    <Badge variant={getStatusBadgeVariant(listing.status)} className="mt-1 capitalize">
+                      {listing.status.replace("_", " ")}
+                    </Badge>
                   </div>
-                </Card>
+
+                  <div className="flex gap-2 ml-4">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/edit-listing/${listing.id}`)}
+                      title="Edit"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/property/${listing.id}`)}
+                      title="View"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const url = `${window.location.origin}/property/${listing.id}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success("Link copied to clipboard!");
+                      }}
+                      title="Share"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive"
+                      onClick={async () => {
+                        if (!confirm("Are you sure you want to delete this listing?")) return;
+                        try {
+                          const { error } = await supabase
+                            .from("listings")
+                            .delete()
+                            .eq("id", listing.id);
+                          if (error) throw error;
+                          toast.success("Listing deleted successfully");
+                          fetchListings();
+                        } catch (error) {
+                          toast.error("Failed to delete listing");
+                        }
+                      }}
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               );
             })}
           </div>
