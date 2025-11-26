@@ -91,6 +91,7 @@ const AddListing = () => {
   const [attomNeighborhoods, setAttomNeighborhoods] = useState<string[]>([]);
   const [addressVerified, setAddressVerified] = useState<boolean>(false);
   const [verificationMessage, setVerificationMessage] = useState<string>("");
+  const [publicRecordStatus, setPublicRecordStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   
   const [formData, setFormData] = useState({
     status: "new",
@@ -373,59 +374,73 @@ const AddListing = () => {
     
     console.log("ATTOM REQUEST:", payload);
 
+    setPublicRecordStatus('loading');
     setAutoFillLoading(true);
     setAttomFetchStatus("Fetching public record data...");
     
-    const { data, error } = await supabase.functions.invoke("fetch-property-data", {
-      body: payload,
-    });
-    
-    setAutoFillLoading(false);
-
-    if (error || !data) {
-      setAttomFetchStatus("No matching public record found. You can enter details manually.");
-      if (!isAutoTrigger) {
-        toast.error("Could not fetch public record data.");
-      }
-      console.error(error || data);
-      // Enable neighborhood dropdown even on failure
-      const areas = getAreasForCity(formData.city, formData.state);
-      setAttomNeighborhoods(areas);
-      return;
-    }
-
-    const results = data.results || [];
-
-    if (results.length === 0) {
-      setAttomFetchStatus("No matching public record found. You can enter details manually.");
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-property-data", {
+        body: payload,
+      });
       
-      // Set verification status - enable neighborhood even on failure
-      setAddressVerified(true);
-      setVerificationMessage("Public record not found – please verify address and choose Neighborhood/Area manually.");
-      
-      // Enable neighborhood dropdown even on failure
-      const areas = getAreasForCity(formData.city, formData.state);
-      setAttomNeighborhoods(areas);
-      
-      if (!isAutoTrigger) {
-        toast.error("No property records found for this address.");
-      }
-      return;
-    }
+      setAutoFillLoading(false);
 
-    if (results.length === 1) {
-      // Auto-fill with the single result
-      applyAttomData(results[0]);
-      setAttomFetchStatus("Public record data loaded successfully.");
-      if (!isAutoTrigger) {
-        toast.success("Property data loaded from public records!");
+      if (error || !data) {
+        setPublicRecordStatus('error');
+        setAttomFetchStatus("No matching public record found. You can enter details manually.");
+        if (!isAutoTrigger) {
+          toast.error("Could not fetch public record data.");
+        }
+        console.error(error || data);
+        // Enable neighborhood dropdown even on failure
+        const areas = getAreasForCity(formData.city, formData.state);
+        setAttomNeighborhoods(areas);
+        return;
       }
-      setHasAutoFetched(true);
-    } else {
-      // Show modal to let user choose
-      setAttomResults(results);
-      setIsAttomModalOpen(true);
-      setAttomFetchStatus("Multiple records found - please select one.");
+
+      const results = data.results || [];
+
+      if (results.length === 0) {
+        setPublicRecordStatus('error');
+        setAttomFetchStatus("No matching public record found. You can enter details manually.");
+        
+        // Set verification status - enable neighborhood even on failure
+        setAddressVerified(true);
+        setVerificationMessage("Public record not found – please verify address and choose Neighborhood/Area manually.");
+        
+        // Enable neighborhood dropdown even on failure
+        const areas = getAreasForCity(formData.city, formData.state);
+        setAttomNeighborhoods(areas);
+        
+        if (!isAutoTrigger) {
+          toast.error("No property records found for this address.");
+        }
+        return;
+      }
+
+      if (results.length === 1) {
+        // Auto-fill with the single result
+        applyAttomData(results[0]);
+        setPublicRecordStatus('success');
+        setAttomFetchStatus("Public record data loaded successfully.");
+        if (!isAutoTrigger) {
+          toast.success("Property data loaded from public records!");
+        }
+        setHasAutoFetched(true);
+      } else {
+        // Show modal to let user choose
+        setAttomResults(results);
+        setIsAttomModalOpen(true);
+        setAttomFetchStatus("Multiple records found - please select one.");
+        setPublicRecordStatus('idle'); // Reset to idle so user can select from modal
+      }
+    } catch (err) {
+      console.error("[handleAutoFillFromPublicRecords] Error:", err);
+      setPublicRecordStatus('error');
+      setAutoFillLoading(false);
+      if (!isAutoTrigger) {
+        toast.error("An error occurred while fetching public record data.");
+      }
     }
   };
 
@@ -528,6 +543,7 @@ const AddListing = () => {
   const handleImportAttomRecord = (record: any) => {
     applyAttomData(record);
     setIsAttomModalOpen(false);
+    setPublicRecordStatus('success');
     setAttomFetchStatus("Public record data loaded successfully.");
     setHasAutoFetched(true);
     toast.success("Property data imported from public records!");
@@ -1173,15 +1189,15 @@ const AddListing = () => {
                     <Button
                       type="button"
                       onClick={() => handleAutoFillFromPublicRecords(false)}
-                      disabled={autoFillLoading}
+                      disabled={publicRecordStatus === 'loading'}
                       variant="default"
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                       size="lg"
                     >
-                      {autoFillLoading ? (
+                      {publicRecordStatus === 'loading' ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Fetching...
+                          Loading public record data...
                         </>
                       ) : (
                         "Click here to import public record data"
@@ -1190,14 +1206,16 @@ const AddListing = () => {
                     <p className="text-xs text-muted-foreground text-center">
                       Enter Street, State, County, City/Town, and ZIP, then click this button to pull public record data.
                     </p>
-                    {attomFetchStatus && (
-                      <p className={cn(
-                        "text-sm text-center",
-                        attomFetchStatus.includes("successfully") ? "text-green-600" : 
-                        attomFetchStatus.includes("Fetching") ? "text-muted-foreground" : 
-                        "text-orange-600"
-                      )}>
-                        {attomFetchStatus}
+                    
+                    {publicRecordStatus === 'success' && (
+                      <p className="text-xs text-green-600 text-center">
+                        Public record data loaded successfully.
+                      </p>
+                    )}
+
+                    {publicRecordStatus === 'error' && (
+                      <p className="text-xs text-red-600 text-center">
+                        Unable to load public record data. Please check the address and try again.
                       </p>
                     )}
                   </div>
