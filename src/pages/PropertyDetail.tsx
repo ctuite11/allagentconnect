@@ -153,7 +153,7 @@ const PropertyDetail = () => {
     }
   }, [id]);
 
-  const handleCopyLink = async () => {
+  const handleShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
@@ -161,12 +161,17 @@ const PropertyDetail = () => {
           text: `Check out this property: ${listing?.address}`,
           url: window.location.href,
         });
-        return;
       } catch (error) {
-        // User cancelled or share failed, fall back to clipboard
+        // User cancelled, do nothing
       }
+    } else {
+      // Fallback to copy if share not available
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard");
     }
-    
+  };
+
+  const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied to clipboard");
   };
@@ -284,11 +289,20 @@ const PropertyDetail = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleCopyLink}
+                onClick={handleShare}
                 className="gap-2"
               >
                 <Share2 className="w-4 h-4" />
                 Share
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyLink}
+                className="gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                Copy
               </Button>
               {listing.video_url && (
                 <Button 

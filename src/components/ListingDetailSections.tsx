@@ -279,22 +279,6 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
         </CardContent>
       </Card>
 
-      {/* Agent-Only: Agent Notes */}
-      {isAgentView && listing.additional_notes && (
-        <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
-              <FileText className="w-5 h-5" />
-              Agent Notes (Internal)
-              <Badge variant="outline" className="ml-2">Agent Only</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap text-foreground/90">{listing.additional_notes}</p>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Agent-Only: Firm Remarks */}
       {isAgentView && listing.broker_comments && (
         <Card className="border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
