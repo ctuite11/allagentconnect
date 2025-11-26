@@ -82,16 +82,31 @@ serve(async (req) => {
 
     console.log("[fetch-property-data] ATTOM status:", attomResponse.status);
 
+    // Parse ATTOM response - even 400 responses may contain valid "no results" data
+    const attomData = await attomResponse.json();
+    
+    // Check if this is a "no results found" response (ATTOM returns 400 with SuccessWithoutResult)
     if (!attomResponse.ok) {
-      const errorText = await attomResponse.text();
-      console.error("[fetch-property-data] ATTOM API error:", attomResponse.status, errorText);
+      const statusCode = attomData?.status?.code;
+      const statusMsg = attomData?.status?.msg;
+      
+      if (statusCode === 400 && statusMsg === "SuccessWithoutResult") {
+        // This is a valid "no records found" response, not an error
+        console.log("[fetch-property-data] ATTOM: No records found for address");
+        return new Response(
+          JSON.stringify({ results: [] }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // For other errors, log and return error
+      console.error("[fetch-property-data] ATTOM API error:", attomResponse.status, JSON.stringify(attomData));
       return new Response(
         JSON.stringify({ error: true, message: "Failed to fetch property data" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const attomData = await attomResponse.json();
     console.log("[fetch-property-data] ATTOM API response properties count:", attomData?.property?.length || 0);
 
     if (!attomData?.property?.length) {
