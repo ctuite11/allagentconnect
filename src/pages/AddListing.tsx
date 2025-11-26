@@ -1541,16 +1541,18 @@ const AddListing = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Air Conditioning", "Central Air", "Window AC", "Ceiling Fans", "Fireplace", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Home Office", "Mudroom", "Laundry in Unit", "Laundry in Building", "Furnished (Rental)"].map((amenity) => (
                           <div key={amenity} className="flex items-center space-x-2">
-                            <Checkbox
+                            <input
+                              type="checkbox"
                               id={`interior-${amenity}`}
                               checked={interiorAmenities.includes(amenity)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
+                              onChange={(e) => {
+                                if (e.target.checked) {
                                   setInteriorAmenities([...interiorAmenities, amenity]);
                                 } else {
                                   setInteriorAmenities(interiorAmenities.filter((a) => a !== amenity));
                                 }
                               }}
+                              className="rounded border-gray-300"
                             />
                             <Label htmlFor={`interior-${amenity}`} className="font-normal cursor-pointer">
                               {amenity}
@@ -1566,16 +1568,18 @@ const AddListing = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Deck", "Patio", "Porch", "Balcony", "Fenced Yard", "Private Yard", "Garden Area", "Sprinkler System", "Outdoor Shower", "Pool", "Hot Tub", "Shed", "Gazebo", "Playground", "Fire Pit", "Outdoor Kitchen", "Greenhouse", "Boat Dock (or Dock Rights)"].map((amenity) => (
                           <div key={amenity} className="flex items-center space-x-2">
-                            <Checkbox
+                            <input
+                              type="checkbox"
                               id={`exterior-${amenity}`}
                               checked={exteriorAmenities.includes(amenity)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
+                              onChange={(e) => {
+                                if (e.target.checked) {
                                   setExteriorAmenities([...exteriorAmenities, amenity]);
                                 } else {
                                   setExteriorAmenities(exteriorAmenities.filter((a) => a !== amenity));
                                 }
                               }}
+                              className="rounded border-gray-300"
                             />
                             <Label htmlFor={`exterior-${amenity}`} className="font-normal cursor-pointer">
                               {amenity}
@@ -1589,23 +1593,26 @@ const AddListing = () => {
                     {(formData.property_type === "condo" || formData.property_type === "multi_family") && (
                       <div className="space-y-3 mb-6">
                         <Label className="text-base font-medium">Building & Property Amenities</Label>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Pet Friendly", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room"].map((amenity) => (
-                            <Button
-                              key={amenity}
-                              type="button"
-                              variant={buildingPropertyAmenities.includes(amenity) ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => {
-                                if (buildingPropertyAmenities.includes(amenity)) {
-                                  setBuildingPropertyAmenities(buildingPropertyAmenities.filter((a) => a !== amenity));
-                                } else {
-                                  setBuildingPropertyAmenities([...buildingPropertyAmenities, amenity]);
-                                }
-                              }}
-                            >
-                              {amenity}
-                            </Button>
+                            <div key={amenity} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`building-${amenity}`}
+                                checked={buildingPropertyAmenities.includes(amenity)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setBuildingPropertyAmenities([...buildingPropertyAmenities, amenity]);
+                                  } else {
+                                    setBuildingPropertyAmenities(buildingPropertyAmenities.filter((a) => a !== amenity));
+                                  }
+                                }}
+                                className="rounded border-gray-300"
+                              />
+                              <Label htmlFor={`building-${amenity}`} className="font-normal cursor-pointer">
+                                {amenity}
+                              </Label>
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -1617,16 +1624,18 @@ const AddListing = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Public Transportation", "Walk/Jog Trails", "Public Park", "Playground", "Water View", "Waterfront", "Beach Access", "Marina", "Golf Course", "University Nearby", "Public School Nearby", "Private School Nearby", "Shopping Nearby", "Highway Access"].map((amenity) => (
                           <div key={amenity} className="flex items-center space-x-2">
-                            <Checkbox
+                            <input
+                              type="checkbox"
                               id={`location-${amenity}`}
                               checked={locationAmenities.includes(amenity)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
+                              onChange={(e) => {
+                                if (e.target.checked) {
                                   setLocationAmenities([...locationAmenities, amenity]);
                                 } else {
                                   setLocationAmenities(locationAmenities.filter((a) => a !== amenity));
                                 }
                               }}
+                              className="rounded border-gray-300"
                             />
                             <Label htmlFor={`location-${amenity}`} className="font-normal cursor-pointer">
                               {amenity}
@@ -1652,23 +1661,26 @@ const AddListing = () => {
                     {formData.property_type === "multi_family" && (
                       <div className="space-y-3 mb-6 border-t pt-6">
                         <Label className="text-base font-medium">Multi-Family Features</Label>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           {["Coin-Op Laundry", "Separate Utilities", "Owner's Unit", "Long-Term Tenant Opportunity", "Strong Rental History", "Lockable Storage Units", "Shared Yard", "Shared Patio/Deck"].map((amenity) => (
-                            <Button
-                              key={amenity}
-                              type="button"
-                              variant={multiFamilyFeatures.includes(amenity) ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => {
-                                if (multiFamilyFeatures.includes(amenity)) {
-                                  setMultiFamilyFeatures(multiFamilyFeatures.filter((a) => a !== amenity));
-                                } else {
-                                  setMultiFamilyFeatures([...multiFamilyFeatures, amenity]);
-                                }
-                              }}
-                            >
-                              {amenity}
-                            </Button>
+                            <div key={amenity} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`multifamily-${amenity}`}
+                                checked={multiFamilyFeatures.includes(amenity)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setMultiFamilyFeatures([...multiFamilyFeatures, amenity]);
+                                  } else {
+                                    setMultiFamilyFeatures(multiFamilyFeatures.filter((a) => a !== amenity));
+                                  }
+                                }}
+                                className="rounded border-gray-300"
+                              />
+                              <Label htmlFor={`multifamily-${amenity}`} className="font-normal cursor-pointer">
+                                {amenity}
+                              </Label>
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -1678,23 +1690,26 @@ const AddListing = () => {
                     {formData.listing_type === "for_rent" && (
                       <div className="space-y-3 mb-6 border-t pt-6">
                         <Label className="text-base font-medium">Rental Features</Label>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           {["Heat Included", "Hot Water Included", "Electricity Included", "Internet Included", "Furnished", "Pet Friendly", "Cats OK", "Dogs OK", "No Smoking", "Short-Term Considered"].map((amenity) => (
-                            <Button
-                              key={amenity}
-                              type="button"
-                              variant={rentalFeatures.includes(amenity) ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => {
-                                if (rentalFeatures.includes(amenity)) {
-                                  setRentalFeatures(rentalFeatures.filter((a) => a !== amenity));
-                                } else {
-                                  setRentalFeatures([...rentalFeatures, amenity]);
-                                }
-                              }}
-                            >
-                              {amenity}
-                            </Button>
+                            <div key={amenity} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`rental-${amenity}`}
+                                checked={rentalFeatures.includes(amenity)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setRentalFeatures([...rentalFeatures, amenity]);
+                                  } else {
+                                    setRentalFeatures(rentalFeatures.filter((a) => a !== amenity));
+                                  }
+                                }}
+                                className="rounded border-gray-300"
+                              />
+                              <Label htmlFor={`rental-${amenity}`} className="font-normal cursor-pointer">
+                                {amenity}
+                              </Label>
+                            </div>
                           ))}
                         </div>
                       </div>
