@@ -353,33 +353,30 @@ function MyListingsView({
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => comingSoon("Open house scheduling")}
+                    onClick={() => toast.info("Open house scheduling is a coming soon feature.")}
                   >
                     Open House
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => comingSoon("Broker tour scheduling")}
+                    onClick={() => toast.info("Broker tour scheduling is a coming soon feature.")}
                   >
                     Broker Tour
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => comingSoon("Reverse prospecting matches")}
+                    onClick={() => toast.info("Reverse prospecting matches is a coming soon feature.")}
                     title="Reverse prospecting contact matches"
                   >
                     Matches ({matchCount})
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => comingSoon("Social share tools")}
+                    onClick={() => toast.info("Social share tools is a coming soon feature.")}
                     title="Social share this listing"
                   >
                     Social Share
                   </button>
-
-                  {/* Views counter on the far right – darker so it’s visible */}
-                  <span className="ml-auto text-xs font-medium text-slate-700">Views: {views}</span>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -456,10 +453,10 @@ function MyListingsView({
                       )}
 
                       {/* List / Exp / Matches / Views meta line */}
-                      <span>List: {formatDate(l.list_date) || formatDate(l.created_at)}</span>
-                      {l.expiration_date && <span>Exp: {formatDate(l.expiration_date)}</span>}
-                      <span>Matches: {matchCount}</span>
-                      <span>Views: {views}</span>
+                      <span className="text-sm text-foreground/80 font-medium">List: {formatDate(l.list_date) || formatDate(l.created_at)}</span>
+                      {l.expiration_date && <span className="text-sm text-foreground/80 font-medium">Exp: {formatDate(l.expiration_date)}</span>}
+                      <span className="text-sm text-foreground/80 font-medium">Matches: {matchCount}</span>
+                      <span className="text-sm text-foreground/80 font-medium">Views: {views}</span>
 
                       {/* Save / Cancel when in quick edit */}
                       {isEditing && (
