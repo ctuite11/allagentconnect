@@ -1946,16 +1946,26 @@ const AddListing = () => {
                     </div>
                   </div>
                   
-                  {/* Property Photos */}
+                  {/* Property Photos - Simplified */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <Label className="text-lg font-medium">Property Photos</Label>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Drag and drop to reorder. First photo will be the main image.
+                          {photos.length > 0 
+                            ? `${photos.length} photo(s) uploaded. First photo is the main image.`
+                            : 'Upload photos for your listing.'}
                         </p>
                       </div>
                       <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => document.getElementById('photo-upload')?.click()}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Photos
+                        </Button>
                         {listingId && (
                           <Button
                             type="button"
@@ -1965,16 +1975,9 @@ const AddListing = () => {
                             Manage Photos
                           </Button>
                         )}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => document.getElementById('photo-upload')?.click()}
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload Photos
-                        </Button>
                       </div>
                     </div>
+                    
                     <input
                       id="photo-upload"
                       type="file"
@@ -1983,34 +1986,37 @@ const AddListing = () => {
                       onChange={(e) => handleFileSelect(e.target.files, 'photos')}
                       className="hidden"
                     />
+                    
                     {photos.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {photos.map((photo, index) => (
-                          <div
-                            key={photo.id}
-                            draggable
-                            onDragStart={() => handleDragStart(index)}
-                            onDragOver={(e) => handleDragOver(e, index)}
-                            onDragEnd={handleDragEnd}
-                            className="relative group cursor-move border rounded-lg overflow-hidden"
-                          >
-                            <img src={photo.preview} alt="Property" className="w-full h-40 object-cover" />
-                            <div className="absolute top-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
-                              {index === 0 ? 'Main' : `#${index + 1}`}
+                      <>
+                        <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                          {photos.slice(0, 6).map((photo, index) => (
+                            <div key={photo.id} className="relative border rounded overflow-hidden">
+                              <img src={photo.preview} alt="Property" className="w-full h-20 object-cover" />
+                              {index === 0 && (
+                                <div className="absolute top-1 left-1 bg-primary text-primary-foreground px-1.5 py-0.5 rounded text-xs">
+                                  Main
+                                </div>
+                              )}
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveFile(photo.id, 'photos')}
-                              className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <GripVertical className="w-5 h-5 text-white" />
+                          ))}
+                          {photos.length > 6 && (
+                            <div className="border rounded flex items-center justify-center h-20 bg-muted">
+                              <span className="text-sm text-muted-foreground">+{photos.length - 6} more</span>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          )}
+                        </div>
+                        
+                        {listingId ? (
+                          <p className="text-sm text-muted-foreground">
+                            Click "Manage Photos" to reorder or delete photos.
+                          </p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            Save the listing first, then you can reorder and manage photos.
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
 
