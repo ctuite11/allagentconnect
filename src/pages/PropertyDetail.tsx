@@ -253,63 +253,61 @@ const PropertyDetail = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Photos & Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Hero Photo */}
-            <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted">
-              <img
-                src={mainPhoto}
-                alt={listing.address}
-                className="w-full h-full object-cover"
-              />
+      <main className="flex-1">
+        {/* Hero Section - Full Width */}
+        <div className="container mx-auto px-4 py-6">
+          {/* Hero Photo */}
+          <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted max-w-6xl mx-auto">
+            <img
+              src={mainPhoto}
+              alt={listing.address}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Thumbnail Strip */}
+          {listing.photos && listing.photos.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-2 mt-4 max-w-6xl mx-auto">
+              {listing.photos.map((photo, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPhotoIndex(index)}
+                  className={`relative flex-shrink-0 w-24 h-16 rounded overflow-hidden border-2 transition ${
+                    index === currentPhotoIndex
+                      ? 'border-primary'
+                      : 'border-transparent hover:border-border'
+                  }`}
+                >
+                  <img
+                    src={getPhotoUrl(photo)}
+                    alt={`Photo ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
             </div>
+          )}
 
-            {/* Thumbnail Strip */}
-            {listing.photos && listing.photos.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {listing.photos.map((photo, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentPhotoIndex(index)}
-                    className={`relative flex-shrink-0 w-24 h-16 rounded overflow-hidden border-2 transition ${
-                      index === currentPhotoIndex
-                        ? 'border-primary'
-                        : 'border-transparent hover:border-border'
-                    }`}
-                  >
-                    <img
-                      src={getPhotoUrl(photo)}
-                      alt={`Photo ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
+          {/* Price & Address - Full Width */}
+          <div className="max-w-6xl mx-auto mt-6">
+            <div className="flex items-start gap-2 mb-2">
+              <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold">{listing.address}</h1>
+                <p className="text-lg text-muted-foreground">
+                  {listing.city}, {listing.state} {listing.zip_code}
+                </p>
               </div>
-            )}
-
-            {/* Address & Price */}
-            <div>
-              <div className="flex items-start gap-2 mb-2">
-                <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <h1 className="text-2xl font-bold">{listing.address}</h1>
-                  <p className="text-muted-foreground">
-                    {listing.city}, {listing.state} {listing.zip_code}
-                  </p>
-                </div>
-              </div>
-              <div className="text-3xl font-bold text-primary">
-                ${listing.price.toLocaleString()}
-                {listing.listing_type === 'for_rent' && (
-                  <span className="text-lg text-muted-foreground">/month</span>
-                )}
-              </div>
+            </div>
+            <div className="text-4xl font-bold text-primary mt-2">
+              ${listing.price.toLocaleString()}
+              {listing.listing_type === 'for_rent' && (
+                <span className="text-xl text-muted-foreground">/month</span>
+              )}
             </div>
 
             {/* Key Stats Row */}
-            <div className="flex flex-wrap items-center gap-6 py-4 border-y">
+            <div className="flex flex-wrap items-center gap-6 py-4 border-y mt-4">
               {listing.bedrooms && (
                 <div className="flex items-center gap-2">
                   <Bed className="w-5 h-5 text-muted-foreground" />
@@ -334,16 +332,16 @@ const PropertyDetail = () => {
             </div>
 
             {/* Metadata Row */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-foreground/80 font-medium">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-foreground font-medium mt-3">
               {listDate && (
                 <div>
-                  <span className="text-muted-foreground">List:</span>{' '}
+                  <span className="text-muted-foreground">Listed:</span>{' '}
                   {new Date(listDate).toLocaleDateString()}
                 </div>
               )}
               {daysOnMarket && (
                 <div>
-                  <span className="text-muted-foreground">Days on Market:</span>{' '}
+                  <span className="text-muted-foreground">DOM:</span>{' '}
                   {daysOnMarket}
                 </div>
               )}
@@ -355,103 +353,106 @@ const PropertyDetail = () => {
                 <span>{stats.views}</span>
               </div>
             </div>
-
-            {/* Overview/Description */}
-            {listing.description && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                    {listing.description}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* MLS-Style Detail Sections */}
-            <ListingDetailSections 
-              listing={listing} 
-              agent={agentProfile}
-              isAgentView={true}
-            />
-          </div>
-
-          {/* Right Column - Agent Card & Key Facts */}
-          <div className="space-y-6">
-            {/* Agent Contact Card */}
-            {agentProfile && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Listing Agent</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Avatar className="w-12 h-12">
-                      {agentProfile.headshot_url ? (
-                        <AvatarImage src={agentProfile.headshot_url} />
-                      ) : (
-                        <AvatarFallback>
-                          {agentProfile.first_name[0]}{agentProfile.last_name[0]}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold">
-                        {agentProfile.first_name} {agentProfile.last_name}
-                      </p>
-                      {agentProfile.title && (
-                        <p className="text-sm text-muted-foreground">{agentProfile.title}</p>
-                      )}
-                      {agentProfile.company && (
-                        <p className="text-sm text-muted-foreground">{agentProfile.company}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground">
-                    Contact the listing agent directly for more information or to schedule a showing.
-                  </p>
-
-                  <Separator />
-
-                  <div className="space-y-3">
-                    {(agentProfile.cell_phone || agentProfile.phone) && (
-                      <a
-                        href={`tel:${agentProfile.cell_phone || agentProfile.phone}`}
-                        className="flex items-center gap-3 text-sm hover:text-primary transition"
-                      >
-                        <Phone className="w-4 h-4 text-muted-foreground" />
-                        <span>
-                          {formatPhoneNumber(agentProfile.cell_phone || agentProfile.phone)}
-                        </span>
-                      </a>
-                    )}
-                    {agentProfile.email && (
-                      <a
-                        href={`mailto:${agentProfile.email}`}
-                        className="flex items-center gap-3 text-sm hover:text-primary transition break-all"
-                      >
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        <span>{agentProfile.email}</span>
-                      </a>
-                    )}
-                  </div>
-
-                  <Button className="w-full" size="lg">
-                    Ask about this property
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
           </div>
         </div>
-      </div>
+
+        {/* Two-Column Layout for Details */}
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* LEFT COLUMN - Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Overview/Description */}
+              {listing.description && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Overview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                      {listing.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* MLS-Style Detail Sections */}
+              <ListingDetailSections 
+                listing={listing} 
+                agent={agentProfile}
+                isAgentView={true}
+              />
+            </div>
+
+            {/* RIGHT COLUMN - Agent & Actions */}
+            <div className="space-y-6">
+              {/* Agent Contact Card */}
+              {agentProfile && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Listing Agent</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="w-12 h-12">
+                        {agentProfile.headshot_url ? (
+                          <AvatarImage src={agentProfile.headshot_url} />
+                        ) : (
+                          <AvatarFallback>
+                            {agentProfile.first_name[0]}{agentProfile.last_name[0]}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold">
+                          {agentProfile.first_name} {agentProfile.last_name}
+                        </p>
+                        {agentProfile.title && (
+                          <p className="text-sm text-muted-foreground">{agentProfile.title}</p>
+                        )}
+                        {agentProfile.company && (
+                          <p className="text-sm text-muted-foreground">{agentProfile.company}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-3">
+                      {(agentProfile.cell_phone || agentProfile.phone) && (
+                        <a
+                          href={`tel:${agentProfile.cell_phone || agentProfile.phone}`}
+                          className="flex items-center gap-3 text-sm hover:text-primary transition"
+                        >
+                          <Phone className="w-4 h-4 text-muted-foreground" />
+                          <span>
+                            {formatPhoneNumber(agentProfile.cell_phone || agentProfile.phone)}
+                          </span>
+                        </a>
+                      )}
+                      {agentProfile.email && (
+                        <a
+                          href={`mailto:${agentProfile.email}`}
+                          className="flex items-center gap-3 text-sm hover:text-primary transition break-all"
+                        >
+                          <Mail className="w-4 h-4 text-muted-foreground" />
+                          <span>{agentProfile.email}</span>
+                        </a>
+                      )}
+                    </div>
+
+                    <Button className="w-full" size="lg">
+                      Ask about this property
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
