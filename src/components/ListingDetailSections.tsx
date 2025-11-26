@@ -248,6 +248,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
             {listing.listing_number && <DetailRow label="Listing Number (AAC ID)" value={listing.listing_number} />}
             {listing.go_live_date && <DetailRow label="Go Live Date" value={new Date(listing.go_live_date).toLocaleDateString()} />}
             {listing.activation_date && <DetailRow label="Activation Date" value={new Date(listing.activation_date).toLocaleDateString()} />}
+            {listing.auto_activate_on && <DetailRow label="Expiration Date" value={new Date(listing.auto_activate_on).toLocaleDateString()} />}
             {listing.cancelled_at && <DetailRow label="Off Market Date" value={new Date(listing.cancelled_at).toLocaleDateString()} />}
           </DetailGrid>
         </CardContent>

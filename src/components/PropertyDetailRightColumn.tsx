@@ -146,9 +146,6 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView }: Prope
               {agent.office_name && <DetailRow label="Office" value={agent.office_name} />}
               {agent.office_phone && <DetailRow label="Office Phone" value={formatPhoneNumber(agent.office_phone)} />}
               {agent.office_address && <DetailRow label="Office Address" value={agent.office_address} />}
-              {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
-                <DetailRow label="Agreement Type" value={formatArray(listing.listing_agreement_types)} />
-              )}
             </DetailGrid>
           </CardContent>
         </Card>
