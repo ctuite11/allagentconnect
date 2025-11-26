@@ -328,6 +328,7 @@ function MyListingsView({
       )}
 
       {/* LIST VIEW – with MLS-style quick tools + quick edit */}
+      {/* LIST VIEW – MLS-style tools + quick edit near price/status */}
       {view === "list" && (
         <div className="space-y-3">
           {filteredListings.map((l) => {
@@ -341,43 +342,44 @@ function MyListingsView({
                 key={l.id}
                 className="border border-border rounded-xl bg-card p-4 shadow-sm hover:shadow-md transition"
               >
-                {/* Top tools row, MLS-style */}
+                {/* Top tools bar */}
                 <div className="flex flex-wrap items-center gap-3 text-xs border-b border-border pb-2 mb-3">
                   <button
-                    className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
+                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
                     onClick={() => onEdit(l.id)}
-                    title="Manage photos and details"
+                    title="Edit listing, manage photos & details"
                   >
                     Photos
                   </button>
                   <button
-                    className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
-                    onClick={() => toast.info("Open house scheduling coming soon.")}
+                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
+                    onClick={() => comingSoon("Open house scheduling")}
                   >
                     Open House
                   </button>
                   <button
-                    className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
-                    onClick={() => toast.info("Broker tour scheduling coming soon.")}
+                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
+                    onClick={() => comingSoon("Broker tour scheduling")}
                   >
                     Broker Tour
                   </button>
                   <button
-                    className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
-                    onClick={() => toast.info("Reverse prospecting matches coming soon.")}
+                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
+                    onClick={() => comingSoon("Reverse prospecting matches")}
                     title="Reverse prospecting contact matches"
                   >
                     Matches ({matchCount})
                   </button>
                   <button
-                    className="px-2 py-1 rounded bg-muted hover:bg-accent transition"
-                    onClick={() => onShare(l.id)}
+                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
+                    onClick={() => comingSoon("Social share tools")}
                     title="Social share this listing"
                   >
                     Social Share
                   </button>
 
-                  <span className="ml-auto text-[11px] text-muted-foreground">Views: {views}</span>
+                  {/* Views counter on the far right – darker so it’s visible */}
+                  <span className="ml-auto text-xs font-medium text-slate-700">Views: {views}</span>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -391,13 +393,14 @@ function MyListingsView({
                     />
                   </div>
 
-                  {/* Main info */}
+                  {/* Main content */}
                   <div className="flex-1 min-w-0">
+                    {/* Address */}
                     <div className="font-semibold text-base truncate">
                       {l.address}, {l.city}
                     </div>
 
-                    {/* Price + MLS + Quick Edit aligned */}
+                    {/* Price + MLS + Quick Edit on the same line */}
                     <div className="mt-1 flex flex-wrap items-center gap-3 justify-between">
                       <div className="flex flex-wrap items-center gap-3">
                         {isEditing ? (
@@ -418,7 +421,7 @@ function MyListingsView({
 
                       {!isEditing && (
                         <button
-                          className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition"
+                          className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100 transition"
                           onClick={() => startQuickEdit(l)}
                           title="Quick edit price and status"
                         >
@@ -427,8 +430,9 @@ function MyListingsView({
                       )}
                     </div>
 
-                    {/* Status + dates + matches + views + save/cancel */}
-                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                    {/* Status + List / Exp / Matches / Views + Save/Cancel */}
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600">
+                      {/* Status pill OR editing select */}
                       {isEditing ? (
                         <select
                           className="border border-border rounded px-2 py-1 bg-background capitalize"
@@ -451,12 +455,13 @@ function MyListingsView({
                         </span>
                       )}
 
-                      {l.list_date && <span className="text-muted-foreground">List: {formatDate(l.list_date)}</span>}
-                      {l.expiration_date && (
-                        <span className="text-muted-foreground">Exp: {formatDate(l.expiration_date)}</span>
-                      )}
-                      {matchCount > 0 && <span className="text-muted-foreground">Matches: {matchCount}</span>}
+                      {/* List / Exp / Matches / Views meta line */}
+                      <span>List: {formatDate(l.list_date) || formatDate(l.created_at)}</span>
+                      {l.expiration_date && <span>Exp: {formatDate(l.expiration_date)}</span>}
+                      <span>Matches: {matchCount}</span>
+                      <span>Views: {views}</span>
 
+                      {/* Save / Cancel when in quick edit */}
                       {isEditing && (
                         <div className="flex items-center gap-2">
                           <button
@@ -476,7 +481,7 @@ function MyListingsView({
                     </div>
                   </div>
 
-                  {/* Right-side icons */}
+                  {/* Icon actions on right */}
                   <div className="flex flex-col items-end gap-2 text-muted-foreground">
                     <div className="flex items-center gap-3">
                       <button
@@ -493,7 +498,11 @@ function MyListingsView({
                       >
                         <Eye size={18} />
                       </button>
-                      <button className="hover:text-foreground transition" onClick={() => onShare(l.id)} title="Share">
+                      <button
+                        className="hover:text-foreground transition"
+                        onClick={() => onShare(l.id)}
+                        title="Share link"
+                      >
                         <Share2 size={18} />
                       </button>
                       <button
