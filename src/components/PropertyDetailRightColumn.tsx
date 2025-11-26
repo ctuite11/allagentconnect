@@ -132,27 +132,103 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView }: Prope
         </Card>
       )}
 
-      {/* Office / Agent Information */}
-      {agent && (
+      {/* Office / Agent Information (Expanded) */}
+      {isAgentView && agent && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Office & Agent Information</CardTitle>
+            <CardTitle className="text-lg">Office / Agent Information (Expanded)</CardTitle>
           </CardHeader>
           <CardContent>
             <DetailGrid>
-              <DetailRow label="Listing Agent" value={`${agent.first_name} ${agent.last_name}`} />
-              {agent.title && <DetailRow label="Title" value={agent.title} />}
-              {agent.company && <DetailRow label="Company" value={agent.company} />}
-              {agent.office_name && <DetailRow label="Office" value={agent.office_name} />}
-              {agent.office_phone && <DetailRow label="Office Phone" value={formatPhoneNumber(agent.office_phone)} />}
-              {agent.office_address && <DetailRow label="Office Address" value={agent.office_address} />}
+              {/* Listing Agreement Type */}
+              {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
+                <DetailRow label="Listing Agreement Type" value={formatArray(listing.listing_agreement_types)} />
+              )}
+              
+              {/* Buyer Agent Compensation */}
+              {listing.commission_rate && listing.commission_type && (
+                <DetailRow 
+                  label="Buyer Agent Compensation" 
+                  value={
+                    listing.commission_type === 'percentage' 
+                      ? `${listing.commission_rate}%`
+                      : `$${listing.commission_rate.toLocaleString()} flat fee`
+                  } 
+                />
+              )}
+              
+              {/* Team Members - Placeholder for future */}
+              <DetailRow label="Team Member(s)" value="None" />
+              
+              {/* Showing Instructions - Expanded */}
+              <div className="py-3 border-t mt-3">
+                <p className="text-sm font-semibold mb-3 text-foreground">Showing Instructions</p>
+                <div className="space-y-2 pl-2">
+                  <DetailRow label="Appointment Required" value={listing.appointment_required ? 'Yes' : 'No'} />
+                  <DetailRow label="Entry Only" value={listing.entry_only ? 'Yes' : 'No'} />
+                  {listing.showing_instructions && (
+                    <div className="py-2">
+                      <p className="text-xs text-muted-foreground mb-1">Instructions:</p>
+                      <p className="text-sm whitespace-pre-wrap text-foreground">{listing.showing_instructions}</p>
+                    </div>
+                  )}
+                  {listing.lockbox_code && <DetailRow label="Lockbox Code" value={listing.lockbox_code} />}
+                  {listing.showing_contact_name && <DetailRow label="Showing Contact" value={listing.showing_contact_name} />}
+                  {listing.showing_contact_phone && <DetailRow label="Showing Phone" value={formatPhoneNumber(listing.showing_contact_phone)} />}
+                </div>
+              </div>
+              
+              {/* Additional Comments */}
+              {listing.additional_notes && (
+                <div className="py-3 border-t mt-3">
+                  <p className="text-sm font-semibold mb-2 text-foreground">Additional Comments</p>
+                  <p className="text-sm whitespace-pre-wrap text-foreground/90 pl-2">{listing.additional_notes}</p>
+                </div>
+              )}
+              
+              {/* Market History */}
+              <div className="py-3 border-t mt-3">
+                <p className="text-sm font-semibold mb-3 text-foreground">Market History</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-2 text-muted-foreground font-medium">Date</th>
+                        <th className="text-left py-2 px-2 text-muted-foreground font-medium">Event</th>
+                        <th className="text-left py-2 px-2 text-muted-foreground font-medium">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {listing.created_at && (
+                        <tr className="border-b">
+                          <td className="py-2 px-2 text-foreground">{new Date(listing.created_at).toLocaleDateString()}</td>
+                          <td className="py-2 px-2 text-foreground">Listing Created</td>
+                          <td className="py-2 px-2 text-foreground">—</td>
+                        </tr>
+                      )}
+                      {listing.active_date && listing.active_date !== listing.created_at && (
+                        <tr className="border-b">
+                          <td className="py-2 px-2 text-foreground">{new Date(listing.active_date).toLocaleDateString()}</td>
+                          <td className="py-2 px-2 text-foreground">Status Changed</td>
+                          <td className="py-2 px-2 text-foreground">Active</td>
+                        </tr>
+                      )}
+                      <tr>
+                        <td colSpan={3} className="py-2 px-2 text-xs text-muted-foreground italic">
+                          Additional history will appear as changes are made
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </DetailGrid>
           </CardContent>
         </Card>
       )}
 
-      {/* Agent-Only: Showing Instructions */}
-      {isAgentView && (
+      {/* Agent-Only: Showing Instructions (Original - Keep for Non-Expanded View) */}
+      {isAgentView && !agent && (
         <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100 text-lg">
