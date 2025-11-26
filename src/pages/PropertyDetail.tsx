@@ -94,6 +94,7 @@ const PropertyDetail = () => {
   const [agentProfile, setAgentProfile] = useState<AgentProfile | null>(null);
   const [stats, setStats] = useState({ matches: 0, views: 0 });
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'video' | 'tour' | 'website'>('photos');
 
   // Track listing view
   useListingView(id);
@@ -186,6 +187,13 @@ const PropertyDetail = () => {
 
   const handleExpandGallery = () => {
     setGalleryOpen(true);
+  };
+
+  const handleMediaTabChange = (tab: 'photos' | 'video' | 'tour' | 'website') => {
+    setActiveMediaTab(tab);
+    if (tab === 'photos') {
+      setCurrentPhotoIndex(0);
+    }
   };
 
   const handlePrevPhoto = () => {
@@ -290,61 +298,11 @@ const PropertyDetail = () => {
             </Button>
 
             <div className="flex items-center gap-2">
-              {listing.listing_number && (
-                <Badge variant="outline" className="font-mono text-xs">
-                  AAC #{listing.listing_number}
-                </Badge>
-              )}
-              <Badge className={getStatusColor(listing.status)}>
-                {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
-              </Badge>
               <SocialShareMenu
                 url={window.location.href}
                 title={`${listing.address}, ${listing.city}, ${listing.state}`}
                 description={listing.description || ''}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyLink}
-                className="gap-2"
-              >
-                <Share2 className="w-4 h-4" />
-                Copy
-              </Button>
-              {listing.video_url && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.open(listing.video_url, '_blank')}
-                  className="gap-2"
-                >
-                  <Video className="w-4 h-4" />
-                  Video
-                </Button>
-              )}
-              {listing.virtual_tour_url && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.open(listing.virtual_tour_url, '_blank')}
-                  className="gap-2"
-                >
-                  <Maximize2 className="w-4 h-4" />
-                  3D Tour
-                </Button>
-              )}
-              {listing.property_website_url && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.open(listing.property_website_url, '_blank')}
-                  className="gap-2"
-                >
-                  <Globe className="w-4 h-4" />
-                  Website
-                </Button>
-              )}
             </div>
           </div>
         </div>
@@ -353,28 +311,74 @@ const PropertyDetail = () => {
       <main className="flex-1">
         {/* Hero Section - Max Width 1600px */}
         <div className="container mx-auto px-4 py-6" style={{ maxWidth: '1600px' }}>
-          {/* Hero Photo with Carousel Controls */}
-          <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted mx-auto group">
-            <img
-              src={mainPhoto}
-              alt={listing.address}
-              className="w-full h-full object-cover cursor-pointer"
-              onClick={handleExpandGallery}
-            />
+          {/* Hero Photo Card with Overlays */}
+          <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted mx-auto shadow-lg">
+            {/* Media Content */}
+            {activeMediaTab === 'photos' && (
+              <img
+                src={mainPhoto}
+                alt={listing.address}
+                className="w-full h-full object-cover cursor-pointer"
+                onClick={handleExpandGallery}
+              />
+            )}
+            {activeMediaTab === 'video' && listing.video_url && (
+              <iframe
+                src={listing.video_url}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            )}
+            {activeMediaTab === 'tour' && listing.virtual_tour_url && (
+              <iframe
+                src={listing.virtual_tour_url}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            )}
+            {activeMediaTab === 'website' && listing.property_website_url && (
+              <iframe
+                src={listing.property_website_url}
+                className="w-full h-full"
+              />
+            )}
             
-            {/* Carousel Arrow Controls - Always Visible */}
-            {listing.photos && listing.photos.length > 1 && (
+            {/* Status Badge & AAC ID - Top Left Overlay */}
+            <div className="absolute top-4 left-4 flex items-center gap-2">
+              {listing.listing_number && (
+                <Badge variant="outline" className="font-mono text-xs bg-white/90 backdrop-blur-sm">
+                  AAC #{listing.listing_number}
+                </Badge>
+              )}
+              <Badge className={`${getStatusColor(listing.status)} bg-white/90 backdrop-blur-sm`}>
+                {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
+              </Badge>
+            </div>
+
+            {/* Share Button - Top Right Overlay */}
+            <button
+              onClick={handleCopyLink}
+              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
+              aria-label="Share property"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+            
+            {/* Carousel Arrow Controls - Only for Photos */}
+            {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 1 && (
               <>
                 <button
                   onClick={handlePrevPhoto}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
                   aria-label="Previous photo"
                 >
                   <ChevronLeft className="w-6 h-6" />
                 </button>
                 <button
                   onClick={handleNextPhoto}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
                   aria-label="Next photo"
                 >
                   <ChevronRight className="w-6 h-6" />
@@ -382,45 +386,59 @@ const PropertyDetail = () => {
               </>
             )}
             
-            {/* Expand Button */}
-            <button
-              onClick={handleExpandGallery}
-              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all"
-              aria-label="Expand gallery"
-            >
-              <Expand className="w-5 h-5" />
-            </button>
-            
-            {/* Photo Counter */}
-            {listing.photos && listing.photos.length > 0 && (
-              <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+            {/* Photo Counter - Bottom Left Overlay */}
+            {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 0 && (
+              <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
                 {currentPhotoIndex + 1} / {listing.photos.length}
               </div>
             )}
           </div>
 
-          {/* Thumbnail Strip */}
-          {listing.photos && listing.photos.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-2 mt-4 mx-auto">
-              {listing.photos.map((photo, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentPhotoIndex(index)}
-                  className={`relative flex-shrink-0 w-24 h-16 rounded overflow-hidden border-2 transition ${
-                    index === currentPhotoIndex
-                      ? 'border-primary'
-                      : 'border-transparent hover:border-border'
-                  }`}
-                >
-                  <img
-                    src={getPhotoUrl(photo)}
-                    alt={`Photo ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Media Type Tabs - Below Photo Card */}
+          <div className="flex items-center gap-2 mt-4 mx-auto">
+            <Button
+              variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleMediaTabChange('photos')}
+              className="rounded-full"
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Photos
+            </Button>
+            {listing.video_url && (
+              <Button
+                variant={activeMediaTab === 'video' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleMediaTabChange('video')}
+                className="rounded-full"
+              >
+                <Video className="w-4 h-4 mr-2" />
+                Video
+              </Button>
+            )}
+            {listing.virtual_tour_url && (
+              <Button
+                variant={activeMediaTab === 'tour' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleMediaTabChange('tour')}
+                className="rounded-full"
+              >
+                <Maximize2 className="w-4 h-4 mr-2" />
+                3D Tour
+              </Button>
+            )}
+            {listing.property_website_url && (
+              <Button
+                variant={activeMediaTab === 'website' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleMediaTabChange('website')}
+                className="rounded-full"
+              >
+                <Globe className="w-4 h-4 mr-2" />
+                Website
+              </Button>
+            )}
+          </div>
 
           {/* Price & Address */}
           <div className="mx-auto mt-6">
