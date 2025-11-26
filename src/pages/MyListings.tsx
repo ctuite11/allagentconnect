@@ -329,6 +329,7 @@ function MyListingsView({
 
       {/* LIST VIEW – with MLS-style quick tools + quick edit */}
       {/* LIST VIEW – MLS-style tools + quick edit near price/status */}
+      {/* LIST VIEW – MLS-style tools + quick edit near price/status */}
       {view === "list" && (
         <div className="space-y-3">
           {filteredListings.map((l) => {
@@ -336,13 +337,16 @@ function MyListingsView({
             const isEditing = editingId === l.id;
             const matchCount = l.hot_sheet_matches ?? 0;
             const views = l.views_count ?? 0;
+            const listDate =
+              formatDate(l.list_date) || formatDate(l.created_at);
+            const expDate = formatDate(l.expiration_date);
 
             return (
               <div
                 key={l.id}
                 className="border border-border rounded-xl bg-card p-4 shadow-sm hover:shadow-md transition"
               >
-                {/* Top tools bar */}
+                {/* Top tools bar – NO Views here */}
                 <div className="flex flex-wrap items-center gap-3 text-xs border-b border-border pb-2 mb-3">
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
@@ -353,26 +357,26 @@ function MyListingsView({
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => toast.info("Open house scheduling is a coming soon feature.")}
+                    onClick={() => comingSoon("Open house scheduling")}
                   >
                     Open House
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => toast.info("Broker tour scheduling is a coming soon feature.")}
+                    onClick={() => comingSoon("Broker tour scheduling")}
                   >
                     Broker Tour
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => toast.info("Reverse prospecting matches is a coming soon feature.")}
+                    onClick={() => comingSoon("Reverse prospecting matches")}
                     title="Reverse prospecting contact matches"
                   >
                     Matches ({matchCount})
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => toast.info("Social share tools is a coming soon feature.")}
+                    onClick={() => comingSoon("Social share tools")}
                     title="Social share this listing"
                   >
                     Social Share
@@ -390,14 +394,14 @@ function MyListingsView({
                     />
                   </div>
 
-                  {/* Main content */}
+                  {/* Main content column */}
                   <div className="flex-1 min-w-0">
                     {/* Address */}
                     <div className="font-semibold text-base truncate">
                       {l.address}, {l.city}
                     </div>
 
-                    {/* Price + MLS + Quick Edit on the same line */}
+                    {/* Price + MLS + Quick Edit on same row */}
                     <div className="mt-1 flex flex-wrap items-center gap-3 justify-between">
                       <div className="flex flex-wrap items-center gap-3">
                         {isEditing ? (
@@ -405,12 +409,137 @@ function MyListingsView({
                             type="number"
                             className="border border-border rounded px-2 py-1 text-sm w-32 bg-background"
                             value={editPrice}
-                            onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                            onChange={(e) =>
+                              setEditPrice(
+                                e.target.value === ""
+                                  ? ""
+                                  : Number(e.target.value)
+                              )
+                            }
                           />
                         ) : (
-                          <div className="text-muted-foreground text-sm">${l.price.toLocaleString()}</div>
+                          <div className="text-muted-foreground text-sm">
+                            ${l.price.toLocaleString()}
+                          </div>
                         )}
 
+                        {l.listing_number && (
+                          <div className="text-xs text-muted-foreground">
+                            MLS #{l.listing_number}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* QUICK EDIT lives here now, near price/MLS */}
+                      {!isEditing && (
+                        <button
+                          className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100 transition"
+                          onClick={() => startQuickEdit(l)}
+                          title="Quick edit price and status"
+                        >
+                          Quick Edit
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Status + List / Exp / Matches / Views + Save/Cancel */}
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-foreground/80 font-medium">
+                      {/* Status pill or dropdown */}
+                      {isEditing ? (
+                        <select
+                          className="border border-border rounded px-2 py-1 bg-background capitalize text-xs"
+                          value={editStatus}
+                          onChange={(e) =>
+                            setEditStatus(e.target.value as ListingStatus)
+                          }
+                        >
+                          {STATUS_TABS.filter((t) => t.value !== "all").map(
+                            (tab) => (
+                              <option key={tab.value} value={tab.value}>
+                                {tab.label}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      ) : (
+                        <span
+                          className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(
+                            l.status
+                          )}`}
+                        >
+                          {l.status.replace("_", " ")}
+                        </span>
+                      )}
+
+                      <span>List: {listDate}</span>
+                      {expDate && <span>Exp: {expDate}</span>}
+                      <span>Matches: {matchCount}</span>
+                      <span>Views: {views}</span>
+
+                      {isEditing && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
+                            onClick={saveQuickEdit}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="px-2 py-1 rounded border border-border text-muted-foreground hover:bg-accent text-xs"
+                            onClick={cancelQuickEdit}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right-hand icon column – NO Quick Edit here */}
+                  <div className="flex flex-col items-end gap-2 text-muted-foreground">
+                    <div className="flex items-center gap-3">
+                      <button
+                        className="hover:text-foreground transition"
+                        onClick={() => onEdit(l.id)}
+                        title="Full edit"
+                      >
+                        <Pencil size={18} />
+                      </button>
+                      <button
+                        className="hover:text-foreground transition"
+                        onClick={() => onPreview(l.id)}
+                        title="Preview"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        className="hover:text-foreground transition"
+                        onClick={() => onShare(l.id)}
+                        title="Share link"
+                      >
+                        <Share2 size={18} />
+                      </button>
+                      <button
+                        className="hover:text-destructive text-destructive/70 transition"
+                        onClick={() => onDelete(l.id)}
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {filteredListings.length === 0 && (
+            <div className="text-center text-muted-foreground text-sm py-10">
+              No listings match your filters yet.
+            </div>
+          )}
+        </div>
+      )}
                         {l.listing_number && (
                           <div className="text-xs text-muted-foreground">MLS #{l.listing_number}</div>
                         )}
