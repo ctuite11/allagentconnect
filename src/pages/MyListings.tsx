@@ -337,8 +337,7 @@ function MyListingsView({
             const isEditing = editingId === l.id;
             const matchCount = l.hot_sheet_matches ?? 0;
             const views = l.views_count ?? 0;
-            const listDate =
-              formatDate(l.list_date) || formatDate(l.created_at);
+            const listDate = formatDate(l.list_date) || formatDate(l.created_at);
             const expDate = formatDate(l.expiration_date);
 
             return (
@@ -409,24 +408,14 @@ function MyListingsView({
                             type="number"
                             className="border border-border rounded px-2 py-1 text-sm w-32 bg-background"
                             value={editPrice}
-                            onChange={(e) =>
-                              setEditPrice(
-                                e.target.value === ""
-                                  ? ""
-                                  : Number(e.target.value)
-                              )
-                            }
+                            onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
                           />
                         ) : (
-                          <div className="text-muted-foreground text-sm">
-                            ${l.price.toLocaleString()}
-                          </div>
+                          <div className="text-muted-foreground text-sm">${l.price.toLocaleString()}</div>
                         )}
 
                         {l.listing_number && (
-                          <div className="text-xs text-muted-foreground">
-                            MLS #{l.listing_number}
-                          </div>
+                          <div className="text-xs text-muted-foreground">MLS #{l.listing_number}</div>
                         )}
                       </div>
 
@@ -449,22 +438,18 @@ function MyListingsView({
                         <select
                           className="border border-border rounded px-2 py-1 bg-background capitalize text-xs"
                           value={editStatus}
-                          onChange={(e) =>
-                            setEditStatus(e.target.value as ListingStatus)
-                          }
+                          onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
                         >
-                          {STATUS_TABS.filter((t) => t.value !== "all").map(
-                            (tab) => (
-                              <option key={tab.value} value={tab.value}>
-                                {tab.label}
-                              </option>
-                            )
-                          )}
+                          {STATUS_TABS.filter((t) => t.value !== "all").map((tab) => (
+                            <option key={tab.value} value={tab.value}>
+                              {tab.label}
+                            </option>
+                          ))}
                         </select>
                       ) : (
                         <span
                           className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(
-                            l.status
+                            l.status,
                           )}`}
                         >
                           {l.status.replace("_", " ")}
@@ -496,118 +481,6 @@ function MyListingsView({
                   </div>
 
                   {/* Right-hand icon column – NO Quick Edit here */}
-                  <div className="flex flex-col items-end gap-2 text-muted-foreground">
-                    <div className="flex items-center gap-3">
-                      <button
-                        className="hover:text-foreground transition"
-                        onClick={() => onEdit(l.id)}
-                        title="Full edit"
-                      >
-                        <Pencil size={18} />
-                      </button>
-                      <button
-                        className="hover:text-foreground transition"
-                        onClick={() => onPreview(l.id)}
-                        title="Preview"
-                      >
-                        <Eye size={18} />
-                      </button>
-                      <button
-                        className="hover:text-foreground transition"
-                        onClick={() => onShare(l.id)}
-                        title="Share link"
-                      >
-                        <Share2 size={18} />
-                      </button>
-                      <button
-                        className="hover:text-destructive text-destructive/70 transition"
-                        onClick={() => onDelete(l.id)}
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {filteredListings.length === 0 && (
-            <div className="text-center text-muted-foreground text-sm py-10">
-              No listings match your filters yet.
-            </div>
-          )}
-        </div>
-      )}
-                        {l.listing_number && (
-                          <div className="text-xs text-muted-foreground">MLS #{l.listing_number}</div>
-                        )}
-                      </div>
-
-                      {!isEditing && (
-                        <button
-                          className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100 transition"
-                          onClick={() => startQuickEdit(l)}
-                          title="Quick edit price and status"
-                        >
-                          Quick Edit
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Status + List / Exp / Matches / Views + Save/Cancel */}
-                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600">
-                      {/* Status pill OR editing select */}
-                      {isEditing ? (
-                        <select
-                          className="border border-border rounded px-2 py-1 bg-background capitalize"
-                          value={editStatus}
-                          onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
-                        >
-                          {STATUS_TABS.filter((t) => t.value !== "all").map((tab) => (
-                            <option key={tab.value} value={tab.value}>
-                              {tab.label}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span
-                          className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(
-                            l.status,
-                          )}`}
-                        >
-                          {l.status.replace("_", " ")}
-                        </span>
-                      )}
-
-                      {/* List / Exp / Matches / Views meta line */}
-                      <span className="text-sm text-foreground/80 font-medium">List: {formatDate(l.list_date) || formatDate(l.created_at)}</span>
-                      {l.expiration_date && <span className="text-sm text-foreground/80 font-medium">Exp: {formatDate(l.expiration_date)}</span>}
-                      <span className="text-sm text-foreground/80 font-medium">Matches: {matchCount}</span>
-                      <span className="text-sm text-foreground/80 font-medium">Views: {views}</span>
-
-                      {/* Save / Cancel when in quick edit */}
-                      {isEditing && (
-                        <div className="flex items-center gap-2">
-                          <button
-                            className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90"
-                            onClick={saveQuickEdit}
-                          >
-                            Save
-                          </button>
-                          <button
-                            className="px-2 py-1 rounded border border-border text-muted-foreground hover:bg-accent"
-                            onClick={cancelQuickEdit}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Icon actions on right */}
                   <div className="flex flex-col items-end gap-2 text-muted-foreground">
                     <div className="flex items-center gap-3">
                       <button
