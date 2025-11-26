@@ -141,7 +141,18 @@ const AddListing = () => {
     property_website_url: "",
     virtual_tour_url: "",
     video_url: "",
+    // New rental & apartment fields
+    unit_number: "",
+    building_name: "",
+    rental_fee: "",
+    laundry_type: "none",
+    pets_comment: "",
   });
+
+  // New state for rental multi-select fields
+  const [depositRequirements, setDepositRequirements] = useState<string[]>([]);
+  const [outdoorSpace, setOutdoorSpace] = useState<string[]>([]);
+  const [hasStorage, setHasStorage] = useState(false);
 
   const [disclosures, setDisclosures] = useState<string[]>([]);
   const [propertyFeatures, setPropertyFeatures] = useState<string[]>([]);
@@ -810,7 +821,19 @@ const AddListing = () => {
         photos: [],
         floor_plans: [],
         documents: [],
+        unit_number: formData.unit_number || null,
+        building_name: formData.building_name || null,
       };
+
+      // Add rental-specific fields to draft if it's a rental
+      if (formData.listing_type === "for_rent") {
+        if (formData.rental_fee) payload.rental_fee = parseFloat(formData.rental_fee);
+        payload.deposit_requirements = depositRequirements;
+        payload.outdoor_space = outdoorSpace;
+        payload.has_storage = hasStorage;
+        payload.laundry_type = formData.laundry_type || null;
+        payload.pets_comment = formData.pets_comment || null;
+      }
 
       if (draftId) {
         const { error } = await supabase
@@ -973,6 +996,9 @@ const AddListing = () => {
         go_live_date: formData.go_live_date || null,
         auto_activate_days: computedAutoActivateDays,
         auto_activate_on: computedAutoActivateOn,
+        // New apartment/rental fields
+        unit_number: formData.unit_number || null,
+        building_name: formData.building_name || null,
       };
 
       // Add type-specific fields
@@ -981,6 +1007,13 @@ const AddListing = () => {
         if (formData.security_deposit) listingData.security_deposit = parseFloat(formData.security_deposit);
         if (formData.lease_term) listingData.lease_term = formData.lease_term;
         if (formData.available_date) listingData.available_date = formData.available_date;
+        // New rental-specific fields
+        if (formData.rental_fee) listingData.rental_fee = parseFloat(formData.rental_fee);
+        listingData.deposit_requirements = depositRequirements;
+        listingData.outdoor_space = outdoorSpace;
+        listingData.has_storage = hasStorage;
+        listingData.laundry_type = formData.laundry_type || null;
+        listingData.pets_comment = formData.pets_comment || null;
       }
 
       // Add multi-family fields if applicable
@@ -1156,6 +1189,7 @@ const AddListing = () => {
                       <SelectContent>
                         <SelectItem value="single_family">Single Family</SelectItem>
                         <SelectItem value="condo">Condo</SelectItem>
+                        <SelectItem value="apartment">Apartment</SelectItem>
                         <SelectItem value="multi_family">Multi-Family</SelectItem>
                       </SelectContent>
                     </Select>
@@ -1220,16 +1254,43 @@ const AddListing = () => {
                     )}
                   </div>
                   
-                  {/* Address */}
+                  {/* Street Address + Unit # */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3")}>
+                      <Label htmlFor="address">Street Address *</Label>
+                      <Input
+                        id="address"
+                        type="text"
+                        value={formData.address}
+                        onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                        placeholder="e.g. 123 Main Street"
+                        required
+                      />
+                    </div>
+
+                    {(formData.property_type === 'condo' || formData.property_type === 'apartment') && (
+                      <div className="space-y-2">
+                        <Label htmlFor="unit_number">Unit #</Label>
+                        <Input
+                          id="unit_number"
+                          type="text"
+                          value={formData.unit_number}
+                          onChange={(e) => setFormData(prev => ({ ...prev, unit_number: e.target.value }))}
+                          placeholder="3B"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Building / Complex Name */}
                   <div className="space-y-2">
-                    <Label htmlFor="address">Street Address *</Label>
+                    <Label htmlFor="building_name">Building / Complex Name</Label>
                     <Input
-                      id="address"
+                      id="building_name"
                       type="text"
-                      value={formData.address}
-                      onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                      placeholder="e.g. 123 Main Street"
-                      required
+                      value={formData.building_name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, building_name: e.target.value }))}
+                      placeholder="e.g. Harborview Towers"
                     />
                   </div>
                   
@@ -1558,6 +1619,142 @@ const AddListing = () => {
                     />
                   </div>
                 </div>
+
+                {/* Rental Details Section - Only for rentals */}
+                {formData.listing_type === "for_rent" && (
+                  <div className="space-y-4 border-t pt-6">
+                    <Label className="text-lg font-semibold">Rental Details</Label>
+
+                    {/* Rental Fee + Monthly Rent */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="rental_fee">Rental Fee (Commission)</Label>
+                        <FormattedInput
+                          id="rental_fee"
+                          format="currency"
+                          placeholder="e.g. 2500"
+                          value={formData.rental_fee}
+                          onChange={(value) => setFormData(prev => ({ ...prev, rental_fee: value }))}
+                          decimals={0}
+                        />
+                        <p className="text-xs text-muted-foreground">Flat dollar amount</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="monthly_rent_display">Monthly Rent *</Label>
+                        <FormattedInput
+                          id="monthly_rent_display"
+                          format="currency"
+                          placeholder="e.g. 3200"
+                          value={formData.monthly_rent}
+                          onChange={(value) => setFormData(prev => ({ ...prev, monthly_rent: value }))}
+                          decimals={0}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Deposit Requirements (multi-select) */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Deposit Requirements</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          { key: 'first_month', label: 'First Month' },
+                          { key: 'last_month', label: 'Last Month' },
+                          { key: 'security_deposit', label: 'Security Deposit' },
+                          { key: 'key_deposit', label: 'Key Deposit' },
+                          { key: 'move_in_out_fee', label: 'Move-in / Move-out Fee' },
+                        ].map(({ key, label }) => (
+                          <div key={key} className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={depositRequirements.includes(key)}
+                              onCheckedChange={(isChecked) => {
+                                if (isChecked === true) {
+                                  setDepositRequirements(prev => Array.from(new Set([...prev, key])));
+                                } else {
+                                  setDepositRequirements(prev => prev.filter((v) => v !== key));
+                                }
+                              }}
+                            />
+                            <Label className="text-sm font-normal cursor-pointer">{label}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Outdoor Space (multi-select) */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Outdoor Space</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          { key: 'private', label: 'Private Outdoor Space' },
+                          { key: 'deck', label: 'Deck' },
+                          { key: 'balcony', label: 'Balcony' },
+                          { key: 'roof_deck', label: 'Roof Deck' },
+                          { key: 'yard', label: 'Yard' },
+                          { key: 'patio', label: 'Patio' },
+                        ].map(({ key, label }) => (
+                          <div key={key} className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={outdoorSpace.includes(key)}
+                              onCheckedChange={(isChecked) => {
+                                if (isChecked === true) {
+                                  setOutdoorSpace(prev => Array.from(new Set([...prev, key])));
+                                } else {
+                                  setOutdoorSpace(prev => prev.filter((v) => v !== key));
+                                }
+                              }}
+                            />
+                            <Label className="text-sm font-normal cursor-pointer">{label}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Storage (single checkbox) */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Storage</Label>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={hasStorage}
+                          onCheckedChange={(isChecked) => setHasStorage(isChecked === true)}
+                        />
+                        <Label className="text-sm font-normal cursor-pointer">Storage available</Label>
+                      </div>
+                    </div>
+
+                    {/* Laundry options */}
+                    <div className="space-y-2 max-w-xs">
+                      <Label htmlFor="laundry_type">Laundry</Label>
+                      <Select
+                        value={formData.laundry_type}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, laundry_type: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select laundry option" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="in_unit">In Unit</SelectItem>
+                          <SelectItem value="in_building">In Building</SelectItem>
+                          <SelectItem value="hookups">Hook-ups</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Pets comment */}
+                    <div className="space-y-2">
+                      <Label htmlFor="pets_comment">Pets - Notes / Restrictions</Label>
+                      <Textarea
+                        id="pets_comment"
+                        rows={3}
+                        placeholder="e.g. Cats OK, small dogs under 25lb, no aggressive breeds..."
+                        value={formData.pets_comment}
+                        onChange={(e) => setFormData(prev => ({ ...prev, pets_comment: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Property Features */}
                 <div className="space-y-4 border-t pt-6">
