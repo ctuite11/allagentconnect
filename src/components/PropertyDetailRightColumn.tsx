@@ -145,6 +145,28 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView }: Prope
         </Card>
       )}
 
+      {/* Office / Agent Information */}
+      {agent && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Office & Agent Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DetailGrid>
+              <DetailRow label="Listing Agent" value={`${agent.first_name} ${agent.last_name}`} />
+              {agent.title && <DetailRow label="Title" value={agent.title} />}
+              {agent.company && <DetailRow label="Company" value={agent.company} />}
+              {agent.office_name && <DetailRow label="Office" value={agent.office_name} />}
+              {agent.office_phone && <DetailRow label="Office Phone" value={formatPhoneNumber(agent.office_phone)} />}
+              {agent.office_address && <DetailRow label="Office Address" value={agent.office_address} />}
+              {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
+                <DetailRow label="Agreement Type" value={formatArray(listing.listing_agreement_types)} />
+              )}
+            </DetailGrid>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Agent-Only: Showing Instructions */}
       {isAgentView && (
         <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
@@ -173,27 +195,6 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView }: Prope
         </Card>
       )}
 
-      {/* Office / Agent Information */}
-      {agent && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Office & Agent Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DetailGrid>
-              <DetailRow label="Listing Agent" value={`${agent.first_name} ${agent.last_name}`} />
-              {agent.title && <DetailRow label="Title" value={agent.title} />}
-              {agent.company && <DetailRow label="Company" value={agent.company} />}
-              {agent.office_name && <DetailRow label="Office" value={agent.office_name} />}
-              {agent.office_phone && <DetailRow label="Office Phone" value={formatPhoneNumber(agent.office_phone)} />}
-              {agent.office_address && <DetailRow label="Office Address" value={agent.office_address} />}
-              {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
-                <DetailRow label="Agreement Type" value={formatArray(listing.listing_agreement_types)} />
-              )}
-            </DetailGrid>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
