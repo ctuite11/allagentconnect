@@ -1539,10 +1539,11 @@ const AddListing = () => {
                       <Label className="text-base font-medium">Interior Amenities</Label>
                       <div className="flex flex-wrap gap-2">
                         {["Air Conditioning", "Central Air", "Window AC", "Ceiling Fans", "Fireplace", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Home Office", "Mudroom", "Laundry in Unit", "Laundry in Building", "Furnished (Rental)"].map((amenity) => (
-                          <Badge
+                          <Button
                             key={amenity}
+                            type="button"
                             variant={interiorAmenities.includes(amenity) ? "default" : "outline"}
-                            className="cursor-pointer"
+                            size="sm"
                             onClick={() => {
                               if (interiorAmenities.includes(amenity)) {
                                 setInteriorAmenities(interiorAmenities.filter((a) => a !== amenity));
@@ -1552,7 +1553,7 @@ const AddListing = () => {
                             }}
                           >
                             {amenity}
-                          </Badge>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -1562,10 +1563,11 @@ const AddListing = () => {
                       <Label className="text-base font-medium">Exterior Amenities</Label>
                       <div className="flex flex-wrap gap-2">
                         {["Deck", "Patio", "Porch", "Balcony", "Fenced Yard", "Private Yard", "Garden Area", "Sprinkler System", "Outdoor Shower", "Pool", "Hot Tub", "Shed", "Gazebo", "Playground", "Fire Pit", "Outdoor Kitchen", "Greenhouse", "Boat Dock (or Dock Rights)"].map((amenity) => (
-                          <Badge
+                          <Button
                             key={amenity}
+                            type="button"
                             variant={exteriorAmenities.includes(amenity) ? "default" : "outline"}
-                            className="cursor-pointer"
+                            size="sm"
                             onClick={() => {
                               if (exteriorAmenities.includes(amenity)) {
                                 setExteriorAmenities(exteriorAmenities.filter((a) => a !== amenity));
@@ -1575,43 +1577,47 @@ const AddListing = () => {
                             }}
                           >
                             {amenity}
-                          </Badge>
+                          </Button>
                         ))}
                       </div>
                     </div>
 
-                    {/* 3. Building & Property Amenities */}
-                    <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Building & Property Amenities</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Pet Friendly", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room"].map((amenity) => (
-                          <Badge
-                            key={amenity}
-                            variant={buildingPropertyAmenities.includes(amenity) ? "default" : "outline"}
-                            className="cursor-pointer"
-                            onClick={() => {
-                              if (buildingPropertyAmenities.includes(amenity)) {
-                                setBuildingPropertyAmenities(buildingPropertyAmenities.filter((a) => a !== amenity));
-                              } else {
-                                setBuildingPropertyAmenities([...buildingPropertyAmenities, amenity]);
-                              }
-                            }}
-                          >
-                            {amenity}
-                          </Badge>
-                        ))}
+                    {/* 3. Building & Property Amenities - Only for condo and multi_family */}
+                    {(formData.property_type === "condo" || formData.property_type === "multi_family") && (
+                      <div className="space-y-3 mb-6">
+                        <Label className="text-base font-medium">Building & Property Amenities</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Pet Friendly", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room"].map((amenity) => (
+                            <Button
+                              key={amenity}
+                              type="button"
+                              variant={buildingPropertyAmenities.includes(amenity) ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => {
+                                if (buildingPropertyAmenities.includes(amenity)) {
+                                  setBuildingPropertyAmenities(buildingPropertyAmenities.filter((a) => a !== amenity));
+                                } else {
+                                  setBuildingPropertyAmenities([...buildingPropertyAmenities, amenity]);
+                                }
+                              }}
+                            >
+                              {amenity}
+                            </Button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* 4. Location Amenities */}
                     <div className="space-y-3 mb-6">
                       <Label className="text-base font-medium">Location Amenities</Label>
                       <div className="flex flex-wrap gap-2">
                         {["Public Transportation", "Walk/Jog Trails", "Public Park", "Playground", "Water View", "Waterfront", "Beach Access", "Marina", "Golf Course", "University Nearby", "Public School Nearby", "Private School Nearby", "Shopping Nearby", "Highway Access"].map((amenity) => (
-                          <Badge
+                          <Button
                             key={amenity}
+                            type="button"
                             variant={locationAmenities.includes(amenity) ? "default" : "outline"}
-                            className="cursor-pointer"
+                            size="sm"
                             onClick={() => {
                               if (locationAmenities.includes(amenity)) {
                                 setLocationAmenities(locationAmenities.filter((a) => a !== amenity));
@@ -1621,7 +1627,7 @@ const AddListing = () => {
                             }}
                           >
                             {amenity}
-                          </Badge>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -1644,10 +1650,11 @@ const AddListing = () => {
                         <Label className="text-base font-medium">Multi-Family Features</Label>
                         <div className="flex flex-wrap gap-2">
                           {["Coin-Op Laundry", "Separate Utilities", "Owner's Unit", "Long-Term Tenant Opportunity", "Strong Rental History", "Lockable Storage Units", "Shared Yard", "Shared Patio/Deck"].map((amenity) => (
-                            <Badge
+                            <Button
                               key={amenity}
+                              type="button"
                               variant={multiFamilyFeatures.includes(amenity) ? "default" : "outline"}
-                              className="cursor-pointer"
+                              size="sm"
                               onClick={() => {
                                 if (multiFamilyFeatures.includes(amenity)) {
                                   setMultiFamilyFeatures(multiFamilyFeatures.filter((a) => a !== amenity));
@@ -1657,7 +1664,7 @@ const AddListing = () => {
                               }}
                             >
                               {amenity}
-                            </Badge>
+                            </Button>
                           ))}
                         </div>
                       </div>
@@ -1669,10 +1676,11 @@ const AddListing = () => {
                         <Label className="text-base font-medium">Rental Features</Label>
                         <div className="flex flex-wrap gap-2">
                           {["Heat Included", "Hot Water Included", "Electricity Included", "Internet Included", "Furnished", "Pet Friendly", "Cats OK", "Dogs OK", "No Smoking", "Short-Term Considered"].map((amenity) => (
-                            <Badge
+                            <Button
                               key={amenity}
+                              type="button"
                               variant={rentalFeatures.includes(amenity) ? "default" : "outline"}
-                              className="cursor-pointer"
+                              size="sm"
                               onClick={() => {
                                 if (rentalFeatures.includes(amenity)) {
                                   setRentalFeatures(rentalFeatures.filter((a) => a !== amenity));
@@ -1682,7 +1690,7 @@ const AddListing = () => {
                               }}
                             >
                               {amenity}
-                            </Badge>
+                            </Button>
                           ))}
                         </div>
                       </div>
