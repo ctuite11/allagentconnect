@@ -1480,6 +1480,7 @@ export type Database = {
           outdoor_space: Json | null
           parking_comments: string | null
           parking_features_list: Json | null
+          pet_options: Json | null
           pets_comment: string | null
           photos: Json | null
           price: number
@@ -1591,6 +1592,7 @@ export type Database = {
           outdoor_space?: Json | null
           parking_comments?: string | null
           parking_features_list?: Json | null
+          pet_options?: Json | null
           pets_comment?: string | null
           photos?: Json | null
           price: number
@@ -1702,6 +1704,7 @@ export type Database = {
           outdoor_space?: Json | null
           parking_comments?: string | null
           parking_features_list?: Json | null
+          pet_options?: Json | null
           pets_comment?: string | null
           photos?: Json | null
           price?: number
