@@ -623,8 +623,88 @@ const AddListing = () => {
     }
   };
 
-  const handleFileSelect = (files: FileList | null, type: 'photos' | 'floorplans' | 'documents') => {
+  const handleFileSelect = async (files: FileList | null, type: 'photos' | 'floorplans' | 'documents') => {
     if (!files) return;
+    
+    // For photos, navigate to photo management page
+    if (type === 'photos') {
+      let targetListingId = listingId;
+      
+      // If new listing, create a draft first
+      if (!targetListingId) {
+        try {
+          const { data, error } = await supabase
+            .from('listings')
+            .insert({
+              agent_id: user.id,
+              status: 'draft',
+              address: formData.address || 'Draft Listing',
+              city: formData.city || 'TBD',
+              state: formData.state || 'MA',
+              zip_code: formData.zip_code || '00000',
+              price: formData.price ? parseFloat(formData.price) : 0,
+            })
+            .select('id')
+            .single();
+          
+          if (error) throw error;
+          targetListingId = data.id;
+          toast.success('Draft listing created');
+        } catch (error) {
+          console.error('Error creating draft:', error);
+          toast.error('Failed to create draft listing');
+          return;
+        }
+      }
+      
+      // Upload photos to storage
+      const uploadedPhotos: { url: string; order: number }[] = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const filePath = `${targetListingId}/${Date.now()}_${file.name}`;
+        
+        try {
+          const { error: uploadError } = await supabase.storage
+            .from('listing-photos')
+            .upload(filePath, file);
+          
+          if (uploadError) throw uploadError;
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from('listing-photos')
+            .getPublicUrl(filePath);
+          
+          uploadedPhotos.push({ url: publicUrl, order: i });
+        } catch (error) {
+          console.error('Error uploading photo:', error);
+          toast.error(`Failed to upload ${file.name}`);
+        }
+      }
+      
+      // Save photos to database
+      if (uploadedPhotos.length > 0) {
+        try {
+          const { error } = await supabase
+            .from('listings')
+            .update({ photos: uploadedPhotos })
+            .eq('id', targetListingId);
+          
+          if (error) throw error;
+          
+          toast.success(`${uploadedPhotos.length} photo(s) uploaded`);
+        } catch (error) {
+          console.error('Error saving photos:', error);
+          toast.error('Failed to save photos');
+        }
+      }
+      
+      // Navigate to photo management page
+      navigate(`/agent/listings/${targetListingId}/photos`);
+      return;
+    }
+    
+    // For floor plans and documents, keep existing behavior
     const fileArray = Array.from(files);
     const newFiles: FileWithPreview[] = fileArray.map(file => ({
       file,
@@ -632,9 +712,7 @@ const AddListing = () => {
       id: Math.random().toString(36).substr(2, 9),
     }));
 
-    if (type === 'photos') {
-      setPhotos(prev => [...prev, ...newFiles]);
-    } else if (type === 'floorplans') {
+    if (type === 'floorplans') {
       setFloorPlans(prev => [...prev, ...newFiles]);
     } else {
       setDocuments(prev => [...prev, ...newFiles]);
@@ -1946,15 +2024,13 @@ const AddListing = () => {
                     </div>
                   </div>
                   
-                  {/* Property Photos - Simplified */}
+                  {/* Property Photos - Auto-Navigate to Management Page */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <Label className="text-lg font-medium">Property Photos</Label>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {photos.length > 0 
-                            ? `${photos.length} photo(s) uploaded. First photo is the main image.`
-                            : 'Upload photos for your listing.'}
+                          Upload and manage photos on a dedicated page.
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -1987,37 +2063,9 @@ const AddListing = () => {
                       className="hidden"
                     />
                     
-                    {photos.length > 0 && (
-                      <>
-                        <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
-                          {photos.slice(0, 6).map((photo, index) => (
-                            <div key={photo.id} className="relative border rounded overflow-hidden">
-                              <img src={photo.preview} alt="Property" className="w-full h-20 object-cover" />
-                              {index === 0 && (
-                                <div className="absolute top-1 left-1 bg-primary text-primary-foreground px-1.5 py-0.5 rounded text-xs">
-                                  Main
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                          {photos.length > 6 && (
-                            <div className="border rounded flex items-center justify-center h-20 bg-muted">
-                              <span className="text-sm text-muted-foreground">+{photos.length - 6} more</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {listingId ? (
-                          <p className="text-sm text-muted-foreground">
-                            Click "Manage Photos" to reorder or delete photos.
-                          </p>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            Save the listing first, then you can reorder and manage photos.
-                          </p>
-                        )}
-                      </>
-                    )}
+                    <p className="text-sm text-muted-foreground">
+                      Click "Upload Photos" to add photos. You'll be taken to a dedicated page to manage, reorder, and delete photos.
+                    </p>
                   </div>
 
                   {/* Floor Plans */}
