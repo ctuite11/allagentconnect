@@ -2,30 +2,32 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, MapPin, Bed, Bath, Square, Calendar, DollarSign, ArrowLeft, Home, FileText, Video, Globe, Lock, Phone, Mail, AlertCircle, GraduationCap, Footprints, Image, Cloud } from "lucide-react";
+import { 
+  ArrowLeft, 
+  MapPin, 
+  Bed, 
+  Bath, 
+  Square, 
+  Calendar,
+  Phone,
+  Mail,
+  Share2,
+  Eye,
+  Home,
+  FileText
+} from "lucide-react";
 import { toast } from "sonner";
-import SocialShareMenu from "@/components/SocialShareMenu";
-import FavoriteButton from "@/components/FavoriteButton";
-import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
-import MatchingBuyerAgents from "@/components/MatchingBuyerAgents";
-import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
-import ContactAgentDialog from "@/components/ContactAgentDialog";
-import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo";
-import PropertyMap from "@/components/PropertyMap";
-import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
-import AdBanner from "@/components/AdBanner";
-import { ShareListingDialog } from "@/components/ShareListingDialog";
-import { PublicRecordModal } from "@/components/PublicRecordModal";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
+
 interface Listing {
   id: string;
   agent_id: string;
@@ -45,156 +47,85 @@ interface Listing {
   description: string | null;
   status: string;
   listing_type: string;
-  commission_rate: number | null;
-  commission_type: string | null;
-  commission_notes: string | null;
-  showing_instructions: string | null;
-  lockbox_code: string | null;
-  appointment_required: boolean | null;
-  showing_contact_name: string | null;
-  showing_contact_phone: string | null;
-  disclosures: string[] | null;
-  property_features: string[] | null;
-  amenities: string[] | null;
-  additional_notes: string | null;
   photos: any[] | null;
-  floor_plans: any[] | null;
-  documents: any[] | null;
-  attom_data: any;
-  walk_score_data: any;
-  schools_data: any;
-  value_estimate: any;
   listing_number?: string | null;
   created_at?: string;
   active_date?: string | null;
-  condo_details?: any;
-  multi_family_details?: any;
-  commercial_details?: any;
-  annual_property_tax?: number | null;
-  tax_year?: number | null;
-  tax_assessment_value?: number | null;
-  num_fireplaces?: number | null;
-  garage_spaces?: number | null;
-  total_parking_spaces?: number | null;
-  neighborhood?: string | null;
 }
+
+interface AgentProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  cell_phone?: string;
+  phone?: string;
+  title?: string;
+  company?: string;
+  headshot_url?: string;
+  logo_url?: string;
+}
+
 const PropertyDetail = () => {
-  const {
-    id
-  } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [isAgent, setIsAgent] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const [agentProfile, setAgentProfile] = useState<any>(null);
-  const [galleryOpen, setGalleryOpen] = useState(false);
-  const [galleryTab, setGalleryTab] = useState("photos");
-  const [galleryIndex, setGalleryIndex] = useState(0);
-  const [refreshing, setRefreshing] = useState(false);
-  const [cameFromAgentDashboard, setCameFromAgentDashboard] = useState<boolean>(Boolean((location as any)?.state?.fromAgentDashboard) || sessionStorage.getItem('fromAgentDashboard') === 'true');
-
-  // Schools and neighborhood data
-  const [schools, setSchools] = useState<any[]>([]);
-  const [neighborhood, setNeighborhood] = useState<any>(null);
-  const [showPublicRecord, setShowPublicRecord] = useState(false);
-  const [walkScoreData, setWalkScoreData] = useState<{
-    enabled: boolean;
-    walkScore: number | null;
-    walkDescription: string | null;
-    transitScore: number | null;
-    transitDescription: string | null;
-    bikeScore: number | null;
-    bikeDescription: string | null;
-  } | null>(null);
-
-  type TimelineEvent =
-    | {
-        type: "price";
-        id: string;
-        at: string;
-        oldValue: number | null;
-        newValue: number;
-        note: string | null;
-      }
-    | {
-        type: "status";
-        id: string;
-        at: string;
-        oldValue: string | null;
-        newValue: string;
-        note: string | null;
-      };
-
-  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [agentProfile, setAgentProfile] = useState<AgentProfile | null>(null);
+  const [stats, setStats] = useState({ matches: 0, views: 0 });
 
   // Track listing view
   useListingView(id);
 
-  // Check if came from agent dashboard
   useEffect(() => {
-    const referrer = document.referrer;
-    const fromDashboard = sessionStorage.getItem('fromAgentDashboard');
-    const params = new URLSearchParams(location.search);
-    if (referrer.includes('/agent-dashboard') || fromDashboard === 'true' || params.get('from') === 'my-listings') {
-      setCameFromAgentDashboard(true);
-      sessionStorage.setItem('fromAgentDashboard', 'true');
-    }
-    return () => {
-      // Clean up when leaving the page
-      if (!window.location.pathname.includes('/property/')) {
-        sessionStorage.removeItem('fromAgentDashboard');
-      }
-    };
-  }, [location.search]);
-  useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: {
-          session
-        }
-      } = await supabase.auth.getSession();
-      if (session?.user) {
-        setCurrentUser(session.user);
-
-        // Check if user is an agent by checking if they have an agent profile
-        const {
-          data: agentProfile
-        } = await supabase.from("agent_profiles").select("id").eq("id", session.user.id).maybeSingle();
-        setIsAgent(!!agentProfile);
-      }
-    };
     const fetchListing = async () => {
       try {
-        const {
-          data,
-          error
-        } = await supabase.from("listings").select("*").eq("id", id).maybeSingle();
+        const { data, error } = await supabase
+          .from("listings")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+
         if (error) throw error;
 
-        // Cast the Json types to proper arrays
         if (data) {
           setListing({
             ...data,
-            disclosures: Array.isArray(data.disclosures) ? data.disclosures as string[] : [],
-            property_features: Array.isArray(data.property_features) ? data.property_features as string[] : [],
-            amenities: Array.isArray(data.amenities) ? data.amenities as string[] : [],
             photos: Array.isArray(data.photos) ? data.photos as any[] : [],
-            floor_plans: Array.isArray(data.floor_plans) ? data.floor_plans as any[] : [],
-            documents: Array.isArray(data.documents) ? data.documents as any[] : []
           } as Listing);
 
           // Fetch agent profile
           if (data.agent_id) {
-            const {
-              data: profile
-            } = await supabase.from("agent_profiles").select("id, first_name, last_name, email, cell_phone, phone, title, company, headshot_url, logo_url").eq("id", data.agent_id).maybeSingle();
+            const { data: profile } = await supabase
+              .from("agent_profiles")
+              .select("id, first_name, last_name, email, cell_phone, phone, title, company, headshot_url, logo_url")
+              .eq("id", data.agent_id)
+              .maybeSingle();
+
             if (profile) {
               setAgentProfile(profile);
             }
           }
+
+          // Fetch stats
+          const { data: statsData } = await supabase
+            .from("listing_stats")
+            .select("view_count")
+            .eq("listing_id", data.id)
+            .maybeSingle();
+
+          const { count: matchCount } = await supabase
+            .from("hot_sheets")
+            .select("*", { count: "exact", head: true })
+            .contains("criteria", { city: [data.city] });
+
+          setStats({
+            matches: matchCount || 0,
+            views: statsData?.view_count || 0,
+          });
         }
       } catch (error: any) {
         console.error("Error fetching listing:", error);
@@ -202,173 +133,40 @@ const PropertyDetail = () => {
         setLoading(false);
       }
     };
-    checkUser();
+
     if (id) {
       fetchListing();
     }
   }, [id]);
 
-  // Fetch schools and neighborhood data
-  useEffect(() => {
-    const loadNeighborhoodData = async () => {
-      if (!listing) return;
-      
-      const attomId = (listing as any).attom_id;
-      if (!attomId && !listing.latitude) return;
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Link copied to clipboard");
+  };
 
-      try {
-        const { data, error } = await supabase.functions.invoke("fetch-neighborhood-data", {
-          body: {
-            attomId,
-            latitude: listing.latitude,
-            longitude: listing.longitude,
-          }
-        });
-
-        if (error) {
-          console.error("Error loading neighborhood data:", error);
-          return;
-        }
-
-        if (data) {
-          setSchools(data.schools || []);
-          setNeighborhood(data.neighborhood || null);
-        }
-      } catch (error) {
-        console.error("Error fetching neighborhood data:", error);
-      }
-    };
-
-    loadNeighborhoodData();
-  }, [listing]);
-
-  // Fetch Walk Score data
-  useEffect(() => {
-    const loadWalkScore = async () => {
-      if (!listing || !listing.latitude || !listing.longitude) return;
-
-      try {
-        const { data, error } = await supabase.functions.invoke("fetch-walkscore", {
-          body: {
-            latitude: listing.latitude,
-            longitude: listing.longitude,
-            address: listing.address,
-            city: listing.city,
-            state: listing.state,
-          },
-        });
-
-        if (error) {
-          console.error("Error fetching Walk Score", error);
-          return;
-        }
-
-        setWalkScoreData(data);
-      } catch (error) {
-        console.error("Error loading Walk Score:", error);
-      }
-    };
-
-    loadWalkScore();
-  }, [listing]);
-
-  // Load listing activity timeline
-  useEffect(() => {
-    const loadTimeline = async () => {
-      if (!listing?.id) return;
-
-      const [
-        { data: priceData, error: priceError },
-        { data: statusData, error: statusError },
-      ] = await Promise.all([
-        (supabase as any)
-          .from("listing_price_history")
-          .select("id, old_price, new_price, changed_at, note")
-          .eq("listing_id", listing.id)
-          .order("changed_at", { ascending: false }),
-        (supabase as any)
-          .from("listing_status_history")
-          .select("id, old_status, new_status, changed_at, note")
-          .eq("listing_id", listing.id)
-          .order("changed_at", { ascending: false }),
-      ]);
-
-      if (priceError) console.error("Price history error", priceError);
-      if (statusError) console.error("Status history error", statusError);
-
-      const priceEvents: TimelineEvent[] = (priceData || []).map((p: any) => ({
-        type: "price" as const,
-        id: p.id,
-        at: p.changed_at,
-        oldValue: p.old_price,
-        newValue: p.new_price,
-        note: p.note,
-      }));
-
-      const statusEvents: TimelineEvent[] = (statusData || []).map((s: any) => ({
-        type: "status" as const,
-        id: s.id,
-        at: s.changed_at,
-        oldValue: s.old_status,
-        newValue: s.new_status,
-        note: s.note,
-      }));
-
-      const combined = [...priceEvents, ...statusEvents].sort(
-        (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()
-      );
-
-      setTimelineEvents(combined);
-    };
-
-    loadTimeline();
-  }, [listing]);
-
-  const handleRefreshData = async () => {
-    if (!id) return;
-    setRefreshing(true);
-    try {
-      const {
-        error
-      } = await supabase.functions.invoke('auto-fetch-property-data', {
-        body: {
-          listing_id: id
-        }
-      });
-      if (error) throw error;
-      toast.success("Property data refreshed successfully");
-
-      // Refetch the listing to show updated data
-      const {
-        data,
-        error: fetchError
-      } = await supabase.from("listings").select("*").eq("id", id).maybeSingle();
-      if (fetchError) throw fetchError;
-      if (data) {
-        setListing({
-          ...data,
-          disclosures: Array.isArray(data.disclosures) ? data.disclosures as string[] : [],
-          property_features: Array.isArray(data.property_features) ? data.property_features as string[] : [],
-          amenities: Array.isArray(data.amenities) ? data.amenities as string[] : [],
-          photos: Array.isArray(data.photos) ? data.photos as any[] : [],
-          floor_plans: Array.isArray(data.floor_plans) ? data.floor_plans as any[] : [],
-          documents: Array.isArray(data.documents) ? data.documents as any[] : []
-        } as Listing);
-      }
-    } catch (error: any) {
-      console.error("Error refreshing property data:", error);
-      toast.error("Failed to refresh property data");
-    } finally {
-      setRefreshing(false);
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-green-500/10 text-green-700 border-green-500/20';
+      case 'pending':
+        return 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20';
+      case 'sold':
+        return 'bg-blue-500/10 text-blue-700 border-blue-500/20';
+      case 'cancelled':
+      case 'expired':
+        return 'bg-gray-500/10 text-gray-700 border-gray-500/20';
+      default:
+        return 'bg-muted text-muted-foreground';
     }
   };
+
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>;
+    return <LoadingScreen />;
   }
+
   if (!listing) {
-    return <div className="min-h-screen bg-background">
+    return (
+      <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 py-8 mt-20">
           <Card>
@@ -380,1107 +178,316 @@ const PropertyDetail = () => {
             </CardContent>
           </Card>
         </div>
-      </div>;
+      </div>
+    );
   }
-  const mainPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[currentPhotoIndex].url : '/placeholder.svg';
+
+  const mainPhoto = listing.photos && listing.photos.length > 0 
+    ? listing.photos[currentPhotoIndex].url 
+    : '/placeholder.svg';
+
   const canonicalUrl = `${window.location.origin}/property/${id}`;
-  const sharePreviewUrl = `https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/${id}`;
-  
-  return <div className="min-h-screen bg-background">
-      <PropertyMetaTags address={listing.address} city={listing.city} state={listing.state} price={listing.price} bedrooms={listing.bedrooms} bathrooms={listing.bathrooms} description={listing.description} photo={mainPhoto} listingType={listing.listing_type} url={canonicalUrl} />
+  const listDate = listing.active_date || listing.created_at;
+  const daysOnMarket = listDate 
+    ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <PropertyMetaTags
+        address={listing.address}
+        city={listing.city}
+        state={listing.state}
+        price={listing.price}
+        bedrooms={listing.bedrooms}
+        bathrooms={listing.bathrooms}
+        description={listing.description}
+        photo={mainPhoto}
+        listingType={listing.listing_type}
+        url={canonicalUrl}
+      />
+      
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
-        <div className="max-w-7xl mx-auto">
-          {/* Hero Image Section */}
-          <div className="relative mb-6">
-            <div className="relative h-[500px] rounded-lg overflow-hidden">
-              <img src={mainPhoto} alt={listing.address} className="w-full h-full object-cover" />
-              
-              {/* Overlay buttons */}
-              <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                <Button variant="secondary" size="lg" onClick={() => {
-                const isOwner = isAgent && listing && listing.agent_id === currentUser?.id;
-                if (cameFromAgentDashboard || isOwner) {
-                  sessionStorage.removeItem('fromAgentDashboard');
-                  navigate('/agent-dashboard#my-listings');
-                } else {
-                  navigate(-1);
-                }
-              }} className="gap-2">
-                  <ArrowLeft className="w-4 h-4" />
-                  {cameFromAgentDashboard || isAgent && listing && listing.agent_id === currentUser?.id ? 'Back to My Listings' : 'Back to Search'}
-                </Button>
-                <div className="flex gap-2">
-                  <SocialShareMenu url={sharePreviewUrl} title={`${listing.address}, ${listing.city}, ${listing.state}`} description={`$${listing.price.toLocaleString()} - ${listing.bedrooms} bed, ${listing.bathrooms} bath`} />
-                  <FavoriteButton listingId={listing.id} />
-                  <SaveToHotSheetDialog currentSearch={{
-                  min_price: listing.price * 0.8,
-                  max_price: listing.price * 1.2,
-                  bedrooms: listing.bedrooms || undefined,
-                  bathrooms: listing.bathrooms || undefined,
-                  property_type: listing.property_type || undefined,
-                  listing_type: listing.listing_type
-                }} />
-                </div>
-              </div>
 
-              {/* Status and Property Type Badges */}
-              <div className="absolute bottom-4 left-4 flex gap-2">
-                <Badge className="bg-green-600 text-white text-base px-4 py-2">
-                  {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
+      {/* Compact Header Bar */}
+      <div className="border-b bg-card sticky top-16 z-10">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-14">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(-1)}
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+
+            <div className="flex items-center gap-2">
+              {listing.listing_number && (
+                <Badge variant="outline" className="font-mono text-xs">
+                  AAC #{listing.listing_number}
                 </Badge>
-                {listing.property_type && <Badge variant="secondary" className="text-base px-4 py-2">
-                    {listing.property_type}
-                  </Badge>}
-              </div>
-
-              {/* View All Media Button */}
-              <div className="absolute bottom-4 right-4">
-                <Button variant="secondary" size="lg" className="gap-2" onClick={() => {
-                setGalleryTab("photos");
-                setGalleryIndex(currentPhotoIndex);
-                setGalleryOpen(true);
-              }}>
-                  <Image className="w-4 h-4" />
-                  View All Photos & Media
-                </Button>
-              </div>
-            </div>
-
-            {/* Photo Gallery Dialog */}
-            <PhotoGalleryDialog open={galleryOpen} onOpenChange={setGalleryOpen} photos={listing.photos || []} floorPlans={listing.floor_plans || []} videos={[]} virtualTours={[]} initialTab={galleryTab} initialIndex={galleryIndex} />
-          </div>
-
-          {/* Address and Price */}
-          <div className="flex justify-between items-start mb-6">
-            <div className="flex items-start gap-3">
-              <MapPin className="w-6 h-6 text-primary mt-1" />
-              <div>
-                <h1 className="font-bold mb-1 text-xl">{buildDisplayAddress(listing)}</h1>
-                <p className="text-xl text-muted-foreground">
-                  {listing.city}, {listing.state} {listing.zip_code}
-                </p>
-                {(listing.neighborhood || listing.attom_data?.neighborhood) && (
-                  <div className="mt-1">
-                    <Badge variant="secondary" className="text-sm">
-                      {listing.neighborhood || listing.attom_data?.neighborhood}
-                    </Badge>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 mt-1">
-                  {listing.listing_number && <p className="text-sm text-muted-foreground font-mono">
-                      Listing #{listing.listing_number}
-                    </p>}
-                  {(listing.active_date || listing.created_at) && <>
-                      {listing.listing_number && <span className="text-sm text-muted-foreground">•</span>}
-                      <Badge variant="outline" className="text-xs">
-                        {(() => {
-                      const marketDate = listing.active_date || listing.created_at;
-                      const activeDate = new Date(marketDate!);
-                      const today = new Date();
-                      const diffTime = Math.abs(today.getTime() - activeDate.getTime());
-                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                      return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} on market`;
-                    })()}
-                      </Badge>
-                    </>}
-                </div>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="font-bold text-primary text-xl">
-                ${listing.price.toLocaleString()}
-              </p>
-              {listing.listing_type === 'for_rent' && <p className="text-muted-foreground">/month</p>}
-            </div>
-          </div>
-
-          {/* Schedule Showing and Contact Section */}
-          <div className="mb-6">
-            <div className="flex flex-wrap gap-3 mb-6">
-              <ScheduleShowingDialog listingId={listing.id} listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`} />
-              <ContactAgentDialog listingId={listing.id} agentId={listing.agent_id} listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`} />
-              {isAgent && <ShareListingDialog listingId={listing.id} listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`} />}
-              <Button variant="outline" size="lg" onClick={() => navigate(`/agent/${listing.agent_id}`)}>
-                View Agent Profile
-              </Button>
-              {currentUser?.id === listing.agent_id && <Button variant="outline" size="lg" onClick={handleRefreshData} disabled={refreshing} className="gap-2">
-                  {refreshing ? <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Refreshing...
-                    </> : <>
-                      <Cloud className="w-4 h-4" />
-                      Refresh Data
-                    </>}
-                </Button>}
-            </div>
-
-            {/* Agent and Commission Info */}
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Listing Agent Card */}
-                {agentProfile && <Card>
-                    <CardHeader>
-                      <CardTitle>Listing Agent</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex gap-4">
-                        {agentProfile.headshot_url && <img src={agentProfile.headshot_url} alt={`${agentProfile.first_name} ${agentProfile.last_name}`} className="w-32 h-40 rounded-lg object-cover flex-shrink-0" />}
-                        <div className="flex-1 space-y-3">
-                          <div className="space-y-1">
-                            <p className="font-semibold text-lg">{agentProfile.first_name} {agentProfile.last_name}</p>
-                            {agentProfile.title && <p className="text-sm text-muted-foreground">{agentProfile.title}</p>}
-                            {agentProfile.company && <p className="text-sm text-muted-foreground">{agentProfile.company}</p>}
-                          </div>
-                          <div className="space-y-2 text-sm">
-                            {(agentProfile.cell_phone || agentProfile.phone) && <div className="flex items-center gap-2">
-                                <Phone className="h-4 w-4 flex-shrink-0" />
-                                <a href={`tel:${agentProfile.cell_phone || agentProfile.phone}`} className="text-primary hover:underline">
-                                  {formatPhoneNumber(agentProfile.cell_phone || agentProfile.phone)}
-                                </a>
-                              </div>}
-                            {agentProfile.email && <div className="flex items-center gap-2">
-                                <Mail className="h-4 w-4 flex-shrink-0" />
-                                <a href={`mailto:${agentProfile.email}`} className="text-primary hover:underline break-all">
-                                  {agentProfile.email}
-                                </a>
-                              </div>}
-                          </div>
-                        </div>
-                        {agentProfile.logo_url && <img src={agentProfile.logo_url} alt={`${agentProfile.company || 'Company'} logo`} className="w-20 h-20 object-contain flex-shrink-0" />}
-                      </div>
-                      <Button variant="outline" className="w-full" onClick={() => navigate(`/agent/${listing.agent_id}`)}>
-                        View Full Profile
-                      </Button>
-                    </CardContent>
-                  </Card>}
-
-                {/* Buyer Agent Commission */}
-                {listing.commission_rate && <Card className="border-primary/30 bg-primary/5">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <DollarSign className="h-6 w-6" />
-                        Buyer Agent Compensation
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col items-center justify-center">
-                      <div className="flex items-center justify-center gap-2 py-2">
-                        <p className="text-3xl font-bold text-primary">
-                          {listing.commission_type === 'flat_fee' ? `$${listing.commission_rate.toLocaleString()}` : `${listing.commission_rate}%`}
-                        </p>
-                        <BuyerAgentCompensationInfo />
-                      </div>
-                      <p className="text-sm text-muted-foreground text-center">
-                        Offered to cooperating buyer agents
-                      </p>
-                    </CardContent>
-                  </Card>}
-              </div>
-
-              {/* Matching Buyer Agents - Visible to everyone */}
-              {listing.city && listing.state && <MatchingBuyerAgents listingCity={listing.city} listingState={listing.state} listingZipCode={listing.zip_code} listingAgentId={listing.agent_id} />}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Property Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Property Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {listing.bedrooms && <div className="flex flex-col items-center">
-                        <Bed className="h-8 w-8 text-primary mb-2" />
-                        <span className="text-2xl font-bold">{listing.bedrooms}</span>
-                        <span className="text-sm text-muted-foreground">Bedrooms</span>
-                      </div>}
-                    {listing.bathrooms && <div className="flex flex-col items-center">
-                        <Bath className="h-8 w-8 text-primary mb-2" />
-                        <span className="text-2xl font-bold">{listing.bathrooms}</span>
-                        <span className="text-sm text-muted-foreground">Bathrooms</span>
-                      </div>}
-                    {listing.square_feet && <div className="flex flex-col items-center">
-                        <Square className="h-8 w-8 text-primary mb-2" />
-                        <span className="text-2xl font-bold">{listing.square_feet.toLocaleString()}</span>
-                        <span className="text-sm text-muted-foreground">Sq Ft</span>
-                      </div>}
-                    {listing.year_built && <div className="flex flex-col items-center">
-                        <Calendar className="h-8 w-8 text-primary mb-2" />
-                        <span className="text-2xl font-bold">{listing.year_built}</span>
-                        <span className="text-sm text-muted-foreground">Year Built</span>
-                      </div>}
-                  </div>
-                  {listing.lot_size && !listing.property_type?.toLowerCase().includes("condo") && <div className="mt-4 pt-4 border-t">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Lot Size:</span>
-                        <span className="font-semibold">{listing.lot_size} acres</span>
-                      </div>
-                    </div>}
-                </CardContent>
-              </Card>
-
-              {/* Description */}
-              {listing.description && <Card>
-                  <CardHeader>
-                    <CardTitle>Property Description</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{listing.description}</p>
-                  </CardContent>
-                </Card>}
-
-              {/* Property Features */}
-              {listing.property_features && listing.property_features.length > 0 && <Card>
-                  <CardHeader>
-                    <CardTitle>Property Features</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {listing.property_features.map((feature, index) => <div key={index} className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary" />
-                          <span className="text-sm">{feature}</span>
-                        </div>)}
-                    </div>
-                  </CardContent>
-                </Card>}
-
-              {/* Amenities */}
-              {listing.amenities && listing.amenities.length > 0 && <Card>
-                  <CardHeader>
-                    <CardTitle>Amenities</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {listing.amenities.map((amenity, index) => <div key={index} className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary" />
-                          <span className="text-sm">{amenity}</span>
-                        </div>)}
-                    </div>
-                  </CardContent>
-                </Card>}
-
-              {/* Unit Features */}
-              {(listing.disclosures?.find((d: string) => d.startsWith('Floors:')) || listing.num_fireplaces !== null && listing.num_fireplaces !== undefined || listing.condo_details?.hoa_fee) && <Card>
-                  <CardHeader>
-                    <CardTitle>Unit Features</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.disclosures?.find((d: string) => d.startsWith('Floors:')) && <div>
-                          <p className="text-sm text-muted-foreground">Number of Floors</p>
-                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Floors:'))?.replace('Floors: ', '')}</p>
-                        </div>}
-                      {listing.num_fireplaces !== null && listing.num_fireplaces !== undefined && <div>
-                          <p className="text-sm text-muted-foreground">Fireplaces</p>
-                          <p className="font-semibold">{listing.num_fireplaces}</p>
-                        </div>}
-                      {listing.condo_details?.hoa_fee && <div>
-                          <p className="text-sm text-muted-foreground">HOA/Condo Fee</p>
-                          <p className="font-semibold">
-                            ${parseFloat(listing.condo_details.hoa_fee).toLocaleString()}/{listing.condo_details.hoa_fee_frequency || 'monthly'}
-                          </p>
-                        </div>}
-                    </div>
-                  </CardContent>
-                </Card>}
-
-              {/* Property Tax */}
-              {(listing.annual_property_tax || listing.tax_year || listing.tax_assessment_value) && <Card>
-                  <CardHeader>
-                    <CardTitle>Property Tax</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.annual_property_tax && <div>
-                          <p className="text-sm text-muted-foreground">Annual Property Tax</p>
-                          <p className="font-semibold">${parseFloat(listing.annual_property_tax.toString()).toLocaleString()}</p>
-                        </div>}
-                      {listing.tax_assessment_value && <div>
-                          <p className="text-sm text-muted-foreground">Assessed Value</p>
-                          <p className="font-semibold">${parseFloat(listing.tax_assessment_value.toString()).toLocaleString()}</p>
-                        </div>}
-                      {listing.tax_year && <div>
-                          <p className="text-sm text-muted-foreground">Fiscal Year</p>
-                          <p className="font-semibold">{listing.tax_year}</p>
-                        </div>}
-                      {listing.disclosures?.find((d: string) => d.startsWith('Residential Exemption:')) && <div>
-                          <p className="text-sm text-muted-foreground">Residential Exemption</p>
-                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Residential Exemption:'))?.replace('Residential Exemption: ', '')}</p>
-                        </div>}
-                    </div>
-                  </CardContent>
-                </Card>}
-
-              {/* Basement Details */}
-              {listing.disclosures?.some((d: string) => d.startsWith('Basement Type:') || d.startsWith('Basement Features:') || d.startsWith('Basement Floor Type:')) && <Card>
-                  <CardHeader>
-                    <CardTitle>Basement Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {listing.disclosures.find((d: string) => d.startsWith('Basement Type:')) && <div>
-                        <p className="text-sm text-muted-foreground mb-2">Basement Type</p>
-                        <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Basement Type:'))?.replace('Basement Type: ', '')}</p>
-                      </div>}
-                    {listing.disclosures.find((d: string) => d.startsWith('Basement Features:')) && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Basement Features</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Basement Features:'))?.replace('Basement Features: ', '').split(', ').map((feature: string, index: number) => <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{feature}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-                    {listing.disclosures.find((d: string) => d.startsWith('Basement Floor Type:')) && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Floor Type</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Basement Floor Type:'))?.replace('Basement Floor Type: ', '').split(', ').map((type: string, index: number) => <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{type}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-                  </CardContent>
-                </Card>}
-
-              {/* Foundation & Building Details */}
-              {listing.disclosures?.some((d: string) => d.startsWith('Lead Paint:') || d.startsWith('Handicap Access:') || d.startsWith('Foundation:')) && <Card>
-                  <CardHeader>
-                    <CardTitle>Foundation & Building Details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.disclosures.find((d: string) => d.startsWith('Lead Paint:')) && <div>
-                          <p className="text-sm text-muted-foreground">Lead Paint</p>
-                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Lead Paint:'))?.replace('Lead Paint: ', '')}</p>
-                        </div>}
-                      {listing.disclosures.find((d: string) => d.startsWith('Handicap Access:')) && <div>
-                          <p className="text-sm text-muted-foreground">Handicap Access</p>
-                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Handicap Access:'))?.replace('Handicap Access: ', '')}</p>
-                        </div>}
-                    </div>
-                    {listing.disclosures.find((d: string) => d.startsWith('Foundation:')) && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Foundation</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Foundation:'))?.replace('Foundation: ', '').split(', ').map((type: string, index: number) => <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{type}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-                  </CardContent>
-                </Card>}
-
-              {/* Parking & Garage Information */}
-              {(listing.garage_spaces || listing.total_parking_spaces || listing.disclosures?.some((d: string) => d.startsWith('Parking Features:') || d.startsWith('Parking Comments:') || d.startsWith('Garage Features:') || d.startsWith('Garage Comments:'))) && <Card>
-                  <CardHeader>
-                    <CardTitle>Parking & Garage</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.total_parking_spaces && <div>
-                          <p className="text-sm text-muted-foreground">Total Parking Spaces</p>
-                          <p className="font-semibold">{listing.total_parking_spaces}</p>
-                        </div>}
-                      {listing.garage_spaces !== undefined && listing.garage_spaces !== null && <div>
-                          <p className="text-sm text-muted-foreground">Garage Spaces</p>
-                          <p className="font-semibold">{listing.garage_spaces}</p>
-                        </div>}
-                    </div>
-                    
-                    {listing.disclosures?.find((d: string) => d.startsWith('Parking Features:')) && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Parking Features</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Parking Features:'))?.replace('Parking Features: ', '').split(', ').map((feature: string, index: number) => <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{feature}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-                    
-                    {listing.disclosures?.find((d: string) => d.startsWith('Parking Comments:')) && <div className="pt-4 border-t">
-                        <p className="text-sm font-medium text-muted-foreground mb-2">Parking Comments</p>
-                        <p className="text-sm">{listing.disclosures.find((d: string) => d.startsWith('Parking Comments:'))?.replace('Parking Comments: ', '')}</p>
-                      </div>}
-                    
-                    {listing.disclosures?.find((d: string) => d.startsWith('Garage Features:')) && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Garage Features</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Garage Features:'))?.replace('Garage Features: ', '').split(', ').map((feature: string, index: number) => <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{feature}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-                    
-                    {listing.disclosures?.find((d: string) => d.startsWith('Garage Comments:')) && <div className="pt-4 border-t">
-                        <p className="text-sm font-medium text-muted-foreground mb-2">Garage Comments</p>
-                        <p className="text-sm">{listing.disclosures.find((d: string) => d.startsWith('Garage Comments:'))?.replace('Garage Comments: ', '')}</p>
-                      </div>}
-                  </CardContent>
-                </Card>}
-
-              {/* Lot Information */}
-              {!listing.property_type?.toLowerCase().includes("condo") && listing.disclosures?.some((d: string) => d.startsWith('Lot Size Source:') || d.startsWith('Lot Description:')) && <Card>
-                  <CardHeader>
-                    <CardTitle>Lot Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {listing.disclosures.find((d: string) => d.startsWith('Lot Size Source:')) && <div>
-                        <p className="text-sm text-muted-foreground mb-2">Lot Size Source</p>
-                        <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Lot Size Source:'))?.replace('Lot Size Source: ', '')}</p>
-                      </div>}
-                    {listing.disclosures?.find((d: string) => d.startsWith('Lot Description:')) && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Lot Description</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Lot Description:'))?.replace('Lot Description: ', '').split(', ').map((desc: string, index: number) => <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{desc}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-                  </CardContent>
-                </Card>}
-
-              {/* Condominium Details */}
-              {listing.property_type === "Condominium" && listing.condo_details && <Card>
-                  <CardHeader>
-                    <CardTitle>Condominium Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.condo_details.unit_number && <div>
-                          <p className="text-sm text-muted-foreground">Unit Number</p>
-                          <p className="font-semibold">{listing.condo_details.unit_number}</p>
-                        </div>}
-                      {listing.condo_details.floor_level && <div>
-                          <p className="text-sm text-muted-foreground">Floor Level</p>
-                          <p className="font-semibold">{listing.condo_details.floor_level}</p>
-                        </div>}
-                      {listing.condo_details.total_units && <div>
-                          <p className="text-sm text-muted-foreground">Total Units</p>
-                          <p className="font-semibold">{listing.condo_details.total_units}</p>
-                        </div>}
-                    </div>
-                    
-                    {listing.condo_details.hoa_fee && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">HOA Fee</p>
-                        <p className="font-semibold">
-                          ${parseFloat(listing.condo_details.hoa_fee).toLocaleString()}/{listing.condo_details.hoa_fee_frequency || 'month'}
-                        </p>
-                      </div>}
-
-                    {listing.condo_details.pet_policy && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Pet Policy</p>
-                        <p className="font-semibold capitalize">{listing.condo_details.pet_policy.replace('_', ' ')}</p>
-                      </div>}
-
-                    {listing.condo_details.building_amenities && listing.condo_details.building_amenities.length > 0 && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Building Amenities</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.condo_details.building_amenities.map((amenity: string, index: number) => <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{amenity}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-                  </CardContent>
-                </Card>}
-
-              {/* Multi-Family Details */}
-              {listing.property_type === "Multi-Family" && listing.multi_family_details && <Card>
-                  <CardHeader>
-                    <CardTitle>Multi-Family Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.multi_family_details.number_of_units && <div>
-                          <p className="text-sm text-muted-foreground">Number of Units</p>
-                          <p className="font-semibold">{listing.multi_family_details.number_of_units}</p>
-                        </div>}
-                      {listing.multi_family_details.parking_per_unit && <div>
-                          <p className="text-sm text-muted-foreground">Parking Per Unit</p>
-                          <p className="font-semibold">{listing.multi_family_details.parking_per_unit}</p>
-                        </div>}
-                      {listing.multi_family_details.occupancy_status && <div>
-                          <p className="text-sm text-muted-foreground">Occupancy Status</p>
-                          <p className="font-semibold capitalize">{listing.multi_family_details.occupancy_status.replace('_', ' ')}</p>
-                        </div>}
-                    </div>
-
-                    {listing.multi_family_details.unit_breakdown && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Unit Breakdown</p>
-                        <p className="text-sm whitespace-pre-wrap">{listing.multi_family_details.unit_breakdown}</p>
-                      </div>}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                      {listing.multi_family_details.current_monthly_income && <div>
-                          <p className="text-sm text-muted-foreground">Current Monthly Income</p>
-                          <p className="font-semibold text-green-600">
-                            ${parseFloat(listing.multi_family_details.current_monthly_income).toLocaleString()}
-                          </p>
-                        </div>}
-                      {listing.multi_family_details.potential_monthly_income && <div>
-                          <p className="text-sm text-muted-foreground">Potential Monthly Income</p>
-                          <p className="font-semibold text-blue-600">
-                            ${parseFloat(listing.multi_family_details.potential_monthly_income).toLocaleString()}
-                          </p>
-                        </div>}
-                    </div>
-
-                    {listing.multi_family_details.laundry_type && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Laundry</p>
-                        <p className="font-semibold capitalize">{listing.multi_family_details.laundry_type.replace('_', ' ')}</p>
-                      </div>}
-
-                    {listing.multi_family_details.separate_utilities && listing.multi_family_details.separate_utilities.length > 0 && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Separate Utilities</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.multi_family_details.separate_utilities.map((utility: string, index: number) => <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{utility}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-                  </CardContent>
-                </Card>}
-
-              {/* Commercial Details */}
-              {listing.property_type === "Commercial" && listing.commercial_details && <Card>
-                  <CardHeader>
-                    <CardTitle>Commercial Property Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.commercial_details.space_type && <div>
-                          <p className="text-sm text-muted-foreground">Space Type</p>
-                          <p className="font-semibold capitalize">{listing.commercial_details.space_type.replace('_', ' ')}</p>
-                        </div>}
-                      {listing.commercial_details.lease_type && <div>
-                          <p className="text-sm text-muted-foreground">Lease Type</p>
-                          <p className="font-semibold capitalize">{listing.commercial_details.lease_type.replace('_', ' ')}</p>
-                        </div>}
-                      {listing.commercial_details.zoning && <div>
-                          <p className="text-sm text-muted-foreground">Zoning</p>
-                          <p className="font-semibold">{listing.commercial_details.zoning}</p>
-                        </div>}
-                    </div>
-
-                    {listing.commercial_details.lease_rate && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Lease Rate</p>
-                        <p className="font-semibold text-lg text-primary">
-                          ${parseFloat(listing.commercial_details.lease_rate).toLocaleString()} 
-                          {listing.commercial_details.lease_rate_per && ` ${listing.commercial_details.lease_rate_per.replace('_', ' ')}`}
-                        </p>
-                      </div>}
-
-                    {(listing.commercial_details.lease_term_min || listing.commercial_details.lease_term_max) && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Lease Term</p>
-                        <p className="font-semibold">
-                          {listing.commercial_details.lease_term_min && listing.commercial_details.lease_term_max ? `${listing.commercial_details.lease_term_min} - ${listing.commercial_details.lease_term_max} months` : listing.commercial_details.lease_term_min ? `${listing.commercial_details.lease_term_min}+ months` : `Up to ${listing.commercial_details.lease_term_max} months`}
-                        </p>
-                      </div>}
-
-                    {listing.commercial_details.current_tenant && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Current Tenant</p>
-                        <p className="font-semibold">{listing.commercial_details.current_tenant}</p>
-                      </div>}
-
-                    {listing.commercial_details.lease_expiration && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Lease Expiration</p>
-                        <p className="font-semibold">
-                          {new Date(listing.commercial_details.lease_expiration).toLocaleDateString()}
-                        </p>
-                      </div>}
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t">
-                      {listing.commercial_details.ceiling_height && <div>
-                          <p className="text-sm text-muted-foreground">Ceiling Height</p>
-                          <p className="font-semibold">{listing.commercial_details.ceiling_height} ft</p>
-                        </div>}
-                      {listing.commercial_details.loading_docks !== null && listing.commercial_details.loading_docks !== undefined && <div>
-                          <p className="text-sm text-muted-foreground">Loading Docks</p>
-                          <p className="font-semibold">{listing.commercial_details.loading_docks}</p>
-                        </div>}
-                      {listing.commercial_details.power_available && <div>
-                          <p className="text-sm text-muted-foreground">Power Available</p>
-                          <p className="font-semibold">{listing.commercial_details.power_available}</p>
-                        </div>}
-                    </div>
-
-                    {listing.commercial_details.allowed_business_types && listing.commercial_details.allowed_business_types.length > 0 && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Allowed Business Types</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.commercial_details.allowed_business_types.map((type: string, index: number) => <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{type}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-
-                    {listing.commercial_details.tenant_responsibilities && listing.commercial_details.tenant_responsibilities.length > 0 && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Tenant Responsibilities</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {listing.commercial_details.tenant_responsibilities.map((resp: string, index: number) => <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{resp}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-
-                    {listing.commercial_details.additional_features && listing.commercial_details.additional_features.length > 0 && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Additional Features</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.commercial_details.additional_features.map((feature: string, index: number) => <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{feature}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-                  </CardContent>
-                </Card>}
-
-              {/* Disclosures & Legal Information */}
-              {(listing.disclosures?.some((d: string) => d.startsWith('Seller Disclosure:') || d.startsWith('Disclosures:') || d.startsWith('Exclusions:')) || listing.additional_notes) && <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5" />
-                      Disclosures & Important Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {listing.disclosures?.find((d: string) => d.startsWith('Seller Disclosure:')) && <div>
-                        <p className="text-sm text-muted-foreground mb-2">Seller Disclosure</p>
-                        <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Seller Disclosure:'))?.replace('Seller Disclosure: ', '')}</p>
-                      </div>}
-                    {listing.disclosures?.find((d: string) => d.startsWith('Disclosures:')) && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Additional Disclosures</p>
-                        <p className="text-sm whitespace-pre-wrap">{listing.disclosures.find((d: string) => d.startsWith('Disclosures:'))?.replace('Disclosures: ', '')}</p>
-                      </div>}
-                    {listing.disclosures?.find((d: string) => d.startsWith('Exclusions:')) && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Exclusions</p>
-                        <p className="text-sm whitespace-pre-wrap">{listing.disclosures.find((d: string) => d.startsWith('Exclusions:'))?.replace('Exclusions: ', '')}</p>
-                      </div>}
-                    {listing.additional_notes?.includes('Broker Comments:') && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Broker Comments</p>
-                        <p className="text-sm whitespace-pre-wrap">{listing.additional_notes.split('Broker Comments:')[1]?.trim()}</p>
-                      </div>}
-                    {listing.disclosures && listing.disclosures.filter((d: string) => !d.startsWith('Seller Disclosure:') && !d.startsWith('Disclosures:') && !d.startsWith('Exclusions:') && !d.startsWith('Residential Exemption:') && !d.startsWith('Floors:') && !d.startsWith('Basement Type:') && !d.startsWith('Basement Features:') && !d.startsWith('Basement Floor Type:') && !d.startsWith('Lead Paint:') && !d.startsWith('Handicap Access:') && !d.startsWith('Foundation:') && !d.startsWith('Parking Features:') && !d.startsWith('Parking Comments:') && !d.startsWith('Garage Features:') && !d.startsWith('Garage Comments:') && !d.startsWith('Lot Size Source:') && !d.startsWith('Lot Description:')).length > 0 && <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Other Disclosures</p>
-                        <div className="space-y-2">
-                          {listing.disclosures.filter((d: string) => !d.startsWith('Seller Disclosure:') && !d.startsWith('Disclosures:') && !d.startsWith('Exclusions:') && !d.startsWith('Residential Exemption:') && !d.startsWith('Floors:') && !d.startsWith('Basement Type:') && !d.startsWith('Basement Features:') && !d.startsWith('Basement Floor Type:') && !d.startsWith('Lead Paint:') && !d.startsWith('Handicap Access:') && !d.startsWith('Foundation:') && !d.startsWith('Parking Features:') && !d.startsWith('Parking Comments:') && !d.startsWith('Garage Features:') && !d.startsWith('Garage Comments:') && !d.startsWith('Lot Size Source:') && !d.startsWith('Lot Description:')).map((disclosure, index) => <div key={index} className="flex items-start gap-2 text-sm">
-                              <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                              <span>{disclosure}</span>
-                            </div>)}
-                        </div>
-                      </div>}
-                  </CardContent>
-                </Card>}
-
-              {/* Additional Notes */}
-              {listing.additional_notes && <Card>
-                  <CardHeader>
-                    <CardTitle>Additional Notes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{listing.additional_notes}</p>
-                  </CardContent>
-                </Card>}
-
-              {/* Nearby Schools */}
-              {schools.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <GraduationCap className="w-5 h-5" />
-                      Nearby Schools
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {schools.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">School data not available.</p>
-                    ) : (
-                      <ul className="space-y-3">
-                        {schools.map((school: any, index: number) => (
-                          <li key={index} className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0">
-                            <div className="flex-1">
-                              <div className="font-medium">{school.name}</div>
-                              <div className="text-sm text-muted-foreground mt-1">
-                                {school.type} {school.gradeRange && `• ${school.gradeRange}`} {school.distanceMiles && `• ${school.distanceMiles} mi`}
-                              </div>
-                            </div>
-                            {school.rating && (
-                              <Badge variant="secondary" className="ml-2">
-                                {school.rating}/10
-                              </Badge>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </CardContent>
-                </Card>
               )}
-
-              {/* Walkability & Transit */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Footprints className="w-5 h-5" />
-                    Walkability & Transit
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {/* Walk Score */}
-                    <div className="border rounded-xl p-4 flex flex-col gap-2">
-                      <div className="text-xs text-muted-foreground uppercase tracking-wide">
-                        Walk Score
-                      </div>
-                      <div className="text-3xl font-semibold">
-                        {walkScoreData?.enabled && walkScoreData.walkScore != null
-                          ? walkScoreData.walkScore
-                          : neighborhood?.walkabilityIndex != null
-                          ? neighborhood.walkabilityIndex
-                          : "—"}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {walkScoreData?.enabled && walkScoreData.walkDescription
-                          ? walkScoreData.walkDescription
-                          : neighborhood?.walkabilityIndex != null
-                          ? "Walkability index (ATTOM)"
-                          : "Walkability data not available"}
-                      </div>
-                    </div>
-
-                    {/* Transit */}
-                    <div className="border rounded-xl p-4 flex flex-col gap-2">
-                      <div className="text-xs text-muted-foreground uppercase tracking-wide">
-                        Transit
-                      </div>
-                      <div className="text-3xl font-semibold">
-                        {walkScoreData?.enabled && walkScoreData.transitScore != null
-                          ? walkScoreData.transitScore
-                          : neighborhood?.transitScore != null
-                          ? neighborhood.transitScore
-                          : "—"}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {walkScoreData?.enabled && walkScoreData.transitDescription
-                          ? walkScoreData.transitDescription
-                          : neighborhood?.transitScore != null
-                          ? "Transit score (ATTOM)"
-                          : "Transit data not available"}
-                      </div>
-                    </div>
-
-                    {/* Bike */}
-                    <div className="border rounded-xl p-4 flex flex-col gap-2">
-                      <div className="text-xs text-muted-foreground uppercase tracking-wide">
-                        Bike
-                      </div>
-                      <div className="text-3xl font-semibold">
-                        {walkScoreData?.enabled && walkScoreData.bikeScore != null
-                          ? walkScoreData.bikeScore
-                          : "—"}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {walkScoreData?.enabled && walkScoreData.bikeDescription
-                          ? walkScoreData.bikeDescription
-                          : "Bikeability data not available"}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="mt-4 text-xs text-muted-foreground">
-                    Scores provided by Walk Score and public data sources; not guaranteed and
-                    subject to change.
-                  </p>
-
-                  {/* Crime Index */}
-                  {neighborhood?.crimeIndex && (
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="text-xs text-muted-foreground uppercase mb-1">Crime Index</div>
-                      <div className="text-2xl font-semibold">{neighborhood.crimeIndex}</div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Listing Activity Timeline */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Listing Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {timelineEvents.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No activity history available for this listing.
-                    </p>
-                  ) : (
-                    <ol className="space-y-4 border-l-2 border-border pl-6">
-                      {timelineEvents.map((event) => {
-                        const date = new Date(event.at).toLocaleString();
-
-                        if (event.type === "price") {
-                          const oldPrice =
-                            event.oldValue != null
-                              ? `$${Number(event.oldValue).toLocaleString()}`
-                              : null;
-                          const newPrice = `$${Number(event.newValue).toLocaleString()}`;
-
-                          return (
-                            <li key={event.id} className="flex gap-3 items-start relative">
-                              <div className="absolute -left-[29px] mt-1.5 h-3 w-3 rounded-full bg-primary border-2 border-background" />
-                              <div className="flex-1">
-                                <div className="text-xs text-muted-foreground mb-1">{date}</div>
-                                <div className="font-medium">
-                                  {oldPrice ? (
-                                    <>
-                                      Price changed from {oldPrice} to{" "}
-                                      <span className="text-primary">{newPrice}</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      Listed at{" "}
-                                      <span className="text-primary">{newPrice}</span>
-                                    </>
-                                  )}
-                                </div>
-                                {event.note && (
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    {event.note}
-                                  </div>
-                                )}
-                              </div>
-                            </li>
-                          );
-                        }
-
-                        // status event
-                        const oldStatus = event.oldValue ?? "No previous status";
-                        const newStatus = event.newValue;
-
-                        return (
-                          <li key={event.id} className="flex gap-3 items-start relative">
-                            <div className="absolute -left-[29px] mt-1.5 h-3 w-3 rounded-full bg-accent border-2 border-background" />
-                            <div className="flex-1">
-                              <div className="text-xs text-muted-foreground mb-1">{date}</div>
-                              <div className="font-medium">
-                                Status changed from{" "}
-                                <span className="capitalize">{oldStatus.replace(/_/g, " ")}</span> to{" "}
-                                <span className="text-accent capitalize">{newStatus.replace(/_/g, " ")}</span>
-                              </div>
-                              {event.note && (
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  {event.note}
-                                </div>
-                              )}
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  )}
-
-                  <p className="mt-4 text-xs text-muted-foreground">
-                    Activity reflects changes made within AllAgentConnect and scheduled status
-                    updates; may not include off-platform changes.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* AGENT ONLY INFORMATION */}
-              {isAgent && <>
-                  <Card className="border-primary/50">
-                    <CardHeader className="bg-primary/5">
-                      <CardTitle className="flex items-center gap-2 text-primary">
-                        <Lock className="w-5 h-5" />
-                        Agent Only Information
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6 space-y-4">
-                      {/* Buyer Agent Compensation */}
-                      {(listing.commission_rate || listing.commission_notes) && <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold">Buyer Agent Compensation</h4>
-                            <BuyerAgentCompensationInfo />
-                          </div>
-                          {listing.commission_rate && <p className="text-sm text-muted-foreground">
-                              {listing.commission_type === 'percentage' ? `${listing.commission_rate}%` : `$${listing.commission_rate.toLocaleString()}`}
-                            </p>}
-                          {listing.commission_notes && <p className="text-sm text-muted-foreground mt-1">{listing.commission_notes}</p>}
-                          <Separator className="mt-4" />
-                        </div>}
-
-                      {/* Showing Instructions */}
-                      {(listing.showing_instructions || listing.lockbox_code || listing.showing_contact_name) && <div>
-                          <h4 className="font-semibold mb-2">Showing Instructions</h4>
-                          {listing.showing_instructions && <p className="text-sm text-muted-foreground mb-2">{listing.showing_instructions}</p>}
-                          {listing.appointment_required && <Badge variant="outline" className="mb-2">Appointment Required</Badge>}
-                          {listing.lockbox_code && <div className="flex items-center gap-2 text-sm">
-                              <Lock className="w-4 h-4" />
-                              <span className="font-mono">{listing.lockbox_code}</span>
-                            </div>}
-                          {listing.showing_contact_name && <div className="mt-2 space-y-1">
-                              <div className="flex items-center gap-2 text-sm">
-                                <Phone className="w-4 h-4" />
-                                <span>{listing.showing_contact_name}</span>
-                              </div>
-                              {listing.showing_contact_phone && <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                                  {formatPhoneNumber(listing.showing_contact_phone)}
-                                </div>}
-                            </div>}
-                          <Separator className="mt-4" />
-                        </div>}
-
-                      {/* Documents */}
-                      {listing.documents && listing.documents.length > 0 && <div>
-                          <h4 className="font-semibold mb-2">Documents</h4>
-                          <div className="space-y-2">
-                            {listing.documents.map((doc: any, index: number) => <a key={index} href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-primary hover:underline">
-                                <FileText className="w-4 h-4" />
-                                {doc.name}
-                              </a>)}
-                          </div>
-                        </div>}
-                      
-                      {/* Contact Listing Agent Button */}
-                      <div className="pt-4">
-                        <ContactAgentDialog listingId={listing.id} agentId={listing.agent_id} listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`} />
-                      </div>
-
-                      {/* View Public Record Button */}
-                      {(listing as any).attom_id && (
-                        <div className="pt-2">
-                          <Button
-                            onClick={() => setShowPublicRecord(true)}
-                            variant="outline"
-                            className="w-full"
-                          >
-                            <FileText className="w-4 h-4 mr-2" />
-                            View Public Record
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </>}
-
-              {/* Property Data Cards */}
-              {listing.value_estimate && <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <DollarSign className="h-5 w-5" />
-                      Value Estimate
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {listing.value_estimate.estimate && <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Estimated:</span>
-                          <span className="font-semibold">${listing.value_estimate.estimate.toLocaleString()}</span>
-                        </div>}
-                      {listing.value_estimate.high && listing.value_estimate.low && <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Range:</span>
-                          <span className="text-sm">${listing.value_estimate.low.toLocaleString()} - ${listing.value_estimate.high.toLocaleString()}</span>
-                        </div>}
-                    </div>
-                  </CardContent>
-                </Card>}
-
-              {/* Map */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Location
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <PropertyMap address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`} latitude={listing.latitude} longitude={listing.longitude} />
-                </CardContent>
-              </Card>
-
-              {/* Walk Score */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Footprints className="h-5 w-5" />
-                    Walk Score
-                  </CardTitle>
-                </CardHeader>
-                 <CardContent>
-                   {listing.walk_score_data ? <div className="space-y-3">
-                       {listing.walk_score_data.walkscore && <div className="flex justify-between items-center">
-                           <span className="text-sm text-muted-foreground">Score:</span>
-                           <Badge variant={listing.walk_score_data.walkscore >= 70 ? "default" : "secondary"}>
-                             {listing.walk_score_data.walkscore}
-                           </Badge>
-                         </div>}
-                       {listing.walk_score_data.description && <p className="text-sm text-muted-foreground">{listing.walk_score_data.description}</p>}
-                     </div> : listing.attom_data?.walk_score ? <div className="space-y-3">
-                       <div className="flex justify-between items-center">
-                         <span className="text-sm text-muted-foreground">Score:</span>
-                         <Badge variant={listing.attom_data.walk_score >= 70 ? "default" : "secondary"}>
-                           {listing.attom_data.walk_score}
-                         </Badge>
-                       </div>
-                       {listing.attom_data.walk_score_description && <p className="text-sm text-muted-foreground">{listing.attom_data.walk_score_description}</p>}
-                     </div> : <p className="text-sm text-muted-foreground">Walk score data not available. ATTOM API needs to be called to fetch this data.</p>}
-                 </CardContent>
-              </Card>
-
-              {/* Nearby Schools */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5" />
-                    Nearby Schools
-                  </CardTitle>
-                </CardHeader>
-                 <CardContent>
-                   {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 ? <div className="space-y-3">
-                       {listing.schools_data.schools.slice(0, 3).map((school: any, index: number) => <div key={index} className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0">
-                           <div className="flex-1">
-                             <h4 className="font-semibold text-sm">{school.name}</h4>
-                             <p className="text-xs text-muted-foreground">{school.type}</p>
-                             {school.distance && <p className="text-xs text-muted-foreground">{school.distance} mi</p>}
-                           </div>
-                           {school.rating && <Badge variant="default" className="text-xs">{school.rating}/10</Badge>}
-                         </div>)}
-                     </div> : listing.attom_data?.schools && Array.isArray(listing.attom_data.schools) && listing.attom_data.schools.length > 0 ? <div className="space-y-3">
-                       {listing.attom_data.schools.slice(0, 3).map((school: any, index: number) => <div key={index} className="flex justify-between items-start border-b pb-3 last:border-0 last:pb-0">
-                           <div className="flex-1">
-                             <h4 className="font-semibold text-sm">{school.name}</h4>
-                             <p className="text-xs text-muted-foreground">{school.type || school.level}</p>
-                             {school.distance && <p className="text-xs text-muted-foreground">{school.distance} mi</p>}
-                           </div>
-                           {school.rating && <Badge variant="default" className="text-xs">{school.rating}/10</Badge>}
-                         </div>)}
-                     </div> : <p className="text-sm text-muted-foreground">School data not available. ATTOM API needs to be called to fetch this data.</p>}
-                  </CardContent>
-              </Card>
-
-              {/* Vendor Advertisement */}
-              <AdBanner placementZone="listing_sidebar" className="mt-4" />
-
+              <Badge className={getStatusColor(listing.status)}>
+                {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyLink}
+                className="gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                Share
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Public Record Modal */}
-      {showPublicRecord && (
-        <PublicRecordModal
-          attomId={(listing as any).attom_id}
-          onClose={() => setShowPublicRecord(false)}
-        />
-      )}
-    </div>;
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Photos & Details */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Hero Photo */}
+            <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted">
+              <img
+                src={mainPhoto}
+                alt={listing.address}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Thumbnail Strip */}
+            {listing.photos && listing.photos.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {listing.photos.map((photo, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentPhotoIndex(index)}
+                    className={`relative flex-shrink-0 w-24 h-16 rounded overflow-hidden border-2 transition ${
+                      index === currentPhotoIndex
+                        ? 'border-primary'
+                        : 'border-transparent hover:border-border'
+                    }`}
+                  >
+                    <img
+                      src={photo.url}
+                      alt={`Photo ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Address & Price */}
+            <div>
+              <div className="flex items-start gap-2 mb-2">
+                <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold">{listing.address}</h1>
+                  <p className="text-muted-foreground">
+                    {listing.city}, {listing.state} {listing.zip_code}
+                  </p>
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-primary">
+                ${listing.price.toLocaleString()}
+                {listing.listing_type === 'for_rent' && (
+                  <span className="text-lg text-muted-foreground">/month</span>
+                )}
+              </div>
+            </div>
+
+            {/* Key Stats Row */}
+            <div className="flex flex-wrap items-center gap-6 py-4 border-y">
+              {listing.bedrooms && (
+                <div className="flex items-center gap-2">
+                  <Bed className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-semibold">{listing.bedrooms}</span>
+                  <span className="text-muted-foreground text-sm">Beds</span>
+                </div>
+              )}
+              {listing.bathrooms && (
+                <div className="flex items-center gap-2">
+                  <Bath className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-semibold">{listing.bathrooms}</span>
+                  <span className="text-muted-foreground text-sm">Baths</span>
+                </div>
+              )}
+              {listing.square_feet && (
+                <div className="flex items-center gap-2">
+                  <Square className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-semibold">{listing.square_feet.toLocaleString()}</span>
+                  <span className="text-muted-foreground text-sm">Sq Ft</span>
+                </div>
+              )}
+            </div>
+
+            {/* Metadata Row */}
+            <div className="flex flex-wrap items-center gap-4 text-sm text-foreground/80 font-medium">
+              {listDate && (
+                <div>
+                  <span className="text-muted-foreground">List:</span>{' '}
+                  {new Date(listDate).toLocaleDateString()}
+                </div>
+              )}
+              {daysOnMarket && (
+                <div>
+                  <span className="text-muted-foreground">Days on Market:</span>{' '}
+                  {daysOnMarket}
+                </div>
+              )}
+              <div>
+                <span className="text-muted-foreground">Matches:</span> {stats.matches}
+              </div>
+              <div className="flex items-center gap-1">
+                <Eye className="w-4 h-4" />
+                <span>{stats.views}</span>
+              </div>
+            </div>
+
+            {/* Overview/Description */}
+            {listing.description && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                    {listing.description}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Additional property details can go here */}
+          </div>
+
+          {/* Right Column - Agent Card & Key Facts */}
+          <div className="space-y-6">
+            {/* Agent Contact Card */}
+            {agentProfile && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Listing Agent</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-12 h-12">
+                      {agentProfile.headshot_url ? (
+                        <AvatarImage src={agentProfile.headshot_url} />
+                      ) : (
+                        <AvatarFallback>
+                          {agentProfile.first_name[0]}{agentProfile.last_name[0]}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold">
+                        {agentProfile.first_name} {agentProfile.last_name}
+                      </p>
+                      {agentProfile.title && (
+                        <p className="text-sm text-muted-foreground">{agentProfile.title}</p>
+                      )}
+                      {agentProfile.company && (
+                        <p className="text-sm text-muted-foreground">{agentProfile.company}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-muted-foreground">
+                    Contact the listing agent directly for more information or to schedule a showing.
+                  </p>
+
+                  <Separator />
+
+                  <div className="space-y-3">
+                    {(agentProfile.cell_phone || agentProfile.phone) && (
+                      <a
+                        href={`tel:${agentProfile.cell_phone || agentProfile.phone}`}
+                        className="flex items-center gap-3 text-sm hover:text-primary transition"
+                      >
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <span>
+                          {formatPhoneNumber(agentProfile.cell_phone || agentProfile.phone)}
+                        </span>
+                      </a>
+                    )}
+                    {agentProfile.email && (
+                      <a
+                        href={`mailto:${agentProfile.email}`}
+                        className="flex items-center gap-3 text-sm hover:text-primary transition break-all"
+                      >
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                        <span>{agentProfile.email}</span>
+                      </a>
+                    )}
+                  </div>
+
+                  <Button className="w-full" size="lg">
+                    Ask about this property
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Key Facts Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Key Facts</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Status</span>
+                  <span className="font-medium">
+                    {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
+                  </span>
+                </div>
+                {listing.listing_number && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">AAC #</span>
+                    <span className="font-medium font-mono">{listing.listing_number}</span>
+                  </div>
+                )}
+                {listDate && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Listed</span>
+                    <span className="font-medium">
+                      {new Date(listDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+                {listing.year_built && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Year Built</span>
+                    <span className="font-medium">{listing.year_built}</span>
+                  </div>
+                )}
+                {listing.property_type && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Property Type</span>
+                    <span className="font-medium">{listing.property_type}</span>
+                  </div>
+                )}
+                {listing.lot_size && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Lot Size</span>
+                    <span className="font-medium">{listing.lot_size} acres</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
+
 export default PropertyDetail;
