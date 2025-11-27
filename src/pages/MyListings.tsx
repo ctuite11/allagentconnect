@@ -398,8 +398,7 @@ function MyListingsView({
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
                     onClick={() => onBrokerTour(l)}
                   >
-                    Broker Tour
-                    {hasOpenHouses && <span className="text-sm">🎈</span>}
+                    🚗 Broker Tour
                   </button>
                   {hasOpenHouses && (
                     <button
