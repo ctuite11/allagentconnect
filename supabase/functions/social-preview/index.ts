@@ -69,7 +69,7 @@ serve(async (req) => {
     }
 
     // Photo URL resolution
-    let photoUrl = "https://lovable.dev/opengraph-image-p98pqg.png";
+    let photoUrl = "https://allagentconnect.com/og-default.png";
     if (Array.isArray(listing.photos) && listing.photos.length) {
       const first = listing.photos[0];
       photoUrl = typeof first === "string" ? first : first?.url || photoUrl;
