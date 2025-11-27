@@ -17,17 +17,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { AgentListing } from "@/pages/AgentListingsPage";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ListingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  listing: AgentListing | null;
+  listing: {
+    id: string;
+    addressLine1: string;
+    city: string;
+    state: string;
+    zip: string;
+    mlsNumber?: string;
+  } | null;
   onSaved?: () => void;
+  eventTypePreset?: "in_person" | "virtual" | "broker_tour";
 }
 
 /**
- * Dialog to add a simple open house for a listing.
+ * Dialog to add a simple open house or broker tour for a listing.
  * Stores date, start time, end time, type, and comments.
  */
 export function OpenHouseDialog({
@@ -35,12 +44,13 @@ export function OpenHouseDialog({
   onOpenChange,
   listing,
   onSaved,
+  eventTypePreset,
 }: ListingDialogProps) {
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [eventType, setEventType] = useState<"in_person" | "virtual">(
-    "in_person",
+  const [eventType, setEventType] = useState<"in_person" | "virtual" | "broker_tour">(
+    eventTypePreset || "in_person",
   );
   const [comments, setComments] = useState("");
   const [saving, setSaving] = useState(false);
@@ -51,10 +61,10 @@ export function OpenHouseDialog({
       setDate("");
       setStartTime("");
       setEndTime("");
-      setEventType("in_person");
+      setEventType(eventTypePreset || "in_person");
       setComments("");
     }
-  }, [open]);
+  }, [open, eventTypePreset]);
 
   const canSave = !!date && !!startTime && !!endTime && !!listing;
 
@@ -64,23 +74,36 @@ export function OpenHouseDialog({
     try {
       setSaving(true);
 
-      // TODO: Supabase insert goes here.
-      // Example (pseudo):
-      //
-      // const supabase = createClient();
-      // await supabase.from("open_houses").insert({
-      //   listing_id: listing.id,
-      //   date,
-      //   start_time: startTime,
-      //   end_time: endTime,
-      //   event_type: eventType,
-      //   comments,
-      // });
-      //
-      // Then refetch open houses if needed.
+      // Fetch current open_houses array
+      const { data: currentListing } = await supabase
+        .from("listings")
+        .select("open_houses")
+        .eq("id", listing.id)
+        .single();
 
+      const existingOpenHouses = (currentListing?.open_houses as any[]) || [];
+      const newOpenHouse = { 
+        date, 
+        start_time: startTime, 
+        end_time: endTime, 
+        event_type: eventType, 
+        comments 
+      };
+
+      // Append new open house to array
+      const { error } = await supabase
+        .from("listings")
+        .update({ open_houses: [...existingOpenHouses, newOpenHouse] })
+        .eq("id", listing.id);
+
+      if (error) throw error;
+
+      toast.success(eventType === "broker_tour" ? "Broker tour scheduled!" : "Open house scheduled!");
       if (onSaved) onSaved();
       onOpenChange(false);
+    } catch (error) {
+      console.error("Error saving open house:", error);
+      toast.error("Failed to schedule");
     } finally {
       setSaving(false);
     }
@@ -90,11 +113,13 @@ export function OpenHouseDialog({
     ? `${listing.addressLine1}, ${listing.city}, ${listing.state} ${listing.zip}`
     : "";
 
+  const dialogTitle = eventType === "broker_tour" ? "Schedule Broker Tour" : "Add Open House";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Open House</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
           {listing && (
             <DialogDescription>
               {formattedAddress}
@@ -122,7 +147,7 @@ export function OpenHouseDialog({
             <Select
               value={eventType}
               onValueChange={(val) =>
-                setEventType(val as "in_person" | "virtual")
+                setEventType(val as "in_person" | "virtual" | "broker_tour")
               }
             >
               <SelectTrigger>
@@ -131,6 +156,7 @@ export function OpenHouseDialog({
               <SelectContent>
                 <SelectItem value="in_person">In-Person</SelectItem>
                 <SelectItem value="virtual">Virtual</SelectItem>
+                <SelectItem value="broker_tour">Broker Tour</SelectItem>
               </SelectContent>
             </Select>
           </div>
