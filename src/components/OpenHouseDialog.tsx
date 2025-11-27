@@ -134,12 +134,13 @@ export function OpenHouseDialog({
         </DialogHeader>
 
         <div className="grid gap-3 py-2 sm:grid-cols-2">
-          <div className="space-y-1">
+          <div className="space-y-1 pointer-events-auto">
             <label className="text-sm font-medium">Date</label>
             <Input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              className="pointer-events-auto"
             />
           </div>
           <div className="space-y-1">
@@ -160,20 +161,22 @@ export function OpenHouseDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1 pointer-events-auto">
             <label className="text-sm font-medium">Start Time</label>
             <Input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
+              className="pointer-events-auto"
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1 pointer-events-auto">
             <label className="text-sm font-medium">End Time</label>
             <Input
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
+              className="pointer-events-auto"
             />
           </div>
         </div>
