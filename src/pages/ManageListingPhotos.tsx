@@ -39,7 +39,16 @@ const ManageListingPhotos: React.FC = () => {
       if (error) throw error;
 
       const photosData = (data?.photos as any[]) || [];
-      setPhotos(photosData.sort((a, b) => a.order - b.order));
+      
+      // Handle both formats: array of strings (old) or array of objects (new)
+      const normalizedPhotos = photosData.map((item, index) => {
+        if (typeof item === 'string') {
+          return { url: item, order: index };
+        }
+        return item;
+      });
+      
+      setPhotos(normalizedPhotos.sort((a, b) => a.order - b.order));
     } catch (error: any) {
       console.error('Error fetching photos:', error);
       toast.error('Failed to load photos');
