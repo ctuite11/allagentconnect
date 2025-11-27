@@ -20,6 +20,8 @@ import {
   DollarSign,
   Share2,
 } from "lucide-react";
+import { PriceDialog } from "@/components/PriceDialog";
+import { OpenHouseDialog } from "@/components/OpenHouseDialog";
 
 type ListingStatus =
   | "on_market"
@@ -64,6 +66,8 @@ export default function AgentListingsPage({ listings }: AgentListingsPageProps) 
   const [sort, setSort] = useState<
     "list_date_desc" | "price_desc" | "price_asc" | "dom_desc"
   >("list_date_desc");
+  const [priceDialogListing, setPriceDialogListing] = useState<AgentListing | null>(null);
+  const [openHouseListing, setOpenHouseListing] = useState<AgentListing | null>(null);
 
   const filtered = listings
     .filter((listing) => {
@@ -198,10 +202,27 @@ export default function AgentListingsPage({ listings }: AgentListingsPageProps) 
       </div>
 
       {viewMode === "table" ? (
-        <ListingsTable listings={filtered} />
+        <ListingsTable 
+          listings={filtered} 
+          onPrice={(listing) => setPriceDialogListing(listing)}
+          onOpenHouse={(listing) => setOpenHouseListing(listing)}
+        />
       ) : (
         <ListingsGrid listings={filtered} />
       )}
+
+      <PriceDialog
+        open={!!priceDialogListing}
+        onOpenChange={(open) => !open && setPriceDialogListing(null)}
+        listing={priceDialogListing}
+        onSaved={() => {/* refetch or refresh listings */}}
+      />
+      <OpenHouseDialog
+        open={!!openHouseListing}
+        onOpenChange={(open) => !open && setOpenHouseListing(null)}
+        listing={openHouseListing}
+        onSaved={() => {/* optional refresh */}}
+      />
     </div>
   );
 }
@@ -216,7 +237,15 @@ const statusTabs: { label: string; value: ListingStatus | "all" }[] = [
   { label: "Offline / Partial", value: "offline_partial" },
 ];
 
-function ListingsTable({ listings }: { listings: AgentListing[] }) {
+function ListingsTable({ 
+  listings,
+  onPrice,
+  onOpenHouse,
+}: { 
+  listings: AgentListing[];
+  onPrice: (listing: AgentListing) => void;
+  onOpenHouse: (listing: AgentListing) => void;
+}) {
   if (!listings.length) {
     return (
       <div className="rounded-lg border bg-muted/40 p-6 text-sm text-muted-foreground">
@@ -243,7 +272,12 @@ function ListingsTable({ listings }: { listings: AgentListing[] }) {
         </thead>
         <tbody>
           {listings.map((listing) => (
-            <ListingRow key={listing.id} listing={listing} />
+            <ListingRow 
+              key={listing.id} 
+              listing={listing}
+              onPrice={onPrice}
+              onOpenHouse={onOpenHouse}
+            />
           ))}
         </tbody>
       </table>
@@ -251,7 +285,15 @@ function ListingsTable({ listings }: { listings: AgentListing[] }) {
   );
 }
 
-function ListingRow({ listing }: { listing: AgentListing }) {
+function ListingRow({ 
+  listing,
+  onPrice,
+  onOpenHouse,
+}: { 
+  listing: AgentListing;
+  onPrice: (listing: AgentListing) => void;
+  onOpenHouse: (listing: AgentListing) => void;
+}) {
   const expSoon =
     listing.expDate &&
     new Date(listing.expDate).getTime() - Date.now() <
@@ -268,13 +310,11 @@ function ListingRow({ listing }: { listing: AgentListing }) {
   };
 
   const handleOpenHouse = () => {
-    console.log("Open House dialog for listing", listing.id);
-    // TODO: open OpenHouseDialog
+    onOpenHouse(listing);
   };
 
   const handlePrice = () => {
-    console.log("Price dialog for listing", listing.id);
-    // TODO: open PriceDialog
+    onPrice(listing);
   };
 
   const handlePreview = () => {
