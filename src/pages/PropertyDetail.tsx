@@ -38,6 +38,7 @@ import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColum
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
+import { getListingPublicUrl } from "@/lib/getPublicUrl";
 
 interface Listing {
   id: string;
@@ -159,25 +160,27 @@ const PropertyDetail = () => {
   }, [id]);
 
   const handleShare = async () => {
+    const publicUrl = getListingPublicUrl(id!);
     if (navigator.share) {
       try {
         await navigator.share({
           title: listing?.address || 'Property Listing',
           text: `Check out this property: ${listing?.address}`,
-          url: window.location.href,
+          url: publicUrl,
         });
       } catch (error) {
         // User cancelled, do nothing
       }
     } else {
       // Fallback to copy if share not available
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(publicUrl);
       toast.success("Link copied to clipboard");
     }
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+    const publicUrl = getListingPublicUrl(id!);
+    navigator.clipboard.writeText(publicUrl);
     toast.success("Link copied to clipboard");
   };
 
@@ -260,7 +263,7 @@ const PropertyDetail = () => {
     ? getPhotoUrl(listing.photos[currentPhotoIndex])
     : '/placeholder.svg';
 
-  const canonicalUrl = `${window.location.origin}/property/${id}`;
+  const canonicalUrl = getListingPublicUrl(id!);
   const listDate = listing.active_date || listing.created_at;
   const daysOnMarket = listDate 
     ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
@@ -299,7 +302,7 @@ const PropertyDetail = () => {
 
             <div className="flex items-center gap-2">
               <SocialShareMenu
-                url={window.location.href}
+                url={getListingPublicUrl(id!)}
                 title={`${listing.address}, ${listing.city}, ${listing.state}`}
                 description={listing.description || ''}
               />

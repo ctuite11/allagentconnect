@@ -10,6 +10,7 @@ import { OpenHouseDialog } from "@/components/OpenHouseDialog";
 import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
 import { ReverseProspectDialog } from "@/components/ReverseProspectDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
+import { getListingPublicUrl } from "@/lib/getPublicUrl";
 
 type ListingStatus = "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon";
 
@@ -619,7 +620,7 @@ const MyListings = () => {
   };
 
   const handleShare = (id: string) => {
-    const url = `${window.location.origin}/property/${id}`;
+    const url = getListingPublicUrl(id);
     navigator.clipboard.writeText(url);
     toast.success("Link copied to clipboard!");
   };
@@ -812,7 +813,7 @@ const MyListings = () => {
           <div className="bg-background p-6 rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold mb-4">Share Listing</h3>
             <SocialShareMenu
-              url={`${window.location.origin}/property/${socialShareListing.id}`}
+              url={getListingPublicUrl(socialShareListing.id)}
               title={`${socialShareListing.address}, ${socialShareListing.city} - $${socialShareListing.price.toLocaleString()}`}
               description={`Check out this property listing`}
             />
