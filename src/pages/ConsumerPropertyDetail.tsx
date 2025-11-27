@@ -236,7 +236,6 @@ const ConsumerPropertyDetail = () => {
     ? getPhotoUrl(listing.photos[currentPhotoIndex]) 
     : '/placeholder.svg';
   const canonicalUrl = getListingPublicUrl(id!);
-  const sharePreviewUrl = `https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/${id}`;
 
   return (
     <div className="min-h-screen bg-background">

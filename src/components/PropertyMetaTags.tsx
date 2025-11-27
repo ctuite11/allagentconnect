@@ -35,7 +35,7 @@ export const PropertyMetaTags = ({
     ? `${priceText} - ${bedrooms} bed, ${bathrooms} bath. ${description.substring(0, 120)}...`
     : `${priceText} - ${bedrooms} bed, ${bathrooms} bath property in ${city}, ${state}`;
 
-  const imageUrl = photo || 'https://lovable.dev/opengraph-image-p98pqg.png';
+  const imageUrl = photo || 'https://allagentconnect.com/og-default.png';
   const canonicalUrl = getListingPublicUrl(listingId);
 
   return (
