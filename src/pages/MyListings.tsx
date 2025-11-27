@@ -403,11 +403,12 @@ function MyListingsView({
                   </button>
                   {hasOpenHouses && (
                     <button
-                      className="px-3 py-1 rounded-full bg-primary/10 border border-primary text-primary hover:bg-primary/20 transition"
+                      className="px-3 py-1 rounded-full bg-primary/10 border border-primary text-primary hover:bg-primary/20 transition flex items-center gap-1"
                       onClick={() => onViewOpenHouses(l)}
                       title="View scheduled open houses"
                     >
                       View Schedule ({Array.isArray(l.open_houses) ? l.open_houses.length : 0})
+                      <span className="text-sm">🎈</span>
                     </button>
                   )}
                   <button
