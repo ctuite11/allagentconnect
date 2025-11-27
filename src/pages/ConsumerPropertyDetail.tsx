@@ -26,6 +26,7 @@ import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColumn";
+import { getListingPublicUrl } from "@/lib/getPublicUrl";
 
 interface AgentProfile {
   id: string;
@@ -180,12 +181,13 @@ const ConsumerPropertyDetail = () => {
   };
 
   const handleShareLink = async () => {
+    const publicUrl = getListingPublicUrl(id!);
     if (navigator.share) {
       try {
         await navigator.share({
           title: listing?.address || 'Property Listing',
           text: `Check out this property: ${listing?.address}`,
-          url: window.location.href,
+          url: publicUrl,
         });
         return;
       } catch (error) {
@@ -193,7 +195,7 @@ const ConsumerPropertyDetail = () => {
       }
     }
     
-    navigator.clipboard.writeText(window.location.href);
+    navigator.clipboard.writeText(publicUrl);
     toast.success("Link copied to clipboard");
   };
 
@@ -233,7 +235,7 @@ const ConsumerPropertyDetail = () => {
   const mainPhoto = listing.photos && listing.photos.length > 0 
     ? getPhotoUrl(listing.photos[currentPhotoIndex]) 
     : '/placeholder.svg';
-  const canonicalUrl = `${window.location.origin}/property/${id}`;
+  const canonicalUrl = getListingPublicUrl(id!);
   const sharePreviewUrl = `https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/${id}`;
 
   return (
