@@ -15,7 +15,7 @@ interface OpenHouse {
   date: string;
   start_time: string;
   end_time: string;
-  event_type: "in_person" | "virtual" | "broker_tour";
+  event_type: "in_person" | "broker_tour";
   comments?: string;
 }
 
@@ -94,16 +94,14 @@ export function ViewOpenHousesDialog({
     }
   };
 
-  const formatEventType = (type: string) => {
+  const formatEventType = (type: string): { label: string; emoji: string; colorClass: string } => {
     switch (type) {
       case "in_person":
-        return "In-Person";
-      case "virtual":
-        return "Virtual";
+        return { label: "Public Open House", emoji: "🎈", colorClass: "bg-green-100 text-green-700" };
       case "broker_tour":
-        return "Broker Tour";
+        return { label: "Broker Tour", emoji: "🚗", colorClass: "bg-purple-100 text-purple-700" };
       default:
-        return type;
+        return { label: type, emoji: "", colorClass: "bg-gray-100 text-gray-700" };
     }
   };
 
@@ -146,17 +144,17 @@ export function ViewOpenHousesDialog({
                   <div className="flex-1 space-y-2">
                     {/* Event Type Badge */}
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                          house.event_type === "broker_tour"
-                            ? "bg-purple-100 text-purple-700"
-                            : house.event_type === "virtual"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {formatEventType(house.event_type)}
-                      </span>
+                      {(() => {
+                        const typeInfo = formatEventType(house.event_type);
+                        return (
+                          <span
+                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${typeInfo.colorClass}`}
+                          >
+                            <span>{typeInfo.emoji}</span>
+                            {typeInfo.label}
+                          </span>
+                        );
+                      })()}
                     </div>
 
                     {/* Date & Time */}

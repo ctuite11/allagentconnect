@@ -32,7 +32,7 @@ interface ListingDialogProps {
     mlsNumber?: string;
   } | null;
   onSaved?: () => void;
-  eventTypePreset?: "in_person" | "virtual" | "broker_tour";
+  eventTypePreset?: "in_person" | "broker_tour";
 }
 
 /**
@@ -49,7 +49,7 @@ export function OpenHouseDialog({
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [eventType, setEventType] = useState<"in_person" | "virtual" | "broker_tour">(
+  const [eventType, setEventType] = useState<"in_person" | "broker_tour">(
     eventTypePreset || "in_person",
   );
   const [comments, setComments] = useState("");
@@ -148,15 +148,14 @@ export function OpenHouseDialog({
             <Select
               value={eventType}
               onValueChange={(val) =>
-                setEventType(val as "in_person" | "virtual" | "broker_tour")
+                setEventType(val as "in_person" | "broker_tour")
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="in_person">In-Person</SelectItem>
-                <SelectItem value="virtual">Virtual</SelectItem>
+                <SelectItem value="in_person">Public Open House</SelectItem>
                 <SelectItem value="broker_tour">Broker Tour</SelectItem>
               </SelectContent>
             </Select>
