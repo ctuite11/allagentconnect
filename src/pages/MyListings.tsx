@@ -388,14 +388,13 @@ function MyListingsView({
                     Photos
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
+                    className="px-3 py-1 rounded-full bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 transition flex items-center gap-1"
                     onClick={() => onOpenHouse(l)}
                   >
-                    Open House
-                    {hasOpenHouses && <span className="text-sm">🎈</span>}
+                    🎈 Public Open House
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
+                    className="px-3 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100 transition flex items-center gap-1"
                     onClick={() => onBrokerTour(l)}
                   >
                     🚗 Broker Tour
