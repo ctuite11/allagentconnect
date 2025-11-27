@@ -105,6 +105,14 @@ export function ViewOpenHousesDialog({
     }
   };
 
+  const formatTime = (time: string): string => {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
+
   const formattedAddress = listing
     ? `${listing.addressLine1}, ${listing.city}, ${listing.state} ${listing.zip}`
     : "";
@@ -173,7 +181,7 @@ export function ViewOpenHousesDialog({
                       <div className="flex items-center gap-2 text-foreground">
                         <Clock className="w-4 h-4 text-muted-foreground" />
                         <span>
-                          {house.start_time} - {house.end_time}
+                          {formatTime(house.start_time)} - {formatTime(house.end_time)}
                         </span>
                       </div>
                     </div>
