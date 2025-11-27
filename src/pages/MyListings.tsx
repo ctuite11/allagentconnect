@@ -6,6 +6,9 @@ import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { OpenHouseDialog } from "@/components/OpenHouseDialog";
+import { ReverseProspectDialog } from "@/components/ReverseProspectDialog";
+import SocialShareMenu from "@/components/SocialShareMenu";
 
 type ListingStatus = "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon";
 
@@ -25,6 +28,10 @@ interface Listing {
   expiration_date?: string | null;
   hot_sheet_matches?: number | null;
   views_count?: number | null;
+  property_type?: string | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  square_feet?: number | null;
 }
 
 type SortOption = "newest" | "oldest" | "priceHigh" | "priceLow" | "activeRecent";
@@ -86,6 +93,11 @@ function MyListingsView({
   onDelete,
   onNewListing,
   onQuickUpdate,
+  onPhotos,
+  onOpenHouse,
+  onBrokerTour,
+  onMatches,
+  onSocialShare,
 }: {
   listings: Listing[];
   onEdit: (id: string) => void;
@@ -94,6 +106,11 @@ function MyListingsView({
   onDelete: (id: string) => void;
   onNewListing: () => void;
   onQuickUpdate: (id: string, updates: Partial<Pick<Listing, "price" | "status">>) => Promise<void>;
+  onPhotos: (id: string) => void;
+  onOpenHouse: (listing: Listing) => void;
+  onBrokerTour: (listing: Listing) => void;
+  onMatches: (listing: Listing) => void;
+  onSocialShare: (listing: Listing) => void;
 }) {
   const [activeStatus, setActiveStatus] = useState<ListingStatus | "all">("active");
   const [view, setView] = useState<"grid" | "list">("list");
@@ -353,34 +370,34 @@ function MyListingsView({
                 <div className="flex flex-wrap items-center gap-3 text-xs border-b border-border pb-2 mb-3">
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => onEdit(l.id)}
-                    title="Edit listing, manage photos & details"
+                    onClick={() => onPhotos(l.id)}
+                    title="Manage photos"
                   >
                     Photos
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => comingSoon("Open house scheduling")}
+                    onClick={() => onOpenHouse(l)}
                   >
                     Open House
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => comingSoon("Broker tour scheduling")}
+                    onClick={() => onBrokerTour(l)}
                   >
                     Broker Tour
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => comingSoon("Reverse prospecting matches")}
-                    title="Reverse prospecting contact matches"
+                    onClick={() => onMatches(l)}
+                    title="Contact matching buyers"
                   >
                     Matches ({matchCount})
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
-                    onClick={() => comingSoon("Social share tools")}
-                    title="Social share this listing"
+                    onClick={() => onSocialShare(l)}
+                    title="Share on social media"
                   >
                     Social Share
                   </button>
@@ -540,6 +557,10 @@ const MyListings = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [openHouseListing, setOpenHouseListing] = useState<Listing | null>(null);
+  const [brokerTourListing, setBrokerTourListing] = useState<Listing | null>(null);
+  const [matchesListing, setMatchesListing] = useState<Listing | null>(null);
+  const [socialShareListing, setSocialShareListing] = useState<Listing | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -611,6 +632,32 @@ const MyListings = () => {
     }
   };
 
+  const handlePhotos = (id: string) => {
+    navigate(`/agent/listings/${id}/photos`);
+  };
+
+  const handleOpenHouse = (listing: Listing) => {
+    setOpenHouseListing(listing);
+  };
+
+  const handleBrokerTour = (listing: Listing) => {
+    setBrokerTourListing(listing);
+  };
+
+  const handleMatches = (listing: Listing) => {
+    setMatchesListing(listing);
+  };
+
+  const handleSocialShare = (listing: Listing) => {
+    setSocialShareListing(listing);
+  };
+
+  const handleOpenHouseClose = () => {
+    setOpenHouseListing(null);
+    setBrokerTourListing(null);
+    fetchListings();
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -658,7 +705,75 @@ const MyListings = () => {
         onDelete={handleDelete}
         onNewListing={handleNewListing}
         onQuickUpdate={handleQuickUpdate}
+        onPhotos={handlePhotos}
+        onOpenHouse={handleOpenHouse}
+        onBrokerTour={handleBrokerTour}
+        onMatches={handleMatches}
+        onSocialShare={handleSocialShare}
       />
+
+      {/* Open House Dialog */}
+      <OpenHouseDialog
+        open={!!openHouseListing}
+        onOpenChange={(open) => !open && handleOpenHouseClose()}
+        listing={openHouseListing ? {
+          id: openHouseListing.id,
+          addressLine1: openHouseListing.address,
+          city: openHouseListing.city,
+          state: openHouseListing.state,
+          zip: openHouseListing.zip_code,
+          mlsNumber: openHouseListing.listing_number
+        } : null}
+        onSaved={handleOpenHouseClose}
+      />
+
+      {/* Broker Tour Dialog */}
+      <OpenHouseDialog
+        open={!!brokerTourListing}
+        onOpenChange={(open) => !open && handleOpenHouseClose()}
+        listing={brokerTourListing ? {
+          id: brokerTourListing.id,
+          addressLine1: brokerTourListing.address,
+          city: brokerTourListing.city,
+          state: brokerTourListing.state,
+          zip: brokerTourListing.zip_code,
+          mlsNumber: brokerTourListing.listing_number
+        } : null}
+        onSaved={handleOpenHouseClose}
+        eventTypePreset="broker_tour"
+      />
+
+      {/* Matches Dialog */}
+      <ReverseProspectDialog
+        open={!!matchesListing}
+        onOpenChange={(open) => !open && setMatchesListing(null)}
+        listing={matchesListing ? {
+          id: matchesListing.id,
+          address: matchesListing.address,
+          city: matchesListing.city,
+          state: matchesListing.state,
+          price: matchesListing.price,
+          property_type: matchesListing.property_type || null,
+          bedrooms: matchesListing.bedrooms || null,
+          bathrooms: matchesListing.bathrooms || null,
+          square_feet: matchesListing.square_feet || null
+        } : null}
+        matchCount={matchesListing?.hot_sheet_matches ?? 0}
+      />
+
+      {/* Social Share Dialog */}
+      {socialShareListing && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setSocialShareListing(null)}>
+          <div className="bg-background p-6 rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-4">Share Listing</h3>
+            <SocialShareMenu
+              url={`${window.location.origin}/property/${socialShareListing.id}`}
+              title={`${socialShareListing.address}, ${socialShareListing.city} - $${socialShareListing.price.toLocaleString()}`}
+              description={`Check out this property listing`}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
