@@ -130,7 +130,7 @@ const ManageListingPhotos: React.FC = () => {
       if (error) throw error;
 
       toast.success('Photos updated successfully');
-      navigate(`/add-listing/${id}`);
+      navigate('/agent/listings');
     } catch (error: any) {
       console.error('Error saving photos:', error);
       toast.error('Failed to save photos');
@@ -200,10 +200,10 @@ const ManageListingPhotos: React.FC = () => {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => navigate(`/add-listing/${id}`)}
+            onClick={() => navigate('/agent/listings')}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Listing
+            Back to Listings
           </Button>
           <Button
             onClick={handleSave}
