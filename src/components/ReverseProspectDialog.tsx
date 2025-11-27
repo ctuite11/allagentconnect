@@ -55,11 +55,11 @@ export function ReverseProspectDialog({
   const [loadingMatches, setLoadingMatches] = useState(false);
 
   useEffect(() => {
-    if (open) {
+    if (open && listing) {
       loadMatches();
       loadAgentProfile();
     }
-  }, [open]);
+  }, [open, listing]);
 
   const loadAgentProfile = async () => {
     try {
@@ -190,6 +190,10 @@ export function ReverseProspectDialog({
   const formatPropertyType = (type: string) => {
     return type.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase());
   };
+
+  if (!listing) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
