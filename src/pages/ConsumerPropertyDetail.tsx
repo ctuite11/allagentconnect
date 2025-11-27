@@ -250,7 +250,7 @@ const ConsumerPropertyDetail = () => {
         description={listing.description}
         photo={mainPhoto}
         listingType={listing.listing_type}
-        url={canonicalUrl}
+        listingId={id!}
       />
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24" style={{ maxWidth: '1600px' }}>

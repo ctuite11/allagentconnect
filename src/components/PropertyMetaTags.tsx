@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { getListingPublicUrl } from '@/lib/getPublicUrl';
 
 interface PropertyMetaTagsProps {
   address: string;
@@ -10,7 +11,7 @@ interface PropertyMetaTagsProps {
   description: string | null;
   photo: string | null;
   listingType: string;
-  url?: string;
+  listingId: string;
 }
 
 export const PropertyMetaTags = ({
@@ -23,7 +24,7 @@ export const PropertyMetaTags = ({
   description,
   photo,
   listingType,
-  url,
+  listingId,
 }: PropertyMetaTagsProps) => {
   const title = `${address}, ${city}, ${state} - All Agent Connect`;
   const priceText = listingType === 'for_rent' 
@@ -35,7 +36,7 @@ export const PropertyMetaTags = ({
     : `${priceText} - ${bedrooms} bed, ${bathrooms} bath property in ${city}, ${state}`;
 
   const imageUrl = photo || 'https://lovable.dev/opengraph-image-p98pqg.png';
-  const canonicalUrl = url || `${window.location.origin}${window.location.pathname}`;
+  const canonicalUrl = getListingPublicUrl(listingId);
 
   return (
     <Helmet>
