@@ -372,6 +372,10 @@ function MyListingsView({
             const listDate = formatDate(l.list_date) || formatDate(l.created_at);
             const expDate = formatDate(l.expiration_date);
             const hasOpenHouses = Array.isArray(l.open_houses) && l.open_houses.length > 0;
+            const hasPublicOpenHouse = Array.isArray(l.open_houses) && 
+              l.open_houses.some((oh: any) => oh.event_type === "in_person");
+            const hasBrokerTour = Array.isArray(l.open_houses) && 
+              l.open_houses.some((oh: any) => oh.event_type === "broker_tour");
 
             return (
               <div
@@ -388,27 +392,25 @@ function MyListingsView({
                     Photos
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 transition flex items-center gap-1"
-                    onClick={() => onOpenHouse(l)}
+                    className={`px-3 py-1 rounded-full transition flex items-center gap-1 ${
+                      hasPublicOpenHouse 
+                        ? "bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100"
+                        : "bg-green-50 border border-green-200 text-green-700 hover:bg-green-100"
+                    }`}
+                    onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                   >
-                    🎈 Public Open House
+                    🎈 {hasPublicOpenHouse ? "View Schedule" : "Public Open House"}
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100 transition flex items-center gap-1"
-                    onClick={() => onBrokerTour(l)}
+                    className={`px-3 py-1 rounded-full transition flex items-center gap-1 ${
+                      hasBrokerTour 
+                        ? "bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100"
+                        : "bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100"
+                    }`}
+                    onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                   >
-                    🚗 Broker Tour
+                    🚗 {hasBrokerTour ? "View Schedule" : "Broker Tour"}
                   </button>
-                  {hasOpenHouses && (
-                    <button
-                      className="px-3 py-1 rounded-full bg-primary/10 border border-primary text-primary hover:bg-primary/20 transition flex items-center gap-1"
-                      onClick={() => onViewOpenHouses(l)}
-                      title="View scheduled open houses"
-                    >
-                      View Schedule ({Array.isArray(l.open_houses) ? l.open_houses.length : 0})
-                      <span className="text-sm">🎈</span>
-                    </button>
-                  )}
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
                     onClick={() => onMatches(l)}
