@@ -7,8 +7,10 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { OpenHouseDialog } from "@/components/OpenHouseDialog";
+import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
 import { ReverseProspectDialog } from "@/components/ReverseProspectDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
+import { PartyPopper } from "lucide-react";
 
 type ListingStatus = "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon";
 
@@ -22,6 +24,7 @@ interface Listing {
   status: string;
   listing_number: string;
   photos: any;
+  open_houses?: any;
   created_at: string;
   active_date: string | null;
   list_date?: string | null;
@@ -72,7 +75,14 @@ function statusBadgeClass(status: string) {
 function getThumbnailUrl(listing: Listing) {
   if (!listing.photos) return null;
   const photos = Array.isArray(listing.photos) ? listing.photos : [];
-  return photos[0] || null;
+  if (photos.length === 0) return null;
+  
+  // Handle both string URLs and objects with url property
+  const firstPhoto = photos[0];
+  if (typeof firstPhoto === 'string') {
+    return firstPhoto;
+  }
+  return firstPhoto?.url || null;
 }
 
 function formatDate(value?: string | null) {
@@ -96,6 +106,7 @@ function MyListingsView({
   onPhotos,
   onOpenHouse,
   onBrokerTour,
+  onViewOpenHouses,
   onMatches,
   onSocialShare,
 }: {
@@ -109,6 +120,7 @@ function MyListingsView({
   onPhotos: (id: string) => void;
   onOpenHouse: (listing: Listing) => void;
   onBrokerTour: (listing: Listing) => void;
+  onViewOpenHouses: (listing: Listing) => void;
   onMatches: (listing: Listing) => void;
   onSocialShare: (listing: Listing) => void;
 }) {
@@ -360,6 +372,7 @@ function MyListingsView({
             const views = l.views_count ?? 0;
             const listDate = formatDate(l.list_date) || formatDate(l.created_at);
             const expDate = formatDate(l.expiration_date);
+            const hasOpenHouses = Array.isArray(l.open_houses) && l.open_houses.length > 0;
 
             return (
               <div
@@ -376,17 +389,28 @@ function MyListingsView({
                     Photos
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
+                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
                     onClick={() => onOpenHouse(l)}
                   >
                     Open House
+                    {hasOpenHouses && <PartyPopper className="w-3 h-3 text-primary" />}
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
+                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
                     onClick={() => onBrokerTour(l)}
                   >
                     Broker Tour
+                    {hasOpenHouses && <PartyPopper className="w-3 h-3 text-primary" />}
                   </button>
+                  {hasOpenHouses && (
+                    <button
+                      className="px-3 py-1 rounded-full bg-primary/10 border border-primary text-primary hover:bg-primary/20 transition"
+                      onClick={() => onViewOpenHouses(l)}
+                      title="View scheduled open houses"
+                    >
+                      View Schedule ({Array.isArray(l.open_houses) ? l.open_houses.length : 0})
+                    </button>
+                  )}
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
                     onClick={() => onMatches(l)}
@@ -559,6 +583,7 @@ const MyListings = () => {
   const navigate = useNavigate();
   const [openHouseListing, setOpenHouseListing] = useState<Listing | null>(null);
   const [brokerTourListing, setBrokerTourListing] = useState<Listing | null>(null);
+  const [viewOpenHousesListing, setViewOpenHousesListing] = useState<Listing | null>(null);
   const [matchesListing, setMatchesListing] = useState<Listing | null>(null);
   const [socialShareListing, setSocialShareListing] = useState<Listing | null>(null);
 
@@ -644,6 +669,10 @@ const MyListings = () => {
     setBrokerTourListing(listing);
   };
 
+  const handleViewOpenHouses = (listing: Listing) => {
+    setViewOpenHousesListing(listing);
+  };
+
   const handleMatches = (listing: Listing) => {
     setMatchesListing(listing);
   };
@@ -708,6 +737,7 @@ const MyListings = () => {
         onPhotos={handlePhotos}
         onOpenHouse={handleOpenHouse}
         onBrokerTour={handleBrokerTour}
+        onViewOpenHouses={handleViewOpenHouses}
         onMatches={handleMatches}
         onSocialShare={handleSocialShare}
       />
@@ -741,6 +771,21 @@ const MyListings = () => {
         } : null}
         onSaved={handleOpenHouseClose}
         eventTypePreset="broker_tour"
+      />
+
+      {/* View Open Houses Dialog */}
+      <ViewOpenHousesDialog
+        open={!!viewOpenHousesListing}
+        onOpenChange={(open) => !open && setViewOpenHousesListing(null)}
+        listing={viewOpenHousesListing ? {
+          id: viewOpenHousesListing.id,
+          addressLine1: viewOpenHousesListing.address,
+          city: viewOpenHousesListing.city,
+          state: viewOpenHousesListing.state,
+          zip: viewOpenHousesListing.zip_code,
+          mlsNumber: viewOpenHousesListing.listing_number
+        } : null}
+        onDeleted={fetchListings}
       />
 
       {/* Matches Dialog */}
