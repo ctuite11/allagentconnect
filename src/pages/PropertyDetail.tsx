@@ -281,7 +281,7 @@ const PropertyDetail = () => {
         description={listing.description}
         photo={mainPhoto}
         listingType={listing.listing_type}
-        url={canonicalUrl}
+        listingId={id!}
       />
       
       <Navigation />
