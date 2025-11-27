@@ -1,14 +1,2 @@
-# Serve crawler-friendly HTML via backend function
-# Facebook, Twitter, LinkedIn, WhatsApp, Slack, Discord, Pinterest
-/property/:id https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/:id 200! User-Agent=facebookexternalhit
-/property/:id https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/:id 200! User-Agent=facebot
-/property/:id https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/:id 200! User-Agent=Twitterbot
-/property/:id https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/:id 200! User-Agent=LinkedInBot
-/property/:id https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/:id 200! User-Agent=Slackbot
-/property/:id https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/:id 200! User-Agent=WhatsApp
-/property/:id https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/:id 200! User-Agent=TelegramBot
-/property/:id https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/:id 200! User-Agent=Pinterest
-/property/:id https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/:id 200! User-Agent=Discordbot
-
-# SPA fallback for everyone else
+# SPA fallback
 /* /index.html 200
