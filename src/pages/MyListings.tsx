@@ -10,7 +10,6 @@ import { OpenHouseDialog } from "@/components/OpenHouseDialog";
 import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
 import { ReverseProspectDialog } from "@/components/ReverseProspectDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
-import { Circle } from "lucide-react";
 
 type ListingStatus = "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon";
 
@@ -393,14 +392,14 @@ function MyListingsView({
                     onClick={() => onOpenHouse(l)}
                   >
                     Open House
-                    {hasOpenHouses && <Circle className="w-3 h-3 text-red-500 fill-red-500" />}
+                    {hasOpenHouses && <span className="text-sm">🎈</span>}
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
                     onClick={() => onBrokerTour(l)}
                   >
                     Broker Tour
-                    {hasOpenHouses && <Circle className="w-3 h-3 text-red-500 fill-red-500" />}
+                    {hasOpenHouses && <span className="text-sm">🎈</span>}
                   </button>
                   {hasOpenHouses && (
                     <button
