@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -294,6 +295,8 @@ function ListingRow({
   onPrice: (listing: AgentListing) => void;
   onOpenHouse: (listing: AgentListing) => void;
 }) {
+  const navigate = useNavigate();
+  
   const expSoon =
     listing.expDate &&
     new Date(listing.expDate).getTime() - Date.now() <
@@ -305,8 +308,7 @@ function ListingRow({
   };
 
   const handlePhotos = () => {
-    console.log("Manage photos for listing", listing.id);
-    // TODO: navigate to photos page
+    navigate(`/agent/listings/${listing.id}/photos`);
   };
 
   const handleOpenHouse = () => {
