@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, ChevronDown } from "lucide-react";
+import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, ChevronDown, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { OpenHouseDialog } from "@/components/OpenHouseDialog";
 import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
@@ -35,6 +35,13 @@ interface Listing {
   bedrooms?: number | null;
   bathrooms?: number | null;
   square_feet?: number | null;
+  listing_stats?: {
+    view_count: number;
+    save_count: number;
+    share_count: number;
+    contact_count: number;
+    showing_request_count: number;
+  };
 }
 
 type SortOption = "newest" | "oldest" | "priceHigh" | "priceLow" | "activeRecent";
@@ -109,6 +116,7 @@ function MyListingsView({
   onViewOpenHouses,
   onMatches,
   onSocialShare,
+  onStats,
 }: {
   listings: Listing[];
   onEdit: (id: string) => void;
@@ -123,6 +131,7 @@ function MyListingsView({
   onViewOpenHouses: (listing: Listing) => void;
   onMatches: (listing: Listing) => void;
   onSocialShare: (listing: Listing) => void;
+  onStats: (id: string) => void;
 }) {
   const [activeStatus, setActiveStatus] = useState<ListingStatus | "all">("active");
   const [view, setView] = useState<"grid" | "list">("list");
@@ -369,7 +378,9 @@ function MyListingsView({
             const thumbnail = getThumbnailUrl(l);
             const isEditing = editingId === l.id;
             const matchCount = l.hot_sheet_matches ?? 0;
-            const views = l.views_count ?? 0;
+            const views = l.listing_stats?.view_count ?? 0;
+            const favorites = l.listing_stats?.save_count ?? 0;
+            const shares = l.listing_stats?.share_count ?? 0;
             const listDate = formatDate(l.list_date) || formatDate(l.created_at);
             const expDate = formatDate(l.expiration_date);
             const hasOpenHouses = Array.isArray(l.open_houses) && l.open_houses.length > 0;
@@ -425,6 +436,14 @@ function MyListingsView({
                     title="Share on social media"
                   >
                     Social Share
+                  </button>
+                  <button
+                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
+                    onClick={() => onStats(l.id)}
+                    title="View analytics"
+                  >
+                    <BarChart3 className="h-3 w-3" />
+                    Stats
                   </button>
                 </div>
 
@@ -524,6 +543,8 @@ function MyListingsView({
                       {expDate && <span>Exp: {expDate}</span>}
                       <span>Matches: {matchCount}</span>
                       <span>Views: {views}</span>
+                      <span>Favorites: {favorites}</span>
+                      <span>Shares: {shares}</span>
                     </div>
                   </div>
 
@@ -615,35 +636,54 @@ const MyListings = () => {
         listing_stats: listing.listing_stats?.[0]
       })) || [];
 
-      // Calculate matches for each listing
+      // Calculate matches from hot_sheets
       const listingsWithMatches = await Promise.all(
         listingsWithStats.map(async (listing) => {
-          let query = supabase
-            .from("client_needs")
-            .select("id", { count: 'exact', head: true });
+          // Query all active hot sheets
+          const { data: hotSheets } = await supabase
+            .from("hot_sheets")
+            .select("id, criteria")
+            .eq("is_active", true);
           
-          // Match by state (case-insensitive)
-          if (listing.state) {
-            query = query.ilike("state", listing.state);
-          }
-          // Match by city
-          if (listing.city) {
-            query = query.ilike("city", listing.city);
-          }
-          // Match by property type
-          if (listing.property_type) {
-            // Query matching property_types array that contains this property type
-            query = query.contains("property_types", [listing.property_type]);
-          }
-          // Match by price (listing price <= buyer's max_price)
-          if (listing.price) {
-            query = query.gte("max_price", listing.price);
-          }
+          // Count hot sheets where listing matches criteria
+          let matchCount = 0;
+          hotSheets?.forEach((hs: any) => {
+            const criteria = hs.criteria;
+            if (!criteria) return;
+            
+            // Check state match
+            if (criteria.state && listing.state?.toLowerCase() !== criteria.state?.toLowerCase()) return;
+            
+            // Check city match (if cities specified)
+            if (criteria.cities?.length > 0) {
+              const listingCity = listing.city?.toLowerCase();
+              const matchesCity = criteria.cities.some((c: string) => 
+                c.toLowerCase() === listingCity
+              );
+              if (!matchesCity) return;
+            }
+            
+            // Check property type match
+            if (criteria.propertyTypes?.length > 0) {
+              if (!criteria.propertyTypes.includes(listing.property_type)) return;
+            }
+            
+            // Check price range
+            if (criteria.minPrice && listing.price < criteria.minPrice) return;
+            if (criteria.maxPrice && listing.price > criteria.maxPrice) return;
+            
+            // Check bedrooms
+            if (criteria.bedrooms && listing.bedrooms < criteria.bedrooms) return;
+            
+            // Check bathrooms
+            if (criteria.bathrooms && listing.bathrooms < criteria.bathrooms) return;
+            
+            matchCount++;
+          });
           
-          const { count } = await query;
           return {
             ...listing,
-            hot_sheet_matches: count || 0
+            hot_sheet_matches: matchCount
           };
         })
       );
@@ -732,6 +772,10 @@ const MyListings = () => {
     setSocialShareListing(listing);
   };
 
+  const handleStats = (id: string) => {
+    navigate(`/analytics/${id}`);
+  };
+
   const handleOpenHouseClose = () => {
     setOpenHouseListing(null);
     setBrokerTourListing(null);
@@ -791,6 +835,7 @@ const MyListings = () => {
         onViewOpenHouses={handleViewOpenHouses}
         onMatches={handleMatches}
         onSocialShare={handleSocialShare}
+        onStats={handleStats}
       />
 
       {/* Open House Dialog */}
@@ -866,6 +911,7 @@ const MyListings = () => {
               url={getListingShareUrl(socialShareListing.id)}
               title={`${socialShareListing.address}, ${socialShareListing.city} - $${socialShareListing.price.toLocaleString()}`}
               description={`Check out this property listing`}
+              listingId={socialShareListing.id}
             />
           </div>
         </div>
