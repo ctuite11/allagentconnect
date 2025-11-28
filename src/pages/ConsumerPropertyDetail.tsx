@@ -26,7 +26,7 @@ import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColumn";
-import { getListingPublicUrl } from "@/lib/getPublicUrl";
+import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 
 interface AgentProfile {
   id: string;
@@ -181,13 +181,13 @@ const ConsumerPropertyDetail = () => {
   };
 
   const handleShareLink = async () => {
-    const publicUrl = getListingPublicUrl(id!);
+    const shareUrl = getListingShareUrl(id!);
     if (navigator.share) {
       try {
         await navigator.share({
           title: listing?.address || 'Property Listing',
           text: `Check out this property: ${listing?.address}`,
-          url: publicUrl,
+          url: shareUrl,
         });
         return;
       } catch (error) {
@@ -195,7 +195,7 @@ const ConsumerPropertyDetail = () => {
       }
     }
     
-    navigator.clipboard.writeText(publicUrl);
+    navigator.clipboard.writeText(shareUrl);
     toast.success("Link copied to clipboard");
   };
 
