@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, ChevronDown, BarChart3 } from "lucide-react";
+import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, ChevronDown, BarChart3, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { OpenHouseDialog } from "@/components/OpenHouseDialog";
 import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
@@ -35,6 +35,7 @@ interface Listing {
   bedrooms?: number | null;
   bathrooms?: number | null;
   square_feet?: number | null;
+  neighborhood?: string | null;
   listing_stats?: {
     view_count: number;
     save_count: number;
@@ -421,7 +422,7 @@ function MyListingsView({
                     }`}
                     onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                   >
-                    🚗 {hasBrokerTour ? "View Schedule" : "Broker Tour"}
+                    🚗 {hasBrokerTour ? "View Schedule" : "Broker Open House"}
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
@@ -431,11 +432,33 @@ function MyListingsView({
                     Matches ({matchCount})
                   </button>
                   <button
+                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
+                    onClick={() => onPreview(l.id)}
+                    title="View count"
+                  >
+                    <Eye className="h-3 w-3" />
+                    Views ({views})
+                  </button>
+                  <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
                     onClick={() => onSocialShare(l)}
                     title="Share on social media"
                   >
                     Social Share
+                  </button>
+                  <button
+                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
+                    title="Times favorited"
+                  >
+                    <Heart className="h-3 w-3" />
+                    Favorites ({favorites})
+                  </button>
+                  <button
+                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
+                    title="Times shared"
+                  >
+                    <Share2 className="h-3 w-3" />
+                    Shares ({shares})
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
@@ -539,12 +562,14 @@ function MyListingsView({
                         </span>
                       )}
 
+                      {l.neighborhood && (
+                        <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                          {l.neighborhood}
+                        </span>
+                      )}
+
                       <span>List: {listDate}</span>
                       {expDate && <span>Exp: {expDate}</span>}
-                      <span>Matches: {matchCount}</span>
-                      <span>Views: {views}</span>
-                      <span>Favorites: {favorites}</span>
-                      <span>Shares: {shares}</span>
                     </div>
                   </div>
 
