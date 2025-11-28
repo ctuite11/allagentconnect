@@ -1288,6 +1288,41 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_shares: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          recipient_email: string | null
+          share_type: string
+          shared_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          recipient_email?: string | null
+          share_type: string
+          shared_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          recipient_email?: string | null
+          share_type?: string
+          shared_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_shares_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_stats: {
         Row: {
           contact_count: number
@@ -1296,6 +1331,7 @@ export type Database = {
           id: string
           listing_id: string
           save_count: number
+          share_count: number
           showing_request_count: number
           updated_at: string
           view_count: number
@@ -1307,6 +1343,7 @@ export type Database = {
           id?: string
           listing_id: string
           save_count?: number
+          share_count?: number
           showing_request_count?: number
           updated_at?: string
           view_count?: number
@@ -1318,6 +1355,7 @@ export type Database = {
           id?: string
           listing_id?: string
           save_count?: number
+          share_count?: number
           showing_request_count?: number
           updated_at?: string
           view_count?: number

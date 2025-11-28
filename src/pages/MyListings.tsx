@@ -599,10 +599,56 @@ const MyListings = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.from("listings").select("*").eq("agent_id", user.id);
+      const { data, error } = await supabase
+        .from("listings")
+        .select(`
+          *,
+          listing_stats (view_count, save_count, share_count, contact_count, showing_request_count)
+        `)
+        .eq("agent_id", user.id);
 
       if (error) throw error;
-      setListings(data || []);
+      
+      const listingsWithStats = data?.map(listing => ({
+        ...listing,
+        views_count: listing.listing_stats?.[0]?.view_count || 0,
+        listing_stats: listing.listing_stats?.[0]
+      })) || [];
+
+      // Calculate matches for each listing
+      const listingsWithMatches = await Promise.all(
+        listingsWithStats.map(async (listing) => {
+          let query = supabase
+            .from("client_needs")
+            .select("id", { count: 'exact', head: true });
+          
+          // Match by state (case-insensitive)
+          if (listing.state) {
+            query = query.ilike("state", listing.state);
+          }
+          // Match by city
+          if (listing.city) {
+            query = query.ilike("city", listing.city);
+          }
+          // Match by property type
+          if (listing.property_type) {
+            // Query matching property_types array that contains this property type
+            query = query.contains("property_types", [listing.property_type]);
+          }
+          // Match by price (listing price <= buyer's max_price)
+          if (listing.price) {
+            query = query.gte("max_price", listing.price);
+          }
+          
+          const { count } = await query;
+          return {
+            ...listing,
+            hot_sheet_matches: count || 0
+          };
+        })
+      );
+
+      setListings(listingsWithMatches);
     } catch (error) {
       console.error("Error fetching listings:", error);
       toast.error("Failed to load listings");
@@ -619,10 +665,14 @@ const MyListings = () => {
     navigate(`/property/${id}`);
   };
 
-  const handleShare = (id: string) => {
+  const handleShare = async (id: string) => {
     const url = getListingShareUrl(id);
     navigator.clipboard.writeText(url);
     toast.success("Link copied to clipboard!");
+    
+    // Track the share
+    const { trackShare } = await import("@/lib/trackShare");
+    await trackShare(id, 'copy_link');
   };
 
   const handleDelete = async (id: string) => {

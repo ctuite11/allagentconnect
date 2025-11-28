@@ -144,6 +144,10 @@ export const ShareListingDialog = ({ listingId, listingAddress }: ShareListingDi
 
       if (error) throw error;
 
+      // Track the share
+      const { trackShare } = await import("@/lib/trackShare");
+      await trackShare(listingId, 'email_direct', recipientEmail);
+
       toast.success(`Listing shared with ${recipientName}`);
       setOpen(false);
     } catch (error) {

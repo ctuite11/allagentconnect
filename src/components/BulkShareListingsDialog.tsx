@@ -155,6 +155,12 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
 
       if (error) throw error;
 
+      // Track the share for each listing
+      const { trackShare } = await import("@/lib/trackShare");
+      await Promise.all(
+        listingIds.map(listingId => trackShare(listingId, 'email_bulk', recipientEmail))
+      );
+
       toast.success(`Successfully shared ${listingCount} listing${listingCount > 1 ? 's' : ''}`);
       setOpen(false);
     } catch (error) {

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp, Eye, Heart, Mail, Calendar, Users, BarChart3, Clock, RefreshCw } from "lucide-react";
+import { ArrowLeft, TrendingUp, Eye, Heart, Mail, Calendar, Users, BarChart3, Clock, RefreshCw, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { format, subDays, startOfDay, eachDayOfInterval } from "date-fns";
@@ -16,6 +16,7 @@ interface ListingStats {
   listing_id: string;
   view_count: number;
   save_count: number;
+  share_count?: number;
   contact_count: number;
   showing_request_count: number;
   updated_at: string;
@@ -133,7 +134,7 @@ const ListingAnalytics = () => {
         .from("listing_stats")
         .select("*")
         .eq("listing_id", selectedListing)
-        .single();
+        .maybeSingle();
 
       if (statsData) {
         setCurrentStats(statsData);
@@ -238,6 +239,7 @@ const ListingAnalytics = () => {
     return [
       { name: "Views", value: currentStats.view_count, color: "#3b82f6" },
       { name: "Saves", value: currentStats.save_count, color: "#ef4444" },
+      { name: "Shares", value: currentStats.share_count || 0, color: "#8b5cf6" },
       { name: "Contacts", value: currentStats.contact_count, color: "#10b981" },
       { name: "Showings", value: currentStats.showing_request_count, color: "#f59e0b" },
     ];
@@ -388,6 +390,18 @@ const ListingAnalytics = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{currentStats.showing_request_count}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Share2 className="h-4 w-4" />
+                    Shares
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{currentStats.share_count || 0}</div>
                 </CardContent>
               </Card>
             </div>
