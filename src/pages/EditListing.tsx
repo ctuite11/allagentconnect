@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { getNeighborhoodsForLocation } from "@/lib/locationData";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const EditListing: React.FC = () => {
   const { user } = useAuthRole();
@@ -26,6 +28,7 @@ const EditListing: React.FC = () => {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
   const [price, setPrice] = useState<number | "">("");
   const [originalPrice, setOriginalPrice] = useState<number | null>(null);
   const [originalStatus, setOriginalStatus] = useState<string | null>(null);
@@ -94,6 +97,7 @@ const EditListing: React.FC = () => {
         setCity(data.city || "");
         setState(data.state || "");
         setZipCode(data.zip_code || "");
+        setNeighborhood(data.neighborhood || "");
         setPrice(data.price || "");
         
         // Track original values for history
@@ -217,6 +221,7 @@ const EditListing: React.FC = () => {
       city,
       state,
       zip_code: zipCode,
+      neighborhood: neighborhood || null,
       listing_type: listingType,
       property_type: propertyType,
       status: status.toLowerCase().replace(" ", "_"),
@@ -501,6 +506,36 @@ const EditListing: React.FC = () => {
                     />
                   </div>
                 </div>
+
+                {/* Neighborhood/Area */}
+                {(() => {
+                  const neighborhoods = getNeighborhoodsForLocation({
+                    city: city,
+                    state: state,
+                  });
+                  
+                  return neighborhoods.length > 0 && (
+                    <div>
+                      <Label htmlFor="neighborhood">Neighborhood/Area</Label>
+                      <Select
+                        value={neighborhood}
+                        onValueChange={(value) => setNeighborhood(value)}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Select neighborhood..." />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[300px]">
+                          <SelectItem value="">No neighborhood</SelectItem>
+                          {neighborhoods.map((n) => (
+                            <SelectItem key={n} value={n}>
+                              {n}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  );
+                })()}
 
                 <div className="grid grid-cols-3 gap-4 border-t pt-4">
                   <div>
