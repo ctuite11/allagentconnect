@@ -12,9 +12,10 @@ interface SocialShareMenuProps {
   url: string;
   title: string;
   description?: string;
+  listingId?: string;
 }
 
-const SocialShareMenu = ({ url, title, description = "" }: SocialShareMenuProps) => {
+const SocialShareMenu = ({ url, title, description = "", listingId }: SocialShareMenuProps) => {
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
   const encodedDescription = encodeURIComponent(description);
@@ -27,13 +28,23 @@ const SocialShareMenu = ({ url, title, description = "" }: SocialShareMenuProps)
     email: `mailto:?subject=${encodedTitle}&body=${encodedDescription}%0A%0A${encodedUrl}`,
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     navigator.clipboard.writeText(url);
     toast.success("Link copied to clipboard!");
+    
+    if (listingId) {
+      const { trackShare } = await import("@/lib/trackShare");
+      await trackShare(listingId, 'copy_link');
+    }
   };
 
-  const handleShare = (platform: keyof typeof shareLinks) => {
+  const handleShare = async (platform: keyof typeof shareLinks) => {
     window.open(shareLinks[platform], "_blank", "noopener,noreferrer,width=600,height=400");
+    
+    if (listingId) {
+      const { trackShare } = await import("@/lib/trackShare");
+      await trackShare(listingId, platform);
+    }
   };
 
   return (

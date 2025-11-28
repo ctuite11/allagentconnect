@@ -178,10 +178,14 @@ const PropertyDetail = () => {
     }
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     const shareUrl = getListingShareUrl(id!);
     navigator.clipboard.writeText(shareUrl);
     toast.success("Link copied to clipboard");
+    
+    // Track the share
+    const { trackShare } = await import("@/lib/trackShare");
+    await trackShare(id!, 'copy_link');
   };
 
   const handlePrint = () => {
@@ -305,6 +309,7 @@ const PropertyDetail = () => {
                 url={getListingShareUrl(id!)}
                 title={`${listing.address}, ${listing.city}, ${listing.state}`}
                 description={listing.description || ''}
+                listingId={id!}
               />
             </div>
           </div>

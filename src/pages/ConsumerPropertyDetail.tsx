@@ -182,6 +182,8 @@ const ConsumerPropertyDetail = () => {
 
   const handleShareLink = async () => {
     const shareUrl = getListingShareUrl(id!);
+    const { trackShare } = await import("@/lib/trackShare");
+    
     if (navigator.share) {
       try {
         await navigator.share({
@@ -189,6 +191,7 @@ const ConsumerPropertyDetail = () => {
           text: `Check out this property: ${listing?.address}`,
           url: shareUrl,
         });
+        await trackShare(id!, 'native');
         return;
       } catch (error) {
         // User cancelled or share failed, fall back to clipboard
@@ -197,6 +200,7 @@ const ConsumerPropertyDetail = () => {
     
     navigator.clipboard.writeText(shareUrl);
     toast.success("Link copied to clipboard");
+    await trackShare(id!, 'copy_link');
   };
 
 
