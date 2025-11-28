@@ -1,2 +1,5 @@
+# Proxy social-preview requests to Supabase function for social media crawlers
+/social-preview/* https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/:splat 200
+
 # SPA fallback
 /* /index.html 200

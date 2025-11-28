@@ -38,7 +38,7 @@ import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColum
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
-import { getListingPublicUrl } from "@/lib/getPublicUrl";
+import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 
 interface Listing {
   id: string;
@@ -160,27 +160,27 @@ const PropertyDetail = () => {
   }, [id]);
 
   const handleShare = async () => {
-    const publicUrl = getListingPublicUrl(id!);
+    const shareUrl = getListingShareUrl(id!);
     if (navigator.share) {
       try {
         await navigator.share({
           title: listing?.address || 'Property Listing',
           text: `Check out this property: ${listing?.address}`,
-          url: publicUrl,
+          url: shareUrl,
         });
       } catch (error) {
         // User cancelled, do nothing
       }
     } else {
       // Fallback to copy if share not available
-      navigator.clipboard.writeText(publicUrl);
+      navigator.clipboard.writeText(shareUrl);
       toast.success("Link copied to clipboard");
     }
   };
 
   const handleCopyLink = () => {
-    const publicUrl = getListingPublicUrl(id!);
-    navigator.clipboard.writeText(publicUrl);
+    const shareUrl = getListingShareUrl(id!);
+    navigator.clipboard.writeText(shareUrl);
     toast.success("Link copied to clipboard");
   };
 
@@ -302,7 +302,7 @@ const PropertyDetail = () => {
 
             <div className="flex items-center gap-2">
               <SocialShareMenu
-                url={getListingPublicUrl(id!)}
+                url={getListingShareUrl(id!)}
                 title={`${listing.address}, ${listing.city}, ${listing.state}`}
                 description={listing.description || ''}
               />
