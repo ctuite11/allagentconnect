@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, ChevronDown, BarChart3, Heart } from "lucide-react";
+import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, ChevronDown, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { OpenHouseDialog } from "@/components/OpenHouseDialog";
 import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
@@ -432,33 +432,11 @@ function MyListingsView({
                     Matches ({matchCount})
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
-                    onClick={() => onPreview(l.id)}
-                    title="View count"
-                  >
-                    <Eye className="h-3 w-3" />
-                    Views ({views})
-                  </button>
-                  <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
                     onClick={() => onSocialShare(l)}
                     title="Share on social media"
                   >
                     Social Share
-                  </button>
-                  <button
-                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
-                    title="Times favorited"
-                  >
-                    <Heart className="h-3 w-3" />
-                    Favorites ({favorites})
-                  </button>
-                  <button
-                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
-                    title="Times shared"
-                  >
-                    <Share2 className="h-3 w-3" />
-                    Shares ({shares})
                   </button>
                   <button
                     className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
@@ -657,8 +635,8 @@ const MyListings = () => {
       
       const listingsWithStats = data?.map(listing => ({
         ...listing,
-        views_count: listing.listing_stats?.[0]?.view_count || 0,
-        listing_stats: listing.listing_stats?.[0]
+        views_count: listing.listing_stats?.view_count || 0,
+        listing_stats: listing.listing_stats
       })) || [];
 
       // Calculate matches from hot_sheets
