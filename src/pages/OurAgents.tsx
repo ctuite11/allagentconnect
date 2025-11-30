@@ -21,21 +21,20 @@ const OurAgents = () => {
     fetchAgents();
   }, []);
 
-  const fetchAgents = async () => {
+    const fetchAgents = async () => {
     try {
       setLoading(true);
+
       const { data, error } = await supabase
         .from("agent_profiles")
-        .select(`
-          *,
-          agent_county_preferences (
-            county_id,
-            counties (name, state)
-          )
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading agents:", error);
+        throw error;
+      }
+
       setAgents(data || []);
     } catch (error: any) {
       toast.error("Failed to load agents");
@@ -44,6 +43,7 @@ const OurAgents = () => {
       setLoading(false);
     }
   };
+
 
   const filteredAgents = agents.filter((agent) => {
     if (!searchQuery) return true;
