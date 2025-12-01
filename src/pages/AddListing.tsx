@@ -279,14 +279,18 @@ const AddListing = () => {
     }
   }, [formData, user]);
 
-  // Auto-save functionality
+  // Auto-save functionality - debounced on changes
   useEffect(() => {
     if (!user || !hasUnsavedChanges) return;
-    const autoSaveInterval = setInterval(() => {
+    
+    // Debounce autosave to 3 seconds after last change
+    const debounceTimeout = setTimeout(() => {
       handleSaveDraft(true);
-    }, 30000);
-    return () => clearInterval(autoSaveInterval);
-  }, [user, hasUnsavedChanges, formData]);
+    }, 3000);
+    
+    return () => clearTimeout(debounceTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, hasUnsavedChanges, formData, photos, floorPlans, documents, disclosures, propertyFeatures, amenities]);
 
   // Warn before leaving
   useEffect(() => {
