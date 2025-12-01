@@ -97,6 +97,9 @@ const AddListing = () => {
   const [isAddressConfirmOpen, setIsAddressConfirmOpen] = useState(false);
   const [attomRejectedForAddress, setAttomRejectedForAddress] = useState<string>("");
   
+  // Ref to track when we're applying ATTOM data (to prevent re-triggering fetch)
+  const isApplyingAttomDataRef = useRef(false);
+  
   const [formData, setFormData] = useState({
     status: "new",
     listing_type: "for_sale",
@@ -500,6 +503,9 @@ const AddListing = () => {
   };
 
   const applyAttomData = (record: any) => {
+    // Mark that we're applying ATTOM data to prevent re-triggering fetch
+    isApplyingAttomDataRef.current = true;
+    
     setAttomId(record.attom_id ?? null);
     
     const oldZip = formData.zip_code;
@@ -593,6 +599,11 @@ const AddListing = () => {
         description: message,
       });
     }
+    
+    // Reset the flag after a short delay to allow state updates to complete
+    setTimeout(() => {
+      isApplyingAttomDataRef.current = false;
+    }, 100);
   };
 
   const handleImportAttomRecord = (record: any) => {
@@ -658,8 +669,9 @@ const AddListing = () => {
     const cityChanged = prevAddressRef.current.city !== currentCity && prevAddressRef.current.city !== "";
     const zipChanged = prevAddressRef.current.zip !== currentZip && prevAddressRef.current.zip !== "";
     
-    if ((addressChanged || cityChanged || zipChanged) && hasAutoFetched) {
-      console.log("[AddListing] Address changed, resetting auto-fetch flag");
+    // Only reset if the change was NOT from applying ATTOM data
+    if ((addressChanged || cityChanged || zipChanged) && hasAutoFetched && !isApplyingAttomDataRef.current) {
+      console.log("[AddListing] Address changed by user, resetting auto-fetch flag");
       setHasAutoFetched(false);
       setAttomFetchStatus("");
       setAttomNeighborhoods([]);
