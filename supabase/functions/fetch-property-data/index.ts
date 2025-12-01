@@ -24,9 +24,9 @@ serve(async (req) => {
       );
     }
 
-    const attomApiKey = Deno.env.get("ATTOM_API_KEY");
+    const attomApiKey = Deno.env.get("attom_api_key");
     if (!attomApiKey) {
-      console.error("ATTOM_API_KEY not configured");
+      console.error("attom_api_key not configured");
       return new Response(
         JSON.stringify({ error: true, message: "API key not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
