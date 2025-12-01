@@ -191,7 +191,7 @@ const Favorites = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
-        <main className="flex-1 flex items-center justify-center">
+        <main className="flex-1 flex items-center justify-center pt-20">
           <div className="text-center">
             <p className="text-muted-foreground">Loading favorites...</p>
           </div>

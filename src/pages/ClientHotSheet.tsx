@@ -609,7 +609,7 @@ const ClientHotSheet = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
-        <main className="flex-1 flex items-center justify-center">
+        <main className="flex-1 flex items-center justify-center pt-20">
           <Card className="p-8">
             <p className="text-muted-foreground">Hot sheet not found</p>
           </Card>

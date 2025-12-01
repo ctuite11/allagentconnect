@@ -32,7 +32,7 @@ const SeedTestData = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle>Seed Test Data</CardTitle>

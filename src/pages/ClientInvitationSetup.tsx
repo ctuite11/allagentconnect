@@ -211,7 +211,7 @@ const ClientInvitationSetup = () => {
     return (
       <div className="min-h-screen">
         <Navigation />
-        <main className="container mx-auto px-4 py-16">
+        <main className="container mx-auto px-4 py-16 pt-24">
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
               <CardTitle className="text-2xl text-destructive">Invalid Invitation</CardTitle>
@@ -234,7 +234,7 @@ const ClientInvitationSetup = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-16">
+      <main className="container mx-auto px-4 py-16 pt-24">
         <div className="max-w-2xl mx-auto">
           {phase === "form" && (
             <Card className="shadow-lg">
