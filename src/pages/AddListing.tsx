@@ -649,12 +649,13 @@ const AddListing = () => {
       formData.city.trim() !== "" &&
       formData.zip_code.trim() !== "";
 
-    if (hasAllLocationData && !hasAutoFetched && !autoFillLoading) {
+    // Guard: Don't trigger if modal is already open or we're applying ATTOM data
+    if (hasAllLocationData && !hasAutoFetched && !autoFillLoading && !isAddressConfirmOpen && !isApplyingAttomDataRef.current) {
       console.log("[AddListing] All location fields filled, triggering auto-fetch");
       handleAutoFillFromPublicRecords(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.address, formData.state, selectedCounty, formData.city, formData.zip_code, hasAutoFetched, autoFillLoading]);
+  }, [formData.address, formData.state, selectedCounty, formData.city, formData.zip_code, hasAutoFetched, autoFillLoading, isAddressConfirmOpen]);
 
   // Reset auto-fetch flag when address changes significantly
   const prevAddressRef = useRef({ address: "", city: "", zip: "" });
@@ -2775,38 +2776,40 @@ const AddListing = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ATTOM Address Confirmation Modal */}
-      <Dialog open={isAddressConfirmOpen} onOpenChange={setIsAddressConfirmOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirm Address</DialogTitle>
-          </DialogHeader>
+      {/* ATTOM Address Confirmation Modal - Single instance, controlled */}
+      {isAddressConfirmOpen && attomPendingRecord && (
+        <Dialog open={true} onOpenChange={(open) => { if (!open) handleRejectAttomAddress(); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Confirm Address</DialogTitle>
+            </DialogHeader>
 
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground mb-3">
-              We found this property in public records:
-            </p>
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground mb-3">
+                We found this property in public records:
+              </p>
 
-            <p className="font-medium text-base bg-muted p-3 rounded-md">
-              {attomPendingRecord ? buildAttomAddressString(attomPendingRecord) : ''}
-            </p>
+              <p className="font-medium text-base bg-muted p-3 rounded-md">
+                {buildAttomAddressString(attomPendingRecord)}
+              </p>
 
-            <p className="text-sm text-muted-foreground mt-3">
-              Is this address correct?
-            </p>
-          </div>
+              <p className="text-sm text-muted-foreground mt-3">
+                Is this address correct?
+              </p>
+            </div>
 
-          <div className="flex gap-3 justify-end">
-            <Button type="button" variant="outline" onClick={handleRejectAttomAddress}>
-              No, I'll enter it manually
-            </Button>
+            <div className="flex gap-3 justify-end">
+              <Button type="button" variant="outline" onClick={handleRejectAttomAddress}>
+                No, I'll enter it manually
+              </Button>
 
-            <Button type="button" onClick={handleConfirmAttomAddress}>
-              Yes, use this address
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+              <Button type="button" onClick={handleConfirmAttomAddress}>
+                Yes, use this address
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
