@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Store, TrendingUp, Eye, MousePointer, Plus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import Navigation from "@/components/Navigation";
 
 const VendorDashboard = () => {
   const navigate = useNavigate();
@@ -100,39 +101,48 @@ const VendorDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="flex-1 flex items-center justify-center pt-20">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
 
   if (!vendorProfile) {
     return (
-      <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
-        <Alert>
-          <Store className="h-4 w-4" />
-          <AlertDescription>
-            <div className="flex items-center justify-between">
-              <span>You need to create a vendor profile to start advertising.</span>
-              <Button onClick={() => navigate('/vendor/setup')}>
-                Create Profile
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
+          <Alert>
+            <Store className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <span>You need to create a vendor profile to start advertising.</span>
+                <Button onClick={() => navigate('/vendor/setup')}>
+                  Create Profile
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
       </div>
     );
   }
 
   if (!vendorProfile.is_approved) {
     return (
-      <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Your vendor profile is pending approval. You'll be notified once it's approved and you can start advertising.
-          </AlertDescription>
-        </Alert>
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Your vendor profile is pending approval. You'll be notified once it's approved and you can start advertising.
+            </AlertDescription>
+          </Alert>
+        </div>
       </div>
     );
   }
@@ -140,7 +150,9 @@ const VendorDashboard = () => {
   const activeSubscription = subscriptions.find(sub => sub.status === 'active');
 
   return (
-    <div className="container mx-auto px-4 py-8 pt-24">
+    <div className="min-h-screen flex flex-col">
+      <Navigation />
+      <div className="container mx-auto px-4 py-8 pt-24">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Vendor Dashboard</h1>
         <p className="text-muted-foreground">
@@ -385,6 +397,7 @@ const VendorDashboard = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 };

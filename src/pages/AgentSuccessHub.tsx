@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Users, FileText, UserPlus, TrendingUp, Calendar, Mail, Heart, Bell } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import Navigation from "@/components/Navigation";
 
 interface Buyer {
   id: string;
@@ -365,14 +366,19 @@ export default function AgentSuccessHub() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="flex-1 flex items-center justify-center pt-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="min-h-screen flex flex-col">
+      <Navigation />
+      <div className="container mx-auto px-4 py-8 pt-24 space-y-8">
         {/* Header */}
         <div>
           <h1 className="text-4xl font-bold text-foreground">Agent Success Hub</h1>
@@ -592,5 +598,6 @@ export default function AgentSuccessHub() {
           </CardContent>
         </Card>
       </div>
+    </div>
   );
 }
