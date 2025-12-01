@@ -92,6 +92,11 @@ const AddListing = () => {
   const [verificationMessage, setVerificationMessage] = useState<string>("");
   const [publicRecordStatus, setPublicRecordStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   
+  // ATTOM address confirmation state
+  const [attomPendingRecord, setAttomPendingRecord] = useState<any>(null);
+  const [isAddressConfirmOpen, setIsAddressConfirmOpen] = useState(false);
+  const [attomRejectedForAddress, setAttomRejectedForAddress] = useState<string>("");
+  
   const [formData, setFormData] = useState({
     status: "new",
     listing_type: "for_sale",
@@ -383,6 +388,17 @@ const AddListing = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Helper to build one-line address string from ATTOM record
+  const buildAttomAddressString = (record: any): string => {
+    const parts = [
+      record.address,
+      record.city,
+      record.state,
+      record.zip
+    ].filter(Boolean);
+    return parts.join(', ');
+  };
+
   const handleAutoFillFromPublicRecords = async (isAutoTrigger = false) => {
     if (!formData.address || !formData.city || !formData.state) {
       if (!isAutoTrigger) {
@@ -448,14 +464,24 @@ const AddListing = () => {
       }
 
       if (results.length === 1) {
-        // Auto-fill with the single result
-        applyAttomData(results[0]);
-        setPublicRecordStatus('success');
-        setAttomFetchStatus("Public record data loaded successfully.");
-        if (!isAutoTrigger) {
-          toast.success("Property data loaded from public records!");
+        const record = results[0];
+        const attomAddressKey = buildAttomAddressString(record);
+
+        // If user already rejected this exact address, skip confirmation
+        if (attomRejectedForAddress === attomAddressKey) {
+          console.log("[AddListing] ATTOM address previously rejected, skipping confirmation");
+          setPublicRecordStatus('idle');
+          setAttomFetchStatus("");
+          setHasAutoFetched(true);
+          return;
         }
-        setHasAutoFetched(true);
+
+        // Show confirmation modal instead of auto-applying
+        setAttomPendingRecord(record);
+        setIsAddressConfirmOpen(true);
+        setPublicRecordStatus('idle');
+        setAttomFetchStatus("Address found - please confirm.");
+        return;
       } else {
         // Show modal to let user choose
         setAttomResults(results);
@@ -578,6 +604,31 @@ const AddListing = () => {
     toast.success("Property data imported from public records!");
   };
 
+  const handleConfirmAttomAddress = () => {
+    if (attomPendingRecord) {
+      applyAttomData(attomPendingRecord);
+      setPublicRecordStatus('success');
+      setAttomFetchStatus("Public record data loaded successfully.");
+      toast.success("Property data loaded from public records!");
+      setHasAutoFetched(true);
+    }
+    setIsAddressConfirmOpen(false);
+    setAttomPendingRecord(null);
+  };
+
+  const handleRejectAttomAddress = () => {
+    if (attomPendingRecord) {
+      const rejectedKey = buildAttomAddressString(attomPendingRecord);
+      setAttomRejectedForAddress(rejectedKey);
+    }
+    setIsAddressConfirmOpen(false);
+    setAttomPendingRecord(null);
+    setPublicRecordStatus('idle');
+    setAttomFetchStatus("");
+    setHasAutoFetched(true);
+    toast.info("Address not confirmed. You can enter details manually.");
+  };
+
   // Auto-fetch when all location fields are filled
   useEffect(() => {
     const hasAllLocationData = 
@@ -612,6 +663,7 @@ const AddListing = () => {
       setHasAutoFetched(false);
       setAttomFetchStatus("");
       setAttomNeighborhoods([]);
+      setAttomRejectedForAddress(""); // Reset rejection flag for new address
     }
     
     // Update refs
@@ -2707,6 +2759,39 @@ const AddListing = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ATTOM Address Confirmation Modal */}
+      <Dialog open={isAddressConfirmOpen} onOpenChange={setIsAddressConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Address</DialogTitle>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground mb-3">
+              We found this property in public records:
+            </p>
+
+            <p className="font-medium text-base bg-muted p-3 rounded-md">
+              {attomPendingRecord ? buildAttomAddressString(attomPendingRecord) : ''}
+            </p>
+
+            <p className="text-sm text-muted-foreground mt-3">
+              Is this address correct?
+            </p>
+          </div>
+
+          <div className="flex gap-3 justify-end">
+            <Button type="button" variant="outline" onClick={handleRejectAttomAddress}>
+              No, I'll enter it manually
+            </Button>
+
+            <Button type="button" onClick={handleConfirmAttomAddress}>
+              Yes, use this address
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
