@@ -891,23 +891,50 @@ const AddListing = () => {
         setSubmitting(true);
       }
 
+      // Upload photos if there are any pending uploads
+      let uploadedPhotos: any[] = [];
+      let uploadedFloorPlans: any[] = [];
+      let uploadedDocuments: any[] = [];
+
+      if (photos.length > 0 || floorPlans.length > 0 || documents.length > 0) {
+        console.log('Uploading files for draft save:', { 
+          photos: photos.length, 
+          floorPlans: floorPlans.length, 
+          documents: documents.length 
+        });
+        
+        try {
+          const uploaded = await uploadFiles();
+          uploadedPhotos = uploaded.photos;
+          uploadedFloorPlans = uploaded.floorPlans;
+          uploadedDocuments = uploaded.documents;
+          console.log('Files uploaded successfully:', uploaded);
+        } catch (uploadError: any) {
+          console.error('Error uploading files during draft save:', uploadError);
+          if (!isAutoSave) {
+            toast.error(`Failed to upload files: ${uploadError.message}`);
+          }
+          // Continue saving draft without photos if upload fails
+        }
+      }
+
       const payload: any = {
         agent_id: user.id,
         status: "draft",
         listing_type: formData.listing_type,
         address: (formData.address || "Draft").trim(),
-        city: formData.city?.trim() || "",
-        state: formData.state?.trim() || "",
-        zip_code: formData.zip_code?.trim() || "",
+        city: formData.city?.trim() || "TBD",
+        state: formData.state?.trim() || "MA",
+        zip_code: formData.zip_code?.trim() || "00000",
         county: selectedCounty !== "all" ? selectedCounty : null,
         price: formData.price ? parseFloat(formData.price) : 0,
         property_type: formData.property_type || null,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
         square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
-        photos: [],
-        floor_plans: [],
-        documents: [],
+        photos: uploadedPhotos,
+        floor_plans: uploadedFloorPlans,
+        documents: uploadedDocuments,
         unit_number: formData.unit_number || null,
         building_name: formData.building_name || null,
       };
@@ -927,20 +954,43 @@ const AddListing = () => {
       payload.lead_paint = leadPaint;
       payload.handicap_accessible = handicapAccessible || null;
 
+      console.log('Saving draft with payload:', { ...payload, photos: payload.photos?.length || 0 });
+
       if (draftId) {
         const { error } = await supabase
           .from("listings")
           .update(payload)
           .eq("id", draftId);
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating draft listing:', error);
+          throw error;
+        }
+        console.log('Draft updated successfully, id:', draftId);
       } else {
         const { data, error } = await supabase
           .from("listings")
           .insert(payload)
           .select()
           .single();
-        if (error) throw error;
-        if (data) setDraftId(data.id);
+        if (error) {
+          console.error('Error inserting draft listing:', error);
+          throw error;
+        }
+        if (data) {
+          console.log('Draft created successfully, id:', data.id);
+          setDraftId(data.id);
+        }
+      }
+
+      // Clear the local file arrays after successful upload to prevent re-uploading
+      if (uploadedPhotos.length > 0) {
+        setPhotos([]);
+      }
+      if (uploadedFloorPlans.length > 0) {
+        setFloorPlans([]);
+      }
+      if (uploadedDocuments.length > 0) {
+        setDocuments([]);
       }
 
       setHasUnsavedChanges(false);
@@ -951,9 +1001,10 @@ const AddListing = () => {
         navigate("/agent-dashboard", { state: { reload: true } });
       }
     } catch (error: any) {
-      console.error("Error saving draft:", error);
+      console.error("Error saving draft listing:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       if (!isAutoSave) {
-        toast.error(error.message || "Failed to save draft");
+        toast.error(error.message || "Failed to save draft listing");
       }
     } finally {
       if (isAutoSave) {
