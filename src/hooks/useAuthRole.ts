@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -14,28 +14,14 @@ export function useAuthRole(): AuthRoleState {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const initialLoadDone = useRef(false);
 
-  async function loadUserAndRole() {
-    setLoading(true);
-
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      setUser(null);
-      setRole(null);
-      setLoading(false);
-      return;
-    }
-
-    setUser(user);
-
+  // Load role for a given user - doesn't set loading state
+  async function loadRoleForUser(userId: string) {
     const { data: roleRow, error: roleError } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle();
 
     if (roleError) {
@@ -44,19 +30,51 @@ export function useAuthRole(): AuthRoleState {
     } else {
       setRole((roleRow?.role as Role) ?? null);
     }
-
-    setLoading(false);
   }
 
   useEffect(() => {
-    // initial load
-    loadUserAndRole();
+    // Initial load - only this sets loading=true
+    async function initialLoad() {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
 
-    // reload whenever auth state changes
+      if (error || !user) {
+        setUser(null);
+        setRole(null);
+        setLoading(false);
+        initialLoadDone.current = true;
+        return;
+      }
+
+      setUser(user);
+      await loadRoleForUser(user.id);
+      setLoading(false);
+      initialLoadDone.current = true;
+    }
+
+    initialLoad();
+
+    // Auth state change listener - does NOT set loading=true
+    // This prevents component unmounting when switching tabs
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, _session) => {
-      loadUserAndRole();
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Only update state after initial load is complete
+      if (!initialLoadDone.current) return;
+
+      const newUser = session?.user ?? null;
+      setUser(newUser);
+
+      if (newUser) {
+        // Defer role fetch to avoid deadlock
+        setTimeout(() => {
+          loadRoleForUser(newUser.id);
+        }, 0);
+      } else {
+        setRole(null);
+      }
     });
 
     return () => {
