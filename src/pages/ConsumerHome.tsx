@@ -34,7 +34,7 @@ const ConsumerHome = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main>
+      <main className="pt-20">
         {/* Modern, unified hero */}
         <PropertySearchHero />
 

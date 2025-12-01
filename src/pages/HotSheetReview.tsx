@@ -289,7 +289,7 @@ if (agentIds.length > 0) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
-        <main className="flex-1 flex items-center justify-center">
+        <main className="flex-1 flex items-center justify-center pt-20">
           <div className="text-center">
             <p className="text-muted-foreground">Loading hot sheet...</p>
           </div>
@@ -302,7 +302,7 @@ if (agentIds.length > 0) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
-        <main className="flex-1 flex items-center justify-center">
+        <main className="flex-1 flex items-center justify-center pt-20">
           <div className="text-center">
             <p className="text-muted-foreground">Hot sheet not found</p>
             <Button onClick={() => navigate("/hot-sheets")} className="mt-4">
