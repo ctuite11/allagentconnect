@@ -701,33 +701,16 @@ const AddListing = () => {
     
     // For photos, navigate to photo management page
     if (type === 'photos') {
-      let targetListingId = listingId;
+      let targetListingId = listingId || draftId;
       
-      // If new listing, create a draft first
+      // If new listing, ensure draft exists first using helper
       if (!targetListingId) {
-        try {
-          const { data, error } = await supabase
-            .from('listings')
-            .insert({
-              agent_id: user.id,
-              status: 'draft',
-              address: formData.address || 'Draft Listing',
-              city: formData.city || 'TBD',
-              state: formData.state || 'MA',
-              zip_code: formData.zip_code || '00000',
-              price: formData.price ? parseFloat(formData.price) : 0,
-            })
-            .select('id')
-            .single();
-          
-          if (error) throw error;
-          targetListingId = data.id;
-          toast.success('Draft listing created');
-        } catch (error) {
-          console.error('Error creating draft:', error);
-          toast.error('Failed to create draft listing');
+        targetListingId = await ensureDraftListing();
+        if (!targetListingId) {
+          toast.error('Please wait - unable to create draft listing');
           return;
         }
+        toast.success('Draft listing created');
       }
       
       // Upload photos to storage
@@ -832,6 +815,12 @@ const AddListing = () => {
   };
 
   const uploadFiles = async (): Promise<{ photos: any[], floorPlans: any[], documents: any[] }> => {
+    // Defensive null check for user
+    if (!user) {
+      console.warn('uploadFiles called without user - aborting');
+      return { photos: [], floorPlans: [], documents: [] };
+    }
+
     const uploadedPhotos: any[] = [];
     const uploadedFloorPlans: any[] = [];
     const uploadedDocuments: any[] = [];
@@ -873,6 +862,49 @@ const AddListing = () => {
     }
 
     return { photos: uploadedPhotos, floorPlans: uploadedFloorPlans, documents: uploadedDocuments };
+  };
+
+  // Helper to ensure a draft listing exists before any save/upload operation
+  const ensureDraftListing = async (): Promise<string | null> => {
+    if (draftId) return draftId;
+    
+    if (!user) {
+      console.error('ensureDraftListing: Cannot create draft - no user logged in');
+      return null;
+    }
+    
+    const minimalPayload = {
+      agent_id: user.id,
+      status: 'draft',
+      address: formData.address || 'Draft',
+      city: formData.city || 'TBD',
+      state: formData.state || 'MA',
+      zip_code: formData.zip_code || '00000',
+      price: formData.price ? parseFloat(formData.price) : 0
+    };
+    
+    console.log('ensureDraftListing: Creating initial draft with payload:', minimalPayload);
+    
+    const { data, error } = await supabase
+      .from('listings')
+      .insert(minimalPayload)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('ensureDraftListing: Error creating initial draft:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        payload: minimalPayload
+      });
+      return null;
+    }
+    
+    console.log('ensureDraftListing: Draft created successfully with id:', data.id);
+    setDraftId(data.id);
+    return data.id;
   };
 
   const handleSaveDraft = async (isAutoSave = false) => {
@@ -1001,10 +1033,24 @@ const AddListing = () => {
         navigate("/agent-dashboard", { state: { reload: true } });
       }
     } catch (error: any) {
-      console.error("Error saving draft listing:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
+      console.error("Error saving draft listing:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        draftId: draftId,
+        userId: user?.id,
+        payloadSummary: {
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zip_code: formData.zip_code,
+          price: formData.price
+        }
+      });
+      console.error("Full error object:", JSON.stringify(error, null, 2));
       if (!isAutoSave) {
-        toast.error(error.message || "Failed to save draft listing");
+        toast.error(`Failed to save draft: ${error.message || 'Unknown error'}`);
       }
     } finally {
       if (isAutoSave) {
