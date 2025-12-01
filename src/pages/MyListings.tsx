@@ -789,7 +789,7 @@ const MyListings = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navigation />
-        <div className="flex-1 flex items-center justify-center p-6">
+        <div className="flex-1 flex items-center justify-center p-6 pt-24">
           <p className="text-muted-foreground">You must be signed in as an agent to view your listings.</p>
         </div>
       </div>
@@ -804,7 +804,7 @@ const MyListings = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navigation />
-        <div className="flex-1 container mx-auto p-6">
+        <div className="flex-1 container mx-auto p-6 pt-24">
           <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
             <h1 className="text-3xl font-semibold mb-2">My Listings</h1>
             <p className="text-muted-foreground mb-6">You haven't created any listings yet.</p>
@@ -824,6 +824,7 @@ const MyListings = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
+      <main className="pt-20">
       <MyListingsView
         listings={listings}
         onEdit={handleEdit}
@@ -919,6 +920,7 @@ const MyListings = () => {
           </div>
         </div>
       )}
+      </main>
     </div>
   );
 };
