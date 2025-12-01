@@ -999,20 +999,28 @@ const AddListing = () => {
         }
         console.log('Draft updated successfully, id:', draftId);
       } else {
-        const { data, error } = await supabase
-          .from("listings")
-          .insert(payload)
-          .select()
-          .single();
-        if (error) {
-          console.error('Error inserting draft listing:', error);
-          throw error;
-        }
-        if (data) {
-          console.log('Draft created successfully, id:', data.id);
-          setDraftId(data.id);
-        }
-      }
+  // Let the database generate listing_number using its default/sequence.
+  // We remove listing_number from the payload before inserting to avoid
+  // duplicate key violations on listings_listing_number_key.
+  const { listing_number, ...payloadWithoutListingNumber } = payload;
+
+  const { data, error } = await supabase
+    .from("listings")
+    .insert(payloadWithoutListingNumber)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error inserting draft listing:', error);
+    throw error;
+  }
+
+  if (data) {
+    console.log('Draft created successfully, id:', data.id);
+    setDraftId(data.id);
+  }
+}
+
 
       // Clear the local file arrays after successful upload to prevent re-uploading
       if (uploadedPhotos.length > 0) {
