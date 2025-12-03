@@ -304,7 +304,7 @@ const AddListing = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  // Fetch ZIP codes when city changes
+  // Fetch ZIP codes when city changes - uses static data, edge function, and Zippopotam.us fallback
   useEffect(() => {
     const fetchZipCodes = async () => {
       // Determine the actual city to use for ZIP lookup
@@ -313,23 +313,57 @@ const AddListing = () => {
       if (selectedState && actualCity) {
         setSuggestedZipsLoading(true);
         try {
+          // Try static data first
           if (hasZipCodeData(actualCity, selectedState)) {
             const staticZips = getZipCodesForCity(actualCity, selectedState);
             setSuggestedZips(staticZips);
             setAvailableZips(staticZips);
-          } else {
+            setFormData(prev => ({ ...prev, city: actualCity, zip_code: "" }));
+            setSuggestedZipsLoading(false);
+            return;
+          }
+          
+          // Try edge function second
+          try {
             const { data, error } = await supabase.functions.invoke('get-city-zips', {
               body: { state: selectedState, city: actualCity }
             });
-            if (error) throw error;
-            const zips = data?.zips || [];
-            setSuggestedZips(zips);
-            setAvailableZips(zips);
+            if (!error && data?.zips?.length > 0) {
+              setSuggestedZips(data.zips);
+              setAvailableZips(data.zips);
+              setFormData(prev => ({ ...prev, city: actualCity, zip_code: "" }));
+              setSuggestedZipsLoading(false);
+              return;
+            }
+          } catch (edgeFnError) {
+            console.log("Edge function failed, trying Zippopotam.us fallback:", edgeFnError);
           }
+          
+          // Fallback to Zippopotam.us API
+          try {
+            const response = await fetch(`https://api.zippopotam.us/us/${selectedState}/${encodeURIComponent(actualCity)}`);
+            if (response.ok) {
+              const data = await response.json();
+              const zips = data.places?.map((place: any) => place['post code']) || [];
+              if (zips.length > 0) {
+                setSuggestedZips(zips);
+                setAvailableZips(zips);
+                setFormData(prev => ({ ...prev, city: actualCity, zip_code: "" }));
+                setSuggestedZipsLoading(false);
+                return;
+              }
+            }
+          } catch (zippopotamError) {
+            console.log("Zippopotam.us fallback failed:", zippopotamError);
+          }
+          
+          // No ZIPs found - allow manual entry without error
+          setSuggestedZips([]);
+          setAvailableZips([]);
           setFormData(prev => ({ ...prev, city: actualCity, zip_code: "" }));
         } catch (error) {
           console.error("Error fetching ZIP codes:", error);
-          toast.error("Could not load ZIP codes for this city");
+          // Don't show error toast - just allow manual entry
           setSuggestedZips([]);
           setAvailableZips([]);
         } finally {
@@ -1449,41 +1483,13 @@ const AddListing = () => {
                 <div className="space-y-4">
                   <Label className="text-lg font-semibold">Property Location</Label>
                   
-                  {/* Get Public Data Button - Above everything */}
-                  <div className="space-y-2 p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                    <Button
-                      type="button"
-                      onClick={() => handleAutoFillFromPublicRecords(false)}
-                      disabled={publicRecordStatus === 'loading'}
-                      variant="default"
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                      size="lg"
-                    >
-                      {publicRecordStatus === 'loading' ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Loading public record data...
-                        </>
-                      ) : (
-                        "Click here to import public record data"
-                      )}
-                    </Button>
-                    <p className="text-xs text-muted-foreground text-center">
-                      Enter Street, State, County, City/Town, and ZIP, then click this button to pull public record data.
-                    </p>
-                    
-                    {publicRecordStatus === 'success' && (
-                      <p className="text-xs text-green-600 text-center">
-                        Public record data loaded successfully.
-                      </p>
-                    )}
-
-                    {publicRecordStatus === 'error' && (
-                      <p className="text-xs text-red-600 text-center">
-                        Unable to load public record data. Please check the address and try again.
-                      </p>
-                    )}
-                  </div>
+                  {/* Public Record Status - subtle feedback only on success */}
+                  {publicRecordStatus === 'success' && (
+                    <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>Public record data loaded successfully.</span>
+                    </div>
+                  )}
                   
                   {/* Street Address + Unit # */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1728,17 +1734,19 @@ const AddListing = () => {
                       );
                   })()}
 
-                  {/* Building / Complex Name - moved to last */}
-                  <div className="space-y-2">
-                    <Label htmlFor="building_name">Building / Complex Name</Label>
-                    <Input
-                      id="building_name"
-                      type="text"
-                      value={formData.building_name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, building_name: e.target.value }))}
-                      placeholder="e.g. Harborview Towers"
-                    />
-                  </div>
+                  {/* Building / Complex Name - hidden for single-family */}
+                  {formData.property_type !== 'single_family' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="building_name">Building / Complex Name</Label>
+                      <Input
+                        id="building_name"
+                        type="text"
+                        value={formData.building_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, building_name: e.target.value }))}
+                        placeholder="e.g. Harborview Towers"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Price Section */}

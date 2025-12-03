@@ -130,7 +130,28 @@ const ManageListingPhotos: React.FC = () => {
       if (error) throw error;
 
       toast.success('Photos updated successfully');
-      navigate('/agent/listings');
+    } catch (error: any) {
+      console.error('Error saving photos:', error);
+      toast.error('Failed to save photos');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveAndReturn = async () => {
+    if (!id) return;
+    
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ photos: photos })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Photos updated successfully');
+      navigate(`/add-listing/${id}`);
     } catch (error: any) {
       console.error('Error saving photos:', error);
       toast.error('Failed to save photos');
@@ -200,13 +221,19 @@ const ManageListingPhotos: React.FC = () => {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => navigate('/agent/listings')}
+            onClick={() => navigate(`/add-listing/${id}`)}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Listings
+            Back to Listing Form
           </Button>
           <Button
-            onClick={handleSave}
+            variant="ghost"
+            onClick={() => navigate('/agent/listings')}
+          >
+            Back to My Listings
+          </Button>
+          <Button
+            onClick={handleSaveAndReturn}
             disabled={saving}
           >
             {saving ? (
