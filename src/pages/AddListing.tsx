@@ -415,6 +415,12 @@ const AddListing = () => {
         return;
       }
       setUser(session.user);
+      
+      // If we have a listingId in URL, load that listing's data
+      if (listingId) {
+        await loadExistingListing(listingId);
+      }
+      
       setLoading(false);
     };
     checkUser();
@@ -427,7 +433,125 @@ const AddListing = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, listingId]);
+
+  // Function to load existing listing data
+  const loadExistingListing = async (id: string) => {
+    try {
+      console.log('[AddListing] Loading existing listing:', id);
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error('[AddListing] Error loading listing:', error);
+        return;
+      }
+      
+      if (data) {
+        console.log('[AddListing] Loaded listing data:', data);
+        setDraftId(data.id);
+        
+        // Set form data from loaded listing
+        setFormData(prev => ({
+          ...prev,
+          status: data.status || "new",
+          listing_type: data.listing_type || "for_sale",
+          property_type: data.property_type || "single_family",
+          address: data.address || "",
+          city: data.city || "",
+          state: data.state || "",
+          zip_code: data.zip_code || "",
+          county: data.county || "",
+          neighborhood: data.neighborhood || "",
+          latitude: data.latitude,
+          longitude: data.longitude,
+          bedrooms: data.bedrooms?.toString() || "",
+          bathrooms: data.bathrooms?.toString() || "",
+          square_feet: data.square_feet?.toString() || "",
+          lot_size: data.lot_size?.toString() || "",
+          year_built: data.year_built?.toString() || "",
+          price: data.price?.toString() || "",
+          description: data.description || "",
+          commission_rate: data.commission_rate?.toString() || "",
+          commission_type: data.commission_type || "percentage",
+          commission_notes: data.commission_notes || "",
+          showing_instructions: data.showing_instructions || "",
+          lockbox_code: data.lockbox_code || "",
+          appointment_required: data.appointment_required || false,
+          showing_contact_name: data.showing_contact_name || "",
+          showing_contact_phone: data.showing_contact_phone || "",
+          additional_notes: data.additional_notes || "",
+          annual_property_tax: data.annual_property_tax?.toString() || "",
+          tax_year: data.tax_year?.toString() || "",
+          go_live_date: data.go_live_date || "",
+          unit_number: data.unit_number || "",
+          building_name: data.building_name || "",
+          rental_fee: data.rental_fee?.toString() || "",
+          laundry_type: data.laundry_type || "none",
+          pets_comment: data.pets_comment || "",
+        }));
+        
+        // Set state/county/city selectors
+        if (data.state) {
+          setSelectedState(data.state);
+        }
+        if (data.county) {
+          setSelectedCounty(data.county);
+        }
+        if (data.city) {
+          setCityChoice(data.city);
+        }
+        
+        // Load photos from database
+        if (data.photos && Array.isArray(data.photos) && data.photos.length > 0) {
+          const loadedPhotos: FileWithPreview[] = data.photos.map((photo: any, index: number) => ({
+            file: new File([], ''),
+            preview: typeof photo === 'string' ? photo : photo.url,
+            id: `existing-${index}`,
+            uploaded: true,
+            url: typeof photo === 'string' ? photo : photo.url
+          }));
+          setPhotos(loadedPhotos);
+        }
+        
+        // Load other arrays (cast from Json[] to string[])
+        if (data.disclosures && Array.isArray(data.disclosures)) {
+          setDisclosures(data.disclosures as string[]);
+        }
+        if (data.property_features && Array.isArray(data.property_features)) {
+          setPropertyFeatures(data.property_features as string[]);
+        }
+        if (data.amenities && Array.isArray(data.amenities)) {
+          setAmenities(data.amenities as string[]);
+        }
+        if (data.deposit_requirements && Array.isArray(data.deposit_requirements)) {
+          setDepositRequirements(data.deposit_requirements as string[]);
+        }
+        if (data.outdoor_space && Array.isArray(data.outdoor_space)) {
+          setOutdoorSpace(data.outdoor_space as string[]);
+        }
+        if (data.storage_options && Array.isArray(data.storage_options)) {
+          setStorageOptions(data.storage_options as string[]);
+        }
+        if (data.pet_options && Array.isArray(data.pet_options)) {
+          setPetOptions(data.pet_options as string[]);
+        }
+        
+        // Mark as already auto-fetched if we have ATTOM data
+        if (data.attom_id) {
+          setAttomId(data.attom_id);
+          setHasAutoFetched(true);
+        }
+        
+        setHasUnsavedChanges(false);
+      }
+    } catch (err) {
+      console.error('[AddListing] Error in loadExistingListing:', err);
+    }
+  };
 
   // Helper to build one-line address string from ATTOM record
   const buildAttomAddressString = (record: any): string => {
@@ -680,10 +804,15 @@ const AddListing = () => {
 
   // Auto-fetch when all location fields are filled
   useEffect(() => {
+    // For MA, require county selection; for other states, county is optional
+    const countyOk = formData.state === "MA" 
+      ? (selectedCounty !== "" && selectedCounty !== "all")
+      : true;
+    
     const hasAllLocationData = 
       formData.address.trim() !== "" &&
       formData.state.trim() !== "" &&
-      selectedCounty !== "" && selectedCounty !== "all" &&
+      countyOk &&
       formData.city.trim() !== "" &&
       formData.zip_code.trim() !== "";
 
@@ -750,6 +879,9 @@ const AddListing = () => {
       // Upload photos to storage
       const uploadedPhotos: { url: string; order: number }[] = [];
       
+      // Get existing photos count for proper ordering
+      const existingCount = photos.length;
+      
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const filePath = `${targetListingId}/${Date.now()}_${file.name}`;
@@ -765,19 +897,29 @@ const AddListing = () => {
             .from('listing-photos')
             .getPublicUrl(filePath);
           
-          uploadedPhotos.push({ url: publicUrl, order: i });
+          uploadedPhotos.push({ url: publicUrl, order: existingCount + i });
         } catch (error) {
           console.error('Error uploading photo:', error);
           toast.error(`Failed to upload ${file.name}`);
         }
       }
       
-      // Save photos to database
+      // Save photos to database (merge with existing)
       if (uploadedPhotos.length > 0) {
         try {
+          // Get existing photos first
+          const { data: existingData } = await supabase
+            .from('listings')
+            .select('photos')
+            .eq('id', targetListingId)
+            .single();
+          
+          const existingPhotos = (existingData?.photos as any[]) || [];
+          const mergedPhotos = [...existingPhotos, ...uploadedPhotos];
+          
           const { error } = await supabase
             .from('listings')
-            .update({ photos: uploadedPhotos })
+            .update({ photos: mergedPhotos })
             .eq('id', targetListingId);
           
           if (error) throw error;
@@ -2683,6 +2825,7 @@ const AddListing = () => {
                   </div>
                   
                   {/* Property Photos - Auto-Navigate to Management Page */}
+                  {/* Photos Section */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -2700,11 +2843,11 @@ const AddListing = () => {
                           <Upload className="w-4 h-4 mr-2" />
                           Upload Photos
                         </Button>
-                        {listingId && (
+                        {(listingId || draftId) && (
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() => navigate(`/agent/listings/${listingId}/photos`)}
+                            onClick={() => navigate(`/agent/listings/${listingId || draftId}/photos`)}
                           >
                             Manage Photos
                           </Button>
@@ -2721,9 +2864,39 @@ const AddListing = () => {
                       className="hidden"
                     />
                     
-                    <p className="text-sm text-muted-foreground">
-                      Click "Upload Photos" to add photos. You'll be taken to a dedicated page to manage, reorder, and delete photos.
-                    </p>
+                    {/* Display existing photos */}
+                    {photos.length > 0 ? (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-primary">
+                          {photos.length} photo{photos.length !== 1 ? 's' : ''} uploaded
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {photos.slice(0, 4).map((photo, index) => (
+                            <div key={photo.id} className="relative aspect-video rounded-lg overflow-hidden border">
+                              <img 
+                                src={photo.preview || photo.url} 
+                                alt={`Photo ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                              {index === 0 && (
+                                <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
+                                  Main
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        {photos.length > 4 && (
+                          <p className="text-sm text-muted-foreground">
+                            +{photos.length - 4} more photo{photos.length - 4 !== 1 ? 's' : ''}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Click "Upload Photos" to add photos. You'll be taken to a dedicated page to manage, reorder, and delete photos.
+                      </p>
+                    )}
                   </div>
 
                   {/* Floor Plans */}
