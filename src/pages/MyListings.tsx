@@ -701,7 +701,7 @@ const MyListings = () => {
   };
 
   const handleEdit = (id: string) => {
-    navigate(`/edit-listing/${id}`);
+    navigate(`/add-listing/${id}`);
   };
 
   const handlePreview = (id: string) => {
@@ -734,7 +734,7 @@ const MyListings = () => {
   };
 
   const handleNewListing = () => {
-    navigate("/new-listing");
+    navigate("/agent/listings/new");
   };
 
   const handleQuickUpdate = async (id: string, updates: Partial<Pick<Listing, "price" | "status">>) => {
