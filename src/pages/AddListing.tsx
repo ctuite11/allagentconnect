@@ -99,8 +99,9 @@ const AddListing = () => {
   
   // Ref to track when we're applying ATTOM data (to prevent re-triggering fetch)
   const isApplyingAttomDataRef = useRef(false);
-  // Ref to track initial data loading (prevent ATTOM auto-fetch during load)
-  const isInitialLoadRef = useRef(true);
+  // State to track initial data loading (prevent ATTOM auto-fetch during load)
+  // Using state instead of ref so that changes trigger re-renders and the useEffect re-runs
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   const [formData, setFormData] = useState({
     status: "new",
@@ -412,7 +413,7 @@ const AddListing = () => {
   useEffect(() => {
     const checkUser = async () => {
       // Set initial load flag to prevent ATTOM auto-fetch during data load
-      isInitialLoadRef.current = true;
+      setIsInitialLoad(true);
       
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -431,7 +432,7 @@ const AddListing = () => {
       
       // Allow ATTOM auto-fetch after initial load completes (with small delay)
       setTimeout(() => {
-        isInitialLoadRef.current = false;
+        setIsInitialLoad(false);
         console.log('[AddListing] Initial load complete, ATTOM auto-fetch enabled');
       }, 500);
     };
@@ -842,7 +843,7 @@ const AddListing = () => {
   // Auto-fetch when all location fields are filled
   useEffect(() => {
     // Skip during initial data load to prevent ATTOM from triggering on loaded data
-    if (isInitialLoadRef.current) {
+    if (isInitialLoad) {
       console.log("[AddListing] ATTOM auto-fetch skipped: initial load in progress");
       return;
     }
@@ -865,7 +866,7 @@ const AddListing = () => {
       autoFillLoading,
       isAddressConfirmOpen,
       isApplyingAttom: isApplyingAttomDataRef.current,
-      isInitialLoad: isInitialLoadRef.current,
+      isInitialLoad,
       address: formData.address,
       state: formData.state,
       county: selectedCounty,
@@ -880,7 +881,7 @@ const AddListing = () => {
       handleAutoFillFromPublicRecords(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.address, formData.state, selectedCounty, formData.city, formData.zip_code, hasAutoFetched, autoFillLoading, isAddressConfirmOpen]);
+  }, [formData.address, formData.state, selectedCounty, formData.city, formData.zip_code, hasAutoFetched, autoFillLoading, isAddressConfirmOpen, isInitialLoad]);
 
   // Reset auto-fetch flag when address changes significantly
   const prevAddressRef = useRef({ address: "", city: "", zip: "" });
