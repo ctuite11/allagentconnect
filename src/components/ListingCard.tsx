@@ -826,7 +826,7 @@ const ListingCard = ({
             </div>
 
             <div className="col-span-2 flex flex-col gap-1 justify-center">
-              <Button variant="outline" size="sm" onClick={() => navigate(`/add-listing/${listing.id}`)} className="w-full">
+              <Button variant="outline" size="sm" onClick={() => navigate(`/agent/listings/edit/${listing.id}`)} className="w-full">
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
@@ -1161,7 +1161,7 @@ const ListingCard = ({
               Schedule
             </Button>
           </div>
-          <Button variant="default" size="sm" className="flex-1" onClick={() => navigate(`/add-listing/${listing.id}`)}>
+          <Button variant="default" size="sm" className="flex-1" onClick={() => navigate(`/agent/listings/edit/${listing.id}`)}>
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>

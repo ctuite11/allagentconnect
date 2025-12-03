@@ -161,7 +161,7 @@ const ManageListingPhotos: React.FC = () => {
     
     if (success) {
       toast.success('Photos saved');
-      navigate(`/add-listing/${id}`);
+      navigate(`/agent/listings/edit/${id}`);
     } else {
       toast.error('Failed to save photos');
     }

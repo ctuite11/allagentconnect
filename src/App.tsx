@@ -95,10 +95,7 @@ const App = () => (
           <Route path="/submit-client-need" element={<SubmitClientNeed />} />
           <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
           <Route path="/listing-intel" element={<RouteGuard requireRole="agent"><ListingIntel /></RouteGuard>} />
-          <Route path="/add-listing" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
-          <Route path="/add-listing/:id" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
           <Route path="/add-rental-listing" element={<RouteGuard requireRole="agent"><AddRentalListing /></RouteGuard>} />
-          <Route path="/edit-listing/:id" element={<Navigate to="/add-listing/:id" replace />} />
           <Route path="/property/:id" element={<PropertyDetail />} />
           <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
           <Route path="/agent/:id" element={<AgentProfile />} />

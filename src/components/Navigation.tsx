@@ -137,7 +137,7 @@ const Navigation = () => {
                         <FileText className="mr-2 h-4 w-4" />
                         Communication Center
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/add-listing")}>
+                      <DropdownMenuItem onClick={() => navigate("/agent/listings/new")}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add For Sale Listing
                       </DropdownMenuItem>
