@@ -426,17 +426,17 @@ const AgentDashboard = () => {
     title: "For Sale",
     description: "Add new or coming soon listing.",
     image: forSaleImg,
-    action: () => navigate("/add-listing?type=sale")
+    action: () => navigate("/agent/listings/new?type=sale")
   }, {
     title: "For Off Market Sale",
     description: "Add a new off market listing for sale.",
     image: privateSaleImg,
-    action: () => navigate("/add-listing?type=private")
+    action: () => navigate("/agent/listings/new?type=private")
   }, {
     title: "For Rent",
     description: "Add a new listing for rent.",
     image: forRentImg,
-    action: () => navigate("/add-listing?type=rent")
+    action: () => navigate("/agent/listings/new?type=rent")
   }];
   const getActivityIcon = (iconName: string) => {
     switch (iconName) {

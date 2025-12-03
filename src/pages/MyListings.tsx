@@ -701,7 +701,7 @@ const MyListings = () => {
   };
 
   const handleEdit = (id: string) => {
-    navigate(`/add-listing/${id}`);
+    navigate(`/agent/listings/edit/${id}`);
   };
 
   const handlePreview = (id: string) => {

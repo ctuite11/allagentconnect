@@ -758,7 +758,7 @@ const ListingAnalytics = () => {
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground">No listings found. Create your first listing to see analytics.</p>
-              <Button className="mt-4" onClick={() => navigate("/add-listing")}>
+              <Button className="mt-4" onClick={() => navigate("/agent/listings/new")}>
                 Add Listing
               </Button>
             </CardContent>
