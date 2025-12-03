@@ -99,6 +99,8 @@ const AddListing = () => {
   
   // Ref to track when we're applying ATTOM data (to prevent re-triggering fetch)
   const isApplyingAttomDataRef = useRef(false);
+  // Ref to track initial data loading (prevent ATTOM auto-fetch during load)
+  const isInitialLoadRef = useRef(true);
   
   const [formData, setFormData] = useState({
     status: "new",
@@ -409,6 +411,9 @@ const AddListing = () => {
 
   useEffect(() => {
     const checkUser = async () => {
+      // Set initial load flag to prevent ATTOM auto-fetch during data load
+      isInitialLoadRef.current = true;
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
@@ -423,6 +428,12 @@ const AddListing = () => {
       }
       
       setLoading(false);
+      
+      // Allow ATTOM auto-fetch after initial load completes (with small delay)
+      setTimeout(() => {
+        isInitialLoadRef.current = false;
+        console.log('[AddListing] Initial load complete, ATTOM auto-fetch enabled');
+      }, 500);
     };
     checkUser();
 
@@ -830,6 +841,12 @@ const AddListing = () => {
 
   // Auto-fetch when all location fields are filled
   useEffect(() => {
+    // Skip during initial data load to prevent ATTOM from triggering on loaded data
+    if (isInitialLoadRef.current) {
+      console.log("[AddListing] ATTOM auto-fetch skipped: initial load in progress");
+      return;
+    }
+    
     // For MA, require county selection; for other states, county is optional
     const countyOk = formData.state === "MA" 
       ? (selectedCounty !== "" && selectedCounty !== "all")
@@ -848,6 +865,7 @@ const AddListing = () => {
       autoFillLoading,
       isAddressConfirmOpen,
       isApplyingAttom: isApplyingAttomDataRef.current,
+      isInitialLoad: isInitialLoadRef.current,
       address: formData.address,
       state: formData.state,
       county: selectedCounty,
@@ -1283,6 +1301,64 @@ const AddListing = () => {
         setSubmitting(false);
       }
     }
+  };
+
+  // Helper to save form data and navigate to manage photos
+  const handleNavigateToManagePhotos = async () => {
+    let targetId = listingId || draftId;
+    
+    // Ensure draft exists
+    if (!targetId) {
+      targetId = await ensureDraftListing();
+      if (!targetId) {
+        toast.error('Unable to create draft listing');
+        return;
+      }
+    }
+    
+    // Save current form data silently before navigating
+    try {
+      const payload: any = {
+        listing_type: formData.listing_type,
+        property_type: formData.property_type || null,
+        address: (formData.address || "Draft").trim(),
+        city: formData.city?.trim() || "TBD",
+        state: formData.state?.trim() || "MA",
+        zip_code: formData.zip_code?.trim() || "00000",
+        county: selectedCounty !== "all" ? selectedCounty : null,
+        neighborhood: formData.neighborhood || null,
+        price: formData.price ? parseFloat(formData.price) : 0,
+        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+        bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
+        square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
+        lot_size: formData.lot_size ? parseFloat(formData.lot_size) : null,
+        year_built: formData.year_built ? parseInt(formData.year_built) : null,
+        description: formData.description || null,
+        commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
+        commission_type: formData.commission_type || null,
+        commission_notes: formData.commission_notes || null,
+        showing_instructions: formData.showing_instructions || null,
+        lockbox_code: formData.lockbox_code || null,
+        appointment_required: formData.appointment_required,
+        showing_contact_name: formData.showing_contact_name || null,
+        showing_contact_phone: formData.showing_contact_phone || null,
+        additional_notes: formData.additional_notes || null,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+      };
+      
+      await supabase
+        .from('listings')
+        .update(payload)
+        .eq('id', targetId);
+        
+      console.log('[AddListing] Form data saved before navigating to photos');
+    } catch (err) {
+      console.error('[AddListing] Error saving before photo navigation:', err);
+      // Continue anyway - photos page can still work
+    }
+    
+    navigate(`/agent/listings/${targetId}/photos`);
   };
 
   const handlePreview = () => {
@@ -2883,15 +2959,13 @@ const AddListing = () => {
                           <Upload className="w-4 h-4 mr-2" />
                           Upload Photos
                         </Button>
-                        {(listingId || draftId) && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => navigate(`/agent/listings/${listingId || draftId}/photos`)}
-                          >
-                            Manage Photos
-                          </Button>
-                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleNavigateToManagePhotos}
+                        >
+                          Manage Photos
+                        </Button>
                       </div>
                     </div>
                     

@@ -16,9 +16,11 @@ const ManageListingPhotos: React.FC = () => {
   const navigate = useNavigate();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set());
   const [saving, setSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -29,6 +31,7 @@ const ManageListingPhotos: React.FC = () => {
   }, [id]);
 
   const fetchPhotos = async () => {
+    setLoadError(false);
     try {
       const { data, error } = await supabase
         .from('listings')
@@ -51,7 +54,7 @@ const ManageListingPhotos: React.FC = () => {
       setPhotos(normalizedPhotos.sort((a, b) => a.order - b.order));
     } catch (error: any) {
       console.error('Error fetching photos:', error);
-      toast.error('Failed to load photos');
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -117,24 +120,35 @@ const ManageListingPhotos: React.FC = () => {
     setSelectedIndexes(new Set());
   };
 
+  // Save photos to database (without navigating)
+  const savePhotosToDb = async (photosToSave: Photo[]) => {
+    if (!id) return false;
+    
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ photos: photosToSave })
+        .eq('id', id);
+
+      if (error) throw error;
+      return true;
+    } catch (error: any) {
+      console.error('Error saving photos:', error);
+      return false;
+    }
+  };
+
   const handleSave = async () => {
     if (!id) return;
     
     setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('listings')
-        .update({ photos: photos })
-        .eq('id', id);
-
-      if (error) throw error;
-
+    const success = await savePhotosToDb(photos);
+    setSaving(false);
+    
+    if (success) {
       toast.success('Photos updated successfully');
-    } catch (error: any) {
-      console.error('Error saving photos:', error);
+    } else {
       toast.error('Failed to save photos');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -142,27 +156,21 @@ const ManageListingPhotos: React.FC = () => {
     if (!id) return;
     
     setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('listings')
-        .update({ photos: photos })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast.success('Photos updated successfully');
+    const success = await savePhotosToDb(photos);
+    setSaving(false);
+    
+    if (success) {
+      toast.success('Photos saved');
       navigate(`/add-listing/${id}`);
-    } catch (error: any) {
-      console.error('Error saving photos:', error);
+    } else {
       toast.error('Failed to save photos');
-    } finally {
-      setSaving(false);
     }
   };
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
+    setIsUploading(true);
     const newPhotos: Photo[] = [];
     
     for (let i = 0; i < files.length; i++) {
@@ -195,9 +203,19 @@ const ManageListingPhotos: React.FC = () => {
     }
 
     if (newPhotos.length > 0) {
-      setPhotos([...photos, ...newPhotos]);
-      toast.success(`${newPhotos.length} photo(s) uploaded`);
+      const updatedPhotos = [...photos, ...newPhotos];
+      setPhotos(updatedPhotos);
+      
+      // Auto-save to database immediately after upload
+      const success = await savePhotosToDb(updatedPhotos);
+      if (success) {
+        toast.success(`${newPhotos.length} photo(s) uploaded and saved`);
+      } else {
+        toast.error('Photos uploaded but failed to save to database');
+      }
     }
+    
+    setIsUploading(false);
   };
 
   if (loading) {
@@ -220,21 +238,9 @@ const ManageListingPhotos: React.FC = () => {
         </div>
         <div className="flex gap-2">
           <Button
-            variant="outline"
-            onClick={() => navigate(`/add-listing/${id}`)}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Listing Form
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/agent/listings')}
-          >
-            Back to My Listings
-          </Button>
-          <Button
+            variant="default"
             onClick={handleSaveAndReturn}
-            disabled={saving}
+            disabled={saving || isUploading}
           >
             {saving ? (
               <>
@@ -242,7 +248,10 @@ const ManageListingPhotos: React.FC = () => {
                 Saving...
               </>
             ) : (
-              'Save Changes'
+              <>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Save & Return to Listing
+              </>
             )}
           </Button>
         </div>
@@ -254,9 +263,19 @@ const ManageListingPhotos: React.FC = () => {
           variant="outline"
           size="sm"
           onClick={() => document.getElementById('photo-upload-manage')?.click()}
+          disabled={isUploading}
         >
-          <Upload className="w-4 h-4 mr-2" />
-          Upload More Photos
+          {isUploading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            <>
+              <Upload className="w-4 h-4 mr-2" />
+              Upload More Photos
+            </>
+          )}
         </Button>
         <input
           id="photo-upload-manage"
@@ -265,12 +284,13 @@ const ManageListingPhotos: React.FC = () => {
           accept="image/*"
           onChange={(e) => handleFileSelect(e.target.files)}
           className="hidden"
+          disabled={isUploading}
         />
         <Button
           variant="destructive"
           size="sm"
           onClick={handleDeleteSelected}
-          disabled={selectedIndexes.size === 0}
+          disabled={selectedIndexes.size === 0 || isUploading}
         >
           <Trash2 className="w-4 h-4 mr-2" />
           Delete Selected ({selectedIndexes.size})
@@ -280,20 +300,44 @@ const ManageListingPhotos: React.FC = () => {
         </span>
       </div>
 
+      {/* Error State */}
+      {loadError && (
+        <div className="text-center py-8 border-2 border-dashed border-destructive/50 rounded-lg bg-destructive/5">
+          <p className="text-destructive font-medium">Failed to load photos</p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={fetchPhotos}
+          >
+            Try Again
+          </Button>
+        </div>
+      )}
+
       {/* Photo Grid */}
-      {photos.length === 0 ? (
+      {!loadError && photos.length === 0 ? (
         <div className="text-center py-12 border-2 border-dashed rounded-lg">
           <p className="text-muted-foreground">No photos uploaded yet.</p>
           <Button
             variant="outline"
             className="mt-4"
             onClick={() => document.getElementById('photo-upload-manage')?.click()}
+            disabled={isUploading}
           >
-            <Upload className="w-4 h-4 mr-2" />
-            Upload Photos
+            {isUploading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Photos
+              </>
+            )}
           </Button>
         </div>
-      ) : (
+      ) : !loadError && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {photos.map((photo, index) => (
             <div
