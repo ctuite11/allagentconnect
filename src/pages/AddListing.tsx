@@ -583,14 +583,9 @@ const AddListing = () => {
   };
 
   // Helper to build one-line address string from ATTOM record
+  // ATTOM's address field (from oneLine) is already formatted as full address
   const buildAttomAddressString = (record: any): string => {
-    const parts = [
-      record.address,
-      record.city,
-      record.state,
-      record.zip
-    ].filter(Boolean);
-    return parts.join(', ');
+    return record.address || '';
   };
 
   const handleAutoFillFromPublicRecords = async (isAutoTrigger = false) => {
