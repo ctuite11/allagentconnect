@@ -418,6 +418,7 @@ const AddListing = () => {
       
       // If we have a listingId in URL, load that listing's data
       if (listingId) {
+        console.log('[AddListing] Loading listing from URL param:', listingId);
         await loadExistingListing(listingId);
       }
       
@@ -451,8 +452,26 @@ const AddListing = () => {
       }
       
       if (data) {
-        console.log('[AddListing] Loaded listing data:', data);
+        const photosArray = Array.isArray(data.photos) ? data.photos : [];
+        console.log('[AddListing] Loaded listing data:', {
+          id: data.id,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          photos: photosArray.length
+        });
         setDraftId(data.id);
+        
+        // Set state/county/city selectors FIRST (order matters for cascading selects)
+        if (data.state) {
+          setSelectedState(data.state);
+        }
+        if (data.county) {
+          setSelectedCounty(data.county);
+        }
+        if (data.city) {
+          setCityChoice(data.city);
+        }
         
         // Set form data from loaded listing
         setFormData(prev => ({
@@ -494,19 +513,9 @@ const AddListing = () => {
           pets_comment: data.pets_comment || "",
         }));
         
-        // Set state/county/city selectors
-        if (data.state) {
-          setSelectedState(data.state);
-        }
-        if (data.county) {
-          setSelectedCounty(data.county);
-        }
-        if (data.city) {
-          setCityChoice(data.city);
-        }
-        
         // Load photos from database
         if (data.photos && Array.isArray(data.photos) && data.photos.length > 0) {
+          console.log('[AddListing] Loading photos:', data.photos.length);
           const loadedPhotos: FileWithPreview[] = data.photos.map((photo: any, index: number) => ({
             file: new File([], ''),
             preview: typeof photo === 'string' ? photo : photo.url,
@@ -515,6 +524,9 @@ const AddListing = () => {
             url: typeof photo === 'string' ? photo : photo.url
           }));
           setPhotos(loadedPhotos);
+        } else {
+          console.log('[AddListing] No photos found in listing');
+          setPhotos([]);
         }
         
         // Load other arrays (cast from Json[] to string[])
@@ -544,6 +556,11 @@ const AddListing = () => {
         if (data.attom_id) {
           setAttomId(data.attom_id);
           setHasAutoFetched(true);
+          console.log('[AddListing] Has ATTOM data, setting hasAutoFetched=true');
+        } else {
+          // If no ATTOM data and we have complete address, allow ATTOM to trigger
+          setHasAutoFetched(false);
+          console.log('[AddListing] No ATTOM data, ATTOM can trigger for new address');
         }
         
         setHasUnsavedChanges(false);
@@ -582,7 +599,7 @@ const AddListing = () => {
       zip: formData.zip_code,
     };
     
-    console.log("ATTOM REQUEST:", payload);
+    console.log("[AddListing] ATTOM REQUEST:", payload);
 
     setPublicRecordStatus('loading');
     setAutoFillLoading(true);
@@ -593,6 +610,7 @@ const AddListing = () => {
         body: payload,
       });
       
+      console.log("[AddListing] ATTOM RESPONSE:", { data, error });
       setAutoFillLoading(false);
 
       if (error || !data) {
@@ -601,7 +619,7 @@ const AddListing = () => {
         if (!isAutoTrigger) {
           toast.error("Could not fetch public record data.");
         }
-        console.error(error || data);
+        console.error("[AddListing] ATTOM error:", error || data);
         // Enable neighborhood dropdown even on failure
         const areas = getAreasForCity(formData.city, formData.state);
         setAttomNeighborhoods(areas);
@@ -609,6 +627,7 @@ const AddListing = () => {
       }
 
       const results = data.results || [];
+      console.log("[AddListing] ATTOM results count:", results.length);
 
       if (results.length === 0) {
         setPublicRecordStatus('error');
@@ -631,6 +650,12 @@ const AddListing = () => {
       if (results.length === 1) {
         const record = results[0];
         const attomAddressKey = buildAttomAddressString(record);
+        
+        console.log("[AddListing] ATTOM single result found:", {
+          address: attomAddressKey,
+          record: record,
+          rejectedAddress: attomRejectedForAddress
+        });
 
         // If user already rejected this exact address, skip confirmation
         if (attomRejectedForAddress === attomAddressKey) {
@@ -642,6 +667,7 @@ const AddListing = () => {
         }
 
         // Show confirmation modal instead of auto-applying
+        console.log("[AddListing] Opening ATTOM confirmation modal");
         setAttomPendingRecord(record);
         setIsAddressConfirmOpen(true);
         setPublicRecordStatus('idle');
@@ -815,6 +841,20 @@ const AddListing = () => {
       countyOk &&
       formData.city.trim() !== "" &&
       formData.zip_code.trim() !== "";
+    
+    console.log("[AddListing] ATTOM auto-fetch check:", {
+      hasAllLocationData,
+      hasAutoFetched,
+      autoFillLoading,
+      isAddressConfirmOpen,
+      isApplyingAttom: isApplyingAttomDataRef.current,
+      address: formData.address,
+      state: formData.state,
+      county: selectedCounty,
+      city: formData.city,
+      zip: formData.zip_code,
+      countyOk
+    });
 
     // Guard: Don't trigger if modal is already open or we're applying ATTOM data
     if (hasAllLocationData && !hasAutoFetched && !autoFillLoading && !isAddressConfirmOpen && !isApplyingAttomDataRef.current) {
