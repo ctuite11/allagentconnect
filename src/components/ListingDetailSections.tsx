@@ -8,6 +8,13 @@ interface ListingDetailSectionsProps {
   isAgentView: boolean;
 }
 
+// Helper to format empty/null fields with placeholder
+export const formatField = (value: any): string => {
+  if (value === null || value === undefined || value === '') return '—';
+  if (typeof value === 'string' && value.trim() === '') return '—';
+  return String(value);
+};
+
 export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDetailSectionsProps) => {
   const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (!value && value !== 0) return null;
@@ -23,16 +30,19 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
     <div className="space-y-0">{children}</div>
   );
 
-  // Format arrays for display
+  // Format arrays for display - deduplicate using Set
   const formatArray = (arr: any[] | null | undefined) => {
     if (!arr || !Array.isArray(arr) || arr.length === 0) return null;
-    return arr.map((item: any) => {
+    const items = arr.map((item: any) => {
       if (typeof item === 'string') return item;
       if (typeof item === 'object' && item !== null) {
         return item.name || item.label || item.value || JSON.stringify(item);
       }
       return String(item);
-    }).join(', ');
+    });
+    // Deduplicate items
+    const uniqueItems = [...new Set(items)];
+    return uniqueItems.join(', ');
   };
 
   const listDate = listing.active_date || listing.created_at;
