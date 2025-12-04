@@ -1638,6 +1638,115 @@ const AddListing = () => {
     }
   };
 
+  // Handler for "Save Changes" in edit mode - preserves current status (does NOT force draft)
+  const handleSaveChanges = async () => {
+    if (!user) {
+      toast.error("You must be logged in to save changes.");
+      return;
+    }
+
+    const targetId = listingId || draftId;
+    if (!targetId) {
+      toast.error("No listing to update. Please use Save Draft for new listings.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      // Upload any new files
+      let uploaded: { photos: { url: string; name: string }[]; floorPlans: { url: string; name: string }[]; documents: { url: string; name: string; documentType: string }[] } = {
+        photos: photos.filter(p => p.uploaded && p.url).map(p => ({ url: p.url!, name: p.file?.name || '' })),
+        floorPlans: floorPlans.filter(p => p.uploaded && p.url).map(p => ({ url: p.url!, name: p.file?.name || '' })),
+        documents: documents.filter(d => d.uploaded && d.url).map(d => ({ url: d.url!, name: d.file?.name || '', documentType: d.documentType || 'Other' })),
+      };
+
+      const hasNewFilesToUpload = 
+        photos.some(p => p.file && p.file.size > 0 && !p.uploaded) ||
+        floorPlans.some(p => p.file && p.file.size > 0 && !p.uploaded) ||
+        documents.some(d => d.file && d.file.size > 0 && !d.uploaded);
+
+      if (hasNewFilesToUpload) {
+        try {
+          const uploadResult = await uploadFiles();
+          uploaded = {
+            photos: uploadResult.photos.map(p => ({ url: p.url, name: p.name || '' })),
+            floorPlans: uploadResult.floorPlans.map(p => ({ url: p.url, name: p.name || '' })),
+            documents: uploadResult.documents.map(d => ({ url: d.url, name: d.name || '', documentType: d.documentType || 'Other' })),
+          };
+          console.log('[handleSaveChanges] Files uploaded successfully:', uploaded);
+        } catch (uploadError: any) {
+          console.error('[handleSaveChanges] Error uploading files:', uploadError);
+          toast.error(`Failed to upload files: ${uploadError.message}`);
+          return;
+        }
+      }
+
+      // Use centralized helper WITHOUT overriding status - keeps current form status
+      const payload = buildListingDataFromForm(uploaded);
+
+      console.log('[handleSaveChanges] Saving with status:', payload.status);
+
+      // Remove agent_id from update payload (it's immutable after creation)
+      const { agent_id, ...updatePayload } = payload;
+
+      const { error } = await supabase
+        .from("listings")
+        .update(updatePayload)
+        .eq("id", targetId);
+
+      if (error) {
+        console.error('[handleSaveChanges] Error updating listing:', error);
+        throw error;
+      }
+
+      // Track price changes if applicable
+      const newPrice = payload.price;
+      if (originalPriceRef.current !== null && originalPriceRef.current !== newPrice) {
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          await supabase.from("listing_price_history").insert({
+            listing_id: targetId,
+            old_price: originalPriceRef.current,
+            new_price: newPrice,
+            changed_by: userData?.user?.id ?? null,
+            note: "Price updated via Save Changes",
+          });
+          console.log("[handleSaveChanges] Price change logged:", originalPriceRef.current, "->", newPrice);
+        } catch (priceHistoryError) {
+          console.error("[handleSaveChanges] Error logging price history:", priceHistoryError);
+        }
+      }
+
+      // Track status changes if applicable
+      const newStatus = payload.status;
+      if (originalStatusRef.current !== null && originalStatusRef.current !== newStatus) {
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          await supabase.from("listing_status_history").insert({
+            listing_id: targetId,
+            old_status: originalStatusRef.current,
+            new_status: newStatus,
+            changed_by: userData?.user?.id ?? null,
+            notes: "Status updated via Save Changes",
+          });
+          console.log("[handleSaveChanges] Status change logged:", originalStatusRef.current, "->", newStatus);
+        } catch (statusHistoryError) {
+          console.error("[handleSaveChanges] Error logging status history:", statusHistoryError);
+        }
+      }
+
+      setHasUnsavedChanges(false);
+      toast.success("Listing changes saved!");
+      navigate("/agent/listings");
+    } catch (error: any) {
+      console.error("[handleSaveChanges] Error:", error);
+      toast.error(`Failed to save changes: ${error.message || 'Unknown error'}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // Helper to save form data and navigate to manage photos
   const handleNavigateToManagePhotos = async () => {
     let targetId = listingId || draftId;
@@ -3660,7 +3769,7 @@ const AddListing = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => handleSaveDraft(false)}
+                    onClick={() => listingId ? handleSaveChanges() : handleSaveDraft(false)}
                     disabled={submitting || autoSaving}
                   >
                     {autoSaving ? (
