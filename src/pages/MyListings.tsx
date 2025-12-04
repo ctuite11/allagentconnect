@@ -137,7 +137,7 @@ function MyListingsView({
   onSocialShare: (listing: Listing) => void;
   onStats: (id: string) => void;
 }) {
-  const [activeStatus, setActiveStatus] = useState<ListingStatus>("new");
+  const [activeStatus, setActiveStatus] = useState<ListingStatus | null>(null);
   const [view, setView] = useState<"grid" | "list">("list");
 
   // Quick edit state
@@ -193,7 +193,9 @@ function MyListingsView({
   };
 
   const filteredListings = useMemo(() => {
-    let result = listings.filter((l) => l.status === activeStatus);
+    let result = activeStatus === null 
+      ? listings 
+      : listings.filter((l) => l.status === activeStatus);
     // Sort newest first
     result.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
     return result;
@@ -253,7 +255,7 @@ function MyListingsView({
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.value}
-              onClick={() => setActiveStatus(tab.value)}
+              onClick={() => setActiveStatus(activeStatus === tab.value ? null : tab.value)}
               className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
                 activeStatus === tab.value
                   ? "bg-primary text-primary-foreground border-primary"
