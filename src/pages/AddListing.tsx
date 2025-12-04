@@ -640,14 +640,22 @@ const AddListing = () => {
         // Load documents from database
         if (data.documents && Array.isArray(data.documents) && data.documents.length > 0) {
           console.log('[AddListing] Loading documents:', data.documents.length);
-          const loadedDocuments: FileWithPreview[] = data.documents.map((doc: any, index: number) => ({
-            file: new File([], ''),
-            preview: typeof doc === 'string' ? doc : doc.url,
-            id: `existing-doc-${index}`,
-            uploaded: true,
-            url: typeof doc === 'string' ? doc : doc.url,
-            documentType: doc.documentType || ''
-          }));
+          const loadedDocuments: FileWithPreview[] = data.documents.map((doc: any, index: number) => {
+            // Extract URL - handle both string format and object format
+            const docUrl = typeof doc === 'string' ? doc : doc.url;
+            // Extract filename from URL or use stored name
+            const docName = doc.name || (docUrl ? decodeURIComponent(docUrl.split('/').pop() || '').replace(/^\d+_/, '') : `Document ${index + 1}`);
+            const docType = doc.documentType || '';
+            
+            return {
+              file: new File([], docName), // Create file with name for display
+              preview: docUrl,
+              id: `existing-doc-${index}`,
+              uploaded: true,
+              url: docUrl,
+              documentType: docType
+            };
+          });
           setDocuments(loadedDocuments);
         } else {
           console.log('[AddListing] No documents found in listing');
@@ -1256,7 +1264,7 @@ const AddListing = () => {
   const uploadFiles = async (): Promise<{
     photos: { url: string; name?: string }[];
     floorPlans: { url: string; name?: string }[];
-    documents: { url: string; name?: string }[];
+    documents: { url: string; name?: string; documentType?: string }[];
   }> => {
     if (!user) {
       console.warn("uploadFiles called without user - aborting");
@@ -1265,7 +1273,7 @@ const AddListing = () => {
 
     const uploadedPhotos: { url: string; name?: string }[] = [];
     const uploadedFloorPlans: { url: string; name?: string }[] = [];
-    const uploadedDocuments: { url: string; name?: string }[] = [];
+    const uploadedDocuments: { url: string; name?: string; documentType?: string }[] = [];
 
     // ---- PHOTOS ----
     for (const photo of photos) {
@@ -1340,6 +1348,7 @@ const AddListing = () => {
         uploadedDocuments.push({
           url: doc.url,
           name: doc.file?.name || "",
+          documentType: doc.documentType || "",
         });
         continue;
       }
@@ -1363,7 +1372,7 @@ const AddListing = () => {
         .from("listing-documents")
         .getPublicUrl(filePath);
 
-      uploadedDocuments.push({ url: publicUrl, name: doc.file.name });
+      uploadedDocuments.push({ url: publicUrl, name: doc.file.name, documentType: doc.documentType || "" });
     }
 
     console.log("uploadFiles result", {

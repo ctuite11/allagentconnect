@@ -19,6 +19,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TimePicker12h } from "@/components/ui/time-picker-12h";
 
 interface ListingDialogProps {
   open: boolean;
@@ -154,7 +155,7 @@ export function OpenHouseDialog({
               <SelectTrigger>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background z-50">
                 <SelectItem value="in_person">Public Open House</SelectItem>
                 <SelectItem value="broker_tour">Broker Tour</SelectItem>
               </SelectContent>
@@ -162,20 +163,16 @@ export function OpenHouseDialog({
           </div>
           <div className="space-y-1 pointer-events-auto">
             <label className="text-sm font-medium">Start Time</label>
-            <Input
-              type="time"
+            <TimePicker12h
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="pointer-events-auto"
+              onChange={setStartTime}
             />
           </div>
           <div className="space-y-1 pointer-events-auto">
             <label className="text-sm font-medium">End Time</label>
-            <Input
-              type="time"
+            <TimePicker12h
               value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="pointer-events-auto"
+              onChange={setEndTime}
             />
           </div>
         </div>
