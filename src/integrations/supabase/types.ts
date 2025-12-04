@@ -1288,6 +1288,44 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_price_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          listing_id: string
+          new_price: number
+          note: string | null
+          old_price: number | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          listing_id: string
+          new_price: number
+          note?: string | null
+          old_price?: number | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          listing_id?: string
+          new_price?: number
+          note?: string | null
+          old_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_price_history_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_shares: {
         Row: {
           created_at: string
@@ -1481,6 +1519,7 @@ export type Database = {
           disclosures_other: string | null
           documents: Json | null
           entry_only: boolean | null
+          expiration_date: string | null
           exterior_features_list: Json | null
           facing_direction: Json | null
           fiscal_year: number | null
@@ -1504,6 +1543,7 @@ export type Database = {
           laundry_type: string | null
           lead_paint: string | null
           lender_owned: boolean | null
+          list_date: string | null
           listing_agreement_types: Json | null
           listing_exclusions: string | null
           listing_number: string
@@ -1595,6 +1635,7 @@ export type Database = {
           disclosures_other?: string | null
           documents?: Json | null
           entry_only?: boolean | null
+          expiration_date?: string | null
           exterior_features_list?: Json | null
           facing_direction?: Json | null
           fiscal_year?: number | null
@@ -1618,6 +1659,7 @@ export type Database = {
           laundry_type?: string | null
           lead_paint?: string | null
           lender_owned?: boolean | null
+          list_date?: string | null
           listing_agreement_types?: Json | null
           listing_exclusions?: string | null
           listing_number?: string
@@ -1709,6 +1751,7 @@ export type Database = {
           disclosures_other?: string | null
           documents?: Json | null
           entry_only?: boolean | null
+          expiration_date?: string | null
           exterior_features_list?: Json | null
           facing_direction?: Json | null
           fiscal_year?: number | null
@@ -1732,6 +1775,7 @@ export type Database = {
           laundry_type?: string | null
           lead_paint?: string | null
           lender_owned?: boolean | null
+          list_date?: string | null
           listing_agreement_types?: Json | null
           listing_exclusions?: string | null
           listing_number?: string

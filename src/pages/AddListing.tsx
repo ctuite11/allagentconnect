@@ -105,6 +105,10 @@ const AddListing = () => {
   // Using state instead of ref so that changes trigger re-renders and the useEffect re-runs
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   
+  // Refs to track original values for change detection in edit mode
+  const originalPriceRef = useRef<number | null>(null);
+  const originalStatusRef = useRef<string | null>(null);
+
   const [formData, setFormData] = useState({
     status: "new",
     listing_type: "for_sale",
@@ -138,6 +142,9 @@ const AddListing = () => {
     tax_year: "",
     go_live_date: "",
     auto_activate_on: null as Date | null,
+    // New date fields
+    list_date: new Date().toISOString().split('T')[0],
+    expiration_date: "",
     // Rental-specific
     monthly_rent: "",
     security_deposit: "",
@@ -491,6 +498,10 @@ const AddListing = () => {
         }
         
         // Set form data from loaded listing
+        // Store original values for change tracking in edit mode
+        originalPriceRef.current = data.price || null;
+        originalStatusRef.current = data.status || null;
+
         setFormData(prev => ({
           ...prev,
           status: data.status || "new",
@@ -523,6 +534,9 @@ const AddListing = () => {
           annual_property_tax: data.annual_property_tax?.toString() || "",
           tax_year: data.tax_year?.toString() || "",
           go_live_date: data.go_live_date || "",
+          // New date fields
+          list_date: data.list_date || "",
+          expiration_date: data.expiration_date || "",
           unit_number: data.unit_number || "",
           building_name: data.building_name || "",
           rental_fee: data.rental_fee?.toString() || "",
@@ -1240,6 +1254,9 @@ const AddListing = () => {
         documents: uploadedDocuments,
         unit_number: formData.unit_number || null,
         building_name: formData.building_name || null,
+        // Include list_date and expiration_date in drafts
+        list_date: formData.list_date || null,
+        expiration_date: formData.expiration_date || null,
       };
 
       // Add rental-specific fields to draft if it's a rental
@@ -1554,48 +1571,118 @@ const AddListing = () => {
         if (formData.operating_expenses) listingData.operating_expenses = parseFloat(formData.operating_expenses);
       }
 
-      const { data: insertedListing, error } = await supabase
-        .from("listings")
-        .insert(listingData)
-        .select('id')
-        .single();
+      // Add list_date and expiration_date to listing data
+      listingData.list_date = formData.list_date || null;
+      listingData.expiration_date = formData.expiration_date || null;
 
-      if (error) throw error;
+      // Determine if we're in edit mode
+      const isEditMode = !!listingId;
+      const targetListingId = listingId || draftId;
 
-      // Log price history for new listing
-      if (insertedListing?.id) {
-        const { data: userData } = await supabase.auth.getUser();
-        const currentUserId = userData?.user?.id ?? null;
+      let resultListingId: string | null = null;
 
-        await (supabase as any).from("listing_price_history").insert({
-          listing_id: insertedListing.id,
-          old_price: null,
-          new_price: validatedData.price,
-          changed_by: currentUserId,
-          note: "Initial listing price",
-        });
+      if (isEditMode && targetListingId) {
+        // UPDATE existing listing
+        console.log("[AddListing] Updating existing listing:", targetListingId);
+        
+        const { error } = await supabase
+          .from("listings")
+          .update(listingData)
+          .eq("id", targetListingId);
 
-        // Log status history
-        await (supabase as any).from("listing_status_history").insert({
-          listing_id: insertedListing.id,
-          old_status: null,
-          new_status: formData.status,
-          changed_by: currentUserId,
-          note: "Listing created",
-        });
+        if (error) throw error;
+        resultListingId = targetListingId;
 
-        // Auto-fetch ATTOM data
-        try {
-          console.log("[AddListing] Triggering auto-fetch-property-data for listing:", insertedListing.id);
-          await supabase.functions.invoke('auto-fetch-property-data', {
-            body: { listing_id: insertedListing.id }
-          });
-        } catch (fetchError) {
-          console.error("[AddListing] Error fetching ATTOM data:", fetchError);
+        // Track price changes
+        const newPrice = validatedData.price;
+        if (originalPriceRef.current !== null && originalPriceRef.current !== newPrice) {
+          try {
+            const { data: userData } = await supabase.auth.getUser();
+            await supabase.from("listing_price_history").insert({
+              listing_id: targetListingId,
+              old_price: originalPriceRef.current,
+              new_price: newPrice,
+              changed_by: userData?.user?.id ?? null,
+              note: "Price updated",
+            });
+            console.log("[AddListing] Price change logged:", originalPriceRef.current, "->", newPrice);
+          } catch (priceHistoryError) {
+            console.error("[AddListing] Error logging price history:", priceHistoryError);
+          }
         }
+
+        // Track status changes
+        const newStatus = formData.status;
+        if (originalStatusRef.current !== null && originalStatusRef.current !== newStatus) {
+          try {
+            const { data: userData } = await supabase.auth.getUser();
+            await supabase.from("listing_status_history").insert({
+              listing_id: targetListingId,
+              old_status: originalStatusRef.current,
+              new_status: newStatus,
+              changed_by: userData?.user?.id ?? null,
+              notes: "Status updated via edit form",
+            });
+            console.log("[AddListing] Status change logged:", originalStatusRef.current, "->", newStatus);
+          } catch (statusHistoryError) {
+            console.error("[AddListing] Error logging status history:", statusHistoryError);
+          }
+        }
+
+        toast.success("Listing updated successfully!");
+      } else {
+        // INSERT new listing
+        console.log("[AddListing] Creating new listing");
+        
+        const { data: insertedListing, error } = await supabase
+          .from("listings")
+          .insert(listingData)
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        resultListingId = insertedListing?.id ?? null;
+
+        // Log price history for new listing
+        if (resultListingId) {
+          try {
+            const { data: userData } = await supabase.auth.getUser();
+            const currentUserId = userData?.user?.id ?? null;
+
+            await supabase.from("listing_price_history").insert({
+              listing_id: resultListingId,
+              old_price: null,
+              new_price: validatedData.price,
+              changed_by: currentUserId,
+              note: "Initial listing price",
+            });
+
+            // Log status history
+            await supabase.from("listing_status_history").insert({
+              listing_id: resultListingId,
+              old_status: null,
+              new_status: formData.status,
+              changed_by: currentUserId,
+              notes: "Listing created",
+            });
+          } catch (historyError) {
+            console.error("[AddListing] Error logging initial history:", historyError);
+          }
+
+          // Auto-fetch ATTOM data
+          try {
+            console.log("[AddListing] Triggering auto-fetch-property-data for listing:", resultListingId);
+            await supabase.functions.invoke('auto-fetch-property-data', {
+              body: { listing_id: resultListingId }
+            });
+          } catch (fetchError) {
+            console.error("[AddListing] Error fetching ATTOM data:", fetchError);
+          }
+        }
+
+        toast.success("Listing created successfully!");
       }
 
-      toast.success("Listing created successfully!");
       navigate("/agent-dashboard", { state: { reload: true } });
     } catch (error: any) {
       console.error("Error creating listing:", error);
@@ -1708,16 +1795,44 @@ const AddListing = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-6">
                   <div className="space-y-2">
                     <Label htmlFor="status">Status *</Label>
-                    <Select value={formData.status} onValueChange={handleStatusChange}>
+                    <Select 
+                      value={formData.status} 
+                      onValueChange={handleStatusChange}
+                      disabled={formData.status === 'cancelled' || formData.status === 'sold'}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="new">New</SelectItem>
-                        <SelectItem value="coming_soon">Coming Soon</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
+                        {!listingId ? (
+                          // CREATE MODE: Only New and Coming Soon
+                          <>
+                            <SelectItem value="new">New</SelectItem>
+                            <SelectItem value="coming_soon">Coming Soon</SelectItem>
+                          </>
+                        ) : (
+                          // EDIT MODE: All status options
+                          <>
+                            <SelectItem value="new">New</SelectItem>
+                            <SelectItem value="coming_soon">Coming Soon</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                            <SelectItem value="temporarily_withdrawn">Temporarily Withdrawn</SelectItem>
+                            <SelectItem value="expired">Expired</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                            <SelectItem value="sold">Sold</SelectItem>
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
+                    {/* Warning for final status states */}
+                    {(formData.status === 'cancelled' || formData.status === 'sold') && (
+                      <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
+                        <AlertCircle className="h-3 w-3" />
+                        This is a final state. Status and price cannot be changed.
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -1776,6 +1891,34 @@ const AddListing = () => {
                     </p>
                   </div>
                 )}
+
+                {/* List Date & Expiration Date Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b pb-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="list_date">List Date (On MLS)</Label>
+                    <Input
+                      id="list_date"
+                      type="date"
+                      value={formData.list_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, list_date: e.target.value }))}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      The date this listing was/will be added to the MLS.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expiration_date">Expiration Date</Label>
+                    <Input
+                      id="expiration_date"
+                      type="date"
+                      value={formData.expiration_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, expiration_date: e.target.value }))}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Listing will automatically change to "Expired" status on this date.
+                    </p>
+                  </div>
+                </div>
 
                 {/* Address Section */}
                 <div className="space-y-4">
@@ -2061,7 +2204,13 @@ const AddListing = () => {
                         onChange={(value) => setFormData(prev => ({ ...prev, price: value }))}
                         decimals={0}
                         required
+                        disabled={formData.status === 'cancelled' || formData.status === 'sold'}
                       />
+                      {(formData.status === 'cancelled' || formData.status === 'sold') && (
+                        <p className="text-xs text-muted-foreground">
+                          Price cannot be changed for {formData.status} listings.
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <div className="space-y-4">
