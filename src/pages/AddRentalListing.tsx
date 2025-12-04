@@ -41,9 +41,18 @@ const listingSchema = z.object({
   property_type: z.string().optional(),
   bedrooms: z.number().int().min(0, "Bedrooms must be 0 or more").max(50, "Bedrooms must be 50 or less").optional(),
   bathrooms: z.number().min(0, "Bathrooms must be 0 or more").max(50, "Bathrooms must be 50 or less").optional(),
-  square_feet: z.number().int().min(1, "Square feet must be at least 1").max(100000, "Square feet must be less than 100,000").optional(),
-  year_built: z.number().int().min(1800, "Year built must be 1800 or later").max(new Date().getFullYear() + 1, "Year built cannot be in the future").optional().nullable(),
-  lot_size: z.number().min(0, "Lot size must be 0 or more").max(10000, "Lot size must be less than 10,000 acres").optional(),
+  square_feet: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
+    z.number().int().min(1, "Square feet must be at least 1").max(100000, "Square feet must be less than 100,000").optional()
+  ),
+  year_built: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? null : Number(val)),
+    z.number().int().min(1800, "Year built must be 1800 or later").max(new Date().getFullYear() + 1, "Year built cannot be in the future").nullable()
+  ).optional(),
+  lot_size: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? null : Number(val)),
+    z.number().min(0, "Lot size must be 0 or more").max(10000, "Lot size must be less than 10,000 acres").nullable()
+  ).optional(),
   description: z.string().max(5000, "Description must be less than 5,000 characters").optional(),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),
