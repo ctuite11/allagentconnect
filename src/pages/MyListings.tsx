@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, ChevronDown, BarChart3 } from "lucide-react";
+import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { OpenHouseDialog } from "@/components/OpenHouseDialog";
 import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
@@ -13,7 +13,7 @@ import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-type ListingStatus = "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon";
+type ListingStatus = "new" | "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon";
 
 interface Listing {
   id: string;
@@ -46,9 +46,9 @@ interface Listing {
   };
 }
 
-type SortOption = "newest" | "oldest" | "priceHigh" | "priceLow" | "activeRecent";
-
-const STATUS_TABS: { label: string; value: ListingStatus | "all" }[] = [
+const STATUS_TABS: { label: string; value: ListingStatus }[] = [
+  { label: "New", value: "new" },
+  { label: "Coming Soon", value: "coming_soon" },
   { label: "Active", value: "active" },
   { label: "Pending", value: "pending" },
   { label: "Sold", value: "sold" },
@@ -56,12 +56,12 @@ const STATUS_TABS: { label: string; value: ListingStatus | "all" }[] = [
   { label: "Expired", value: "expired" },
   { label: "Cancelled", value: "cancelled" },
   { label: "Draft", value: "draft" },
-  { label: "Coming Soon", value: "coming_soon" },
-  { label: "All", value: "all" },
 ];
 
 function statusBadgeClass(status: string) {
   switch (status) {
+    case "new":
+      return "bg-emerald-500 text-white";
     case "active":
       return "bg-blue-500 text-white";
     case "pending":
@@ -137,10 +137,8 @@ function MyListingsView({
   onSocialShare: (listing: Listing) => void;
   onStats: (id: string) => void;
 }) {
-  const [activeStatus, setActiveStatus] = useState<ListingStatus | "all">("all");
+  const [activeStatus, setActiveStatus] = useState<ListingStatus>("new");
   const [view, setView] = useState<"grid" | "list">("list");
-  
-  const [sortOption, setSortOption] = useState<SortOption>("newest");
 
   // Quick edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -195,31 +193,11 @@ function MyListingsView({
   };
 
   const filteredListings = useMemo(() => {
-    let result = [...listings];
-
-    if (activeStatus !== "all") {
-      result = result.filter((l) => l.status === activeStatus);
-    }
-
-
-    result.sort((a, b) => {
-      switch (sortOption) {
-        case "priceHigh":
-          return b.price - a.price;
-        case "priceLow":
-          return a.price - b.price;
-        case "oldest":
-          return new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime();
-        case "activeRecent":
-          return new Date(b.active_date ?? 0).getTime() - new Date(a.active_date ?? 0).getTime();
-        case "newest":
-        default:
-          return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
-      }
-    });
-
+    let result = listings.filter((l) => l.status === activeStatus);
+    // Sort newest first
+    result.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
     return result;
-  }, [listings, activeStatus, sortOption]);
+  }, [listings, activeStatus]);
 
   const startQuickEdit = (listing: Listing) => {
     setEditingId(listing.id);
@@ -251,14 +229,17 @@ function MyListingsView({
   return (
     <div className="flex-1 container mx-auto p-6 space-y-4">
       {/* Header */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">My Listings</h1>
           <p className="text-sm text-muted-foreground">
             Manage your active, pending, and past listings from one place.
           </p>
         </div>
+      </div>
 
+      {/* New Listing Button Row */}
+      <div className="flex items-center justify-between">
         <button
           onClick={onNewListing}
           className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition"
@@ -266,15 +247,35 @@ function MyListingsView({
           <Plus className="h-4 w-4" />
           New Listing
         </button>
+
+        {/* View toggle */}
+        <div className="flex items-center gap-1 border border-border rounded-lg p-1 bg-muted">
+          <button
+            onClick={() => setView("grid")}
+            className={`p-1.5 rounded ${
+              view === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            <Grid size={16} />
+          </button>
+          <button
+            onClick={() => setView("list")}
+            className={`p-1.5 rounded ${
+              view === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            <ListIcon size={16} />
+          </button>
+        </div>
       </div>
 
-      {/* Status Tabs */}
+      {/* Status Tabs - smaller buttons */}
       <div className="flex flex-wrap gap-2">
         {STATUS_TABS.map((tab) => (
           <button
             key={tab.value}
             onClick={() => setActiveStatus(tab.value)}
-            className={`px-4 py-2 rounded-full text-sm border transition ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
               activeStatus === tab.value
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-background text-foreground border-border hover:bg-accent"
@@ -284,8 +285,6 @@ function MyListingsView({
           </button>
         ))}
       </div>
-
-      {/* Bulk Delete Confirmation Dialog */}
 
       {/* Bulk Delete Confirmation Dialog */}
       <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
@@ -309,75 +308,31 @@ function MyListingsView({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Controls Row: Select All (left) + Sort/View (right) */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Select All Drafts - only visible on Draft tab */}
-        <div className="flex items-center gap-4">
-          {activeStatus === "draft" && draftListings.length > 0 && (
-            <>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="select-all-drafts"
-                  checked={selectedDraftIds.size === draftListings.length && draftListings.length > 0}
-                  onCheckedChange={selectAllDrafts}
-                />
-                <label htmlFor="select-all-drafts" className="text-sm font-medium cursor-pointer">
-                  Select All Drafts ({selectedDraftIds.size} of {draftListings.length})
-                </label>
-              </div>
-              {selectedDraftIds.size > 0 && (
-                <button
-                  onClick={() => setShowBulkDeleteConfirm(true)}
-                  disabled={isDeleting}
-                  className="flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition text-sm font-medium disabled:opacity-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete Selected ({selectedDraftIds.size})
-                </button>
-              )}
-            </>
+      {/* Select All Drafts Row - only visible on Draft tab */}
+      {activeStatus === "draft" && draftListings.length > 0 && (
+        <div className="flex items-center gap-4 py-2">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="select-all-drafts"
+              checked={selectedDraftIds.size === draftListings.length && draftListings.length > 0}
+              onCheckedChange={selectAllDrafts}
+            />
+            <label htmlFor="select-all-drafts" className="text-sm font-medium cursor-pointer">
+              Select All Drafts ({selectedDraftIds.size} of {draftListings.length})
+            </label>
+          </div>
+          {selectedDraftIds.size > 0 && (
+            <button
+              onClick={() => setShowBulkDeleteConfirm(true)}
+              disabled={isDeleting}
+              className="flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition text-sm font-medium disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Selected ({selectedDraftIds.size})
+            </button>
           )}
         </div>
-
-        {/* Right: Sort + View toggle */}
-        <div className="flex items-center gap-3">
-          {/* Sort */}
-          <div className="relative">
-            <select
-              className="appearance-none border border-border rounded-lg pl-4 pr-8 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value as SortOption)}
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="priceHigh">Price: high to low</option>
-              <option value="priceLow">Price: low to high</option>
-              <option value="activeRecent">Recently active</option>
-            </select>
-            <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
-          </div>
-
-          {/* View toggle */}
-          <div className="flex items-center gap-1 border border-border rounded-lg p-1 bg-muted">
-            <button
-              onClick={() => setView("grid")}
-              className={`p-1.5 rounded ${
-                view === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-              }`}
-            >
-              <Grid size={16} />
-            </button>
-            <button
-              onClick={() => setView("list")}
-              className={`p-1.5 rounded ${
-                view === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-              }`}
-            >
-              <ListIcon size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* GRID VIEW */}
       {view === "grid" && (
@@ -614,7 +569,7 @@ function MyListingsView({
                           value={editStatus}
                           onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
                         >
-                          {STATUS_TABS.filter((t) => t.value !== "all").map((tab) => (
+                          {STATUS_TABS.map((tab) => (
                             <option key={tab.value} value={tab.value}>
                               {tab.label}
                             </option>
