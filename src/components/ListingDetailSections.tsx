@@ -78,9 +78,14 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
             {listing.basement_floor_types && formatArray(listing.basement_floor_types) && (
               <DetailRow label="Basement Flooring" value={formatArray(listing.basement_floor_types)} />
             )}
-            {listing.property_features && formatArray(listing.property_features) && (
-              <DetailRow label="Interior Features" value={formatArray(listing.property_features)} />
-            )}
+            {/* Property Features - combined from property_features + amenities, deduplicated */}
+            {(() => {
+              const features = listing.property_features || [];
+              const amenities = listing.amenities || [];
+              const combined = [...new Set([...features, ...amenities])];
+              const formatted = formatArray(combined);
+              return formatted ? <DetailRow label="Property Features" value={formatted} /> : null;
+            })()}
             {listing.exterior_features_list && formatArray(listing.exterior_features_list) && (
               <DetailRow label="Exterior Features" value={formatArray(listing.exterior_features_list)} />
             )}

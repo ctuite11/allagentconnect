@@ -643,7 +643,7 @@ const AddRentalListing = () => {
         showing_contact_phone: formData.showing_contact_phone || null,
         disclosures: disclosures,
         property_features: propertyFeatures,
-        amenities: amenities,
+        amenities: propertyFeatures, // Same as property_features - unified storage
         additional_notes: formData.additional_notes || null,
         photos: uploadedFiles.photos,
         floor_plans: uploadedFiles.floorPlans,
