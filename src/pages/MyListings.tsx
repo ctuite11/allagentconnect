@@ -139,7 +139,7 @@ function MyListingsView({
 }) {
   const [activeStatus, setActiveStatus] = useState<ListingStatus | "all">("all");
   const [view, setView] = useState<"grid" | "list">("list");
-  const [search, setSearch] = useState("");
+  
   const [sortOption, setSortOption] = useState<SortOption>("newest");
 
   // Quick edit state
@@ -201,14 +201,6 @@ function MyListingsView({
       result = result.filter((l) => l.status === activeStatus);
     }
 
-    if (search.trim()) {
-      const term = search.toLowerCase();
-      result = result.filter((l) => {
-        const address = `${l.address}, ${l.city}`.toLowerCase();
-        const mls = l.listing_number?.toLowerCase() ?? "";
-        return address.includes(term) || mls.includes(term);
-      });
-    }
 
     result.sort((a, b) => {
       switch (sortOption) {
@@ -227,9 +219,7 @@ function MyListingsView({
     });
 
     return result;
-  }, [listings, activeStatus, search, sortOption]);
-
-  const showingLabel = `Showing ${filteredListings.length} of ${listings.length} listings`;
+  }, [listings, activeStatus, sortOption]);
 
   const startQuickEdit = (listing: Listing) => {
     setEditingId(listing.id);
@@ -295,31 +285,7 @@ function MyListingsView({
         ))}
       </div>
 
-      {/* Bulk Draft Delete Bar - only visible on Draft tab */}
-      {activeStatus === "draft" && draftListings.length > 0 && (
-        <div className="flex items-center gap-4 p-3 bg-muted rounded-lg border border-border">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="select-all-drafts"
-              checked={selectedDraftIds.size === draftListings.length && draftListings.length > 0}
-              onCheckedChange={selectAllDrafts}
-            />
-            <label htmlFor="select-all-drafts" className="text-sm font-medium cursor-pointer">
-              Select All Drafts ({selectedDraftIds.size} of {draftListings.length})
-            </label>
-          </div>
-          {selectedDraftIds.size > 0 && (
-            <button
-              onClick={() => setShowBulkDeleteConfirm(true)}
-              disabled={isDeleting}
-              className="flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition text-sm font-medium disabled:opacity-50"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete Selected ({selectedDraftIds.size})
-            </button>
-          )}
-        </div>
-      )}
+      {/* Bulk Delete Confirmation Dialog */}
 
       {/* Bulk Delete Confirmation Dialog */}
       <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
@@ -343,18 +309,37 @@ function MyListingsView({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Search / Sort / View Toggle */}
+      {/* Controls Row: Select All (left) + Sort/View (right) */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex-1 min-w-[220px]">
-          <input
-            type="text"
-            placeholder="Search by address or AAC #"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full border border-border rounded-lg px-4 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+        {/* Left: Select All Drafts - only visible on Draft tab */}
+        <div className="flex items-center gap-4">
+          {activeStatus === "draft" && draftListings.length > 0 && (
+            <>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="select-all-drafts"
+                  checked={selectedDraftIds.size === draftListings.length && draftListings.length > 0}
+                  onCheckedChange={selectAllDrafts}
+                />
+                <label htmlFor="select-all-drafts" className="text-sm font-medium cursor-pointer">
+                  Select All Drafts ({selectedDraftIds.size} of {draftListings.length})
+                </label>
+              </div>
+              {selectedDraftIds.size > 0 && (
+                <button
+                  onClick={() => setShowBulkDeleteConfirm(true)}
+                  disabled={isDeleting}
+                  className="flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition text-sm font-medium disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Selected ({selectedDraftIds.size})
+                </button>
+              )}
+            </>
+          )}
         </div>
 
+        {/* Right: Sort + View toggle */}
         <div className="flex items-center gap-3">
           {/* Sort */}
           <div className="relative">
@@ -393,9 +378,6 @@ function MyListingsView({
           </div>
         </div>
       </div>
-
-      {/* Count */}
-      <div className="text-xs text-muted-foreground">{showingLabel}</div>
 
       {/* GRID VIEW */}
       {view === "grid" && (
