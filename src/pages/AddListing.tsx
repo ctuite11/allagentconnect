@@ -98,6 +98,8 @@ const AddListing = () => {
   const [attomPendingRecord, setAttomPendingRecord] = useState<any>(null);
   const [isAddressConfirmOpen, setIsAddressConfirmOpen] = useState(false);
   const [attomRejectedForAddress, setAttomRejectedForAddress] = useState<string>("");
+  // Flag to track if ATTOM address has been confirmed (prevents auto-popup on edit/return)
+  const [hasConfirmedAttomAddress, setHasConfirmedAttomAddress] = useState(false);
   
   // Ref to track when we're applying ATTOM data (to prevent re-triggering fetch)
   const isApplyingAttomDataRef = useRef(false);
@@ -587,15 +589,16 @@ const AddListing = () => {
           setPetOptions(data.pet_options as string[]);
         }
         
-        // Mark as already auto-fetched if we have ATTOM data
+        // For edit mode: always prevent ATTOM auto-popup
+        // Set hasConfirmedAttomAddress to true for existing listings
+        setHasConfirmedAttomAddress(true);
+        setHasAutoFetched(true);
+        
         if (data.attom_id) {
           setAttomId(data.attom_id);
-          setHasAutoFetched(true);
-          console.log('[AddListing] Has ATTOM data, setting hasAutoFetched=true');
+          console.log('[AddListing] Edit mode: Has ATTOM data, auto-popup disabled');
         } else {
-          // If no ATTOM data and we have complete address, allow ATTOM to trigger
-          setHasAutoFetched(false);
-          console.log('[AddListing] No ATTOM data, ATTOM can trigger for new address');
+          console.log('[AddListing] Edit mode: No ATTOM data, but auto-popup still disabled (user can manually trigger)');
         }
         
         setHasUnsavedChanges(false);
@@ -732,9 +735,20 @@ const AddListing = () => {
     
     const oldZip = formData.zip_code;
     const newZip = record.zip;
-    const currentCity = formData.city;
     
-    // Handle city from ATTOM record - NON-DESTRUCTIVE approach
+    // OVERWRITE address fields with normalized ATTOM values
+    // This corrects user typos in city/state/zip
+    if (record.address) {
+      setFormData(prev => ({ ...prev, address: record.address }));
+    }
+    
+    if (record.state) {
+      const attomState = record.state.trim();
+      setSelectedState(attomState);
+      setFormData(prev => ({ ...prev, state: attomState }));
+    }
+    
+    // Handle city from ATTOM record - OVERWRITE with normalized value
     if (record.city) {
       const attomCity = record.city.trim();
       const attomCityLower = attomCity.toLowerCase();
@@ -746,44 +760,41 @@ const AddListing = () => {
       
       if (matchedBoston) {
         // This is actually a Boston neighborhood, not a city
-        // Only update if no city is selected or if it matches
-        if (!currentCity || currentCity.toLowerCase() === 'boston') {
-          setCityChoice("Boston");
-          setCustomCity("");
-          setFormData(prev => ({ 
-            ...prev, 
-            city: "Boston",
-            neighborhood: matchedBoston
-          }));
-        } else {
-          // Keep current city, just set neighborhood
-          setFormData(prev => ({ ...prev, neighborhood: matchedBoston }));
-        }
+        setCityChoice("Boston");
+        setCustomCity("");
+        setFormData(prev => ({ 
+          ...prev, 
+          city: "Boston",
+          neighborhood: matchedBoston
+        }));
       } else {
         // Try to match city in available options
         const normalizedCity = validateAndNormalizeCity(
           attomCity,
-          formData.state || record.state,
+          record.state || formData.state,
           selectedCounty !== 'all' ? selectedCounty : undefined
         );
         
         if (normalizedCity) {
-          // Found a matching city - only update if no city selected or exact match
-          if (!currentCity || currentCity.toLowerCase() === attomCityLower) {
-            setCityChoice(normalizedCity);
-            setCustomCity("");
-            setFormData(prev => ({ ...prev, city: normalizedCity }));
-          }
-        } else if (!currentCity) {
-          // No city selected and no match found - set as "Other" with custom name
+          // Found a matching city - overwrite with normalized version
+          setCityChoice(normalizedCity);
+          setCustomCity("");
+          setFormData(prev => ({ ...prev, city: normalizedCity }));
+        } else {
+          // No match found - set as "Other" with ATTOM city name
           setCityChoice("Other");
           setCustomCity(attomCity);
           setFormData(prev => ({ ...prev, city: attomCity }));
         }
-        // else: keep current city selection unchanged
       }
     }
     
+    // Overwrite ZIP code with ATTOM value
+    if (newZip) {
+      setFormData(prev => ({ ...prev, zip_code: newZip }));
+    }
+    
+    // Fill in property details
     setFormData(prev => ({
       ...prev,
       bedrooms: record.beds ? record.beds.toString() : prev.bedrooms,
@@ -795,7 +806,6 @@ const AddListing = () => {
       tax_year: record.taxYear ? record.taxYear.toString() : prev.tax_year,
       latitude: record.latitude ?? prev.latitude,
       longitude: record.longitude ?? prev.longitude,
-      zip_code: newZip || prev.zip_code,
     }));
 
     // Update property type if it's condo/co-op
@@ -809,6 +819,9 @@ const AddListing = () => {
     // Set address verification status
     setAddressVerified(true);
     setVerificationMessage("Address verified via public records.");
+    
+    // Mark that ATTOM address has been confirmed
+    setHasConfirmedAttomAddress(true);
     
     // Show ZIP change notification if needed
     if (newZip && oldZip && newZip !== oldZip) {
@@ -844,6 +857,7 @@ const AddListing = () => {
       setAttomFetchStatus("Public record data loaded successfully.");
       toast.success("Property data loaded from public records!");
       setHasAutoFetched(true);
+      setHasConfirmedAttomAddress(true);
     }
     setIsAddressConfirmOpen(false);
     setAttomPendingRecord(null);
@@ -862,11 +876,17 @@ const AddListing = () => {
     toast.info("Address not confirmed. You can enter details manually.");
   };
 
-  // Auto-fetch when all location fields are filled
+  // Auto-fetch when all location fields are filled - ONLY for new listings
   useEffect(() => {
     // Skip during initial data load to prevent ATTOM from triggering on loaded data
     if (isInitialLoad) {
       console.log("[AddListing] ATTOM auto-fetch skipped: initial load in progress");
+      return;
+    }
+    
+    // Skip if in edit mode (listingId present) or address already confirmed
+    if (listingId || hasConfirmedAttomAddress) {
+      console.log("[AddListing] ATTOM auto-fetch skipped: edit mode or address already confirmed");
       return;
     }
     
@@ -889,6 +909,8 @@ const AddListing = () => {
       isAddressConfirmOpen,
       isApplyingAttom: isApplyingAttomDataRef.current,
       isInitialLoad,
+      listingId,
+      hasConfirmedAttomAddress,
       address: formData.address,
       state: formData.state,
       county: selectedCounty,
@@ -903,7 +925,19 @@ const AddListing = () => {
       handleAutoFillFromPublicRecords(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.address, formData.state, selectedCounty, formData.city, formData.zip_code, hasAutoFetched, autoFillLoading, isAddressConfirmOpen, isInitialLoad]);
+  }, [formData.address, formData.state, selectedCounty, formData.city, formData.zip_code, hasAutoFetched, autoFillLoading, isAddressConfirmOpen, isInitialLoad, listingId, hasConfirmedAttomAddress]);
+  
+  // Manual ATTOM lookup trigger
+  const handleManualAttomLookup = () => {
+    if (!formData.address || !formData.city || !formData.state) {
+      toast.error("Please enter address, city, and state first.");
+      return;
+    }
+    // Reset flags to allow a fresh lookup
+    setHasAutoFetched(false);
+    setAttomRejectedForAddress("");
+    handleAutoFillFromPublicRecords(false);
+  };
 
   // Reset auto-fetch flag when address changes significantly
   const prevAddressRef = useRef({ address: "", city: "", zip: "" });
@@ -1324,16 +1358,45 @@ const AddListing = () => {
         state: formData.state?.trim() || "MA",
         zip_code: formData.zip_code?.trim() || "00000",
         county: selectedCounty !== "all" ? selectedCounty : null,
+        neighborhood: formData.neighborhood || null,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
         price: formData.price ? parseFloat(formData.price) : 0,
         property_type: formData.property_type || null,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
         square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
+        lot_size: formData.lot_size ? parseFloat(formData.lot_size) : null,
+        year_built: formData.year_built ? parseInt(formData.year_built) : null,
+        description: formData.description || null,
         photos: uploadedPhotos,
         floor_plans: uploadedFloorPlans,
         documents: uploadedDocuments,
+        disclosures: disclosures,
+        property_features: propertyFeatures,
+        amenities: amenities,
+        area_amenities: areaAmenities.length > 0 ? areaAmenities : null,
+        commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
+        commission_type: formData.commission_type || null,
+        commission_notes: formData.commission_notes || null,
+        showing_instructions: formData.showing_instructions || null,
+        lockbox_code: formData.lockbox_code || null,
+        appointment_required: formData.appointment_required,
+        showing_contact_name: formData.showing_contact_name || null,
+        showing_contact_phone: formData.showing_contact_phone || null,
+        additional_notes: formData.additional_notes || null,
+        annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
+        tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
+        go_live_date: formData.go_live_date || null,
         unit_number: formData.unit_number || null,
         building_name: formData.building_name || null,
+        disclosures_other: formData.disclosures_other || null,
+        listing_exclusions: formData.listing_exclusions || null,
+        property_website_url: formData.property_website_url || null,
+        virtual_tour_url: formData.virtual_tour_url || null,
+        video_url: formData.video_url || null,
+        listing_agreement_types: formData.listing_agreement_type ? [formData.listing_agreement_type] : null,
+        attom_id: attomId,
         // Include list_date and expiration_date in drafts
         list_date: formData.list_date || null,
         expiration_date: formData.expiration_date || null,
@@ -1455,6 +1518,8 @@ const AddListing = () => {
         zip_code: formData.zip_code?.trim() || "00000",
         county: selectedCounty !== "all" ? selectedCounty : null,
         neighborhood: formData.neighborhood || null,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
         price: formData.price ? parseFloat(formData.price) : 0,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
@@ -1462,6 +1527,10 @@ const AddListing = () => {
         lot_size: formData.lot_size ? parseFloat(formData.lot_size) : null,
         year_built: formData.year_built ? parseInt(formData.year_built) : null,
         description: formData.description || null,
+        disclosures: disclosures,
+        property_features: propertyFeatures,
+        amenities: amenities,
+        area_amenities: areaAmenities.length > 0 ? areaAmenities : null,
         commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
         commission_type: formData.commission_type || null,
         commission_notes: formData.commission_notes || null,
@@ -1471,9 +1540,36 @@ const AddListing = () => {
         showing_contact_name: formData.showing_contact_name || null,
         showing_contact_phone: formData.showing_contact_phone || null,
         additional_notes: formData.additional_notes || null,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
+        annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
+        tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
+        go_live_date: formData.go_live_date || null,
+        unit_number: formData.unit_number || null,
+        building_name: formData.building_name || null,
+        disclosures_other: formData.disclosures_other || null,
+        listing_exclusions: formData.listing_exclusions || null,
+        property_website_url: formData.property_website_url || null,
+        virtual_tour_url: formData.virtual_tour_url || null,
+        video_url: formData.video_url || null,
+        listing_agreement_types: formData.listing_agreement_type ? [formData.listing_agreement_type] : null,
+        attom_id: attomId,
+        list_date: formData.list_date || null,
+        expiration_date: formData.expiration_date || null,
       };
+      
+      // Add rental-specific fields if it's a rental
+      if (formData.listing_type === "for_rent") {
+        if (formData.rental_fee) payload.rental_fee = parseFloat(formData.rental_fee);
+        payload.deposit_requirements = depositRequirements;
+        payload.outdoor_space = outdoorSpace;
+        payload.storage_options = storageOptions;
+        payload.laundry_type = formData.laundry_type || null;
+        payload.pets_comment = formData.pets_comment || null;
+        payload.pet_options = petOptions;
+      }
+      
+      // Add disclosures
+      payload.lead_paint = leadPaint;
+      payload.handicap_accessible = handicapAccessible || null;
       
       await supabase
         .from('listings')
@@ -1999,7 +2095,30 @@ const AddListing = () => {
 
                 {/* Address Section */}
                 <div className="space-y-4">
-                  <Label className="text-lg font-semibold">Property Location</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-lg font-semibold">Property Location</Label>
+                    {/* Manual ATTOM lookup button - always available */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleManualAttomLookup}
+                      disabled={autoFillLoading || !formData.address || !formData.city || !formData.state}
+                      className="gap-2"
+                    >
+                      {autoFillLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Looking up...
+                        </>
+                      ) : (
+                        <>
+                          <Cloud className="h-4 w-4" />
+                          {hasConfirmedAttomAddress ? "Re-verify with ATTOM" : "Verify with ATTOM"}
+                        </>
+                      )}
+                    </Button>
+                  </div>
                   
                   {/* Public Record Status - subtle feedback only on success */}
                   {publicRecordStatus === 'success' && (
