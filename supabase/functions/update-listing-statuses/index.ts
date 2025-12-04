@@ -16,70 +16,112 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     console.log('Starting listing status update job...');
+    
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
-    // Query listings that should be activated
-    const { data: listingsToActivate, error: queryError } = await supabase
+    // ========== PART 1: Auto-activate Coming Soon / New listings ==========
+    const { data: listingsToActivate, error: activateQueryError } = await supabase
       .from('listings')
       .select('id, address, status, go_live_date, auto_activate_on')
       .or('status.eq.coming_soon,status.eq.new')
       .not('auto_activate_on', 'is', null)
       .lte('auto_activate_on', new Date().toISOString());
 
-    if (queryError) {
-      console.error('Error querying listings:', queryError);
-      throw queryError;
+    if (activateQueryError) {
+      console.error('Error querying listings to activate:', activateQueryError);
     }
 
-    if (!listingsToActivate || listingsToActivate.length === 0) {
-      console.log('No listings to activate at this time.');
-      return new Response(
-        JSON.stringify({ 
-          message: 'No listings to activate',
-          updatedCount: 0 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
+    const activatedIds: string[] = [];
+    if (listingsToActivate && listingsToActivate.length > 0) {
+      console.log(`Found ${listingsToActivate.length} listing(s) to activate:`, listingsToActivate);
+
+      for (const listing of listingsToActivate) {
+        const { id, status: oldStatus } = listing;
+
+        const { error: updateError } = await supabase
+          .from('listings')
+          .update({ status: 'active' })
+          .eq('id', id);
+
+        if (updateError) {
+          console.error(`Error activating listing ${id}:`, updateError);
+          continue;
         }
-      );
-    }
 
-    console.log(`Found ${listingsToActivate.length} listing(s) to activate:`, listingsToActivate);
+        activatedIds.push(id);
 
-    // Update each listing to Active and log status history
-    const listingIds = [];
-    for (const listing of listingsToActivate) {
-      const { id, status: oldStatus } = listing;
-
-      const { error: updateError } = await supabase
-        .from('listings')
-        .update({ status: 'active' })
-        .eq('id', id);
-
-      if (updateError) {
-        console.error(`Error updating listing ${id}:`, updateError);
-        continue;
+        // Log status history for auto-activation
+        await supabase.from('listing_status_history').insert({
+          listing_id: id,
+          old_status: oldStatus,
+          new_status: 'active',
+          changed_by: null, // null = system
+          notes: 'Auto-activated by schedule',
+        });
       }
 
-      listingIds.push(id);
-
-      // Log status history for auto-activation
-      await supabase.from('listing_status_history').insert({
-        listing_id: id,
-        old_status: oldStatus,
-        new_status: 'active',
-        changed_by: null, // null = system
-        note: 'Auto-activated by schedule',
-      });
+      console.log(`Successfully activated ${activatedIds.length} listing(s).`);
+    } else {
+      console.log('No listings to activate at this time.');
     }
 
-    console.log(`Successfully activated ${listingIds.length} listing(s).`);
+    // ========== PART 2: Auto-expire listings based on expiration_date ==========
+    const { data: listingsToExpire, error: expireQueryError } = await supabase
+      .from('listings')
+      .select('id, address, status, expiration_date')
+      .eq('status', 'active')
+      .not('expiration_date', 'is', null)
+      .lte('expiration_date', today);
+
+    if (expireQueryError) {
+      console.error('Error querying listings to expire:', expireQueryError);
+    }
+
+    const expiredIds: string[] = [];
+    if (listingsToExpire && listingsToExpire.length > 0) {
+      console.log(`Found ${listingsToExpire.length} listing(s) to expire:`, listingsToExpire);
+
+      for (const listing of listingsToExpire) {
+        const { id, status: oldStatus } = listing;
+
+        const { error: updateError } = await supabase
+          .from('listings')
+          .update({ status: 'expired' })
+          .eq('id', id);
+
+        if (updateError) {
+          console.error(`Error expiring listing ${id}:`, updateError);
+          continue;
+        }
+
+        expiredIds.push(id);
+
+        // Log status history for auto-expiration
+        await supabase.from('listing_status_history').insert({
+          listing_id: id,
+          old_status: oldStatus,
+          new_status: 'expired',
+          changed_by: null, // null = system
+          notes: 'Auto-expired based on expiration_date',
+        });
+      }
+
+      console.log(`Successfully expired ${expiredIds.length} listing(s).`);
+    } else {
+      console.log('No listings to expire at this time.');
+    }
 
     return new Response(
       JSON.stringify({ 
-        message: `Successfully activated ${listingsToActivate.length} listing(s)`,
-        updatedCount: listingsToActivate.length,
-        listingIds 
+        message: `Processed ${activatedIds.length} activation(s) and ${expiredIds.length} expiration(s)`,
+        activated: {
+          count: activatedIds.length,
+          ids: activatedIds
+        },
+        expired: {
+          count: expiredIds.length,
+          ids: expiredIds
+        }
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
