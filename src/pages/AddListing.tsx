@@ -53,7 +53,7 @@ interface FileWithPreview {
   documentType?: string;
 }
 
-// Zod validation schema
+// Zod validation schema - year_built allows empty/undefined, only validates when value provided
 const listingSchema = z.object({
   address: z.string().trim().min(1, "Address is required").max(500),
   city: z.string().trim().min(1, "City is required").max(200),
@@ -64,7 +64,7 @@ const listingSchema = z.object({
   bedrooms: z.number().int().min(0).max(50).optional(),
   bathrooms: z.number().min(0).max(50).optional(),
   square_feet: z.number().int().min(1).max(100000).optional(),
-  year_built: z.number().int().min(1800).max(new Date().getFullYear() + 1).optional(),
+  year_built: z.number().int().min(1800, "Year built must be 1800 or later").max(new Date().getFullYear() + 1, "Year cannot be in the future").optional().nullable(),
   lot_size: z.number().min(0).max(10000).optional(),
   description: z.string().max(5000).optional(),
   latitude: z.number().optional().nullable(),
@@ -166,6 +166,7 @@ const AddListing = () => {
     property_website_url: "",
     virtual_tour_url: "",
     video_url: "",
+    listing_agreement_type: "",
     // New rental & apartment fields
     unit_number: "",
     building_name: "",
@@ -542,6 +543,9 @@ const AddListing = () => {
           rental_fee: data.rental_fee?.toString() || "",
           laundry_type: data.laundry_type || "none",
           pets_comment: data.pets_comment || "",
+          listing_agreement_type: Array.isArray(data.listing_agreement_types) && data.listing_agreement_types.length > 0 
+            ? data.listing_agreement_types[0] as string 
+            : "",
         }));
         
         // Load photos from database
@@ -1348,6 +1352,8 @@ const AddListing = () => {
       if (!isAutoSave) {
         toast.error(`Failed to save draft: ${error.message || 'Unknown error'}`);
       }
+      // Return early on error - don't update state or show success
+      return;
     } finally {
       if (isAutoSave) {
         setAutoSaving(false);
@@ -1574,6 +1580,9 @@ const AddListing = () => {
       // Add list_date and expiration_date to listing data
       listingData.list_date = formData.list_date || null;
       listingData.expiration_date = formData.expiration_date || null;
+      
+      // Add listing agreement type
+      listingData.listing_agreement_types = formData.listing_agreement_type ? [formData.listing_agreement_type] : null;
 
       // Determine if we're in edit mode
       const isEditMode = !!listingId;
@@ -2989,6 +2998,29 @@ const AddListing = () => {
                   </div>
                 </div>
 
+                {/* Listing Agreement Type */}
+                <div className="space-y-2 border-t pt-6">
+                  <Label className="text-xl font-semibold">Listing Agreement</Label>
+                  <div className="space-y-2 max-w-md">
+                    <Label htmlFor="listing_agreement_type">Type of Listing Agreement</Label>
+                    <Select
+                      value={formData.listing_agreement_type}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, listing_agreement_type: value }))}
+                    >
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="Select agreement type..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        <SelectItem value="exclusive_right_to_sell">Exclusive Right to Sell</SelectItem>
+                        <SelectItem value="exclusive_agency">Exclusive Agency</SelectItem>
+                        <SelectItem value="entry_only">Entry Only</SelectItem>
+                        <SelectItem value="open_listing">Open Listing</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
                 {/* Exclusions - Not for Multi-Family FOR SALE */}
                 {!(formData.listing_type === "for_sale" && formData.property_type === "multi_family") && (
                   <div className="space-y-2 border-t pt-6">
@@ -3346,6 +3378,58 @@ const AddListing = () => {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="flex flex-col sm:flex-row items-center justify-end gap-3 border-t pt-6 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const targetId = listingId || draftId;
+                      if (targetId) {
+                        window.open(`/listing/${targetId}`, '_blank');
+                      } else {
+                        toast.error("Please save the listing first to preview it.");
+                      }
+                    }}
+                    disabled={submitting || autoSaving}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleSaveDraft(false)}
+                    disabled={submitting || autoSaving}
+                  >
+                    {autoSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        {listingId ? "Save Changes" : "Save Draft"}
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={submitting || autoSaving}
+                    onClick={(e) => handleSubmit(e as unknown as React.FormEvent, true)}
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Publishing...
+                      </>
+                    ) : (
+                      listingId ? "Save & Publish" : "Publish Listing"
+                    )}
+                  </Button>
                 </div>
               </form>
             </CardContent>
