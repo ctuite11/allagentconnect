@@ -556,7 +556,7 @@ const AddListing = () => {
           const loadedPhotos: FileWithPreview[] = data.photos.map((photo: any, index: number) => ({
             file: new File([], ''),
             preview: typeof photo === 'string' ? photo : photo.url,
-            id: `existing-${index}`,
+            id: `existing-photo-${index}`,
             uploaded: true,
             url: typeof photo === 'string' ? photo : photo.url
           }));
@@ -564,6 +564,39 @@ const AddListing = () => {
         } else {
           console.log('[AddListing] No photos found in listing');
           setPhotos([]);
+        }
+        
+        // Load floor plans from database
+        if (data.floor_plans && Array.isArray(data.floor_plans) && data.floor_plans.length > 0) {
+          console.log('[AddListing] Loading floor plans:', data.floor_plans.length);
+          const loadedFloorPlans: FileWithPreview[] = data.floor_plans.map((plan: any, index: number) => ({
+            file: new File([], ''),
+            preview: typeof plan === 'string' ? plan : plan.url,
+            id: `existing-floor-${index}`,
+            uploaded: true,
+            url: typeof plan === 'string' ? plan : plan.url
+          }));
+          setFloorPlans(loadedFloorPlans);
+        } else {
+          console.log('[AddListing] No floor plans found in listing');
+          setFloorPlans([]);
+        }
+        
+        // Load documents from database
+        if (data.documents && Array.isArray(data.documents) && data.documents.length > 0) {
+          console.log('[AddListing] Loading documents:', data.documents.length);
+          const loadedDocuments: FileWithPreview[] = data.documents.map((doc: any, index: number) => ({
+            file: new File([], ''),
+            preview: typeof doc === 'string' ? doc : doc.url,
+            id: `existing-doc-${index}`,
+            uploaded: true,
+            url: typeof doc === 'string' ? doc : doc.url,
+            documentType: doc.documentType || ''
+          }));
+          setDocuments(loadedDocuments);
+        } else {
+          console.log('[AddListing] No documents found in listing');
+          setDocuments([]);
         }
         
         // Load other arrays (cast from Json[] to string[])
@@ -1306,6 +1339,94 @@ const AddListing = () => {
     return data.id;
   };
 
+  // Centralized helper to build listing payload from form data
+  const buildListingDataFromForm = (
+    uploadedMedia: { photos: any[]; floorPlans: any[]; documents: any[] },
+    overrideStatus?: string
+  ) => ({
+    // Agent
+    agent_id: user?.id,
+    
+    // Status & Type
+    status: overrideStatus || formData.status,
+    listing_type: formData.listing_type,
+    property_type: formData.property_type || null,
+    
+    // Location
+    address: (formData.address || "Draft").trim(),
+    city: formData.city?.trim() || "TBD",
+    state: formData.state?.trim() || "MA",
+    zip_code: formData.zip_code?.trim() || "00000",
+    county: selectedCounty !== "all" ? selectedCounty : null,
+    neighborhood: formData.neighborhood || null,
+    latitude: formData.latitude,
+    longitude: formData.longitude,
+    
+    // Property Details ("meat and potatoes")
+    price: formData.price ? parseFloat(formData.price) : 0,
+    bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+    bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
+    square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
+    lot_size: formData.lot_size ? parseFloat(formData.lot_size) : null,
+    year_built: formData.year_built ? parseInt(formData.year_built) : null,
+    description: formData.description || null,
+    
+    // Features & Amenities
+    property_features: propertyFeatures,
+    amenities: amenities,
+    area_amenities: areaAmenities.length > 0 ? areaAmenities : null,
+    disclosures: disclosures,
+    
+    // Media
+    photos: uploadedMedia.photos,
+    floor_plans: uploadedMedia.floorPlans,
+    documents: uploadedMedia.documents,
+    
+    // Commission & Showing
+    commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
+    commission_type: formData.commission_type || null,
+    commission_notes: formData.commission_notes || null,
+    showing_instructions: formData.showing_instructions || null,
+    lockbox_code: formData.lockbox_code || null,
+    appointment_required: formData.appointment_required,
+    showing_contact_name: formData.showing_contact_name || null,
+    showing_contact_phone: formData.showing_contact_phone || null,
+    additional_notes: formData.additional_notes || null,
+    
+    // Taxes & Dates
+    annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
+    tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
+    list_date: formData.list_date || null,
+    expiration_date: formData.expiration_date || null,
+    go_live_date: formData.go_live_date || null,
+    
+    // Additional Info
+    unit_number: formData.unit_number || null,
+    building_name: formData.building_name || null,
+    disclosures_other: formData.disclosures_other || null,
+    listing_exclusions: formData.listing_exclusions || null,
+    property_website_url: formData.property_website_url || null,
+    virtual_tour_url: formData.virtual_tour_url || null,
+    video_url: formData.video_url || null,
+    listing_agreement_types: formData.listing_agreement_type ? [formData.listing_agreement_type] : null,
+    attom_id: attomId,
+    
+    // Disclosures (lead_paint is stored as string, not array)
+    lead_paint: leadPaint.length > 0 ? leadPaint.join(', ') : null,
+    handicap_accessible: handicapAccessible || null,
+    
+    // Rental-specific (conditionally added in handlers)
+    ...(formData.listing_type === "for_rent" ? {
+      rental_fee: formData.rental_fee ? parseFloat(formData.rental_fee) : null,
+      deposit_requirements: depositRequirements,
+      outdoor_space: outdoorSpace,
+      storage_options: storageOptions,
+      laundry_type: formData.laundry_type || null,
+      pets_comment: formData.pets_comment || null,
+      pet_options: petOptions,
+    } : {}),
+  });
+
   const handleSaveDraft = async (isAutoSave = false) => {
     try {
       if (!user) {
@@ -1322,11 +1443,9 @@ const AddListing = () => {
         setSubmitting(true);
       }
 
-      // Upload photos if there are any pending uploads
-      let uploadedPhotos: any[] = [];
-      let uploadedFloorPlans: any[] = [];
-      let uploadedDocuments: any[] = [];
-
+      // Upload files (preserves existing, uploads new)
+      let uploaded = { photos: [] as any[], floorPlans: [] as any[], documents: [] as any[] };
+      
       if (photos.length > 0 || floorPlans.length > 0 || documents.length > 0) {
         console.log('Uploading files for draft save:', { 
           photos: photos.length, 
@@ -1335,94 +1454,28 @@ const AddListing = () => {
         });
         
         try {
-          const uploaded = await uploadFiles();
-          uploadedPhotos = uploaded.photos;
-          uploadedFloorPlans = uploaded.floorPlans;
-          uploadedDocuments = uploaded.documents;
+          uploaded = await uploadFiles();
           console.log('Files uploaded successfully:', uploaded);
         } catch (uploadError: any) {
           console.error('Error uploading files during draft save:', uploadError);
           if (!isAutoSave) {
             toast.error(`Failed to upload files: ${uploadError.message}`);
           }
-          // Continue saving draft without photos if upload fails
         }
       }
 
-      const payload: any = {
-        agent_id: user.id,
-        status: "draft",
-        listing_type: formData.listing_type,
-        address: (formData.address || "Draft").trim(),
-        city: formData.city?.trim() || "TBD",
-        state: formData.state?.trim() || "MA",
-        zip_code: formData.zip_code?.trim() || "00000",
-        county: selectedCounty !== "all" ? selectedCounty : null,
-        neighborhood: formData.neighborhood || null,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-        price: formData.price ? parseFloat(formData.price) : 0,
-        property_type: formData.property_type || null,
-        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
-        bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
-        square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
-        lot_size: formData.lot_size ? parseFloat(formData.lot_size) : null,
-        year_built: formData.year_built ? parseInt(formData.year_built) : null,
-        description: formData.description || null,
-        photos: uploadedPhotos,
-        floor_plans: uploadedFloorPlans,
-        documents: uploadedDocuments,
-        disclosures: disclosures,
-        property_features: propertyFeatures,
-        amenities: amenities,
-        area_amenities: areaAmenities.length > 0 ? areaAmenities : null,
-        commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
-        commission_type: formData.commission_type || null,
-        commission_notes: formData.commission_notes || null,
-        showing_instructions: formData.showing_instructions || null,
-        lockbox_code: formData.lockbox_code || null,
-        appointment_required: formData.appointment_required,
-        showing_contact_name: formData.showing_contact_name || null,
-        showing_contact_phone: formData.showing_contact_phone || null,
-        additional_notes: formData.additional_notes || null,
-        annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
-        tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
-        go_live_date: formData.go_live_date || null,
-        unit_number: formData.unit_number || null,
-        building_name: formData.building_name || null,
-        disclosures_other: formData.disclosures_other || null,
-        listing_exclusions: formData.listing_exclusions || null,
-        property_website_url: formData.property_website_url || null,
-        virtual_tour_url: formData.virtual_tour_url || null,
-        video_url: formData.video_url || null,
-        listing_agreement_types: formData.listing_agreement_type ? [formData.listing_agreement_type] : null,
-        attom_id: attomId,
-        // Include list_date and expiration_date in drafts
-        list_date: formData.list_date || null,
-        expiration_date: formData.expiration_date || null,
-      };
-
-      // Add rental-specific fields to draft if it's a rental
-      if (formData.listing_type === "for_rent") {
-        if (formData.rental_fee) payload.rental_fee = parseFloat(formData.rental_fee);
-        payload.deposit_requirements = depositRequirements;
-        payload.outdoor_space = outdoorSpace;
-        payload.storage_options = storageOptions;
-        payload.laundry_type = formData.laundry_type || null;
-        payload.pets_comment = formData.pets_comment || null;
-        payload.pet_options = petOptions;
-      }
-
-      // Add disclosures
-      payload.lead_paint = leadPaint;
-      payload.handicap_accessible = handicapAccessible || null;
+      // Use centralized helper to build payload
+      const payload = buildListingDataFromForm(uploaded, "draft");
 
       console.log('Saving draft with payload:', { ...payload, photos: payload.photos?.length || 0 });
 
+      // Remove agent_id from update payload (it's immutable after creation)
+      const { agent_id, ...updatePayload } = payload;
+      
       if (draftId) {
         const { error } = await supabase
           .from("listings")
-          .update(payload)
+          .update(updatePayload)
           .eq("id", draftId);
         if (error) {
           console.error('Error updating draft listing:', error);
@@ -1430,27 +1483,23 @@ const AddListing = () => {
         }
         console.log('Draft updated successfully, id:', draftId);
       } else {
-  // Let the database generate listing_number using its default/sequence.
-  // We remove listing_number from the payload before inserting to avoid
-  // duplicate key violations on listings_listing_number_key.
-  const { listing_number, ...payloadWithoutListingNumber } = payload;
+        // Let the database generate listing_number using its default/sequence
+        const { data, error } = await supabase
+          .from("listings")
+          .insert(payload)
+          .select()
+          .single();
 
-  const { data, error } = await supabase
-    .from("listings")
-    .insert(payloadWithoutListingNumber)
-    .select()
-    .single();
+        if (error) {
+          console.error('Error inserting draft listing:', error);
+          throw error;
+        }
 
-  if (error) {
-    console.error('Error inserting draft listing:', error);
-    throw error;
-  }
-
-  if (data) {
-    console.log('Draft created successfully, id:', data.id);
-    setDraftId(data.id);
-  }
-}
+        if (data) {
+          console.log('Draft created successfully, id:', data.id);
+          setDraftId(data.id);
+        }
+      }
 
 
       // Mark all items as uploaded to prevent re-uploading on next save
@@ -1507,73 +1556,23 @@ const AddListing = () => {
       }
     }
     
-    // Save current form data silently before navigating
+    // Save current form data silently before navigating (don't overwrite media - photos page handles it)
     try {
-      const payload: any = {
-        listing_type: formData.listing_type,
-        property_type: formData.property_type || null,
-        address: (formData.address || "Draft").trim(),
-        city: formData.city?.trim() || "TBD",
-        state: formData.state?.trim() || "MA",
-        zip_code: formData.zip_code?.trim() || "00000",
-        county: selectedCounty !== "all" ? selectedCounty : null,
-        neighborhood: formData.neighborhood || null,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-        price: formData.price ? parseFloat(formData.price) : 0,
-        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
-        bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
-        square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
-        lot_size: formData.lot_size ? parseFloat(formData.lot_size) : null,
-        year_built: formData.year_built ? parseInt(formData.year_built) : null,
-        description: formData.description || null,
-        disclosures: disclosures,
-        property_features: propertyFeatures,
-        amenities: amenities,
-        area_amenities: areaAmenities.length > 0 ? areaAmenities : null,
-        commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
-        commission_type: formData.commission_type || null,
-        commission_notes: formData.commission_notes || null,
-        showing_instructions: formData.showing_instructions || null,
-        lockbox_code: formData.lockbox_code || null,
-        appointment_required: formData.appointment_required,
-        showing_contact_name: formData.showing_contact_name || null,
-        showing_contact_phone: formData.showing_contact_phone || null,
-        additional_notes: formData.additional_notes || null,
-        annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
-        tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
-        go_live_date: formData.go_live_date || null,
-        unit_number: formData.unit_number || null,
-        building_name: formData.building_name || null,
-        disclosures_other: formData.disclosures_other || null,
-        listing_exclusions: formData.listing_exclusions || null,
-        property_website_url: formData.property_website_url || null,
-        virtual_tour_url: formData.virtual_tour_url || null,
-        video_url: formData.video_url || null,
-        listing_agreement_types: formData.listing_agreement_type ? [formData.listing_agreement_type] : null,
-        attom_id: attomId,
-        list_date: formData.list_date || null,
-        expiration_date: formData.expiration_date || null,
-      };
+      // Get current media from state to preserve it
+      const currentPhotos = photos.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
+      const currentFloorPlans = floorPlans.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
+      const currentDocuments = documents.filter(d => d.uploaded && d.url).map(d => ({ url: d.url, name: d.file?.name || '' }));
       
-      // Add rental-specific fields if it's a rental
-      if (formData.listing_type === "for_rent") {
-        if (formData.rental_fee) payload.rental_fee = parseFloat(formData.rental_fee);
-        payload.deposit_requirements = depositRequirements;
-        payload.outdoor_space = outdoorSpace;
-        payload.storage_options = storageOptions;
-        payload.laundry_type = formData.laundry_type || null;
-        payload.pets_comment = formData.pets_comment || null;
-        payload.pet_options = petOptions;
-      }
+      const payload = buildListingDataFromForm(
+        { photos: currentPhotos, floorPlans: currentFloorPlans, documents: currentDocuments }
+      );
       
-      // Add disclosures
-      payload.lead_paint = leadPaint;
-      payload.handicap_accessible = handicapAccessible || null;
+      // Remove agent_id from update (it's immutable)
+      const { agent_id, ...updatePayload } = payload;
       
       await supabase
         .from('listings')
-        .update(payload)
+        .update(updatePayload)
         .eq('id', targetId);
         
       console.log('[AddListing] Form data saved before navigating to photos');
@@ -1583,6 +1582,44 @@ const AddListing = () => {
     }
     
     navigate(`/agent/listings/${targetId}/photos`);
+  };
+
+  // Helper to save form data and navigate to manage floor plans
+  const handleNavigateToManageFloorPlans = async () => {
+    let targetId = listingId || draftId;
+    
+    // Ensure draft exists
+    if (!targetId) {
+      targetId = await ensureDraftListing();
+      if (!targetId) {
+        toast.error('Unable to create draft listing');
+        return;
+      }
+    }
+    
+    // Save current form data silently before navigating
+    try {
+      const currentPhotos = photos.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
+      const currentFloorPlans = floorPlans.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
+      const currentDocuments = documents.filter(d => d.uploaded && d.url).map(d => ({ url: d.url, name: d.file?.name || '' }));
+      
+      const payload = buildListingDataFromForm(
+        { photos: currentPhotos, floorPlans: currentFloorPlans, documents: currentDocuments }
+      );
+      
+      const { agent_id, ...updatePayload } = payload;
+      
+      await supabase
+        .from('listings')
+        .update(updatePayload)
+        .eq('id', targetId);
+        
+      console.log('[AddListing] Form data saved before navigating to floor plans');
+    } catch (err) {
+      console.error('[AddListing] Error saving before floor plan navigation:', err);
+    }
+    
+    navigate(`/agent/listings/${targetId}/floor-plans`);
   };
 
   const handlePreview = () => {
@@ -3437,14 +3474,23 @@ const AddListing = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <Label className="text-lg font-medium">Floor Plans</Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => document.getElementById('floorplan-upload')?.click()}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Floor Plans
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => document.getElementById('floorplan-upload')?.click()}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Floor Plans
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleNavigateToManageFloorPlans}
+                        >
+                          Manage Floor Plans
+                        </Button>
+                      </div>
                     </div>
                     <input
                       id="floorplan-upload"
