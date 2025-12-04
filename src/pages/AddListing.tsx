@@ -1103,54 +1103,130 @@ const AddListing = () => {
     setDraggedIndex(null);
   };
 
-  const uploadFiles = async (): Promise<{ photos: any[], floorPlans: any[], documents: any[] }> => {
-    // Defensive null check for user
+  const uploadFiles = async (): Promise<{
+    photos: { url: string; name?: string }[];
+    floorPlans: { url: string; name?: string }[];
+    documents: { url: string; name?: string }[];
+  }> => {
     if (!user) {
-      console.warn('uploadFiles called without user - aborting');
+      console.warn("uploadFiles called without user - aborting");
       return { photos: [], floorPlans: [], documents: [] };
     }
 
-    const uploadedPhotos: any[] = [];
-    const uploadedFloorPlans: any[] = [];
-    const uploadedDocuments: any[] = [];
+    const uploadedPhotos: { url: string; name?: string }[] = [];
+    const uploadedFloorPlans: { url: string; name?: string }[] = [];
+    const uploadedDocuments: { url: string; name?: string }[] = [];
 
+    // ---- PHOTOS ----
     for (const photo of photos) {
+      // Preserve existing, already-uploaded items
+      if (photo.uploaded && photo.url) {
+        uploadedPhotos.push({
+          url: photo.url,
+          name: photo.file?.name || "",
+        });
+        continue;
+      }
+
+      // Skip items without a valid file
+      if (!photo.file || photo.file.size === 0) {
+        console.warn("Skipping photo without valid file", photo);
+        continue;
+      }
+
+      // Upload NEW photos only
       const filePath = `${user.id}/${Date.now()}_${photo.file.name}`;
-      const { error } = await supabase.storage
-        .from('listing-photos')
+      const { error: uploadError } = await supabase.storage
+        .from("listing-photos")
         .upload(filePath, photo.file);
-      if (error) throw error;
+
+      if (uploadError) {
+        console.error("Photo upload error", { filePath, uploadError });
+        throw uploadError;
+      }
+
       const { data: { publicUrl } } = supabase.storage
-        .from('listing-photos')
+        .from("listing-photos")
         .getPublicUrl(filePath);
+
       uploadedPhotos.push({ url: publicUrl, name: photo.file.name });
     }
 
+    // ---- FLOOR PLANS ----
     for (const plan of floorPlans) {
+      if (plan.uploaded && plan.url) {
+        uploadedFloorPlans.push({
+          url: plan.url,
+          name: plan.file?.name || "",
+        });
+        continue;
+      }
+
+      if (!plan.file || plan.file.size === 0) {
+        console.warn("Skipping floor plan without valid file", plan);
+        continue;
+      }
+
       const filePath = `${user.id}/${Date.now()}_${plan.file.name}`;
-      const { error } = await supabase.storage
-        .from('listing-floorplans')
+      const { error: uploadError } = await supabase.storage
+        .from("listing-floorplans")
         .upload(filePath, plan.file);
-      if (error) throw error;
+
+      if (uploadError) {
+        console.error("Floor plan upload error", { filePath, uploadError });
+        throw uploadError;
+      }
+
       const { data: { publicUrl } } = supabase.storage
-        .from('listing-floorplans')
+        .from("listing-floorplans")
         .getPublicUrl(filePath);
+
       uploadedFloorPlans.push({ url: publicUrl, name: plan.file.name });
     }
 
+    // ---- DOCUMENTS ----
     for (const doc of documents) {
+      if (doc.uploaded && doc.url) {
+        uploadedDocuments.push({
+          url: doc.url,
+          name: doc.file?.name || "",
+        });
+        continue;
+      }
+
+      if (!doc.file || doc.file.size === 0) {
+        console.warn("Skipping document without valid file", doc);
+        continue;
+      }
+
       const filePath = `${user.id}/${Date.now()}_${doc.file.name}`;
-      const { error } = await supabase.storage
-        .from('listing-documents')
+      const { error: uploadError } = await supabase.storage
+        .from("listing-documents")
         .upload(filePath, doc.file);
-      if (error) throw error;
+
+      if (uploadError) {
+        console.error("Document upload error", { filePath, uploadError });
+        throw uploadError;
+      }
+
       const { data: { publicUrl } } = supabase.storage
-        .from('listing-documents')
+        .from("listing-documents")
         .getPublicUrl(filePath);
+
       uploadedDocuments.push({ url: publicUrl, name: doc.file.name });
     }
 
-    return { photos: uploadedPhotos, floorPlans: uploadedFloorPlans, documents: uploadedDocuments };
+    console.log("uploadFiles result", {
+      photos: uploadedPhotos,
+      floorPlans: uploadedFloorPlans,
+      documents: uploadedDocuments,
+    });
+
+    return {
+      photos: uploadedPhotos,
+      floorPlans: uploadedFloorPlans,
+      documents: uploadedDocuments,
+    };
   };
 
   // Helper to ensure a draft listing exists before any save/upload operation
@@ -1314,16 +1390,8 @@ const AddListing = () => {
 }
 
 
-      // Clear the local file arrays after successful upload to prevent re-uploading
-      if (uploadedPhotos.length > 0) {
-        setPhotos([]);
-      }
-      if (uploadedFloorPlans.length > 0) {
-        setFloorPlans([]);
-      }
-      if (uploadedDocuments.length > 0) {
-        setDocuments([]);
-      }
+      // Mark all items as uploaded to prevent re-uploading on next save
+      // (Don't clear arrays - this preserves data for continued editing)
 
       setHasUnsavedChanges(false);
       setLastAutoSave(new Date());
