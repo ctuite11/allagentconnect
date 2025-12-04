@@ -263,9 +263,8 @@ const AddListing = () => {
         c => c.name.toLowerCase() === cityChoice?.toLowerCase()
       );
       
-      if (cityChoice && !currentCityExists && cityChoice !== "Other") {
+      if (cityChoice && !currentCityExists) {
         setCityChoice("");
-        setCustomCity("");
         setFormData(prev => ({ ...prev, city: "" }));
       }
       
@@ -322,8 +321,8 @@ const AddListing = () => {
   // Fetch ZIP codes when city changes - uses static data, edge function, and Zippopotam.us fallback
   useEffect(() => {
     const fetchZipCodes = async () => {
-      // Determine the actual city to use for ZIP lookup
-      const actualCity = cityChoice === "Other" ? customCity : cityChoice;
+      // Use cityChoice directly (no more "Other" option)
+      const actualCity = cityChoice;
       
       if (selectedState && actualCity) {
         setSuggestedZipsLoading(true);
@@ -537,7 +536,6 @@ const AddListing = () => {
           annual_property_tax: data.annual_property_tax?.toString() || "",
           tax_year: data.tax_year?.toString() || "",
           go_live_date: data.go_live_date || "",
-          // New date fields
           list_date: data.list_date || "",
           expiration_date: data.expiration_date || "",
           unit_number: data.unit_number || "",
@@ -548,6 +546,12 @@ const AddListing = () => {
           listing_agreement_type: Array.isArray(data.listing_agreement_types) && data.listing_agreement_types.length > 0 
             ? data.listing_agreement_types[0] as string 
             : "",
+          // Additional fields that were missing
+          listing_exclusions: data.listing_exclusions || "",
+          property_website_url: data.property_website_url || "",
+          virtual_tour_url: data.virtual_tour_url || "",
+          video_url: data.video_url || "",
+          disclosures_other: data.disclosures_other || "",
         }));
         
         // Load photos from database
@@ -832,12 +836,10 @@ const AddListing = () => {
         if (normalizedCity) {
           // Found a matching city - overwrite with normalized version
           setCityChoice(normalizedCity);
-          setCustomCity("");
           setFormData(prev => ({ ...prev, city: normalizedCity }));
         } else {
-          // No match found - set as "Other" with ATTOM city name
-          setCityChoice("Other");
-          setCustomCity(attomCity);
+          // No match found - use ATTOM city name directly
+          setCityChoice(attomCity);
           setFormData(prev => ({ ...prev, city: attomCity }));
         }
       }
@@ -2244,12 +2246,7 @@ const AddListing = () => {
                                   value={cityOption.name}
                                   onSelect={(currentValue) => {
                                     setCityChoice(currentValue === cityChoice ? "" : currentValue);
-                                    if (currentValue !== "Other") {
-                                      setFormData(prev => ({ ...prev, city: currentValue }));
-                                      setCustomCity("");
-                                    } else {
-                                      setFormData(prev => ({ ...prev, city: "" }));
-                                    }
+                                    setFormData(prev => ({ ...prev, city: currentValue }));
                                     setOpenCityCombo(false);
                                   }}
                                 >
@@ -2262,22 +2259,6 @@ const AddListing = () => {
                       </PopoverContent>
                     </Popover>
                     
-                    {cityChoice === "Other" && (
-                      <div className="space-y-2 mt-2">
-                        <Label htmlFor="customCity">Specify City/Town</Label>
-                        <Input
-                          id="customCity"
-                          type="text"
-                          value={customCity}
-                          onChange={(e) => {
-                            setCustomCity(e.target.value);
-                            setFormData(prev => ({ ...prev, city: e.target.value }));
-                          }}
-                          placeholder="Enter city name"
-                          required
-                        />
-                      </div>
-                    )}
                   </div>
 
 
