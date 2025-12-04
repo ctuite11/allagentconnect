@@ -238,6 +238,14 @@ const ManageListingPhotos: React.FC = () => {
         </div>
         <div className="flex gap-2">
           <Button
+            variant="outline"
+            onClick={() => navigate('/agent/listings')}
+            disabled={saving || isUploading}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to My Listings
+          </Button>
+          <Button
             variant="default"
             onClick={handleSaveAndReturn}
             disabled={saving || isUploading}
@@ -248,10 +256,7 @@ const ManageListingPhotos: React.FC = () => {
                 Saving...
               </>
             ) : (
-              <>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Save & Return to Listing
-              </>
+              'Save & Return to Listing'
             )}
           </Button>
         </div>
