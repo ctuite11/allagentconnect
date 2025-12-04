@@ -11,7 +11,8 @@ import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
 import { ReverseProspectDialog } from "@/components/ReverseProspectDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
-
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 type ListingStatus = "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon";
 
 interface Listing {
@@ -109,6 +110,7 @@ function MyListingsView({
   onPreview,
   onShare,
   onDelete,
+  onBulkDeleteDrafts,
   onNewListing,
   onQuickUpdate,
   onPhotos,
@@ -124,6 +126,7 @@ function MyListingsView({
   onPreview: (id: string) => void;
   onShare: (id: string) => void;
   onDelete: (id: string) => void;
+  onBulkDeleteDrafts: (ids: string[]) => Promise<void>;
   onNewListing: () => void;
   onQuickUpdate: (id: string, updates: Partial<Pick<Listing, "price" | "status">>) => Promise<void>;
   onPhotos: (id: string) => void;
@@ -134,7 +137,7 @@ function MyListingsView({
   onSocialShare: (listing: Listing) => void;
   onStats: (id: string) => void;
 }) {
-  const [activeStatus, setActiveStatus] = useState<ListingStatus | "all">("active");
+  const [activeStatus, setActiveStatus] = useState<ListingStatus | "all">("all");
   const [view, setView] = useState<"grid" | "list">("list");
   const [search, setSearch] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("newest");
@@ -143,6 +146,53 @@ function MyListingsView({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState<number | "">("");
   const [editStatus, setEditStatus] = useState<ListingStatus | "">("");
+
+  // Bulk draft deletion state
+  const [selectedDraftIds, setSelectedDraftIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Get draft listings for bulk selection
+  const draftListings = useMemo(() => listings.filter(l => l.status === "draft"), [listings]);
+
+  // Clear selection when switching away from draft tab
+  useEffect(() => {
+    if (activeStatus !== "draft") {
+      setSelectedDraftIds(new Set());
+    }
+  }, [activeStatus]);
+
+  const toggleDraftSelection = (id: string) => {
+    setSelectedDraftIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const selectAllDrafts = () => {
+    if (selectedDraftIds.size === draftListings.length) {
+      setSelectedDraftIds(new Set());
+    } else {
+      setSelectedDraftIds(new Set(draftListings.map(l => l.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedDraftIds.size === 0) return;
+    setIsDeleting(true);
+    try {
+      await onBulkDeleteDrafts(Array.from(selectedDraftIds));
+      setSelectedDraftIds(new Set());
+    } finally {
+      setIsDeleting(false);
+      setShowBulkDeleteConfirm(false);
+    }
+  };
 
   const filteredListings = useMemo(() => {
     let result = [...listings];
@@ -244,6 +294,54 @@ function MyListingsView({
           </button>
         ))}
       </div>
+
+      {/* Bulk Draft Delete Bar - only visible on Draft tab */}
+      {activeStatus === "draft" && draftListings.length > 0 && (
+        <div className="flex items-center gap-4 p-3 bg-muted rounded-lg border border-border">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="select-all-drafts"
+              checked={selectedDraftIds.size === draftListings.length && draftListings.length > 0}
+              onCheckedChange={selectAllDrafts}
+            />
+            <label htmlFor="select-all-drafts" className="text-sm font-medium cursor-pointer">
+              Select All Drafts ({selectedDraftIds.size} of {draftListings.length})
+            </label>
+          </div>
+          {selectedDraftIds.size > 0 && (
+            <button
+              onClick={() => setShowBulkDeleteConfirm(true)}
+              disabled={isDeleting}
+              className="flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition text-sm font-medium disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Selected ({selectedDraftIds.size})
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedDraftIds.size} draft listing(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedDraftIds.size} draft listing(s)? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Search / Sort / View Toggle */}
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -449,6 +547,16 @@ function MyListingsView({
                 </div>
 
                 <div className="flex items-center gap-4">
+                  {/* Checkbox for draft selection */}
+                  {activeStatus === "draft" && l.status === "draft" && (
+                    <div className="shrink-0">
+                      <Checkbox
+                        checked={selectedDraftIds.has(l.id)}
+                        onCheckedChange={() => toggleDraftSelection(l.id)}
+                      />
+                    </div>
+                  )}
+
                   {/* Thumbnail */}
                   <div className="w-32 h-24 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer">
                     <img
@@ -779,6 +887,23 @@ const MyListings = () => {
     navigate(`/analytics/${id}`);
   };
 
+  const handleBulkDeleteDrafts = async (ids: string[]) => {
+    try {
+      const { error } = await supabase.from("listings").delete().in("id", ids);
+      if (error) throw error;
+      
+      toast.success(`Successfully deleted ${ids.length} draft listing(s)`, {
+        className: "bg-green-50 border-green-200 text-green-800",
+      });
+      fetchListings();
+    } catch (error) {
+      console.error("Error deleting drafts:", error);
+      toast.error("Failed to delete drafts. Please try again.", {
+        className: "bg-red-50 border-red-200 text-red-800",
+      });
+    }
+  };
+
   const handleOpenHouseClose = () => {
     setOpenHouseListing(null);
     setBrokerTourListing(null);
@@ -831,6 +956,7 @@ const MyListings = () => {
         onPreview={handlePreview}
         onShare={handleShare}
         onDelete={handleDelete}
+        onBulkDeleteDrafts={handleBulkDeleteDrafts}
         onNewListing={handleNewListing}
         onQuickUpdate={handleQuickUpdate}
         onPhotos={handlePhotos}
