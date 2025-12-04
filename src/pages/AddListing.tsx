@@ -911,12 +911,12 @@ const AddListing = () => {
       longitude: record.longitude ?? prev.longitude,
     }));
 
-    // Update property type if it's condo/co-op
+    // Update property type if it's condo/co-op and clear lot_size (not applicable for condos)
     if (record.property_type && (
       record.property_type.toLowerCase().includes('condo') ||
       record.property_type.toLowerCase().includes('co-op')
     )) {
-      setFormData(prev => ({ ...prev, property_type: 'condo' }));
+      setFormData(prev => ({ ...prev, property_type: 'condo', lot_size: '' }));
     }
     
     // Set address verification status
@@ -1069,13 +1069,22 @@ const AddListing = () => {
   }, [formData.address, formData.city, formData.zip_code, hasAutoFetched]);
 
   const handleStatusChange = (value: string) => {
-    setFormData(prev => ({ ...prev, status: value }));
-    if (value === "coming_soon") {
+    // Ensure status is never empty - default to original or 'new'
+    const newStatus = value || originalStatusRef.current || 'new';
+    setFormData(prev => ({ ...prev, status: newStatus }));
+    if (newStatus === "coming_soon") {
       setFormData(prev => ({ ...prev, auto_activate_on: null }));
-    } else if (value === "new" || value === "active") {
+    } else if (newStatus === "new" || newStatus === "active") {
       setFormData(prev => ({ ...prev, go_live_date: "" }));
     }
   };
+  
+  // Clear lot_size when property type changes to condo/apartment (not applicable)
+  useEffect(() => {
+    if (formData.property_type === 'condo' || formData.property_type === 'apartment') {
+      setFormData(prev => ({ ...prev, lot_size: '' }));
+    }
+  }, [formData.property_type]);
 
   const handleFileSelect = async (files: FileList | null, type: 'photos' | 'floorplans' | 'documents') => {
     if (!files) return;
@@ -1437,7 +1446,10 @@ const AddListing = () => {
     bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
     bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
     square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
-    lot_size: formData.lot_size ? parseFloat(formData.lot_size) : null,
+    // Set lot_size to null for condos/apartments (not applicable)
+    lot_size: (formData.property_type === 'condo' || formData.property_type === 'apartment') 
+      ? null 
+      : (formData.lot_size ? parseFloat(formData.lot_size) : null),
     year_built: formData.year_built ? parseInt(formData.year_built) : null,
     description: formData.description || null,
     
@@ -1745,6 +1757,8 @@ const AddListing = () => {
       }
 
       // Prepare data for validation
+      // Exclude lot_size for condos/apartments (not applicable)
+      const isCondoOrApartment = formData.property_type === 'condo' || formData.property_type === 'apartment';
       const dataToValidate = {
         address: formData.address,
         city: formData.city,
@@ -1756,7 +1770,8 @@ const AddListing = () => {
         bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : undefined,
         square_feet: formData.square_feet ? parseInt(formData.square_feet) : undefined,
         year_built: formData.year_built ? parseInt(formData.year_built) : undefined,
-        lot_size: formData.lot_size ? parseFloat(formData.lot_size) : undefined,
+        // Skip lot_size validation for condos/apartments
+        lot_size: isCondoOrApartment ? undefined : (formData.lot_size ? parseFloat(formData.lot_size) : undefined),
         description: formData.description || undefined,
         latitude: formData.latitude,
         longitude: formData.longitude,
