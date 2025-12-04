@@ -9,12 +9,17 @@ import { Loader2 } from 'lucide-react';
 type Photo = {
   url: string;
   order: number;
+  name?: string;
 };
 
-const ManageListingPhotos: React.FC = () => {
+interface ManageListingPhotosProps {
+  mode?: 'photos' | 'floorPlans';
+}
+
+const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photos' }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [items, setItems] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -22,38 +27,62 @@ const ManageListingPhotos: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Mode-specific configuration
+  const config = {
+    photos: {
+      title: 'Manage Photos',
+      description: 'Drag photos to reorder. First photo will be the main image.',
+      dbField: 'photos',
+      storageBucket: 'listing-photos',
+      emptyMessage: 'No photos uploaded yet.',
+      uploadLabel: 'Upload More Photos',
+      mainLabel: '📌 Main Photo',
+      itemLabel: 'Photo',
+    },
+    floorPlans: {
+      title: 'Manage Floor Plans',
+      description: 'Drag floor plans to reorder.',
+      dbField: 'floor_plans',
+      storageBucket: 'listing-floorplans',
+      emptyMessage: 'No floor plans uploaded yet.',
+      uploadLabel: 'Upload More Floor Plans',
+      mainLabel: '📌 Primary Floor Plan',
+      itemLabel: 'Floor Plan',
+    },
+  }[mode];
+
   useEffect(() => {
     if (!id) {
       navigate('/agent/listings');
       return;
     }
-    fetchPhotos();
-  }, [id]);
+    fetchItems();
+  }, [id, mode]);
 
-  const fetchPhotos = async () => {
+  const fetchItems = async () => {
     setLoadError(false);
     try {
       const { data, error } = await supabase
         .from('listings')
-        .select('photos')
+        .select(config.dbField)
         .eq('id', id)
         .single();
 
       if (error) throw error;
 
-      const photosData = (data?.photos as any[]) || [];
+      const itemsData = ((data as any)?.[config.dbField] as any[]) || [];
       
       // Handle both formats: array of strings (old) or array of objects (new)
-      const normalizedPhotos = photosData.map((item, index) => {
+      const normalizedItems = itemsData.map((item, index) => {
         if (typeof item === 'string') {
           return { url: item, order: index };
         }
-        return item;
+        return { ...item, order: item.order ?? index };
       });
       
-      setPhotos(normalizedPhotos.sort((a, b) => a.order - b.order));
+      setItems(normalizedItems.sort((a, b) => a.order - b.order));
     } catch (error: any) {
-      console.error('Error fetching photos:', error);
+      console.error(`Error fetching ${mode}:`, error);
       setLoadError(true);
     } finally {
       setLoading(false);
@@ -74,13 +103,13 @@ const ManageListingPhotos: React.FC = () => {
       return;
     }
 
-    const updated = [...photos];
+    const updated = [...items];
     const [moved] = updated.splice(dragIndex, 1);
     updated.splice(index, 0, moved);
 
     // Reassign order values
     const reOrdered = updated.map((p, i) => ({ ...p, order: i }));
-    setPhotos(reOrdered);
+    setItems(reOrdered);
     setDragIndex(null);
   };
 
@@ -101,9 +130,9 @@ const ManageListingPhotos: React.FC = () => {
   };
 
   const handleDeleteOne = (index: number) => {
-    const updated = photos.filter((_, i) => i !== index);
+    const updated = items.filter((_, i) => i !== index);
     const reOrdered = updated.map((p, i) => ({ ...p, order: i }));
-    setPhotos(reOrdered);
+    setItems(reOrdered);
     setSelectedIndexes(prev => {
       const next = new Set(prev);
       next.delete(index);
@@ -114,26 +143,26 @@ const ManageListingPhotos: React.FC = () => {
   const handleDeleteSelected = () => {
     if (selectedIndexes.size === 0) return;
     
-    const updated = photos.filter((_, i) => !selectedIndexes.has(i));
+    const updated = items.filter((_, i) => !selectedIndexes.has(i));
     const reOrdered = updated.map((p, i) => ({ ...p, order: i }));
-    setPhotos(reOrdered);
+    setItems(reOrdered);
     setSelectedIndexes(new Set());
   };
 
-  // Save photos to database (without navigating)
-  const savePhotosToDb = async (photosToSave: Photo[]) => {
+  // Save items to database (without navigating)
+  const saveItemsToDb = async (itemsToSave: Photo[]) => {
     if (!id) return false;
     
     try {
       const { error } = await supabase
         .from('listings')
-        .update({ photos: photosToSave })
+        .update({ [config.dbField]: itemsToSave })
         .eq('id', id);
 
       if (error) throw error;
       return true;
     } catch (error: any) {
-      console.error('Error saving photos:', error);
+      console.error(`Error saving ${mode}:`, error);
       return false;
     }
   };
@@ -142,13 +171,13 @@ const ManageListingPhotos: React.FC = () => {
     if (!id) return;
     
     setSaving(true);
-    const success = await savePhotosToDb(photos);
+    const success = await saveItemsToDb(items);
     setSaving(false);
     
     if (success) {
-      toast.success('Photos updated successfully');
+      toast.success(`${config.title.replace('Manage ', '')} updated successfully`);
     } else {
-      toast.error('Failed to save photos');
+      toast.error(`Failed to save ${mode === 'photos' ? 'photos' : 'floor plans'}`);
     }
   };
 
@@ -156,14 +185,14 @@ const ManageListingPhotos: React.FC = () => {
     if (!id) return;
     
     setSaving(true);
-    const success = await savePhotosToDb(photos);
+    const success = await saveItemsToDb(items);
     setSaving(false);
     
     if (success) {
-      toast.success('Photos saved');
+      toast.success(`${config.title.replace('Manage ', '')} saved`);
       navigate(`/agent/listings/edit/${id}`);
     } else {
-      toast.error('Failed to save photos');
+      toast.error(`Failed to save ${mode === 'photos' ? 'photos' : 'floor plans'}`);
     }
   };
 
@@ -171,7 +200,7 @@ const ManageListingPhotos: React.FC = () => {
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
-    const newPhotos: Photo[] = [];
+    const newItems: Photo[] = [];
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -182,36 +211,37 @@ const ManageListingPhotos: React.FC = () => {
       try {
         // Upload to Supabase Storage
         const { error: uploadError } = await supabase.storage
-          .from('listing-photos')
+          .from(config.storageBucket)
           .upload(filePath, file);
 
         if (uploadError) throw uploadError;
 
         // Get public URL
         const { data: { publicUrl } } = supabase.storage
-          .from('listing-photos')
+          .from(config.storageBucket)
           .getPublicUrl(filePath);
 
-        newPhotos.push({
+        newItems.push({
           url: publicUrl,
-          order: photos.length + newPhotos.length
+          order: items.length + newItems.length,
+          name: file.name,
         });
       } catch (error: any) {
-        console.error('Error uploading photo:', error);
+        console.error(`Error uploading ${config.itemLabel.toLowerCase()}:`, error);
         toast.error(`Failed to upload ${file.name}`);
       }
     }
 
-    if (newPhotos.length > 0) {
-      const updatedPhotos = [...photos, ...newPhotos];
-      setPhotos(updatedPhotos);
+    if (newItems.length > 0) {
+      const updatedItems = [...items, ...newItems];
+      setItems(updatedItems);
       
       // Auto-save to database immediately after upload
-      const success = await savePhotosToDb(updatedPhotos);
+      const success = await saveItemsToDb(updatedItems);
       if (success) {
-        toast.success(`${newPhotos.length} photo(s) uploaded and saved`);
+        toast.success(`${newItems.length} ${config.itemLabel.toLowerCase()}(s) uploaded and saved`);
       } else {
-        toast.error('Photos uploaded but failed to save to database');
+        toast.error(`${config.itemLabel}s uploaded but failed to save to database`);
       }
     }
     
@@ -231,9 +261,9 @@ const ManageListingPhotos: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Manage Photos</h1>
+          <h1 className="text-2xl font-bold">{config.title}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Drag photos to reorder. First photo will be the main image.
+            {config.description}
           </p>
         </div>
         <div className="flex gap-2">
@@ -267,7 +297,7 @@ const ManageListingPhotos: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => document.getElementById('photo-upload-manage')?.click()}
+          onClick={() => document.getElementById('item-upload-manage')?.click()}
           disabled={isUploading}
         >
           {isUploading ? (
@@ -278,12 +308,12 @@ const ManageListingPhotos: React.FC = () => {
           ) : (
             <>
               <Upload className="w-4 h-4 mr-2" />
-              Upload More Photos
+              {config.uploadLabel}
             </>
           )}
         </Button>
         <input
-          id="photo-upload-manage"
+          id="item-upload-manage"
           type="file"
           multiple
           accept="image/*"
@@ -301,32 +331,32 @@ const ManageListingPhotos: React.FC = () => {
           Delete Selected ({selectedIndexes.size})
         </Button>
         <span className="text-xs text-muted-foreground ml-auto">
-          {photos.length} photo(s) total
+          {items.length} {config.itemLabel.toLowerCase()}(s) total
         </span>
       </div>
 
       {/* Error State */}
       {loadError && (
         <div className="text-center py-8 border-2 border-dashed border-destructive/50 rounded-lg bg-destructive/5">
-          <p className="text-destructive font-medium">Failed to load photos</p>
+          <p className="text-destructive font-medium">Failed to load {mode === 'photos' ? 'photos' : 'floor plans'}</p>
           <Button
             variant="outline"
             className="mt-4"
-            onClick={fetchPhotos}
+            onClick={fetchItems}
           >
             Try Again
           </Button>
         </div>
       )}
 
-      {/* Photo Grid */}
-      {!loadError && photos.length === 0 ? (
+      {/* Item Grid */}
+      {!loadError && items.length === 0 ? (
         <div className="text-center py-12 border-2 border-dashed rounded-lg">
-          <p className="text-muted-foreground">No photos uploaded yet.</p>
+          <p className="text-muted-foreground">{config.emptyMessage}</p>
           <Button
             variant="outline"
             className="mt-4"
-            onClick={() => document.getElementById('photo-upload-manage')?.click()}
+            onClick={() => document.getElementById('item-upload-manage')?.click()}
             disabled={isUploading}
           >
             {isUploading ? (
@@ -337,14 +367,14 @@ const ManageListingPhotos: React.FC = () => {
             ) : (
               <>
                 <Upload className="w-4 h-4 mr-2" />
-                Upload Photos
+                Upload {config.itemLabel}s
               </>
             )}
           </Button>
         </div>
       ) : !loadError && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {photos.map((photo, index) => (
+          {items.map((item, index) => (
             <div
               key={index}
               draggable
@@ -381,17 +411,17 @@ const ManageListingPhotos: React.FC = () => {
                 <Trash2 className="w-4 h-4" />
               </button>
 
-              {/* Photo */}
+              {/* Image */}
               <img
-                src={photo.url}
-                alt={`Photo ${index + 1}`}
+                src={item.url}
+                alt={`${config.itemLabel} ${index + 1}`}
                 className="w-full h-48 object-cover"
               />
 
               {/* Order Label */}
               <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm px-3 py-2 flex items-center justify-between">
                 <span className="text-sm font-medium">
-                  {index === 0 ? '📌 Main Photo' : `Photo #${index + 1}`}
+                  {index === 0 ? config.mainLabel : `${config.itemLabel} #${index + 1}`}
                 </span>
                 <span className="text-xs text-muted-foreground cursor-move">
                   ⇅ Drag
