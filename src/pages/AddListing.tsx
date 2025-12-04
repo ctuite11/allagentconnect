@@ -65,7 +65,7 @@ const listingSchema = z.object({
   bathrooms: z.number().min(0).max(50).optional(),
   square_feet: z.number().int().min(1).max(100000).optional(),
   year_built: z.number().int().min(1800, "Year built must be 1800 or later").max(new Date().getFullYear() + 1, "Year cannot be in the future").optional().nullable(),
-  lot_size: z.number().min(0).max(10000).optional(),
+  lot_size: z.number().min(0, "Lot size must be 0 or more").max(10000, "Lot size must be less than 10,000 acres").optional().nullable(),
   description: z.string().max(5000).optional(),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),
@@ -327,12 +327,22 @@ const AddListing = () => {
       if (selectedState && actualCity) {
         setSuggestedZipsLoading(true);
         try {
+          // Preserve existing ZIP code from database when editing
+          const existingZip = formData.zip_code;
+          
           // Try static data first
           if (hasZipCodeData(actualCity, selectedState)) {
             const staticZips = getZipCodesForCity(actualCity, selectedState);
-            setSuggestedZips(staticZips);
-            setAvailableZips(staticZips);
-            setFormData(prev => ({ ...prev, city: actualCity, zip_code: "" }));
+            // Include existing ZIP if not in list (for edit mode)
+            const allZips = existingZip && !staticZips.includes(existingZip) 
+              ? [...staticZips, existingZip] 
+              : staticZips;
+            setSuggestedZips(allZips);
+            setAvailableZips(allZips);
+            // Don't clear ZIP in edit mode
+            if (!existingZip) {
+              setFormData(prev => ({ ...prev, city: actualCity }));
+            }
             setSuggestedZipsLoading(false);
             return;
           }
@@ -343,9 +353,14 @@ const AddListing = () => {
               body: { state: selectedState, city: actualCity }
             });
             if (!error && data?.zips?.length > 0) {
-              setSuggestedZips(data.zips);
-              setAvailableZips(data.zips);
-              setFormData(prev => ({ ...prev, city: actualCity, zip_code: "" }));
+              const allZips = existingZip && !data.zips.includes(existingZip)
+                ? [...data.zips, existingZip]
+                : data.zips;
+              setSuggestedZips(allZips);
+              setAvailableZips(allZips);
+              if (!existingZip) {
+                setFormData(prev => ({ ...prev, city: actualCity }));
+              }
               setSuggestedZipsLoading(false);
               return;
             }
@@ -360,9 +375,14 @@ const AddListing = () => {
               const data = await response.json();
               const zips = data.places?.map((place: any) => place['post code']) || [];
               if (zips.length > 0) {
-                setSuggestedZips(zips);
-                setAvailableZips(zips);
-                setFormData(prev => ({ ...prev, city: actualCity, zip_code: "" }));
+                const allZips = existingZip && !zips.includes(existingZip)
+                  ? [...zips, existingZip]
+                  : zips;
+                setSuggestedZips(allZips);
+                setAvailableZips(allZips);
+                if (!existingZip) {
+                  setFormData(prev => ({ ...prev, city: actualCity }));
+                }
                 setSuggestedZipsLoading(false);
                 return;
               }
@@ -372,24 +392,39 @@ const AddListing = () => {
           }
           
           // No ZIPs found - allow manual entry without error
-          setSuggestedZips([]);
-          setAvailableZips([]);
-          setFormData(prev => ({ ...prev, city: actualCity, zip_code: "" }));
+          // But preserve existing ZIP if we have one
+          if (existingZip) {
+            setSuggestedZips([existingZip]);
+            setAvailableZips([existingZip]);
+          } else {
+            setSuggestedZips([]);
+            setAvailableZips([]);
+            setFormData(prev => ({ ...prev, city: actualCity }));
+          }
         } catch (error) {
           console.error("Error fetching ZIP codes:", error);
           // Don't show error toast - just allow manual entry
-          setSuggestedZips([]);
-          setAvailableZips([]);
+          // Preserve existing ZIP if we have one
+          if (formData.zip_code) {
+            setSuggestedZips([formData.zip_code]);
+            setAvailableZips([formData.zip_code]);
+          } else {
+            setSuggestedZips([]);
+            setAvailableZips([]);
+          }
         } finally {
           setSuggestedZipsLoading(false);
         }
       } else {
         setSuggestedZips([]);
-        setFormData(prev => ({ ...prev, zip_code: "" }));
+        // Don't clear ZIP if we have one (edit mode)
+        if (!formData.zip_code) {
+          setFormData(prev => ({ ...prev, zip_code: "" }));
+        }
       }
     };
     fetchZipCodes();
-  }, [selectedState, cityChoice, customCity]);
+  }, [selectedState, cityChoice]);
 
   const toggleCityExpansion = (city: string) => {
     setExpandedCities(prev => {
@@ -502,11 +537,14 @@ const AddListing = () => {
         // Set form data from loaded listing
         // Store original values for change tracking in edit mode
         originalPriceRef.current = data.price || null;
-        originalStatusRef.current = data.status || null;
+        originalStatusRef.current = (data.status || "new").toLowerCase();
 
+        // Normalize status to lowercase to match Select options
+        const normalizedStatus = (data.status || "new").toLowerCase();
+        
         setFormData(prev => ({
           ...prev,
-          status: data.status || "new",
+          status: normalizedStatus,
           listing_type: data.listing_type || "for_sale",
           property_type: data.property_type || "single_family",
           address: data.address || "",
@@ -1860,7 +1898,12 @@ const AddListing = () => {
         toast.success("Listing created successfully!");
       }
 
-      navigate("/agent-dashboard", { state: { reload: true } });
+      // Navigate to My Listings in edit mode, dashboard for new listings
+      if (isEditMode) {
+        navigate("/agent/listings");
+      } else {
+        navigate("/agent-dashboard", { state: { reload: true } });
+      }
     } catch (error: any) {
       console.error("Error creating listing:", error);
       if (error instanceof z.ZodError) {
