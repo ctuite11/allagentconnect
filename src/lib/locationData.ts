@@ -32,18 +32,14 @@ export function getCitiesForStateAndCounty(state: string, county?: string | null
     source = 'state';
   }
 
-  // Always add "Other" as fallback option
-  const cityOptions: CityOption[] = [
-    ...cities.map(name => ({ name, source })),
-    { name: 'Other', source: 'fallback' }
-  ];
+  // Deduplicate cities using Set
+  const uniqueCities = [...new Set(cities)];
+  
+  // Create city options without "Other" option
+  const cityOptions: CityOption[] = uniqueCities.map(name => ({ name, source }));
 
-  // Sort alphabetically, keeping "Other" at the end
-  return cityOptions.sort((a, b) => {
-    if (a.name === 'Other') return 1;
-    if (b.name === 'Other') return -1;
-    return a.name.localeCompare(b.name);
-  });
+  // Sort alphabetically
+  return cityOptions.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /**

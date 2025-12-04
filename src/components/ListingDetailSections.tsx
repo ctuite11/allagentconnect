@@ -57,7 +57,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Info className="w-5 h-5" />
-            Features & Amenities
+            Property Features
           </CardTitle>
         </CardHeader>
         <CardContent>
