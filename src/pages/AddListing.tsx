@@ -546,10 +546,14 @@ const AddListing = () => {
         // Set form data from loaded listing
         // Store original values for change tracking in edit mode
         originalPriceRef.current = data.price || null;
-        originalStatusRef.current = (data.status || "new").toLowerCase();
-
+        
         // Normalize status to lowercase to match Select options
-        const normalizedStatus = (data.status || "new").toLowerCase();
+        // If status is "draft", convert to "new" (draft isn't a valid UI option for edit)
+        let normalizedStatus = (data.status || "new").toLowerCase();
+        if (normalizedStatus === "draft") {
+          normalizedStatus = "new";
+        }
+        originalStatusRef.current = normalizedStatus;
         
         setFormData(prev => ({
           ...prev,
@@ -1785,9 +1789,11 @@ const AddListing = () => {
       const uploadedFiles = await uploadFiles();
 
       // Use centralized helper to build payload (same as handleSaveDraft for consistency)
+      // When publishing, ensure we never save "draft" - default to "new" if somehow still draft
+      const statusForPublish = (formData.status === "draft" || !formData.status) ? "new" : formData.status;
       const listingData = buildListingDataFromForm(
         { photos: uploadedFiles.photos, floorPlans: uploadedFiles.floorPlans, documents: uploadedFiles.documents },
-        publishNow ? formData.status : "draft"
+        publishNow ? statusForPublish : "draft"
       );
       
       // Override with validated data for consistency
