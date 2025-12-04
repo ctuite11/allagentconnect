@@ -227,19 +227,17 @@ function MyListingsView({
   };
 
   return (
-    <div className="flex-1 container mx-auto p-6 space-y-4">
+    <div className="flex-1 container mx-auto p-6 pt-8 space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">My Listings</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your active, pending, and past listings from one place.
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">My Listings</h1>
+        <p className="text-sm text-muted-foreground">
+          Manage your active, pending, and past listings from one place.
+        </p>
       </div>
 
       {/* New Listing Button Row */}
-      <div className="flex items-center justify-between">
+      <div className="mb-2">
         <button
           onClick={onNewListing}
           className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition"
@@ -247,6 +245,25 @@ function MyListingsView({
           <Plus className="h-4 w-4" />
           New Listing
         </button>
+      </div>
+
+      {/* Status Tabs + Grid Toggle on same row */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap gap-2">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveStatus(tab.value)}
+              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
+                activeStatus === tab.value
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-foreground border-border hover:bg-accent"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
         {/* View toggle */}
         <div className="flex items-center gap-1 border border-border rounded-lg p-1 bg-muted">
@@ -267,23 +284,6 @@ function MyListingsView({
             <ListIcon size={16} />
           </button>
         </div>
-      </div>
-
-      {/* Status Tabs - smaller buttons */}
-      <div className="flex flex-wrap gap-2">
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setActiveStatus(tab.value)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-              activeStatus === tab.value
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background text-foreground border-border hover:bg-accent"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
       </div>
 
       {/* Bulk Delete Confirmation Dialog */}
