@@ -76,12 +76,14 @@ const AddListing = () => {
   const { id: listingId } = useParams<{ id: string }>();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoadingListing, setIsLoadingListing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [autoSaving, setAutoSaving] = useState(false);
   const [autoFillLoading, setAutoFillLoading] = useState(false);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
   const [attomId, setAttomId] = useState<string | null>(null);
   const [attomResults, setAttomResults] = useState<any[]>([]);
   const [isAttomModalOpen, setIsAttomModalOpen] = useState(false);
@@ -450,6 +452,7 @@ const AddListing = () => {
 
   // Function to load existing listing data
   const loadExistingListing = async (id: string) => {
+    setIsLoadingListing(true);
     try {
       console.log('[AddListing] Loading existing listing:', id);
       const { data, error } = await supabase
@@ -460,6 +463,8 @@ const AddListing = () => {
       
       if (error) {
         console.error('[AddListing] Error loading listing:', error);
+        toast.error('Failed to load listing data');
+        setIsLoadingListing(false);
         return;
       }
       
@@ -576,9 +581,13 @@ const AddListing = () => {
         }
         
         setHasUnsavedChanges(false);
+        console.log('[AddListing] Listing data loaded successfully');
       }
     } catch (err) {
       console.error('[AddListing] Error in loadExistingListing:', err);
+      toast.error('Failed to load listing data');
+    } finally {
+      setIsLoadingListing(false);
     }
   };
 
@@ -916,7 +925,7 @@ const AddListing = () => {
   const handleFileSelect = async (files: FileList | null, type: 'photos' | 'floorplans' | 'documents') => {
     if (!files) return;
     
-    // For photos, navigate to photo management page
+    // For photos, upload directly with spinner
     if (type === 'photos') {
       let targetListingId = listingId || draftId;
       
@@ -930,63 +939,95 @@ const AddListing = () => {
         toast.success('Draft listing created');
       }
       
-      // Upload photos to storage
-      const uploadedPhotos: { url: string; order: number }[] = [];
+      // Set uploading state
+      setIsUploadingPhotos(true);
       
-      // Get existing photos count for proper ordering
-      const existingCount = photos.length;
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const filePath = `${targetListingId}/${Date.now()}_${file.name}`;
+      try {
+        // Upload photos to storage
+        const uploadedPhotos: { url: string; order: number }[] = [];
         
-        try {
-          const { error: uploadError } = await supabase.storage
-            .from('listing-photos')
-            .upload(filePath, file);
+        // Get existing photos count for proper ordering
+        const existingCount = photos.length;
+        let uploadErrors = 0;
+        
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const filePath = `${targetListingId}/${Date.now()}_${file.name}`;
           
-          if (uploadError) throw uploadError;
-          
-          const { data: { publicUrl } } = supabase.storage
-            .from('listing-photos')
-            .getPublicUrl(filePath);
-          
-          uploadedPhotos.push({ url: publicUrl, order: existingCount + i });
-        } catch (error) {
-          console.error('Error uploading photo:', error);
-          toast.error(`Failed to upload ${file.name}`);
+          try {
+            const { error: uploadError } = await supabase.storage
+              .from('listing-photos')
+              .upload(filePath, file);
+            
+            if (uploadError) throw uploadError;
+            
+            const { data: { publicUrl } } = supabase.storage
+              .from('listing-photos')
+              .getPublicUrl(filePath);
+            
+            uploadedPhotos.push({ url: publicUrl, order: existingCount + i });
+          } catch (error) {
+            console.error('[AddListing] Error uploading photo:', {
+              listingId: targetListingId,
+              fileName: file.name,
+              error
+            });
+            uploadErrors++;
+          }
         }
-      }
-      
-      // Save photos to database (merge with existing)
-      if (uploadedPhotos.length > 0) {
-        try {
-          // Get existing photos first
-          const { data: existingData } = await supabase
-            .from('listings')
-            .select('photos')
-            .eq('id', targetListingId)
-            .single();
-          
-          const existingPhotos = (existingData?.photos as any[]) || [];
-          const mergedPhotos = [...existingPhotos, ...uploadedPhotos];
-          
-          const { error } = await supabase
-            .from('listings')
-            .update({ photos: mergedPhotos })
-            .eq('id', targetListingId);
-          
-          if (error) throw error;
-          
-          toast.success(`${uploadedPhotos.length} photo(s) uploaded`);
-        } catch (error) {
-          console.error('Error saving photos:', error);
-          toast.error('Failed to save photos');
+        
+        // Save photos to database (merge with existing)
+        if (uploadedPhotos.length > 0) {
+          try {
+            // Get existing photos first
+            const { data: existingData } = await supabase
+              .from('listings')
+              .select('photos')
+              .eq('id', targetListingId)
+              .single();
+            
+            const existingPhotos = (existingData?.photos as any[]) || [];
+            const mergedPhotos = [...existingPhotos, ...uploadedPhotos];
+            
+            const { error } = await supabase
+              .from('listings')
+              .update({ photos: mergedPhotos })
+              .eq('id', targetListingId);
+            
+            if (error) {
+              console.error('[AddListing] Error saving photos to database:', {
+                listingId: targetListingId,
+                photoCount: uploadedPhotos.length,
+                error
+              });
+              throw error;
+            }
+            
+            // Update local photo state with the merged photos
+            const newLocalPhotos: FileWithPreview[] = mergedPhotos.map((photo: any, index: number) => ({
+              file: new File([], ''),
+              preview: typeof photo === 'string' ? photo : photo.url,
+              id: `existing-${index}`,
+              uploaded: true,
+              url: typeof photo === 'string' ? photo : photo.url
+            }));
+            setPhotos(newLocalPhotos);
+            
+            if (uploadErrors > 0) {
+              toast.warning(`${uploadedPhotos.length} photo(s) uploaded, ${uploadErrors} failed`);
+            } else {
+              toast.success(`${uploadedPhotos.length} photo(s) uploaded`);
+            }
+          } catch (error) {
+            console.error('[AddListing] Error saving photos:', error);
+            toast.error('Photo upload failed, please try again');
+          }
+        } else if (uploadErrors > 0) {
+          toast.error('Photo upload failed, please try again');
         }
+      } finally {
+        setIsUploadingPhotos(false);
       }
-      
-      // Navigate to photo management page
-      navigate(`/agent/listings/${targetListingId}/photos`);
       return;
     }
     
@@ -1569,10 +1610,13 @@ const AddListing = () => {
     }
   };
 
-  if (loading) {
+  if (loading || isLoadingListing) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen flex-col gap-4">
         <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="text-muted-foreground">
+          {isLoadingListing ? 'Loading listing data...' : 'Checking authentication...'}
+        </p>
       </div>
     );
   }
@@ -2951,14 +2995,25 @@ const AddListing = () => {
                           type="button"
                           variant="outline"
                           onClick={() => document.getElementById('photo-upload')?.click()}
+                          disabled={isUploadingPhotos}
                         >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload Photos
+                          {isUploadingPhotos ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4 mr-2" />
+                              Upload Photos
+                            </>
+                          )}
                         </Button>
                         <Button
                           type="button"
                           variant="outline"
                           onClick={handleNavigateToManagePhotos}
+                          disabled={isUploadingPhotos}
                         >
                           Manage Photos
                         </Button>
@@ -2972,6 +3027,7 @@ const AddListing = () => {
                       accept="image/*"
                       onChange={(e) => handleFileSelect(e.target.files, 'photos')}
                       className="hidden"
+                      disabled={isUploadingPhotos}
                     />
                     
                     {/* Display existing photos */}
