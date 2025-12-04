@@ -512,44 +512,30 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Property Features */}
-              {listing.property_features && listing.property_features.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Property Features</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {listing.property_features.map((feature, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary" />
-                          <span className="text-sm">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Amenities */}
-              {listing.amenities && listing.amenities.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Amenities</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {listing.amenities.map((amenity, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary" />
-                          <span className="text-sm">{amenity}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
+              {/* Property Features - combined from property_features + amenities, deduplicated */}
+              {(() => {
+                const features = listing.property_features || [];
+                const amenities = listing.amenities || [];
+                const combined = [...new Set([...features, ...amenities])];
+                if (combined.length === 0) return null;
+                return (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Property Features</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {combined.map((feature, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                            <span className="text-sm">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
               {/* Unit Features */}
               {(listing.disclosures?.find((d: string) => d.startsWith('Floors:')) || 
                 (listing.num_fireplaces !== null && listing.num_fireplaces !== undefined) ||

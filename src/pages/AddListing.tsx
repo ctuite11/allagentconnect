@@ -603,12 +603,15 @@ const AddListing = () => {
         if (data.disclosures && Array.isArray(data.disclosures)) {
           setDisclosures(data.disclosures as string[]);
         }
-        if (data.property_features && Array.isArray(data.property_features)) {
-          setPropertyFeatures(data.property_features as string[]);
-        }
-        if (data.amenities && Array.isArray(data.amenities)) {
-          setAmenities(data.amenities as string[]);
-        }
+        
+        // COMBINE property_features + amenities into one unified set (no duplicates)
+        const dbPropertyFeatures = Array.isArray(data.property_features) ? data.property_features as string[] : [];
+        const dbAmenities = Array.isArray(data.amenities) ? data.amenities as string[] : [];
+        const combinedFeatures = Array.from(new Set([...dbPropertyFeatures, ...dbAmenities]));
+        setPropertyFeatures(combinedFeatures);
+        // Keep amenities in sync for backward compatibility
+        setAmenities(combinedFeatures);
+        
         if (data.deposit_requirements && Array.isArray(data.deposit_requirements)) {
           setDepositRequirements(data.deposit_requirements as string[]);
         }
@@ -620,6 +623,24 @@ const AddListing = () => {
         }
         if (data.pet_options && Array.isArray(data.pet_options)) {
           setPetOptions(data.pet_options as string[]);
+        }
+        
+        // Load lead_paint: stored as string in DB, but UI expects array
+        if (data.lead_paint) {
+          const leadPaintArray = typeof data.lead_paint === 'string'
+            ? data.lead_paint.split(', ').filter(Boolean)
+            : Array.isArray(data.lead_paint) ? data.lead_paint : [];
+          setLeadPaint(leadPaintArray);
+        }
+        
+        // Load handicap_accessible
+        if (data.handicap_accessible !== undefined && data.handicap_accessible !== null) {
+          setHandicapAccessible(data.handicap_accessible);
+        }
+        
+        // Load area_amenities
+        if (Array.isArray(data.area_amenities)) {
+          setAreaAmenities(data.area_amenities as string[]);
         }
         
         // For edit mode: always prevent ATTOM auto-popup
@@ -1371,9 +1392,9 @@ const AddListing = () => {
     year_built: formData.year_built ? parseInt(formData.year_built) : null,
     description: formData.description || null,
     
-    // Features & Amenities
+    // Features & Amenities - write combined set to BOTH columns for backward compatibility
     property_features: propertyFeatures,
-    amenities: amenities,
+    amenities: propertyFeatures, // Same as property_features - unified storage
     area_amenities: areaAmenities.length > 0 ? areaAmenities : null,
     disclosures: disclosures,
     
@@ -1699,91 +1720,35 @@ const AddListing = () => {
       toast.info("Uploading files...");
       const uploadedFiles = await uploadFiles();
 
-      const listingData: any = {
-        agent_id: user.id,
-        status: publishNow ? formData.status : "draft",
-        listing_type: formData.listing_type,
-        address: validatedData.address,
-        city: validatedData.city,
-        state: validatedData.state,
-        zip_code: validatedData.zip_code,
-        county: selectedCounty !== "all" ? selectedCounty : null,
-        neighborhood: formData.neighborhood || null,
-        latitude: validatedData.latitude,
-        longitude: validatedData.longitude,
-        property_type: formData.property_type,
-        bedrooms: validatedData.bedrooms || null,
-        bathrooms: validatedData.bathrooms || null,
-        square_feet: validatedData.square_feet || null,
-        lot_size: validatedData.lot_size || null,
-        year_built: validatedData.year_built || null,
-        price: validatedData.price,
-        description: validatedData.description || null,
-        commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
-        commission_type: formData.commission_type,
-        commission_notes: formData.commission_notes || null,
-        showing_instructions: formData.showing_instructions || null,
-        lockbox_code: formData.lockbox_code || null,
-        appointment_required: formData.appointment_required,
-        showing_contact_name: formData.showing_contact_name || null,
-        showing_contact_phone: formData.showing_contact_phone || null,
-        disclosures: disclosures,
-        property_features: propertyFeatures,
-        amenities: amenities,
-        area_amenities: areaAmenities.length > 0 ? areaAmenities : null,
-        disclosures_other: formData.disclosures_other || null,
-        listing_exclusions: formData.listing_exclusions || null,
-        property_website_url: formData.property_website_url || null,
-        virtual_tour_url: formData.virtual_tour_url || null,
-        video_url: formData.video_url || null,
-        additional_notes: formData.additional_notes || null,
-        photos: uploadedFiles.photos,
-        floor_plans: uploadedFiles.floorPlans,
-        documents: uploadedFiles.documents,
-        attom_id: attomId,
-        annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
-        tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
-        go_live_date: formData.go_live_date || null,
-        auto_activate_days: computedAutoActivateDays,
-        auto_activate_on: computedAutoActivateOn,
-        // New apartment/rental fields
-        unit_number: formData.unit_number || null,
-        building_name: formData.building_name || null,
-      };
-
-      // Add type-specific fields
-      if (formData.listing_type === "for_rent") {
-        listingData.monthly_rent = listingData.price;
-        if (formData.security_deposit) listingData.security_deposit = parseFloat(formData.security_deposit);
-        if (formData.lease_term) listingData.lease_term = formData.lease_term;
-        if (formData.available_date) listingData.available_date = formData.available_date;
-        // New rental-specific fields
-        if (formData.rental_fee) listingData.rental_fee = parseFloat(formData.rental_fee);
-        listingData.deposit_requirements = depositRequirements;
-        listingData.outdoor_space = outdoorSpace;
-        listingData.storage_options = storageOptions;
-        listingData.laundry_type = formData.laundry_type || null;
-        listingData.pets_comment = formData.pets_comment || null;
-        listingData.pet_options = petOptions;
-      }
-
-      // Add disclosures fields
-      listingData.lead_paint = leadPaint;
-      listingData.handicap_accessible = handicapAccessible || null;
+      // Use centralized helper to build payload (same as handleSaveDraft for consistency)
+      const listingData = buildListingDataFromForm(
+        { photos: uploadedFiles.photos, floorPlans: uploadedFiles.floorPlans, documents: uploadedFiles.documents },
+        publishNow ? formData.status : "draft"
+      );
+      
+      // Override with validated data for consistency
+      listingData.address = validatedData.address;
+      listingData.city = validatedData.city;
+      listingData.state = validatedData.state;
+      listingData.zip_code = validatedData.zip_code;
+      listingData.price = validatedData.price;
+      listingData.bedrooms = validatedData.bedrooms || null;
+      listingData.bathrooms = validatedData.bathrooms || null;
+      listingData.square_feet = validatedData.square_feet || null;
+      listingData.lot_size = validatedData.lot_size || null;
+      listingData.year_built = validatedData.year_built || null;
+      listingData.description = validatedData.description || null;
+      
+      // Add auto-activation fields
+      (listingData as any).auto_activate_days = computedAutoActivateDays;
+      (listingData as any).auto_activate_on = computedAutoActivateOn;
 
       // Add multi-family fields if applicable
       if (formData.property_type === "multi_family") {
-        if (formData.num_units) listingData.num_units = parseFloat(formData.num_units);
-        if (formData.gross_income) listingData.gross_income = parseFloat(formData.gross_income);
-        if (formData.operating_expenses) listingData.operating_expenses = parseFloat(formData.operating_expenses);
+        if (formData.num_units) (listingData as any).num_units = parseFloat(formData.num_units);
+        if (formData.gross_income) (listingData as any).gross_income = parseFloat(formData.gross_income);
+        if (formData.operating_expenses) (listingData as any).operating_expenses = parseFloat(formData.operating_expenses);
       }
-
-      // Add list_date and expiration_date to listing data
-      listingData.list_date = formData.list_date || null;
-      listingData.expiration_date = formData.expiration_date || null;
-      
-      // Add listing agreement type
-      listingData.listing_agreement_types = formData.listing_agreement_type ? [formData.listing_agreement_type] : null;
 
       // Determine if we're in edit mode
       const isEditMode = !!listingId;
@@ -2994,182 +2959,180 @@ const AddListing = () => {
                   </div>
                 )}
 
-                {/* Property Features */}
-                <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Property Features</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {[
-                      'Hardwood floors', 'Granite countertops', 'Stainless appliances',
-                      'Updated kitchen', 'Updated bathrooms', 'Fireplace', 'Central air',
-                      'Forced air heating', 'Basement', 'Finished basement', 'Attic',
-                      'Garage', 'Carport', 'Energy efficient', 'Smart home features'
-                    ].map((feature) => (
-                      <div key={feature} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={feature}
-                          checked={propertyFeatures.includes(feature)}
-                          onCheckedChange={(isChecked) => {
-                            if (isChecked === true) {
-                              setPropertyFeatures(prev => Array.from(new Set([...prev, feature])));
-                            } else {
-                              setPropertyFeatures(prev => prev.filter(f => f !== feature));
-                            }
-                          }}
-                        />
-                        <Label htmlFor={feature} className="font-normal cursor-pointer">
-                          {feature}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Property Amenities - Organized into 4 Main Groups */}
+                {/* Property Features - Unified Section */}
                 <div className="space-y-6 border-t pt-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Property Amenities</h3>
-                    
-                    {/* 1. Interior Amenities */}
-                    <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Interior Amenities</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {["Air Conditioning", "Central Air", "Window AC", "Ceiling Fans", "Fireplace", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Home Office", "Mudroom", "In-Home Laundry", "Shared Laundry"].map((amenity) => (
-                          <div key={amenity} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`interior-${amenity}`}
-                              checked={interiorAmenities.includes(amenity)}
-                              onCheckedChange={(isChecked) => {
-                                if (isChecked === true) {
-                                  setInteriorAmenities(prev => Array.from(new Set([...prev, amenity])));
-                                } else {
-                                  setInteriorAmenities(prev => prev.filter((a) => a !== amenity));
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`interior-${amenity}`} className="font-normal cursor-pointer">
-                              {amenity}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 2. Exterior Amenities */}
-                    <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Exterior Amenities</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {["Deck", "Patio", "Porch", "Balcony", "Fenced Yard", "Private Yard", "Garden Area", "Sprinkler System", "Outdoor Shower", "Pool", "Hot Tub", "Shed", "Gazebo", "Fire Pit", "Outdoor Kitchen", "Greenhouse", "Boat Dock (or Dock Rights)"].map((amenity) => (
-                          <div key={amenity} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`exterior-${amenity}`}
-                              checked={exteriorAmenities.includes(amenity)}
-                              onCheckedChange={(isChecked) => {
-                                if (isChecked === true) {
-                                  setExteriorAmenities(prev => Array.from(new Set([...prev, amenity])));
-                                } else {
-                                  setExteriorAmenities(prev => prev.filter((a) => a !== amenity));
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`exterior-${amenity}`} className="font-normal cursor-pointer">
-                              {amenity}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 3. Community Amenities - Only for condo and multi_family */}
-                    {(formData.property_type === "condo" || formData.property_type === "multi_family") && (
-                      <div className="space-y-3 mb-6">
-                        <Label className="text-base font-medium">Community Amenities</Label>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room"].map((amenity) => (
-                            <div key={amenity} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`community-${amenity}`}
-                                checked={communityAmenities.includes(amenity)}
-                                onCheckedChange={(isChecked) => {
-                                  if (isChecked === true) {
-                                    setCommunityAmenities(prev => Array.from(new Set([...prev, amenity])));
-                                  } else {
-                                    setCommunityAmenities(prev => prev.filter((a) => a !== amenity));
-                                  }
-                                }}
-                              />
-                              <Label htmlFor={`community-${amenity}`} className="font-normal cursor-pointer">
-                                {amenity}
-                              </Label>
-                            </div>
-                          ))}
+                  <Label className="text-xl font-semibold">Property Features</Label>
+                  
+                  {/* Basic Features */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Basic Features</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {[
+                        'Hardwood floors', 'Granite countertops', 'Stainless appliances',
+                        'Updated kitchen', 'Updated bathrooms', 'Fireplace', 'Central air',
+                        'Forced air heating', 'Basement', 'Finished basement', 'Attic',
+                        'Garage', 'Carport', 'Energy efficient', 'Smart home features'
+                      ].map((feature) => (
+                        <div key={feature} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={feature}
+                            checked={propertyFeatures.includes(feature)}
+                            onCheckedChange={(isChecked) => {
+                              if (isChecked === true) {
+                                setPropertyFeatures(prev => Array.from(new Set([...prev, feature])));
+                              } else {
+                                setPropertyFeatures(prev => prev.filter(f => f !== feature));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={feature} className="font-normal cursor-pointer">
+                            {feature}
+                          </Label>
                         </div>
-                      </div>
-                    )}
-
-                    {/* 4. Location Amenities */}
-                    <div className="space-y-3 mb-6">
-                      <Label className="text-base font-medium">Location Amenities</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {["Public Transportation", "Walk/Jog Trails", "Public Park", "Playground", "Water View", "Waterfront", "Beach Access", "Marina", "Golf Course", "University Nearby", "Public School Nearby", "Private School Nearby", "Shopping Nearby", "Highway Access"].map((amenity) => (
-                          <div key={amenity} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`location-${amenity}`}
-                              checked={locationAmenities.includes(amenity)}
-                              onCheckedChange={(isChecked) => {
-                                if (isChecked === true) {
-                                  setLocationAmenities(prev => Array.from(new Set([...prev, amenity])));
-                                } else {
-                                  setLocationAmenities(prev => prev.filter((a) => a !== amenity));
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`location-${amenity}`} className="font-normal cursor-pointer">
-                              {amenity}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
+                      ))}
                     </div>
-
-                    {/* Other Amenities Text Field */}
-                    <div className="space-y-2 mb-6">
-                      <Label htmlFor="other_amenities">Other Amenities (optional)</Label>
-                      <Textarea
-                        id="other_amenities"
-                        placeholder="List any additional amenities not covered above..."
-                        value={otherAmenities}
-                        onChange={(e) => setOtherAmenities(e.target.value)}
-                        rows={3}
-                      />
-                    </div>
-
-                    {/* Multi-Family Features - Only show for multi_family */}
-                    {formData.property_type === "multi_family" && (
-                      <div className="space-y-3 mb-6 border-t pt-6">
-                        <Label className="text-base font-medium">Multi-Family Features</Label>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          {["Coin-Op Laundry", "Separate Utilities", "Owner's Unit", "Long-Term Tenant Opportunity", "Strong Rental History", "Lockable Storage Units", "Shared Yard", "Shared Patio/Deck"].map((amenity) => (
-                            <div key={amenity} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`multifamily-${amenity}`}
-                                checked={multiFamilyFeatures.includes(amenity)}
-                                onCheckedChange={(isChecked) => {
-                                  if (isChecked === true) {
-                                    setMultiFamilyFeatures(prev => Array.from(new Set([...prev, amenity])));
-                                  } else {
-                                    setMultiFamilyFeatures(prev => prev.filter((a) => a !== amenity));
-                                  }
-                                }}
-                              />
-                              <Label htmlFor={`multifamily-${amenity}`} className="font-normal cursor-pointer">
-                                {amenity}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
+
+                  {/* Interior Features */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Interior Features</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {["Air Conditioning", "Central Air", "Window AC", "Ceiling Fans", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Home Office", "Mudroom", "In-Home Laundry", "Shared Laundry"].map((feature) => (
+                        <div key={feature} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`interior-${feature}`}
+                            checked={propertyFeatures.includes(feature)}
+                            onCheckedChange={(isChecked) => {
+                              if (isChecked === true) {
+                                setPropertyFeatures(prev => Array.from(new Set([...prev, feature])));
+                              } else {
+                                setPropertyFeatures(prev => prev.filter((a) => a !== feature));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`interior-${feature}`} className="font-normal cursor-pointer">
+                            {feature}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Exterior Features */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Exterior Features</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {["Deck", "Patio", "Porch", "Balcony", "Fenced Yard", "Private Yard", "Garden Area", "Sprinkler System", "Outdoor Shower", "Pool", "Hot Tub", "Shed", "Gazebo", "Fire Pit", "Outdoor Kitchen", "Greenhouse", "Boat Dock (or Dock Rights)"].map((feature) => (
+                        <div key={feature} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`exterior-${feature}`}
+                            checked={propertyFeatures.includes(feature)}
+                            onCheckedChange={(isChecked) => {
+                              if (isChecked === true) {
+                                setPropertyFeatures(prev => Array.from(new Set([...prev, feature])));
+                              } else {
+                                setPropertyFeatures(prev => prev.filter((a) => a !== feature));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`exterior-${feature}`} className="font-normal cursor-pointer">
+                            {feature}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Community Features - Only for condo and multi_family */}
+                  {(formData.property_type === "condo" || formData.property_type === "multi_family") && (
+                    <div className="space-y-3">
+                      <Label className="text-base font-medium">Community Features</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room"].map((feature) => (
+                          <div key={feature} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`community-${feature}`}
+                              checked={propertyFeatures.includes(feature)}
+                              onCheckedChange={(isChecked) => {
+                                if (isChecked === true) {
+                                  setPropertyFeatures(prev => Array.from(new Set([...prev, feature])));
+                                } else {
+                                  setPropertyFeatures(prev => prev.filter((a) => a !== feature));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`community-${feature}`} className="font-normal cursor-pointer">
+                              {feature}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Location Features */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Location Features</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {["Public Transportation", "Walk/Jog Trails", "Public Park", "Playground", "Water View", "Waterfront", "Beach Access", "Marina", "Golf Course", "University Nearby", "Public School Nearby", "Private School Nearby", "Shopping Nearby", "Highway Access"].map((feature) => (
+                        <div key={feature} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`location-${feature}`}
+                            checked={propertyFeatures.includes(feature)}
+                            onCheckedChange={(isChecked) => {
+                              if (isChecked === true) {
+                                setPropertyFeatures(prev => Array.from(new Set([...prev, feature])));
+                              } else {
+                                setPropertyFeatures(prev => prev.filter((a) => a !== feature));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`location-${feature}`} className="font-normal cursor-pointer">
+                            {feature}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Other Features Text Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="other_features">Other Features (optional)</Label>
+                    <Textarea
+                      id="other_features"
+                      placeholder="List any additional features not covered above..."
+                      value={otherAmenities}
+                      onChange={(e) => setOtherAmenities(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* Multi-Family Features - Only show for multi_family */}
+                  {formData.property_type === "multi_family" && (
+                    <div className="space-y-3 border-t pt-6">
+                      <Label className="text-base font-medium">Multi-Family Features</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {["Coin-Op Laundry", "Separate Utilities", "Owner's Unit", "Long-Term Tenant Opportunity", "Strong Rental History", "Lockable Storage Units", "Shared Yard", "Shared Patio/Deck"].map((feature) => (
+                          <div key={feature} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`multifamily-${feature}`}
+                              checked={propertyFeatures.includes(feature)}
+                              onCheckedChange={(isChecked) => {
+                                if (isChecked === true) {
+                                  setPropertyFeatures(prev => Array.from(new Set([...prev, feature])));
+                                } else {
+                                  setPropertyFeatures(prev => prev.filter((a) => a !== feature));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`multifamily-${feature}`} className="font-normal cursor-pointer">
+                              {feature}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Disclosures - Simplified */}
