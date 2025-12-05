@@ -242,12 +242,21 @@ const AddListing = () => {
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [citySearch, setCitySearch] = useState("");
   const [showCityList, setShowCityList] = useState(true);
+  
+  // Flag to prevent cascading useEffects from clearing values during initial data load
+  const isHydratingLocationRef = useRef(false);
 
   // Update available counties when state changes
   useEffect(() => {
     if (selectedState) {
       const counties = getCountiesForState(selectedState);
       setAvailableCounties(counties);
+      
+      // Skip clearing if we're hydrating existing data
+      if (isHydratingLocationRef.current) {
+        return;
+      }
+      
       // For MA, don't default to "all" since we require county selection
       if (selectedState === "MA") {
         setSelectedCounty("");
@@ -266,6 +275,12 @@ const AddListing = () => {
   useEffect(() => {
     if (selectedState) {
       const cityOptions = getCitiesForStateAndCounty(selectedState, selectedCounty);
+      
+      // Skip clearing if we're hydrating existing data
+      if (isHydratingLocationRef.current) {
+        setAvailableCities(cityOptions);
+        return;
+      }
       
       // Clear city choice if it's not in the new filtered list
       const currentCityExists = cityOptions.some(
@@ -532,16 +547,35 @@ const AddListing = () => {
         });
         setDraftId(data.id);
         
+        // Set flag to prevent cascading useEffects from clearing location values
+        isHydratingLocationRef.current = true;
+        
         // Set state/county/city selectors FIRST (order matters for cascading selects)
         if (data.state) {
           setSelectedState(data.state);
+          // Also populate counties for this state immediately
+          const counties = getCountiesForState(data.state);
+          setAvailableCounties(counties);
         }
         if (data.county) {
           setSelectedCounty(data.county);
         }
         if (data.city) {
           setCityChoice(data.city);
+          // Populate cities for this state/county immediately
+          const cityOptions = getCitiesForStateAndCounty(data.state || "", data.county || "all");
+          setAvailableCities(cityOptions);
         }
+        if (data.zip_code) {
+          // Ensure ZIP is in the available list
+          setSuggestedZips([data.zip_code]);
+          setAvailableZips([data.zip_code]);
+        }
+        
+        // Clear the hydration flag after a tick to allow useEffects to run
+        setTimeout(() => {
+          isHydratingLocationRef.current = false;
+        }, 100);
         
         // Set form data from loaded listing
         // Store original values for change tracking in edit mode
