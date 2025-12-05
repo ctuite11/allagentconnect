@@ -116,7 +116,7 @@ const AgentProfileEditor = () => {
   const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
-  const [buyerLeadsExpanded, setBuyerLeadsExpanded] = useState(false);
+  
 
   useEffect(() => {
     checkAuthAndLoadProfile();
@@ -802,104 +802,20 @@ const AgentProfileEditor = () => {
               </CardContent>
             </Card>
 
-            {/* Coverage Areas Section */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5 text-primary" />
-                      Buyer Leads
-                    </CardTitle>
-                    <CardDescription className="mt-1.5">
-                      Define your coverage areas to receive buyer leads (max 3 zip codes)
-                    </CardDescription>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setBuyerLeadsExpanded(prev => !prev)}
-                  >
-                    {buyerLeadsExpanded ? (
-                      <>
-                        <X className="h-4 w-4 mr-2" />
-                        Close
-                      </>
-                    ) : (
-                      <>
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Edit
-                      </>
-                    )}
-                  </Button>
-                </div>
+            {/* Buyer Leads Section */}
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  Buyer Leads
+                </CardTitle>
+                <CardDescription className="mt-1.5">
+                  Define your coverage areas to receive buyer leads (max 3 zip codes)
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Summary view when collapsed */}
-                {!buyerLeadsExpanded && (
-                  <div className="space-y-4">
-                    {/* Coverage Areas Summary */}
-                    <div>
-                      <h3 className="font-semibold text-sm mb-2">Coverage Areas</h3>
-                      {coverageAreas.length === 0 ? (
-                        <p className="text-muted-foreground text-sm">No coverage areas added yet</p>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {coverageAreas.map((area) => (
-                            <div 
-                              key={area.id}
-                              className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full"
-                            >
-                              <MapPin className="h-3 w-3 text-primary" />
-                              <span className="text-sm font-medium">{area.zip_code}</span>
-                              <span className="text-muted-foreground text-xs">
-                                {area.city}, {area.state}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Property Types Summary */}
-                    <div className="pt-4 border-t">
-                      <h3 className="font-semibold text-sm mb-2">Property Types</h3>
-                      {selectedPropertyTypes.length === 0 ? (
-                        <p className="text-muted-foreground text-sm">No property types selected</p>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {selectedPropertyTypes.map((typeValue) => {
-                            const typeLabel = {
-                              single_family: "Single Family",
-                              condo: "Condominium",
-                              townhouse: "Townhouse",
-                              multi_family: "Multi-Family",
-                              land: "Land",
-                              commercial: "Commercial",
-                              residential_rental: "Residential Rental",
-                              commercial_rental: "Commercial Rental"
-                            }[typeValue] || typeValue;
-                            return (
-                              <div 
-                                key={typeValue}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full"
-                              >
-                                <Home className="h-3 w-3 text-primary" />
-                                <span className="text-sm font-medium">{typeLabel}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Expanded edit view */}
-                {buyerLeadsExpanded && (
-                  <>
-                    {/* Add New Coverage Area */}
-                    {coverageAreas.length < 3 && (
+                {/* Add New Coverage Area */}
+                {coverageAreas.length < 3 && (
                       <div className="border-2 border-dashed rounded-xl p-5 space-y-4">
                         <h3 className="font-semibold text-sm flex items-center gap-2">
                           <Plus className="h-4 w-4" />
@@ -1212,8 +1128,6 @@ const AgentProfileEditor = () => {
                         )}
                       </div>
                     </div>
-                  </>
-                )}
               </CardContent>
             </Card>
 
