@@ -1028,7 +1028,17 @@ const AddListing = () => {
 
   const handleConfirmAttomAddress = () => {
     if (attomPendingRecord) {
+      // Capture the agent's unit number BEFORE applying ATTOM data
+      const agentUnit = formData.unit_number;
+      
       applyAttomData(attomPendingRecord);
+      
+      // IMPORTANT: Explicitly re-set the agent's unit number after ATTOM updates
+      // ATTOM must never clear or change a non-empty unit_number
+      if (agentUnit) {
+        setFormData(prev => ({ ...prev, unit_number: agentUnit }));
+      }
+      
       setPublicRecordStatus('success');
       setAttomFetchStatus("Public record data loaded successfully.");
       toast.success("Property data loaded from public records!");
@@ -4001,9 +4011,10 @@ const AddListing = () => {
                 We found this property in public records:
               </p>
 
-              <p className="font-medium text-base bg-muted p-3 rounded-md">
-                {buildAttomAddressString(attomPendingRecord, formData.unit_number)}
-              </p>
+              <div className="font-medium text-base bg-muted p-3 rounded-md">
+                <p>{`${attomPendingRecord.street_address || attomPendingRecord.address?.split(',')[0] || formData.address}${formData.unit_number ? ` #${formData.unit_number}` : ''}`}</p>
+                <p>{`${attomPendingRecord.city || formData.city}, ${attomPendingRecord.state || formData.state} ${attomPendingRecord.zip || formData.zip_code}`}</p>
+              </div>
 
               <p className="text-sm text-muted-foreground mt-3">
                 Is this address correct?
