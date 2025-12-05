@@ -765,8 +765,25 @@ const AddListing = () => {
 
   // Helper to build one-line address string from ATTOM record
   // ATTOM's address field (from oneLine) is already formatted as full address
-  const buildAttomAddressString = (record: any): string => {
-    return record.address || '';
+  // includeFormUnit: when true, appends the user's unit_number from form state
+  const buildAttomAddressString = (record: any, includeFormUnit: boolean = false): string => {
+    const baseAddress = record.address || '';
+    
+    // If we should include the form's unit number (for display purposes)
+    if (includeFormUnit && formData.unit_number) {
+      // Parse the address to insert unit after street but before city
+      // ATTOM returns format like "123 MAIN ST, BOSTON, MA 02109"
+      const commaIndex = baseAddress.indexOf(',');
+      if (commaIndex > 0) {
+        const street = baseAddress.substring(0, commaIndex);
+        const rest = baseAddress.substring(commaIndex);
+        return `${street} #${formData.unit_number}${rest}`;
+      }
+      // Fallback: just append unit at the end
+      return `${baseAddress} #${formData.unit_number}`;
+    }
+    
+    return baseAddress;
   };
 
   const handleAutoFillFromPublicRecords = async (isAutoTrigger = false) => {
@@ -3985,7 +4002,7 @@ const AddListing = () => {
               </p>
 
               <p className="font-medium text-base bg-muted p-3 rounded-md">
-                {buildAttomAddressString(attomPendingRecord)}
+                {buildAttomAddressString(attomPendingRecord, true)}
               </p>
 
               <p className="text-sm text-muted-foreground mt-3">
