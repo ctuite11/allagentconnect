@@ -808,56 +808,6 @@ const AgentProfileEditor = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Property Type Preferences */}
-                <div className="space-y-2">
-                  <Label>Property Types</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue>
-                        {selectedPropertyTypes.length > 0 
-                          ? `${selectedPropertyTypes.length} type(s) selected` 
-                          : "Select property types"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <div className="p-2 space-y-2">
-                        {[
-                          { value: "single_family", label: "Single Family" },
-                          { value: "condo", label: "Condominium" },
-                          { value: "townhouse", label: "Townhouse" },
-                          { value: "multi_family", label: "Multi-Family" },
-                          { value: "land", label: "Land" },
-                          { value: "commercial", label: "Commercial" },
-                          { value: "residential_rental", label: "Residential Rental" },
-                          { value: "commercial_rental", label: "Commercial Rental" },
-                        ].map((type) => (
-                          <div key={type.value} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`pref-${type.value}`}
-                              checked={selectedPropertyTypes.includes(type.value)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setSelectedPropertyTypes([...selectedPropertyTypes, type.value]);
-                                } else {
-                                  setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== type.value));
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`pref-${type.value}`} className="cursor-pointer text-sm">
-                              {type.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </SelectContent>
-                  </Select>
-                  {selectedPropertyTypes.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      {selectedPropertyTypes.length} type(s) selected
-                    </p>
-                  )}
-                </div>
-
                 {/* Add New Coverage Area */}
                 {coverageAreas.length < 3 && (
                   <div className="border-2 border-dashed rounded-xl p-5 space-y-4">
@@ -866,8 +816,8 @@ const AgentProfileEditor = () => {
                       Add Coverage Area
                     </h3>
                     
+                    {/* State & County - Row 1 */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* State */}
                       <div>
                         <Label>State</Label>
                         <Select
@@ -891,7 +841,6 @@ const AgentProfileEditor = () => {
                         </Select>
                       </div>
 
-                      {/* County */}
                       <div>
                         <Label>County (Optional)</Label>
                         <Select
@@ -916,56 +865,102 @@ const AgentProfileEditor = () => {
                       </div>
                     </div>
 
-                    {/* City */}
-                    <div>
-                      <Label>City</Label>
-                      <Select
-                        value={newCoverageCity}
-                        onValueChange={async (value) => {
-                          setNewCoverageCity(value);
-                          setNewCoverageZips(["", "", ""]);
-                          if (!newCoverageState) return;
-                          
-                          setSuggestedZipsLoading(true);
-                          try {
-                            if (hasZipCodeData(value, newCoverageState)) {
-                              const staticZips = getZipCodesForCity(value, newCoverageState);
-                              setSuggestedZips(staticZips);
-                            } else {
-                              const { data, error } = await supabase.functions.invoke('get-city-zips', {
-                                body: { state: newCoverageState, city: value }
-                              });
-                              if (error) throw error;
-                              setSuggestedZips(data?.zips || []);
-                            }
-                          } catch (err) {
-                            console.error('ZIP lookup failed', err);
-                            setSuggestedZips([]);
-                          } finally {
-                            setSuggestedZipsLoading(false);
-                          }
-                        }}
-                        disabled={!newCoverageState}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={!newCoverageState ? "Select state first" : "Select city"} />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[300px]">
-                          {newCoverageState && (() => {
-                            if (newCoverageCounty && hasCountyCityMapping(newCoverageState)) {
-                              const countyCities = getCitiesForCounty(newCoverageState, newCoverageCounty);
-                              if (countyCities.length > 0) {
-                                return countyCities.map((city) => (
-                                  <SelectItem key={city} value={city}>{city}</SelectItem>
-                                ));
+                    {/* City & Property Type - Row 2 */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label>City</Label>
+                        <Select
+                          value={newCoverageCity}
+                          onValueChange={async (value) => {
+                            setNewCoverageCity(value);
+                            setNewCoverageZips(["", "", ""]);
+                            if (!newCoverageState) return;
+                            
+                            setSuggestedZipsLoading(true);
+                            try {
+                              if (hasZipCodeData(value, newCoverageState)) {
+                                const staticZips = getZipCodesForCity(value, newCoverageState);
+                                setSuggestedZips(staticZips);
+                              } else {
+                                const { data, error } = await supabase.functions.invoke('get-city-zips', {
+                                  body: { state: newCoverageState, city: value }
+                                });
+                                if (error) throw error;
+                                setSuggestedZips(data?.zips || []);
                               }
+                            } catch (err) {
+                              console.error('ZIP lookup failed', err);
+                              setSuggestedZips([]);
+                            } finally {
+                              setSuggestedZipsLoading(false);
                             }
-                            return usCitiesByState[newCoverageState]?.map((city) => (
-                              <SelectItem key={city} value={city}>{city}</SelectItem>
-                            ));
-                          })()}
-                        </SelectContent>
-                      </Select>
+                          }}
+                          disabled={!newCoverageState}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={!newCoverageState ? "Select state first" : "Select city"} />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            {newCoverageState && (() => {
+                              if (newCoverageCounty && hasCountyCityMapping(newCoverageState)) {
+                                const countyCities = getCitiesForCounty(newCoverageState, newCoverageCounty);
+                                if (countyCities.length > 0) {
+                                  return countyCities.map((city) => (
+                                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                                  ));
+                                }
+                              }
+                              return usCitiesByState[newCoverageState]?.map((city) => (
+                                <SelectItem key={city} value={city}>{city}</SelectItem>
+                              ));
+                            })()}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label>Property Type</Label>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue>
+                              {selectedPropertyTypes.length > 0 
+                                ? `${selectedPropertyTypes.length} type(s) selected` 
+                                : "Select property types"}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <div className="p-2 space-y-2">
+                              {[
+                                { value: "single_family", label: "Single Family" },
+                                { value: "condo", label: "Condominium" },
+                                { value: "townhouse", label: "Townhouse" },
+                                { value: "multi_family", label: "Multi-Family" },
+                                { value: "land", label: "Land" },
+                                { value: "commercial", label: "Commercial" },
+                                { value: "residential_rental", label: "Residential Rental" },
+                                { value: "commercial_rental", label: "Commercial Rental" },
+                              ].map((type) => (
+                                <div key={type.value} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`pref-${type.value}`}
+                                    checked={selectedPropertyTypes.includes(type.value)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setSelectedPropertyTypes([...selectedPropertyTypes, type.value]);
+                                      } else {
+                                        setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== type.value));
+                                      }
+                                    }}
+                                  />
+                                  <Label htmlFor={`pref-${type.value}`} className="cursor-pointer text-sm">
+                                    {type.label}
+                                  </Label>
+                                </div>
+                              ))}
+                            </div>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
                     {/* Suggested Zip Codes */}
