@@ -815,12 +815,12 @@ const AgentProfileEditor = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Add New Coverage Area */}
-                {coverageAreas.length < 3 && (
-                      <div className="border-2 border-dashed rounded-xl p-5 space-y-4">
-                        <h3 className="font-semibold text-sm flex items-center gap-2">
-                          <Plus className="h-4 w-4" />
-                          Add Coverage Area
-                        </h3>
+                {coverageAreas.length < 3 ? (
+                  <div className="border-2 border-dashed rounded-xl p-5 space-y-4">
+                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Coverage Area
+                    </h3>
                         
                         {/* State & County - Row 1 */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1040,94 +1040,98 @@ const AgentProfileEditor = () => {
                             Add Coverage Area
                           </Button>
                         )}
-                      </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 border-2 border-dashed rounded-xl bg-muted/30">
+                    <p className="text-muted-foreground text-sm">Maximum 3 coverage areas reached</p>
+                  </div>
+                )}
+
+                {/* Existing Coverage Areas */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">Your Coverage Areas</h3>
+                    {coverageAreas.length > 0 && (
+                      <Button variant="outline" size="sm" onClick={handleClearAllCoverageAreas}>
+                        Clear All
+                      </Button>
                     )}
-
-                    {/* Existing Coverage Areas */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">Your Coverage Areas</h3>
-                        {coverageAreas.length > 0 && (
-                          <Button variant="outline" size="sm" onClick={handleClearAllCoverageAreas}>
-                            Clear All
+                  </div>
+                  {coverageAreas.length === 0 ? (
+                    <div className="text-center py-8 border-2 border-dashed rounded-xl">
+                      <MapPin className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+                      <p className="text-muted-foreground">No coverage areas added yet</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {coverageAreas.map((area) => (
+                        <div 
+                          key={area.id}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full group"
+                        >
+                          <MapPin className="h-4 w-4 text-primary" />
+                          <span className="font-medium">{area.zip_code}</span>
+                          <span className="text-muted-foreground text-sm">
+                            {area.city}, {area.state}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteCoverageArea(area.id)}
+                            className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
                           </Button>
-                        )}
-                      </div>
-                      {coverageAreas.length === 0 ? (
-                        <div className="text-center py-8 border-2 border-dashed rounded-xl">
-                          <MapPin className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-                          <p className="text-muted-foreground">No coverage areas added yet</p>
                         </div>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {coverageAreas.map((area) => (
-                            <div 
-                              key={area.id}
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full group"
-                            >
-                              <MapPin className="h-4 w-4 text-primary" />
-                              <span className="font-medium">{area.zip_code}</span>
-                              <span className="text-muted-foreground text-sm">
-                                {area.city}, {area.state}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteCoverageArea(area.id)}
-                                className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      ))}
                     </div>
+                  )}
+                </div>
 
-                    {/* Property Type Preferences */}
-                    <div className="space-y-4 pt-4 border-t">
-                      <h3 className="font-semibold flex items-center gap-2">
-                        <Home className="h-4 w-4 text-primary" />
-                        Property Type Preferences
-                      </h3>
-                      
-                      {/* Display selected property types as badges */}
-                      <div className="flex flex-wrap gap-2">
-                        {selectedPropertyTypes.length === 0 ? (
-                          <p className="text-muted-foreground text-sm">No property types selected. Use the dropdown above to add.</p>
-                        ) : (
-                          selectedPropertyTypes.map((typeValue) => {
-                            const typeLabel = {
-                              single_family: "Single Family",
-                              condo: "Condominium",
-                              townhouse: "Townhouse",
-                              multi_family: "Multi-Family",
-                              land: "Land",
-                              commercial: "Commercial",
-                              residential_rental: "Residential Rental",
-                              commercial_rental: "Commercial Rental"
-                            }[typeValue] || typeValue;
-                            
-                            return (
-                              <div 
-                                key={typeValue}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
-                              >
-                                <span className="font-medium text-sm">{typeLabel}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== typeValue))}
-                                  className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
+                {/* Property Type Preferences */}
+                <div className="space-y-4 pt-4 border-t">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Home className="h-4 w-4 text-primary" />
+                    Property Type Preferences
+                  </h3>
+                  
+                  {/* Display selected property types as badges */}
+                  <div className="flex flex-wrap gap-2">
+                    {selectedPropertyTypes.length === 0 ? (
+                      <p className="text-muted-foreground text-sm">No property types selected. Use the dropdown above to add.</p>
+                    ) : (
+                      selectedPropertyTypes.map((typeValue) => {
+                        const typeLabel = {
+                          single_family: "Single Family",
+                          condo: "Condominium",
+                          townhouse: "Townhouse",
+                          multi_family: "Multi-Family",
+                          land: "Land",
+                          commercial: "Commercial",
+                          residential_rental: "Residential Rental",
+                          commercial_rental: "Commercial Rental"
+                        }[typeValue] || typeValue;
+                        
+                        return (
+                          <div 
+                            key={typeValue}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
+                          >
+                            <span className="font-medium text-sm">{typeLabel}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== typeValue))}
+                              className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
