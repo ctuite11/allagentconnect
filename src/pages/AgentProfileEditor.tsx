@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -34,7 +35,7 @@ import CompanyLogoUpload from "@/components/profile-editor/CompanyLogoUpload";
 import SocialLinksSection from "@/components/profile-editor/SocialLinksSection";
 import IncentivesSection from "@/components/profile-editor/IncentivesSection";
 import TestimonialCard from "@/components/profile-editor/TestimonialCard";
-import PropertyTypePreferences from "@/components/PropertyTypePreferences";
+
 
 interface SocialLinks {
   linkedin: string;
@@ -109,6 +110,7 @@ const AgentProfileEditor = () => {
   const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
   const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
 
   useEffect(() => {
     checkAuthAndLoadProfile();
@@ -200,6 +202,17 @@ const AgentProfileEditor = () => {
 
       if (coverageError) throw coverageError;
       setCoverageAreas(coverageData || []);
+
+      // Load property type preferences
+      const { data: prefData } = await supabase
+        .from("notification_preferences")
+        .select("property_types")
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      if (prefData?.property_types && Array.isArray(prefData.property_types)) {
+        setSelectedPropertyTypes(prefData.property_types as string[]);
+      }
     } catch (error) {
       console.error("Error loading profile:", error);
       toast.error("Failed to load profile");
@@ -239,6 +252,15 @@ const AgentProfileEditor = () => {
         .eq("id", session.user.id);
 
       if (error) throw error;
+
+      // Save property type preferences
+      await supabase
+        .from("notification_preferences")
+        .upsert({
+          user_id: session.user.id,
+          property_types: selectedPropertyTypes,
+        }, { onConflict: 'user_id' });
+
       toast.success("Profile saved successfully!");
       return session.user.id;
     } catch (error) {
@@ -787,11 +809,54 @@ const AgentProfileEditor = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Property Type Preferences */}
-                {userId && (
-                  <div className="mb-2">
-                    <PropertyTypePreferences agentId={userId} />
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label>Property Types</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue>
+                        {selectedPropertyTypes.length > 0 
+                          ? `${selectedPropertyTypes.length} type(s) selected` 
+                          : "Select property types"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div className="p-2 space-y-2">
+                        {[
+                          { value: "single_family", label: "Single Family" },
+                          { value: "condo", label: "Condominium" },
+                          { value: "townhouse", label: "Townhouse" },
+                          { value: "multi_family", label: "Multi-Family" },
+                          { value: "land", label: "Land" },
+                          { value: "commercial", label: "Commercial" },
+                          { value: "residential_rental", label: "Residential Rental" },
+                          { value: "commercial_rental", label: "Commercial Rental" },
+                        ].map((type) => (
+                          <div key={type.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`pref-${type.value}`}
+                              checked={selectedPropertyTypes.includes(type.value)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedPropertyTypes([...selectedPropertyTypes, type.value]);
+                                } else {
+                                  setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== type.value));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`pref-${type.value}`} className="cursor-pointer text-sm">
+                              {type.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                  {selectedPropertyTypes.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {selectedPropertyTypes.length} type(s) selected
+                    </p>
+                  )}
+                </div>
 
                 {/* Add New Coverage Area */}
                 {coverageAreas.length < 3 && (
