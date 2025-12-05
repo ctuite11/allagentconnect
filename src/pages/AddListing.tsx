@@ -972,19 +972,51 @@ const AddListing = () => {
       setFormData(prev => ({ ...prev, zip_code: newZip }));
     }
     
-    // Fill in property details
-    setFormData(prev => ({
-      ...prev,
-      bedrooms: record.beds ? record.beds.toString() : prev.bedrooms,
-      bathrooms: record.baths ? record.baths.toString() : prev.bathrooms,
-      square_feet: record.sqft ? record.sqft.toString() : prev.square_feet,
-      lot_size: record.lotSizeSqft ? record.lotSizeSqft.toString() : prev.lot_size,
-      year_built: record.yearBuilt ? record.yearBuilt.toString() : prev.year_built,
-      annual_property_tax: record.taxAmount ? record.taxAmount.toString() : prev.annual_property_tax,
-      tax_year: record.taxYear ? record.taxYear.toString() : prev.tax_year,
-      latitude: record.latitude ?? prev.latitude,
-      longitude: record.longitude ?? prev.longitude,
-    }));
+    // Fill in property details - only fill if blank and ATTOM has data
+    // Use functional update to ensure we get the latest form state
+    setFormData(prev => {
+      const updates: Partial<typeof prev> = {};
+      
+      // Bedrooms - only fill if empty
+      if (!prev.bedrooms && record.beds) {
+        updates.bedrooms = record.beds.toString();
+      }
+      // Bathrooms - only fill if empty
+      if (!prev.bathrooms && record.baths) {
+        updates.bathrooms = record.baths.toString();
+      }
+      // Square feet - only fill if empty
+      if (!prev.square_feet && record.sqft) {
+        updates.square_feet = record.sqft.toString();
+      }
+      // Lot size - only fill if empty (and not a condo)
+      if (!prev.lot_size && record.lotSizeSqft && prev.property_type !== 'condo') {
+        updates.lot_size = record.lotSizeSqft.toString();
+      }
+      // Year built - only fill if empty
+      if (!prev.year_built && record.yearBuilt) {
+        updates.year_built = record.yearBuilt.toString();
+      }
+      // Tax amount - only fill if empty
+      if (!prev.annual_property_tax && record.taxAmount) {
+        updates.annual_property_tax = record.taxAmount.toString();
+      }
+      // Tax year - only fill if empty
+      if (!prev.tax_year && record.taxYear) {
+        updates.tax_year = record.taxYear.toString();
+      }
+      // Latitude/longitude - always update if ATTOM provides them
+      if (record.latitude != null) {
+        updates.latitude = record.latitude;
+      }
+      if (record.longitude != null) {
+        updates.longitude = record.longitude;
+      }
+      
+      console.log('[ATTOM] Property details being applied:', updates);
+      
+      return { ...prev, ...updates };
+    });
 
     // Update property type if it's condo/co-op and clear lot_size (not applicable for condos)
     if (record.property_type && (

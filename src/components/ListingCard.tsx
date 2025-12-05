@@ -332,8 +332,8 @@ const ListingCard = ({
     return upcoming[0] || null;
   };
   const getStatusChangeBanner = () => {
-    if (statusHistory.length === 0) return null;
-    const currentStatus = statusHistory[0]?.new_status;
+    // Check current listing status directly (not just from history)
+    const currentStatus = listing.status;
 
     // Check for Coming Soon status
     if (currentStatus === 'coming_soon') {
@@ -344,27 +344,41 @@ const ListingCard = ({
       };
     }
 
-    // Check if listing is new (not a relisting and active within last 7 days)
-    // NEW shows if: first time active OR relisted after 30 days OR relisted with different agent
-    const allActiveStatuses = statusHistory.filter(h => h.new_status === 'active');
-    if (currentStatus === 'active' && !listing.is_relisting) {
-      // This is either a brand new listing or relisted after 30+ days or with different agent
-      if (allActiveStatuses.length >= 1) {
-        const mostRecentActiveDate = new Date(allActiveStatuses[0].changed_at);
-        const daysSinceActive = Math.ceil((Date.now() - mostRecentActiveDate.getTime()) / (1000 * 60 * 60 * 24));
-        if (daysSinceActive <= 7) {
-          return {
-            text: "NEW LISTING",
-            color: "bg-blue-600",
-            iconType: "sparkles" as const
-          };
+    // Check if listing is "new" status OR recently became active (not a relisting)
+    // Show NEW LISTING banner for: status='new' OR status='active' within 7 days
+    const isNewStatus = currentStatus === 'new';
+    const isActiveStatus = currentStatus === 'active';
+    
+    if ((isNewStatus || isActiveStatus) && !listing.is_relisting) {
+      // For 'new' status, always show the banner
+      if (isNewStatus) {
+        return {
+          text: "NEW LISTING",
+          color: "bg-blue-600",
+          iconType: "sparkles" as const
+        };
+      }
+      
+      // For 'active' status, check if it became active recently (within 7 days)
+      if (isActiveStatus && statusHistory.length > 0) {
+        const allActiveStatuses = statusHistory.filter(h => h.new_status === 'active');
+        if (allActiveStatuses.length >= 1) {
+          const mostRecentActiveDate = new Date(allActiveStatuses[0].changed_at);
+          const daysSinceActive = Math.ceil((Date.now() - mostRecentActiveDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysSinceActive <= 7) {
+            return {
+              text: "NEW LISTING",
+              color: "bg-blue-600",
+              iconType: "sparkles" as const
+            };
+          }
         }
       }
     }
 
     // Check if back on market (was pending, under_contract, withdrawn, or cancelled and now active again)
     // This applies when status changes within the same listing (not creating a new listing)
-    if (statusHistory.length >= 2 && currentStatus === 'active') {
+    if (statusHistory.length >= 2 && isActiveStatus) {
       const previousStatus = statusHistory[1]?.new_status;
       const changeDate = new Date(statusHistory[0].changed_at);
       const daysSinceChange = Math.ceil((Date.now() - changeDate.getTime()) / (1000 * 60 * 60 * 24));
