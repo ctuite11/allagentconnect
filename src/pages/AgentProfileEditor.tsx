@@ -34,6 +34,7 @@ import CompanyLogoUpload from "@/components/profile-editor/CompanyLogoUpload";
 import SocialLinksSection from "@/components/profile-editor/SocialLinksSection";
 import IncentivesSection from "@/components/profile-editor/IncentivesSection";
 import TestimonialCard from "@/components/profile-editor/TestimonialCard";
+import PropertyTypePreferences from "@/components/PropertyTypePreferences";
 
 interface SocialLinks {
   linkedin: string;
@@ -785,6 +786,13 @@ const AgentProfileEditor = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Property Type Preferences */}
+                {userId && (
+                  <div className="mb-2">
+                    <PropertyTypePreferences agentId={userId} />
+                  </div>
+                )}
+
                 {/* Add New Coverage Area */}
                 {coverageAreas.length < 3 && (
                   <div className="border-2 border-dashed rounded-xl p-5 space-y-4">
@@ -933,7 +941,7 @@ const AgentProfileEditor = () => {
 
                     {/* Selected Zips */}
                     <div>
-                      <Label>Selected Zip Codes ({newCoverageZips.filter(z => z.trim()).length}/3)</Label>
+                      <Label>Selected Zip Codes ({coverageAreas.length}/3)</Label>
                       <div className="flex flex-wrap gap-2 mt-2">
                         {newCoverageZips.map((zip, index) => (
                           zip.trim() && (
