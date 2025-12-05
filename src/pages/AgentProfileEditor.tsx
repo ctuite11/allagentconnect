@@ -818,7 +818,7 @@ const AgentProfileEditor = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => setBuyerLeadsExpanded(!buyerLeadsExpanded)}
+                    onClick={() => setBuyerLeadsExpanded(prev => !prev)}
                   >
                     {buyerLeadsExpanded ? (
                       <>
