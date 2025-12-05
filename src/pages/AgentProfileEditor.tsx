@@ -20,8 +20,13 @@ import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
 import { 
   Trash2, Plus, Star, X, MapPin, ArrowLeft, User, FileText, 
-  Share2, MessageSquare, Eye, ExternalLink, Users
+  Share2, MessageSquare, Eye, ExternalLink, Users, Pencil, Home
 } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import Navigation from "@/components/Navigation";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
@@ -1079,6 +1084,93 @@ const AgentProfileEditor = () => {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* Property Type Preferences - Always visible and editable */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Home className="h-4 w-4 text-primary" />
+                      Property Type Preferences
+                    </h3>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64" align="end">
+                        <div className="space-y-3">
+                          <p className="text-sm font-medium">Select property types you work with:</p>
+                          {[
+                            { value: "single_family", label: "Single Family" },
+                            { value: "condo", label: "Condominium" },
+                            { value: "townhouse", label: "Townhouse" },
+                            { value: "multi_family", label: "Multi-Family" },
+                            { value: "land", label: "Land" },
+                            { value: "commercial", label: "Commercial" },
+                            { value: "residential_rental", label: "Residential Rental" },
+                            { value: "commercial_rental", label: "Commercial Rental" },
+                          ].map((type) => (
+                            <div key={type.value} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`edit-pref-${type.value}`}
+                                checked={selectedPropertyTypes.includes(type.value)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedPropertyTypes([...selectedPropertyTypes, type.value]);
+                                  } else {
+                                    setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== type.value));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`edit-pref-${type.value}`} className="cursor-pointer text-sm">
+                                {type.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  {/* Display selected property types as badges */}
+                  <div className="flex flex-wrap gap-2">
+                    {selectedPropertyTypes.length === 0 ? (
+                      <p className="text-muted-foreground text-sm">No property types selected. Click Edit to add.</p>
+                    ) : (
+                      selectedPropertyTypes.map((typeValue) => {
+                        const typeLabel = {
+                          single_family: "Single Family",
+                          condo: "Condominium",
+                          townhouse: "Townhouse",
+                          multi_family: "Multi-Family",
+                          land: "Land",
+                          commercial: "Commercial",
+                          residential_rental: "Residential Rental",
+                          commercial_rental: "Commercial Rental"
+                        }[typeValue] || typeValue;
+                        
+                        return (
+                          <div 
+                            key={typeValue}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
+                          >
+                            <span className="font-medium text-sm">{typeLabel}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== typeValue))}
+                              className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
