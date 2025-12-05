@@ -2159,7 +2159,7 @@ const AddListing = () => {
             </p>
           </div>
 
-          {/* Action Buttons - Sticky */}
+          {/* Action Buttons - Sticky Top Bar */}
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-8 -mx-4 px-4 py-4">
             <div className="flex gap-4 items-center">
               <div className="flex-1 flex items-center gap-2">
@@ -2182,18 +2182,58 @@ const AddListing = () => {
                   </div>
                 )}
               </div>
-              <Button variant="outline" size="lg" onClick={() => handleSaveDraft(false)} type="button" disabled={submitting || autoSaving} className="gap-2">
-                <Save className="w-5 h-5" />
-                Save Draft
-              </Button>
-              <Button variant="default" size="lg" onClick={handlePreview} type="button" className="gap-2">
-                <Eye className="w-5 h-5" />
-                Preview Listing
-              </Button>
-              <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
-                <Upload className="w-5 h-5" />
-                {submitting ? "Publishing..." : "Publish"}
-              </Button>
+              
+              {/* Edit mode: Preview + Save Changes only */}
+              {listingId ? (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    onClick={() => window.open(`/listing/${listingId}`, '_blank')} 
+                    type="button" 
+                    className="gap-2"
+                  >
+                    <Eye className="w-5 h-5" />
+                    Preview
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="lg" 
+                    onClick={handleSaveChanges} 
+                    type="button" 
+                    disabled={submitting || autoSaving} 
+                    className="gap-2"
+                  >
+                    {autoSaving ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-5 h-5" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </>
+              ) : (
+                /* Create mode: Save Draft, Preview, Publish */
+                <>
+                  <Button variant="outline" size="lg" onClick={() => handleSaveDraft(false)} type="button" disabled={submitting || autoSaving} className="gap-2">
+                    <Save className="w-5 h-5" />
+                    Save Draft
+                  </Button>
+                  <Button variant="outline" size="lg" onClick={handlePreview} type="button" className="gap-2">
+                    <Eye className="w-5 h-5" />
+                    Preview
+                  </Button>
+                  <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
+                    <Upload className="w-5 h-5" />
+                    {submitting ? "Publishing..." : "Publish"}
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
@@ -3792,56 +3832,91 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Footer Buttons */}
-                <div className="flex flex-col sm:flex-row items-center justify-end gap-3 border-t pt-6 mt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      const targetId = listingId || draftId;
-                      if (targetId) {
-                        window.open(`/listing/${targetId}`, '_blank');
-                      } else {
-                        toast.error("Please save the listing first to preview it.");
-                      }
-                    }}
-                    disabled={submitting || autoSaving}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Preview
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => listingId ? handleSaveChanges() : handleSaveDraft(false)}
-                    disabled={submitting || autoSaving}
-                  >
-                    {autoSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        {listingId ? "Save Changes" : "Save Draft"}
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    disabled={submitting || autoSaving}
-                    onClick={(e) => handleSubmit(e as unknown as React.FormEvent, true)}
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Publishing...
-                      </>
-                    ) : (
-                      listingId ? "Save & Publish" : "Publish Listing"
-                    )}
-                  </Button>
+                {/* Footer Buttons - Sticky at bottom */}
+                <div className="sticky bottom-0 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] py-4 mt-6 -mx-6 px-6 flex flex-col sm:flex-row items-center justify-end gap-3">
+                  {/* Edit mode: Preview + Save Changes only */}
+                  {listingId ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => window.open(`/listing/${listingId}`, '_blank')}
+                        disabled={submitting || autoSaving}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Preview
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleSaveChanges}
+                        disabled={submitting || autoSaving}
+                      >
+                        {autoSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4 mr-2" />
+                            Save Changes
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    /* Create mode: Preview, Save Draft, Publish */
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          const targetId = draftId;
+                          if (targetId) {
+                            window.open(`/listing/${targetId}`, '_blank');
+                          } else {
+                            toast.error("Please save the listing first to preview it.");
+                          }
+                        }}
+                        disabled={submitting || autoSaving}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Preview
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleSaveDraft(false)}
+                        disabled={submitting || autoSaving}
+                      >
+                        {autoSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4 mr-2" />
+                            Save Draft
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        disabled={submitting || autoSaving}
+                        onClick={(e) => handleSubmit(e as unknown as React.FormEvent, true)}
+                      >
+                        {submitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Publishing...
+                          </>
+                        ) : (
+                          "Publish Listing"
+                        )}
+                      </Button>
+                    </>
+                  )}
                 </div>
               </form>
             </CardContent>
