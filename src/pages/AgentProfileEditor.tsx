@@ -1006,30 +1006,25 @@ const AgentProfileEditor = () => {
                         <div>
                           <Label>Selected Zip Codes ({coverageAreas.length}/3)</Label>
                           <div className="flex flex-wrap gap-2 mt-2">
-                            {newCoverageZips.map((zip, index) => (
-                              zip.trim() && (
+                            {coverageAreas.length === 0 ? (
+                              <p className="text-sm text-muted-foreground">No zip codes selected</p>
+                            ) : (
+                              coverageAreas.map((area) => (
                                 <div 
-                                  key={index}
-                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-lg"
+                                  key={area.id}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
                                 >
-                                  <span className="font-mono font-medium text-sm">{zip}</span>
+                                  <span className="font-medium text-sm">{area.zip_code}</span>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => {
-                                      const newZips = [...newCoverageZips];
-                                      newZips[index] = "";
-                                      setNewCoverageZips(newZips);
-                                    }}
-                                    className="h-5 w-5 hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={() => handleDeleteCoverageArea(area.id)}
+                                    className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
                                   >
                                     <X className="h-3 w-3" />
                                   </Button>
                                 </div>
-                              )
-                            ))}
-                            {!newCoverageZips.some(z => z.trim()) && (
-                              <p className="text-sm text-muted-foreground">No zip codes selected</p>
+                              ))
                             )}
                           </div>
                         </div>
