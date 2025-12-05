@@ -146,10 +146,38 @@ serve(async (req) => {
           }
         }
 
+        // Extract unit number from address if present
+        // ATTOM may include unit in line1 like "300 COMMERCIAL ST #404" or in a separate field
+        let streetAddress = address_info.line1 || '';
+        let unitNumber = address_info.unitNumber || null;
+        
+        // Parse unit from street address if not in separate field
+        // Common patterns: #404, Unit 404, Apt 404, Suite 404
+        if (!unitNumber && streetAddress) {
+          const unitPatterns = [
+            /\s+#(\S+)$/i,           // #404
+            /\s+unit\s+(\S+)$/i,     // Unit 404
+            /\s+apt\.?\s+(\S+)$/i,   // Apt 404, Apt. 404
+            /\s+suite\s+(\S+)$/i,    // Suite 404
+            /\s+ste\.?\s+(\S+)$/i,   // Ste 404
+          ];
+          
+          for (const pattern of unitPatterns) {
+            const match = streetAddress.match(pattern);
+            if (match) {
+              unitNumber = match[1];
+              // Remove unit from street address
+              streetAddress = streetAddress.replace(pattern, '').trim();
+              break;
+            }
+          }
+        }
+
         // Build normalized result
         return {
           attom_id: attomId,
-          address: address_info.oneLine || `${address_info.line1 || ''} ${address_info.line2 || ''}`.trim(),
+          address: streetAddress || address_info.oneLine || '',
+          unit_number: unitNumber,
           city: address_info.locality || city,
           state: address_info.countrySubd || state,
           zip: address_info.postal1 || zip || null,
