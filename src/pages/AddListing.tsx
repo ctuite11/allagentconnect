@@ -911,26 +911,16 @@ const AddListing = () => {
     // Preserve user-entered unit number - ATTOM data should NOT clear it
     const existingUnit = formData.unit_number;
     
-    // OVERWRITE address fields with normalized ATTOM values
-    // This corrects user typos in city/state/zip
-    if (record.address) {
-      // Set street address (ATTOM should return base address without unit)
-      setFormData(prev => ({ ...prev, address: record.address }));
-    }
-    
-    // Handle unit number: only set from ATTOM if user hasn't entered one
-    // ATTOM may return unit_number parsed from the address
-    if (record.unit_number && !existingUnit) {
-      setFormData(prev => ({ ...prev, unit_number: record.unit_number }));
-    }
-    
+    // Handle state first (for dropdown sync)
     if (record.state) {
       const attomState = record.state.trim();
       setSelectedState(attomState);
-      setFormData(prev => ({ ...prev, state: attomState }));
     }
     
-    // Handle city from ATTOM record - OVERWRITE with normalized value
+    // Handle city dropdown sync
+    let finalCity = formData.city;
+    let finalNeighborhood = formData.neighborhood;
+    
     if (record.city) {
       const attomCity = record.city.trim();
       const attomCityLower = attomCity.toLowerCase();
@@ -944,11 +934,8 @@ const AddListing = () => {
         // This is actually a Boston neighborhood, not a city
         setCityChoice("Boston");
         setCustomCity("");
-        setFormData(prev => ({ 
-          ...prev, 
-          city: "Boston",
-          neighborhood: matchedBoston
-        }));
+        finalCity = "Boston";
+        finalNeighborhood = matchedBoston;
       } else {
         // Try to match city in available options
         const normalizedCity = validateAndNormalizeCity(
@@ -958,67 +945,100 @@ const AddListing = () => {
         );
         
         if (normalizedCity) {
-          // Found a matching city - overwrite with normalized version
           setCityChoice(normalizedCity);
-          setFormData(prev => ({ ...prev, city: normalizedCity }));
+          finalCity = normalizedCity;
         } else {
-          // No match found - use ATTOM city name directly
           setCityChoice(attomCity);
-          setFormData(prev => ({ ...prev, city: attomCity }));
+          finalCity = attomCity;
         }
       }
     }
     
-    // Overwrite ZIP code with ATTOM value
-    if (newZip) {
-      setFormData(prev => ({ ...prev, zip_code: newZip }));
-    }
-    
-    // Fill in property details - only fill if blank and ATTOM has data
-    // Use functional update to ensure we get the latest form state
+    // SINGLE consolidated setFormData call to apply ALL ATTOM data at once
+    // This prevents race conditions between multiple setFormData calls
     setFormData(prev => {
       const updates: Partial<typeof prev> = {};
-      const isCondo = prev.property_type === 'condo' || 
-        (record.property_type && (
-          record.property_type.toLowerCase().includes('condo') ||
-          record.property_type.toLowerCase().includes('co-op')
-        ));
       
+      // ===== ADDRESS FIELDS =====
+      if (record.address) {
+        updates.address = record.address;
+        console.log('[ATTOM] Setting address:', record.address);
+      }
+      
+      if (record.state) {
+        updates.state = record.state.trim();
+        console.log('[ATTOM] Setting state:', record.state.trim());
+      }
+      
+      // City and neighborhood from above logic
+      if (finalCity) {
+        updates.city = finalCity;
+        console.log('[ATTOM] Setting city:', finalCity);
+      }
+      if (finalNeighborhood && finalNeighborhood !== prev.neighborhood) {
+        updates.neighborhood = finalNeighborhood;
+        console.log('[ATTOM] Setting neighborhood:', finalNeighborhood);
+      }
+      
+      if (newZip) {
+        updates.zip_code = newZip;
+        console.log('[ATTOM] Setting zip_code:', newZip);
+      }
+      
+      // Handle unit number: only set from ATTOM if user hasn't entered one
+      if (record.unit_number && !existingUnit) {
+        updates.unit_number = record.unit_number;
+        console.log('[ATTOM] Setting unit_number from ATTOM:', record.unit_number);
+      }
+      
+      // ===== PROPERTY DETAILS - only fill if empty =====
       // Bedrooms - only fill if empty
       if (!prev.bedrooms && record.beds) {
         updates.bedrooms = record.beds.toString();
         console.log('[ATTOM] Setting bedrooms:', record.beds);
       }
+      
       // Bathrooms - only fill if empty
       if (!prev.bathrooms && record.baths) {
         updates.bathrooms = record.baths.toString();
         console.log('[ATTOM] Setting bathrooms:', record.baths);
       }
-      // Square feet - only fill if empty AND not a condo (ATTOM returns building sqft for condos)
-      if (!prev.square_feet && record.sqft && !isCondo) {
+      
+      // Square feet - ALWAYS fill if empty and ATTOM has data (per user request, don't skip for condos)
+      if (!prev.square_feet && record.sqft) {
         updates.square_feet = record.sqft.toString();
         console.log('[ATTOM] Setting square_feet:', record.sqft);
-      } else if (isCondo && record.sqft) {
-        console.log('[ATTOM] Skipping square_feet for condo (ATTOM returns building size, not unit size):', record.sqft);
       }
-      // Lot size - only fill if empty (and not a condo)
+      
+      // Lot size - only fill if empty (skip for condos since not applicable)
+      const isCondo = prev.property_type === 'condo' || 
+        (record.property_type && (
+          record.property_type.toLowerCase().includes('condo') ||
+          record.property_type.toLowerCase().includes('co-op')
+        ));
       if (!prev.lot_size && record.lotSizeSqft && !isCondo) {
         updates.lot_size = record.lotSizeSqft.toString();
         console.log('[ATTOM] Setting lot_size:', record.lotSizeSqft);
       }
+      
       // Year built - only fill if empty
       if (!prev.year_built && record.yearBuilt) {
         updates.year_built = record.yearBuilt.toString();
+        console.log('[ATTOM] Setting year_built:', record.yearBuilt);
       }
+      
       // Tax amount - only fill if empty
       if (!prev.annual_property_tax && record.taxAmount) {
         updates.annual_property_tax = record.taxAmount.toString();
+        console.log('[ATTOM] Setting annual_property_tax:', record.taxAmount);
       }
+      
       // Tax year - only fill if empty
       if (!prev.tax_year && record.taxYear) {
         updates.tax_year = record.taxYear.toString();
         console.log('[ATTOM] Setting tax_year:', record.taxYear);
       }
+      
       // Latitude/longitude - always update if ATTOM provides them
       if (record.latitude != null) {
         updates.latitude = record.latitude;
@@ -1029,8 +1049,22 @@ const AddListing = () => {
         console.log('[ATTOM] Setting longitude:', record.longitude);
       }
       
-      // Log what's available vs what's being applied
+      // Update property type if it's condo/co-op
+      if (record.property_type && (
+        record.property_type.toLowerCase().includes('condo') ||
+        record.property_type.toLowerCase().includes('co-op')
+      )) {
+        updates.property_type = 'condo';
+        updates.lot_size = ''; // Clear lot_size for condos
+        console.log('[ATTOM] Setting property_type to condo');
+      }
+      
+      // Log summary
       console.log('[ATTOM] Record data available:', {
+        address: record.address,
+        city: record.city,
+        state: record.state,
+        zip: record.zip,
         beds: record.beds,
         baths: record.baths,
         sqft: record.sqft,
@@ -1040,21 +1074,26 @@ const AddListing = () => {
         taxYear: record.taxYear,
         latitude: record.latitude,
         longitude: record.longitude,
-        property_type: record.property_type,
-        isCondo
+        property_type: record.property_type
       });
-      console.log('[ATTOM] Property details being applied:', updates);
+      console.log('[ATTOM] ALL updates being applied to form:', updates);
       
-      return { ...prev, ...updates };
+      const newState = { ...prev, ...updates };
+      console.log('[ATTOM] New formData state:', {
+        address: newState.address,
+        city: newState.city,
+        state: newState.state,
+        zip_code: newState.zip_code,
+        bedrooms: newState.bedrooms,
+        bathrooms: newState.bathrooms,
+        square_feet: newState.square_feet,
+        year_built: newState.year_built,
+        annual_property_tax: newState.annual_property_tax,
+        tax_year: newState.tax_year
+      });
+      
+      return newState;
     });
-
-    // Update property type if it's condo/co-op and clear lot_size (not applicable for condos)
-    if (record.property_type && (
-      record.property_type.toLowerCase().includes('condo') ||
-      record.property_type.toLowerCase().includes('co-op')
-    )) {
-      setFormData(prev => ({ ...prev, property_type: 'condo', lot_size: '' }));
-    }
     
     // Set address verification status
     setAddressVerified(true);
