@@ -898,6 +898,8 @@ const AddListing = () => {
   const applyAttomData = (record: any) => {
     // Mark that we're applying ATTOM data to prevent re-triggering fetch
     isApplyingAttomDataRef.current = true;
+    // ALSO set hydration flag to prevent cascading useEffects from clearing values
+    isHydratingLocationRef.current = true;
     
     setAttomId(record.attom_id ?? null);
     
@@ -1011,9 +1013,10 @@ const AddListing = () => {
       });
     }
     
-    // Reset the flag after a short delay to allow state updates to complete
+    // Reset flags after a short delay to allow state updates to complete
     setTimeout(() => {
       isApplyingAttomDataRef.current = false;
+      isHydratingLocationRef.current = false;
     }, 100);
   };
 
@@ -4012,7 +4015,7 @@ const AddListing = () => {
               </p>
 
               <div className="font-medium text-base bg-muted p-3 rounded-md">
-                <p>{`${attomPendingRecord.street_address || attomPendingRecord.address?.split(',')[0] || formData.address}${formData.unit_number ? ` #${formData.unit_number}` : ''}`}</p>
+                <p>{`${attomPendingRecord.address || formData.address}${formData.unit_number ? ` #${formData.unit_number}` : ''}`}</p>
                 <p>{`${attomPendingRecord.city || formData.city}, ${attomPendingRecord.state || formData.state} ${attomPendingRecord.zip || formData.zip_code}`}</p>
               </div>
 
