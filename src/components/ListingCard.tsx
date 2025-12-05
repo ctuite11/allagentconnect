@@ -611,10 +611,10 @@ const ListingCard = ({
           
           {/* Open House Info */}
           {nextOpenHouse && (
-            <div className={`flex items-center gap-2 text-sm p-2 rounded-md mt-2 ${nextOpenHouse.type === 'broker' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300'}`}>
+            <div className={`flex items-center gap-2 text-sm p-2 rounded-md mt-2 ${nextOpenHouse.event_type === 'broker_tour' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300'}`}>
               <Calendar className="h-4 w-4" />
               <span className="font-medium">
-                {nextOpenHouse.type === 'broker' ? 'Broker Tour' : 'Open House'}: {format(new Date(nextOpenHouse.date), "MMM d")} • {nextOpenHouse.start_time} - {nextOpenHouse.end_time}
+                {nextOpenHouse.event_type === 'broker_tour' ? 'Broker Tour' : 'Open House'}: {format(new Date(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} - {formatTime(nextOpenHouse.end_time)}
               </span>
             </div>
           )}
