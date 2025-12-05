@@ -778,7 +778,7 @@ const AgentProfileEditor = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-primary" />
-                  Service Areas
+                  Buyer Leads
                 </CardTitle>
                 <CardDescription>
                   Define your coverage areas to receive buyer leads (max 3 zip codes)
