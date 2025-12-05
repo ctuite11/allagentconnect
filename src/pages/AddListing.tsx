@@ -765,22 +765,22 @@ const AddListing = () => {
 
   // Helper to build one-line address string from ATTOM record
   // ATTOM's address field (from oneLine) is already formatted as full address
-  // includeFormUnit: when true, appends the user's unit_number from form state
-  const buildAttomAddressString = (record: any, includeFormUnit: boolean = false): string => {
+  // unitNumber: explicitly pass the unit to append (avoids timing issues with formData)
+  const buildAttomAddressString = (record: any, unitNumber?: string): string => {
     const baseAddress = record.address || '';
     
-    // If we should include the form's unit number (for display purposes)
-    if (includeFormUnit && formData.unit_number) {
-      // Parse the address to insert unit after street but before city
+    // If unit number is provided, insert it after the street but before city
+    if (unitNumber && unitNumber.trim()) {
+      const unit = unitNumber.trim();
       // ATTOM returns format like "123 MAIN ST, BOSTON, MA 02109"
       const commaIndex = baseAddress.indexOf(',');
       if (commaIndex > 0) {
         const street = baseAddress.substring(0, commaIndex);
         const rest = baseAddress.substring(commaIndex);
-        return `${street} #${formData.unit_number}${rest}`;
+        return `${street} #${unit}${rest}`;
       }
       // Fallback: just append unit at the end
-      return `${baseAddress} #${formData.unit_number}`;
+      return `${baseAddress} #${unit}`;
     }
     
     return baseAddress;
@@ -4002,7 +4002,7 @@ const AddListing = () => {
               </p>
 
               <p className="font-medium text-base bg-muted p-3 rounded-md">
-                {buildAttomAddressString(attomPendingRecord, true)}
+                {buildAttomAddressString(attomPendingRecord, formData.unit_number)}
               </p>
 
               <p className="text-sm text-muted-foreground mt-3">
