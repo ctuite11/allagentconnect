@@ -887,10 +887,20 @@ const AddListing = () => {
     const oldZip = formData.zip_code;
     const newZip = record.zip;
     
+    // Preserve user-entered unit number - ATTOM data should NOT clear it
+    const existingUnit = formData.unit_number;
+    
     // OVERWRITE address fields with normalized ATTOM values
     // This corrects user typos in city/state/zip
     if (record.address) {
+      // Set street address (ATTOM should return base address without unit)
       setFormData(prev => ({ ...prev, address: record.address }));
+    }
+    
+    // Handle unit number: only set from ATTOM if user hasn't entered one
+    // ATTOM may return unit_number parsed from the address
+    if (record.unit_number && !existingUnit) {
+      setFormData(prev => ({ ...prev, unit_number: record.unit_number }));
     }
     
     if (record.state) {
