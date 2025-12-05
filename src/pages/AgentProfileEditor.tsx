@@ -814,8 +814,6 @@ const AgentProfileEditor = () => {
                             {US_STATES.map((s) => (
                               <SelectItem key={s.code} value={s.code}>{s.name}</SelectItem>
                             ))}
-                              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                            ))}
                           </SelectContent>
                         </Select>
                       </div>
