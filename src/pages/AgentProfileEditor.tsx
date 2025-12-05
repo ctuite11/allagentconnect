@@ -17,13 +17,23 @@ import {
 } from "@/components/ui/select";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
-import { Trash2, Plus, Star, Upload, X, MapPin, ArrowLeft, User, Image, FileText, DollarSign, Share2, MessageSquare } from "lucide-react";
+import { 
+  Trash2, Plus, Star, X, MapPin, ArrowLeft, User, FileText, 
+  Share2, MessageSquare, Eye, ExternalLink, Users
+} from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
-
 import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
+
+// New components
+import ProfilePreviewPanel from "@/components/profile-editor/ProfilePreviewPanel";
+import ProfilePhotoUpload from "@/components/profile-editor/ProfilePhotoUpload";
+import CompanyLogoUpload from "@/components/profile-editor/CompanyLogoUpload";
+import SocialLinksSection from "@/components/profile-editor/SocialLinksSection";
+import IncentivesSection from "@/components/profile-editor/IncentivesSection";
+import TestimonialCard from "@/components/profile-editor/TestimonialCard";
 
 interface SocialLinks {
   linkedin: string;
@@ -97,6 +107,7 @@ const AgentProfileEditor = () => {
   const [newCoverageZips, setNewCoverageZips] = useState<string[]>(["", "", ""]);
   const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
   const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuthAndLoadProfile();
@@ -110,6 +121,7 @@ const AgentProfileEditor = () => {
       return;
     }
 
+    setUserId(session.user.id);
     await loadProfile(session.user.id);
   };
 
@@ -121,7 +133,6 @@ const AgentProfileEditor = () => {
         .eq("id", userId)
         .single();
 
-      // If profile doesn't exist, create it
       if (profileError && profileError.code === 'PGRST116') {
         const { data: { session } } = await supabase.auth.getSession();
         const { data: newProfile, error: insertError } = await supabase
@@ -179,7 +190,6 @@ const AgentProfileEditor = () => {
       if (testimonialError) throw testimonialError;
       setTestimonials(testimonialData || []);
 
-      // Load coverage areas (profile only)
       const { data: coverageData, error: coverageError } = await supabase
         .from("agent_buyer_coverage_areas")
         .select("*")
@@ -197,7 +207,6 @@ const AgentProfileEditor = () => {
     }
   };
 
-  // Save profile data without redirecting
   const saveProfileData = async (): Promise<string | null> => {
     setSaving(true);
     try {
@@ -229,7 +238,7 @@ const AgentProfileEditor = () => {
         .eq("id", session.user.id);
 
       if (error) throw error;
-      toast.success("Profile updated successfully!");
+      toast.success("Profile saved successfully!");
       return session.user.id;
     } catch (error) {
       console.error("Error saving profile:", error);
@@ -241,19 +250,14 @@ const AgentProfileEditor = () => {
     }
   };
 
-  // Section save: stays on editor
   const handleSaveProfile = async () => {
     await saveProfileData();
   };
 
-  // Publish: save and redirect to public profile
-  const handlePublishProfile = async () => {
-    const userId = await saveProfileData();
-    if (!userId) return;
-    setRedirecting(true);
-    setTimeout(() => {
-      navigate(`/agent/${userId}`);
-    }, 400);
+  const handleViewProfile = () => {
+    if (userId) {
+      window.open(`/agent/${userId}`, "_blank");
+    }
   };
 
   const handleHeadshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -373,7 +377,6 @@ const AgentProfileEditor = () => {
   };
 
   const handleAddCoverageArea = async () => {
-    // Filter out empty zip codes
     const validZips = newCoverageZips.filter(zip => zip.trim() !== "");
     
     if (validZips.length === 0) {
@@ -386,13 +389,11 @@ const AgentProfileEditor = () => {
       return;
     }
 
-    // Check if adding these would exceed the limit
     if (coverageAreas.length + validZips.length > 3) {
       toast.error(`You can only add ${3 - coverageAreas.length} more zip code(s). Maximum 3 total.`);
       return;
     }
 
-    // Basic zip code validation (5 digits)
     const zipRegex = /^\d{5}$/;
     const invalidZips = validZips.filter(zip => !zipRegex.test(zip));
     if (invalidZips.length > 0) {
@@ -404,7 +405,6 @@ const AgentProfileEditor = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Check for duplicate zip codes
       const existingZips = coverageAreas.map(area => area.zip_code);
       const duplicates = validZips.filter(zip => existingZips.includes(zip));
       if (duplicates.length > 0) {
@@ -412,7 +412,6 @@ const AgentProfileEditor = () => {
         return;
       }
 
-      // Insert all valid zip codes (as profile coverage)
       const insertPromises = validZips.map(zip => 
         supabase
           .from("agent_buyer_coverage_areas")
@@ -430,17 +429,14 @@ const AgentProfileEditor = () => {
 
       const results = await Promise.all(insertPromises);
       
-      // Check for errors
       const errors = results.filter(r => r.error);
       if (errors.length > 0) {
         throw errors[0].error;
       }
 
-      // Add all new coverage areas
       const newAreas = results.map(r => r.data).filter(Boolean);
       setCoverageAreas([...coverageAreas, ...newAreas]);
       
-      // Reset form
       setNewCoverageState("");
       setNewCoverageCounty("");
       setNewCoverageCity("");
@@ -498,7 +494,9 @@ const AgentProfileEditor = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 py-8 pt-24">
-          <p>Loading...</p>
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-pulse text-muted-foreground">Loading profile...</div>
+          </div>
         </div>
       </div>
     );
@@ -507,515 +505,370 @@ const AgentProfileEditor = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" onClick={() => navigate("/agent-dashboard")}>
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold">Edit Your Profile</h1>
-                {aacId && (
-                  <p className="text-sm text-muted-foreground font-mono mt-1">
-                    {aacId}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleSaveProfile} disabled={saving}>
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/manage-team")}>
-                Manage Team
-              </Button>
+      <div className="container mx-auto px-4 py-8 pt-24 pb-32">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" onClick={() => navigate("/agent-dashboard")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Edit Profile</h1>
+              <p className="text-muted-foreground">Customize how you appear to clients</p>
             </div>
           </div>
+          <div className="hidden md:flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate("/manage-team")}>
+              <Users className="h-4 w-4 mr-2" />
+              Manage Team
+            </Button>
+            <Button variant="outline" onClick={handleViewProfile}>
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+          </div>
+        </div>
 
-          {/* Contact Information */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-blue-500">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <User className="h-5 w-5 text-blue-500" />
-                </div>
-                Contact Information
-              </CardTitle>
-              <CardDescription>Update your contact details and office information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="first_name">First Name</Label>
-                  <Input
-                    id="first_name"
-                    placeholder="John"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+        {/* Two-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Form */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Profile Images Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Profile Images
+                </CardTitle>
+                <CardDescription>Upload your photo and company logo</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-10">
+                  <ProfilePhotoUpload
+                    headshotUrl={headshotUrl}
+                    uploadingHeadshot={uploadingHeadshot}
+                    onUpload={handleHeadshotUpload}
+                    onRemove={() => setHeadshotUrl("")}
+                    aacId={aacId}
+                  />
+                  <div className="hidden sm:block w-px h-32 bg-border" />
+                  <CompanyLogoUpload
+                    logoUrl={logoUrl}
+                    uploadingLogo={uploadingLogo}
+                    onUpload={handleLogoUpload}
+                    onRemove={() => setLogoUrl("")}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="last_name">Last Name</Label>
-                  <Input
-                    id="last_name"
-                    placeholder="Smith"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  placeholder="Real Estate Agent, Broker, etc."
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="cell_phone">Cell Phone</Label>
-                  <FormattedInput
-                    id="cell_phone"
-                    format="phone"
-                     placeholder="1234567890"
-                    value={cellPhone}
-                    onChange={setCellPhone}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="office_phone">Office Phone</Label>
-                  <FormattedInput
-                    id="office_phone"
-                    format="phone"
-                    placeholder="1234567890"
-                    value={officePhone}
-                    onChange={setOfficePhone}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="team_name">Team Name</Label>
-                <Input
-                  id="team_name"
-                  placeholder="Your Team Name"
-                  value={teamName}
-                  onChange={(e) => setTeamName(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="personal_website">Personal Website</Label>
-                <Input
-                  id="personal_website"
-                  type="url"
-                  placeholder="https://yourwebsite.com"
-                  value={socialLinks.website}
-                  onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="office_name">Office Name</Label>
-                <Input
-                  id="office_name"
-                  placeholder="ABC Realty Group"
-                  value={officeName}
-                  onChange={(e) => setOfficeName(e.target.value)}
-                />
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label htmlFor="office_address">Office Address</Label>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="address-toggle" className="text-sm text-muted-foreground cursor-pointer">
-                      {useAddressAutocomplete ? "Use autocomplete" : "Manual entry"}
-                    </Label>
-                    <Switch
-                      id="address-toggle"
-                      checked={useAddressAutocomplete}
-                      onCheckedChange={setUseAddressAutocomplete}
-                    />
-                  </div>
-                </div>
-                {useAddressAutocomplete ? (
-                  <AddressAutocomplete
-                    placeholder="Start typing an address..."
-                    value={officeAddress}
-                    onChange={setOfficeAddress}
-                    onPlaceSelect={(place) => {
-                      setOfficeAddress(place.formatted_address || place.name || "");
-                      
-                      // Parse address components
-                      if (place.address_components) {
-                        const components = place.address_components;
-                        
-                        // Extract city
-                        const cityComponent = components.find((c: any) => 
-                          c.types.includes('locality') || c.types.includes('sublocality')
-                        );
-                        if (cityComponent) {
-                          setOfficeCity(cityComponent.long_name);
-                        }
-                        
-                        // Extract state
-                        const stateComponent = components.find((c: any) => 
-                          c.types.includes('administrative_area_level_1')
-                        );
-                        if (stateComponent) {
-                          setOfficeState(stateComponent.short_name);
-                        }
-                        
-                        // Extract zip
-                        const zipComponent = components.find((c: any) => 
-                          c.types.includes('postal_code')
-                        );
-                        if (zipComponent) {
-                          setOfficeZip(zipComponent.long_name);
-                        }
-                      }
-                    }}
-                  />
-                ) : (
-                  <Input
-                    id="office_address"
-                    placeholder="123 Main St, Boston, MA 02101"
-                    value={officeAddress}
-                    onChange={(e) => setOfficeAddress(e.target.value)}
-                  />
-                )}
-              </div>
-              <Button onClick={handleSaveProfile} disabled={saving}>
-                {saving ? "Saving..." : "Save Contact Info"}
-              </Button>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Profile Images */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-purple-500">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                  <Image className="h-5 w-5 text-purple-500" />
-                </div>
-                Profile Images
-              </CardTitle>
-              <CardDescription>Upload your headshot and company logo</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label>Headshot</Label>
-                <div className="mt-2 space-y-4">
-                  {headshotUrl && (
-                    <div className="relative inline-block">
-                      <img
-                        src={headshotUrl}
-                        alt="Headshot"
-                        className="w-48 h-64 rounded-lg object-cover border-4 border-border"
-                      />
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        className="absolute top-2 right-2 h-8 w-8"
-                        onClick={() => setHeadshotUrl("")}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+            {/* Basic Info Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Basic Information
+                </CardTitle>
+                <CardDescription>Your name and professional details</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
+                    <Label htmlFor="first_name">First Name</Label>
                     <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleHeadshotUpload}
-                      disabled={uploadingHeadshot}
-                      className="hidden"
-                      id="headshot-upload"
+                      id="first_name"
+                      placeholder="John"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
                     />
-                    <Label
-                      htmlFor="headshot-upload"
-                      className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-                    >
-                      <Upload className="h-4 w-4" />
-                      {uploadingHeadshot ? "Uploading..." : "Upload Headshot"}
-                    </Label>
                   </div>
-                </div>
-              </div>
-
-              <div>
-                <Label>Company Logo</Label>
-                <div className="mt-2 space-y-4">
-                  {logoUrl && (
-                    <div className="relative inline-block">
-                      <img
-                        src={logoUrl}
-                        alt="Logo"
-                        className="w-48 h-32 rounded-lg object-contain border-2 border-border bg-muted p-2"
-                      />
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        className="absolute -top-2 -right-2 h-6 w-6"
-                        onClick={() => setLogoUrl("")}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
                   <div>
+                    <Label htmlFor="last_name">Last Name</Label>
                     <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                      disabled={uploadingLogo}
-                      className="hidden"
-                      id="logo-upload"
+                      id="last_name"
+                      placeholder="Smith"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
                     />
-                    <Label
-                      htmlFor="logo-upload"
-                      className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-                    >
-                      <Upload className="h-4 w-4" />
-                      {uploadingLogo ? "Uploading..." : "Upload Logo"}
-                    </Label>
                   </div>
                 </div>
-              </div>
-
-              <Button onClick={handleSaveProfile} disabled={saving}>
-                {saving ? "Saving..." : "Save Images"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Bio Section */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-emerald-500">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-emerald-500" />
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    placeholder="Real Estate Agent, Broker, etc."
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
                 </div>
-                Your Bio
-              </CardTitle>
-              <CardDescription>Tell clients about yourself and your expertise</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Write your professional bio here..."
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                rows={6}
-                className="mb-4"
-              />
-              <Button onClick={handleSaveProfile} disabled={saving}>
-                {saving ? "Saving..." : "Save Bio"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Incentives Section */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-orange-500">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                  <DollarSign className="h-5 w-5 text-orange-500" />
+                <div>
+                  <Label htmlFor="team_name">Team / Company Name</Label>
+                  <Input
+                    id="team_name"
+                    placeholder="Your Team or Company"
+                    value={teamName}
+                    onChange={(e) => setTeamName(e.target.value)}
+                  />
                 </div>
-                Client Incentives
-              </CardTitle>
-              <CardDescription>Highlight special offers or incentives you provide to clients</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="buyer_incentives">Buyer Incentives</Label>
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Contact Info Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  Contact Information
+                </CardTitle>
+                <CardDescription>Phone numbers and office details</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="cell_phone">Cell Phone</Label>
+                    <FormattedInput
+                      id="cell_phone"
+                      format="phone"
+                      placeholder="1234567890"
+                      value={cellPhone}
+                      onChange={setCellPhone}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="office_phone">Office Phone</Label>
+                    <FormattedInput
+                      id="office_phone"
+                      format="phone"
+                      placeholder="1234567890"
+                      value={officePhone}
+                      onChange={setOfficePhone}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="office_name">Office Name</Label>
+                  <Input
+                    id="office_name"
+                    placeholder="ABC Realty Group"
+                    value={officeName}
+                    onChange={(e) => setOfficeName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="office_address">Office Address</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="address-toggle" className="text-sm text-muted-foreground cursor-pointer">
+                        {useAddressAutocomplete ? "Autocomplete" : "Manual"}
+                      </Label>
+                      <Switch
+                        id="address-toggle"
+                        checked={useAddressAutocomplete}
+                        onCheckedChange={setUseAddressAutocomplete}
+                      />
+                    </div>
+                  </div>
+                  {useAddressAutocomplete ? (
+                    <AddressAutocomplete
+                      placeholder="Start typing an address..."
+                      value={officeAddress}
+                      onChange={setOfficeAddress}
+                      onPlaceSelect={(place) => {
+                        setOfficeAddress(place.formatted_address || place.name || "");
+                        if (place.address_components) {
+                          const components = place.address_components;
+                          const cityComponent = components.find((c: any) => 
+                            c.types.includes('locality') || c.types.includes('sublocality')
+                          );
+                          if (cityComponent) setOfficeCity(cityComponent.long_name);
+                          const stateComponent = components.find((c: any) => 
+                            c.types.includes('administrative_area_level_1')
+                          );
+                          if (stateComponent) setOfficeState(stateComponent.short_name);
+                          const zipComponent = components.find((c: any) => 
+                            c.types.includes('postal_code')
+                          );
+                          if (zipComponent) setOfficeZip(zipComponent.long_name);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <Input
+                      id="office_address"
+                      placeholder="123 Main St, Boston, MA 02101"
+                      value={officeAddress}
+                      onChange={(e) => setOfficeAddress(e.target.value)}
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Bio Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  About You
+                </CardTitle>
+                <CardDescription>Tell clients about yourself and your expertise</CardDescription>
+              </CardHeader>
+              <CardContent>
                 <Textarea
-                  id="buyer_incentives"
-                  placeholder="e.g., Free home inspection, closing cost assistance, buyer rebate..."
-                  value={buyerIncentives}
-                  onChange={(e) => setBuyerIncentives(e.target.value)}
-                  rows={4}
+                  placeholder="Write your professional bio here..."
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows={6}
+                  className="resize-none"
                 />
-              </div>
-              <div>
-                <Label htmlFor="seller_incentives">Seller Incentives</Label>
-                <Textarea
-                  id="seller_incentives"
-                  placeholder="e.g., Professional photography, staging consultation, reduced commission..."
-                  value={sellerIncentives}
-                  onChange={(e) => setSellerIncentives(e.target.value)}
-                  rows={4}
-                />
-              </div>
-              <Button onClick={handleSaveProfile} disabled={saving}>
-                {saving ? "Saving..." : "Save Incentives"}
-              </Button>
-            </CardContent>
-          </Card>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {bio.length} characters
+                </p>
+              </CardContent>
+            </Card>
 
-          {/* Social Links Section */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-pink-500">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-full bg-pink-500/10 flex items-center justify-center">
-                  <Share2 className="h-5 w-5 text-pink-500" />
-                </div>
-                Social Media Links
-              </CardTitle>
-              <CardDescription>Connect your social media profiles</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="linkedin">LinkedIn</Label>
-                <Input
-                  id="linkedin"
-                  placeholder="https://linkedin.com/in/yourprofile"
-                  value={socialLinks.linkedin}
-                  onChange={(e) => setSocialLinks({ ...socialLinks, linkedin: e.target.value })}
+            {/* Incentives Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-primary" />
+                  Client Incentives
+                </CardTitle>
+                <CardDescription>Special offers for buyers and sellers</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <IncentivesSection
+                  buyerIncentives={buyerIncentives}
+                  sellerIncentives={sellerIncentives}
+                  onBuyerChange={setBuyerIncentives}
+                  onSellerChange={setSellerIncentives}
                 />
-              </div>
-              <div>
-                <Label htmlFor="twitter">Twitter/X</Label>
-                <Input
-                  id="twitter"
-                  placeholder="https://twitter.com/yourhandle"
-                  value={socialLinks.twitter}
-                  onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="facebook">Facebook</Label>
-                <Input
-                  id="facebook"
-                  placeholder="https://facebook.com/yourpage"
-                  value={socialLinks.facebook}
-                  onChange={(e) => setSocialLinks({ ...socialLinks, facebook: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="instagram">Instagram</Label>
-                <Input
-                  id="instagram"
-                  placeholder="https://instagram.com/yourprofile"
-                  value={socialLinks.instagram}
-                  onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
-                />
-              </div>
-              <Button onClick={handleSaveProfile} disabled={saving}>
-                {saving ? "Saving..." : "Save Social Links"}
-              </Button>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Buyer Agent Lead Opt-In Section */}
-          <Card className="mb-6 hover:shadow-lg transition-all border-l-4 border-l-indigo-500">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center">
-                  <MapPin className="h-5 w-5 text-indigo-500" />
-                </div>
-                Buyer Agent Lead Program
-              </CardTitle>
-              <CardDescription>
-                Opt in to receive buyer agent leads for specific zip codes. Choose up to 3 zip codes where you want to appear as a verified buyer agent.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
+            {/* Social Links Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Share2 className="h-5 w-5 text-primary" />
+                  Social Media
+                </CardTitle>
+                <CardDescription>Connect your social profiles</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SocialLinksSection
+                  socialLinks={socialLinks}
+                  onChange={setSocialLinks}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Coverage Areas Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  Service Areas
+                </CardTitle>
+                <CardDescription>
+                  Define your coverage areas to receive buyer leads (max 3 zip codes)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 {/* Add New Coverage Area */}
-                <div className="border-2 border-dashed border-border rounded-2xl p-6 bg-muted/30 hover:border-primary/50 transition-colors">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Coverage Zip Code ({coverageAreas.length}/3)
-                  </h3>
-                  <div className="space-y-4">
-                    {/* State Dropdown */}
-                    <div>
-                      <Label>State</Label>
-                      <Select value={newCoverageState} onValueChange={(value) => {
-                        setNewCoverageState(value);
-                        setNewCoverageCounty(""); // Reset county when state changes
-                        setNewCoverageCity(""); // Reset city when state changes
-                        setSuggestedZips([]); // Reset suggested zips
-                      }}>
-                        <SelectTrigger className="h-12 bg-background">
-                          <SelectValue placeholder="Select state" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border border-border shadow-lg z-[100]">
-                          {US_STATES.map((state) => (
-                            <SelectItem key={state.code} value={state.code}>
-                              {state.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* County Dropdown */}
-                    {newCoverageState && COUNTIES_BY_STATE[newCoverageState] && (
+                {coverageAreas.length < 3 && (
+                  <div className="border-2 border-dashed rounded-xl p-5 space-y-4">
+                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Coverage Area
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* State */}
                       <div>
-                        <Label>County / Area (Optional)</Label>
-                        <Select 
-                          value={newCoverageCounty} 
+                        <Label>State</Label>
+                        <Select
+                          value={newCoverageState}
                           onValueChange={(value) => {
-                            setNewCoverageCounty(value);
-                            setNewCoverageCity(""); // Reset city when county changes
-                            setSuggestedZips([]); // Reset suggested zips
+                            setNewCoverageState(value);
+                            setNewCoverageCounty("");
+                            setNewCoverageCity("");
+                            setNewCoverageZips(["", "", ""]);
+                            setSuggestedZips([]);
                           }}
                         >
-                          <SelectTrigger className="h-12 bg-background">
-                            <SelectValue placeholder="Select county or area" />
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select state" />
                           </SelectTrigger>
-                          <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-[300px]">
-                            {COUNTIES_BY_STATE[newCoverageState].map((county) => (
-                              <SelectItem key={county} value={county}>
-                                {county}
-                              </SelectItem>
+                          <SelectContent>
+                            {US_STATES.map((s) => (
+                              <SelectItem key={s.code} value={s.code}>{s.name}</SelectItem>
+                            ))}
+                              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Selecting a county will filter available cities
-                        </p>
                       </div>
-                    )}
 
-                    {/* City Dropdown */}
+                      {/* County */}
+                      <div>
+                        <Label>County (Optional)</Label>
+                        <Select
+                          value={newCoverageCounty}
+                          onValueChange={(value) => {
+                            setNewCoverageCounty(value);
+                            setNewCoverageCity("");
+                            setNewCoverageZips(["", "", ""]);
+                            setSuggestedZips([]);
+                          }}
+                          disabled={!newCoverageState}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select county" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {newCoverageState && COUNTIES_BY_STATE[newCoverageState]?.map((county) => (
+                              <SelectItem key={county} value={county}>{county}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* City */}
                     <div>
                       <Label>City</Label>
-                      <Select 
-                        value={newCoverageCity} 
+                      <Select
+                        value={newCoverageCity}
                         onValueChange={async (value) => {
                           setNewCoverageCity(value);
-                          setSuggestedZips([]);
+                          setNewCoverageZips(["", "", ""]);
                           if (!newCoverageState) return;
                           
                           setSuggestedZipsLoading(true);
                           try {
-                            // First, try to get zip codes from static data
                             if (hasZipCodeData(value, newCoverageState)) {
                               const staticZips = getZipCodesForCity(value, newCoverageState);
                               setSuggestedZips(staticZips);
                             } else {
-                              // Fallback to API if city not in static data
                               const { data, error } = await supabase.functions.invoke('get-city-zips', {
                                 body: { state: newCoverageState, city: value }
                               });
                               if (error) throw error;
-                              const zips: string[] = data?.zips || [];
-                              setSuggestedZips(zips);
+                              setSuggestedZips(data?.zips || []);
                             }
                           } catch (err) {
-                            console.error('[AgentProfileEditor] ZIP lookup failed', err);
+                            console.error('ZIP lookup failed', err);
                             setSuggestedZips([]);
                           } finally {
                             setSuggestedZipsLoading(false);
@@ -1023,55 +876,37 @@ const AgentProfileEditor = () => {
                         }}
                         disabled={!newCoverageState}
                       >
-                        <SelectTrigger className="h-12 bg-background">
-                          <SelectValue placeholder={
-                            !newCoverageState 
-                              ? "Select state first" 
-                              : "Select city"
-                          } />
+                        <SelectTrigger>
+                          <SelectValue placeholder={!newCoverageState ? "Select state first" : "Select city"} />
                         </SelectTrigger>
-                        <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-[300px]">
+                        <SelectContent className="max-h-[300px]">
                           {newCoverageState && (() => {
-                            // If county is selected and has mapping, show only cities in that county
                             if (newCoverageCounty && hasCountyCityMapping(newCoverageState)) {
                               const countyCities = getCitiesForCounty(newCoverageState, newCoverageCounty);
                               if (countyCities.length > 0) {
                                 return countyCities.map((city) => (
-                                  <SelectItem key={city} value={city}>
-                                    {city}
-                                  </SelectItem>
+                                  <SelectItem key={city} value={city}>{city}</SelectItem>
                                 ));
                               }
                             }
-                            // Otherwise show all cities for the state
                             return usCitiesByState[newCoverageState]?.map((city) => (
-                              <SelectItem key={city} value={city}>
-                                {city}
-                              </SelectItem>
+                              <SelectItem key={city} value={city}>{city}</SelectItem>
                             ));
                           })()}
                         </SelectContent>
                       </Select>
-                      {newCoverageCounty && hasCountyCityMapping(newCoverageState) && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Showing cities in {newCoverageCounty} County
-                        </p>
-                      )}
                     </div>
 
                     {/* Suggested Zip Codes */}
                     {suggestedZipsLoading && (
-                      <div className="border rounded-lg p-4 bg-muted/50">
-                        <p className="text-sm text-muted-foreground">Loading zip codes for {newCoverageCity}...</p>
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Loading zip codes...</p>
                       </div>
                     )}
                     {!suggestedZipsLoading && suggestedZips.length > 0 && (
-                      <div className="border rounded-lg p-4 bg-muted/50 space-y-3">
-                        <div>
-                          <Label className="text-sm font-medium">Available Zip Codes for {newCoverageCity}</Label>
-                          <p className="text-xs text-muted-foreground mt-1">Click a zip code to add it to your coverage areas</p>
-                        </div>
-                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                      <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                        <Label className="text-sm">Click to add a zip code</Label>
+                        <div className="flex flex-wrap gap-2">
                           {suggestedZips.map((zip) => (
                             <Button
                               key={zip}
@@ -1085,11 +920,11 @@ const AgentProfileEditor = () => {
                                   newZips[emptyIndex] = zip;
                                   setNewCoverageZips(newZips);
                                 } else {
-                                  toast.error("All zip code slots are filled. Please clear one first.");
+                                  toast.error("All zip code slots are filled.");
                                 }
                               }}
-                              className="justify-center text-xs"
                               disabled={newCoverageZips.includes(zip)}
+                              className="font-mono text-xs"
                             >
                               {zip}
                             </Button>
@@ -1098,44 +933,18 @@ const AgentProfileEditor = () => {
                       </div>
                     )}
 
-                    {/* Zip Codes Input - Multiple */}
+                    {/* Selected Zips */}
                     <div>
                       <Label>Selected Zip Codes ({newCoverageZips.filter(z => z.trim()).length}/3)</Label>
-                      <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2 mt-2">
                         {newCoverageZips.map((zip, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground w-6">{index + 1}.</span>
-                            <AddressAutocomplete
-                              placeholder={`Zip code ${index + 1}`}
-                              value={zip}
-                              types={['geocode']}
-                              onChange={(value) => {
-                                const zipMatch = value.match(/\b\d{5}\b/);
-                                const extractedZip = zipMatch ? zipMatch[0] : value.replace(/\D/g, '').slice(0, 5);
-                                const newZips = [...newCoverageZips];
-                                newZips[index] = extractedZip;
-                                setNewCoverageZips(newZips);
-                              }}
-                              onPlaceSelect={(place) => {
-                                const comps = (place as any).address_components || (place as any).addressComponents || [];
-                                const zipComponent = comps.find((c: any) => c.types?.includes('postal_code'));
-                                let extracted = zipComponent?.short_name || zipComponent?.long_name || "";
-                                if (!extracted) {
-                                  const text = (place as any).formatted_address || (place as any).formattedAddress || (place as any).name || "";
-                                  const match = String(text).match(/\b\d{5}\b/);
-                                  extracted = match ? match[0] : "";
-                                }
-                                if (extracted) {
-                                  const newZips = [...newCoverageZips];
-                                  newZips[index] = extracted;
-                                  setNewCoverageZips(newZips);
-                                }
-                              }}
-                              className="h-12 font-mono"
-                            />
-                            {zip && (
+                          zip.trim() && (
+                            <div 
+                              key={index}
+                              className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-lg"
+                            >
+                              <span className="font-mono font-medium text-sm">{zip}</span>
                               <Button
-                                type="button"
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => {
@@ -1143,175 +952,106 @@ const AgentProfileEditor = () => {
                                   newZips[index] = "";
                                   setNewCoverageZips(newZips);
                                 }}
-                                className="h-12 w-12"
+                                className="h-5 w-5 hover:bg-destructive/10 hover:text-destructive"
                               >
-                                <X className="h-4 w-4" />
+                                <X className="h-3 w-3" />
                               </Button>
-                            )}
-                          </div>
+                            </div>
+                          )
                         ))}
+                        {!newCoverageZips.some(z => z.trim()) && (
+                          <p className="text-sm text-muted-foreground">No zip codes selected</p>
+                        )}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Enter zip codes for {newCoverageCity || "selected city"}
-                      </p>
                     </div>
 
-{(newCoverageState && newCoverageCity && newCoverageZips.some(z => z.trim() !== "") && coverageAreas.length < 3) && (
-  <Button 
-    onClick={handleAddCoverageArea}
-    className="w-full"
-  >
-    <Plus className="h-4 w-4 mr-2" />
-    Add Coverage Area{newCoverageZips.filter(z => z.trim()).length > 1 ? 's' : ''}
-  </Button>
-)}
-
-                    <p className="text-sm text-muted-foreground">
-                      Select a state, optionally narrow by county, then choose city and enter up to 3 zip codes at once. Major cities will show suggested zip codes that you can click to add.
-                    </p>
+                    {(newCoverageState && newCoverageCity && newCoverageZips.some(z => z.trim())) && (
+                      <Button onClick={handleAddCoverageArea} className="w-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Coverage Area
+                      </Button>
+                    )}
                   </div>
-                </div>
+                )}
 
                 {/* Existing Coverage Areas */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">Your Coverage Areas</h3>
                     {coverageAreas.length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleClearAllCoverageAreas}
-                      >
-                        Clear all coverage areas
+                      <Button variant="outline" size="sm" onClick={handleClearAllCoverageAreas}>
+                        Clear All
                       </Button>
                     )}
                   </div>
                   {coverageAreas.length === 0 ? (
-                    <div className="text-center py-8 border-2 border-dashed rounded-2xl">
-                      <MapPin className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                      <p className="text-muted-foreground mb-2">No coverage areas added yet</p>
-                      <p className="text-sm text-muted-foreground">Add up to 3 zip codes to start receiving buyer agent leads</p>
+                    <div className="text-center py-8 border-2 border-dashed rounded-xl">
+                      <MapPin className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+                      <p className="text-muted-foreground">No coverage areas added yet</p>
                     </div>
                   ) : (
-                    <div className="grid gap-4">
-                      {/* Group by city/county */}
-                      {Object.entries(
-                        coverageAreas.reduce((acc, area) => {
-                          // Create a key for grouping by county + city or just city
-                          const groupKey = area.county
-                            ? `${area.county}, ${area.city}, ${area.state}`
-                            : `${area.city}, ${area.state}`;
-                          
-                          if (!acc[groupKey]) {
-                            acc[groupKey] = {
-                              county: area.county,
-                              city: area.city,
-                              state: area.state,
-                              areas: []
-                            };
-                          }
-                          acc[groupKey].areas.push(area);
-                          return acc;
-                        }, {} as Record<string, { county: string | null; city: string | null; state: string | null; areas: CoverageArea[] }>)
-                      ).map(([groupKey, group]) => (
+                    <div className="flex flex-wrap gap-2">
+                      {coverageAreas.map((area) => (
                         <div 
-                          key={groupKey} 
-                          className="border-2 rounded-2xl p-4 bg-gradient-card hover:border-primary/50 transition-colors"
+                          key={area.id}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full group"
                         >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-start gap-3">
-                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                                <MapPin className="h-5 w-5 text-primary" />
-                              </div>
-                              <div className="flex-1">
-                                <p className="font-semibold text-lg">
-                                  {group.city}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {group.state}
-                                  {group.county && ` • ${group.county} County`}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Zip codes for this city */}
-                          <div className="ml-13 space-y-2">
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                              Zip Codes ({group.areas.length})
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {group.areas.map((area) => (
-                                <div 
-                                  key={area.id}
-                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-background border border-border rounded-lg group/zip hover:border-destructive/50 transition-colors"
-                                >
-                                  <span className="font-mono font-medium">{area.zip_code}</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleDeleteCoverageArea(area.id)}
-                                    className="h-5 w-5 hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover/zip:opacity-100 transition-opacity"
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
+                          <MapPin className="h-4 w-4 text-primary" />
+                          <span className="font-medium">{area.zip_code}</span>
+                          <span className="text-muted-foreground text-sm">
+                            {area.city}, {area.state}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteCoverageArea(area.id)}
+                            className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
 
-                {coverageAreas.length > 0 && (
-                  <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4">
-                    <p className="text-sm text-foreground">
-                      ✓ You're now receiving buyer agent leads for {coverageAreas.length} zip code{coverageAreas.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Testimonials Section */}
-          <Card className="mb-6 border-l-4 border-l-teal-500 hover:shadow-lg transition-all">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-teal-500/10">
-                  <MessageSquare className="h-5 w-5 text-teal-500" />
-                </div>
-                Testimonials
-              </CardTitle>
-              <CardDescription>Add client testimonials to build trust</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Add New Testimonial */}
-              <div className="border rounded-lg p-4 mb-6 bg-muted/50">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add New Testimonial
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="client_name">Client Name *</Label>
-                    <Input
-                      id="client_name"
-                      placeholder="John Smith"
-                      value={newTestimonial.client_name}
-                      onChange={(e) => setNewTestimonial({ ...newTestimonial, client_name: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="client_title">Client Title (Optional)</Label>
-                    <Input
-                      id="client_title"
-                      placeholder="First-time Homebuyer"
-                      value={newTestimonial.client_title}
-                      onChange={(e) => setNewTestimonial({ ...newTestimonial, client_title: e.target.value })}
-                    />
+            {/* Testimonials Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  Testimonials
+                </CardTitle>
+                <CardDescription>Add client testimonials to build trust</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Add New Testimonial */}
+                <div className="border-2 border-dashed rounded-xl p-5 space-y-4">
+                  <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Testimonial
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="client_name">Client Name *</Label>
+                      <Input
+                        id="client_name"
+                        placeholder="John Smith"
+                        value={newTestimonial.client_name}
+                        onChange={(e) => setNewTestimonial({ ...newTestimonial, client_name: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="client_title">Client Role (Optional)</Label>
+                      <Input
+                        id="client_title"
+                        placeholder="First-time Homebuyer"
+                        value={newTestimonial.client_title}
+                        onChange={(e) => setNewTestimonial({ ...newTestimonial, client_title: e.target.value })}
+                      />
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="testimonial_text">Testimonial *</Label>
@@ -1320,77 +1060,92 @@ const AgentProfileEditor = () => {
                       placeholder="Write the testimonial here..."
                       value={newTestimonial.testimonial_text}
                       onChange={(e) => setNewTestimonial({ ...newTestimonial, testimonial_text: e.target.value })}
-                      rows={4}
+                      rows={3}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="rating">Rating (1-5 stars)</Label>
-                    <Input
-                      id="rating"
-                      type="number"
-                      min="1"
-                      max="5"
-                      value={newTestimonial.rating}
-                      onChange={(e) => setNewTestimonial({ ...newTestimonial, rating: parseInt(e.target.value) || 5 })}
-                    />
-                  </div>
-                  <Button onClick={handleAddTestimonial}>Add Testimonial</Button>
-                </div>
-              </div>
-
-              {/* Existing Testimonials */}
-              <div className="space-y-4">
-                <h3 className="font-semibold">Your Testimonials</h3>
-                {testimonials.length === 0 ? (
-                  <p className="text-muted-foreground">No testimonials yet. Add your first one above!</p>
-                ) : (
-                  testimonials.map((testimonial) => (
-                    <div key={testimonial.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-semibold">{testimonial.client_name}</p>
-                          {testimonial.client_title && (
-                            <p className="text-sm text-muted-foreground">{testimonial.client_title}</p>
-                          )}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteTestimonial(testimonial.id)}
+                    <Label>Rating</Label>
+                    <div className="flex items-center gap-1 mt-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setNewTestimonial({ ...newTestimonial, rating: star })}
+                          className="focus:outline-none"
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex items-center gap-1 mb-2">
-                        {Array.from({ length: testimonial.rating }).map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                        ))}
-                      </div>
-                      <p className="text-sm">{testimonial.testimonial_text}</p>
+                          <Star
+                            className={`h-6 w-6 ${
+                              star <= newTestimonial.rating
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "text-muted-foreground/30"
+                            }`}
+                          />
+                        </button>
+                      ))}
                     </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                  <Button onClick={handleAddTestimonial}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Testimonial
+                  </Button>
+                </div>
 
-          {/* Publish Profile Section */}
-          <Card className="border-primary/50 bg-primary/5">
-            <CardHeader>
-              <CardTitle className="text-2xl">Ready to Publish?</CardTitle>
-              <CardDescription>Your profile is complete! Click below to make it live and visible to potential clients.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                size="lg" 
-                onClick={handlePublishProfile} 
-                disabled={saving || redirecting}
-                className="w-full md:w-auto"
-              >
-                {redirecting ? "Redirecting to profile..." : saving ? "Publishing..." : "Publish Profile"}
-              </Button>
-            </CardContent>
-          </Card>
+                {/* Existing Testimonials */}
+                {testimonials.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">
+                    No testimonials yet. Add your first one above!
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {testimonials.map((testimonial) => (
+                      <TestimonialCard
+                        key={testimonial.id}
+                        testimonial={testimonial}
+                        onDelete={handleDeleteTestimonial}
+                      />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Live Preview */}
+          <div className="hidden lg:block">
+            <ProfilePreviewPanel
+              firstName={firstName}
+              lastName={lastName}
+              title={title}
+              teamName={teamName}
+              email={email}
+              cellPhone={cellPhone}
+              officePhone={officePhone}
+              headshotUrl={headshotUrl}
+              logoUrl={logoUrl}
+              bio={bio}
+              aacId={aacId}
+              socialLinks={socialLinks}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky Bottom Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t shadow-lg z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
+          <div className="text-sm text-muted-foreground hidden sm:block">
+            {saving ? "Saving changes..." : "Changes are not auto-saved"}
+          </div>
+          <div className="flex items-center gap-3 ml-auto">
+            <Button variant="outline" onClick={handleViewProfile} className="gap-2">
+              <ExternalLink className="h-4 w-4" />
+              <span className="hidden sm:inline">View Public Profile</span>
+              <span className="sm:hidden">Preview</span>
+            </Button>
+            <Button onClick={handleSaveProfile} disabled={saving} className="gap-2">
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -1398,4 +1153,3 @@ const AgentProfileEditor = () => {
 };
 
 export default AgentProfileEditor;
-
