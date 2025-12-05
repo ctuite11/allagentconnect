@@ -1046,7 +1046,10 @@ const AgentProfileEditor = () => {
                 {/* Existing Coverage Areas */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">Your Coverage Areas</h3>
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      Your Coverage Areas
+                    </h3>
                     {coverageAreas.length > 0 && (
                       <Button variant="outline" size="sm" onClick={handleClearAllCoverageAreas}>
                         Clear All
