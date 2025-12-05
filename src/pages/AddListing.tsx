@@ -896,6 +896,8 @@ const AddListing = () => {
   };
 
   const applyAttomData = (record: any) => {
+    console.log('[ATTOM] applyAttomData called with record:', JSON.stringify(record, null, 2));
+    
     // Mark that we're applying ATTOM data to prevent re-triggering fetch
     isApplyingAttomDataRef.current = true;
     // ALSO set hydration flag to prevent cascading useEffects from clearing values
@@ -976,22 +978,33 @@ const AddListing = () => {
     // Use functional update to ensure we get the latest form state
     setFormData(prev => {
       const updates: Partial<typeof prev> = {};
+      const isCondo = prev.property_type === 'condo' || 
+        (record.property_type && (
+          record.property_type.toLowerCase().includes('condo') ||
+          record.property_type.toLowerCase().includes('co-op')
+        ));
       
       // Bedrooms - only fill if empty
       if (!prev.bedrooms && record.beds) {
         updates.bedrooms = record.beds.toString();
+        console.log('[ATTOM] Setting bedrooms:', record.beds);
       }
       // Bathrooms - only fill if empty
       if (!prev.bathrooms && record.baths) {
         updates.bathrooms = record.baths.toString();
+        console.log('[ATTOM] Setting bathrooms:', record.baths);
       }
-      // Square feet - only fill if empty
-      if (!prev.square_feet && record.sqft) {
+      // Square feet - only fill if empty AND not a condo (ATTOM returns building sqft for condos)
+      if (!prev.square_feet && record.sqft && !isCondo) {
         updates.square_feet = record.sqft.toString();
+        console.log('[ATTOM] Setting square_feet:', record.sqft);
+      } else if (isCondo && record.sqft) {
+        console.log('[ATTOM] Skipping square_feet for condo (ATTOM returns building size, not unit size):', record.sqft);
       }
       // Lot size - only fill if empty (and not a condo)
-      if (!prev.lot_size && record.lotSizeSqft && prev.property_type !== 'condo') {
+      if (!prev.lot_size && record.lotSizeSqft && !isCondo) {
         updates.lot_size = record.lotSizeSqft.toString();
+        console.log('[ATTOM] Setting lot_size:', record.lotSizeSqft);
       }
       // Year built - only fill if empty
       if (!prev.year_built && record.yearBuilt) {
@@ -1004,15 +1017,32 @@ const AddListing = () => {
       // Tax year - only fill if empty
       if (!prev.tax_year && record.taxYear) {
         updates.tax_year = record.taxYear.toString();
+        console.log('[ATTOM] Setting tax_year:', record.taxYear);
       }
       // Latitude/longitude - always update if ATTOM provides them
       if (record.latitude != null) {
         updates.latitude = record.latitude;
+        console.log('[ATTOM] Setting latitude:', record.latitude);
       }
       if (record.longitude != null) {
         updates.longitude = record.longitude;
+        console.log('[ATTOM] Setting longitude:', record.longitude);
       }
       
+      // Log what's available vs what's being applied
+      console.log('[ATTOM] Record data available:', {
+        beds: record.beds,
+        baths: record.baths,
+        sqft: record.sqft,
+        lotSizeSqft: record.lotSizeSqft,
+        yearBuilt: record.yearBuilt,
+        taxAmount: record.taxAmount,
+        taxYear: record.taxYear,
+        latitude: record.latitude,
+        longitude: record.longitude,
+        property_type: record.property_type,
+        isCondo
+      });
       console.log('[ATTOM] Property details being applied:', updates);
       
       return { ...prev, ...updates };
