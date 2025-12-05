@@ -125,7 +125,7 @@ function MyListingsView({
   onEdit: (id: string) => void;
   onPreview: (id: string) => void;
   onShare: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
   onBulkDeleteDrafts: (ids: string[]) => Promise<void>;
   onNewListing: () => void;
   onQuickUpdate: (id: string, updates: Partial<Pick<Listing, "price" | "status">>) => Promise<void>;
@@ -149,6 +149,10 @@ function MyListingsView({
   const [selectedDraftIds, setSelectedDraftIds] = useState<Set<string>>(new Set());
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Single listing deletion state
+  const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
+  const [isDeletingSingle, setIsDeletingSingle] = useState(false);
 
   // Get draft listings for bulk selection
   const draftListings = useMemo(() => listings.filter(l => l.status === "draft"), [listings]);
@@ -189,6 +193,18 @@ function MyListingsView({
     } finally {
       setIsDeleting(false);
       setShowBulkDeleteConfirm(false);
+    }
+  };
+
+  // Single listing delete handler
+  const handleConfirmSingleDelete = async () => {
+    if (!listingToDelete) return;
+    setIsDeletingSingle(true);
+    try {
+      await onDelete(listingToDelete.id);
+    } finally {
+      setIsDeletingSingle(false);
+      setListingToDelete(null);
     }
   };
 
@@ -310,6 +326,28 @@ function MyListingsView({
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Single Listing Delete Confirmation Dialog */}
+      <AlertDialog open={!!listingToDelete} onOpenChange={(open) => !open && setListingToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this listing?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this listing? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingSingle}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmSingleDelete}
+              disabled={isDeletingSingle}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingSingle ? "Deleting..." : "Delete listing"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Select All Drafts Row - only visible on Draft tab */}
       {activeStatus === "draft" && draftListings.length > 0 && (
         <div className="flex items-center gap-4 py-2">
@@ -387,7 +425,7 @@ function MyListingsView({
                       </button>
                       <button
                         className="p-2 rounded-md hover:bg-destructive/10 text-destructive transition"
-                        onClick={() => onDelete(l.id)}
+                        onClick={() => setListingToDelete(l)}
                         title="Delete"
                       >
                         <Trash2 size={16} />
@@ -624,7 +662,7 @@ function MyListingsView({
                       </button>
                       <button
                         className="hover:text-destructive text-destructive/70 transition"
-                        onClick={() => onDelete(l.id)}
+                        onClick={() => setListingToDelete(l)}
                         title="Delete"
                       >
                         <Trash2 size={18} />
@@ -766,17 +804,20 @@ const MyListings = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this listing?")) return;
-
     try {
       const { error } = await supabase.from("listings").delete().eq("id", id);
       if (error) throw error;
 
-      toast.success("Listing deleted successfully");
+      toast.success("Listing deleted successfully", {
+        className: "bg-green-50 border-green-200 text-green-800",
+      });
       fetchListings();
     } catch (error) {
       console.error("Error deleting listing:", error);
-      toast.error("Failed to delete listing");
+      toast.error("Failed to delete listing", {
+        className: "bg-red-50 border-red-200 text-red-800",
+      });
+      throw error; // Re-throw so the dialog can handle it
     }
   };
 
