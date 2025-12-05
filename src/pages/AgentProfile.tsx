@@ -3,24 +3,32 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, Building2, MapPin, ArrowLeft, Loader2, Home, Star, Briefcase, Globe, Linkedin, Facebook, Twitter, Instagram, DollarSign, Award, Download } from "lucide-react";
+import { 
+  Mail, 
+  Phone, 
+  ArrowLeft, 
+  Loader2, 
+  Home, 
+  Star, 
+  Globe, 
+  Linkedin, 
+  Facebook, 
+  Twitter, 
+  Instagram, 
+  Download,
+  Users,
+  ShieldCheck,
+  Gift,
+  TrendingUp,
+  Quote,
+  HomeIcon
+} from "lucide-react";
 import { toast } from "sonner";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
-
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-
-const formatPhoneNumber_OLD = (phone: string) => {
-  const cleaned = phone.replace(/\D/g, '');
-  if (cleaned.length === 10) {
-    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
-  }
-  return phone;
-};
 
 const generateVCard = (agent: AgentProfile) => {
   const vcard = [
@@ -46,16 +54,6 @@ const generateVCard = (agent: AgentProfile) => {
   link.download = `${agent.first_name}_${agent.last_name}.vcf`;
   link.click();
   window.URL.revokeObjectURL(url);
-  
-  // Scroll to main content section after saving contact
-  setTimeout(() => {
-    const mainContent = document.getElementById('agent-main-content');
-    if (mainContent) {
-      const yOffset = -100; // Account for fixed navigation
-      const y = mainContent.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
-  }, 200);
 };
 
 interface AgentProfile {
@@ -121,7 +119,6 @@ const AgentProfile = () => {
     try {
       setLoading(true);
 
-      // Fetch agent profile
       const { data: agentData, error: agentError } = await supabase
         .from("agent_profiles")
         .select(`
@@ -143,7 +140,6 @@ const AgentProfile = () => {
 
       setAgent(agentData as AgentProfile);
 
-      // Fetch agent's active listings
       const { data: listingsData, error: listingsError } = await supabase
         .from("listings")
         .select("*")
@@ -155,7 +151,6 @@ const AgentProfile = () => {
       if (listingsError) throw listingsError;
       setListings(listingsData || []);
 
-      // Fetch testimonials
       const { data: testimonialsData, error: testimonialsError } = await supabase
         .from("testimonials")
         .select("*")
@@ -177,7 +172,7 @@ const AgentProfile = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="flex items-center justify-center min-h-[60vh] mt-20">
-          <Loader2 className="h-8 w-8 animate-spin" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -199,303 +194,345 @@ const AgentProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-secondary/30">
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
         <Button
-          variant="outline"
+          variant="ghost"
           onClick={() => navigate(-1)}
-          className="mb-6 gap-2"
+          className="mb-6 gap-2 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
 
-        {/* Hero Section with Agent Contact Information */}
-        <section className="mb-8">
-          <div className="flex flex-col md:flex-row gap-8 items-start">
-            {/* Headshot and Agent ID */}
-            <div className="flex-shrink-0">
-              <div className="w-48 h-64 rounded-lg overflow-hidden border border-border">
-                {agent.headshot_url ? (
-                  <img 
-                    src={agent.headshot_url} 
-                    alt={`${agent.first_name} ${agent.last_name}`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-background flex items-center justify-center">
-                    <span className="text-6xl font-bold text-foreground">
-                      {agent.first_name[0]}{agent.last_name[0]}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {agent.aac_id && (
-                <div className="mt-3 text-center">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    <span className="font-semibold">Agent Id:</span> {agent.aac_id}
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 w-full"
-                    onClick={() => generateVCard(agent)}
-                  >
-                    <Download className="h-4 w-4" />
-                    Save Contact
-                  </Button>
+        {/* Hero Header Section */}
+        <Card className="mb-8 overflow-hidden shadow-lg border-0">
+          <CardContent className="p-6 md:p-8">
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+              {/* Left Column - Photo & Save Contact */}
+              <div className="flex flex-col items-center lg:items-start flex-shrink-0">
+                <div className="w-40 h-40 md:w-44 md:h-44 rounded-full overflow-hidden border-4 border-primary/20 shadow-lg">
+                  {agent.headshot_url ? (
+                    <img 
+                      src={agent.headshot_url} 
+                      alt={`${agent.first_name} ${agent.last_name}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-5xl font-bold text-primary">
+                        {agent.first_name[0]}{agent.last_name[0]}
+                      </span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            
-            {/* Contact Information - Simple Text Layout */}
-            <div className="flex-1 space-y-0">
-              <div className="flex items-start justify-between mb-1">
-                <h1 className="text-3xl font-bold">
+                {agent.aac_id && (
+                  <p className="text-xs text-muted-foreground mt-3 text-center">
+                    Agent ID: {agent.aac_id}
+                  </p>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 gap-2 rounded-full px-5"
+                  onClick={() => generateVCard(agent)}
+                >
+                  <Download className="h-4 w-4" />
+                  Save Contact
+                </Button>
+              </div>
+              
+              {/* Middle Column - Name, Title, Contact Info, CTAs */}
+              <div className="flex-1 text-center lg:text-left">
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-1">
                   {agent.first_name} {agent.last_name}
                 </h1>
-                {agent.logo_url && (
-                  <img src={agent.logo_url} alt="Company logo" className="h-28 object-contain" />
+                
+                {(agent.title || agent.company) && (
+                  <p className="text-lg text-muted-foreground mb-4">
+                    {agent.title}{agent.title && agent.company && ' • '}{agent.company}
+                  </p>
                 )}
-              </div>
-              
-              {agent.title && (
-                <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">Title:</span> {agent.title}
-                </p>
-              )}
-              
-              {agent.company && (
-                <p className="text-xl font-semibold text-foreground mt-2">
-                  {agent.company}
-                </p>
-              )}
-              
-              {agent.office_phone && agent.office_phone.trim() && (
-                <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">Office:</span>{' '}
-                  <a href={`tel:${agent.office_phone}`} className="hover:text-primary transition-colors">
-                    {formatPhoneNumber(agent.office_phone)}
-                  </a>
-                </p>
-              )}
-              {agent.cell_phone && agent.cell_phone.trim() && (
-                <p className="text-lg text-muted-foreground">
-                  <span className="font-semibold">Cell:</span>{' '}
-                  <a href={`tel:${agent.cell_phone}`} className="hover:text-primary transition-colors">
-                    {formatPhoneNumber(agent.cell_phone)}
-                  </a>
-                </p>
-              )}
-              
-              <p className="text-lg text-muted-foreground">
-                <span className="font-semibold">Email:</span>{' '}
-                <a href={`mailto:${agent.email}`} className="hover:text-primary transition-colors">
-                  {agent.email}
-                </a>
-              </p>
-
-              {agent.social_links?.website && (
-                <div className="mt-3 mb-2">
-                  <a 
-                    href={agent.social_links.website.startsWith('http') ? agent.social_links.website : `https://${agent.social_links.website}`}
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold"
-                  >
-                    <Globe className="h-4 w-4" />
-                    Visit My Website
-                  </a>
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-3 pt-4">
-                <ContactAgentProfileDialog 
-                  agentId={agent.id}
-                  agentName={`${agent.first_name} ${agent.last_name}`}
-                  agentEmail={agent.email}
-                />
-              </div>
-
-              {agent.social_links && Object.values(agent.social_links).some(link => link) && (
-                <div className="pt-2">
-                  <div className="flex gap-3">
-                    {agent.social_links.website && (
-                      <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
-                        <Globe className="h-5 w-5" />
+                
+                <div className="space-y-2 mb-6">
+                  {agent.office_phone && agent.office_phone.trim() && (
+                    <div className="flex items-center justify-center lg:justify-start gap-3 text-foreground">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <a href={`tel:${agent.office_phone}`} className="hover:text-primary transition-colors">
+                        Office: {formatPhoneNumber(agent.office_phone)}
                       </a>
-                    )}
+                    </div>
+                  )}
+                  {agent.cell_phone && agent.cell_phone.trim() && (
+                    <div className="flex items-center justify-center lg:justify-start gap-3 text-foreground">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <a href={`tel:${agent.cell_phone}`} className="hover:text-primary transition-colors">
+                        Cell: {formatPhoneNumber(agent.cell_phone)}
+                      </a>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-center lg:justify-start gap-3 text-foreground">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <a href={`mailto:${agent.email}`} className="hover:text-primary transition-colors">
+                      {agent.email}
+                    </a>
+                  </div>
+                </div>
+
+                {/* CTAs */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-4">
+                  <ContactAgentProfileDialog 
+                    agentId={agent.id}
+                    agentName={`${agent.first_name} ${agent.last_name}`}
+                    agentEmail={agent.email}
+                  />
+                  {agent.social_links?.website && (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      asChild
+                    >
+                      <a 
+                        href={agent.social_links.website.startsWith('http') ? agent.social_links.website : `https://${agent.social_links.website}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        <Globe className="h-4 w-4" />
+                        Visit My Website
+                      </a>
+                    </Button>
+                  )}
+                </div>
+
+                {/* Social Links */}
+                {agent.social_links && Object.values(agent.social_links).some(link => link) && (
+                  <div className="flex gap-2 justify-center lg:justify-start">
                     {agent.social_links.linkedin && (
-                      <a href={agent.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#0A66C2] hover:bg-[#004182] text-white transition-colors">
-                        <Linkedin className="h-5 w-5" />
+                      <a href={agent.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#0A66C2] hover:bg-[#004182] text-white transition-colors">
+                        <Linkedin className="h-4 w-4" />
                       </a>
                     )}
                     {agent.social_links.facebook && (
-                      <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#1877F2] hover:bg-[#166FE5] text-white transition-colors">
-                        <Facebook className="h-5 w-5" />
+                      <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#1877F2] hover:bg-[#166FE5] text-white transition-colors">
+                        <Facebook className="h-4 w-4" />
                       </a>
                     )}
                     {agent.social_links.twitter && (
-                      <a href={agent.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white transition-colors">
-                        <Twitter className="h-5 w-5" />
+                      <a href={agent.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-foreground hover:bg-foreground/80 text-background transition-colors">
+                        <Twitter className="h-4 w-4" />
                       </a>
                     )}
                     {agent.social_links.instagram && (
-                      <a href={agent.social_links.instagram} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white transition-colors">
-                        <Instagram className="h-5 w-5" />
+                      <a href={agent.social_links.instagram} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white transition-colors">
+                        <Instagram className="h-4 w-4" />
                       </a>
                     )}
                   </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
+                )}
+              </div>
 
+              {/* Right Column - Logo & Badges */}
+              <div className="flex flex-col items-center lg:items-end gap-4 flex-shrink-0">
+                {agent.logo_url && (
+                  <img 
+                    src={agent.logo_url} 
+                    alt="Company logo" 
+                    className="h-16 md:h-20 object-contain"
+                  />
+                )}
+                <div className="flex flex-col gap-2">
+                  <Badge variant="outline" className="gap-2 px-4 py-1.5 rounded-full border-primary/30 bg-primary/5 text-primary">
+                    <Users className="h-3.5 w-3.5" />
+                    DirectConnect Friendly
+                  </Badge>
+                  <Badge variant="outline" className="gap-2 px-4 py-1.5 rounded-full border-accent/30 bg-accent/5 text-accent">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    Verified Agent
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Main Content */}
-        <div id="agent-main-content" className="space-y-6">
+        <div id="agent-main-content" className="space-y-8">
           {/* Bio Section */}
           {agent.bio && (
-            <Card>
-              <CardHeader>
-                <CardTitle>About Me</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground whitespace-pre-wrap">{agent.bio}</p>
-              </CardContent>
-            </Card>
+            <section>
+              <h2 className="text-2xl font-bold text-foreground mb-4">Bio</h2>
+              <Card className="shadow-md border-0">
+                <CardContent className="p-6 md:p-8">
+                  <p className="text-foreground leading-relaxed text-lg whitespace-pre-wrap">
+                    {agent.bio}
+                  </p>
+                </CardContent>
+              </Card>
+            </section>
           )}
 
           {/* Incentives Section */}
           {(agent.buyer_incentives || agent.seller_incentives) && (
-            <div className="grid md:grid-cols-2 gap-6">
-              {agent.buyer_incentives && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <DollarSign className="h-5 w-5 text-accent" />
-                      Buyer Incentives
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{agent.buyer_incentives}</p>
-                  </CardContent>
-                </Card>
-              )}
-              {agent.seller_incentives && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <DollarSign className="h-5 w-5 text-accent" />
-                      Seller Incentives
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{agent.seller_incentives}</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            <section>
+              <h2 className="text-2xl font-bold text-foreground mb-4">Incentives</h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                {agent.buyer_incentives && (
+                  <Card className="shadow-md border-0 overflow-hidden">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 rounded-xl bg-accent/10 flex-shrink-0">
+                          <Gift className="h-6 w-6 text-accent" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg text-foreground mb-2">Buyer Incentives</h3>
+                          <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                            {agent.buyer_incentives}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                {agent.seller_incentives && (
+                  <Card className="shadow-md border-0 overflow-hidden">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 rounded-xl bg-primary/10 flex-shrink-0">
+                          <TrendingUp className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg text-foreground mb-2">Seller Incentives</h3>
+                          <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                            {agent.seller_incentives}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </section>
           )}
 
           {/* Testimonials Section */}
           {testimonials.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                  Client Testimonials
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {testimonials.map((testimonial) => (
-                    <Card key={testimonial.id} className="border-l-4 border-l-primary/50">
-                      <CardContent className="pt-6">
-                        {testimonial.rating && (
-                          <div className="flex gap-1 mb-2">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${
-                                  i < testimonial.rating!
-                                    ? "text-yellow-500 fill-yellow-500"
-                                    : "text-gray-300"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        )}
-                        <p className="text-muted-foreground italic mb-3">"{testimonial.testimonial_text}"</p>
-                        <div className="text-sm">
-                          <p className="font-semibold">{testimonial.client_name}</p>
-                          {testimonial.client_title && (
-                            <p className="text-muted-foreground">{testimonial.client_title}</p>
-                          )}
+            <section>
+              <h2 className="text-2xl font-bold text-foreground mb-4">Client Testimonials</h2>
+              <div className="grid gap-6">
+                {testimonials.map((testimonial) => (
+                  <Card key={testimonial.id} className="shadow-md border-0">
+                    <CardContent className="p-6 md:p-8">
+                      {testimonial.rating && (
+                        <div className="flex gap-1 mb-4">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-5 w-5 ${
+                                i < testimonial.rating!
+                                  ? "text-yellow-500 fill-yellow-500"
+                                  : "text-muted-foreground/30"
+                              }`}
+                            />
+                          ))}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                      )}
+                      <div className="flex gap-3 mb-4">
+                        <Quote className="h-8 w-8 text-primary/20 flex-shrink-0 transform rotate-180" />
+                        <p className="text-foreground text-lg italic leading-relaxed">
+                          {testimonial.testimonial_text}
+                        </p>
+                      </div>
+                      <div className="ml-11">
+                        <p className="font-bold text-foreground">{testimonial.client_name}</p>
+                        {testimonial.client_title && (
+                          <p className="text-sm text-muted-foreground">{testimonial.client_title}</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
           )}
 
-          {/* Listings Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Home className="h-5 w-5" />
-                Active Listings ({listings.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {listings.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No active listings at this time
-                </p>
-              ) : (
-                <div className="grid md:grid-cols-2 gap-4">
-                  {listings.map((listing) => (
-                    <Card key={listing.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate(`/property/${listing.id}`)}>
-                      <div className="relative h-48 overflow-hidden rounded-t-lg">
-                        <img
-                          src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '/placeholder.svg'}
-                          alt={listing.address}
-                          className="w-full h-full object-cover"
-                        />
-                        <Badge className="absolute top-2 right-2 bg-accent">
-                          {listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'}
-                        </Badge>
-                      </div>
-                      <CardContent className="pt-4">
-                        <p className="text-2xl font-bold text-primary mb-2">
-                          ${listing.price.toLocaleString()}
-                        </p>
-                        <p className="font-semibold text-sm mb-1">{listing.address}</p>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          {listing.city}, {listing.state} {listing.zip_code}
-                        </p>
-                        <div className="flex gap-4 text-sm text-muted-foreground">
-                          {listing.bedrooms && (
-                            <span>{listing.bedrooms} bed</span>
-                          )}
-                          {listing.bathrooms && (
-                            <span>{listing.bathrooms} bath</span>
-                          )}
-                          {listing.square_feet && (
-                            <span>{listing.square_feet.toLocaleString()} sqft</span>
-                          )}
+          {/* Active Listings Section */}
+          <section>
+            <h2 className="text-2xl font-bold text-foreground mb-4">
+              Active Listings ({listings.length})
+            </h2>
+            <Card className="shadow-md border-0">
+              <CardContent className="p-6 md:p-8">
+                {listings.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                      <HomeIcon className="h-10 w-10 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-lg text-muted-foreground mb-2">
+                      This agent currently has no active listings.
+                    </p>
+                    <p className="text-muted-foreground mb-6">
+                      Browse available homes or contact the agent directly.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button onClick={() => navigate('/browse')}>
+                        <Home className="h-4 w-4 mr-2" />
+                        Browse Properties
+                      </Button>
+                      <ContactAgentProfileDialog 
+                        agentId={agent.id}
+                        agentName={`${agent.first_name} ${agent.last_name}`}
+                        agentEmail={agent.email}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {listings.map((listing) => (
+                      <Card 
+                        key={listing.id} 
+                        className="cursor-pointer hover:shadow-lg transition-all duration-300 border overflow-hidden group"
+                        onClick={() => navigate(`/property/${listing.id}`)}
+                      >
+                        <div className="relative h-48 overflow-hidden">
+                          <img
+                            src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '/placeholder.svg'}
+                            alt={listing.address}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground">
+                            {listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'}
+                          </Badge>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                        <CardContent className="p-4">
+                          <p className="text-2xl font-bold text-primary mb-2">
+                            ${listing.price.toLocaleString()}
+                          </p>
+                          <p className="font-semibold text-foreground text-sm mb-1 truncate">
+                            {listing.address}
+                          </p>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            {listing.city}, {listing.state} {listing.zip_code}
+                          </p>
+                          <div className="flex gap-4 text-sm text-muted-foreground">
+                            {listing.bedrooms && (
+                              <span>{listing.bedrooms} bed</span>
+                            )}
+                            {listing.bathrooms && (
+                              <span>{listing.bathrooms} bath</span>
+                            )}
+                            {listing.square_feet && (
+                              <span>{listing.square_feet.toLocaleString()} sqft</span>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
         </div>
       </div>
       <Footer />
