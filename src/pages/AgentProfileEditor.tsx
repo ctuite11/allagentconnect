@@ -1010,10 +1010,11 @@ const AgentProfileEditor = () => {
                               <p className="text-sm text-muted-foreground">No zip codes selected</p>
                             ) : (
                               coverageAreas.map((area) => (
-                                <div 
+                              <div 
                                   key={area.id}
-                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
+                                  className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
                                 >
+                                  <MapPin className="h-4 w-4 text-primary" />
                                   <span className="font-medium text-sm">{area.zip_code}</span>
                                   <Button
                                     variant="ghost"
@@ -1062,7 +1063,7 @@ const AgentProfileEditor = () => {
                       {coverageAreas.map((area) => (
                       <div 
                           key={area.id}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
+                          className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
                         >
                           <MapPin className="h-4 w-4 text-primary" />
                           <span className="font-medium text-sm">{area.zip_code}</span>
@@ -1110,8 +1111,9 @@ const AgentProfileEditor = () => {
                         return (
                           <div 
                             key={typeValue}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
+                            className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
                           >
+                            <Home className="h-4 w-4 text-primary" />
                             <span className="font-medium text-sm">{typeLabel}</span>
                             <Button
                               variant="ghost"
