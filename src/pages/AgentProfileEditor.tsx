@@ -116,6 +116,7 @@ const AgentProfileEditor = () => {
   const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
+  const [buyerLeadsExpanded, setBuyerLeadsExpanded] = useState(false);
 
   useEffect(() => {
     checkAuthAndLoadProfile();
@@ -817,373 +818,402 @@ const AgentProfileEditor = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate("/manage-coverage-areas")}
+                    onClick={() => setBuyerLeadsExpanded(!buyerLeadsExpanded)}
                   >
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit
+                    {buyerLeadsExpanded ? (
+                      <>
+                        <X className="h-4 w-4 mr-2" />
+                        Close
+                      </>
+                    ) : (
+                      <>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Add New Coverage Area */}
-                {coverageAreas.length < 3 && (
-                  <div className="border-2 border-dashed rounded-xl p-5 space-y-4">
-                    <h3 className="font-semibold text-sm flex items-center gap-2">
-                      <Plus className="h-4 w-4" />
-                      Add Coverage Area
-                    </h3>
-                    
-                    {/* State & County - Row 1 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <Label>State</Label>
-                        <Select
-                          value={newCoverageState}
-                          onValueChange={(value) => {
-                            setNewCoverageState(value);
-                            setNewCoverageCounty("");
-                            setNewCoverageCity("");
-                            setNewCoverageZips(["", "", ""]);
-                            setSuggestedZips([]);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select state" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {US_STATES.map((s) => (
-                              <SelectItem key={s.code} value={s.code}>{s.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label>County (Optional)</Label>
-                        <Select
-                          value={newCoverageCounty}
-                          onValueChange={(value) => {
-                            setNewCoverageCounty(value);
-                            setNewCoverageCity("");
-                            setNewCoverageZips(["", "", ""]);
-                            setSuggestedZips([]);
-                          }}
-                          disabled={!newCoverageState}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select county" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {newCoverageState && COUNTIES_BY_STATE[newCoverageState]?.map((county) => (
-                              <SelectItem key={county} value={county}>{county}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* City & Property Type - Row 2 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <Label>City</Label>
-                        <Select
-                          value={newCoverageCity}
-                          onValueChange={async (value) => {
-                            setNewCoverageCity(value);
-                            setNewCoverageZips(["", "", ""]);
-                            if (!newCoverageState) return;
-                            
-                            setSuggestedZipsLoading(true);
-                            try {
-                              if (hasZipCodeData(value, newCoverageState)) {
-                                const staticZips = getZipCodesForCity(value, newCoverageState);
-                                setSuggestedZips(staticZips);
-                              } else {
-                                const { data, error } = await supabase.functions.invoke('get-city-zips', {
-                                  body: { state: newCoverageState, city: value }
-                                });
-                                if (error) throw error;
-                                setSuggestedZips(data?.zips || []);
-                              }
-                            } catch (err) {
-                              console.error('ZIP lookup failed', err);
-                              setSuggestedZips([]);
-                            } finally {
-                              setSuggestedZipsLoading(false);
-                            }
-                          }}
-                          disabled={!newCoverageState}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder={!newCoverageState ? "Select state first" : "Select city"} />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-[300px]">
-                            {newCoverageState && (() => {
-                              if (newCoverageCounty && hasCountyCityMapping(newCoverageState)) {
-                                const countyCities = getCitiesForCounty(newCoverageState, newCoverageCounty);
-                                if (countyCities.length > 0) {
-                                  return countyCities.map((city) => (
-                                    <SelectItem key={city} value={city}>{city}</SelectItem>
-                                  ));
-                                }
-                              }
-                              return usCitiesByState[newCoverageState]?.map((city) => (
-                                <SelectItem key={city} value={city}>{city}</SelectItem>
-                              ));
-                            })()}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label>Property Type</Label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue>
-                              {selectedPropertyTypes.length > 0 
-                                ? `${selectedPropertyTypes.length} type(s) selected` 
-                                : "Select property types"}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <div className="p-2 space-y-2">
-                              {[
-                                { value: "single_family", label: "Single Family" },
-                                { value: "condo", label: "Condominium" },
-                                { value: "townhouse", label: "Townhouse" },
-                                { value: "multi_family", label: "Multi-Family" },
-                                { value: "land", label: "Land" },
-                                { value: "commercial", label: "Commercial" },
-                                { value: "residential_rental", label: "Residential Rental" },
-                                { value: "commercial_rental", label: "Commercial Rental" },
-                              ].map((type) => (
-                                <div key={type.value} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={`pref-${type.value}`}
-                                    checked={selectedPropertyTypes.includes(type.value)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        setSelectedPropertyTypes([...selectedPropertyTypes, type.value]);
-                                      } else {
-                                        setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== type.value));
-                                      }
-                                    }}
-                                  />
-                                  <Label htmlFor={`pref-${type.value}`} className="cursor-pointer text-sm">
-                                    {type.label}
-                                  </Label>
-                                </div>
-                              ))}
-                            </div>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* Suggested Zip Codes */}
-                    {suggestedZipsLoading && (
-                      <div className="bg-muted/50 rounded-lg p-4">
-                        <p className="text-sm text-muted-foreground">Loading zip codes...</p>
-                      </div>
-                    )}
-                    {!suggestedZipsLoading && suggestedZips.length > 0 && (
-                      <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                        <Label className="text-sm">Click to add a zip code</Label>
+                {/* Summary view when collapsed */}
+                {!buyerLeadsExpanded && (
+                  <div className="space-y-4">
+                    {/* Coverage Areas Summary */}
+                    <div>
+                      <h3 className="font-semibold text-sm mb-2">Coverage Areas</h3>
+                      {coverageAreas.length === 0 ? (
+                        <p className="text-muted-foreground text-sm">No coverage areas added yet</p>
+                      ) : (
                         <div className="flex flex-wrap gap-2">
-                          {suggestedZips.map((zip) => (
-                            <Button
-                              key={zip}
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const emptyIndex = newCoverageZips.findIndex(z => !z.trim());
-                                if (emptyIndex !== -1) {
-                                  const newZips = [...newCoverageZips];
-                                  newZips[emptyIndex] = zip;
-                                  setNewCoverageZips(newZips);
-                                } else {
-                                  toast.error("All zip code slots are filled.");
-                                }
-                              }}
-                              disabled={newCoverageZips.includes(zip)}
-                              className="font-mono text-xs"
+                          {coverageAreas.map((area) => (
+                            <div 
+                              key={area.id}
+                              className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full"
                             >
-                              {zip}
-                            </Button>
+                              <MapPin className="h-3 w-3 text-primary" />
+                              <span className="text-sm font-medium">{area.zip_code}</span>
+                              <span className="text-muted-foreground text-xs">
+                                {area.city}, {area.state}
+                              </span>
+                            </div>
                           ))}
                         </div>
+                      )}
+                    </div>
+                    
+                    {/* Property Types Summary */}
+                    <div className="pt-4 border-t">
+                      <h3 className="font-semibold text-sm mb-2">Property Types</h3>
+                      {selectedPropertyTypes.length === 0 ? (
+                        <p className="text-muted-foreground text-sm">No property types selected</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {selectedPropertyTypes.map((typeValue) => {
+                            const typeLabel = {
+                              single_family: "Single Family",
+                              condo: "Condominium",
+                              townhouse: "Townhouse",
+                              multi_family: "Multi-Family",
+                              land: "Land",
+                              commercial: "Commercial",
+                              residential_rental: "Residential Rental",
+                              commercial_rental: "Commercial Rental"
+                            }[typeValue] || typeValue;
+                            return (
+                              <div 
+                                key={typeValue}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full"
+                              >
+                                <Home className="h-3 w-3 text-primary" />
+                                <span className="text-sm font-medium">{typeLabel}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Expanded edit view */}
+                {buyerLeadsExpanded && (
+                  <>
+                    {/* Add New Coverage Area */}
+                    {coverageAreas.length < 3 && (
+                      <div className="border-2 border-dashed rounded-xl p-5 space-y-4">
+                        <h3 className="font-semibold text-sm flex items-center gap-2">
+                          <Plus className="h-4 w-4" />
+                          Add Coverage Area
+                        </h3>
+                        
+                        {/* State & County - Row 1 */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <Label>State</Label>
+                            <Select
+                              value={newCoverageState}
+                              onValueChange={(value) => {
+                                setNewCoverageState(value);
+                                setNewCoverageCounty("");
+                                setNewCoverageCity("");
+                                setNewCoverageZips(["", "", ""]);
+                                setSuggestedZips([]);
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select state" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {US_STATES.map((s) => (
+                                  <SelectItem key={s.code} value={s.code}>{s.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <Label>County (Optional)</Label>
+                            <Select
+                              value={newCoverageCounty}
+                              onValueChange={(value) => {
+                                setNewCoverageCounty(value);
+                                setNewCoverageCity("");
+                                setNewCoverageZips(["", "", ""]);
+                                setSuggestedZips([]);
+                              }}
+                              disabled={!newCoverageState}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select county" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {newCoverageState && COUNTIES_BY_STATE[newCoverageState]?.map((county) => (
+                                  <SelectItem key={county} value={county}>{county}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {/* City & Property Type - Row 2 */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <Label>City</Label>
+                            <Select
+                              value={newCoverageCity}
+                              onValueChange={async (value) => {
+                                setNewCoverageCity(value);
+                                setNewCoverageZips(["", "", ""]);
+                                setSuggestedZipsLoading(true);
+                                try {
+                                  if (hasZipCodeData(value, newCoverageState)) {
+                                    const staticZips = getZipCodesForCity(value, newCoverageState);
+                                    setSuggestedZips(staticZips);
+                                  } else {
+                                    const { data, error } = await supabase.functions.invoke('get-city-zips', {
+                                      body: { state: newCoverageState, city: value }
+                                    });
+                                    if (error) throw error;
+                                    setSuggestedZips(data?.zips || []);
+                                  }
+                                } catch (err) {
+                                  console.error('ZIP lookup failed', err);
+                                  setSuggestedZips([]);
+                                } finally {
+                                  setSuggestedZipsLoading(false);
+                                }
+                              }}
+                              disabled={!newCoverageState}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={!newCoverageState ? "Select state first" : "Select city"} />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-[300px]">
+                                {newCoverageState && (() => {
+                                  if (newCoverageCounty && hasCountyCityMapping(newCoverageState)) {
+                                    const countyCities = getCitiesForCounty(newCoverageState, newCoverageCounty);
+                                    if (countyCities.length > 0) {
+                                      return countyCities.map((city) => (
+                                        <SelectItem key={city} value={city}>{city}</SelectItem>
+                                      ));
+                                    }
+                                  }
+                                  return usCitiesByState[newCoverageState]?.map((city) => (
+                                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                                  ));
+                                })()}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <Label>Property Type</Label>
+                            <Select>
+                              <SelectTrigger>
+                                <SelectValue>
+                                  {selectedPropertyTypes.length > 0 
+                                    ? `${selectedPropertyTypes.length} type(s) selected` 
+                                    : "Select property types"}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <div className="p-2 space-y-2">
+                                  {[
+                                    { value: "single_family", label: "Single Family" },
+                                    { value: "condo", label: "Condominium" },
+                                    { value: "townhouse", label: "Townhouse" },
+                                    { value: "multi_family", label: "Multi-Family" },
+                                    { value: "land", label: "Land" },
+                                    { value: "commercial", label: "Commercial" },
+                                    { value: "residential_rental", label: "Residential Rental" },
+                                    { value: "commercial_rental", label: "Commercial Rental" },
+                                  ].map((type) => (
+                                    <div key={type.value} className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={`pref-${type.value}`}
+                                        checked={selectedPropertyTypes.includes(type.value)}
+                                        onCheckedChange={(checked) => {
+                                          if (checked) {
+                                            setSelectedPropertyTypes([...selectedPropertyTypes, type.value]);
+                                          } else {
+                                            setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== type.value));
+                                          }
+                                        }}
+                                      />
+                                      <Label htmlFor={`pref-${type.value}`} className="cursor-pointer text-sm">
+                                        {type.label}
+                                      </Label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {/* Suggested Zips */}
+                        {suggestedZipsLoading && (
+                          <p className="text-sm text-muted-foreground">Loading ZIP codes...</p>
+                        )}
+
+                        {suggestedZips.length > 0 && (
+                          <div>
+                            <Label>Suggested ZIP Codes (click to select)</Label>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {suggestedZips.map((zip) => (
+                                <Button
+                                  key={zip}
+                                  variant={newCoverageZips.includes(zip) ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => {
+                                    if (newCoverageZips.includes(zip)) {
+                                      setNewCoverageZips(newCoverageZips.map(z => z === zip ? "" : z));
+                                    } else {
+                                      const emptyIndex = newCoverageZips.findIndex(z => !z.trim());
+                                      if (emptyIndex !== -1) {
+                                        const newZips = [...newCoverageZips];
+                                        newZips[emptyIndex] = zip;
+                                        setNewCoverageZips(newZips);
+                                      }
+                                    }
+                                  }}
+                                  disabled={!newCoverageZips.includes(zip) && newCoverageZips.every(z => z.trim())}
+                                >
+                                  {zip}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Selected Zips */}
+                        <div>
+                          <Label>Selected Zip Codes ({coverageAreas.length}/3)</Label>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {newCoverageZips.map((zip, index) => (
+                              zip.trim() && (
+                                <div 
+                                  key={index}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-lg"
+                                >
+                                  <span className="font-mono font-medium text-sm">{zip}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      const newZips = [...newCoverageZips];
+                                      newZips[index] = "";
+                                      setNewCoverageZips(newZips);
+                                    }}
+                                    className="h-5 w-5 hover:bg-destructive/10 hover:text-destructive"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              )
+                            ))}
+                            {!newCoverageZips.some(z => z.trim()) && (
+                              <p className="text-sm text-muted-foreground">No zip codes selected</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {(newCoverageState && newCoverageCity && newCoverageZips.some(z => z.trim())) && (
+                          <Button onClick={handleAddCoverageArea} className="w-full">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Coverage Area
+                          </Button>
+                        )}
                       </div>
                     )}
 
-                    {/* Selected Zips */}
-                    <div>
-                      <Label>Selected Zip Codes ({coverageAreas.length}/3)</Label>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {newCoverageZips.map((zip, index) => (
-                          zip.trim() && (
+                    {/* Existing Coverage Areas */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold">Your Coverage Areas</h3>
+                        {coverageAreas.length > 0 && (
+                          <Button variant="outline" size="sm" onClick={handleClearAllCoverageAreas}>
+                            Clear All
+                          </Button>
+                        )}
+                      </div>
+                      {coverageAreas.length === 0 ? (
+                        <div className="text-center py-8 border-2 border-dashed rounded-xl">
+                          <MapPin className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+                          <p className="text-muted-foreground">No coverage areas added yet</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {coverageAreas.map((area) => (
                             <div 
-                              key={index}
-                              className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-lg"
+                              key={area.id}
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full group"
                             >
-                              <span className="font-mono font-medium text-sm">{zip}</span>
+                              <MapPin className="h-4 w-4 text-primary" />
+                              <span className="font-medium">{area.zip_code}</span>
+                              <span className="text-muted-foreground text-sm">
+                                {area.city}, {area.state}
+                              </span>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => {
-                                  const newZips = [...newCoverageZips];
-                                  newZips[index] = "";
-                                  setNewCoverageZips(newZips);
-                                }}
-                                className="h-5 w-5 hover:bg-destructive/10 hover:text-destructive"
+                                onClick={() => handleDeleteCoverageArea(area.id)}
+                                className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
                               >
                                 <X className="h-3 w-3" />
                               </Button>
                             </div>
-                          )
-                        ))}
-                        {!newCoverageZips.some(z => z.trim()) && (
-                          <p className="text-sm text-muted-foreground">No zip codes selected</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Property Type Preferences */}
+                    <div className="space-y-4 pt-4 border-t">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <Home className="h-4 w-4 text-primary" />
+                        Property Type Preferences
+                      </h3>
+                      
+                      {/* Display selected property types as badges */}
+                      <div className="flex flex-wrap gap-2">
+                        {selectedPropertyTypes.length === 0 ? (
+                          <p className="text-muted-foreground text-sm">No property types selected. Use the dropdown above to add.</p>
+                        ) : (
+                          selectedPropertyTypes.map((typeValue) => {
+                            const typeLabel = {
+                              single_family: "Single Family",
+                              condo: "Condominium",
+                              townhouse: "Townhouse",
+                              multi_family: "Multi-Family",
+                              land: "Land",
+                              commercial: "Commercial",
+                              residential_rental: "Residential Rental",
+                              commercial_rental: "Commercial Rental"
+                            }[typeValue] || typeValue;
+                            
+                            return (
+                              <div 
+                                key={typeValue}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
+                              >
+                                <span className="font-medium text-sm">{typeLabel}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== typeValue))}
+                                  className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            );
+                          })
                         )}
                       </div>
                     </div>
-
-                    {(newCoverageState && newCoverageCity && newCoverageZips.some(z => z.trim())) && (
-                      <Button onClick={handleAddCoverageArea} className="w-full">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Coverage Area
-                      </Button>
-                    )}
-                  </div>
+                  </>
                 )}
-
-                {/* Existing Coverage Areas */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">Your Coverage Areas</h3>
-                    {coverageAreas.length > 0 && (
-                      <Button variant="outline" size="sm" onClick={handleClearAllCoverageAreas}>
-                        Clear All
-                      </Button>
-                    )}
-                  </div>
-                  {coverageAreas.length === 0 ? (
-                    <div className="text-center py-8 border-2 border-dashed rounded-xl">
-                      <MapPin className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-                      <p className="text-muted-foreground">No coverage areas added yet</p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {coverageAreas.map((area) => (
-                        <div 
-                          key={area.id}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full group"
-                        >
-                          <MapPin className="h-4 w-4 text-primary" />
-                          <span className="font-medium">{area.zip_code}</span>
-                          <span className="text-muted-foreground text-sm">
-                            {area.city}, {area.state}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteCoverageArea(area.id)}
-                            className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Property Type Preferences - Always visible and editable */}
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Home className="h-4 w-4 text-primary" />
-                      Property Type Preferences
-                    </h3>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64" align="end">
-                        <div className="space-y-3">
-                          <p className="text-sm font-medium">Select property types you work with:</p>
-                          {[
-                            { value: "single_family", label: "Single Family" },
-                            { value: "condo", label: "Condominium" },
-                            { value: "townhouse", label: "Townhouse" },
-                            { value: "multi_family", label: "Multi-Family" },
-                            { value: "land", label: "Land" },
-                            { value: "commercial", label: "Commercial" },
-                            { value: "residential_rental", label: "Residential Rental" },
-                            { value: "commercial_rental", label: "Commercial Rental" },
-                          ].map((type) => (
-                            <div key={type.value} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`edit-pref-${type.value}`}
-                                checked={selectedPropertyTypes.includes(type.value)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedPropertyTypes([...selectedPropertyTypes, type.value]);
-                                  } else {
-                                    setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== type.value));
-                                  }
-                                }}
-                              />
-                              <Label htmlFor={`edit-pref-${type.value}`} className="cursor-pointer text-sm">
-                                {type.label}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  
-                  {/* Display selected property types as badges */}
-                  <div className="flex flex-wrap gap-2">
-                    {selectedPropertyTypes.length === 0 ? (
-                      <p className="text-muted-foreground text-sm">No property types selected. Click Edit to add.</p>
-                    ) : (
-                      selectedPropertyTypes.map((typeValue) => {
-                        const typeLabel = {
-                          single_family: "Single Family",
-                          condo: "Condominium",
-                          townhouse: "Townhouse",
-                          multi_family: "Multi-Family",
-                          land: "Land",
-                          commercial: "Commercial",
-                          residential_rental: "Residential Rental",
-                          commercial_rental: "Commercial Rental"
-                        }[typeValue] || typeValue;
-                        
-                        return (
-                          <div 
-                            key={typeValue}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
-                          >
-                            <span className="font-medium text-sm">{typeLabel}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setSelectedPropertyTypes(selectedPropertyTypes.filter(t => t !== typeValue))}
-                              className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
               </CardContent>
             </Card>
 
