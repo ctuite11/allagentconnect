@@ -804,13 +804,25 @@ const AgentProfileEditor = () => {
             {/* Coverage Areas Section */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  Buyer Leads
-                </CardTitle>
-                <CardDescription>
-                  Define your coverage areas to receive buyer leads (max 3 zip codes)
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-primary" />
+                      Buyer Leads
+                    </CardTitle>
+                    <CardDescription className="mt-1.5">
+                      Define your coverage areas to receive buyer leads (max 3 zip codes)
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate("/manage-coverage-areas")}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Add New Coverage Area */}
