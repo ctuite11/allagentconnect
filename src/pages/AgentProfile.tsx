@@ -189,20 +189,9 @@ const AgentProfile = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="pt-20">
-        {/* Back Button */}
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="gap-2 text-muted-foreground hover:text-foreground -ml-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-        </div>
-
-        {/* Premium Header with Customizable Background */}
+      
+      {/* Premium Header - Extends to very top (behind nav) */}
+      <div className="pt-16">
         <AgentProfileHeader 
           agent={agent} 
           onSaveContact={() => generateVCard(agent)} 
