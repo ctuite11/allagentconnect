@@ -10,17 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Send, Users, ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
-import { useTownsPicker } from "@/hooks/useTownsPicker";
-import { TownsPicker } from "@/components/TownsPicker";
-import { getAreasForCity } from "@/data/usNeighborhoodsData";
+import { US_STATES } from "@/data/usStatesCountiesData";
+import GeographicSelector, { GeographicSelection } from "@/components/GeographicSelector";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -38,12 +33,13 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [loadingCount, setLoadingCount] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   
-  // Geographic fields
-  const [state, setState] = useState("");
-  const [selectedCounties, setSelectedCounties] = useState<string[]>([]);
-  const [selectedTowns, setSelectedTowns] = useState<string[]>([]);
-  const [showAreas, setShowAreas] = useState("yes");
-  const [townSearch, setTownSearch] = useState("");
+  // Geographic selection using unified component
+  const [geoSelection, setGeoSelection] = useState<GeographicSelection>({
+    state: "",
+    county: "all",
+    towns: [],
+    showAreas: true,
+  });
   
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -53,19 +49,10 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [noMaxPrice, setNoMaxPrice] = useState(false);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
 
-  // Use the towns picker hook
-  const {
-    townsList,
-    expandedCities,
-    toggleCityExpansion,
-    hasCountyData
-  } = useTownsPicker({
-    state,
-    county: selectedCounties.length === 1 ? selectedCounties[0] : "",
-    showAreas: showAreas === "yes"
-  });
-
-  const currentStateCounties = hasCountyData ? getCountiesForState(state) : [];
+  // Get full state name for display
+  const getStateName = (code: string) => {
+    return US_STATES.find(s => s.code === code)?.name || code;
+  };
 
   // Set default subject when dialog opens
   useEffect(() => {
@@ -99,26 +86,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     }
   };
 
-  const toggleCounty = (countyName: string) => {
-    setSelectedCounties(prev =>
-      prev.includes(countyName)
-        ? prev.filter(c => c !== countyName)
-        : [...prev, countyName]
-    );
-  };
-
-  const selectAllCounties = () => {
-    if (selectedCounties.length === currentStateCounties.length) {
-      setSelectedCounties([]);
-    } else {
-      setSelectedCounties([...currentStateCounties]);
-    }
-  };
-
   const handleMinPriceChange = (value: string) => {
     const sanitized = value.replace(/[^\d]/g, '');
     setMinPrice(sanitized);
-    // Format as user types
     const formatted = sanitized ? sanitized.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
     setMinPriceDisplay(formatted);
     if (sanitized) setNoMinPrice(false);
@@ -127,7 +97,6 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const handleMaxPriceChange = (value: string) => {
     const sanitized = value.replace(/[^\d]/g, '');
     setMaxPrice(sanitized);
-    // Format as user types
     const formatted = sanitized ? sanitized.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
     setMaxPriceDisplay(formatted);
     if (sanitized) setNoMaxPrice(false);
@@ -138,10 +107,10 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     if (open && showLocationFields) {
       fetchRecipientCount();
     }
-  }, [open, state, selectedCounties, selectedTowns, propertyTypes, minPrice, maxPrice, noMinPrice, noMaxPrice]);
+  }, [open, geoSelection, propertyTypes, minPrice, maxPrice, noMinPrice, noMaxPrice]);
 
   const fetchRecipientCount = async () => {
-    if (!state) {
+    if (!geoSelection.state) {
       setRecipientCount(null);
       return;
     }
@@ -160,7 +129,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         const cities: string[] = [];
         const neighborhoods: string[] = [];
         
-        selectedTowns.forEach(town => {
+        geoSelection.towns.forEach(town => {
           if (town.includes('-')) {
             const [city, neighborhood] = town.split('-');
             if (!cities.includes(city)) cities.push(city);
@@ -171,8 +140,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         });
 
         requestBody.criteria = {
-          state: state || undefined,
-          counties: selectedCounties.length > 0 ? selectedCounties : undefined,
+          state: geoSelection.state || undefined,
+          counties: geoSelection.county && geoSelection.county !== "all" ? [geoSelection.county] : undefined,
           cities: cities.length > 0 ? cities : undefined,
           neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
           minPrice: !noMinPrice && minPrice ? parseFloat(minPrice) : undefined,
@@ -198,37 +167,6 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     }
   };
 
-  // Auto-select neighborhoods when all towns are selected
-  useEffect(() => {
-    if (showAreas === "yes" && state) {
-      // Get all city names (non-hyphenated entries)
-      const allCities = townsList.filter(t => !t.includes('-'));
-      
-      // Check if all cities are selected
-      const allCitiesSelected = allCities.every(city => selectedTowns.includes(city));
-      
-      if (allCitiesSelected && allCities.length > 0) {
-        // Auto-add all neighborhoods
-        const withNeighborhoods = [...selectedTowns];
-        allCities.forEach(city => {
-          const neighborhoods = getAreasForCity(city, state);
-          if (neighborhoods && neighborhoods.length > 0) {
-            neighborhoods.forEach(n => {
-              const key = `${city}-${n}`;
-              if (!withNeighborhoods.includes(key)) {
-                withNeighborhoods.push(key);
-              }
-            });
-          }
-        });
-        
-        if (withNeighborhoods.length > selectedTowns.length) {
-          setSelectedTowns(withNeighborhoods);
-        }
-      }
-    }
-  }, [selectedTowns, townsList, showAreas, state]);
-
   const handleSend = async () => {
     if (!showConfirmation) {
       // Validate
@@ -240,7 +178,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         toast.error("Please enter a message");
         return;
       }
-      if (showLocationFields && !state) {
+      if (showLocationFields && !geoSelection.state) {
         toast.error("Please select a state");
         return;
       }
@@ -264,7 +202,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         const cities: string[] = [];
         const neighborhoods: string[] = [];
         
-        selectedTowns.forEach(town => {
+        geoSelection.towns.forEach(town => {
           if (town.includes('-')) {
             const [city, neighborhood] = town.split('-');
             if (!cities.includes(city)) cities.push(city);
@@ -275,8 +213,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         });
 
         requestBody.criteria = {
-          state: state || undefined,
-          counties: selectedCounties.length > 0 ? selectedCounties : undefined,
+          state: geoSelection.state || undefined,
+          counties: geoSelection.county && geoSelection.county !== "all" ? [geoSelection.county] : undefined,
           cities: cities.length > 0 ? cities : undefined,
           neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
           minPrice: !noMinPrice && minPrice ? parseFloat(minPrice) : undefined,
@@ -309,55 +247,17 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const handleClose = () => {
     setSubject("");
     setMessage("");
-    setState("");
-    setSelectedCounties([]);
-    setSelectedTowns([]);
-    setTownSearch("");
+    setGeoSelection({ state: "", county: "all", towns: [], showAreas: true });
     setMinPrice("");
     setMaxPrice("");
+    setMinPriceDisplay("");
+    setMaxPriceDisplay("");
     setNoMinPrice(false);
     setNoMaxPrice(false);
     setPropertyTypes([]);
     setRecipientCount(null);
     setShowConfirmation(false);
     onOpenChange(false);
-  };
-
-  const toggleTown = (town: string) => {
-    setSelectedTowns(prev =>
-      prev.includes(town)
-        ? prev.filter(t => t !== town)
-        : [...prev, town]
-    );
-  };
-
-  const selectAllTowns = () => {
-    if (selectedTowns.length === townsList.length) {
-      // Deselect all
-      setSelectedTowns([]);
-    } else {
-      // Select all towns AND neighborhoods
-      const allLocations: string[] = [];
-      
-      townsList.forEach(town => {
-        if (!town.includes('-')) {
-          // Add the city/town
-          allLocations.push(town);
-          
-          // Add all its neighborhoods if showAreas is enabled
-          if (showAreas === "yes") {
-            const neighborhoods = getAreasForCity(town, state);
-            if (neighborhoods && neighborhoods.length > 0) {
-              neighborhoods.forEach(n => {
-                allLocations.push(`${town}-${n}`);
-              });
-            }
-          }
-        }
-      });
-      
-      setSelectedTowns(allLocations);
-    }
   };
 
   return (
@@ -386,16 +286,16 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <Label className="text-sm font-semibold">Message</Label>
                 <p className="mt-1 text-sm whitespace-pre-wrap">{message}</p>
               </div>
-              {state && (
+              {geoSelection.state && (
                 <div>
                   <Label className="text-sm font-semibold">Criteria</Label>
                   <div className="mt-1 text-sm space-y-1">
-                    <p><strong>State:</strong> {state}</p>
-                  {selectedCounties.length > 0 && (
-                    <p><strong>Counties:</strong> {selectedCounties.length} selected</p>
+                    <p><strong>State:</strong> {getStateName(geoSelection.state)}</p>
+                  {geoSelection.county && geoSelection.county !== "all" && (
+                    <p><strong>County:</strong> {geoSelection.county}</p>
                   )}
-                  {selectedTowns.length > 0 && (
-                    <p><strong>Towns/Cities:</strong> {selectedTowns.length} selected</p>
+                  {geoSelection.towns.length > 0 && (
+                    <p><strong>Towns/Cities:</strong> {geoSelection.towns.length} selected</p>
                   )}
                     {propertyTypes.length > 0 && (
                       <p><strong>Property Types:</strong> {propertyTypes.map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ")}</p>
@@ -467,7 +367,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             </div>
 
             <div className="space-y-6">
-              {/* Simplified Location & Criteria */}
+              {/* Location & Criteria using GeographicSelector */}
               {showLocationFields && (
                 <div className="space-y-4 pb-4 border-b">
                   <h3 className="text-sm font-medium">Location & Criteria</h3>
@@ -589,7 +489,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                               }
                             }}
                           />
-                          <label htmlFor="maxMaxPrice" className="text-xs text-muted-foreground cursor-pointer">
+                          <label htmlFor="noMaxPrice" className="text-xs text-muted-foreground cursor-pointer">
                             No maximum
                           </label>
                         </div>
@@ -597,123 +497,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="state">State *</Label>
-                    <Select value={state} onValueChange={setState}>
-                      <SelectTrigger id="state">
-                        <SelectValue placeholder="Select state" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {US_STATES.map((s) => (
-                          <SelectItem key={s.code} value={s.code}>
-                            {s.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Counties and Neighborhoods Side-by-Side */}
-                  {state && hasCountyData && currentStateCounties.length > 0 && (
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Counties Section (Left) */}
-                      <div className="space-y-2">
-                        <Label>Counties (Optional)</Label>
-                        <ScrollArea className="h-32 border rounded-md">
-                          <div className="space-y-2 p-2 pl-1">
-                            {/* Select All Option */}
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="select-all-counties"
-                                checked={selectedCounties.length === currentStateCounties.length}
-                                onCheckedChange={selectAllCounties}
-                              />
-                              <Label
-                                htmlFor="select-all-counties"
-                                className="font-normal cursor-pointer"
-                              >
-                                Select All
-                              </Label>
-                            </div>
-                            
-                            {/* Individual County Options */}
-                            {currentStateCounties.map((countyName) => (
-                              <div key={countyName} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`county-${countyName}`}
-                                  checked={selectedCounties.includes(countyName)}
-                                  onCheckedChange={() => toggleCounty(countyName)}
-                                />
-                                <Label
-                                  htmlFor={`county-${countyName}`}
-                                  className="font-normal cursor-pointer"
-                                >
-                                  {countyName}
-                                </Label>
-                              </div>
-                            ))}
-                          </div>
-                        </ScrollArea>
-                        {selectedCounties.length > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            {selectedCounties.length} county/counties selected
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Include Neighborhoods Section (Right) */}
-                      <div className="space-y-2 pt-8">
-                        <Label>Include Neighborhoods?</Label>
-                        <RadioGroup value={showAreas} onValueChange={setShowAreas}>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id="areas-yes" />
-                            <Label htmlFor="areas-yes" className="font-normal cursor-pointer">
-                              Yes - Show neighborhoods within cities
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id="areas-no" />
-                            <Label htmlFor="areas-no" className="font-normal cursor-pointer">
-                              No - Cities only
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Town/City Selection */}
-                  {state && (
-                    <div className="space-y-2">
-                      <Label htmlFor="townSearch">Cities/Towns (Optional)</Label>
-                      <Input
-                        id="townSearch"
-                        placeholder="Search cities..."
-                        value={townSearch}
-                        onChange={(e) => setTownSearch(e.target.value)}
-                      />
-                      <ScrollArea className="h-48 border rounded-md">
-                        <TownsPicker
-                          towns={townsList}
-                          selectedTowns={selectedTowns}
-                          onToggleTown={toggleTown}
-                          expandedCities={expandedCities}
-                          onToggleCityExpansion={toggleCityExpansion}
-                          state={state}
-                          searchQuery={townSearch}
-                          variant="checkbox"
-                          showAreas={showAreas === "yes"}
-                          showSelectAll={true}
-                          onSelectAll={selectAllTowns}
-                        />
-                      </ScrollArea>
-                      {selectedTowns.length > 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          {selectedTowns.length} location(s) selected
-                        </p>
-                      )}
-                    </div>
-                  )}
+                  {/* Geographic Selection - Unified Component */}
+                  <GeographicSelector
+                    value={geoSelection}
+                    onChange={setGeoSelection}
+                    defaultCollapsed={false}
+                    showWrapper={false}
+                    label="Location"
+                  />
                 </div>
               )}
 
@@ -751,7 +542,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   disabled={
                     !subject.trim() ||
                     !message.trim() ||
-                    (showLocationFields && !state) ||
+                    (showLocationFields && !geoSelection.state) ||
                     loadingCount ||
                     recipientCount === 0
                   }

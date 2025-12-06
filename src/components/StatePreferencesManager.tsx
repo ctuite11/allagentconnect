@@ -137,7 +137,7 @@ const StatePreferencesManager = ({ agentId }: StatePreferencesManagerProps) => {
                   htmlFor={`state-${state.code}`}
                   className="cursor-pointer flex-1"
                 >
-                  {state.code} - {state.name}
+                  {state.name}
                 </Label>
               </div>
             ))}
