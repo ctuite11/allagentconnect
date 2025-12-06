@@ -7,20 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Mail, 
-  Phone, 
   ArrowLeft, 
   Loader2, 
   Home, 
   Star, 
-  Globe, 
-  Linkedin, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
-  Download,
-  Users,
-  ShieldCheck,
   Gift,
   TrendingUp,
   Quote,
@@ -28,7 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
-import { formatPhoneNumber } from "@/lib/phoneFormat";
+import AgentProfileHeader from "@/components/AgentProfileHeader";
 
 const generateVCard = (agent: AgentProfile) => {
   const vcard = [
@@ -85,6 +75,9 @@ interface AgentProfile {
   } | null;
   receive_buyer_alerts: boolean;
   aac_id?: string | null;
+  header_background_type?: string;
+  header_background_value?: string;
+  header_image_url?: string;
   agent_county_preferences: {
     county_id: string;
     counties: {
@@ -193,14 +186,12 @@ const AgentProfile = () => {
     );
   }
 
-  const hasSocialLinks = agent.social_links && Object.values(agent.social_links).some(link => link);
-
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="pt-20">
         {/* Back Button */}
-        <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 py-4">
           <Button
             variant="ghost"
             onClick={() => navigate(-1)}
@@ -211,315 +202,122 @@ const AgentProfile = () => {
           </Button>
         </div>
 
-        {/* Hero Header Section - Compass-style 3-column layout */}
-        <div className="border-b border-border/40 bg-card">
-          <div className="max-w-6xl mx-auto px-6 py-10">
-            <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_180px] gap-8 lg:gap-12">
-              
-              {/* LEFT COLUMN: Photo + Buttons + Social Icons */}
-              <div className="flex flex-col items-center lg:items-start">
-                {/* Agent Photo */}
-                <div className="w-44 h-44 lg:w-52 lg:h-52 rounded-lg overflow-hidden bg-muted shadow-md">
-                  {agent.headshot_url ? (
-                    <img 
-                      src={agent.headshot_url} 
-                      alt={`${agent.first_name} ${agent.last_name}`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-4xl font-bold text-primary">
-                        {agent.first_name[0]}{agent.last_name[0]}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-2.5 w-full max-w-[200px] mt-5">
-                  <ContactAgentProfileDialog 
-                    agentId={agent.id}
-                    agentName={`${agent.first_name} ${agent.last_name}`}
-                    agentEmail={agent.email}
-                  />
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2"
-                    onClick={() => generateVCard(agent)}
-                  >
-                    <Download className="h-4 w-4" />
-                    Save Contact
-                  </Button>
-                </div>
-
-                {/* Social Media Section */}
-                {hasSocialLinks && (
-                  <div className="mt-6 w-full max-w-[200px]">
-                    <p className="text-sm font-medium text-muted-foreground mb-3">Social Media</p>
-                    <div className="flex flex-col gap-2">
-                      {agent.social_links?.facebook && (
-                        <a 
-                          href={agent.social_links.facebook} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors"
-                        >
-                          <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center">
-                            <Facebook className="h-4 w-4" />
-                          </div>
-                          <span>Facebook</span>
-                        </a>
-                      )}
-                      {agent.social_links?.instagram && (
-                        <a 
-                          href={agent.social_links.instagram} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors"
-                        >
-                          <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center">
-                            <Instagram className="h-4 w-4" />
-                          </div>
-                          <span>Instagram</span>
-                        </a>
-                      )}
-                      {agent.social_links?.linkedin && (
-                        <a 
-                          href={agent.social_links.linkedin} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors"
-                        >
-                          <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center">
-                            <Linkedin className="h-4 w-4" />
-                          </div>
-                          <span>LinkedIn</span>
-                        </a>
-                      )}
-                      {agent.social_links?.twitter && (
-                        <a 
-                          href={agent.social_links.twitter} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors"
-                        >
-                          <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center">
-                            <Twitter className="h-4 w-4" />
-                          </div>
-                          <span>X (Twitter)</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* CENTER COLUMN: Agent Details */}
-              <div className="text-center lg:text-left">
-                <h1 className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
-                  {agent.first_name} {agent.last_name}
-                </h1>
-                
-                {agent.title && (
-                  <p className="text-lg text-muted-foreground mt-1">
-                    {agent.title}
-                  </p>
-                )}
-
-                {agent.company && (
-                  <p className="text-muted-foreground mt-0.5">
-                    {agent.company}
-                  </p>
-                )}
-
-                {agent.aac_id && (
-                  <p className="text-sm text-muted-foreground/70 mt-2">
-                    Agent ID: {agent.aac_id}
-                  </p>
-                )}
-                
-                {/* Contact Information */}
-                <div className="mt-6 space-y-2">
-                  {agent.email && (
-                    <a 
-                      href={`mailto:${agent.email}`} 
-                      className="block text-foreground hover:text-primary transition-colors"
-                    >
-                      {agent.email}
-                    </a>
-                  )}
-                  
-                  <div className="flex flex-col lg:flex-row gap-1 lg:gap-4 text-muted-foreground">
-                    {agent.office_phone && agent.office_phone.trim() && (
-                      <a href={`tel:${agent.office_phone}`} className="hover:text-primary transition-colors">
-                        O: {formatPhoneNumber(agent.office_phone)}
-                      </a>
-                    )}
-                    {agent.cell_phone && agent.cell_phone.trim() && (
-                      <a href={`tel:${agent.cell_phone}`} className="hover:text-primary transition-colors">
-                        M: {formatPhoneNumber(agent.cell_phone)}
-                      </a>
-                    )}
-                  </div>
-
-                  {agent.social_links?.website && (
-                    <a 
-                      href={agent.social_links.website.startsWith('http') ? agent.social_links.website : `https://${agent.social_links.website}`}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-primary hover:underline mt-2"
-                    >
-                      <Globe className="h-4 w-4" />
-                      {agent.social_links.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-                    </a>
-                  )}
-                </div>
-
-                {/* CTA Button for Desktop - centered in this column */}
-                <div className="mt-6 hidden lg:block">
-                  <Button size="lg" className="px-8">
-                    Work with {agent.first_name}
-                  </Button>
-                </div>
-              </div>
-
-              {/* RIGHT COLUMN: Logo + Badges */}
-              <div className="flex flex-col items-center lg:items-end justify-start gap-4">
-                {agent.logo_url && (
-                  <img 
-                    src={agent.logo_url} 
-                    alt="Company logo" 
-                    className="h-14 max-w-[140px] object-contain opacity-90"
-                  />
-                )}
-                <div className="flex flex-col gap-2 items-center lg:items-end">
-                  <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-xs rounded-full border-primary/30 bg-primary/5 text-primary">
-                    <Users className="h-3 w-3" />
-                    DirectConnect Friendly
-                  </Badge>
-                  <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-xs rounded-full border-accent/30 bg-accent/5 text-accent">
-                    <ShieldCheck className="h-3 w-3" />
-                    Verified Agent
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Premium Header with Customizable Background */}
+        <AgentProfileHeader 
+          agent={agent} 
+          onSaveContact={() => generateVCard(agent)} 
+        />
 
         {/* Main Content */}
-        <div className="max-w-6xl mx-auto px-6 py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_180px] gap-8 lg:gap-12">
-            {/* Left spacer for alignment */}
-            <div className="hidden lg:block" />
+        <div className="max-w-5xl mx-auto px-4 md:px-6 py-10">
+          <div className="max-w-3xl space-y-12">
+            {/* About Me Section */}
+            {agent.bio && (
+              <section>
+                <h2 className="text-2xl font-semibold text-foreground mb-4">
+                  About Me
+                </h2>
+                <div className="max-w-prose">
+                  <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                    {agent.bio}
+                  </p>
+                </div>
+              </section>
+            )}
 
-            {/* Center content area */}
-            <div className="space-y-12">
-              {/* About Me Section */}
-              {agent.bio && (
-                <section>
-                  <h2 className="text-2xl font-semibold text-foreground mb-4">
-                    About {agent.first_name}
-                  </h2>
-                  <div className="max-w-2xl">
-                    <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                      {agent.bio}
-                    </p>
-                  </div>
-                </section>
-              )}
-
-              {/* Client Testimonials Section */}
-              {testimonials.length > 0 && (
-                <section>
-                  <h2 className="text-2xl font-semibold text-foreground mb-4">
-                    Client Testimonials
-                  </h2>
-                  <div className="space-y-4 max-w-2xl">
-                    {testimonials.slice(0, 3).map((testimonial) => (
-                      <Card key={testimonial.id} className="border shadow-sm rounded-xl overflow-hidden">
-                        <CardContent className="p-5">
-                          {testimonial.rating && (
-                            <div className="flex gap-0.5 mb-3">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-4 w-4 ${
-                                    i < testimonial.rating!
-                                      ? "text-foreground fill-foreground"
-                                      : "text-muted-foreground/30"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          )}
-                          <p className="text-foreground/80 italic leading-relaxed">
-                            "{testimonial.testimonial_text}"
-                          </p>
-                          <p className="mt-3 text-sm font-semibold text-foreground">
-                            -{testimonial.client_name}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Incentives Section */}
-              {(agent.buyer_incentives || agent.seller_incentives) && (
-                <section>
-                  <h2 className="text-2xl font-semibold text-foreground mb-4">
-                    Client Incentives
-                  </h2>
-                  <div className="grid md:grid-cols-2 gap-4 max-w-2xl">
-                    {agent.buyer_incentives && (
-                      <Card className="border shadow-sm rounded-xl bg-accent/5">
-                        <CardContent className="p-5">
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 rounded-lg bg-accent/10 flex-shrink-0">
-                              <Gift className="h-5 w-5 text-accent" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-foreground mb-1.5">Buyer Incentives</h3>
-                              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                {agent.buyer_incentives}
-                              </p>
-                            </div>
+            {/* Client Incentives Section */}
+            {(agent.buyer_incentives || agent.seller_incentives) && (
+              <section>
+                <h2 className="text-2xl font-semibold text-foreground mb-4">
+                  Client Incentives
+                </h2>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {agent.buyer_incentives && (
+                    <Card className="border shadow-sm rounded-xl bg-accent/5">
+                      <CardContent className="p-5">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-lg bg-accent/10 flex-shrink-0">
+                            <Gift className="h-5 w-5 text-accent" />
                           </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {agent.seller_incentives && (
-                      <Card className="border shadow-sm rounded-xl bg-primary/5">
-                        <CardContent className="p-5">
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
-                              <TrendingUp className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-foreground mb-1.5">Seller Incentives</h3>
-                              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                {agent.seller_incentives}
-                              </p>
-                            </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground mb-1.5">Buyer Incentives</h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                              {agent.buyer_incentives}
+                            </p>
                           </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
-                </section>
-              )}
-            </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {agent.seller_incentives && (
+                    <Card className="border shadow-sm rounded-xl bg-primary/5">
+                      <CardContent className="p-5">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground mb-1.5">Seller Incentives</h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                              {agent.seller_incentives}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </section>
+            )}
 
-            {/* Right spacer */}
-            <div className="hidden lg:block" />
+            {/* Client Testimonials Section */}
+            {testimonials.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-semibold text-foreground mb-4">
+                  Client Testimonials
+                </h2>
+                <div className="space-y-4">
+                  {testimonials.slice(0, 3).map((testimonial) => (
+                    <Card key={testimonial.id} className="border shadow-md rounded-xl overflow-hidden">
+                      <CardContent className="p-6 relative">
+                        <Quote className="absolute top-4 right-4 h-8 w-8 text-primary/10" />
+                        {testimonial.rating && (
+                          <div className="flex gap-0.5 mb-3">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < testimonial.rating!
+                                    ? "text-amber-500 fill-amber-500"
+                                    : "text-muted-foreground/30"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-foreground/80 italic leading-relaxed pr-8">
+                          "{testimonial.testimonial_text}"
+                        </p>
+                        <p className="mt-4 text-sm font-semibold text-foreground">
+                          — {testimonial.client_name}
+                        </p>
+                        {testimonial.client_title && (
+                          <p className="text-xs text-muted-foreground">
+                            {testimonial.client_title}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         </div>
 
         {/* Active Listings Section - Full Width */}
         <div className="bg-muted/30 border-t border-border/40">
-          <div className="max-w-6xl mx-auto px-6 py-12">
+          <div className="max-w-5xl mx-auto px-4 md:px-6 py-12">
             <h2 className="text-2xl font-semibold text-foreground mb-6 text-center">
               {agent.first_name}'s Listings
             </h2>

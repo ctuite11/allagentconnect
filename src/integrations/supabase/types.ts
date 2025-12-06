@@ -333,6 +333,9 @@ export type Database = {
           created_at: string | null
           email: string
           first_name: string
+          header_background_type: string | null
+          header_background_value: string | null
+          header_image_url: string | null
           headshot_url: string | null
           id: string
           last_name: string
@@ -359,6 +362,9 @@ export type Database = {
           created_at?: string | null
           email: string
           first_name: string
+          header_background_type?: string | null
+          header_background_value?: string | null
+          header_image_url?: string | null
           headshot_url?: string | null
           id: string
           last_name: string
@@ -385,6 +391,9 @@ export type Database = {
           created_at?: string | null
           email?: string
           first_name?: string
+          header_background_type?: string | null
+          header_background_value?: string | null
+          header_image_url?: string | null
           headshot_url?: string | null
           id?: string
           last_name?: string
