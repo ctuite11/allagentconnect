@@ -62,6 +62,16 @@ export default {
           cyan: "hsl(var(--neon-cyan))",
           green: "hsl(var(--neon-green))",
         },
+        "primary-soft": "hsl(var(--primary-soft) / 0.10)",
+        "success-soft": "hsl(var(--success-soft) / 0.10)",
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          soft: "hsl(var(--warning-soft) / 0.12)",
+          foreground: "hsl(0 0% 100%)",
+        },
+        "danger-soft": "hsl(var(--danger-soft) / 0.10)",
+        "neutral-soft": "hsl(var(--neutral-soft))",
+        "neutral-text": "hsl(var(--neutral-text))",
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',
