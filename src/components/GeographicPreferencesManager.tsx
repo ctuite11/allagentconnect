@@ -44,6 +44,7 @@ const GeographicPreferencesManager = ({
   const [townSearch, setTownSearch] = useState("");
   const [manualTowns, setManualTowns] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [townsListExpanded, setTownsListExpanded] = useState(false);
   const [confirmSelectAllOpen, setConfirmSelectAllOpen] = useState(false);
   const {
     townsList,
@@ -214,16 +215,9 @@ const GeographicPreferencesManager = ({
   const toggleTown = (town: string) => {
     setSelectedTowns(prev => {
       if (town.includes('-')) {
-        // It's a neighborhood selection
-        const [city] = town.split('-');
-        
-        // If adding a neighborhood, ensure parent city is selected
+        // It's a neighborhood selection - DO NOT auto-select parent city
         if (!prev.includes(town)) {
-          if (!prev.includes(city)) {
-            // Add both city and neighborhood
-            return [...prev, city, town];
-          }
-          // Just add neighborhood
+          // Just add the neighborhood alone
           return [...prev, town];
         } else {
           // Removing a neighborhood
@@ -323,7 +317,7 @@ const GeographicPreferencesManager = ({
             <Select value={state} onValueChange={setState}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent className="z-50 max-h-[300px]">
-                {US_STATES.map(s => <SelectItem key={s.code} value={s.code}>{s.code}</SelectItem>)}
+                {US_STATES.map(s => <SelectItem key={s.code} value={s.code}>{s.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -353,7 +347,15 @@ const GeographicPreferencesManager = ({
         </div>
 
         <div className="relative">
-          <Input value={townSearch} onChange={e => setTownSearch(e.target.value)} placeholder="Type Full or Partial Name" className="pr-8" />
+          <Input 
+            value={townSearch} 
+            onChange={e => {
+              setTownSearch(e.target.value);
+              if (e.target.value) setTownsListExpanded(true);
+            }} 
+            placeholder="Type town or neighborhood" 
+            className="pr-8" 
+          />
           {townSearch && <Button variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0" onClick={() => setTownSearch("")}>
               <X className="h-4 w-4" />
             </Button>}
@@ -363,21 +365,30 @@ const GeographicPreferencesManager = ({
           <div className="space-y-3">
             {/* IMPORTANT: Confirmation required to prevent accidental mass-selection of 300+ towns
                 This is tightly coupled to agent_buyer_coverage_areas and should not be removed */}
-            <Button 
-              onClick={() => setConfirmSelectAllOpen(true)}
-              variant="outline"
-              size="sm"
-              className="w-full"
-            >
-              Select All Towns & Neighborhoods
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setConfirmSelectAllOpen(true)}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                Select All Towns & Neighborhoods
+              </Button>
+              <Button 
+                onClick={() => setTownsListExpanded(!townsListExpanded)}
+                variant="outline"
+                size="sm"
+              >
+                {townsListExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </div>
             
             <AlertDialog open={confirmSelectAllOpen} onOpenChange={setConfirmSelectAllOpen}>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Select all towns & neighborhoods?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will add every town (and available neighborhoods) in {state} as coverage areas. 
+                    This will add every town (and available neighborhoods) in {US_STATES.find(s => s.code === state)?.name || state} as coverage areas. 
                     This can be 300+ locations and will replace your current selection.
                     <br /><br />
                     Consider selecting specific counties or towns instead for more focused buyer alerts.
@@ -388,6 +399,7 @@ const GeographicPreferencesManager = ({
                   <AlertDialogAction
                     onClick={() => {
                       addAllTowns();
+                      setTownsListExpanded(true);
                       setConfirmSelectAllOpen(false);
                     }}
                   >
@@ -397,11 +409,19 @@ const GeographicPreferencesManager = ({
               </AlertDialogContent>
             </AlertDialog>
             
-            <div className="max-h-96 overflow-y-auto border rounded bg-background relative z-10">
-              <div className="p-2">
-                <TownsPicker towns={townsList} selectedTowns={selectedTowns} onToggleTown={toggleTown} expandedCities={expandedCities} onToggleCityExpansion={toggleCityExpansion} state={state} searchQuery={townSearch} variant="checkbox" showAreas={showAreas === "yes"} />
+            {(townsListExpanded || townSearch) && (
+              <div className="max-h-96 overflow-y-auto border rounded bg-background relative z-10">
+                <div className="p-2">
+                  <TownsPicker towns={townsList} selectedTowns={selectedTowns} onToggleTown={toggleTown} expandedCities={expandedCities} onToggleCityExpansion={toggleCityExpansion} state={state} searchQuery={townSearch} variant="checkbox" showAreas={showAreas === "yes"} />
+                </div>
               </div>
-            </div>
+            )}
+            
+            {!townsListExpanded && !townSearch && (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                Type to search or expand the list to browse towns
+              </p>
+            )}
 
             <div className="mt-3">
               <Label className="text-xs mb-1 block">Type Multiple Towns/Areas</Label>
