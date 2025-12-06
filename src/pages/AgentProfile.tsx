@@ -206,16 +206,16 @@ const AgentProfile = () => {
           Back
         </Button>
 
-        {/* Hero Header Section */}
+        {/* Hero Header Section - Compass-style compact layout */}
         <Card className="mb-8 overflow-hidden shadow-lg border-0">
-          <CardContent className="p-6">
-            <div className="max-w-5xl mx-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8">
-                {/* Left Column - Photo + Name + Title + Contact Info */}
-                <div className="flex flex-col sm:flex-row gap-6">
-                  {/* Photo & Save Contact */}
-                  <div className="flex flex-col items-center sm:items-start flex-shrink-0">
-                    <div className="w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-primary/20 shadow-lg">
+          <CardContent className="p-5 md:p-6">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-6">
+                {/* Left: Photo + Agent Info */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 flex-1">
+                  {/* Photo */}
+                  <div className="flex flex-col items-center flex-shrink-0">
+                    <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-3 border-primary/20 shadow-md">
                       {agent.headshot_url ? (
                         <img 
                           src={agent.headshot_url} 
@@ -224,67 +224,59 @@ const AgentProfile = () => {
                         />
                       ) : (
                         <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-4xl font-bold text-primary">
+                          <span className="text-3xl font-bold text-primary">
                             {agent.first_name[0]}{agent.last_name[0]}
                           </span>
                         </div>
                       )}
                     </div>
-                    {agent.aac_id && (
-                      <p className="text-xs text-muted-foreground mt-2 text-center">
-                        Agent ID: {agent.aac_id}
-                      </p>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-2 gap-2 rounded-full px-4 text-xs"
-                      onClick={() => generateVCard(agent)}
-                    >
-                      <Download className="h-3 w-3" />
-                      Save Contact
-                    </Button>
                   </div>
                   
-                  {/* Name, Title, Contact Info, CTAs */}
-                  <div className="flex-1 text-center sm:text-left">
-                    <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-0.5">
+                  {/* Name, Title, Contact Info */}
+                  <div className="flex-1 text-center sm:text-left min-w-0">
+                    <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">
                       {agent.first_name} {agent.last_name}
                     </h1>
                     
                     {(agent.title || agent.company) && (
-                      <p className="text-base text-muted-foreground mb-3">
+                      <p className="text-sm text-muted-foreground mt-0.5">
                         {agent.title}{agent.title && agent.company && ' • '}{agent.company}
                       </p>
                     )}
+
+                    {agent.aac_id && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Agent ID: {agent.aac_id}
+                      </p>
+                    )}
                     
-                    <div className="space-y-1.5 mb-4">
+                    <div className="space-y-1 mt-2.5">
                       {agent.office_phone && agent.office_phone.trim() && (
                         <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-foreground">
-                          <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                          <a href={`tel:${agent.office_phone}`} className="hover:text-primary transition-colors">
+                          <Phone className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                          <a href={`tel:${agent.office_phone}`} className="hover:text-primary transition-colors truncate">
                             Office: {formatPhoneNumber(agent.office_phone)}
                           </a>
                         </div>
                       )}
                       {agent.cell_phone && agent.cell_phone.trim() && (
                         <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-foreground">
-                          <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                          <a href={`tel:${agent.cell_phone}`} className="hover:text-primary transition-colors">
+                          <Phone className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                          <a href={`tel:${agent.cell_phone}`} className="hover:text-primary transition-colors truncate">
                             Cell: {formatPhoneNumber(agent.cell_phone)}
                           </a>
                         </div>
                       )}
                       <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-foreground">
-                        <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                        <a href={`mailto:${agent.email}`} className="hover:text-primary transition-colors">
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        <a href={`mailto:${agent.email}`} className="hover:text-primary transition-colors truncate">
                           {agent.email}
                         </a>
                       </div>
                     </div>
 
-                    {/* CTAs - Compact inline buttons */}
-                    <div className="flex flex-wrap gap-2 justify-center sm:justify-start mb-3 max-w-md">
+                    {/* CTAs + Social - Compact inline */}
+                    <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start mt-3">
                       <ContactAgentProfileDialog 
                         agentId={agent.id}
                         agentName={`${agent.first_name} ${agent.last_name}`}
@@ -294,7 +286,7 @@ const AgentProfile = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-2"
+                          className="gap-1.5 h-8 px-3 text-xs"
                           asChild
                         >
                           <a 
@@ -302,34 +294,43 @@ const AgentProfile = () => {
                             target="_blank" 
                             rel="noopener noreferrer"
                           >
-                            <Globe className="h-3.5 w-3.5" />
+                            <Globe className="h-3 w-3" />
                             Website
                           </a>
                         </Button>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1.5 h-8 px-3 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => generateVCard(agent)}
+                      >
+                        <Download className="h-3 w-3" />
+                        Save Contact
+                      </Button>
                     </div>
 
-                    {/* Social Links */}
+                    {/* Social Links - inline with buttons */}
                     {agent.social_links && Object.values(agent.social_links).some(link => link) && (
-                      <div className="flex gap-1.5 justify-center sm:justify-start">
+                      <div className="flex gap-1.5 justify-center sm:justify-start mt-2.5">
                         {agent.social_links.linkedin && (
                           <a href={agent.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-[#0A66C2] hover:bg-[#004182] text-white transition-colors">
-                            <Linkedin className="h-3.5 w-3.5" />
+                            <Linkedin className="h-3 w-3" />
                           </a>
                         )}
                         {agent.social_links.facebook && (
                           <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-[#1877F2] hover:bg-[#166FE5] text-white transition-colors">
-                            <Facebook className="h-3.5 w-3.5" />
+                            <Facebook className="h-3 w-3" />
                           </a>
                         )}
                         {agent.social_links.twitter && (
                           <a href={agent.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-foreground hover:bg-foreground/80 text-background transition-colors">
-                            <Twitter className="h-3.5 w-3.5" />
+                            <Twitter className="h-3 w-3" />
                           </a>
                         )}
                         {agent.social_links.instagram && (
                           <a href={agent.social_links.instagram} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white transition-colors">
-                            <Instagram className="h-3.5 w-3.5" />
+                            <Instagram className="h-3 w-3" />
                           </a>
                         )}
                       </div>
@@ -337,23 +338,23 @@ const AgentProfile = () => {
                   </div>
                 </div>
 
-                {/* Right Column - Logo & Badges (closer, not floating) */}
-                <div className="flex flex-col items-center lg:items-end gap-3 flex-shrink-0">
+                {/* Right: Logo & Badges - vertically centered */}
+                <div className="flex flex-row lg:flex-col items-center justify-center gap-3 flex-shrink-0 lg:pl-4 lg:border-l lg:border-border/50">
                   {agent.logo_url && (
                     <img 
                       src={agent.logo_url} 
                       alt="Company logo" 
-                      className="h-14 md:h-16 object-contain opacity-85"
+                      className="h-12 md:h-14 max-w-[120px] object-contain opacity-85"
                     />
                   )}
-                  <div className="flex flex-col gap-1.5">
-                    <Badge variant="outline" className="gap-1.5 px-3 py-1 text-xs rounded-full border-primary/30 bg-primary/5 text-primary">
-                      <Users className="h-3 w-3" />
-                      DirectConnect Friendly
+                  <div className="flex flex-row lg:flex-col gap-1.5">
+                    <Badge variant="outline" className="gap-1 px-2.5 py-0.5 text-[11px] rounded-full border-primary/30 bg-primary/5 text-primary whitespace-nowrap">
+                      <Users className="h-2.5 w-2.5" />
+                      DirectConnect
                     </Badge>
-                    <Badge variant="outline" className="gap-1.5 px-3 py-1 text-xs rounded-full border-accent/30 bg-accent/5 text-accent">
-                      <ShieldCheck className="h-3 w-3" />
-                      Verified Agent
+                    <Badge variant="outline" className="gap-1 px-2.5 py-0.5 text-[11px] rounded-full border-accent/30 bg-accent/5 text-accent whitespace-nowrap">
+                      <ShieldCheck className="h-2.5 w-2.5" />
+                      Verified
                     </Badge>
                   </div>
                 </div>
