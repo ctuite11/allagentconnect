@@ -51,9 +51,8 @@ interface AgentProfileHeaderProps {
 const AgentProfileHeader = ({ agent, onSaveContact }: AgentProfileHeaderProps) => {
   const navigate = useNavigate();
   
-  const backgroundType = agent.header_background_type || "theme";
-  const backgroundValue = agent.header_background_value || "allagentconnect";
-  const headerImageUrl = agent.header_image_url;
+  const backgroundType = agent.header_background_type || "color";
+  const backgroundValue = agent.header_background_value || "directconnect-blue";
 
   const socialIcons = [
     { key: "facebook", icon: Facebook, url: agent.social_links?.facebook },
@@ -65,7 +64,7 @@ const AgentProfileHeader = ({ agent, onSaveContact }: AgentProfileHeaderProps) =
   return (
     <div 
       className="relative w-full"
-      style={getHeaderBackgroundStyle(backgroundType, backgroundValue, headerImageUrl)}
+      style={getHeaderBackgroundStyle(backgroundType, backgroundValue)}
     >
       {/* Header: 300-360px desktop, 240px mobile */}
       <div className="min-h-[240px] md:min-h-[320px] lg:min-h-[340px] py-6 md:py-8">
