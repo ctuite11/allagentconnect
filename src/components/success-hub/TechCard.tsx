@@ -27,17 +27,17 @@ export const TechCard = ({
     <div
       className={cn(
         "group relative bg-card rounded-[10px] border border-border p-6",
-        "shadow-custom-md hover:shadow-custom-lg",
+        "shadow-md hover:shadow-lg",
         "transition-all duration-300 ease-out",
         "hover:-translate-y-1 hover:border-primary/50",
-        "hover:shadow-[0_0_20px_hsl(var(--electric-blue)/0.3)]",
+        "hover:shadow-[0_8px_30px_hsl(var(--primary)/0.15)]",
         "cursor-pointer",
         className
       )}
       onClick={onClick}
     >
       {/* Icon */}
-      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+      <div className="w-12 h-12 rounded-[10px] bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
         <div className="text-primary">{icon}</div>
       </div>
 
@@ -50,7 +50,7 @@ export const TechCard = ({
       </p>
 
       {/* Metric Pill */}
-      {metricValue !== undefined && (
+      {metricValue !== undefined && metricValue !== 0 && (
         <div className="mb-4">
           <Pill 
             label={metricLabel ? `${metricValue} ${metricLabel}` : String(metricValue)}
