@@ -1,19 +1,15 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Bell, Check } from "lucide-react";
+import { Bell } from "lucide-react";
 
 interface NotificationSettings {
   schedule: "immediate" | "daily" | "weekly";
 }
 
 export const ClientNeedsNotificationSettings = () => {
-  const navigate = useNavigate();
   const [settings, setSettings] = useState<NotificationSettings>({
     schedule: "immediate",
   });
@@ -81,10 +77,6 @@ export const ClientNeedsNotificationSettings = () => {
     updateSettings({ ...settings, schedule: value as "immediate" | "daily" | "weekly" });
   };
 
-  const handleCompleteSetup = () => {
-    navigate("/agent-dashboard");
-  };
-
   if (loading) {
     return (
       <div className="mb-8">
@@ -133,18 +125,6 @@ export const ClientNeedsNotificationSettings = () => {
               </Label>
             </div>
           </RadioGroup>
-        </div>
-
-        {/* Complete Setup Button */}
-        <div className="pt-4">
-          <Button 
-            onClick={handleCompleteSetup}
-            className="w-full"
-            size="lg"
-          >
-            <Check className="mr-2 h-4 w-4" />
-            Complete Your Setup
-          </Button>
         </div>
       </CardContent>
     </Card>
