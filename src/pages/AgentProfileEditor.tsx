@@ -35,6 +35,7 @@ import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
 
 // New components
 import ProfilePreviewPanel from "@/components/profile-editor/ProfilePreviewPanel";
+import MobilePreviewModal from "@/components/profile-editor/MobilePreviewModal";
 import ProfilePhotoUpload from "@/components/profile-editor/ProfilePhotoUpload";
 import CompanyLogoUpload from "@/components/profile-editor/CompanyLogoUpload";
 import SocialLinksSection from "@/components/profile-editor/SocialLinksSection";
@@ -116,6 +117,7 @@ const AgentProfileEditor = () => {
   const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
   
 
   useEffect(() => {
@@ -546,6 +548,15 @@ const AgentProfileEditor = () => {
               <p className="text-muted-foreground">Customize how you appear to clients</p>
             </div>
           </div>
+          {/* Mobile Preview Button */}
+          <Button 
+            variant="outline" 
+            onClick={() => setShowMobilePreview(true)} 
+            className="lg:hidden"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Preview Profile
+          </Button>
           <div className="hidden md:flex items-center gap-2">
             <Button variant="outline" onClick={() => navigate("/manage-team")}>
               <Users className="h-4 w-4 mr-2" />
@@ -557,6 +568,27 @@ const AgentProfileEditor = () => {
             </Button>
           </div>
         </div>
+
+        {/* Mobile Preview Modal */}
+        <MobilePreviewModal
+          open={showMobilePreview}
+          onClose={() => setShowMobilePreview(false)}
+          firstName={firstName}
+          lastName={lastName}
+          title={title}
+          teamName={teamName}
+          email={email}
+          cellPhone={cellPhone}
+          officePhone={officePhone}
+          headshotUrl={headshotUrl}
+          logoUrl={logoUrl}
+          bio={bio}
+          aacId={aacId}
+          socialLinks={socialLinks}
+          buyerIncentives={buyerIncentives}
+          sellerIncentives={sellerIncentives}
+          testimonials={testimonials}
+        />
 
         {/* Two-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1243,6 +1275,9 @@ const AgentProfileEditor = () => {
               bio={bio}
               aacId={aacId}
               socialLinks={socialLinks}
+              buyerIncentives={buyerIncentives}
+              sellerIncentives={sellerIncentives}
+              testimonials={testimonials}
             />
           </div>
         </div>
