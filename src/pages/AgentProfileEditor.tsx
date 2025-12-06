@@ -119,8 +119,8 @@ const AgentProfileEditor = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
-  const [headerBackgroundType, setHeaderBackgroundType] = useState("gradient");
-  const [headerBackgroundValue, setHeaderBackgroundValue] = useState("blue-indigo");
+const [headerBackgroundType, setHeaderBackgroundType] = useState("color");
+  const [headerBackgroundValue, setHeaderBackgroundValue] = useState("directconnect-blue");
   const [headerImageUrl, setHeaderImageUrl] = useState("");
   const [uploadingHeaderImage, setUploadingHeaderImage] = useState(false);
   
@@ -187,8 +187,8 @@ const AgentProfileEditor = () => {
         setTeamName(profile.company || "");
         setHeadshotUrl(profile.headshot_url || "");
         setLogoUrl(profile.logo_url || "");
-        setHeaderBackgroundType(profile.header_background_type || "gradient");
-        setHeaderBackgroundValue(profile.header_background_value || "blue-indigo");
+setHeaderBackgroundType(profile.header_background_type || "color");
+        setHeaderBackgroundValue(profile.header_background_value || "directconnect-blue");
         setHeaderImageUrl(profile.header_image_url || "");
         const links = profile.social_links as unknown as SocialLinks;
         setSocialLinks(links || {
@@ -634,16 +634,16 @@ const AgentProfileEditor = () => {
               </CardContent>
             </Card>
 
-            {/* Header Theme Section */}
+            {/* Header Theme Section - Collapsible by default */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <Home className="h-5 w-5 text-primary" />
-                  Header Theme
+                  Appearance
                 </CardTitle>
-                <CardDescription>Customize your profile header appearance</CardDescription>
+                <CardDescription>Customize how your profile header looks</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <HeaderBackgroundSelector
                   backgroundType={headerBackgroundType}
                   backgroundValue={headerBackgroundValue}
