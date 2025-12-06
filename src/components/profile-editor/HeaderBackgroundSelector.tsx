@@ -23,14 +23,18 @@ const COLOR_THEMES = [
   { id: "royal-blue", name: "Royal Blue", style: "linear-gradient(135deg, hsl(225, 70%, 40%) 0%, hsl(230, 65%, 50%) 100%)", preview: "bg-gradient-to-br from-blue-800 to-blue-600" },
 ];
 
-// Pattern Themes
+// Pattern Themes (8 total - Neutral Gray tones for subtlety and readability)
 const PATTERN_THEMES = [
-  { id: "diagonal-fade", name: "Diagonal Fade", style: "linear-gradient(135deg, hsl(215, 50%, 25%) 0%, hsl(230, 40%, 35%) 50%, hsl(215, 50%, 25%) 100%)", preview: "bg-gradient-to-br from-slate-800 via-indigo-900 to-slate-800" },
-  { id: "dot-grid", name: "Dot Grid", style: "radial-gradient(circle at 2px 2px, hsl(215, 30%, 40%) 1px, transparent 1px), linear-gradient(135deg, hsl(215, 40%, 20%) 0%, hsl(220, 35%, 28%) 100%)", preview: "bg-gradient-to-br from-slate-900 to-slate-800" },
-  { id: "mesh-pattern", name: "Minimal Mesh", style: "linear-gradient(90deg, hsla(215, 50%, 30%, 0.1) 1px, transparent 1px), linear-gradient(hsla(215, 50%, 30%, 0.1) 1px, transparent 1px), linear-gradient(135deg, hsl(215, 40%, 22%) 0%, hsl(225, 35%, 30%) 100%)", preview: "bg-gradient-to-br from-blue-950 to-indigo-950" },
-  { id: "linen", name: "Linen Texture", style: "linear-gradient(135deg, hsl(30, 10%, 25%) 0%, hsl(25, 15%, 32%) 100%)", preview: "bg-gradient-to-br from-stone-800 to-stone-700" },
-  { id: "vignette", name: "Gentle Vignette", style: "radial-gradient(ellipse at center, hsl(215, 45%, 35%) 0%, hsl(220, 50%, 18%) 100%)", preview: "bg-gradient-to-br from-blue-700 to-blue-950" },
-  { id: "geometric", name: "Thin-Line Geometric", style: "linear-gradient(45deg, transparent 45%, hsla(215, 50%, 40%, 0.15) 45%, hsla(215, 50%, 40%, 0.15) 55%, transparent 55%), linear-gradient(-45deg, transparent 45%, hsla(215, 50%, 40%, 0.15) 45%, hsla(215, 50%, 40%, 0.15) 55%, transparent 55%), linear-gradient(135deg, hsl(220, 45%, 22%) 0%, hsl(225, 40%, 30%) 100%)", preview: "bg-gradient-to-br from-slate-900 to-indigo-900" },
+  // Minimal Patterns
+  { id: "diagonal-fade", name: "Soft Diagonal Fade", style: "linear-gradient(135deg, hsl(0, 0%, 18%) 0%, hsl(0, 0%, 28%) 50%, hsl(0, 0%, 20%) 100%)", preview: "bg-gradient-to-br from-neutral-800 via-neutral-700 to-neutral-800" },
+  { id: "linen", name: "Linen Texture", style: "linear-gradient(135deg, hsl(0, 0%, 22%) 0%, hsl(0, 0%, 28%) 100%)", preview: "bg-gradient-to-br from-neutral-800 to-neutral-700" },
+  { id: "micro-dot", name: "Micro-Dot Pattern", style: "radial-gradient(circle at 1px 1px, hsla(0, 0%, 50%, 0.15) 1px, transparent 1px), linear-gradient(135deg, hsl(0, 0%, 18%) 0%, hsl(0, 0%, 24%) 100%)", preview: "bg-gradient-to-br from-neutral-900 to-neutral-800" },
+  { id: "thin-mesh", name: "Thin-Line Mesh Grid", style: "linear-gradient(90deg, hsla(0, 0%, 40%, 0.08) 1px, transparent 1px), linear-gradient(hsla(0, 0%, 40%, 0.08) 1px, transparent 1px), linear-gradient(135deg, hsl(0, 0%, 20%) 0%, hsl(0, 0%, 26%) 100%)", preview: "bg-gradient-to-br from-neutral-900 to-neutral-800" },
+  // Modern Real Estate Patterns
+  { id: "geometric-mesh", name: "Geometric Mesh", style: "linear-gradient(60deg, transparent 48%, hsla(0, 0%, 45%, 0.1) 48%, hsla(0, 0%, 45%, 0.1) 52%, transparent 52%), linear-gradient(-60deg, transparent 48%, hsla(0, 0%, 45%, 0.1) 48%, hsla(0, 0%, 45%, 0.1) 52%, transparent 52%), linear-gradient(135deg, hsl(0, 0%, 18%) 0%, hsl(0, 0%, 25%) 100%)", preview: "bg-gradient-to-br from-neutral-900 to-neutral-700" },
+  { id: "dot-grid", name: "Dot Grid", style: "radial-gradient(circle at 4px 4px, hsla(0, 0%, 50%, 0.12) 2px, transparent 2px), linear-gradient(135deg, hsl(0, 0%, 16%) 0%, hsl(0, 0%, 22%) 100%)", preview: "bg-gradient-to-br from-neutral-900 to-neutral-800" },
+  { id: "gradient-mesh", name: "Gradient Mesh Nodes", style: "radial-gradient(ellipse at 20% 30%, hsla(0, 0%, 35%, 0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, hsla(0, 0%, 35%, 0.15) 0%, transparent 50%), linear-gradient(135deg, hsl(0, 0%, 17%) 0%, hsl(0, 0%, 24%) 100%)", preview: "bg-gradient-to-br from-neutral-900 to-neutral-800" },
+  { id: "blueprint", name: "Blueprint Linework", style: "linear-gradient(90deg, hsla(0, 0%, 45%, 0.06) 1px, transparent 1px), linear-gradient(hsla(0, 0%, 45%, 0.06) 1px, transparent 1px), linear-gradient(90deg, hsla(0, 0%, 45%, 0.03) 1px, transparent 1px) 10px 10px, linear-gradient(hsla(0, 0%, 45%, 0.03) 1px, transparent 1px) 10px 10px, linear-gradient(135deg, hsl(0, 0%, 15%) 0%, hsl(0, 0%, 22%) 100%)", preview: "bg-gradient-to-br from-neutral-950 to-neutral-900" },
 ];
 
 export const getHeaderBackgroundStyle = (type: string, value: string): React.CSSProperties => {
@@ -113,7 +117,7 @@ const HeaderBackgroundSelector = ({
         {/* Patterns */}
         <div className="space-y-2">
           <Label className="text-xs text-muted-foreground uppercase tracking-wide">Patterns</Label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {PATTERN_THEMES.map((theme) => (
               <button
                 key={theme.id}
