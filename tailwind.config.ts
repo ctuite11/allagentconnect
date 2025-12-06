@@ -55,6 +55,13 @@ export default {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
+        electric: {
+          blue: "hsl(var(--electric-blue))",
+        },
+        neon: {
+          cyan: "hsl(var(--neon-cyan))",
+          green: "hsl(var(--neon-green))",
+        },
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',
