@@ -3,10 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, UserPlus, TrendingUp, Calendar, Mail, Heart, Bell, MessageSquare } from "lucide-react";
+import { 
+  Users, FileText, TrendingUp, Calendar, Mail, Heart, Bell, 
+  Home, UserPlus, Megaphone, Palette, MessageSquare 
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
+import { TechCard } from "@/components/success-hub/TechCard";
 
 interface Buyer {
   id: string;
@@ -46,6 +50,7 @@ export default function AgentSuccessHub() {
   const [activeHotsheetsCount, setActiveHotsheetsCount] = useState(0);
   const [engagedThisWeekCount, setEngagedThisWeekCount] = useState(0);
   const [invitationsSentCount, setInvitationsSentCount] = useState(0);
+  const [activeListingsCount, setActiveListingsCount] = useState(0);
   
   // Lists
   const [buyers, setBuyers] = useState<Buyer[]>([]);
@@ -60,7 +65,6 @@ export default function AgentSuccessHub() {
     try {
       setLoading(true);
       
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate("/auth");
@@ -69,7 +73,6 @@ export default function AgentSuccessHub() {
       
       setCurrentAgentId(user.id);
       
-      // Load all data in parallel
       await Promise.all([
         loadKPIs(user.id),
         loadBuyers(user.id),
@@ -105,8 +108,16 @@ export default function AgentSuccessHub() {
       .eq("user_id", agentId)
       .eq("is_active", true);
     setActiveHotsheetsCount(hotsheetsCount || 0);
+
+    // Active Listings
+    const { count: listingsCount } = await supabase
+      .from("listings")
+      .select("*", { count: "exact", head: true })
+      .eq("agent_id", agentId)
+      .eq("status", "active");
+    setActiveListingsCount(listingsCount || 0);
     
-    // Engaged This Week (favorites + accepted invites + hotsheet updates)
+    // Engaged This Week
     const { data: recentFavorites } = await supabase
       .from("favorites")
       .select("user_id")
@@ -132,7 +143,7 @@ export default function AgentSuccessHub() {
     ]);
     setEngagedThisWeekCount(uniqueUsers.size);
     
-    // New Invitations Sent (7 days)
+    // Invitations Sent
     const { count: invitesCount } = await supabase
       .from("share_tokens")
       .select("*", { count: "exact", head: true })
@@ -142,13 +153,9 @@ export default function AgentSuccessHub() {
   };
 
   const loadBuyers = async (agentId: string) => {
-    // Get active client relationships with profile data
     const { data: relationships } = await supabase
       .from("client_agent_relationships")
-      .select(`
-        client_id,
-        created_at
-      `)
+      .select("client_id, created_at")
       .eq("agent_id", agentId)
       .eq("status", "active");
     
@@ -159,19 +166,16 @@ export default function AgentSuccessHub() {
     
     const clientIds = relationships.map(r => r.client_id);
     
-    // Get profile data for all clients
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, email, first_name, last_name")
       .in("id", clientIds);
     
-    // Get hotsheet counts per client
     const { data: hotsheetCounts } = await supabase
       .from("hot_sheets")
       .select("user_id")
       .in("user_id", clientIds);
     
-    // Get last activity (favorites or hotsheet updates)
     const { data: lastFavorites } = await supabase
       .from("favorites")
       .select("user_id, created_at")
@@ -184,10 +188,8 @@ export default function AgentSuccessHub() {
       .in("user_id", clientIds)
       .order("updated_at", { ascending: false });
     
-    // Combine data
     const buyersData: Buyer[] = (profiles || []).map(profile => {
       const hotsheetsForClient = hotsheetCounts?.filter(h => h.user_id === profile.id).length || 0;
-      
       const lastFav = lastFavorites?.find(f => f.user_id === profile.id);
       const lastHotsheet = lastHotsheetUpdates?.find(h => h.user_id === profile.id);
       
@@ -218,14 +220,7 @@ export default function AgentSuccessHub() {
   const loadHotsheets = async (agentId: string) => {
     const { data: hotsheetsData } = await supabase
       .from("hot_sheets")
-      .select(`
-        id,
-        name,
-        client_id,
-        created_at,
-        updated_at,
-        criteria
-      `)
+      .select("id, name, client_id, created_at, updated_at, criteria")
       .eq("user_id", agentId)
       .eq("is_active", true)
       .order("updated_at", { ascending: false });
@@ -235,7 +230,6 @@ export default function AgentSuccessHub() {
       return;
     }
     
-    // Get client info
     const clientIds = hotsheetsData.map(h => h.client_id).filter(Boolean);
     
     const { data: clients } = await supabase
@@ -243,24 +237,19 @@ export default function AgentSuccessHub() {
       .select("id, email, first_name, last_name")
       .in("id", clientIds);
     
-    // Get share tokens - match by checking payload for hot_sheet_id
     const { data: allTokens } = await supabase
       .from("share_tokens")
       .select("token, payload")
       .eq("agent_id", agentId);
     
-    // Build hotsheets with details and match counts
     const hotsheetsWithDetails: HotSheet[] = await Promise.all(
       hotsheetsData.map(async (hs) => {
         const client = clients?.find(c => c.id === hs.client_id);
-        
-        // Find token by checking payload
         const token = allTokens?.find(t => {
           const payload = t.payload as any;
           return payload?.hot_sheet_id === hs.id || payload?.hotsheet_id === hs.id;
         });
         
-        // Get match count using buildListingsQuery
         let matchingCount = 0;
         try {
           const { count } = await supabase
@@ -296,7 +285,6 @@ export default function AgentSuccessHub() {
     
     const events: ActivityEvent[] = [];
     
-    // Invitations accepted
     const { data: acceptedInvites } = await supabase
       .from("share_tokens")
       .select("accepted_at, payload")
@@ -315,7 +303,6 @@ export default function AgentSuccessHub() {
       });
     });
     
-    // New hotsheets created
     const { data: newHotsheets } = await supabase
       .from("hot_sheets")
       .select("created_at, name, client_id")
@@ -332,7 +319,6 @@ export default function AgentSuccessHub() {
       });
     });
     
-    // New favorites (aggregate by user)
     const { data: newFavorites } = await supabase
       .from("favorites")
       .select("created_at, user_id")
@@ -349,7 +335,7 @@ export default function AgentSuccessHub() {
       }
     });
     
-    favoritesByUser.forEach((data, userId) => {
+    favoritesByUser.forEach((data) => {
       events.push({
         type: "favorite",
         timestamp: data.timestamp,
@@ -358,10 +344,8 @@ export default function AgentSuccessHub() {
       });
     });
     
-    // Sort all events by timestamp
     events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    
-    setActivities(events.slice(0, 20)); // Show latest 20
+    setActivities(events.slice(0, 20));
   };
 
   if (loading) {
@@ -375,19 +359,70 @@ export default function AgentSuccessHub() {
     );
   }
 
+  const hubCards = [
+    {
+      icon: <Home className="w-6 h-6" />,
+      title: "Listings",
+      description: "Manage your property listings and track performance",
+      metricValue: activeListingsCount,
+      metricLabel: "active",
+      route: "/agent/listings",
+    },
+    {
+      icon: <Users className="w-6 h-6" />,
+      title: "Contacts",
+      description: "View and manage your client relationships",
+      metricValue: activeBuyersCount,
+      metricLabel: "clients",
+      route: "/my-clients",
+    },
+    {
+      icon: <Bell className="w-6 h-6" />,
+      title: "Hotsheets",
+      description: "Create and manage property alert hotsheets",
+      metricValue: activeHotsheetsCount,
+      metricLabel: "active",
+      route: "/hot-sheets",
+    },
+    {
+      icon: <UserPlus className="w-6 h-6" />,
+      title: "Buyer Registry",
+      description: "Register buyer needs and track matches",
+      route: "/submit-client-need",
+    },
+    {
+      icon: <Palette className="w-6 h-6" />,
+      title: "Branding",
+      description: "Customize your agent profile and branding",
+      route: "/agent/profile/edit",
+    },
+    {
+      icon: <Mail className="w-6 h-6" />,
+      title: "Messages",
+      description: "View and respond to client inquiries",
+      route: "/my-clients",
+    },
+    {
+      icon: <Megaphone className="w-6 h-6" />,
+      title: "Communications Center",
+      description: "Agent-to-agent alerts for buyer needs, intel, and discussions",
+      route: "/client-needs",
+    },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24 space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-foreground">Agent Success Hub</h1>
+          <h1 className="text-4xl font-bold text-foreground font-display">Agent Success Hub</h1>
           <p className="text-muted-foreground mt-2">Your command center for client success</p>
         </div>
 
-        {/* KPI Cards - Top Section */}
+        {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
+          <Card className="border-l-4 border-l-primary">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Active Buyers</CardTitle>
             </CardHeader>
@@ -402,13 +437,13 @@ export default function AgentSuccessHub() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-l-4 border-l-accent">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Active Hotsheets</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                <Bell className="w-8 h-8 text-primary" />
+                <Bell className="w-8 h-8 text-accent" />
                 <div>
                   <p className="text-4xl font-bold text-foreground">{activeHotsheetsCount}</p>
                   <p className="text-xs text-muted-foreground">Tracking matches</p>
@@ -417,13 +452,13 @@ export default function AgentSuccessHub() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-l-4 border-l-purple-500">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Engaged This Week</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                <TrendingUp className="w-8 h-8 text-primary" />
+                <TrendingUp className="w-8 h-8 text-purple-500" />
                 <div>
                   <p className="text-4xl font-bold text-foreground">{engagedThisWeekCount}</p>
                   <p className="text-xs text-muted-foreground">Active clients</p>
@@ -432,13 +467,13 @@ export default function AgentSuccessHub() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-l-4 border-l-orange-500">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Invitations Sent</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                <Mail className="w-8 h-8 text-primary" />
+                <Mail className="w-8 h-8 text-orange-500" />
                 <div>
                   <p className="text-4xl font-bold text-foreground">{invitationsSentCount}</p>
                   <p className="text-xs text-muted-foreground">Last 7 days</p>
@@ -448,65 +483,26 @@ export default function AgentSuccessHub() {
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks at your fingertips</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <Button onClick={() => navigate("/agent/listings/new")}>
-                <FileText className="w-4 h-4 mr-2" />
-                Create New Listing
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/agent/listings")}>
-                <FileText className="w-4 h-4 mr-2" />
-                View My Listings
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/hot-sheets")}>
-                <Bell className="w-4 h-4 mr-2" />
-                Create New Hotsheet
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/client-invite")}>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Invite a Buyer
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/my-clients")}>
-                <Users className="w-4 h-4 mr-2" />
-                View All Clients
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/client-needs")}>
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Communications Center
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Communications Center Card */}
-        <Card className="border-l-4 border-l-primary">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <MessageSquare className="w-8 h-8 text-primary" />
-              <div>
-                <CardTitle>Communications Center</CardTitle>
-                <CardDescription>
-                  Send and receive agent-to-agent alerts for buyer needs, renter needs, sales intel, and general discussions.
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/client-needs")}>
-              Open Communications Center
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Tech-Forward Hub Cards Grid */}
+        <div>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Quick Access</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {hubCards.map((card) => (
+              <TechCard
+                key={card.title}
+                icon={card.icon}
+                title={card.title}
+                description={card.description}
+                metricValue={card.metricValue}
+                metricLabel={card.metricLabel}
+                onClick={() => navigate(card.route)}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* Two Columns - Buyers & Hotsheets */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Your Buyers */}
           <Card>
             <CardHeader>
               <CardTitle>Your Buyers</CardTitle>
@@ -516,7 +512,7 @@ export default function AgentSuccessHub() {
               {buyers.length === 0 ? (
                 <p className="text-muted-foreground text-sm">No active buyers yet</p>
               ) : (
-                buyers.map(buyer => (
+                buyers.slice(0, 5).map(buyer => (
                   <div key={buyer.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                     <div className="flex-1">
                       <p className="font-medium text-foreground">
@@ -541,7 +537,6 @@ export default function AgentSuccessHub() {
             </CardContent>
           </Card>
 
-          {/* Right Column - Your Hotsheets */}
           <Card>
             <CardHeader>
               <CardTitle>Your Hotsheets</CardTitle>
@@ -551,7 +546,7 @@ export default function AgentSuccessHub() {
               {hotsheets.length === 0 ? (
                 <p className="text-muted-foreground text-sm">No hotsheets created yet</p>
               ) : (
-                hotsheets.map(hs => (
+                hotsheets.slice(0, 5).map(hs => (
                   <div key={hs.id} className="p-4 border border-border rounded-lg space-y-3">
                     <div>
                       <p className="font-medium text-foreground">{hs.name}</p>
@@ -560,27 +555,13 @@ export default function AgentSuccessHub() {
                           Client: {hs.client_name || hs.client_email}
                         </p>
                       )}
-                      {hs.matching_count !== undefined && (
-                        <p className="text-sm text-muted-foreground">
-                          {hs.matching_count} matching {hs.matching_count === 1 ? 'listing' : 'listings'}
-                        </p>
-                      )}
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        <span>Created {formatDistanceToNow(new Date(hs.created_at), { addSuffix: true })}</span>
                         <span>Updated {formatDistanceToNow(new Date(hs.updated_at), { addSuffix: true })}</span>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}>
                         View
-                      </Button>
-                      {hs.share_token && (
-                        <Button size="sm" variant="outline" onClick={() => navigate(`/client/hotsheet/${hs.share_token}`)}>
-                          Client View
-                        </Button>
-                      )}
-                      <Button size="sm" variant="outline" onClick={() => navigate(`/hot-sheets`)}>
-                        Edit
                       </Button>
                     </div>
                   </div>
@@ -601,7 +582,7 @@ export default function AgentSuccessHub() {
               <p className="text-muted-foreground text-sm">No recent activity</p>
             ) : (
               <div className="space-y-4">
-                {activities.map((activity, index) => {
+                {activities.slice(0, 10).map((activity, index) => {
                   const Icon = activity.icon;
                   return (
                     <div key={index} className="flex items-start gap-4">
