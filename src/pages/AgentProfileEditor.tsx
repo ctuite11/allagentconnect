@@ -41,6 +41,7 @@ import CompanyLogoUpload from "@/components/profile-editor/CompanyLogoUpload";
 import SocialLinksSection from "@/components/profile-editor/SocialLinksSection";
 import IncentivesSection from "@/components/profile-editor/IncentivesSection";
 import TestimonialCard from "@/components/profile-editor/TestimonialCard";
+import HeaderBackgroundSelector from "@/components/profile-editor/HeaderBackgroundSelector";
 
 
 interface SocialLinks {
@@ -118,6 +119,10 @@ const AgentProfileEditor = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
+  const [headerBackgroundType, setHeaderBackgroundType] = useState("gradient");
+  const [headerBackgroundValue, setHeaderBackgroundValue] = useState("blue-indigo");
+  const [headerImageUrl, setHeaderImageUrl] = useState("");
+  const [uploadingHeaderImage, setUploadingHeaderImage] = useState(false);
   
 
   useEffect(() => {
@@ -182,6 +187,9 @@ const AgentProfileEditor = () => {
         setTeamName(profile.company || "");
         setHeadshotUrl(profile.headshot_url || "");
         setLogoUrl(profile.logo_url || "");
+        setHeaderBackgroundType(profile.header_background_type || "gradient");
+        setHeaderBackgroundValue(profile.header_background_value || "blue-indigo");
+        setHeaderImageUrl(profile.header_image_url || "");
         const links = profile.social_links as unknown as SocialLinks;
         setSocialLinks(links || {
           linkedin: "",
@@ -256,6 +264,9 @@ const AgentProfileEditor = () => {
           company: teamName,
           headshot_url: headshotUrl,
           logo_url: logoUrl,
+          header_background_type: headerBackgroundType,
+          header_background_value: headerBackgroundValue,
+          header_image_url: headerImageUrl,
         })
         .eq("id", session.user.id);
 
