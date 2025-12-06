@@ -1325,7 +1325,11 @@ setHeaderBackgroundType(profile.header_background_type || "color");
               <span className="hidden sm:inline">View Public Profile</span>
               <span className="sm:hidden">Preview</span>
             </Button>
-            <Button onClick={handleSaveProfile} disabled={saving} className="gap-2">
+            <Button 
+              onClick={handleSaveProfile} 
+              disabled={saving} 
+              className="gap-2 bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white"
+            >
               {saving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
