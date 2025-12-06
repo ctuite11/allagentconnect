@@ -634,49 +634,21 @@ const AgentProfileEditor = () => {
               </CardContent>
             </Card>
 
-            {/* Header Background Section */}
+            {/* Header Theme Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Home className="h-5 w-5 text-primary" />
-                  Header Background
+                  Header Theme
                 </CardTitle>
-                <CardDescription>Customize your profile header with an image, gradient, or pattern</CardDescription>
+                <CardDescription>Customize your profile header appearance</CardDescription>
               </CardHeader>
               <CardContent>
                 <HeaderBackgroundSelector
                   backgroundType={headerBackgroundType}
                   backgroundValue={headerBackgroundValue}
-                  headerImageUrl={headerImageUrl}
                   onTypeChange={setHeaderBackgroundType}
                   onValueChange={setHeaderBackgroundValue}
-                  onImageUpload={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setUploadingHeaderImage(true);
-                    try {
-                      const { data: { session } } = await supabase.auth.getSession();
-                      if (!session) return;
-                      const fileExt = file.name.split('.').pop();
-                      const fileName = `${session.user.id}/header-${Date.now()}.${fileExt}`;
-                      const { error: uploadError } = await supabase.storage
-                        .from('agent-headshots')
-                        .upload(fileName, file, { upsert: true });
-                      if (uploadError) throw uploadError;
-                      const { data: { publicUrl } } = supabase.storage
-                        .from('agent-headshots')
-                        .getPublicUrl(fileName);
-                      setHeaderImageUrl(publicUrl);
-                      toast.success("Header image uploaded!");
-                    } catch (error) {
-                      console.error("Error uploading header image:", error);
-                      toast.error("Failed to upload header image");
-                    } finally {
-                      setUploadingHeaderImage(false);
-                    }
-                  }}
-                  onImageRemove={() => setHeaderImageUrl("")}
-                  uploadingImage={uploadingHeaderImage}
                 />
               </CardContent>
             </Card>

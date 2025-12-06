@@ -1,223 +1,157 @@
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Upload, X, Check, Image } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState } from "react";
 
 interface HeaderBackgroundSelectorProps {
   backgroundType: string;
   backgroundValue: string;
-  headerImageUrl: string;
   onTypeChange: (type: string) => void;
   onValueChange: (value: string) => void;
-  onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onImageRemove: () => void;
-  uploadingImage: boolean;
 }
 
-// 7 Theme Options
-const THEMES = [
-  { 
-    id: "allagentconnect", 
-    name: "AllAgentConnect", 
-    description: "Brand Gradient",
-    style: "linear-gradient(135deg, hsl(215, 85%, 45%) 0%, hsl(270, 70%, 50%) 100%)",
-    preview: "bg-gradient-to-br from-blue-600 to-purple-600"
-  },
-  { 
-    id: "compass", 
-    name: "Compass", 
-    description: "Black & White",
-    style: "linear-gradient(135deg, hsl(0, 0%, 8%) 0%, hsl(0, 0%, 15%) 100%)",
-    preview: "bg-gradient-to-br from-gray-900 to-gray-800"
-  },
-  { 
-    id: "coldwell-banker", 
-    name: "Coldwell Banker", 
-    description: "Deep Navy",
-    style: "linear-gradient(135deg, hsl(215, 60%, 20%) 0%, hsl(215, 50%, 30%) 100%)",
-    preview: "bg-gradient-to-br from-blue-950 to-blue-900"
-  },
-  { 
-    id: "berkshire", 
-    name: "Berkshire Hathaway", 
-    description: "Plum Purple",
-    style: "linear-gradient(135deg, hsl(280, 40%, 25%) 0%, hsl(280, 35%, 35%) 100%)",
-    preview: "bg-gradient-to-br from-purple-950 to-purple-800"
-  },
-  { 
-    id: "century21", 
-    name: "Century 21", 
-    description: "Black & Gold",
-    style: "linear-gradient(135deg, hsl(0, 0%, 10%) 0%, hsl(40, 70%, 35%) 100%)",
-    preview: "bg-gradient-to-br from-gray-900 to-amber-700"
-  },
-  { 
-    id: "remax", 
-    name: "RE/MAX", 
-    description: "Red, White & Blue",
-    style: "linear-gradient(135deg, hsl(0, 75%, 45%) 0%, hsl(215, 80%, 45%) 100%)",
-    preview: "bg-gradient-to-br from-red-600 to-blue-600"
-  },
+// Solid Color Themes
+const COLOR_THEMES = [
+  { id: "directconnect-blue", name: "DirectConnect Blue", style: "linear-gradient(135deg, hsl(215, 85%, 45%) 0%, hsl(230, 70%, 50%) 100%)", preview: "bg-gradient-to-br from-blue-600 to-indigo-600" },
+  { id: "charcoal", name: "Charcoal", style: "linear-gradient(135deg, hsl(0, 0%, 15%) 0%, hsl(0, 0%, 25%) 100%)", preview: "bg-gradient-to-br from-gray-900 to-gray-700" },
+  { id: "navy", name: "Navy", style: "linear-gradient(135deg, hsl(215, 60%, 20%) 0%, hsl(215, 50%, 30%) 100%)", preview: "bg-gradient-to-br from-blue-950 to-blue-900" },
+  { id: "slate", name: "Slate", style: "linear-gradient(135deg, hsl(215, 15%, 35%) 0%, hsl(215, 20%, 45%) 100%)", preview: "bg-gradient-to-br from-slate-700 to-slate-500" },
+  { id: "graphite", name: "Graphite", style: "linear-gradient(135deg, hsl(220, 10%, 20%) 0%, hsl(220, 15%, 35%) 100%)", preview: "bg-gradient-to-br from-gray-800 to-gray-600" },
+  { id: "soft-gold", name: "Soft Gold", style: "linear-gradient(135deg, hsl(40, 50%, 35%) 0%, hsl(35, 45%, 45%) 100%)", preview: "bg-gradient-to-br from-amber-700 to-yellow-600" },
+  { id: "burgundy", name: "Burgundy", style: "linear-gradient(135deg, hsl(345, 50%, 30%) 0%, hsl(350, 45%, 40%) 100%)", preview: "bg-gradient-to-br from-rose-900 to-red-800" },
+  { id: "royal-blue", name: "Royal Blue", style: "linear-gradient(135deg, hsl(225, 70%, 40%) 0%, hsl(230, 65%, 50%) 100%)", preview: "bg-gradient-to-br from-blue-800 to-blue-600" },
 ];
 
-export const getHeaderBackgroundStyle = (type: string, value: string, imageUrl?: string): React.CSSProperties => {
-  // Custom image upload
-  if (type === "custom" && imageUrl) {
-    return {
-      backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.55)), url(${imageUrl})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-    };
+// Pattern Themes
+const PATTERN_THEMES = [
+  { id: "diagonal-fade", name: "Diagonal Fade", style: "linear-gradient(135deg, hsl(215, 50%, 25%) 0%, hsl(230, 40%, 35%) 50%, hsl(215, 50%, 25%) 100%)", preview: "bg-gradient-to-br from-slate-800 via-indigo-900 to-slate-800" },
+  { id: "dot-grid", name: "Dot Grid", style: "radial-gradient(circle at 2px 2px, hsl(215, 30%, 40%) 1px, transparent 1px), linear-gradient(135deg, hsl(215, 40%, 20%) 0%, hsl(220, 35%, 28%) 100%)", preview: "bg-gradient-to-br from-slate-900 to-slate-800" },
+  { id: "mesh-pattern", name: "Minimal Mesh", style: "linear-gradient(90deg, hsla(215, 50%, 30%, 0.1) 1px, transparent 1px), linear-gradient(hsla(215, 50%, 30%, 0.1) 1px, transparent 1px), linear-gradient(135deg, hsl(215, 40%, 22%) 0%, hsl(225, 35%, 30%) 100%)", preview: "bg-gradient-to-br from-blue-950 to-indigo-950" },
+  { id: "linen", name: "Linen Texture", style: "linear-gradient(135deg, hsl(30, 10%, 25%) 0%, hsl(25, 15%, 32%) 100%)", preview: "bg-gradient-to-br from-stone-800 to-stone-700" },
+  { id: "vignette", name: "Gentle Vignette", style: "radial-gradient(ellipse at center, hsl(215, 45%, 35%) 0%, hsl(220, 50%, 18%) 100%)", preview: "bg-gradient-to-br from-blue-700 to-blue-950" },
+  { id: "geometric", name: "Thin-Line Geometric", style: "linear-gradient(45deg, transparent 45%, hsla(215, 50%, 40%, 0.15) 45%, hsla(215, 50%, 40%, 0.15) 55%, transparent 55%), linear-gradient(-45deg, transparent 45%, hsla(215, 50%, 40%, 0.15) 45%, hsla(215, 50%, 40%, 0.15) 55%, transparent 55%), linear-gradient(135deg, hsl(220, 45%, 22%) 0%, hsl(225, 40%, 30%) 100%)", preview: "bg-gradient-to-br from-slate-900 to-indigo-900" },
+];
+
+export const getHeaderBackgroundStyle = (type: string, value: string): React.CSSProperties => {
+  // Color themes
+  const colorTheme = COLOR_THEMES.find(t => t.id === value);
+  if (colorTheme) {
+    return { background: colorTheme.style };
   }
   
-  // Theme-based backgrounds
-  const theme = THEMES.find(t => t.id === value);
-  if (theme) {
-    return { background: theme.style };
+  // Pattern themes
+  const patternTheme = PATTERN_THEMES.find(t => t.id === value);
+  if (patternTheme) {
+    return { background: patternTheme.style };
   }
   
-  // Default to AllAgentConnect theme
-  return { background: THEMES[0].style };
+  // Default to DirectConnect Blue
+  return { background: COLOR_THEMES[0].style };
 };
 
 const HeaderBackgroundSelector = ({
   backgroundType,
   backgroundValue,
-  headerImageUrl,
   onTypeChange,
   onValueChange,
-  onImageUpload,
-  onImageRemove,
-  uploadingImage,
 }: HeaderBackgroundSelectorProps) => {
-  const isCustom = backgroundType === "custom";
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleThemeSelect = (themeId: string) => {
-    onTypeChange("theme");
+  const handleThemeSelect = (themeId: string, type: "color" | "pattern") => {
+    onTypeChange(type);
     onValueChange(themeId);
   };
 
-  const handleCustomSelect = () => {
-    onTypeChange("custom");
-    onValueChange("");
-  };
+  const currentTheme = [...COLOR_THEMES, ...PATTERN_THEMES].find(t => t.id === backgroundValue);
 
   return (
-    <div className="space-y-5">
-      <Label className="text-sm font-medium">Choose Header Theme</Label>
-      
-      {/* Theme Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {THEMES.map((theme) => (
-          <button
-            key={theme.id}
-            type="button"
-            onClick={() => handleThemeSelect(theme.id)}
-            className={cn(
-              "relative h-20 rounded-lg overflow-hidden border-2 transition-all",
-              theme.preview,
-              backgroundType === "theme" && backgroundValue === theme.id
-                ? "border-foreground ring-2 ring-primary ring-offset-2" 
-                : "border-transparent hover:border-foreground/40"
-            )}
-          >
-            {backgroundType === "theme" && backgroundValue === theme.id && (
-              <div className="absolute top-2 right-2">
-                <Check className="h-4 w-4 text-white drop-shadow-md" />
-              </div>
-            )}
-            <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
-              <p className="text-white text-xs font-semibold">{theme.name}</p>
-              <p className="text-white/70 text-[10px]">{theme.description}</p>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {/* Custom Image Upload Option */}
-      <div className="pt-2 border-t">
-        <button
-          type="button"
-          onClick={handleCustomSelect}
-          className={cn(
-            "w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left",
-            isCustom
-              ? "border-primary bg-primary/5" 
-              : "border-border hover:border-primary/50"
-          )}
-        >
-          <div className={cn(
-            "w-10 h-10 rounded-lg flex items-center justify-center",
-            isCustom ? "bg-primary text-white" : "bg-muted text-muted-foreground"
-          )}>
-            <Image className="h-5 w-5" />
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-3">
+      <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-8 h-8 rounded-md border"
+            style={getHeaderBackgroundStyle(backgroundType, backgroundValue)}
+          />
+          <div className="text-left">
+            <p className="text-sm font-medium">Header Theme</p>
+            <p className="text-xs text-muted-foreground">{currentTheme?.name || "DirectConnect Blue"}</p>
           </div>
-          <div>
-            <p className="font-medium text-sm">Custom Image Upload</p>
-            <p className="text-xs text-muted-foreground">Upload your own header background</p>
-          </div>
-          {isCustom && <Check className="h-4 w-4 text-primary ml-auto" />}
-        </button>
-      </div>
+        </div>
+        <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+      </CollapsibleTrigger>
 
-      {/* Image Upload Section - Only show when custom is selected */}
-      {isCustom && (
-        <div className="space-y-3 pl-4 border-l-2 border-primary/30">
-          <Label className="text-xs text-muted-foreground">
-            Recommended: 1800×600px (JPG or PNG)
-          </Label>
-          
-          {headerImageUrl ? (
-            <div className="relative rounded-lg overflow-hidden">
-              <img 
-                src={headerImageUrl} 
-                alt="Header background" 
-                className="w-full h-28 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/40" />
-              <Button
-                variant="destructive"
-                size="sm"
-                className="absolute top-2 right-2"
-                onClick={onImageRemove}
+      <CollapsibleContent className="space-y-4 pt-2">
+        {/* Solid Colors */}
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wide">Solid Colors</Label>
+          <div className="grid grid-cols-4 gap-2">
+            {COLOR_THEMES.map((theme) => (
+              <button
+                key={theme.id}
+                type="button"
+                onClick={() => handleThemeSelect(theme.id, "color")}
+                className={cn(
+                  "relative h-12 rounded-lg overflow-hidden border-2 transition-all",
+                  theme.preview,
+                  backgroundValue === theme.id
+                    ? "border-primary ring-2 ring-primary/30" 
+                    : "border-transparent hover:border-foreground/30"
+                )}
+                title={theme.name}
               >
-                <X className="h-4 w-4 mr-1" />
-                Remove
-              </Button>
-            </div>
-          ) : (
-            <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors">
-              <input
-                type="file"
-                accept="image/jpeg,image/png"
-                onChange={onImageUpload}
-                className="hidden"
-                disabled={uploadingImage}
-              />
-              {uploadingImage ? (
-                <div className="animate-pulse text-muted-foreground">Uploading...</div>
-              ) : (
-                <>
-                  <Upload className="h-6 w-6 text-muted-foreground mb-2" />
-                  <span className="text-sm text-muted-foreground">Click to upload</span>
-                </>
-              )}
-            </label>
-          )}
+                {backgroundValue === theme.id && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <Check className="h-4 w-4 text-white drop-shadow-md" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
-      )}
 
-      {/* Live Preview */}
-      <div className="space-y-2 pt-2">
-        <Label className="text-xs text-muted-foreground">Preview</Label>
-        <div 
-          className="h-20 rounded-lg overflow-hidden flex items-center justify-center"
-          style={getHeaderBackgroundStyle(backgroundType, backgroundValue, headerImageUrl)}
-        >
-          <span className="text-white font-semibold drop-shadow-md">Header Preview</span>
+        {/* Patterns */}
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wide">Patterns</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {PATTERN_THEMES.map((theme) => (
+              <button
+                key={theme.id}
+                type="button"
+                onClick={() => handleThemeSelect(theme.id, "pattern")}
+                className={cn(
+                  "relative h-14 rounded-lg overflow-hidden border-2 transition-all",
+                  theme.preview,
+                  backgroundValue === theme.id
+                    ? "border-primary ring-2 ring-primary/30" 
+                    : "border-transparent hover:border-foreground/30"
+                )}
+              >
+                {backgroundValue === theme.id && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <Check className="h-4 w-4 text-white drop-shadow-md" />
+                  </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black/60 to-transparent">
+                  <p className="text-white text-[10px] font-medium text-center">{theme.name}</p>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-    </div>
+
+        {/* Live Preview */}
+        <div className="space-y-2 pt-2 border-t">
+          <Label className="text-xs text-muted-foreground">Preview</Label>
+          <div 
+            className="h-16 rounded-lg overflow-hidden flex items-center justify-center"
+            style={getHeaderBackgroundStyle(backgroundType, backgroundValue)}
+          >
+            <span className="text-white font-semibold drop-shadow-md text-sm">Header Preview</span>
+          </div>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 };
 
