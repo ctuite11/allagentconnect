@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
-import { Upload, X, Check, Image, Palette, Grid3X3 } from "lucide-react";
+import { Upload, X, Check, Image } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface HeaderBackgroundSelectorProps {
@@ -16,73 +14,70 @@ interface HeaderBackgroundSelectorProps {
   uploadingImage: boolean;
 }
 
-const GRADIENTS = [
-  { id: "blue-indigo", name: "Blue → Indigo", class: "bg-gradient-to-r from-blue-600 to-indigo-700" },
-  { id: "navy-teal", name: "Navy → Teal", class: "bg-gradient-to-r from-slate-800 to-teal-600" },
-  { id: "black-charcoal", name: "Black → Charcoal", class: "bg-gradient-to-r from-gray-900 to-gray-700" },
-  { id: "gold-beige", name: "Gold → Beige", class: "bg-gradient-to-r from-amber-600 to-orange-200" },
-  { id: "slate-silver", name: "Slate → Silver", class: "bg-gradient-to-r from-slate-600 to-gray-300" },
-  { id: "sunset", name: "Sunset", class: "bg-gradient-to-r from-orange-500 to-rose-600" },
+// 7 Theme Options
+const THEMES = [
+  { 
+    id: "allagentconnect", 
+    name: "AllAgentConnect", 
+    description: "Brand Gradient",
+    style: "linear-gradient(135deg, hsl(215, 85%, 45%) 0%, hsl(270, 70%, 50%) 100%)",
+    preview: "bg-gradient-to-br from-blue-600 to-purple-600"
+  },
+  { 
+    id: "compass", 
+    name: "Compass", 
+    description: "Black & White",
+    style: "linear-gradient(135deg, hsl(0, 0%, 8%) 0%, hsl(0, 0%, 15%) 100%)",
+    preview: "bg-gradient-to-br from-gray-900 to-gray-800"
+  },
+  { 
+    id: "coldwell-banker", 
+    name: "Coldwell Banker", 
+    description: "Deep Navy",
+    style: "linear-gradient(135deg, hsl(215, 60%, 20%) 0%, hsl(215, 50%, 30%) 100%)",
+    preview: "bg-gradient-to-br from-blue-950 to-blue-900"
+  },
+  { 
+    id: "berkshire", 
+    name: "Berkshire Hathaway", 
+    description: "Plum Purple",
+    style: "linear-gradient(135deg, hsl(280, 40%, 25%) 0%, hsl(280, 35%, 35%) 100%)",
+    preview: "bg-gradient-to-br from-purple-950 to-purple-800"
+  },
+  { 
+    id: "century21", 
+    name: "Century 21", 
+    description: "Black & Gold",
+    style: "linear-gradient(135deg, hsl(0, 0%, 10%) 0%, hsl(40, 70%, 35%) 100%)",
+    preview: "bg-gradient-to-br from-gray-900 to-amber-700"
+  },
+  { 
+    id: "remax", 
+    name: "RE/MAX", 
+    description: "Red, White & Blue",
+    style: "linear-gradient(135deg, hsl(0, 75%, 45%) 0%, hsl(215, 80%, 45%) 100%)",
+    preview: "bg-gradient-to-br from-red-600 to-blue-600"
+  },
 ];
 
-const PATTERNS = [
-  { id: "geometric", name: "Geometric", preview: "◆ ◇ ◆" },
-  { id: "diagonal", name: "Diagonal Fade", preview: "╱╲╱" },
-  { id: "grid", name: "Grid Lines", preview: "┼┼┼" },
-  { id: "dots", name: "Dot Pattern", preview: "• • •" },
-  { id: "linen", name: "Linen Texture", preview: "≡≡≡" },
-  { id: "branded", name: "DirectConnect", preview: "AAC" },
-];
-
-export const getHeaderBackgroundStyle = (type: string, value: string, imageUrl?: string) => {
-  if (type === "image" && imageUrl) {
+export const getHeaderBackgroundStyle = (type: string, value: string, imageUrl?: string): React.CSSProperties => {
+  // Custom image upload
+  if (type === "custom" && imageUrl) {
     return {
-      backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url(${imageUrl})`,
+      backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.55)), url(${imageUrl})`,
       backgroundSize: "cover",
       backgroundPosition: "center",
     };
   }
   
-  if (type === "gradient") {
-    const gradientMap: Record<string, string> = {
-      "blue-indigo": "linear-gradient(135deg, hsl(215, 85%, 45%) 0%, hsl(245, 70%, 50%) 100%)",
-      "navy-teal": "linear-gradient(135deg, hsl(215, 50%, 25%) 0%, hsl(175, 60%, 40%) 100%)",
-      "black-charcoal": "linear-gradient(135deg, hsl(0, 0%, 10%) 0%, hsl(0, 0%, 30%) 100%)",
-      "gold-beige": "linear-gradient(135deg, hsl(38, 80%, 50%) 0%, hsl(30, 70%, 75%) 100%)",
-      "slate-silver": "linear-gradient(135deg, hsl(215, 20%, 40%) 0%, hsl(210, 15%, 75%) 100%)",
-      "sunset": "linear-gradient(135deg, hsl(25, 90%, 55%) 0%, hsl(350, 75%, 55%) 100%)",
-    };
-    return { background: gradientMap[value] || gradientMap["blue-indigo"] };
+  // Theme-based backgrounds
+  const theme = THEMES.find(t => t.id === value);
+  if (theme) {
+    return { background: theme.style };
   }
   
-  if (type === "pattern") {
-    const patternMap: Record<string, { background: string; backgroundSize?: string }> = {
-      "geometric": {
-        background: `linear-gradient(135deg, hsl(215, 70%, 50%) 0%, hsl(225, 60%, 40%) 100%)`,
-      },
-      "diagonal": {
-        background: `repeating-linear-gradient(45deg, hsl(215, 60%, 45%), hsl(215, 60%, 45%) 10px, hsl(215, 70%, 50%) 10px, hsl(215, 70%, 50%) 20px)`,
-      },
-      "grid": {
-        background: `linear-gradient(hsl(215, 60%, 45%) 1px, transparent 1px), linear-gradient(90deg, hsl(215, 60%, 45%) 1px, transparent 1px), linear-gradient(135deg, hsl(215, 70%, 40%) 0%, hsl(225, 60%, 35%) 100%)`,
-        backgroundSize: "20px 20px, 20px 20px, 100% 100%",
-      },
-      "dots": {
-        background: `radial-gradient(circle, hsl(215, 50%, 60%) 1px, transparent 1px), linear-gradient(135deg, hsl(215, 70%, 45%) 0%, hsl(225, 60%, 40%) 100%)`,
-        backgroundSize: "12px 12px, 100% 100%",
-      },
-      "linen": {
-        background: `linear-gradient(135deg, hsl(215, 60%, 45%) 0%, hsl(225, 55%, 40%) 100%)`,
-      },
-      "branded": {
-        background: `linear-gradient(135deg, hsl(215, 85%, 50%) 0%, hsl(200, 75%, 45%) 100%)`,
-      },
-    };
-    return patternMap[value] || patternMap["geometric"];
-  }
-  
-  // Default gradient
-  return { background: "linear-gradient(135deg, hsl(215, 85%, 45%) 0%, hsl(245, 70%, 50%) 100%)" };
+  // Default to AllAgentConnect theme
+  return { background: THEMES[0].style };
 };
 
 const HeaderBackgroundSelector = ({
@@ -95,62 +90,81 @@ const HeaderBackgroundSelector = ({
   onImageRemove,
   uploadingImage,
 }: HeaderBackgroundSelectorProps) => {
-  return (
-    <div className="space-y-6">
-      {/* Background Type Selection */}
-      <RadioGroup
-        value={backgroundType}
-        onValueChange={onTypeChange}
-        className="grid grid-cols-3 gap-3"
-      >
-        <Label
-          htmlFor="type-image"
-          className={cn(
-            "flex flex-col items-center gap-2 p-4 rounded-lg border-2 cursor-pointer transition-all",
-            backgroundType === "image" 
-              ? "border-primary bg-primary/5" 
-              : "border-border hover:border-primary/50"
-          )}
-        >
-          <RadioGroupItem value="image" id="type-image" className="sr-only" />
-          <Image className="h-5 w-5 text-primary" />
-          <span className="text-sm font-medium">Upload Image</span>
-        </Label>
-        
-        <Label
-          htmlFor="type-gradient"
-          className={cn(
-            "flex flex-col items-center gap-2 p-4 rounded-lg border-2 cursor-pointer transition-all",
-            backgroundType === "gradient" 
-              ? "border-primary bg-primary/5" 
-              : "border-border hover:border-primary/50"
-          )}
-        >
-          <RadioGroupItem value="gradient" id="type-gradient" className="sr-only" />
-          <Palette className="h-5 w-5 text-primary" />
-          <span className="text-sm font-medium">Gradient</span>
-        </Label>
-        
-        <Label
-          htmlFor="type-pattern"
-          className={cn(
-            "flex flex-col items-center gap-2 p-4 rounded-lg border-2 cursor-pointer transition-all",
-            backgroundType === "pattern" 
-              ? "border-primary bg-primary/5" 
-              : "border-border hover:border-primary/50"
-          )}
-        >
-          <RadioGroupItem value="pattern" id="type-pattern" className="sr-only" />
-          <Grid3X3 className="h-5 w-5 text-primary" />
-          <span className="text-sm font-medium">Pattern</span>
-        </Label>
-      </RadioGroup>
+  const isCustom = backgroundType === "custom";
 
-      {/* Image Upload Section */}
-      {backgroundType === "image" && (
-        <div className="space-y-3">
-          <Label className="text-sm text-muted-foreground">
-            Recommended size: 1800×600px (JPG or PNG)
+  const handleThemeSelect = (themeId: string) => {
+    onTypeChange("theme");
+    onValueChange(themeId);
+  };
+
+  const handleCustomSelect = () => {
+    onTypeChange("custom");
+    onValueChange("");
+  };
+
+  return (
+    <div className="space-y-5">
+      <Label className="text-sm font-medium">Choose Header Theme</Label>
+      
+      {/* Theme Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {THEMES.map((theme) => (
+          <button
+            key={theme.id}
+            type="button"
+            onClick={() => handleThemeSelect(theme.id)}
+            className={cn(
+              "relative h-20 rounded-lg overflow-hidden border-2 transition-all",
+              theme.preview,
+              backgroundType === "theme" && backgroundValue === theme.id
+                ? "border-foreground ring-2 ring-primary ring-offset-2" 
+                : "border-transparent hover:border-foreground/40"
+            )}
+          >
+            {backgroundType === "theme" && backgroundValue === theme.id && (
+              <div className="absolute top-2 right-2">
+                <Check className="h-4 w-4 text-white drop-shadow-md" />
+              </div>
+            )}
+            <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
+              <p className="text-white text-xs font-semibold">{theme.name}</p>
+              <p className="text-white/70 text-[10px]">{theme.description}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Custom Image Upload Option */}
+      <div className="pt-2 border-t">
+        <button
+          type="button"
+          onClick={handleCustomSelect}
+          className={cn(
+            "w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left",
+            isCustom
+              ? "border-primary bg-primary/5" 
+              : "border-border hover:border-primary/50"
+          )}
+        >
+          <div className={cn(
+            "w-10 h-10 rounded-lg flex items-center justify-center",
+            isCustom ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+          )}>
+            <Image className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="font-medium text-sm">Custom Image Upload</p>
+            <p className="text-xs text-muted-foreground">Upload your own header background</p>
+          </div>
+          {isCustom && <Check className="h-4 w-4 text-primary ml-auto" />}
+        </button>
+      </div>
+
+      {/* Image Upload Section - Only show when custom is selected */}
+      {isCustom && (
+        <div className="space-y-3 pl-4 border-l-2 border-primary/30">
+          <Label className="text-xs text-muted-foreground">
+            Recommended: 1800×600px (JPG or PNG)
           </Label>
           
           {headerImageUrl ? (
@@ -158,7 +172,7 @@ const HeaderBackgroundSelector = ({
               <img 
                 src={headerImageUrl} 
                 alt="Header background" 
-                className="w-full h-32 object-cover"
+                className="w-full h-28 object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/40" />
               <Button
@@ -172,7 +186,7 @@ const HeaderBackgroundSelector = ({
               </Button>
             </div>
           ) : (
-            <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors">
+            <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors">
               <input
                 type="file"
                 accept="image/jpeg,image/png"
@@ -184,8 +198,8 @@ const HeaderBackgroundSelector = ({
                 <div className="animate-pulse text-muted-foreground">Uploading...</div>
               ) : (
                 <>
-                  <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                  <span className="text-sm text-muted-foreground">Click to upload header image</span>
+                  <Upload className="h-6 w-6 text-muted-foreground mb-2" />
+                  <span className="text-sm text-muted-foreground">Click to upload</span>
                 </>
               )}
             </label>
@@ -193,73 +207,14 @@ const HeaderBackgroundSelector = ({
         </div>
       )}
 
-      {/* Gradient Selection */}
-      {backgroundType === "gradient" && (
-        <div className="grid grid-cols-3 gap-3">
-          {GRADIENTS.map((gradient) => (
-            <button
-              key={gradient.id}
-              type="button"
-              onClick={() => onValueChange(gradient.id)}
-              className={cn(
-                "relative h-16 rounded-lg overflow-hidden border-2 transition-all",
-                gradient.class,
-                backgroundValue === gradient.id 
-                  ? "border-foreground ring-2 ring-primary ring-offset-2" 
-                  : "border-transparent hover:border-foreground/30"
-              )}
-            >
-              {backgroundValue === gradient.id && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                  <Check className="h-5 w-5 text-white" />
-                </div>
-              )}
-              <span className="absolute bottom-1 left-2 text-[10px] text-white/90 font-medium drop-shadow-sm">
-                {gradient.name}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Pattern Selection */}
-      {backgroundType === "pattern" && (
-        <div className="grid grid-cols-3 gap-3">
-          {PATTERNS.map((pattern) => (
-            <button
-              key={pattern.id}
-              type="button"
-              onClick={() => onValueChange(pattern.id)}
-              className={cn(
-                "relative h-16 rounded-lg overflow-hidden border-2 transition-all flex items-center justify-center",
-                "bg-gradient-to-br from-primary/80 to-primary",
-                backgroundValue === pattern.id 
-                  ? "border-foreground ring-2 ring-primary ring-offset-2" 
-                  : "border-transparent hover:border-foreground/30"
-              )}
-            >
-              {backgroundValue === pattern.id && (
-                <div className="absolute top-1 right-1">
-                  <Check className="h-4 w-4 text-white" />
-                </div>
-              )}
-              <span className="text-white/90 text-lg font-mono">{pattern.preview}</span>
-              <span className="absolute bottom-1 left-2 text-[10px] text-white/90 font-medium">
-                {pattern.name}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Preview */}
-      <div className="space-y-2">
-        <Label className="text-sm text-muted-foreground">Preview</Label>
+      {/* Live Preview */}
+      <div className="space-y-2 pt-2">
+        <Label className="text-xs text-muted-foreground">Preview</Label>
         <div 
-          className="h-24 rounded-lg overflow-hidden flex items-center justify-center"
+          className="h-20 rounded-lg overflow-hidden flex items-center justify-center"
           style={getHeaderBackgroundStyle(backgroundType, backgroundValue, headerImageUrl)}
         >
-          <span className="text-white font-semibold text-lg drop-shadow-md">Your Header Preview</span>
+          <span className="text-white font-semibold drop-shadow-md">Header Preview</span>
         </div>
       </div>
     </div>
