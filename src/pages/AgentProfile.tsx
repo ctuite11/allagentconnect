@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -193,353 +193,405 @@ const AgentProfile = () => {
     );
   }
 
+  const hasSocialLinks = agent.social_links && Object.values(agent.social_links).some(link => link);
+
   return (
-    <div className="min-h-screen bg-secondary/30">
+    <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6 gap-2 text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
+      <div className="pt-20">
+        {/* Back Button */}
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="gap-2 text-muted-foreground hover:text-foreground -ml-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        </div>
 
-        {/* Hero Header Section - Compass-style compact layout */}
-        <Card className="mb-8 overflow-hidden shadow-lg border-0">
-          <CardContent className="p-5 md:p-6">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-6">
-                {/* Left: Photo + Agent Info */}
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 flex-1">
-                  {/* Photo */}
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-3 border-primary/20 shadow-md">
-                      {agent.headshot_url ? (
-                        <img 
-                          src={agent.headshot_url} 
-                          alt={`${agent.first_name} ${agent.last_name}`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-3xl font-bold text-primary">
-                            {agent.first_name[0]}{agent.last_name[0]}
-                          </span>
-                        </div>
-                      )}
+        {/* Hero Header Section - Compass-style 3-column layout */}
+        <div className="border-b border-border/40 bg-card">
+          <div className="max-w-6xl mx-auto px-6 py-10">
+            <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_180px] gap-8 lg:gap-12">
+              
+              {/* LEFT COLUMN: Photo + Buttons + Social Icons */}
+              <div className="flex flex-col items-center lg:items-start">
+                {/* Agent Photo */}
+                <div className="w-44 h-44 lg:w-52 lg:h-52 rounded-lg overflow-hidden bg-muted shadow-md">
+                  {agent.headshot_url ? (
+                    <img 
+                      src={agent.headshot_url} 
+                      alt={`${agent.first_name} ${agent.last_name}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-4xl font-bold text-primary">
+                        {agent.first_name[0]}{agent.last_name[0]}
+                      </span>
                     </div>
-                  </div>
-                  
-                  {/* Name, Title, Contact Info */}
-                  <div className="flex-1 text-center sm:text-left min-w-0">
-                    <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">
-                      {agent.first_name} {agent.last_name}
-                    </h1>
-                    
-                    {(agent.title || agent.company) && (
-                      <p className="text-sm text-muted-foreground mt-0.5">
-                        {agent.title}{agent.title && agent.company && ' • '}{agent.company}
-                      </p>
-                    )}
-
-                    {agent.aac_id && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Agent ID: {agent.aac_id}
-                      </p>
-                    )}
-                    
-                    <div className="space-y-1 mt-2.5">
-                      {agent.office_phone && agent.office_phone.trim() && (
-                        <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-foreground">
-                          <Phone className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                          <a href={`tel:${agent.office_phone}`} className="hover:text-primary transition-colors truncate">
-                            Office: {formatPhoneNumber(agent.office_phone)}
-                          </a>
-                        </div>
-                      )}
-                      {agent.cell_phone && agent.cell_phone.trim() && (
-                        <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-foreground">
-                          <Phone className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                          <a href={`tel:${agent.cell_phone}`} className="hover:text-primary transition-colors truncate">
-                            Cell: {formatPhoneNumber(agent.cell_phone)}
-                          </a>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-foreground">
-                        <Mail className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                        <a href={`mailto:${agent.email}`} className="hover:text-primary transition-colors truncate">
-                          {agent.email}
-                        </a>
-                      </div>
-                    </div>
-
-                    {/* CTAs + Social - Compact inline */}
-                    <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start mt-3">
-                      <ContactAgentProfileDialog 
-                        agentId={agent.id}
-                        agentName={`${agent.first_name} ${agent.last_name}`}
-                        agentEmail={agent.email}
-                      />
-                      {agent.social_links?.website && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1.5 h-8 px-3 text-xs"
-                          asChild
-                        >
-                          <a 
-                            href={agent.social_links.website.startsWith('http') ? agent.social_links.website : `https://${agent.social_links.website}`}
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                          >
-                            <Globe className="h-3 w-3" />
-                            Website
-                          </a>
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1.5 h-8 px-3 text-xs text-muted-foreground hover:text-foreground"
-                        onClick={() => generateVCard(agent)}
-                      >
-                        <Download className="h-3 w-3" />
-                        Save Contact
-                      </Button>
-                    </div>
-
-                    {/* Social Links - inline with buttons */}
-                    {agent.social_links && Object.values(agent.social_links).some(link => link) && (
-                      <div className="flex gap-1.5 justify-center sm:justify-start mt-2.5">
-                        {agent.social_links.linkedin && (
-                          <a href={agent.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-[#0A66C2] hover:bg-[#004182] text-white transition-colors">
-                            <Linkedin className="h-3 w-3" />
-                          </a>
-                        )}
-                        {agent.social_links.facebook && (
-                          <a href={agent.social_links.facebook} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-[#1877F2] hover:bg-[#166FE5] text-white transition-colors">
-                            <Facebook className="h-3 w-3" />
-                          </a>
-                        )}
-                        {agent.social_links.twitter && (
-                          <a href={agent.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-foreground hover:bg-foreground/80 text-background transition-colors">
-                            <Twitter className="h-3 w-3" />
-                          </a>
-                        )}
-                        {agent.social_links.instagram && (
-                          <a href={agent.social_links.instagram} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-full bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700 hover:via-pink-600 hover:to-orange-500 text-white transition-colors">
-                            <Instagram className="h-3 w-3" />
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
 
-                {/* Right: Logo & Badges - vertically centered */}
-                <div className="flex flex-row lg:flex-col items-center justify-center gap-3 flex-shrink-0 lg:pl-4 lg:border-l lg:border-border/50">
-                  {agent.logo_url && (
-                    <img 
-                      src={agent.logo_url} 
-                      alt="Company logo" 
-                      className="h-12 md:h-14 max-w-[120px] object-contain opacity-85"
-                    />
-                  )}
-                  <div className="flex flex-row lg:flex-col gap-1.5">
-                    <Badge variant="outline" className="gap-1 px-2.5 py-0.5 text-[11px] rounded-full border-primary/30 bg-primary/5 text-primary whitespace-nowrap">
-                      <Users className="h-2.5 w-2.5" />
-                      DirectConnect
-                    </Badge>
-                    <Badge variant="outline" className="gap-1 px-2.5 py-0.5 text-[11px] rounded-full border-accent/30 bg-accent/5 text-accent whitespace-nowrap">
-                      <ShieldCheck className="h-2.5 w-2.5" />
-                      Verified
-                    </Badge>
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-2.5 w-full max-w-[200px] mt-5">
+                  <ContactAgentProfileDialog 
+                    agentId={agent.id}
+                    agentName={`${agent.first_name} ${agent.last_name}`}
+                    agentEmail={agent.email}
+                  />
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => generateVCard(agent)}
+                  >
+                    <Download className="h-4 w-4" />
+                    Save Contact
+                  </Button>
+                </div>
+
+                {/* Social Media Section */}
+                {hasSocialLinks && (
+                  <div className="mt-6 w-full max-w-[200px]">
+                    <p className="text-sm font-medium text-muted-foreground mb-3">Social Media</p>
+                    <div className="flex flex-col gap-2">
+                      {agent.social_links?.facebook && (
+                        <a 
+                          href={agent.social_links.facebook} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center">
+                            <Facebook className="h-4 w-4" />
+                          </div>
+                          <span>Facebook</span>
+                        </a>
+                      )}
+                      {agent.social_links?.instagram && (
+                        <a 
+                          href={agent.social_links.instagram} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center">
+                            <Instagram className="h-4 w-4" />
+                          </div>
+                          <span>Instagram</span>
+                        </a>
+                      )}
+                      {agent.social_links?.linkedin && (
+                        <a 
+                          href={agent.social_links.linkedin} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center">
+                            <Linkedin className="h-4 w-4" />
+                          </div>
+                          <span>LinkedIn</span>
+                        </a>
+                      )}
+                      {agent.social_links?.twitter && (
+                        <a 
+                          href={agent.social_links.twitter} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center">
+                            <Twitter className="h-4 w-4" />
+                          </div>
+                          <span>X (Twitter)</span>
+                        </a>
+                      )}
+                    </div>
                   </div>
+                )}
+              </div>
+
+              {/* CENTER COLUMN: Agent Details */}
+              <div className="text-center lg:text-left">
+                <h1 className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
+                  {agent.first_name} {agent.last_name}
+                </h1>
+                
+                {agent.title && (
+                  <p className="text-lg text-muted-foreground mt-1">
+                    {agent.title}
+                  </p>
+                )}
+
+                {agent.company && (
+                  <p className="text-muted-foreground mt-0.5">
+                    {agent.company}
+                  </p>
+                )}
+
+                {agent.aac_id && (
+                  <p className="text-sm text-muted-foreground/70 mt-2">
+                    Agent ID: {agent.aac_id}
+                  </p>
+                )}
+                
+                {/* Contact Information */}
+                <div className="mt-6 space-y-2">
+                  {agent.email && (
+                    <a 
+                      href={`mailto:${agent.email}`} 
+                      className="block text-foreground hover:text-primary transition-colors"
+                    >
+                      {agent.email}
+                    </a>
+                  )}
+                  
+                  <div className="flex flex-col lg:flex-row gap-1 lg:gap-4 text-muted-foreground">
+                    {agent.office_phone && agent.office_phone.trim() && (
+                      <a href={`tel:${agent.office_phone}`} className="hover:text-primary transition-colors">
+                        O: {formatPhoneNumber(agent.office_phone)}
+                      </a>
+                    )}
+                    {agent.cell_phone && agent.cell_phone.trim() && (
+                      <a href={`tel:${agent.cell_phone}`} className="hover:text-primary transition-colors">
+                        M: {formatPhoneNumber(agent.cell_phone)}
+                      </a>
+                    )}
+                  </div>
+
+                  {agent.social_links?.website && (
+                    <a 
+                      href={agent.social_links.website.startsWith('http') ? agent.social_links.website : `https://${agent.social_links.website}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-primary hover:underline mt-2"
+                    >
+                      <Globe className="h-4 w-4" />
+                      {agent.social_links.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                    </a>
+                  )}
+                </div>
+
+                {/* CTA Button for Desktop - centered in this column */}
+                <div className="mt-6 hidden lg:block">
+                  <Button size="lg" className="px-8">
+                    Work with {agent.first_name}
+                  </Button>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: Logo + Badges */}
+              <div className="flex flex-col items-center lg:items-end justify-start gap-4">
+                {agent.logo_url && (
+                  <img 
+                    src={agent.logo_url} 
+                    alt="Company logo" 
+                    className="h-14 max-w-[140px] object-contain opacity-90"
+                  />
+                )}
+                <div className="flex flex-col gap-2 items-center lg:items-end">
+                  <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-xs rounded-full border-primary/30 bg-primary/5 text-primary">
+                    <Users className="h-3 w-3" />
+                    DirectConnect Friendly
+                  </Badge>
+                  <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-xs rounded-full border-accent/30 bg-accent/5 text-accent">
+                    <ShieldCheck className="h-3 w-3" />
+                    Verified Agent
+                  </Badge>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Main Content */}
-        <div id="agent-main-content" className="space-y-8">
-          {/* Bio Section */}
-          {agent.bio && (
-            <section>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Bio</h2>
-              <Card className="shadow-md border-0">
-                <CardContent className="p-6 md:p-8">
-                  <p className="text-foreground leading-relaxed text-lg whitespace-pre-wrap">
-                    {agent.bio}
-                  </p>
-                </CardContent>
-              </Card>
-            </section>
-          )}
+        <div className="max-w-6xl mx-auto px-6 py-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_180px] gap-8 lg:gap-12">
+            {/* Left spacer for alignment */}
+            <div className="hidden lg:block" />
 
-          {/* Incentives Section */}
-          {(agent.buyer_incentives || agent.seller_incentives) && (
-            <section>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Incentives</h2>
-              <div className="grid md:grid-cols-2 gap-6">
-                {agent.buyer_incentives && (
-                  <Card className="shadow-md border-0 overflow-hidden">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 rounded-xl bg-accent/10 flex-shrink-0">
-                          <Gift className="h-6 w-6 text-accent" />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-lg text-foreground mb-2">Buyer Incentives</h3>
-                          <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                            {agent.buyer_incentives}
+            {/* Center content area */}
+            <div className="space-y-12">
+              {/* About Me Section */}
+              {agent.bio && (
+                <section>
+                  <h2 className="text-2xl font-semibold text-foreground mb-4">
+                    About {agent.first_name}
+                  </h2>
+                  <div className="max-w-2xl">
+                    <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                      {agent.bio}
+                    </p>
+                  </div>
+                </section>
+              )}
+
+              {/* Client Testimonials Section */}
+              {testimonials.length > 0 && (
+                <section>
+                  <h2 className="text-2xl font-semibold text-foreground mb-4">
+                    Client Testimonials
+                  </h2>
+                  <div className="space-y-4 max-w-2xl">
+                    {testimonials.slice(0, 3).map((testimonial) => (
+                      <Card key={testimonial.id} className="border shadow-sm rounded-xl overflow-hidden">
+                        <CardContent className="p-5">
+                          {testimonial.rating && (
+                            <div className="flex gap-0.5 mb-3">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-4 w-4 ${
+                                    i < testimonial.rating!
+                                      ? "text-foreground fill-foreground"
+                                      : "text-muted-foreground/30"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          )}
+                          <p className="text-foreground/80 italic leading-relaxed">
+                            "{testimonial.testimonial_text}"
                           </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                {agent.seller_incentives && (
-                  <Card className="shadow-md border-0 overflow-hidden">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 rounded-xl bg-primary/10 flex-shrink-0">
-                          <TrendingUp className="h-6 w-6 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-lg text-foreground mb-2">Seller Incentives</h3>
-                          <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                            {agent.seller_incentives}
+                          <p className="mt-3 text-sm font-semibold text-foreground">
+                            -{testimonial.client_name}
                           </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Incentives Section */}
+              {(agent.buyer_incentives || agent.seller_incentives) && (
+                <section>
+                  <h2 className="text-2xl font-semibold text-foreground mb-4">
+                    Client Incentives
+                  </h2>
+                  <div className="grid md:grid-cols-2 gap-4 max-w-2xl">
+                    {agent.buyer_incentives && (
+                      <Card className="border shadow-sm rounded-xl bg-accent/5">
+                        <CardContent className="p-5">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-accent/10 flex-shrink-0">
+                              <Gift className="h-5 w-5 text-accent" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-foreground mb-1.5">Buyer Incentives</h3>
+                              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                {agent.buyer_incentives}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {agent.seller_incentives && (
+                      <Card className="border shadow-sm rounded-xl bg-primary/5">
+                        <CardContent className="p-5">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                              <TrendingUp className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-foreground mb-1.5">Seller Incentives</h3>
+                              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                {agent.seller_incentives}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </section>
+              )}
+            </div>
+
+            {/* Right spacer */}
+            <div className="hidden lg:block" />
+          </div>
+        </div>
+
+        {/* Active Listings Section - Full Width */}
+        <div className="bg-muted/30 border-t border-border/40">
+          <div className="max-w-6xl mx-auto px-6 py-12">
+            <h2 className="text-2xl font-semibold text-foreground mb-6 text-center">
+              {agent.first_name}'s Listings
+            </h2>
+            
+            {listings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <HomeIcon className="h-10 w-10 text-muted-foreground/50" />
+                </div>
+                <p className="text-lg text-muted-foreground mb-2">
+                  This agent currently has no active listings.
+                </p>
+                <p className="text-muted-foreground mb-6">
+                  Browse available homes or contact the agent directly.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button onClick={() => navigate('/browse')}>
+                    <Home className="h-4 w-4 mr-2" />
+                    Browse Properties
+                  </Button>
+                  <ContactAgentProfileDialog 
+                    agentId={agent.id}
+                    agentName={`${agent.first_name} ${agent.last_name}`}
+                    agentEmail={agent.email}
+                  />
+                </div>
               </div>
-            </section>
-          )}
-
-          {/* Testimonials Section */}
-          {testimonials.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Client Testimonials</h2>
-              <div className="grid gap-6">
-                {testimonials.map((testimonial) => (
-                  <Card key={testimonial.id} className="shadow-md border-0">
-                    <CardContent className="p-6 md:p-8">
-                      {testimonial.rating && (
-                        <div className="flex gap-1 mb-4">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-5 w-5 ${
-                                i < testimonial.rating!
-                                  ? "text-yellow-500 fill-yellow-500"
-                                  : "text-muted-foreground/30"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      <div className="flex gap-3 mb-4">
-                        <Quote className="h-8 w-8 text-primary/20 flex-shrink-0 transform rotate-180" />
-                        <p className="text-foreground text-lg italic leading-relaxed">
-                          {testimonial.testimonial_text}
-                        </p>
-                      </div>
-                      <div className="ml-11">
-                        <p className="font-bold text-foreground">{testimonial.client_name}</p>
-                        {testimonial.client_title && (
-                          <p className="text-sm text-muted-foreground">{testimonial.client_title}</p>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {listings.map((listing) => (
+                  <Card 
+                    key={listing.id} 
+                    className="cursor-pointer hover:shadow-lg transition-all duration-300 border overflow-hidden group bg-card"
+                    onClick={() => navigate(`/property/${listing.id}`)}
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '/placeholder.svg'}
+                        alt={listing.address}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground">
+                        {listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'}
+                      </Badge>
+                    </div>
+                    <CardContent className="p-4">
+                      <p className="text-2xl font-bold text-primary mb-2">
+                        ${listing.price.toLocaleString()}
+                      </p>
+                      <p className="font-semibold text-foreground text-sm mb-1 truncate">
+                        {listing.address}
+                      </p>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {listing.city}, {listing.state} {listing.zip_code}
+                      </p>
+                      <div className="flex gap-4 text-sm text-muted-foreground">
+                        {listing.bedrooms && (
+                          <span>{listing.bedrooms} bed</span>
+                        )}
+                        {listing.bathrooms && (
+                          <span>{listing.bathrooms} bath</span>
+                        )}
+                        {listing.square_feet && (
+                          <span>{listing.square_feet.toLocaleString()} sqft</span>
                         )}
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
-            </section>
-          )}
-
-          {/* Active Listings Section */}
-          <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">
-              Active Listings ({listings.length})
-            </h2>
-            <Card className="shadow-md border-0">
-              <CardContent className="p-6 md:p-8">
-                {listings.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
-                      <HomeIcon className="h-10 w-10 text-muted-foreground/50" />
-                    </div>
-                    <p className="text-lg text-muted-foreground mb-2">
-                      This agent currently has no active listings.
-                    </p>
-                    <p className="text-muted-foreground mb-6">
-                      Browse available homes or contact the agent directly.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <Button onClick={() => navigate('/browse')}>
-                        <Home className="h-4 w-4 mr-2" />
-                        Browse Properties
-                      </Button>
-                      <ContactAgentProfileDialog 
-                        agentId={agent.id}
-                        agentName={`${agent.first_name} ${agent.last_name}`}
-                        agentEmail={agent.email}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {listings.map((listing) => (
-                      <Card 
-                        key={listing.id} 
-                        className="cursor-pointer hover:shadow-lg transition-all duration-300 border overflow-hidden group"
-                        onClick={() => navigate(`/property/${listing.id}`)}
-                      >
-                        <div className="relative h-48 overflow-hidden">
-                          <img
-                            src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '/placeholder.svg'}
-                            alt={listing.address}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground">
-                            {listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'}
-                          </Badge>
-                        </div>
-                        <CardContent className="p-4">
-                          <p className="text-2xl font-bold text-primary mb-2">
-                            ${listing.price.toLocaleString()}
-                          </p>
-                          <p className="font-semibold text-foreground text-sm mb-1 truncate">
-                            {listing.address}
-                          </p>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            {listing.city}, {listing.state} {listing.zip_code}
-                          </p>
-                          <div className="flex gap-4 text-sm text-muted-foreground">
-                            {listing.bedrooms && (
-                              <span>{listing.bedrooms} bed</span>
-                            )}
-                            {listing.bathrooms && (
-                              <span>{listing.bathrooms} bath</span>
-                            )}
-                            {listing.square_feet && (
-                              <span>{listing.square_feet.toLocaleString()} sqft</span>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </section>
+            )}
+          </div>
         </div>
       </div>
       <Footer />
