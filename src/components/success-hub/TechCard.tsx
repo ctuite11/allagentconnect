@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Pill } from "@/components/ui/pill";
 import { ArrowRight } from "lucide-react";
 
 interface TechCardProps {
@@ -50,9 +51,12 @@ export const TechCard = ({
 
       {/* Metric Pill */}
       {metricValue !== undefined && (
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-          <span>{metricValue}</span>
-          {metricLabel && <span className="text-xs opacity-75">{metricLabel}</span>}
+        <div className="mb-4">
+          <Pill 
+            label={metricLabel ? `${metricValue} ${metricLabel}` : String(metricValue)}
+            variant="primary"
+            size="sm"
+          />
         </div>
       )}
 
