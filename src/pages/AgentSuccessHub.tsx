@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
-  Users, FileText, TrendingUp, Calendar, Mail, Heart, Bell, 
-  Home, UserPlus, Megaphone, Palette, MessageSquare 
+  Users, FileText, TrendingUp, Mail, Heart, Bell, 
+  Home, UserPlus, Megaphone, Palette, MessageSquare, Settings, HelpCircle
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -362,51 +362,63 @@ export default function AgentSuccessHub() {
   const hubCards = [
     {
       icon: <Home className="w-6 h-6" />,
-      title: "Listings",
-      description: "Manage your property listings and track performance",
+      title: "My Listings",
+      description: "Manage your active & off-market listings",
       metricValue: activeListingsCount,
-      metricLabel: "active",
+      metricLabel: "Active Listings",
       route: "/agent/listings",
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      title: "Contacts",
-      description: "View and manage your client relationships",
-      metricValue: activeBuyersCount,
-      metricLabel: "clients",
-      route: "/my-clients",
-    },
-    {
-      icon: <Bell className="w-6 h-6" />,
-      title: "Hotsheets",
-      description: "Create and manage property alert hotsheets",
-      metricValue: activeHotsheetsCount,
-      metricLabel: "active",
-      route: "/hot-sheets",
     },
     {
       icon: <UserPlus className="w-6 h-6" />,
       title: "Buyer Registry",
-      description: "Register buyer needs and track matches",
+      description: "Your patented buyer matching system",
+      metricValue: activeBuyersCount,
+      metricLabel: "Buyers",
       route: "/submit-client-need",
     },
     {
-      icon: <Palette className="w-6 h-6" />,
-      title: "Branding",
-      description: "Customize your agent profile and branding",
-      route: "/agent/profile/edit",
-    },
-    {
-      icon: <Mail className="w-6 h-6" />,
-      title: "Messages",
-      description: "View and respond to client inquiries",
+      icon: <MessageSquare className="w-6 h-6" />,
+      title: "Messages & Inquiries",
+      description: "Client and agent messages",
       route: "/my-clients",
     },
     {
       icon: <Megaphone className="w-6 h-6" />,
       title: "Communications Center",
-      description: "Agent-to-agent alerts for buyer needs, intel, and discussions",
+      description: "Agent-to-agent alerts & discussions",
       route: "/client-needs",
+    },
+    {
+      icon: <Bell className="w-6 h-6" />,
+      title: "Hotsheets",
+      description: "Automated buyer and market tracking",
+      metricValue: activeHotsheetsCount,
+      metricLabel: "Active",
+      route: "/hot-sheets",
+    },
+    {
+      icon: <Users className="w-6 h-6" />,
+      title: "My Contacts",
+      description: "CRM for leads & clients",
+      route: "/my-clients",
+    },
+    {
+      icon: <Palette className="w-6 h-6" />,
+      title: "My Branding",
+      description: "Logo & listing branding settings",
+      route: "/agent-profile-editor",
+    },
+    {
+      icon: <Settings className="w-6 h-6" />,
+      title: "Profile & Settings",
+      description: "Account & preferences",
+      route: "/agent-profile-editor",
+    },
+    {
+      icon: <HelpCircle className="w-6 h-6" />,
+      title: "Resources / Help",
+      description: "Guides, onboarding & support",
+      route: "/",
     },
   ];
 
@@ -416,7 +428,7 @@ export default function AgentSuccessHub() {
       <div className="container mx-auto px-4 py-8 pt-24 space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-foreground font-display">Agent Success Hub</h1>
+          <h1 className="text-4xl font-bold text-foreground font-display">Success Hub</h1>
           <p className="text-muted-foreground mt-2">Your command center for client success</p>
         </div>
 
@@ -485,7 +497,6 @@ export default function AgentSuccessHub() {
 
         {/* Tech-Forward Hub Cards Grid */}
         <div>
-          <h2 className="text-xl font-semibold text-foreground mb-4">Quick Access</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {hubCards.map((card) => (
               <TechCard
