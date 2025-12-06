@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 interface SocialLinks {
   linkedin: string;
@@ -148,16 +149,16 @@ const ProfilePreviewPanel = ({
 
         {/* Contact Info Details */}
         <div className="space-y-1.5 text-xs">
-          {cellPhone && (
+        {cellPhone && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Phone className="h-3 w-3" />
-              <span>{cellPhone}</span>
+              <span>{formatPhoneNumber(cellPhone)}</span>
             </div>
           )}
           {officePhone && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Building2 className="h-3 w-3" />
-              <span>{officePhone}</span>
+              <span>{formatPhoneNumber(officePhone)}</span>
             </div>
           )}
           {email && (
