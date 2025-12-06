@@ -43,7 +43,7 @@ const GeographicPreferencesManager = ({
   const [showAreas, setShowAreas] = useState("yes");
   const [townSearch, setTownSearch] = useState("");
   const [manualTowns, setManualTowns] = useState("");
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [confirmSelectAllOpen, setConfirmSelectAllOpen] = useState(false);
   const {
     townsList,
@@ -301,6 +301,13 @@ const GeographicPreferencesManager = ({
             <CardDescription className="text-left">
               Select states, counties, and towns for notifications
             </CardDescription>
+            {!isOpen && (
+              <p className="text-sm text-muted-foreground mt-1 text-left">
+                {selectedTowns.length > 0 
+                  ? `${selectedTowns.length} area${selectedTowns.length !== 1 ? 's' : ''} selected`
+                  : "No geographic areas selected — receiving all"}
+              </p>
+            )}
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>

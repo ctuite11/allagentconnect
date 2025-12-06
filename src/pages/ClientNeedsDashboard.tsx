@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Bell, DollarSign, Home, MapPin, Settings } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
 import GeographicPreferencesManager from "@/components/GeographicPreferencesManager";
@@ -21,6 +22,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+interface PreferenceSummary {
+  receivingCount: number;
+  sendingCount: number;
+  propertyTypesCount: number;
+  notificationSchedule: string;
+  priceRange: string;
+  geoCount: number;
+}
+
 const ClientNeedsDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
@@ -31,6 +41,14 @@ const ClientNeedsDashboard = () => {
   const [filtersLocallySet, setFiltersLocallySet] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [warningDismissed, setWarningDismissed] = useState(false);
+  const [summary, setSummary] = useState<PreferenceSummary>({
+    receivingCount: 0,
+    sendingCount: 0,
+    propertyTypesCount: 0,
+    notificationSchedule: "Immediate",
+    priceRange: "All",
+    geoCount: 0,
+  });
 
   useEffect(() => {
     checkAuth();
@@ -108,14 +126,44 @@ const ClientNeedsDashboard = () => {
 
         const hasGeographicFilter = !geoError && geoPrefs && geoPrefs.length > 0;
         const hasAnyFilters = hasPriceFilter || hasPropertyTypes || hasGeographicFilter;
-        
-        // Temporary logging for debugging
-        console.log("ClientNeedsDashboard prefs:", {
-          notificationsEnabled,
-          hasPriceFilter,
-          hasPropertyTypes,
-          hasGeographicFilter,
-          hasAnyFilters,
+
+        // Count receiving topics
+        let receivingCount = 0;
+        if (prefs.buyer_need) receivingCount++;
+        if (prefs.sales_intel) receivingCount++;
+        if (prefs.renter_need) receivingCount++;
+        if (prefs.general_discussion) receivingCount++;
+
+        // Build price range summary
+        let priceRange = "All";
+        if (prefs.min_price && prefs.max_price) {
+          priceRange = `$${prefs.min_price.toLocaleString()} - $${prefs.max_price.toLocaleString()}`;
+        } else if (prefs.min_price) {
+          priceRange = `$${prefs.min_price.toLocaleString()}+`;
+        } else if (prefs.max_price) {
+          priceRange = `Up to $${prefs.max_price.toLocaleString()}`;
+        }
+
+        // Get geo count
+        const { count: geoCount } = await supabase
+          .from("agent_buyer_coverage_areas")
+          .select("*", { count: "exact", head: true })
+          .eq("agent_id", user.id);
+
+        // Schedule
+        const scheduleMap: Record<string, string> = {
+          immediate: "Immediate",
+          daily: "Daily",
+          weekly: "Weekly"
+        };
+
+        setSummary({
+          receivingCount,
+          sendingCount: 0, // Would need separate tracking
+          propertyTypesCount: hasPropertyTypes ? (prefs.property_types as string[]).length : 0,
+          notificationSchedule: scheduleMap[prefs.client_needs_schedule || "immediate"] || "Immediate",
+          priceRange,
+          geoCount: geoCount || 0,
         });
         
         // Batch state updates to prevent race conditions
@@ -145,8 +193,8 @@ const ClientNeedsDashboard = () => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold mb-2">Connect . Communicate . Collaborate</h1>
-              <p className="text-lg text-muted-foreground">Turning relationships into results</p>
+              <h1 className="text-3xl font-bold mb-2">Communications Center</h1>
+              <p className="text-lg text-muted-foreground">Connect · Communicate · Collaborate</p>
             </div>
           </div>
           <p className="text-base text-muted-foreground max-w-3xl">
@@ -154,8 +202,28 @@ const ClientNeedsDashboard = () => {
           </p>
         </div>
 
-        {/* Notification Preference Cards */}
-        <section className="mb-8 min-h-[260px]">
+        {/* Summary Box */}
+        {preferencesLoaded && (
+          <Card className="mb-8 bg-muted/30 border-primary/20">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Bell className="h-4 w-4 text-primary" />
+                <span className="font-medium text-sm">Your Active Preferences</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Receiving for {summary.receivingCount} topic{summary.receivingCount !== 1 ? 's' : ''} · {summary.propertyTypesCount > 0 ? `${summary.propertyTypesCount} property types` : 'All property types'} · {summary.geoCount > 0 ? `${summary.geoCount} areas` : 'All areas'} · Notifications: {summary.notificationSchedule}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Topics / Channels Section */}
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Bell className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">Topics / Channels</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">Select topics to send or receive notifications</p>
           <NotificationPreferenceCards />
         </section>
 
@@ -163,12 +231,14 @@ const ClientNeedsDashboard = () => {
         <Separator className="my-8" />
 
         {/* My Preferences Section */}
-        <div className="mb-8" data-preferences-section>
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold">Set My Preferences</h2>
-            <p className="text-sm text-muted-foreground mt-1">(For receiving email notifications only)</p>
+        <section className="mb-8" data-preferences-section>
+          <div className="flex items-center gap-2 mb-2">
+            <Settings className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">My Preferences</h2>
           </div>
-          <div className="space-y-6">
+          <p className="text-sm text-muted-foreground mb-6">(For receiving email notifications only)</p>
+          
+          <div className="space-y-4">
             <PriceRangePreferences 
               agentId={user?.id || ""} 
               onFiltersUpdated={handleFiltersUpdated}
@@ -182,10 +252,19 @@ const ClientNeedsDashboard = () => {
               onFiltersUpdated={handleFiltersUpdated}
             />
           </div>
-        </div>
+        </section>
 
-        {/* Notification Settings - Required (Final Step) */}
-        <ClientNeedsNotificationSettings />
+        {/* Separator */}
+        <Separator className="my-8" />
+
+        {/* Notification Settings Section */}
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Bell className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">Notification Settings</h2>
+          </div>
+          <ClientNeedsNotificationSettings />
+        </section>
 
         {/* Warning Banner Region - reserve space to prevent layout shift */}
         <div className="mt-8 min-h-[120px]">

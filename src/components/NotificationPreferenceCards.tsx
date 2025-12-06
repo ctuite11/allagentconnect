@@ -218,10 +218,10 @@ export const NotificationPreferenceCards = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className={`w-24 h-8 text-xs border-2 transition-all ${
+                          className={`w-28 h-8 text-xs border-2 transition-all ${
                             card.active 
                               ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
-                              : "bg-background border-secondary hover:bg-secondary hover:border-primary"
+                              : "bg-background border-muted hover:bg-muted hover:border-primary"
                           }`}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -231,18 +231,18 @@ export const NotificationPreferenceCards = () => {
                           {card.active ? (
                             <>
                               <Check className="h-4 w-4 mr-1 font-bold" />
-                              <span>Receive</span>
+                              <span>Receiving</span>
                             </>
                           ) : (
                             <>
                               <Bell className="h-3 w-3 mr-1" />
-                              <span>Receive</span>
+                              <span>Enable</span>
                             </>
                           )}
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Click to {card.active ? "disable" : "enable"} receiving messages based on your selected preferences below</p>
+                        <p>{card.active ? "✓ Receiving Notifications" : "Click to enable receiving"}</p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
