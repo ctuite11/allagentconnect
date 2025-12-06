@@ -6,14 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
-import { US_STATES } from "@/data/usStatesCountiesData";
-import { usCitiesByState } from "@/data/usCitiesData";
+import { GeographicSelector, GeographicSelection } from "@/components/GeographicSelector";
 
 const PROPERTY_TYPES = [
   "single_family",
@@ -39,8 +37,7 @@ const PROPERTY_TYPE_LABELS: Record<typeof PROPERTY_TYPES[number], string> = {
 
 const clientNeedSchema = z.object({
   propertyTypes: z.array(z.enum(PROPERTY_TYPES)).min(1, "Select at least one property type"),
-  city: z.string().trim().min(1, "City is required").max(100, "City must be less than 100 characters"),
-  state: z.string().trim().length(2, "State must be 2 characters"),
+  locations: z.array(z.string()).min(1, "Select at least one location"),
   maxPrice: z.string()
     .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number")
     .refine((val) => parseFloat(val) > 0 && parseFloat(val) < 100000000, {
@@ -65,12 +62,18 @@ const SubmitClientNeed = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     propertyTypes: [] as string[],
-    city: "",
-    state: "",
     maxPrice: "",
     bedrooms: "",
     bathrooms: "",
     description: "",
+  });
+  
+  // Geographic selection state
+  const [geoSelection, setGeoSelection] = useState<GeographicSelection>({
+    state: "MA",
+    county: "all",
+    towns: [],
+    showAreas: true,
   });
 
   // Property type helpers
@@ -89,19 +92,6 @@ const SubmitClientNeed = () => {
       propertyTypes: allSelected ? [] : [...PROPERTY_TYPES],
     }));
   };
-
-  // Get cities for selected state
-  const availableCities = formData.state ? (usCitiesByState[formData.state] || []) : [];
-
-  // Reset city when state changes
-  useEffect(() => {
-    if (formData.state && formData.city) {
-      const citiesForState = usCitiesByState[formData.state] || [];
-      if (!citiesForState.includes(formData.city)) {
-        setFormData(prev => ({ ...prev, city: "" }));
-      }
-    }
-  }, [formData.state]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -130,15 +120,25 @@ const SubmitClientNeed = () => {
     setLoading(true);
 
     try {
+      // Build validation data with locations
+      const dataToValidate = {
+        ...formData,
+        locations: geoSelection.towns,
+      };
+      
       // Validate input
-      const validatedData = clientNeedSchema.parse(formData);
+      const validatedData = clientNeedSchema.parse(dataToValidate);
+
+      // Extract city/state from first selected location for database compatibility
+      const firstLocation = geoSelection.towns[0] || "";
+      const city = firstLocation.includes("-") ? firstLocation.split("-")[0] : firstLocation;
 
       const { error: insertError } = await supabase.from("client_needs").insert({
         submitted_by: user?.id,
         property_type: validatedData.propertyTypes[0] as any,
         property_types: validatedData.propertyTypes as any,
-        city: validatedData.city,
-        state: validatedData.state,
+        city: city,
+        state: geoSelection.state,
         max_price: parseFloat(validatedData.maxPrice),
         bedrooms: validatedData.bedrooms ? parseInt(validatedData.bedrooms) : null,
         bathrooms: validatedData.bathrooms ? parseFloat(validatedData.bathrooms) : null,
@@ -203,48 +203,13 @@ const SubmitClientNeed = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="state">State</Label>
-                  <Select
-                    value={formData.state}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, state: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select state" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 max-h-[300px]">
-                      {US_STATES.map((s) => (
-                        <SelectItem key={s.code} value={s.code}>
-                          {s.code} - {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Select
-                    value={formData.city}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, city: value })
-                    }
-                    disabled={!formData.state}
-                  >
-                    <SelectTrigger className={!formData.state ? "opacity-50 cursor-not-allowed" : ""}>
-                      <SelectValue placeholder={formData.state ? "Select city" : "Select state first"} />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 max-h-[300px]">
-                      {availableCities.map((city) => (
-                        <SelectItem key={city} value={city}>
-                          {city}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label>Location</Label>
+                <GeographicSelector
+                  value={geoSelection}
+                  onChange={setGeoSelection}
+                  defaultCollapsed={false}
+                />
               </div>
 
               <div>
