@@ -8,9 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp, Home, Building2, Users, MapPin, DollarSign, Bed, Bath, Calendar, Waves, Eye } from "lucide-react";
-import { useTownsPicker } from "@/hooks/useTownsPicker";
-import { TownsPicker } from "@/components/TownsPicker";
-import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
+import { GeographicSelector, GeographicSelection } from "@/components/GeographicSelector";
 import { cn } from "@/lib/utils";
 
 export interface SearchCriteria {
@@ -135,15 +133,12 @@ export const UnifiedPropertySearch = ({
 }: UnifiedPropertySearchProps) => {
   const STATUSES = mode === "agent" ? AGENT_STATUSES : CONSUMER_STATUSES;
   
-  const [isLocationOpen, setIsLocationOpen] = useState(true);
   const [isPropertyTypeOpen, setIsPropertyTypeOpen] = useState(true);
   const [isPriceOpen, setIsPriceOpen] = useState(true);
   const [isBedsOpen, setIsBedsOpen] = useState(true);
   const [isStatusOpen, setIsStatusOpen] = useState(true);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isKeywordsOpen, setIsKeywordsOpen] = useState(false);
-  const [townSearchQuery, setTownSearchQuery] = useState("");
-  const [showAllTowns, setShowAllTowns] = useState(false);
 
   // Initialize default statuses if not set
   useEffect(() => {
@@ -198,50 +193,22 @@ export const UnifiedPropertySearch = ({
     if (onClear) onClear();
   };
 
-  // Town picker hook
-  const state = criteria.state || "MA";
-  const county = criteria.county || "all";
-  const showAreas = criteria.showAreas ? "yes" : "no";
-
-  const { townsList, expandedCities, toggleCityExpansion, hasCountyData } = useTownsPicker({
-    state,
-    county,
-    showAreas,
-  });
-
-  const currentStateCounties = getCountiesForState(state);
-  const selectedTowns = criteria.towns || [];
-
-  const toggleTown = (town: string) => {
-    const current = criteria.towns || [];
-    const updated = current.includes(town)
-      ? current.filter((t) => t !== town)
-      : [...current, town];
-    updateCriteria({ towns: updated });
-  };
-
-  // Check if Boston is selected and show neighborhood badge
-  const isBostonSelected = selectedTowns.includes("Boston");
-
-  // Search-as-you-type: filter towns and neighborhoods when user types 2+ chars
-  const getFilteredTowns = () => {
-    const query = townSearchQuery.trim().toLowerCase();
-    
-    // No filtering if less than 2 characters
-    if (query.length < 2) return [];
-    
-    // Filter towns and neighborhoods that match the search
-    return townsList.filter(town => {
-      const townLower = town.toLowerCase();
-      return townLower.includes(query);
+  // Geographic selection handler
+  const handleGeographicChange = (geo: GeographicSelection) => {
+    updateCriteria({
+      state: geo.state,
+      county: geo.county,
+      towns: geo.towns,
+      showAreas: geo.showAreas,
     });
   };
 
-  // Determine which towns to show
-  const shouldShowTownsList = townSearchQuery.trim().length >= 2 || showAllTowns;
-  const displayedTowns = townSearchQuery.trim().length >= 2 
-    ? getFilteredTowns() 
-    : (showAllTowns ? townsList : []);
+  const geographicValue: GeographicSelection = {
+    state: criteria.state || "MA",
+    county: criteria.county || "all",
+    towns: criteria.towns || [],
+    showAreas: criteria.showAreas !== false,
+  };
 
   return (
     <div className="space-y-3">
@@ -265,213 +232,25 @@ export const UnifiedPropertySearch = ({
         </div>
       )}
 
-      {/* Location */}
-      <Collapsible open={isLocationOpen} onOpenChange={setIsLocationOpen}>
-        <div className="bg-card rounded-lg shadow-sm border">
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold text-sm">LOCATION</h3>
-            </div>
-            {isLocationOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="p-4 space-y-4 border-t">
-              {/* State Selection */}
-              <div className="space-y-2">
-                <Label>State</Label>
-                <Select
-                  value={state}
-                  onValueChange={(value) => updateCriteria({ state: value, county: "all", towns: [] })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {US_STATES.map((s) => (
-                      <SelectItem key={s.code} value={s.code}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* Location - Using Unified GeographicSelector */}
+      <GeographicSelector
+        value={geographicValue}
+        onChange={handleGeographicChange}
+        defaultCollapsed={false}
+        label="Location"
+      />
 
-              {/* County Selection - Agent mode only */}
-              {mode === "agent" && hasCountyData && (
-                <div className="space-y-2">
-                  <Label>County</Label>
-                  <Select value={county} onValueChange={(value) => updateCriteria({ county: value, towns: [] })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Counties</SelectItem>
-                      {currentStateCounties.map((countyName) => (
-                        <SelectItem key={countyName} value={countyName}>
-                          {countyName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {/* Zip Code */}
-              <div className="space-y-2">
-                <Label>Zip Code</Label>
-                <Input
-                  placeholder="Enter zip code"
-                  value={criteria.zipCode || ""}
-                  onChange={(e) => updateCriteria({ zipCode: e.target.value })}
-                />
-              </div>
-
-              {/* Show Areas Toggle */}
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="showAreas"
-                  checked={criteria.showAreas !== false}
-                  onCheckedChange={(checked) => updateCriteria({ showAreas: !!checked })}
-                />
-                <label htmlFor="showAreas" className="text-sm cursor-pointer">
-                  Include neighborhoods/areas
-                </label>
-              </div>
-
-              {/* Boston Badge */}
-              {isBostonSelected && (
-                <Badge variant="secondary" className="w-full justify-center py-2">
-                  Selecting Boston includes all neighborhoods unless you select specific ones
-                </Badge>
-              )}
-
-              {/* Towns Picker */}
-              <div className="space-y-2">
-                <Label>Towns & Cities</Label>
-                <Input
-                  placeholder="Type town or neighborhood..."
-                  value={townSearchQuery}
-                  onChange={(e) => setTownSearchQuery(e.target.value)}
-                  className="mb-2"
-                />
-                
-                {!shouldShowTownsList ? (
-                  <div className="text-center py-8 border rounded-lg bg-muted/30">
-                    <p className="text-sm text-muted-foreground mb-3">
-                      {townSearchQuery.trim().length === 1 
-                        ? "Type at least 2 characters to search"
-                        : "Start typing to search towns and neighborhoods"}
-                    </p>
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      onClick={() => setShowAllTowns(true)}
-                      className="text-primary underline"
-                    >
-                      Browse all towns
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    {townSearchQuery.trim().length >= 2 && (
-                      <div className="text-xs text-muted-foreground mb-2">
-                        Found {displayedTowns.length} result{displayedTowns.length !== 1 ? 's' : ''} for "{townSearchQuery}"
-                      </div>
-                    )}
-                    {showAllTowns && townSearchQuery.trim().length < 2 && (
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-muted-foreground">
-                          Showing all towns in {state}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setShowAllTowns(false);
-                            setTownSearchQuery("");
-                          }}
-                        >
-                          Hide List
-                        </Button>
-                      </div>
-                    )}
-                    <div className="max-h-64 overflow-y-auto border rounded-lg bg-background">
-                      <TownsPicker
-                        towns={displayedTowns}
-                        selectedTowns={selectedTowns}
-                        onToggleTown={toggleTown}
-                        expandedCities={expandedCities}
-                        onToggleCityExpansion={toggleCityExpansion}
-                        state={state}
-                        searchQuery={townSearchQuery}
-                        variant="checkbox"
-                        showAreas={criteria.showAreas !== false}
-                        showSelectAll={displayedTowns.length > 0}
-                        onSelectAll={() => {
-                          const allTopLevelTowns = displayedTowns.filter(t => !t.includes('-'));
-                          const allSelected = allTopLevelTowns.every(t => selectedTowns.includes(t));
-                          updateCriteria({ towns: allSelected ? [] : allTopLevelTowns });
-                        }}
-                      />
-                    </div>
-                  </>
-                )}
-                
-                {/* Selected Towns Summary with Chips */}
-                {selectedTowns.length > 0 && (
-                  <div className="mt-3 p-3 bg-card rounded-lg border border-border shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-foreground">Selected Towns</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {selectedTowns.length}
-                        </Badge>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => updateCriteria({ towns: [] })}
-                        className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        Clear All
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                      {selectedTowns.map((town) => {
-                        const isNeighborhood = town.includes('-');
-                        const displayName = isNeighborhood 
-                          ? `${town.split('-')[0]} – ${town.split('-').slice(1).join('-')}`
-                          : town;
-                        
-                        return (
-                          <div
-                            key={town}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-xs font-medium hover:bg-primary/20 transition-colors"
-                          >
-                            <span className="text-primary">{displayName}</span>
-                            <button
-                              type="button"
-                              onClick={() => toggleTown(town)}
-                              className="hover:text-destructive transition-colors"
-                              aria-label={`Remove ${displayName}`}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CollapsibleContent>
+      {/* Zip Code - Separate input since GeographicSelector doesn't handle this */}
+      <div className="bg-card rounded-lg shadow-sm border p-4">
+        <div className="space-y-2">
+          <Label>Zip Code</Label>
+          <Input
+            placeholder="Enter zip code"
+            value={criteria.zipCode || ""}
+            onChange={(e) => updateCriteria({ zipCode: e.target.value })}
+          />
         </div>
-      </Collapsible>
+      </div>
 
       {/* Property Type */}
       <Collapsible open={isPropertyTypeOpen} onOpenChange={setIsPropertyTypeOpen}>
