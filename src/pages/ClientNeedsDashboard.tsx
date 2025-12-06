@@ -11,7 +11,7 @@ import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotific
 import GeographicPreferencesManager from "@/components/GeographicPreferencesManager";
 import PriceRangePreferences from "@/components/PriceRangePreferences";
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
-import { SummaryPill } from "@/components/success-hub/SummaryPill";
+import { Pill } from "@/components/ui/pill";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -213,25 +213,21 @@ const ClientNeedsDashboard = () => {
               <span className="font-semibold text-sm">Your Active Preferences</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              <SummaryPill 
-                label="topics receiving" 
-                value={summary.receivingCount} 
-                variant={summary.receivingCount > 0 ? "primary" : "muted"} 
+              <Pill 
+                label={`${summary.receivingCount} topics receiving`}
+                variant={summary.receivingCount > 0 ? "primary" : "neutral"} 
               />
-              <SummaryPill 
-                label="property types" 
-                value={summary.propertyTypesCount > 0 ? summary.propertyTypesCount : "All"} 
-                variant={summary.propertyTypesCount > 0 ? "primary" : "muted"} 
+              <Pill 
+                label={summary.propertyTypesCount > 0 ? `${summary.propertyTypesCount} property types` : "All property types"}
+                variant={summary.propertyTypesCount > 0 ? "primary" : "neutral"} 
               />
-              <SummaryPill 
-                label="areas" 
-                value={summary.geoCount > 0 ? summary.geoCount : "All"} 
-                variant={summary.geoCount > 0 ? "primary" : "muted"} 
+              <Pill 
+                label={summary.geoCount > 0 ? `${summary.geoCount} areas` : "All areas"}
+                variant={summary.geoCount > 0 ? "primary" : "neutral"} 
               />
-              <SummaryPill 
-                label="" 
-                value={summary.notificationSchedule} 
-                variant="muted" 
+              <Pill 
+                label={summary.notificationSchedule}
+                variant="primary" 
               />
             </div>
           </div>
