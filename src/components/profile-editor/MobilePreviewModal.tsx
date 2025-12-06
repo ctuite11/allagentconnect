@@ -8,6 +8,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 interface SocialLinks {
   linkedin: string;
@@ -159,13 +160,13 @@ const MobilePreviewModal = ({
             {cellPhone && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="h-4 w-4" />
-                <span>{cellPhone}</span>
+                <span>{formatPhoneNumber(cellPhone)}</span>
               </div>
             )}
             {officePhone && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Building2 className="h-4 w-4" />
-                <span>{officePhone}</span>
+                <span>{formatPhoneNumber(officePhone)}</span>
               </div>
             )}
             {email && (
