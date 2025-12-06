@@ -1,43 +1,31 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin } from "lucide-react";
+import { GeographicSelector, GeographicSelection } from "@/components/GeographicSelector";
 
 const PropertySearchHero = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [geoSelection, setGeoSelection] = useState<GeographicSelection>({
+    state: "MA",
+    county: "all",
+    towns: [],
+    showAreas: true,
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (searchQuery.trim()) params.set("search", searchQuery);
+    if (geoSelection.state) params.set("state", geoSelection.state);
+    if (geoSelection.county && geoSelection.county !== "all") params.set("county", geoSelection.county);
+    if (geoSelection.towns?.length) params.set("towns", geoSelection.towns.join("|"));
+    if (geoSelection.showAreas) params.set("showAreas", "yes");
     if (minPrice) params.set("minPrice", minPrice);
     if (maxPrice) params.set("maxPrice", maxPrice);
     navigate(`/browse?${params.toString()}`);
-  };
-
-  const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
-    const addressComponents = place.address_components || [];
-    const getComponent = (type: string) => {
-      const component = addressComponents.find((c) => c.types.includes(type));
-      return component?.long_name || "";
-    };
-
-    const city = getComponent("locality") || getComponent("sublocality");
-    const state = getComponent("administrative_area_level_1");
-    const zip = getComponent("postal_code");
-    
-    // Build search query from selected location
-    const parts = [city, state, zip].filter(Boolean);
-    const query = parts.join(", ");
-    
-    if (query) {
-      setSearchQuery(query);
-    }
   };
 
   return (
@@ -76,18 +64,15 @@ const PropertySearchHero = () => {
                 </h2>
                 
                 <form onSubmit={handleSearch} className="space-y-5">
-                  {/* Search input */}
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-card opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300" />
-                    <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10 group-hover:text-primary transition-colors" />
-                    <AddressAutocomplete
-                      onPlaceSelect={handlePlaceSelect}
-                      placeholder="City, State, Zip or Neighborhood"
-                      className="pl-14 h-16 text-lg w-full rounded-2xl border-2 border-border hover:border-primary focus:border-primary transition-colors bg-card"
-                      value={searchQuery}
-                      onChange={setSearchQuery}
-                    />
-                  </div>
+                  {/* Geographic Selector */}
+                  <GeographicSelector
+                    value={geoSelection}
+                    onChange={setGeoSelection}
+                    defaultCollapsed={false}
+                    label=""
+                    showWrapper={false}
+                    compact
+                  />
                   
                   {/* Price range */}
                   <div className="grid grid-cols-2 gap-4">
