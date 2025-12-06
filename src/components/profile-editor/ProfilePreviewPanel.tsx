@@ -1,4 +1,4 @@
-import { User, Phone, Mail, Building2, Globe, CheckCircle, Shield, Star, Gift, TrendingUp } from "lucide-react";
+import { User, Phone, Mail, Building2, Globe, Users, ShieldCheck, Star, Gift, TrendingUp, Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,14 +67,14 @@ const ProfilePreviewPanel = ({
   const previewTestimonials = testimonials.slice(0, 2);
 
   return (
-    <Card className="sticky top-24 border-2 shadow-lg overflow-hidden max-h-[calc(100vh-8rem)] overflow-y-auto">
-      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 border-b">
+    <Card className="sticky top-24 border-0 shadow-lg overflow-hidden max-h-[calc(100vh-8rem)] overflow-y-auto">
+      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-3 border-b">
         <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
           Live Preview
         </h3>
       </div>
-      <CardContent className="p-5 space-y-5">
-        {/* Header Section */}
+      <CardContent className="p-6 space-y-6">
+        {/* Header Section - matches public profile hero */}
         <div className="flex items-start gap-4">
           {/* Photo */}
           <div className="relative flex-shrink-0">
@@ -82,172 +82,189 @@ const ProfilePreviewPanel = ({
               <img
                 src={headshotUrl}
                 alt={fullName}
-                className="w-16 h-16 rounded-full object-cover border-4 border-background shadow-md"
+                className="w-20 h-20 rounded-full object-cover border-4 border-primary/20 shadow-lg"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center border-4 border-background shadow-md">
-                <User className="h-6 w-6 text-muted-foreground" />
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center border-4 border-primary/20 shadow-lg">
+                <span className="text-xl font-bold text-primary">
+                  {firstName?.[0] || "Y"}{lastName?.[0] || "N"}
+                </span>
               </div>
             )}
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <h4 className="font-bold text-base truncate">{fullName}</h4>
-            <p className="text-sm text-muted-foreground truncate">{displayTitle}</p>
-            <p className="text-sm text-primary font-medium truncate">{displayCompany}</p>
+            <h4 className="font-bold text-lg text-foreground truncate">{fullName}</h4>
+            <p className="text-sm text-muted-foreground">
+              {displayTitle}{displayTitle && displayCompany && ' • '}{displayCompany}
+            </p>
             {aacId && (
-              <p className="text-xs text-muted-foreground font-mono mt-0.5">{aacId}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Agent ID: {aacId}
+              </p>
             )}
           </div>
-
-          {/* Logo */}
-          {logoUrl && (
-            <div className="flex-shrink-0">
-              <img
-                src={logoUrl}
-                alt="Company Logo"
-                className="h-10 w-auto object-contain"
-              />
-            </div>
-          )}
         </div>
 
-        {/* Badges */}
+        {/* Logo */}
+        {logoUrl && (
+          <div className="flex justify-center">
+            <img
+              src={logoUrl}
+              alt="Company Logo"
+              className="h-12 object-contain"
+            />
+          </div>
+        )}
+
+        {/* Badges - matches public profile style */}
         <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary" className="gap-1 text-xs">
-            <CheckCircle className="h-3 w-3 text-accent" />
+          <Badge variant="outline" className="gap-2 px-3 py-1 rounded-full border-primary/30 bg-primary/5 text-primary text-xs">
+            <Users className="h-3 w-3" />
             DirectConnect Friendly
           </Badge>
-          <Badge variant="secondary" className="gap-1 text-xs">
-            <Shield className="h-3 w-3 text-primary" />
+          <Badge variant="outline" className="gap-2 px-3 py-1 rounded-full border-accent/30 bg-accent/5 text-accent text-xs">
+            <ShieldCheck className="h-3 w-3" />
             Verified Agent
           </Badge>
         </div>
 
-        {/* Contact Buttons (visual only) */}
+        {/* Contact Buttons - matches public profile button style */}
         <div className="flex gap-2">
           {cellPhone && (
-            <Button size="sm" variant="outline" className="flex-1 text-xs" disabled>
-              <Phone className="h-3 w-3 mr-1" />
+            <Button variant="outline" className="flex-1 h-9 text-sm gap-2" disabled>
+              <Phone className="h-4 w-4" />
               Call
             </Button>
           )}
           {email && (
-            <Button size="sm" variant="outline" className="flex-1 text-xs" disabled>
-              <Mail className="h-3 w-3 mr-1" />
+            <Button variant="outline" className="flex-1 h-9 text-sm gap-2" disabled>
+              <Mail className="h-4 w-4" />
               Email
             </Button>
           )}
           {socialLinks.website && (
-            <Button size="sm" variant="outline" className="flex-1 text-xs" disabled>
-              <Globe className="h-3 w-3 mr-1" />
+            <Button variant="outline" className="flex-1 h-9 text-sm gap-2" disabled>
+              <Globe className="h-4 w-4" />
               Website
             </Button>
           )}
         </div>
 
-        {/* Contact Info Details */}
-        <div className="space-y-1.5 text-xs">
-        {cellPhone && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Phone className="h-3 w-3" />
-              <span>{formatPhoneNumber(cellPhone)}</span>
+        {/* Contact Info Details - matches public profile spacing */}
+        <div className="space-y-2">
+          {officePhone && (
+            <div className="flex items-center gap-3 text-foreground text-sm">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <span>Office: {formatPhoneNumber(officePhone)}</span>
             </div>
           )}
-          {officePhone && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Building2 className="h-3 w-3" />
-              <span>{formatPhoneNumber(officePhone)}</span>
+          {cellPhone && (
+            <div className="flex items-center gap-3 text-foreground text-sm">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <span>Cell: {formatPhoneNumber(cellPhone)}</span>
             </div>
           )}
           {email && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Mail className="h-3 w-3" />
+            <div className="flex items-center gap-3 text-foreground text-sm">
+              <Mail className="h-4 w-4 text-muted-foreground" />
               <span className="truncate">{email}</span>
-            </div>
-          )}
-          {socialLinks.website && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Globe className="h-3 w-3" />
-              <span className="truncate text-primary">{socialLinks.website}</span>
             </div>
           )}
         </div>
 
-        {/* Bio Preview */}
+        {/* Bio Preview - matches public profile section */}
         {bio && (
           <>
             <Separator />
             <div>
-              <h5 className="font-semibold text-xs mb-1.5 text-muted-foreground uppercase">About</h5>
-              <p className="text-xs text-foreground leading-relaxed">{truncatedBio}</p>
+              <h5 className="text-lg font-bold text-foreground mb-3">Bio</h5>
+              <p className="text-sm text-foreground leading-relaxed">{truncatedBio}</p>
             </div>
           </>
         )}
 
-        {/* Incentives */}
+        {/* Incentives - matches public profile card styling */}
         {(buyerIncentives || sellerIncentives) && (
           <>
             <Separator />
-            <div className="space-y-3">
-              <h5 className="font-semibold text-xs text-muted-foreground uppercase">Incentives</h5>
-              <div className="grid grid-cols-1 gap-2">
+            <div className="space-y-4">
+              <h5 className="text-lg font-bold text-foreground">Incentives</h5>
+              <div className="space-y-3">
                 {buyerIncentives && (
-                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Gift className="h-3.5 w-3.5 text-primary" />
-                      <span className="font-medium text-xs">Buyer</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{buyerIncentives}</p>
-                  </div>
+                  <Card className="shadow-md border-0 overflow-hidden">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-xl bg-accent/10 flex-shrink-0">
+                          <Gift className="h-5 w-5 text-accent" />
+                        </div>
+                        <div>
+                          <h6 className="font-bold text-sm text-foreground mb-1">Buyer Incentives</h6>
+                          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{buyerIncentives}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
                 {sellerIncentives && (
-                  <div className="bg-accent/5 border border-accent/20 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <TrendingUp className="h-3.5 w-3.5 text-accent" />
-                      <span className="font-medium text-xs">Seller</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{sellerIncentives}</p>
-                  </div>
+                  <Card className="shadow-md border-0 overflow-hidden">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-xl bg-primary/10 flex-shrink-0">
+                          <TrendingUp className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h6 className="font-bold text-sm text-foreground mb-1">Seller Incentives</h6>
+                          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{sellerIncentives}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
               </div>
             </div>
           </>
         )}
 
-        {/* Testimonials Preview */}
+        {/* Testimonials Preview - matches public profile styling */}
         {previewTestimonials.length > 0 && (
           <>
             <Separator />
-            <div className="space-y-3">
-              <h5 className="font-semibold text-xs text-muted-foreground uppercase">Testimonials</h5>
-              <div className="space-y-2">
+            <div className="space-y-4">
+              <h5 className="text-lg font-bold text-foreground">Client Testimonials</h5>
+              <div className="space-y-3">
                 {previewTestimonials.map((testimonial) => (
-                  <div 
-                    key={testimonial.id} 
-                    className="bg-muted/50 rounded-lg p-3 border"
-                  >
-                    <div className="flex items-center gap-1 mb-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-3 w-3 ${
-                            star <= testimonial.rating
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-muted-foreground/30"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-xs text-foreground line-clamp-2 italic">
-                      "{testimonial.testimonial_text}"
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1.5 font-medium">
-                      — {testimonial.client_name}
-                      {testimonial.client_title && `, ${testimonial.client_title}`}
-                    </p>
-                  </div>
+                  <Card key={testimonial.id} className="shadow-md border-0">
+                    <CardContent className="p-4">
+                      {testimonial.rating && (
+                        <div className="flex gap-1 mb-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-4 w-4 ${
+                                i < testimonial.rating
+                                  ? "text-yellow-500 fill-yellow-500"
+                                  : "text-muted-foreground/30"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2 mb-2">
+                        <Quote className="h-5 w-5 text-primary/20 flex-shrink-0 transform rotate-180" />
+                        <p className="text-sm text-foreground italic leading-relaxed line-clamp-3">
+                          {testimonial.testimonial_text}
+                        </p>
+                      </div>
+                      <div className="ml-7">
+                        <p className="text-sm font-bold text-foreground">{testimonial.client_name}</p>
+                        {testimonial.client_title && (
+                          <p className="text-xs text-muted-foreground">{testimonial.client_title}</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
               {testimonials.length > 2 && (
