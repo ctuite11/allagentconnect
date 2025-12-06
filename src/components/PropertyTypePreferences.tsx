@@ -28,7 +28,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated }: PropertyTypePref
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     fetchPreferences();
@@ -131,6 +131,13 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated }: PropertyTypePref
             <CardDescription className="text-left">
               Select which property types you want to receive notifications about
             </CardDescription>
+            {!isOpen && (
+              <p className="text-sm text-muted-foreground mt-1 text-left">
+                {selectedTypes.length > 0 
+                  ? `${selectedTypes.length} property type${selectedTypes.length !== 1 ? 's' : ''} selected`
+                  : "All property types"}
+              </p>
+            )}
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>

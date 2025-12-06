@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, UserPlus, TrendingUp, Calendar, Mail, Heart, Bell } from "lucide-react";
+import { Users, FileText, UserPlus, TrendingUp, Calendar, Mail, Heart, Bell, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
@@ -476,7 +476,31 @@ export default function AgentSuccessHub() {
                 <Users className="w-4 h-4 mr-2" />
                 View All Clients
               </Button>
+              <Button variant="outline" onClick={() => navigate("/client-needs")}>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Communications Center
+              </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Communications Center Card */}
+        <Card className="border-l-4 border-l-primary">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <MessageSquare className="w-8 h-8 text-primary" />
+              <div>
+                <CardTitle>Communications Center</CardTitle>
+                <CardDescription>
+                  Send and receive agent-to-agent alerts for buyer needs, renter needs, sales intel, and general discussions.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate("/client-needs")}>
+              Open Communications Center
+            </Button>
           </CardContent>
         </Card>
 

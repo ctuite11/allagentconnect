@@ -63,7 +63,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferen
   const [noMin, setNoMin] = useState(false);
   const [noMax, setNoMax] = useState(false);
   const [errors, setErrors] = useState<{ minPrice?: string; maxPrice?: string }>({});
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     fetchPreferences();
@@ -270,6 +270,17 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferen
             <CardDescription className="text-left">
               Set your preferred price range for client need notifications
             </CardDescription>
+            {!isOpen && (
+              <p className="text-sm text-muted-foreground mt-1 text-left">
+                {minPrice && maxPrice 
+                  ? `$${formatNumberWithCommas(minPrice)} - $${formatNumberWithCommas(maxPrice)}`
+                  : minPrice 
+                    ? `$${formatNumberWithCommas(minPrice)}+`
+                    : maxPrice 
+                      ? `Up to $${formatNumberWithCommas(maxPrice)}`
+                      : "All price ranges"}
+              </p>
+            )}
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
