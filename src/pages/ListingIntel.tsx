@@ -161,7 +161,7 @@ const ListingIntel = () => {
                     <SelectItem value=" ">All States</SelectItem>
                     {US_STATES.map((s) => (
                       <SelectItem key={s.code} value={s.code}>
-                        {s.code}
+                        {s.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
