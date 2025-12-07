@@ -89,8 +89,8 @@ export function CreateHotSheetDialog({
   const [statuses, setStatuses] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [hasNoMin, setHasNoMin] = useState(true);
-  const [hasNoMax, setHasNoMax] = useState(true);
+  const [hasNoMin, setHasNoMin] = useState(false);
+  const [hasNoMax, setHasNoMax] = useState(false);
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [rooms, setRooms] = useState("");
