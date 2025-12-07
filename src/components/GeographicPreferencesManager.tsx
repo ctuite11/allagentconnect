@@ -238,7 +238,26 @@ const GeographicPreferencesManager = ({
 
             {/* Towns Selector - Two column layout matching Hot Sheets */}
             <div className="space-y-2">
-              <Label>Towns & Neighborhoods</Label>
+              {/* Header row with both labels */}
+              <div className="grid grid-cols-2 gap-4">
+                <Label>Towns & Neighborhoods</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Selected Towns</Label>
+                  {selectedTowns.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedTowns([])}
+                      className="h-6 px-2 text-xs"
+                    >
+                      Remove All
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Content row */}
               <div className="grid grid-cols-2 gap-4">
                 {/* LEFT: Towns Selector */}
                 <div>
@@ -269,37 +288,21 @@ const GeographicPreferencesManager = ({
                 </div>
 
                 {/* RIGHT: Selected Towns Panel */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Selected Towns</span>
-                    {selectedTowns.length > 0 && (
-                      <Button
+                <div className="border rounded-md p-2 bg-background min-h-[120px] max-h-48 overflow-y-auto">
+                  {selectedTowns.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No towns selected</p>
+                  ) : (
+                    selectedTowns.map((town) => (
+                      <button
+                        key={town}
                         type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedTowns([])}
-                        className="h-6 px-2 text-xs"
+                        onClick={() => handleToggleTown(town)}
+                        className="w-full text-left py-1 px-2 text-sm border-b last:border-b-0 hover:bg-muted rounded cursor-pointer"
                       >
-                        Remove All
-                      </Button>
-                    )}
-                  </div>
-                  <div className="border rounded-md p-2 bg-background min-h-[120px] max-h-48 overflow-y-auto">
-                    {selectedTowns.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No towns selected</p>
-                    ) : (
-                      selectedTowns.map((town) => (
-                        <button
-                          key={town}
-                          type="button"
-                          onClick={() => handleToggleTown(town)}
-                          className="w-full text-left py-1 px-2 text-sm border-b last:border-b-0 hover:bg-muted rounded cursor-pointer"
-                        >
-                          {town}
-                        </button>
-                      ))
-                    )}
-                  </div>
+                        {town}
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
