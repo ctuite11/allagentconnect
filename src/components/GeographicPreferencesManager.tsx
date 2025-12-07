@@ -199,30 +199,38 @@ const GeographicPreferencesManager = ({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-4 pt-0">
-            {/* State Selector */}
+            {/* State & County Selector - Two column layout */}
             <div className="space-y-2">
-              <Label>State</Label>
-              <Select value={selectedState} onValueChange={handleStateChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select state" />
-                </SelectTrigger>
-                <SelectContent>
-                  {US_STATES.map((s) => (
-                    <SelectItem key={s.code} value={s.code}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* County Selector (for New England states) */}
-            {availableCounties.length > 0 && (
-              <div className="space-y-2">
+              {/* Header row with both labels */}
+              <div className="grid grid-cols-2 gap-4">
+                <Label>State</Label>
                 <Label>County</Label>
-                <Select value={selectedCounty} onValueChange={handleCountyChange}>
+              </div>
+
+              {/* Content row */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* LEFT: State Selector */}
+                <Select value={selectedState} onValueChange={handleStateChange}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All counties" />
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {US_STATES.map((s) => (
+                      <SelectItem key={s.code} value={s.code}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* RIGHT: County Selector */}
+                <Select 
+                  value={selectedCounty} 
+                  onValueChange={handleCountyChange}
+                  disabled={availableCounties.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={availableCounties.length === 0 ? "Select state first" : "All counties"} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Counties</SelectItem>
@@ -234,7 +242,7 @@ const GeographicPreferencesManager = ({
                   </SelectContent>
                 </Select>
               </div>
-            )}
+            </div>
 
             {/* Towns Selector - Two column layout matching Hot Sheets */}
             <div className="space-y-2">
