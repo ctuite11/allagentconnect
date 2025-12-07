@@ -261,10 +261,16 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
   // Helper for summary text
   const getSummaryText = () => {
     if (hasNoMin && hasNoMax) {
-      return "All price ranges";
+      return "No Minimum - No Maximum";
     }
     if (!hasNoMin && !hasNoMax && minPrice && maxPrice) {
       return `${formatDisplayPrice(minPrice)} - ${formatDisplayPrice(maxPrice)}`;
+    }
+    if (hasNoMin && !hasNoMax && maxPrice) {
+      return `No Minimum - ${formatDisplayPrice(maxPrice)}`;
+    }
+    if (!hasNoMin && hasNoMax && minPrice) {
+      return `${formatDisplayPrice(minPrice)} - No Maximum`;
     }
     if (!hasNoMin && minPrice) {
       return `${formatDisplayPrice(minPrice)}+`;
@@ -272,8 +278,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
     if (!hasNoMax && maxPrice) {
       return `Up to ${formatDisplayPrice(maxPrice)}`;
     }
-    // No prices set and no checkboxes checked = no preference set yet
-    return "No price range set";
+    return "";
   };
 
   if (loading) {
@@ -375,54 +380,38 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
             </div>
 
             {/* Summary display based on current state */}
-            {minPrice || maxPrice || hasNoMin || hasNoMax ? (
+            {(minPrice || maxPrice || hasNoMin || hasNoMax) && (
               <div className="p-3 bg-muted rounded-lg">
                 <p className="text-sm">
                   <span className="font-medium">You will receive notifications for properties priced:</span>
                   <br />
                   {isAllPriceRanges && (
-                    <span>All price ranges</span>
+                    <span>No Minimum - No Maximum</span>
                   )}
                   {!hasNoMin && !hasNoMax && minPrice && maxPrice && (
                     <span>Between {formatDisplayPrice(minPrice)} and {formatDisplayPrice(maxPrice)}</span>
                   )}
                   {!hasNoMin && hasNoMax && minPrice && (
-                    <span>{formatDisplayPrice(minPrice)} and above</span>
+                    <span>{formatDisplayPrice(minPrice)} - No Maximum</span>
                   )}
                   {hasNoMin && !hasNoMax && maxPrice && (
+                    <span>No Minimum - {formatDisplayPrice(maxPrice)}</span>
+                  )}
+                  {hasNoMin && !hasNoMax && !maxPrice && (
+                    <span>No Minimum</span>
+                  )}
+                  {!hasNoMin && hasNoMax && !minPrice && (
+                    <span>No Maximum</span>
+                  )}
+                  {!hasNoMin && !hasNoMax && minPrice && !maxPrice && (
+                    <span>{formatDisplayPrice(minPrice)} and above</span>
+                  )}
+                  {!hasNoMin && !hasNoMax && !minPrice && maxPrice && (
                     <span>Up to {formatDisplayPrice(maxPrice)}</span>
                   )}
-                  {!isAllPriceRanges && !minPrice && !maxPrice && (hasNoMin || hasNoMax) && (
-                    <span>{hasNoMin ? "Any minimum" : ""}{hasNoMin && hasNoMax ? " to " : ""}{hasNoMax ? "Any maximum" : ""}</span>
-                  )}
-                </p>
-              </div>
-            ) : (
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <p className="text-sm text-blue-900 dark:text-blue-100">
-                  <span className="font-medium">No price range set.</span>
-                  <br />
-                  <span className="text-blue-700 dark:text-blue-300">
-                    Enter a price range or check "No Minimum" and "No Maximum" for all price ranges.
-                  </span>
                 </p>
               </div>
             )}
-
-            <div className="pt-4 border-t">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {getSummaryText()}
-                </p>
-                <Button 
-                  variant="outline" 
-                  onClick={clearPriceRange}
-                  disabled={!minPrice && !maxPrice && !hasNoMin && !hasNoMax}
-                >
-                  Clear Range
-                </Button>
-              </div>
-            </div>
           </CardContent>
         </CollapsibleContent>
       </Card>
