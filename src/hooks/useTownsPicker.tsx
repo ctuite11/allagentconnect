@@ -133,31 +133,10 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
 
     return Array.from(selection);
   };
-  // Auto-expand all cities with neighborhoods when showAreas is enabled
+  // Reset expanded cities when state/county changes (don't auto-expand, let user control)
   useEffect(() => {
-    if (showAreas && townsList.length > 0) {
-      const citiesToExpand = new Set<string>();
-      
-      townsList.forEach(town => {
-        // Skip if this is already a neighborhood entry (has hyphen)
-        if (town.includes('-')) return;
-        
-        // Check if town has neighborhoods from data
-        const hasNeighborhoods = getAreasForCity(town, stateKey || state)?.length > 0;
-        
-        // Check if town has neighborhoods in the towns list (hyphenated entries)
-        const hasHyphenatedAreas = townsList.some(t => t.startsWith(`${town}-`));
-        
-        if (hasNeighborhoods || hasHyphenatedAreas) {
-          citiesToExpand.add(town);
-        }
-      });
-      
-      setExpandedCities(citiesToExpand);
-    } else {
-      setExpandedCities(new Set());
-    }
-  }, [state, county, showAreas, townsList.length]);
+    setExpandedCities(new Set());
+  }, [state, county]);
 
   return {
     townsList,
