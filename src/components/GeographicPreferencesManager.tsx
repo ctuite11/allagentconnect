@@ -167,11 +167,6 @@ const GeographicPreferencesManager = ({
               </div>
             )}
 
-            <div className="pt-4 border-t">
-              <p className="text-sm text-muted-foreground">
-                {selectedTowns.length} {selectedTowns.length === 1 ? 'town' : 'towns'} selected
-              </p>
-            </div>
           </CardContent>
         </CollapsibleContent>
       </Card>
