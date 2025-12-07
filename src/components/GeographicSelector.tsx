@@ -52,8 +52,8 @@ export function GeographicSelector({
   compact = false,
 }: GeographicSelectorProps) {
   const [isOpen, setIsOpen] = useState(!defaultCollapsed);
-  const [townSearchQuery, setTownSearchQuery] = useState("");
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
+  const [townsListExpanded, setTownsListExpanded] = useState(false);
 
   const state = value.state || "MA";
   const county = value.county || "all";
@@ -114,15 +114,7 @@ export function GeographicSelector({
     });
   };
 
-  // Filter towns based on search query (filter, not gate)
-  const getFilteredTowns = () => {
-    const query = townSearchQuery.trim().toLowerCase();
-    if (!query) return townsList;
-    return townsList.filter(town => town.toLowerCase().includes(query));
-  };
-
-  const filteredTowns = getFilteredTowns();
-  const topLevelTowns = filteredTowns.filter(t => !t.includes('-'));
+  const topLevelTowns = townsList.filter(t => !t.includes('-'));
 
   // Select all visible towns
   const handleSelectAll = () => {
@@ -160,7 +152,7 @@ export function GeographicSelector({
 
     const showNeighborhoodSection = showAreas && neighborhoods.length > 0;
     const isExpanded = expandedCities.has(town);
-    const topCities = new Set(filteredTowns.filter(t => !t.includes('-')));
+    const topCities = new Set(topLevelTowns);
 
     return (
       <div key={town} className="space-y-1">
@@ -279,48 +271,52 @@ export function GeographicSelector({
 
       {/* Town Selection - Native Hierarchical Checkbox List */}
       <div className="space-y-2">
-        <Label className={compact ? "text-xs" : undefined}>Towns & Cities</Label>
-        
-        {/* Search Filter (not a gate) */}
-        <Input
-          placeholder="Filter towns..."
-          value={townSearchQuery}
-          onChange={(e) => setTownSearchQuery(e.target.value)}
-          className="mb-2"
-        />
-        
-        {/* Towns List - Always visible, search filters */}
-        <div className="max-h-64 overflow-y-auto border rounded-lg bg-background p-2">
-          {/* Select All */}
-          {topLevelTowns.length > 0 && (
-            <div className="flex items-center space-x-2 py-0.5 mb-2 pb-2 border-b">
-              <Checkbox
-                id="select-all-towns"
-                checked={topLevelTowns.length > 0 && topLevelTowns.every(t => selectedTowns.includes(t))}
-                onCheckedChange={handleSelectAll}
-              />
-              <label
-                htmlFor="select-all-towns"
-                className="text-sm font-medium cursor-pointer"
-              >
-                Select All {townSearchQuery.trim() ? `(${topLevelTowns.length} matching)` : `(${topLevelTowns.length})`}
-              </label>
-            </div>
-          )}
-          
-          {/* Town Items */}
-          {topLevelTowns.length > 0 ? (
-            <div className="space-y-1">
-              {topLevelTowns.map(town => renderTownItem(town))}
-            </div>
-          ) : (
-            <div className="text-center py-4 text-sm text-muted-foreground">
-              {townSearchQuery.trim() 
-                ? `No towns matching "${townSearchQuery}"`
-                : "No towns available for this selection"}
-            </div>
-          )}
+        <div className="flex items-center justify-between">
+          <Label className={compact ? "text-xs" : undefined}>Towns & Cities</Label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setTownsListExpanded(!townsListExpanded)}
+            className="h-7 text-xs"
+          >
+            {townsListExpanded ? "Hide towns" : "Show towns"}
+            {townsListExpanded ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
+          </Button>
         </div>
+        
+        {/* Towns List - Collapsed by default */}
+        {townsListExpanded && (
+          <div className="max-h-64 overflow-y-auto border rounded-lg bg-background p-2">
+            {/* Select All */}
+            {topLevelTowns.length > 0 && (
+              <div className="flex items-center space-x-2 py-0.5 mb-2 pb-2 border-b">
+                <Checkbox
+                  id="select-all-towns"
+                  checked={topLevelTowns.length > 0 && topLevelTowns.every(t => selectedTowns.includes(t))}
+                  onCheckedChange={handleSelectAll}
+                />
+                <label
+                  htmlFor="select-all-towns"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Select All ({topLevelTowns.length})
+                </label>
+              </div>
+            )}
+            
+            {/* Town Items */}
+            {topLevelTowns.length > 0 ? (
+              <div className="space-y-1">
+                {topLevelTowns.map(town => renderTownItem(town))}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-sm text-muted-foreground">
+                No towns available for this selection
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Selected Towns Summary with Chips */}
         {selectedTowns.length > 0 && (
