@@ -58,13 +58,29 @@ const GeographicPreferencesManager = ({
   const [selectedCounty, setSelectedCounty] = useState("all");
   const [selectedTowns, setSelectedTowns] = useState<string[]>([]);
   const [citySearch, setCitySearch] = useState("");
+  
+  // LIFTED STATE: expandedCities lives in parent to prevent reset on TownsPicker remount
+  const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
 
-  // Use the proven TownsPicker hook
-  const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
+  // Use the proven TownsPicker hook - only for townsList
+  const { townsList } = useTownsPicker({
     state: selectedState,
     county: selectedCounty,
     showAreas: true,
   });
+  
+  // Toggle city expansion - managed in parent
+  const toggleCityExpansion = (city: string) => {
+    setExpandedCities(prev => {
+      const next = new Set(prev);
+      if (next.has(city)) {
+        next.delete(city);
+      } else {
+        next.add(city);
+      }
+      return next;
+    });
+  };
 
   // Get available counties for selected state
   const availableCounties = getCountiesForState(selectedState);
@@ -134,12 +150,14 @@ const GeographicPreferencesManager = ({
     setSelectedCounty("all");
     setSelectedTowns([]);
     setCitySearch("");
+    setExpandedCities(new Set()); // Reset expansions on state change
   };
 
   const handleCountyChange = (newCounty: string) => {
     setSelectedCounty(newCounty);
     setSelectedTowns([]);
     setCitySearch("");
+    setExpandedCities(new Set()); // Reset expansions on county change
   };
 
   const handleToggleTown = (town: string) => {
