@@ -26,30 +26,30 @@ interface PriceRangePreferencesProps {
 const priceSchema = z.object({
   minPrice: z.string()
     .transform(val => val.trim())
-    .refine(val => val === "" || !isNaN(parseFloat(val)), {
+    .refine(val => val === "" || !isNaN(parseFloat(val.replace(/,/g, ''))), {
       message: "Must be a valid number"
     })
-    .refine(val => val === "" || parseFloat(val) >= 0, {
+    .refine(val => val === "" || parseFloat(val.replace(/,/g, '')) >= 0, {
       message: "Price cannot be negative"
     })
-    .refine(val => val === "" || parseFloat(val) <= 999999999, {
+    .refine(val => val === "" || parseFloat(val.replace(/,/g, '')) <= 999999999, {
       message: "Price is too high"
     }),
   maxPrice: z.string()
     .transform(val => val.trim())
-    .refine(val => val === "" || !isNaN(parseFloat(val)), {
+    .refine(val => val === "" || !isNaN(parseFloat(val.replace(/,/g, ''))), {
       message: "Must be a valid number"
     })
-    .refine(val => val === "" || parseFloat(val) >= 0, {
+    .refine(val => val === "" || parseFloat(val.replace(/,/g, '')) >= 0, {
       message: "Price cannot be negative"
     })
-    .refine(val => val === "" || parseFloat(val) <= 999999999, {
+    .refine(val => val === "" || parseFloat(val.replace(/,/g, '')) <= 999999999, {
       message: "Price is too high"
     })
 }).refine(data => {
   if (data.minPrice && data.maxPrice) {
-    const min = parseFloat(data.minPrice);
-    const max = parseFloat(data.maxPrice);
+    const min = parseFloat(data.minPrice.replace(/,/g, ''));
+    const max = parseFloat(data.maxPrice.replace(/,/g, ''));
     return min <= max;
   }
   return true;
@@ -62,12 +62,9 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
   const [loading, setLoading] = useState(true);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [minPriceDisplay, setMinPriceDisplay] = useState("");
-  const [maxPriceDisplay, setMaxPriceDisplay] = useState("");
-  const [isMinPriceFocused, setIsMinPriceFocused] = useState(false);
-  const [isMaxPriceFocused, setIsMaxPriceFocused] = useState(false);
-  const [hasNoMin, setHasNoMin] = useState(true);
-  const [hasNoMax, setHasNoMax] = useState(true);
+  // Default to unchecked - fields editable immediately
+  const [hasNoMin, setHasNoMin] = useState(false);
+  const [hasNoMax, setHasNoMax] = useState(false);
   const [errors, setErrors] = useState<{ minPrice?: string; maxPrice?: string }>({});
   const [isOpen, setIsOpen] = useState(false);
 
@@ -75,13 +72,31 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
     fetchPreferences();
   }, [agentId]);
 
+  // Format number with commas as user types
+  const formatNumberWithCommas = (value: string) => {
+    if (!value) return "";
+    // Remove existing commas, parse, and reformat
+    const numericValue = value.replace(/,/g, '');
+    const num = parseFloat(numericValue);
+    if (isNaN(num)) return value;
+    return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  };
+
+  // Get raw numeric value from formatted string
+  const getRawValue = (value: string) => {
+    return value.replace(/,/g, '');
+  };
+
   // Notify parent of data changes (no autosave)
   const notifyChange = useCallback(() => {
-    const minPriceValue = minPrice.trim() ? parseFloat(minPrice) : null;
-    const maxPriceValue = maxPrice.trim() ? parseFloat(maxPrice) : null;
+    const minPriceValue = minPrice.trim() ? parseFloat(getRawValue(minPrice)) : null;
+    const maxPriceValue = maxPrice.trim() ? parseFloat(getRawValue(maxPrice)) : null;
     
-    const hasFilter = !hasNoMin || !hasNoMax || minPriceValue !== null || maxPriceValue !== null;
-    onFiltersUpdated?.(hasFilter && !(hasNoMin && hasNoMax));
+    // Has filter if either checkbox is checked OR either price is set
+    const hasFilter = hasNoMin || hasNoMax || minPriceValue !== null || maxPriceValue !== null;
+    // "All price ranges" = both checkboxes checked
+    const isAllPriceRanges = hasNoMin && hasNoMax;
+    onFiltersUpdated?.(hasFilter && !isAllPriceRanges);
     
     onDataChange?.({
       minPrice: hasNoMin ? null : minPriceValue,
@@ -117,13 +132,11 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
       if (data) {
         const minVal = (data as any).min_price ? (data as any).min_price.toString() : "";
         const maxVal = (data as any).max_price ? (data as any).max_price.toString() : "";
-        setMinPrice(minVal);
-        setMaxPrice(maxVal);
-        setMinPriceDisplay(minVal ? formatNumberWithCommas(minVal) : "");
-        setMaxPriceDisplay(maxVal ? formatNumberWithCommas(maxVal) : "");
-        // Use explicit boolean columns, default to true if null
-        setHasNoMin((data as any).has_no_min ?? true);
-        setHasNoMax((data as any).has_no_max ?? true);
+        setMinPrice(minVal ? formatNumberWithCommas(minVal) : "");
+        setMaxPrice(maxVal ? formatNumberWithCommas(maxVal) : "");
+        // Use explicit boolean columns, default to false (not checked) if null
+        setHasNoMin((data as any).has_no_min ?? false);
+        setHasNoMax((data as any).has_no_max ?? false);
       }
     } catch (error) {
       console.error("Error fetching price preferences:", error);
@@ -134,7 +147,10 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
 
   const validatePrices = (): boolean => {
     setErrors({});
-    const validation = priceSchema.safeParse({ minPrice, maxPrice });
+    const validation = priceSchema.safeParse({ 
+      minPrice: getRawValue(minPrice), 
+      maxPrice: getRawValue(maxPrice) 
+    });
     
     if (!validation.success) {
       const fieldErrors: { minPrice?: string; maxPrice?: string } = {};
@@ -150,76 +166,65 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
     return true;
   };
 
-  const formatNumberWithCommas = (value: string) => {
-    if (!value) return "";
-    const num = parseFloat(value);
-    if (isNaN(num)) return value;
-    return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
-  };
-
   const handleMinPriceChange = (value: string) => {
-    const sanitized = value.replace(/[^\d.]/g, '');
-    const parts = sanitized.split('.');
-    const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
+    // Remove non-numeric characters except commas
+    const sanitized = value.replace(/[^\d,]/g, '');
+    const numericValue = sanitized.replace(/,/g, '');
     
-    const num = parseFloat(formatted);
+    const num = parseFloat(numericValue);
     if (!isNaN(num) && num > 999999999) {
       return;
     }
     
+    // Format with commas as user types
+    const formatted = numericValue ? formatNumberWithCommas(numericValue) : "";
     setMinPrice(formatted);
-    setMinPriceDisplay(formatted);
+    
+    // Auto-uncheck "No Minimum" when user types a value
+    if (numericValue && hasNoMin) {
+      setHasNoMin(false);
+    }
+    
     if (errors.minPrice) {
       setErrors(prev => ({ ...prev, minPrice: undefined }));
     }
   };
 
   const handleMaxPriceChange = (value: string) => {
-    const sanitized = value.replace(/[^\d.]/g, '');
-    const parts = sanitized.split('.');
-    const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
+    // Remove non-numeric characters except commas
+    const sanitized = value.replace(/[^\d,]/g, '');
+    const numericValue = sanitized.replace(/,/g, '');
     
-    const num = parseFloat(formatted);
+    const num = parseFloat(numericValue);
     if (!isNaN(num) && num > 999999999) {
       return;
     }
     
+    // Format with commas as user types
+    const formatted = numericValue ? formatNumberWithCommas(numericValue) : "";
     setMaxPrice(formatted);
-    setMaxPriceDisplay(formatted);
+    
+    // Auto-uncheck "No Maximum" when user types a value
+    if (numericValue && hasNoMax) {
+      setHasNoMax(false);
+    }
+    
     if (errors.maxPrice) {
       setErrors(prev => ({ ...prev, maxPrice: undefined }));
     }
   };
 
   const handleMinPriceBlur = () => {
-    setIsMinPriceFocused(false);
-    if (minPrice) {
-      setMinPriceDisplay(formatNumberWithCommas(minPrice));
-    }
     validatePrices();
   };
 
   const handleMaxPriceBlur = () => {
-    setIsMaxPriceFocused(false);
-    if (maxPrice) {
-      setMaxPriceDisplay(formatNumberWithCommas(maxPrice));
-    }
     validatePrices();
-  };
-
-  const handleMinPriceFocus = () => {
-    setIsMinPriceFocused(true);
-    setMinPriceDisplay(minPrice);
-  };
-
-  const handleMaxPriceFocus = () => {
-    setIsMaxPriceFocused(true);
-    setMaxPriceDisplay(maxPrice);
   };
 
   const formatDisplayPrice = (price: string) => {
     if (!price) return "";
-    const num = parseFloat(price);
+    const num = parseFloat(getRawValue(price));
     if (isNaN(num)) return price;
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -232,10 +237,8 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
   const clearPriceRange = () => {
     setMinPrice("");
     setMaxPrice("");
-    setMinPriceDisplay("");
-    setMaxPriceDisplay("");
-    setHasNoMin(true);
-    setHasNoMax(true);
+    setHasNoMin(false);
+    setHasNoMax(false);
     setErrors({});
   };
 
@@ -243,7 +246,6 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
     setHasNoMin(checked);
     if (checked) {
       setMinPrice("");
-      setMinPriceDisplay("");
       setErrors(prev => ({ ...prev, minPrice: undefined }));
     }
   };
@@ -252,7 +254,6 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
     setHasNoMax(checked);
     if (checked) {
       setMaxPrice("");
-      setMaxPriceDisplay("");
       setErrors(prev => ({ ...prev, maxPrice: undefined }));
     }
   };
@@ -263,15 +264,16 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
       return "All price ranges";
     }
     if (!hasNoMin && !hasNoMax && minPrice && maxPrice) {
-      return `$${formatNumberWithCommas(minPrice)} - $${formatNumberWithCommas(maxPrice)}`;
+      return `${formatDisplayPrice(minPrice)} - ${formatDisplayPrice(maxPrice)}`;
     }
     if (!hasNoMin && minPrice) {
-      return `$${formatNumberWithCommas(minPrice)}+`;
+      return `${formatDisplayPrice(minPrice)}+`;
     }
     if (!hasNoMax && maxPrice) {
-      return `Up to $${formatNumberWithCommas(maxPrice)}`;
+      return `Up to ${formatDisplayPrice(maxPrice)}`;
     }
-    return "All price ranges";
+    // No prices set and no checkboxes checked = no preference set yet
+    return "No price range set";
   };
 
   if (loading) {
@@ -283,6 +285,8 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
       </Card>
     );
   }
+
+  const isAllPriceRanges = hasNoMin && hasNoMax;
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -316,10 +320,9 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
                   <Input
                     id="min-price"
                     type="text"
-                    inputMode="decimal"
-                    value={minPriceDisplay}
+                    inputMode="numeric"
+                    value={minPrice}
                     onChange={(e) => handleMinPriceChange(e.target.value)}
-                    onFocus={handleMinPriceFocus}
                     onBlur={handleMinPriceBlur}
                     placeholder="100,000"
                     className={`pl-7 ${errors.minPrice ? 'border-destructive' : ''}`}
@@ -347,10 +350,9 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
                   <Input
                     id="max-price"
                     type="text"
-                    inputMode="decimal"
-                    value={maxPriceDisplay}
+                    inputMode="numeric"
+                    value={maxPrice}
                     onChange={(e) => handleMaxPriceChange(e.target.value)}
-                    onFocus={handleMaxPriceFocus}
                     onBlur={handleMaxPriceBlur}
                     placeholder="500,000"
                     className={`pl-7 ${errors.maxPrice ? 'border-destructive' : ''}`}
@@ -372,11 +374,15 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
               </div>
             </div>
 
-            {!hasNoMin || !hasNoMax ? (
+            {/* Summary display based on current state */}
+            {minPrice || maxPrice || hasNoMin || hasNoMax ? (
               <div className="p-3 bg-muted rounded-lg">
                 <p className="text-sm">
                   <span className="font-medium">You will receive notifications for properties priced:</span>
                   <br />
+                  {isAllPriceRanges && (
+                    <span>All price ranges</span>
+                  )}
                   {!hasNoMin && !hasNoMax && minPrice && maxPrice && (
                     <span>Between {formatDisplayPrice(minPrice)} and {formatDisplayPrice(maxPrice)}</span>
                   )}
@@ -386,6 +392,9 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
                   {hasNoMin && !hasNoMax && maxPrice && (
                     <span>Up to {formatDisplayPrice(maxPrice)}</span>
                   )}
+                  {!isAllPriceRanges && !minPrice && !maxPrice && (hasNoMin || hasNoMax) && (
+                    <span>{hasNoMin ? "Any minimum" : ""}{hasNoMin && hasNoMax ? " to " : ""}{hasNoMax ? "Any maximum" : ""}</span>
+                  )}
                 </p>
               </div>
             ) : (
@@ -394,7 +403,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
                   <span className="font-medium">No price range set.</span>
                   <br />
                   <span className="text-blue-700 dark:text-blue-300">
-                    You will receive notifications for all price ranges.
+                    Enter a price range or check "No Minimum" and "No Maximum" for all price ranges.
                   </span>
                 </p>
               </div>
@@ -408,7 +417,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
                 <Button 
                   variant="outline" 
                   onClick={clearPriceRange}
-                  disabled={hasNoMin && hasNoMax && !minPrice && !maxPrice}
+                  disabled={!minPrice && !maxPrice && !hasNoMin && !hasNoMax}
                 >
                   Clear Range
                 </Button>

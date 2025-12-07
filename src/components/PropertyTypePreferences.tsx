@@ -1,16 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import { Loader2, Home, ChevronDown, ChevronUp } from "lucide-react";
+
+export interface PropertyTypeData {
+  propertyTypes: string[];
+}
 
 interface PropertyTypePreferencesProps {
   agentId: string;
   onFiltersUpdated?: (hasFilters: boolean) => void;
+  onDataChange?: (data: PropertyTypeData) => void;
 }
 
 const PROPERTY_TYPES = [
@@ -24,15 +28,27 @@ const PROPERTY_TYPES = [
   { value: "commercial_rental", label: "Commercial Rental" },
 ] as const;
 
-const PropertyTypePreferences = ({ agentId, onFiltersUpdated }: PropertyTypePreferencesProps) => {
+const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: PropertyTypePreferencesProps) => {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  // Default to empty array - no preselection
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     fetchPreferences();
   }, [agentId]);
+
+  // Notify parent of data changes (no autosave)
+  const notifyChange = useCallback(() => {
+    onFiltersUpdated?.(selectedTypes.length > 0);
+    onDataChange?.({ propertyTypes: selectedTypes });
+  }, [selectedTypes, onFiltersUpdated, onDataChange]);
+
+  useEffect(() => {
+    if (!loading) {
+      notifyChange();
+    }
+  }, [selectedTypes, loading, notifyChange]);
 
   const fetchPreferences = async () => {
     if (!agentId) {
@@ -60,31 +76,11 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated }: PropertyTypePref
         const validTypes = types.filter(t => typeof t === 'string');
         setSelectedTypes(validTypes);
       }
+      // If no data or no property_types, keep as empty array (no preselection)
     } catch (error) {
       console.error("Error fetching property type preferences:", error);
-      toast.error("Failed to load property type preferences");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const autoSave = async (types: string[]) => {
-    try {
-      const { error } = await supabase
-        .from("notification_preferences")
-        .upsert({
-          user_id: agentId,
-          property_types: types,
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) throw error;
-      
-      // Notify parent that filters have been updated
-      onFiltersUpdated?.(types.length > 0);
-    } catch (error) {
-      console.error("Error saving property type preferences:", error);
     }
   };
 
@@ -93,7 +89,6 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated }: PropertyTypePref
       ? selectedTypes.filter(t => t !== typeValue)
       : [...selectedTypes, typeValue];
     setSelectedTypes(newTypes);
-    autoSave(newTypes);
   };
 
   const selectAll = () => {
@@ -101,7 +96,6 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated }: PropertyTypePref
       ? [] 
       : PROPERTY_TYPES.map(t => t.value);
     setSelectedTypes(newTypes);
-    autoSave(newTypes);
   };
 
   const allSelected = selectedTypes.length === PROPERTY_TYPES.length;
@@ -135,7 +129,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated }: PropertyTypePref
               <p className="text-sm text-muted-foreground mt-1 text-left">
                 {selectedTypes.length > 0 
                   ? `${selectedTypes.length} property type${selectedTypes.length !== 1 ? 's' : ''} selected`
-                  : "All property types"}
+                  : "No property types selected"}
               </p>
             )}
           </CardHeader>
@@ -186,12 +180,12 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated }: PropertyTypePref
         )}
 
         {selectedTypes.length === 0 && (
-          <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-sm text-blue-900 dark:text-blue-100">
+          <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <p className="text-sm text-amber-900 dark:text-amber-100">
               <span className="font-medium">No property types selected.</span>
               <br />
-              <span className="text-blue-700 dark:text-blue-300">
-                You will receive notifications for all property types.
+              <span className="text-amber-700 dark:text-amber-300">
+                You will not receive notifications until you select at least one property type.
               </span>
             </p>
           </div>

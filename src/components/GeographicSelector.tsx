@@ -53,7 +53,6 @@ export function GeographicSelector({
 }: GeographicSelectorProps) {
   const [isOpen, setIsOpen] = useState(!defaultCollapsed);
   const [townSearchQuery, setTownSearchQuery] = useState("");
-  const [showAllTowns, setShowAllTowns] = useState(false);
 
   const state = value.state || "MA";
   const county = value.county || "all";
@@ -96,17 +95,16 @@ export function GeographicSelector({
     }
   };
 
-  // Search filtering
+  // Search filtering - only show results when user types 2+ characters
   const getFilteredTowns = () => {
     const query = townSearchQuery.trim().toLowerCase();
     if (query.length < 2) return [];
     return townsList.filter(town => town.toLowerCase().includes(query));
   };
 
-  const shouldShowTownsList = townSearchQuery.trim().length >= 2 || showAllTowns;
-  const displayedTowns = townSearchQuery.trim().length >= 2 
-    ? getFilteredTowns() 
-    : (showAllTowns ? townsList : []);
+  // Towns list is ONLY shown when searching (2+ chars)
+  const shouldShowTownsList = townSearchQuery.trim().length >= 2;
+  const displayedTowns = shouldShowTownsList ? getFilteredTowns() : [];
 
   // Auto-generated summary when collapsed
   const getSummary = () => {
@@ -182,11 +180,11 @@ export function GeographicSelector({
         </Badge>
       )}
 
-      {/* Town Search & Selection */}
+      {/* Town Search & Selection - Search to reveal only */}
       <div className="space-y-2">
         <Label className={compact ? "text-xs" : undefined}>Towns & Cities</Label>
         <Input
-          placeholder="Type town or neighborhood..."
+          placeholder="Search towns..."
           value={townSearchQuery}
           onChange={(e) => setTownSearchQuery(e.target.value)}
           className="mb-2"
@@ -194,46 +192,17 @@ export function GeographicSelector({
         
         {!shouldShowTownsList ? (
           <div className="text-center py-6 border rounded-lg bg-muted/30">
-            <p className="text-sm text-muted-foreground mb-3">
+            <p className="text-sm text-muted-foreground">
               {townSearchQuery.trim().length === 1 
                 ? "Type at least 2 characters to search"
-                : "Start typing to search towns and neighborhoods"}
+                : "Type to search for towns and neighborhoods"}
             </p>
-            <Button
-              type="button"
-              variant="link"
-              size="sm"
-              onClick={() => setShowAllTowns(true)}
-              className="text-primary underline"
-            >
-              Browse all towns
-            </Button>
           </div>
         ) : (
           <>
-            {townSearchQuery.trim().length >= 2 && (
-              <div className="text-xs text-muted-foreground mb-2">
-                Found {displayedTowns.length} result{displayedTowns.length !== 1 ? 's' : ''} for "{townSearchQuery}"
-              </div>
-            )}
-            {showAllTowns && townSearchQuery.trim().length < 2 && (
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-muted-foreground">
-                  Showing all towns in {getStateName(state)}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setShowAllTowns(false);
-                    setTownSearchQuery("");
-                  }}
-                >
-                  Hide List
-                </Button>
-              </div>
-            )}
+            <div className="text-xs text-muted-foreground mb-2">
+              Found {displayedTowns.length} result{displayedTowns.length !== 1 ? 's' : ''} for "{townSearchQuery}"
+            </div>
             <div className="max-h-64 overflow-y-auto border rounded-lg bg-background">
               <TownsPicker
                 towns={displayedTowns}
