@@ -1,16 +1,21 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, ChevronDown, ChevronUp, MapPin, ChevronRight } from "lucide-react";
-import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
+import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
+import { CT_COUNTY_TOWNS } from "@/data/ctCountyTowns";
+import { RI_COUNTY_TOWNS } from "@/data/riCountyTowns";
+import { NH_COUNTY_TOWNS } from "@/data/nhCountyTowns";
+import { VT_COUNTY_TOWNS } from "@/data/vtCountyTowns";
+import { ME_COUNTY_TOWNS } from "@/data/meCountyTowns";
+import { usCitiesByState } from "@/data/usCitiesData";
 import { cn } from "@/lib/utils";
 
 export interface GeographicSelection {
@@ -32,6 +37,18 @@ interface GeographicSelectorProps {
   compact?: boolean;
 }
 
+// New England states with county-to-towns mapping
+const NEW_ENGLAND_STATES = ["MA", "CT", "RI", "NH", "VT", "ME"];
+
+const COUNTY_MAPS: Record<string, Record<string, string[]>> = {
+  MA: MA_COUNTY_TOWNS,
+  CT: CT_COUNTY_TOWNS,
+  RI: RI_COUNTY_TOWNS,
+  NH: NH_COUNTY_TOWNS,
+  VT: VT_COUNTY_TOWNS,
+  ME: ME_COUNTY_TOWNS,
+};
+
 export function GeographicSelector({
   value,
   onChange,
@@ -52,40 +69,79 @@ export function GeographicSelector({
   const selectedTowns = value.towns || [];
   const showAreas = value.showAreas !== false;
 
-  const { townsList, hasCountyData } = useTownsPicker({
-    state,
-    county,
-    showAreas,
-  });
+  // Normalize state to 2-letter code
+  const stateCode = useMemo(() => {
+    const raw = (state || "").trim();
+    if (raw.length > 2) {
+      return US_STATES.find(s => s.name.toLowerCase() === raw.toLowerCase())?.code ?? raw.toUpperCase();
+    }
+    return raw.toUpperCase();
+  }, [state]);
 
-  const currentStateCounties = hasCountyData ? getCountiesForState(state) : [];
+  const hasCountyData = NEW_ENGLAND_STATES.includes(stateCode);
+  const currentStateCounties = hasCountyData ? getCountiesForState(stateCode) : [];
+
+  // Build towns list directly from data sources - NO LEGACY HOOK
+  const townsList = useMemo(() => {
+    if (!stateCode) return [];
+
+    let baseCities: string[] = [];
+
+    if (hasCountyData) {
+      const countyMap = COUNTY_MAPS[stateCode];
+      if (countyMap) {
+        if (!county || county === "all") {
+          // Get all towns from all counties for this state
+          const allTowns = new Set<string>();
+          Object.values(countyMap).forEach(towns => {
+            towns.forEach(town => allTowns.add(town));
+          });
+          baseCities = Array.from(allTowns);
+        } else {
+          // Get towns for specific county (handle " County" suffix)
+          const normalizedCounty = county.replace(/\s+county$/i, '').trim().toLowerCase();
+          for (const [key, towns] of Object.entries(countyMap)) {
+            if (key.replace(/\s+county$/i, '').trim().toLowerCase() === normalizedCounty) {
+              baseCities = towns;
+              break;
+            }
+          }
+        }
+      }
+    } else {
+      // For states without county data, use general cities list
+      baseCities = usCitiesByState[stateCode] || [];
+    }
+
+    // Return ONLY base cities, sorted - NO hyphenated entries
+    return baseCities.filter(city => !city.includes('-')).sort();
+  }, [stateCode, county, hasCountyData]);
 
   const getStateName = (code: string) => {
     return US_STATES.find(s => s.code === code)?.name || code;
   };
 
-  const rawState = (state || "").trim();
-  const stateKey = rawState && rawState.length > 2 
-    ? (US_STATES.find(s => s.name.toLowerCase() === rawState.toLowerCase())?.code ?? rawState)
-    : rawState?.toUpperCase();
-
   const updateValue = (updates: Partial<GeographicSelection>) => {
     onChange({ ...value, ...updates });
   };
 
-  const toggleTown = (town: string) => {
-    if (town.includes('-')) {
-      // Neighborhood selection - DO NOT auto-select parent city
-      if (!selectedTowns.includes(town)) {
-        updateValue({ towns: [...selectedTowns, town] });
+  // Clean toggle logic - no hyphenated synthetic entries
+  const toggleTown = (town: string, isNeighborhood: boolean = false, parentCity?: string) => {
+    if (isNeighborhood && parentCity) {
+      // Neighborhood selection - store as "City-Neighborhood"
+      const neighborhoodKey = `${parentCity}-${town}`;
+      if (selectedTowns.includes(neighborhoodKey)) {
+        updateValue({ towns: selectedTowns.filter(t => t !== neighborhoodKey) });
       } else {
-        updateValue({ towns: selectedTowns.filter(t => t !== town) });
+        updateValue({ towns: [...selectedTowns, neighborhoodKey] });
       }
     } else {
       // City selection
       if (selectedTowns.includes(town)) {
-        // Remove city and all its neighborhoods
-        updateValue({ towns: selectedTowns.filter(t => !t.startsWith(`${town}-`) && t !== town) });
+        // Remove city AND all its neighborhoods
+        updateValue({ 
+          towns: selectedTowns.filter(t => t !== town && !t.startsWith(`${town}-`)) 
+        });
       } else {
         updateValue({ towns: [...selectedTowns, town] });
       }
@@ -104,34 +160,47 @@ export function GeographicSelector({
     });
   };
 
-  const topLevelTowns = townsList.filter(t => !t.includes('-'));
-
   const handleSelectAll = () => {
-    const allSelected = topLevelTowns.every(t => selectedTowns.includes(t));
+    const allSelected = townsList.every(t => selectedTowns.includes(t));
     if (allSelected) {
       updateValue({ towns: [] });
     } else {
-      updateValue({ towns: topLevelTowns });
+      // Select all cities only, not neighborhoods
+      updateValue({ towns: [...townsList] });
     }
   };
 
   const getSummary = () => {
     if (collapsedSummary) return collapsedSummary;
     if (selectedTowns.length === 0) return "All areas";
-    if (selectedTowns.length === 1) return selectedTowns[0];
+    if (selectedTowns.length === 1) {
+      const town = selectedTowns[0];
+      if (town.includes('-')) {
+        const [city, ...rest] = town.split('-');
+        return `${city} – ${rest.join('-')}`;
+      }
+      return town;
+    }
     return `${selectedTowns.length} areas selected`;
   };
 
-  const isBostonSelected = selectedTowns.includes("Boston");
-
-  // Get neighborhoods for a city
+  // Get neighborhoods for a city from the data source
   const getNeighborhoods = (city: string): string[] => {
-    const neighborhoodsFromData = getAreasForCity(city, stateKey || state) || [];
-    if (neighborhoodsFromData.length > 0) return neighborhoodsFromData;
-    // Check townsList for hyphenated entries
-    return townsList
-      .filter(t => t.startsWith(`${city}-`))
-      .map(t => t.split('-').slice(1).join('-'));
+    return getAreasForCity(city, stateCode) || [];
+  };
+
+  // Check if a specific neighborhood is selected
+  const isNeighborhoodSelected = (city: string, neighborhood: string): boolean => {
+    return selectedTowns.includes(`${city}-${neighborhood}`);
+  };
+
+  // Format display name for pills
+  const getDisplayName = (town: string): string => {
+    if (town.includes('-')) {
+      const [city, ...rest] = town.split('-');
+      return `${city} – ${rest.join('-')}`;
+    }
+    return town;
   };
 
   const content = (
@@ -140,11 +209,11 @@ export function GeographicSelector({
       <div className="space-y-2">
         <Label className={compact ? "text-xs" : undefined}>State</Label>
         <Select
-          value={state}
+          value={stateCode}
           onValueChange={(newState) => updateValue({ state: newState, county: "all", towns: [] })}
         >
           <SelectTrigger>
-            <SelectValue>{getStateName(state)}</SelectValue>
+            <SelectValue>{getStateName(stateCode)}</SelectValue>
           </SelectTrigger>
           <SelectContent className="z-50 max-h-[300px]">
             {US_STATES.map((s) => (
@@ -191,13 +260,6 @@ export function GeographicSelector({
         </label>
       </div>
 
-      {/* Boston Badge */}
-      {isBostonSelected && (
-        <Badge variant="secondary" className="w-full justify-center py-2">
-          Selecting Boston includes all neighborhoods unless you select specific ones
-        </Badge>
-      )}
-
       {/* Town Selection - Popover with Checkbox List */}
       <div className="space-y-2">
         <Label className={compact ? "text-xs" : undefined}>Towns & Cities</Label>
@@ -220,30 +282,33 @@ export function GeographicSelector({
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="selectAll"
-                  checked={topLevelTowns.length > 0 && topLevelTowns.every(t => selectedTowns.includes(t))}
+                  checked={townsList.length > 0 && townsList.every(t => selectedTowns.includes(t))}
                   onCheckedChange={handleSelectAll}
                 />
                 <label htmlFor="selectAll" className="text-sm font-medium cursor-pointer">
-                  Select All ({topLevelTowns.length})
+                  Select All ({townsList.length})
                 </label>
               </div>
             </div>
             <ScrollArea className="h-[250px]">
               <div className="p-2 space-y-1">
-                {topLevelTowns.length > 0 ? (
-                  topLevelTowns.map((town) => {
-                    const isSelected = selectedTowns.includes(town);
-                    const neighborhoods = showAreas ? getNeighborhoods(town) : [];
+                {townsList.length > 0 ? (
+                  townsList.map((city) => {
+                    const isSelected = selectedTowns.includes(city);
+                    const neighborhoods = showAreas ? getNeighborhoods(city) : [];
                     const hasNeighborhoods = neighborhoods.length > 0;
-                    const isExpanded = expandedCities.has(town);
+                    const isExpanded = expandedCities.has(city);
 
                     return (
-                      <div key={town}>
+                      <div key={city}>
                         <div className="flex items-center space-x-2 py-1.5 px-1 rounded hover:bg-accent">
-                          {hasNeighborhoods && (
+                          {hasNeighborhoods ? (
                             <button
                               type="button"
-                              onClick={() => toggleCityExpand(town)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCityExpand(city);
+                              }}
                               className="p-0.5 hover:bg-accent rounded"
                             >
                               <ChevronRight className={cn(
@@ -251,40 +316,45 @@ export function GeographicSelector({
                                 isExpanded && "rotate-90"
                               )} />
                             </button>
+                          ) : (
+                            <div className="w-5" />
                           )}
-                          {!hasNeighborhoods && <div className="w-5" />}
                           <Checkbox
-                            id={`town-${town}`}
+                            id={`city-${city}`}
                             checked={isSelected}
-                            onCheckedChange={() => toggleTown(town)}
+                            onCheckedChange={() => toggleTown(city)}
                           />
                           <label 
-                            htmlFor={`town-${town}`} 
+                            htmlFor={`city-${city}`} 
                             className="text-sm cursor-pointer flex-1"
                           >
-                            {town}
+                            {city}
+                            {hasNeighborhoods && (
+                              <span className="text-xs text-muted-foreground ml-1">
+                                ({neighborhoods.length})
+                              </span>
+                            )}
                           </label>
                         </div>
                         
-                        {/* Neighborhoods */}
+                        {/* Neighborhoods - rendered inside popover when expanded */}
                         {hasNeighborhoods && isExpanded && (
-                          <div className="ml-7 pl-2 border-l space-y-1">
+                          <div className="ml-7 pl-2 border-l border-border space-y-1 my-1">
                             {neighborhoods.map((neighborhood) => {
-                              const neighborhoodKey = `${town}-${neighborhood}`;
-                              const isNeighborhoodSelected = selectedTowns.includes(neighborhoodKey);
+                              const isNSelected = isNeighborhoodSelected(city, neighborhood);
                               
                               return (
                                 <div 
-                                  key={neighborhoodKey}
+                                  key={`${city}-${neighborhood}`}
                                   className="flex items-center space-x-2 py-1 px-1 rounded hover:bg-accent"
                                 >
                                   <Checkbox
-                                    id={`neighborhood-${neighborhoodKey}`}
-                                    checked={isNeighborhoodSelected}
-                                    onCheckedChange={() => toggleTown(neighborhoodKey)}
+                                    id={`neighborhood-${city}-${neighborhood}`}
+                                    checked={isNSelected}
+                                    onCheckedChange={() => toggleTown(neighborhood, true, city)}
                                   />
                                   <label 
-                                    htmlFor={`neighborhood-${neighborhoodKey}`} 
+                                    htmlFor={`neighborhood-${city}-${neighborhood}`} 
                                     className="text-sm cursor-pointer text-muted-foreground"
                                   >
                                     {neighborhood}
@@ -307,31 +377,31 @@ export function GeographicSelector({
           </PopoverContent>
         </Popover>
         
-        {/* Selected Towns Pills */}
+        {/* Selected Towns Pills - only display, no duplicate counter */}
         {selectedTowns.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
-            {selectedTowns.map((town) => {
-              const isNeighborhood = town.includes('-');
-              const displayName = isNeighborhood 
-                ? `${town.split('-')[0]} – ${town.split('-').slice(1).join('-')}`
-                : town;
-              
-              return (
-                <div
-                  key={town}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-xs font-medium hover:bg-primary/20 transition-colors"
+            {selectedTowns.map((town) => (
+              <div
+                key={town}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-xs font-medium hover:bg-primary/20 transition-colors"
+              >
+                <span className="text-primary">{getDisplayName(town)}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (town.includes('-')) {
+                      const [city, ...rest] = town.split('-');
+                      toggleTown(rest.join('-'), true, city);
+                    } else {
+                      toggleTown(town);
+                    }
+                  }}
+                  className="text-primary/70 hover:text-primary"
                 >
-                  <span className="text-primary">{displayName}</span>
-                  <button
-                    type="button"
-                    onClick={() => toggleTown(town)}
-                    className="text-primary/70 hover:text-primary"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              );
-            })}
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
             <Button
               type="button"
               variant="ghost"
