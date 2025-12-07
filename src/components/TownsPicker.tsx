@@ -174,7 +174,12 @@ export function TownsPicker({
                 checked={selectedTowns.includes(town)}
                 onCheckedChange={() => onToggleTown(town)}
               />
-              <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">{town}</label>
+              <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">
+                {town}
+                {showNeighborhoods && neighborhoods.length > 0 && (
+                  <span className="text-xs text-muted-foreground ml-1">({neighborhoods.length})</span>
+                )}
+              </label>
             </div>
             
             {town === "Boston" && (
