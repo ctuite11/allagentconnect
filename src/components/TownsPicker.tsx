@@ -69,7 +69,11 @@ export function TownsPicker({
                 {showNeighborhoods && (
                   <button
                     type="button"
-                    onClick={() => onToggleCityExpansion(town)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onToggleCityExpansion(town);
+                    }}
                     className="p-1 hover:bg-muted rounded"
                   >
                     {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -88,17 +92,19 @@ export function TownsPicker({
                 </button>
               </div>
               {showNeighborhoods && isExpanded && (
-                <div className="ml-8 border-l-2 border-muted pl-2 mt-1 bg-muted/30 rounded-r py-1 space-y-1">
+                <div 
+                  className="ml-8 border-l-2 border-muted pl-2 mt-1 bg-muted/30 rounded-r py-1 space-y-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {neighborhoods
                     .filter((n) => !topCities.has(n))
                     .map((neighborhood) => (
                     <button
                       key={`${town}-${neighborhood}`}
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         onToggleTown(`${town}-${neighborhood}`);
-                        // Close dropdown by triggering a blur or click outside
-                        (document.activeElement as HTMLElement)?.blur();
                       }}
                       className="w-full text-left px-2 py-1 text-xs hover:bg-muted rounded text-muted-foreground"
                     >
@@ -163,7 +169,11 @@ export function TownsPicker({
               {showNeighborhoods && (
                 <button
                   type="button"
-                  onClick={() => onToggleCityExpansion(town)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onToggleCityExpansion(town);
+                  }}
                   className="p-1 hover:bg-muted rounded"
                 >
                   {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -188,11 +198,18 @@ export function TownsPicker({
               </div>
             )}
             {showNeighborhoods && isExpanded && (
-              <div className="ml-8 border-l-2 border-muted pl-2 space-y-1 rounded-r py-1 bg-muted/30">
+              <div 
+                className="ml-8 border-l-2 border-muted pl-2 space-y-1 rounded-r py-1 bg-muted/30"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {neighborhoods
                   .filter((n) => !topCities.has(n))
                   .map((neighborhood) => (
-                  <div key={`${town}-${neighborhood}`} className="flex items-center space-x-2 py-0.5">
+                  <div 
+                    key={`${town}-${neighborhood}`} 
+                    className="flex items-center space-x-2 py-0.5"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Checkbox
                       id={`neighborhood-${town}-${neighborhood}`}
                       checked={selectedTowns.includes(`${town}-${neighborhood}`)}
