@@ -236,67 +236,72 @@ const GeographicPreferencesManager = ({
               </div>
             )}
 
-            {/* Towns Selector - Popover with trigger button */}
+            {/* Towns Selector - Two column layout matching Hot Sheets */}
             <div className="space-y-2">
               <Label>Towns & Neighborhoods</Label>
-              <Popover open={townsPopoverOpen} onOpenChange={setTownsPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-between">
-                    <span>
-                      {selectedTowns.length > 0 
-                        ? `${selectedTowns.length} town${selectedTowns.length !== 1 ? 's' : ''} selected`
-                        : "Select towns..."}
-                    </span>
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-0" align="start">
-                  <div className="max-h-64 overflow-y-auto">
-                    <TownsPicker
-                      towns={townsList}
-                      selectedTowns={selectedTowns}
-                      onToggleTown={handleToggleTown}
-                      expandedCities={expandedCities}
-                      onToggleCityExpansion={toggleCityExpansion}
-                      state={selectedState}
-                      variant="checkbox"
-                      showAreas={true}
-                      showSelectAll={true}
-                      onSelectAll={handleSelectAll}
-                    />
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <div className="grid grid-cols-2 gap-4">
+                {/* LEFT: Towns Selector */}
+                <div>
+                  <Popover open={townsPopoverOpen} onOpenChange={setTownsPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between">
+                        <span>Select towns...</span>
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0" align="start">
+                      <div className="max-h-64 overflow-y-auto">
+                        <TownsPicker
+                          towns={townsList}
+                          selectedTowns={selectedTowns}
+                          onToggleTown={handleToggleTown}
+                          expandedCities={expandedCities}
+                          onToggleCityExpansion={toggleCityExpansion}
+                          state={selectedState}
+                          variant="checkbox"
+                          showAreas={true}
+                          showSelectAll={true}
+                          onSelectAll={handleSelectAll}
+                        />
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-              {/* Selected Towns Panel - matches Hot Sheets pattern */}
-              {selectedTowns.length > 0 && (
-                <div className="space-y-2">
+                {/* RIGHT: Selected Towns Panel */}
+                <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Selected Towns</Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedTowns([])}
-                      className="h-7 px-2 text-xs"
-                    >
-                      Remove All
-                    </Button>
-                  </div>
-                  <div className="border rounded-md p-3 bg-background max-h-40 overflow-y-auto">
-                    {selectedTowns.map((town) => (
-                      <button
-                        key={town}
+                    <span className="text-sm font-medium">Selected Towns</span>
+                    {selectedTowns.length > 0 && (
+                      <Button
                         type="button"
-                        onClick={() => handleToggleTown(town)}
-                        className="w-full text-left py-1 px-2 text-sm border-b last:border-b-0 hover:bg-muted rounded cursor-pointer"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedTowns([])}
+                        className="h-6 px-2 text-xs"
                       >
-                        {town}
-                      </button>
-                    ))}
+                        Remove All
+                      </Button>
+                    )}
+                  </div>
+                  <div className="border rounded-md p-2 bg-background min-h-[120px] max-h-48 overflow-y-auto">
+                    {selectedTowns.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No towns selected</p>
+                    ) : (
+                      selectedTowns.map((town) => (
+                        <button
+                          key={town}
+                          type="button"
+                          onClick={() => handleToggleTown(town)}
+                          className="w-full text-left py-1 px-2 text-sm border-b last:border-b-0 hover:bg-muted rounded cursor-pointer"
+                        >
+                          {town}
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
 
             {selectedTowns.length > 100 && (
