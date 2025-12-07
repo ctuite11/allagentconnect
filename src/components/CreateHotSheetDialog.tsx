@@ -145,11 +145,18 @@ export function CreateHotSheetDialog({
   const [notifyAgent, setNotifyAgent] = useState(true);
   const [notificationSchedule, setNotificationSchedule] = useState("immediately");
 
-  // Collapsible sections - All open by default for better visibility
+  // Collapsible sections - Towns, Property Type, Status collapsed by default
   const [criteriaOpen, setCriteriaOpen] = useState(true);
   const [addressOpen, setAddressOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(true);
   const [clientInfoOpen, setClientInfoOpen] = useState(true);
+  const [townsOpen, setTownsOpen] = useState(false);
+  const [propertyTypeOpen, setPropertyTypeOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
+  
+  // Add another contact modal
+  const [showAddAnotherContactModal, setShowAddAnotherContactModal] = useState(false);
+  const [createdHotSheetId, setCreatedHotSheetId] = useState<string | null>(null);
 
   // Fetch hot sheet data on mount if editing
   useEffect(() => {
@@ -862,12 +869,12 @@ export function CreateHotSheetDialog({
 
         toast.success("Hot sheet created successfully!");
         setShowSuccess(true);
+        setCreatedHotSheetId(createdHotSheet.id);
+        // Show add another contact modal
         setTimeout(() => {
           setShowSuccess(false);
-          onSuccess(createdHotSheet.id);
-          onOpenChange(false);
-          resetForm();
-        }, 1500);
+          setShowAddAnotherContactModal(true);
+        }, 1000);
       }
     } catch (error: any) {
       console.error("Error creating hot sheet:", error);
@@ -990,17 +997,17 @@ export function CreateHotSheetDialog({
             )}
           </div>
 
-          {/* Client Information */}
+          {/* Contact Information */}
           <Collapsible open={clientInfoOpen} onOpenChange={setClientInfoOpen}>
             <Card>
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">
-                      Client Information *
+                      Contact Information *
                       {selectedClients.length > 0 && (
                         <span className="ml-2 text-sm font-normal text-green-600">
-                          ✓ {selectedClients.length} {selectedClients.length === 1 ? 'client' : 'clients'}
+                          ✓ {selectedClients.length} {selectedClients.length === 1 ? 'contact' : 'contacts'}
                         </span>
                       )}
                     </CardTitle>
@@ -1010,10 +1017,10 @@ export function CreateHotSheetDialog({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="space-y-4">
-              {/* Selected Clients List */}
+              {/* Selected Contacts List */}
               {selectedClients.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Selected Clients ({selectedClients.length})</Label>
+                  <Label>Selected Contacts ({selectedClients.length})</Label>
                   <div className="space-y-2 p-3 bg-muted/30 rounded-md border">
                     {selectedClients.map((client) => (
                       <div key={client.id} className="flex items-center justify-between p-2 bg-background rounded border">
@@ -1041,9 +1048,9 @@ export function CreateHotSheetDialog({
                 </div>
               )}
 
-              {/* Client Search */}
+              {/* Contact Search */}
               <div className="space-y-2 relative">
-                <Label htmlFor="client-search">Search Existing Client</Label>
+                <Label htmlFor="client-search">Search Existing Contact</Label>
                 <Input
                   id="client-search"
                   placeholder="Search by name or email..."
@@ -1088,7 +1095,7 @@ export function CreateHotSheetDialog({
 
               <Separator />
 
-              <p className="text-sm text-muted-foreground">Or add a new client manually:</p>
+              <p className="text-sm text-muted-foreground">Or add a new contact manually:</p>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -1108,7 +1115,7 @@ export function CreateHotSheetDialog({
                   {existingClient && (
                     <p className="text-sm text-green-600 flex items-center gap-1">
                       <Check className="w-4 h-4" />
-                      Existing client found
+                      Existing contact found
                     </p>
                   )}
                   {errors.clientFirstName && (
@@ -1173,7 +1180,7 @@ export function CreateHotSheetDialog({
                 )}
               </div>
 
-              {/* Add Client Button */}
+              {/* Add Contact Button */}
               {(clientFirstName || clientLastName || clientEmail || clientPhone) && (
                 <Button
                   type="button"
@@ -1188,7 +1195,7 @@ export function CreateHotSheetDialog({
                   className="w-full"
                 >
                   <Check className="w-4 h-4 mr-2" />
-                  Add This Client
+                  Add This Contact
                 </Button>
               )}
 
@@ -1208,284 +1215,202 @@ export function CreateHotSheetDialog({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="space-y-6">
-                  {/* Listing Numbers */}
-                  <div className="space-y-2">
-                    <Label htmlFor="listing-numbers" className="text-sm font-semibold uppercase">List Number(s)</Label>
-                    <Input
-                      id="listing-numbers"
-                      placeholder="Enter listing number(s)"
-                      value={listingNumbers}
-                      onChange={(e) => setListingNumbers(e.target.value)}
-                    />
-                  </div>
-
-                  {/* Search by Address Section */}
-                  <Collapsible open={addressOpen} onOpenChange={setAddressOpen} className="border-t pt-4">
+                  {/* Towns Section - Collapsed by default */}
+                  <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border-2 border-border">
-                        <Label className="text-sm font-semibold uppercase cursor-pointer">Search by Address</Label>
-                        {addressOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
+                        <Label className="text-sm font-semibold uppercase cursor-pointer">
+                          Towns & Neighborhoods
+                          {selectedCities.length > 0 && (
+                            <span className="ml-2 text-xs font-normal text-green-600">
+                              ({selectedCities.length} selected)
+                            </span>
+                          )}
+                        </Label>
+                        {townsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <div className="space-y-4 pt-4">
-                        {/* Address Mode Radio Buttons */}
-                        <div className="flex gap-4">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              id="street-address"
-                              name="address-mode"
-                              checked={addressMode === "street"}
-                              onChange={() => setAddressMode("street")}
-                              className="w-4 h-4"
-                            />
-                            <Label htmlFor="street-address" className="text-sm">Street Address</Label>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="state" className="text-sm">State</Label>
+                            <Select value={state} onValueChange={setState}>
+                              <SelectTrigger id="state" className="bg-background text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-popover z-50 max-h-[300px]">
+                                {US_STATES.map((stateItem) => (
+                                  <SelectItem key={stateItem.code} value={stateItem.code} className="text-sm">
+                                    {stateItem.code}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              id="my-location"
-                              name="address-mode"
-                              checked={addressMode === "mylocation"}
-                              onChange={() => setAddressMode("mylocation")}
-                              className="w-4 h-4"
-                            />
-                            <Label htmlFor="my-location" className="text-sm">My Location</Label>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="coverage-areas" className="text-sm">Coverage Areas</Label>
+                            <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
+                              <SelectTrigger id="coverage-areas" className="bg-background text-sm">
+                                <SelectValue placeholder="All Counties" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-popover z-50 max-h-[300px]">
+                                <SelectItem value="all" className="text-sm">
+                                  All Counties
+                                </SelectItem>
+                                {countiesForState.map((county) => (
+                                  <SelectItem key={county.id} value={county.id} className="text-sm">
+                                    {county.name} County
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-sm">Show Areas</Label>
+                            <div className="flex gap-4 mt-2">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="show-yes"
+                                  name="show-areas"
+                                  checked={showAreas === true}
+                                  onChange={() => setShowAreas(true)}
+                                  className="w-4 h-4"
+                                />
+                                <Label htmlFor="show-yes" className="text-sm">Yes</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="show-no"
+                                  name="show-areas"
+                                  checked={showAreas === false}
+                                  onChange={() => setShowAreas(false)}
+                                  className="w-4 h-4"
+                                />
+                                <Label htmlFor="show-no" className="text-sm">No</Label>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Address Fields */}
-                        <div className="grid grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="street-number" className="text-sm">Street #</Label>
                             <Input
-                              id="street-number"
-                              placeholder=""
-                              value={streetNumber}
-                              onChange={(e) => setStreetNumber(e.target.value)}
+                              placeholder="Type Full or Partial Name"
+                              value={citySearch}
+                              onChange={(e) => setCitySearch(e.target.value)}
                               className="text-sm"
                             />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="street-name" className="text-sm">Street Name</Label>
-                            <Input
-                              id="street-name"
-                              placeholder=""
-                              value={streetName}
-                              onChange={(e) => setStreetName(e.target.value)}
-                              className="text-sm"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="zip-code" className="text-sm">Zip Code</Label>
-                            <Input
-                              id="zip-code"
-                              placeholder=""
-                              value={zipCode}
-                              onChange={(e) => setZipCode(e.target.value)}
-                              className="text-sm"
-                            />
-                          </div>
-                          <div className="space-y-2 relative">
-                            <Label htmlFor="radius" className="text-sm">Radius</Label>
-                            <div className="relative">
-                              <Input
-                                id="radius"
-                                placeholder=""
-                                value={radiusMiles}
-                                onChange={(e) => setRadiusMiles(e.target.value)}
-                                className="text-sm pr-12"
+                            <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2 relative z-10">
+                              {selectedCountyId && townsList.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={selectAllTowns}
+                                  className="w-full text-left px-2 py-1.5 text-sm font-semibold hover:bg-muted rounded mb-1 border-b pb-2"
+                                >
+                                  {selectedCountyId === "all" 
+                                    ? `✓ Add All Towns from All Counties` 
+                                    : `✓ Add All Towns in County (${townsList.length})`}
+                                </button>
+                              )}
+                              <TownsPicker
+                                towns={townsList}
+                                selectedTowns={selectedCities}
+                                onToggleTown={toggleCity}
+                                expandedCities={expandedCities}
+                                onToggleCityExpansion={toggleCityExpansion}
+                                state={state}
+                                searchQuery={citySearch}
+                                variant="button"
+                                showAreas={showAreas}
                               />
-                              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground">
-                                Miles
-                              </span>
                             </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm font-medium">Selected Towns</Label>
+                              {selectedCities.length > 0 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setSelectedCities([])}
+                                  className="h-7 px-2 text-xs"
+                                >
+                                  Remove All
+                                </Button>
+                              )}
+                            </div>
+                            <div className="border rounded-md p-3 bg-background min-h-[200px] max-h-60 overflow-y-auto">
+                              {selectedCities.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">No towns selected</p>
+                              ) : (
+                                selectedCities.map((city) => (
+                                  <button
+                                    key={city}
+                                    type="button"
+                                    onClick={() => toggleCity(city)}
+                                    className="w-full text-left py-1 px-2 text-sm border-b last:border-b-0 hover:bg-muted rounded cursor-pointer"
+                                  >
+                                    {city}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm">Type Multiple Towns/Areas</Label>
+                          <p className="text-xs text-muted-foreground">Separate multiple towns with commas</p>
+                          <div className="flex gap-2">
+                            <Input
+                              value={multiTownInput}
+                              onChange={(e) => setMultiTownInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleAddMultipleTowns();
+                                }
+                              }}
+                              placeholder="e.g. Northborough, Worcester, Boston"
+                              className="text-sm flex-1"
+                            />
+                            <Button 
+                              type="button" 
+                              onClick={handleAddMultipleTowns}
+                              className="bg-blue-500 hover:bg-blue-600 text-white px-4 text-sm"
+                            >
+                              Add
+                            </Button>
                           </div>
                         </div>
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
 
-                  {/* Towns Section */}
-                  <div className="space-y-4 border-t pt-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold uppercase">Towns</Label>
-                      <Button
-                        type="button"
-                        variant="link"
-                        className="text-sm text-green-600 p-0 h-auto"
-                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                      >
-                        BACK TO TOP ↑
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="state" className="text-sm">State</Label>
-                        <Select value={state} onValueChange={setState}>
-                          <SelectTrigger id="state" className="bg-background text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover z-50 max-h-[300px]">
-                            {US_STATES.map((stateItem) => (
-                              <SelectItem key={stateItem.code} value={stateItem.code} className="text-sm">
-                                {stateItem.code}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="coverage-areas" className="text-sm">Coverage Areas</Label>
-                        <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
-                          <SelectTrigger id="coverage-areas" className="bg-background text-sm">
-                            <SelectValue placeholder="All Counties" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover z-50 max-h-[300px]">
-                            <SelectItem value="all" className="text-sm">
-                              All Counties
-                            </SelectItem>
-                            {countiesForState.map((county) => (
-                              <SelectItem key={county.id} value={county.id} className="text-sm">
-                                {county.name} County
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-sm">Show Areas</Label>
-                        <div className="flex gap-4 mt-2">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              id="show-yes"
-                              name="show-areas"
-                              checked={showAreas === true}
-                              onChange={() => setShowAreas(true)}
-                              className="w-4 h-4"
-                            />
-                            <Label htmlFor="show-yes" className="text-sm">Yes</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              id="show-no"
-                              name="show-areas"
-                              checked={showAreas === false}
-                              onChange={() => setShowAreas(false)}
-                              className="w-4 h-4"
-                            />
-                            <Label htmlFor="show-no" className="text-sm">No</Label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Input
-                          placeholder="Type Full or Partial Name"
-                          value={citySearch}
-                          onChange={(e) => setCitySearch(e.target.value)}
-                          className="text-sm"
-                        />
-                        <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2 relative z-10">
-                          {selectedCountyId && townsList.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={selectAllTowns}
-                              className="w-full text-left px-2 py-1.5 text-sm font-semibold hover:bg-muted rounded mb-1 border-b pb-2"
-                            >
-                              {selectedCountyId === "all" 
-                                ? `✓ Add All Towns from All Counties` 
-                                : `✓ Add All Towns in County (${townsList.length})`}
-                            </button>
+                  {/* Property Type - Collapsed by default */}
+                  <Collapsible open={propertyTypeOpen} onOpenChange={setPropertyTypeOpen}>
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
+                        <Label className="text-sm font-semibold uppercase cursor-pointer">
+                          Property Type
+                          {propertyTypes.length > 0 && (
+                            <span className="ml-2 text-xs font-normal text-green-600">
+                              ({propertyTypes.length} selected)
+                            </span>
                           )}
-                          <TownsPicker
-                            towns={townsList}
-                            selectedTowns={selectedCities}
-                            onToggleTown={toggleCity}
-                            expandedCities={expandedCities}
-                            onToggleCityExpansion={toggleCityExpansion}
-                            state={state}
-                            searchQuery={citySearch}
-                            variant="button"
-                            showAreas={showAreas}
-                          />
-                        </div>
+                        </Label>
+                        {propertyTypeOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">Selected Towns</Label>
-                          {selectedCities.length > 0 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedCities([])}
-                              className="h-7 px-2 text-xs"
-                            >
-                              Remove All
-                            </Button>
-                          )}
-                        </div>
-                        <div className="border rounded-md p-3 bg-background min-h-[200px] max-h-60 overflow-y-auto">
-                          {selectedCities.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No towns selected</p>
-                          ) : (
-                            selectedCities.map((city) => (
-                              <button
-                                key={city}
-                                type="button"
-                                onClick={() => toggleCity(city)}
-                                className="w-full text-left py-1 px-2 text-sm border-b last:border-b-0 hover:bg-muted rounded cursor-pointer"
-                              >
-                                {city}
-                              </button>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm">Type Multiple Towns/Areas</Label>
-                      <p className="text-xs text-muted-foreground">Separate multiple towns with commas</p>
-                      <div className="flex gap-2">
-                        <Input
-                          value={multiTownInput}
-                          onChange={(e) => setMultiTownInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleAddMultipleTowns();
-                            }
-                          }}
-                          placeholder="e.g. Northborough, Worcester, Boston"
-                          className="text-sm flex-1"
-                        />
-                        <Button 
-                          type="button" 
-                          onClick={handleAddMultipleTowns}
-                          className="bg-blue-500 hover:bg-blue-600 text-white px-4 text-sm"
-                        >
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* Property Types */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold uppercase">Property Type</Label>
-                      <div className="space-y-2 border rounded-md p-3 max-h-64 overflow-y-auto">
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-2 border rounded-md p-3 max-h-64 overflow-y-auto mt-2">
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="pt-select-all"
@@ -1515,12 +1440,26 @@ export function CreateHotSheetDialog({
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </CollapsibleContent>
+                  </Collapsible>
 
-                    {/* Status */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold uppercase">Status</Label>
-                      <div className="space-y-2 border rounded-md p-3 max-h-64 overflow-y-auto">
+                  {/* Status - Collapsed by default */}
+                  <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
+                        <Label className="text-sm font-semibold uppercase cursor-pointer">
+                          Status
+                          {statuses.length > 0 && (
+                            <span className="ml-2 text-xs font-normal text-green-600">
+                              ({statuses.length} selected)
+                            </span>
+                          )}
+                        </Label>
+                        {statusOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-2 border rounded-md p-3 max-h-64 overflow-y-auto mt-2">
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="st-select-all"
@@ -1550,8 +1489,8 @@ export function CreateHotSheetDialog({
                           </div>
                         ))}
                       </div>
-                    </div>
-                  </div>
+                    </CollapsibleContent>
+                  </Collapsible>
 
                   {/* Price Range */}
                   <div className="space-y-4 border-t pt-4">
@@ -1796,7 +1735,7 @@ export function CreateHotSheetDialog({
             <Button 
               onClick={handleValidateAndShowConfirmation} 
               disabled={saving}
-              className="relative min-w-[180px]"
+              className="relative min-w-[180px] bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white"
             >
               {saving ? (
                 <>
@@ -1833,9 +1772,9 @@ export function CreateHotSheetDialog({
               <p className="text-sm text-muted-foreground">{hotSheetName}</p>
             </div>
 
-            {/* Client Information */}
+            {/* Contact Information */}
             <div className="border-b pb-3">
-              <p className="text-sm font-semibold text-foreground mb-2">Client Information</p>
+              <p className="text-sm font-semibold text-foreground mb-2">Contact Information</p>
               {selectedClients.length > 0 ? (
                 <div className="space-y-2">
                   {selectedClients.map((client) => (
@@ -1847,7 +1786,7 @@ export function CreateHotSheetDialog({
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No clients added</p>
+                <p className="text-sm text-muted-foreground">No contacts added</p>
               )}
             </div>
 
@@ -1880,13 +1819,13 @@ export function CreateHotSheetDialog({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Create Client Dialog */}
+      {/* Create Contact Dialog */}
       <AlertDialog open={showCreateClientDialog} onOpenChange={setShowCreateClientDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Save this client to your contacts?</AlertDialogTitle>
+            <AlertDialogTitle>Save this contact to your contacts list?</AlertDialogTitle>
             <AlertDialogDescription>
-              This client will be added to the hot sheet. Would you also like to save them as a permanent contact?
+              This contact will be added to the hot sheet. Would you also like to save them as a permanent contact?
             </AlertDialogDescription>
           </AlertDialogHeader>
           
@@ -1909,6 +1848,41 @@ export function CreateHotSheetDialog({
               ) : (
                 "Yes"
               )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Add Another Contact Modal */}
+      <AlertDialog open={showAddAnotherContactModal} onOpenChange={setShowAddAnotherContactModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Would you like to add another contact to this same Hot Sheet?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You can add more contacts who will receive alerts for this Hot Sheet, or finish and view your results.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => {
+                setShowAddAnotherContactModal(false);
+                if (createdHotSheetId) {
+                  onSuccess(createdHotSheetId);
+                }
+                onOpenChange(false);
+                resetForm();
+              }}
+            >
+              Done
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                setShowAddAnotherContactModal(false);
+                setClientInfoOpen(true);
+              }}
+              className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600"
+            >
+              Add Another Contact
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
