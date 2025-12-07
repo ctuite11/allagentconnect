@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, ChevronDown, ChevronUp, MapPin } from "lucide-react";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
-import { TownsPicker } from "@/components/TownsPicker";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
+import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { cn } from "@/lib/utils";
 
 export interface GeographicSelection {
@@ -53,13 +53,14 @@ export function GeographicSelector({
 }: GeographicSelectorProps) {
   const [isOpen, setIsOpen] = useState(!defaultCollapsed);
   const [townSearchQuery, setTownSearchQuery] = useState("");
+  const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
 
   const state = value.state || "MA";
   const county = value.county || "all";
   const selectedTowns = value.towns || [];
   const showAreas = value.showAreas !== false;
 
-  const { townsList, expandedCities, toggleCityExpansion, hasCountyData } = useTownsPicker({
+  const { townsList, hasCountyData } = useTownsPicker({
     state,
     county,
     showAreas,
@@ -71,6 +72,12 @@ export function GeographicSelector({
   const getStateName = (code: string) => {
     return US_STATES.find(s => s.code === code)?.name || code;
   };
+
+  // Normalize state to 2-letter code
+  const rawState = (state || "").trim();
+  const stateKey = rawState && rawState.length > 2 
+    ? (US_STATES.find(s => s.name.toLowerCase() === rawState.toLowerCase())?.code ?? rawState)
+    : rawState?.toUpperCase();
 
   const updateValue = (updates: Partial<GeographicSelection>) => {
     onChange({ ...value, ...updates });
@@ -95,16 +102,37 @@ export function GeographicSelector({
     }
   };
 
-  // Search filtering - only show results when user types 2+ characters
+  const toggleCityExpansion = (city: string) => {
+    setExpandedCities(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(city)) {
+        newSet.delete(city);
+      } else {
+        newSet.add(city);
+      }
+      return newSet;
+    });
+  };
+
+  // Filter towns based on search query (filter, not gate)
   const getFilteredTowns = () => {
     const query = townSearchQuery.trim().toLowerCase();
-    if (query.length < 2) return [];
+    if (!query) return townsList;
     return townsList.filter(town => town.toLowerCase().includes(query));
   };
 
-  // Towns list is ONLY shown when searching (2+ chars)
-  const shouldShowTownsList = townSearchQuery.trim().length >= 2;
-  const displayedTowns = shouldShowTownsList ? getFilteredTowns() : [];
+  const filteredTowns = getFilteredTowns();
+  const topLevelTowns = filteredTowns.filter(t => !t.includes('-'));
+
+  // Select all visible towns
+  const handleSelectAll = () => {
+    const allSelected = topLevelTowns.every(t => selectedTowns.includes(t));
+    if (allSelected) {
+      updateValue({ towns: [] });
+    } else {
+      updateValue({ towns: topLevelTowns });
+    }
+  };
 
   // Auto-generated summary when collapsed
   const getSummary = () => {
@@ -115,6 +143,75 @@ export function GeographicSelector({
   };
 
   const isBostonSelected = selectedTowns.includes("Boston");
+
+  // Render a single town with optional neighborhoods
+  const renderTownItem = (town: string) => {
+    const hasNeighborhoods = hasNeighborhoodData(town, stateKey || state);
+    let neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
+    
+    // Fallback: derive from towns list if no neighborhood data
+    if ((neighborhoods?.length ?? 0) === 0) {
+      neighborhoods = Array.from(new Set(
+        townsList
+          .filter((t) => t.startsWith(`${town}-`))
+          .map((t) => t.split('-').slice(1).join('-'))
+      ));
+    }
+
+    const showNeighborhoodSection = showAreas && neighborhoods.length > 0;
+    const isExpanded = expandedCities.has(town);
+    const topCities = new Set(filteredTowns.filter(t => !t.includes('-')));
+
+    return (
+      <div key={town} className="space-y-1">
+        <div className="flex items-center space-x-2 py-0.5">
+          {showNeighborhoodSection && (
+            <button
+              type="button"
+              onClick={() => toggleCityExpansion(town)}
+              className="p-1 hover:bg-muted rounded"
+            >
+              {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+            </button>
+          )}
+          <Checkbox
+            id={`town-${town}`}
+            checked={selectedTowns.includes(town)}
+            onCheckedChange={() => toggleTown(town)}
+          />
+          <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">{town}</label>
+        </div>
+        
+        {town === "Boston" && (
+          <div className="ml-6 text-xs text-muted-foreground italic mt-1">
+            Selecting Boston alone includes all neighborhoods
+          </div>
+        )}
+        
+        {showNeighborhoodSection && isExpanded && (
+          <div className="ml-8 border-l-2 border-muted pl-2 space-y-1 rounded-r py-1 bg-muted/30">
+            {neighborhoods
+              .filter((n) => !topCities.has(n))
+              .map((neighborhood) => (
+              <div key={`${town}-${neighborhood}`} className="flex items-center space-x-2 py-0.5">
+                <Checkbox
+                  id={`neighborhood-${town}-${neighborhood}`}
+                  checked={selectedTowns.includes(`${town}-${neighborhood}`)}
+                  onCheckedChange={() => toggleTown(`${town}-${neighborhood}`)}
+                />
+                <label 
+                  htmlFor={`neighborhood-${town}-${neighborhood}`} 
+                  className="text-xs cursor-pointer flex-1 text-muted-foreground"
+                >
+                  {neighborhood}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const content = (
     <div className={cn("space-y-4", compact && "space-y-3")}>
@@ -180,50 +277,50 @@ export function GeographicSelector({
         </Badge>
       )}
 
-      {/* Town Search & Selection - Search to reveal only */}
+      {/* Town Selection - Native Hierarchical Checkbox List */}
       <div className="space-y-2">
         <Label className={compact ? "text-xs" : undefined}>Towns & Cities</Label>
+        
+        {/* Search Filter (not a gate) */}
         <Input
-          placeholder="Search towns..."
+          placeholder="Filter towns..."
           value={townSearchQuery}
           onChange={(e) => setTownSearchQuery(e.target.value)}
           className="mb-2"
         />
         
-        {!shouldShowTownsList ? (
-          <div className="text-center py-6 border rounded-lg bg-muted/30">
-            <p className="text-sm text-muted-foreground">
-              {townSearchQuery.trim().length === 1 
-                ? "Type at least 2 characters to search"
-                : "Type to search for towns and neighborhoods"}
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="text-xs text-muted-foreground mb-2">
-              Found {displayedTowns.length} result{displayedTowns.length !== 1 ? 's' : ''} for "{townSearchQuery}"
-            </div>
-            <div className="max-h-64 overflow-y-auto border rounded-lg bg-background">
-              <TownsPicker
-                towns={displayedTowns}
-                selectedTowns={selectedTowns}
-                onToggleTown={toggleTown}
-                expandedCities={expandedCities}
-                onToggleCityExpansion={toggleCityExpansion}
-                state={state}
-                searchQuery={townSearchQuery}
-                variant="checkbox"
-                showAreas={showAreas}
-                showSelectAll={displayedTowns.length > 0}
-                onSelectAll={() => {
-                  const allTopLevelTowns = displayedTowns.filter(t => !t.includes('-'));
-                  const allSelected = allTopLevelTowns.every(t => selectedTowns.includes(t));
-                  updateValue({ towns: allSelected ? [] : allTopLevelTowns });
-                }}
+        {/* Towns List - Always visible, search filters */}
+        <div className="max-h-64 overflow-y-auto border rounded-lg bg-background p-2">
+          {/* Select All */}
+          {topLevelTowns.length > 0 && (
+            <div className="flex items-center space-x-2 py-0.5 mb-2 pb-2 border-b">
+              <Checkbox
+                id="select-all-towns"
+                checked={topLevelTowns.length > 0 && topLevelTowns.every(t => selectedTowns.includes(t))}
+                onCheckedChange={handleSelectAll}
               />
+              <label
+                htmlFor="select-all-towns"
+                className="text-sm font-medium cursor-pointer"
+              >
+                Select All {townSearchQuery.trim() ? `(${topLevelTowns.length} matching)` : `(${topLevelTowns.length})`}
+              </label>
             </div>
-          </>
-        )}
+          )}
+          
+          {/* Town Items */}
+          {topLevelTowns.length > 0 ? (
+            <div className="space-y-1">
+              {topLevelTowns.map(town => renderTownItem(town))}
+            </div>
+          ) : (
+            <div className="text-center py-4 text-sm text-muted-foreground">
+              {townSearchQuery.trim() 
+                ? `No towns matching "${townSearchQuery}"`
+                : "No towns available for this selection"}
+            </div>
+          )}
+        </div>
         
         {/* Selected Towns Summary with Chips */}
         {selectedTowns.length > 0 && (
