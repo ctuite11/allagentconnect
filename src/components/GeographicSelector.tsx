@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { X, ChevronDown, ChevronUp, MapPin } from "lucide-react";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
-import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { cn } from "@/lib/utils";
 
 export interface GeographicSelection {
@@ -52,8 +50,6 @@ export function GeographicSelector({
   compact = false,
 }: GeographicSelectorProps) {
   const [isOpen, setIsOpen] = useState(!defaultCollapsed);
-  const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
-  const [townsListExpanded, setTownsListExpanded] = useState(false);
 
   const state = value.state || "MA";
   const county = value.county || "all";
@@ -102,18 +98,6 @@ export function GeographicSelector({
     }
   };
 
-  const toggleCityExpansion = (city: string) => {
-    setExpandedCities(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(city)) {
-        newSet.delete(city);
-      } else {
-        newSet.add(city);
-      }
-      return newSet;
-    });
-  };
-
   const topLevelTowns = townsList.filter(t => !t.includes('-'));
 
   // Select all visible towns
@@ -135,75 +119,6 @@ export function GeographicSelector({
   };
 
   const isBostonSelected = selectedTowns.includes("Boston");
-
-  // Render a single town with optional neighborhoods
-  const renderTownItem = (town: string) => {
-    const hasNeighborhoods = hasNeighborhoodData(town, stateKey || state);
-    let neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
-    
-    // Fallback: derive from towns list if no neighborhood data
-    if ((neighborhoods?.length ?? 0) === 0) {
-      neighborhoods = Array.from(new Set(
-        townsList
-          .filter((t) => t.startsWith(`${town}-`))
-          .map((t) => t.split('-').slice(1).join('-'))
-      ));
-    }
-
-    const showNeighborhoodSection = showAreas && neighborhoods.length > 0;
-    const isExpanded = expandedCities.has(town);
-    const topCities = new Set(topLevelTowns);
-
-    return (
-      <div key={town} className="space-y-1">
-        <div className="flex items-center space-x-2 py-0.5">
-          {showNeighborhoodSection && (
-            <button
-              type="button"
-              onClick={() => toggleCityExpansion(town)}
-              className="p-1 hover:bg-muted rounded"
-            >
-              {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
-            </button>
-          )}
-          <Checkbox
-            id={`town-${town}`}
-            checked={selectedTowns.includes(town)}
-            onCheckedChange={() => toggleTown(town)}
-          />
-          <label htmlFor={`town-${town}`} className="text-sm cursor-pointer flex-1">{town}</label>
-        </div>
-        
-        {town === "Boston" && (
-          <div className="ml-6 text-xs text-muted-foreground italic mt-1">
-            Selecting Boston alone includes all neighborhoods
-          </div>
-        )}
-        
-        {showNeighborhoodSection && isExpanded && (
-          <div className="ml-8 border-l-2 border-muted pl-2 space-y-1 rounded-r py-1 bg-muted/30">
-            {neighborhoods
-              .filter((n) => !topCities.has(n))
-              .map((neighborhood) => (
-              <div key={`${town}-${neighborhood}`} className="flex items-center space-x-2 py-0.5">
-                <Checkbox
-                  id={`neighborhood-${town}-${neighborhood}`}
-                  checked={selectedTowns.includes(`${town}-${neighborhood}`)}
-                  onCheckedChange={() => toggleTown(`${town}-${neighborhood}`)}
-                />
-                <label 
-                  htmlFor={`neighborhood-${town}-${neighborhood}`} 
-                  className="text-xs cursor-pointer flex-1 text-muted-foreground"
-                >
-                  {neighborhood}
-                </label>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   const content = (
     <div className={cn("space-y-4", compact && "space-y-3")}>
@@ -269,99 +184,83 @@ export function GeographicSelector({
         </Badge>
       )}
 
-      {/* Town Selection - Native Hierarchical Checkbox List */}
+      {/* Town Selection - Multi-Select Dropdown (Same Style as State/County) */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label className={compact ? "text-xs" : undefined}>Towns & Cities</Label>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setTownsListExpanded(!townsListExpanded)}
-            className="h-7 text-xs"
-          >
-            {townsListExpanded ? "Hide towns" : "Show towns"}
-            {townsListExpanded ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
-          </Button>
-        </div>
-        
-        {/* Towns List - Collapsed by default */}
-        {townsListExpanded && (
-          <div className="max-h-64 overflow-y-auto border rounded-lg bg-background p-2">
-            {/* Select All */}
-            {topLevelTowns.length > 0 && (
-              <div className="flex items-center space-x-2 py-0.5 mb-2 pb-2 border-b">
-                <Checkbox
-                  id="select-all-towns"
-                  checked={topLevelTowns.length > 0 && topLevelTowns.every(t => selectedTowns.includes(t))}
-                  onCheckedChange={handleSelectAll}
-                />
-                <label
-                  htmlFor="select-all-towns"
-                  className="text-sm font-medium cursor-pointer"
-                >
-                  Select All ({topLevelTowns.length})
-                </label>
-              </div>
-            )}
-            
-            {/* Town Items */}
+        <Label className={compact ? "text-xs" : undefined}>Towns & Cities</Label>
+        <Select
+          value=""
+          onValueChange={(town) => {
+            if (town === "__select_all__") {
+              handleSelectAll();
+            } else if (town) {
+              toggleTown(town);
+            }
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={selectedTowns.length > 0 ? `${selectedTowns.length} selected` : "Select towns..."} />
+          </SelectTrigger>
+          <SelectContent className="z-50 max-h-[300px]">
             {topLevelTowns.length > 0 ? (
-              <div className="space-y-1">
-                {topLevelTowns.map(town => renderTownItem(town))}
-              </div>
+              <>
+                <SelectItem value="__select_all__">
+                  <span className="font-medium">
+                    {topLevelTowns.every(t => selectedTowns.includes(t)) ? "Deselect All" : "Select All"} ({topLevelTowns.length})
+                  </span>
+                </SelectItem>
+                {topLevelTowns.map((town) => {
+                  const isSelected = selectedTowns.includes(town);
+                  return (
+                    <SelectItem key={town} value={town}>
+                      <span className={isSelected ? "font-medium text-primary" : ""}>
+                        {isSelected ? "✓ " : ""}{town}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
+              </>
             ) : (
-              <div className="text-center py-4 text-sm text-muted-foreground">
-                No towns available for this selection
-              </div>
+              <SelectItem value="__none__" disabled>
+                No towns available
+              </SelectItem>
             )}
-          </div>
-        )}
+          </SelectContent>
+        </Select>
         
-        {/* Selected Towns Summary with Chips */}
+        {/* Selected Towns Pills */}
         {selectedTowns.length > 0 && (
-          <div className="mt-3 p-3 bg-card rounded-lg border border-border shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-foreground">Selected</span>
-                <Badge variant="secondary" className="text-xs">
-                  {selectedTowns.length}
-                </Badge>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => updateValue({ towns: [] })}
-                className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                Clear All
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-              {selectedTowns.map((town) => {
-                const isNeighborhood = town.includes('-');
-                const displayName = isNeighborhood 
-                  ? `${town.split('-')[0]} – ${town.split('-').slice(1).join('-')}`
-                  : town;
-                
-                return (
-                  <div
-                    key={town}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-xs font-medium hover:bg-primary/20 transition-colors"
+          <div className="flex flex-wrap gap-2 mt-2">
+            {selectedTowns.map((town) => {
+              const isNeighborhood = town.includes('-');
+              const displayName = isNeighborhood 
+                ? `${town.split('-')[0]} – ${town.split('-').slice(1).join('-')}`
+                : town;
+              
+              return (
+                <div
+                  key={town}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-xs font-medium hover:bg-primary/20 transition-colors"
+                >
+                  <span className="text-primary">{displayName}</span>
+                  <button
+                    type="button"
+                    onClick={() => toggleTown(town)}
+                    className="text-primary/70 hover:text-primary"
                   >
-                    <span className="text-primary">{displayName}</span>
-                    <button
-                      type="button"
-                      onClick={() => toggleTown(town)}
-                      className="text-primary/70 hover:text-primary"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              );
+            })}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => updateValue({ towns: [] })}
+              className="h-7 text-xs text-destructive hover:text-destructive"
+            >
+              Clear All
+            </Button>
           </div>
         )}
       </div>
