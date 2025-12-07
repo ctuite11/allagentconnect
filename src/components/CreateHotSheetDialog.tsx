@@ -89,6 +89,8 @@ export function CreateHotSheetDialog({
   const [statuses, setStatuses] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [hasNoMin, setHasNoMin] = useState(true);
+  const [hasNoMax, setHasNoMax] = useState(true);
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [rooms, setRooms] = useState("");
@@ -1505,7 +1507,21 @@ export function CreateHotSheetDialog({
                           placeholder="500000"
                           value={minPrice}
                           onChange={(value) => setMinPrice(value)}
+                          disabled={hasNoMin}
                         />
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="no-min"
+                            checked={hasNoMin}
+                            onCheckedChange={(checked) => {
+                              setHasNoMin(checked === true);
+                              if (checked) setMinPrice("");
+                            }}
+                          />
+                          <Label htmlFor="no-min" className="text-sm font-normal cursor-pointer">
+                            No Minimum
+                          </Label>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="max-price">Max Price</Label>
@@ -1515,7 +1531,21 @@ export function CreateHotSheetDialog({
                           placeholder="1000000"
                           value={maxPrice}
                           onChange={(value) => setMaxPrice(value)}
+                          disabled={hasNoMax}
                         />
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="no-max"
+                            checked={hasNoMax}
+                            onCheckedChange={(checked) => {
+                              setHasNoMax(checked === true);
+                              if (checked) setMaxPrice("");
+                            }}
+                          />
+                          <Label htmlFor="no-max" className="text-sm font-normal cursor-pointer">
+                            No Maximum
+                          </Label>
+                        </div>
                       </div>
                     </div>
                   </div>
