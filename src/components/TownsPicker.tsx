@@ -72,7 +72,7 @@ export function TownsPicker({
                     onClick={() => onToggleCityExpansion(town)}
                     className="p-1 hover:bg-muted rounded"
                   >
-                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
                 )}
                 <button
@@ -166,7 +166,7 @@ export function TownsPicker({
                   onClick={() => onToggleCityExpansion(town)}
                   className="p-1 hover:bg-muted rounded"
                 >
-                  {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                  {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                 </button>
               )}
               <Checkbox
