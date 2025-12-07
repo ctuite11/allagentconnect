@@ -310,8 +310,8 @@ const GeographicPreferencesManager = ({
                   </div>
                 </div>
 
-                {/* RIGHT: Selected Towns Panel */}
-                <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2 relative z-10">
+                {/* RIGHT: Selected Towns Panel - EXACT CLONE FROM HOT SHEETS */}
+                <div className="border rounded-md p-3 bg-background min-h-[200px] max-h-60 overflow-y-auto">
                   {selectedTowns.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No towns selected</p>
                   ) : (
