@@ -1088,7 +1088,7 @@ export function CreateHotSheetDialog({
                 )}
                 {existingClient && (
                   <p className="text-sm text-muted-foreground">
-                    Found existing client - fields auto-filled
+                    Found existing contact - fields auto-filled
                   </p>
                 )}
               </div>
@@ -1215,7 +1215,45 @@ export function CreateHotSheetDialog({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="space-y-6">
-                  {/* Towns Section - Collapsed by default */}
+                  {/* State and County - Always Visible */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="state" className="text-sm font-semibold">State</Label>
+                      <Select value={state} onValueChange={setState}>
+                        <SelectTrigger id="state" className="bg-background">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50 max-h-[300px]">
+                          {US_STATES.map((stateItem) => (
+                            <SelectItem key={stateItem.code} value={stateItem.code}>
+                              {stateItem.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="county" className="text-sm font-semibold">County</Label>
+                      <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
+                        <SelectTrigger id="county" className="bg-background">
+                          <SelectValue placeholder="All Counties" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50 max-h-[300px]">
+                          <SelectItem value="all">
+                            All Counties
+                          </SelectItem>
+                          {countiesForState.map((county) => (
+                            <SelectItem key={county.id} value={county.id}>
+                              {county.name} County
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Towns & Neighborhoods Section - Collapsed by default */}
                   <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                     <CollapsibleTrigger className="w-full">
                       <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
@@ -1232,67 +1270,30 @@ export function CreateHotSheetDialog({
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <div className="space-y-4 pt-4">
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="state" className="text-sm">State</Label>
-                            <Select value={state} onValueChange={setState}>
-                              <SelectTrigger id="state" className="bg-background text-sm">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-popover z-50 max-h-[300px]">
-                                {US_STATES.map((stateItem) => (
-                                  <SelectItem key={stateItem.code} value={stateItem.code} className="text-sm">
-                                    {stateItem.code}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="coverage-areas" className="text-sm">Coverage Areas</Label>
-                            <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
-                              <SelectTrigger id="coverage-areas" className="bg-background text-sm">
-                                <SelectValue placeholder="All Counties" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-popover z-50 max-h-[300px]">
-                                <SelectItem value="all" className="text-sm">
-                                  All Counties
-                                </SelectItem>
-                                {countiesForState.map((county) => (
-                                  <SelectItem key={county.id} value={county.id} className="text-sm">
-                                    {county.name} County
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label className="text-sm">Show Areas</Label>
-                            <div className="flex gap-4 mt-2">
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="radio"
-                                  id="show-yes"
-                                  name="show-areas"
-                                  checked={showAreas === true}
-                                  onChange={() => setShowAreas(true)}
-                                  className="w-4 h-4"
-                                />
-                                <Label htmlFor="show-yes" className="text-sm">Yes</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="radio"
-                                  id="show-no"
-                                  name="show-areas"
-                                  checked={showAreas === false}
-                                  onChange={() => setShowAreas(false)}
-                                  className="w-4 h-4"
-                                />
-                                <Label htmlFor="show-no" className="text-sm">No</Label>
-                              </div>
+                        <div className="flex items-center gap-4">
+                          <Label className="text-sm">Show Areas</Label>
+                          <div className="flex gap-4">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id="show-yes"
+                                name="show-areas"
+                                checked={showAreas === true}
+                                onChange={() => setShowAreas(true)}
+                                className="w-4 h-4"
+                              />
+                              <Label htmlFor="show-yes" className="text-sm">Yes</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id="show-no"
+                                name="show-areas"
+                                checked={showAreas === false}
+                                onChange={() => setShowAreas(false)}
+                                className="w-4 h-4"
+                              />
+                              <Label htmlFor="show-no" className="text-sm">No</Label>
                             </div>
                           </div>
                         </div>
@@ -1873,7 +1874,7 @@ export function CreateHotSheetDialog({
                 resetForm();
               }}
             >
-              Done
+              Continue
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => {
