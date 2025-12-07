@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,16 +6,23 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
 import { Loader2, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
 import { z } from "zod";
+
+export interface PriceRangeData {
+  minPrice: number | null;
+  maxPrice: number | null;
+  hasNoMin: boolean;
+  hasNoMax: boolean;
+}
 
 interface PriceRangePreferencesProps {
   agentId: string;
   onFiltersUpdated?: (hasFilters: boolean) => void;
+  onDataChange?: (data: PriceRangeData) => void;
 }
 
-// Validation schema with security in mind
+// Validation schema
 const priceSchema = z.object({
   minPrice: z.string()
     .transform(val => val.trim())
@@ -51,23 +58,44 @@ const priceSchema = z.object({
   path: ["maxPrice"]
 });
 
-const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferencesProps) => {
+const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: PriceRangePreferencesProps) => {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [minPriceDisplay, setMinPriceDisplay] = useState("");
   const [maxPriceDisplay, setMaxPriceDisplay] = useState("");
   const [isMinPriceFocused, setIsMinPriceFocused] = useState(false);
   const [isMaxPriceFocused, setIsMaxPriceFocused] = useState(false);
-  const [noMin, setNoMin] = useState(false);
-  const [noMax, setNoMax] = useState(false);
+  const [hasNoMin, setHasNoMin] = useState(true);
+  const [hasNoMax, setHasNoMax] = useState(true);
   const [errors, setErrors] = useState<{ minPrice?: string; maxPrice?: string }>({});
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     fetchPreferences();
   }, [agentId]);
+
+  // Notify parent of data changes (no autosave)
+  const notifyChange = useCallback(() => {
+    const minPriceValue = minPrice.trim() ? parseFloat(minPrice) : null;
+    const maxPriceValue = maxPrice.trim() ? parseFloat(maxPrice) : null;
+    
+    const hasFilter = !hasNoMin || !hasNoMax || minPriceValue !== null || maxPriceValue !== null;
+    onFiltersUpdated?.(hasFilter && !(hasNoMin && hasNoMax));
+    
+    onDataChange?.({
+      minPrice: hasNoMin ? null : minPriceValue,
+      maxPrice: hasNoMax ? null : maxPriceValue,
+      hasNoMin,
+      hasNoMax,
+    });
+  }, [minPrice, maxPrice, hasNoMin, hasNoMax, onFiltersUpdated, onDataChange]);
+
+  useEffect(() => {
+    if (!loading) {
+      notifyChange();
+    }
+  }, [minPrice, maxPrice, hasNoMin, hasNoMax, loading, notifyChange]);
 
   const fetchPreferences = async () => {
     if (!agentId) {
@@ -78,7 +106,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferen
     try {
       const { data, error } = await supabase
         .from("notification_preferences")
-        .select("min_price, max_price")
+        .select("min_price, max_price, has_no_min, has_no_max")
         .eq("user_id", agentId)
         .maybeSingle();
 
@@ -93,27 +121,21 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferen
         setMaxPrice(maxVal);
         setMinPriceDisplay(minVal ? formatNumberWithCommas(minVal) : "");
         setMaxPriceDisplay(maxVal ? formatNumberWithCommas(maxVal) : "");
-        setNoMin((data as any).min_price === null);
-        setNoMax((data as any).max_price === null);
+        // Use explicit boolean columns, default to true if null
+        setHasNoMin((data as any).has_no_min ?? true);
+        setHasNoMax((data as any).has_no_max ?? true);
       }
     } catch (error) {
       console.error("Error fetching price preferences:", error);
-      toast.error("Failed to load price preferences");
     } finally {
       setLoading(false);
     }
   };
 
-  const autoSave = async () => {
-    // Clear previous errors
+  const validatePrices = (): boolean => {
     setErrors({});
-
-    // Validate input
-    const validation = priceSchema.safeParse({
-      minPrice,
-      maxPrice
-    });
-
+    const validation = priceSchema.safeParse({ minPrice, maxPrice });
+    
     if (!validation.success) {
       const fieldErrors: { minPrice?: string; maxPrice?: string } = {};
       validation.error.errors.forEach(err => {
@@ -123,31 +145,9 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferen
         }
       });
       setErrors(fieldErrors);
-      return;
+      return false;
     }
-
-    try {
-      const minPriceValue = minPrice.trim() ? parseFloat(minPrice) : null;
-      const maxPriceValue = maxPrice.trim() ? parseFloat(maxPrice) : null;
-
-      const { error } = await supabase
-        .from("notification_preferences")
-        .upsert({
-          user_id: agentId,
-          min_price: minPriceValue,
-          max_price: maxPriceValue,
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) throw error;
-      
-      // Notify parent that filters have been updated
-      const hasFilter = minPriceValue !== null || maxPriceValue !== null;
-      onFiltersUpdated?.(hasFilter);
-    } catch (error) {
-      console.error("Error saving price preferences:", error);
-    }
+    return true;
   };
 
   const formatNumberWithCommas = (value: string) => {
@@ -158,13 +158,10 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferen
   };
 
   const handleMinPriceChange = (value: string) => {
-    // Remove any non-digit characters except decimal point
     const sanitized = value.replace(/[^\d.]/g, '');
-    // Prevent multiple decimal points
     const parts = sanitized.split('.');
     const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
     
-    // Limit to reasonable price values
     const num = parseFloat(formatted);
     if (!isNaN(num) && num > 999999999) {
       return;
@@ -178,13 +175,10 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferen
   };
 
   const handleMaxPriceChange = (value: string) => {
-    // Remove any non-digit characters except decimal point
     const sanitized = value.replace(/[^\d.]/g, '');
-    // Prevent multiple decimal points
     const parts = sanitized.split('.');
     const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
     
-    // Limit to reasonable price values
     const num = parseFloat(formatted);
     if (!isNaN(num) && num > 999999999) {
       return;
@@ -202,7 +196,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferen
     if (minPrice) {
       setMinPriceDisplay(formatNumberWithCommas(minPrice));
     }
-    autoSave();
+    validatePrices();
   };
 
   const handleMaxPriceBlur = () => {
@@ -210,7 +204,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferen
     if (maxPrice) {
       setMaxPriceDisplay(formatNumberWithCommas(maxPrice));
     }
-    autoSave();
+    validatePrices();
   };
 
   const handleMinPriceFocus = () => {
@@ -240,9 +234,44 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferen
     setMaxPrice("");
     setMinPriceDisplay("");
     setMaxPriceDisplay("");
-    setNoMin(false);
-    setNoMax(false);
+    setHasNoMin(true);
+    setHasNoMax(true);
     setErrors({});
+  };
+
+  const handleNoMinChange = (checked: boolean) => {
+    setHasNoMin(checked);
+    if (checked) {
+      setMinPrice("");
+      setMinPriceDisplay("");
+      setErrors(prev => ({ ...prev, minPrice: undefined }));
+    }
+  };
+
+  const handleNoMaxChange = (checked: boolean) => {
+    setHasNoMax(checked);
+    if (checked) {
+      setMaxPrice("");
+      setMaxPriceDisplay("");
+      setErrors(prev => ({ ...prev, maxPrice: undefined }));
+    }
+  };
+
+  // Helper for summary text
+  const getSummaryText = () => {
+    if (hasNoMin && hasNoMax) {
+      return "All price ranges";
+    }
+    if (!hasNoMin && !hasNoMax && minPrice && maxPrice) {
+      return `$${formatNumberWithCommas(minPrice)} - $${formatNumberWithCommas(maxPrice)}`;
+    }
+    if (!hasNoMin && minPrice) {
+      return `$${formatNumberWithCommas(minPrice)}+`;
+    }
+    if (!hasNoMax && maxPrice) {
+      return `Up to $${formatNumberWithCommas(maxPrice)}`;
+    }
+    return "All price ranges";
   };
 
   if (loading) {
@@ -272,150 +301,122 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated }: PriceRangePreferen
             </CardDescription>
             {!isOpen && (
               <p className="text-sm text-muted-foreground mt-1 text-left">
-                {minPrice && maxPrice 
-                  ? `$${formatNumberWithCommas(minPrice)} - $${formatNumberWithCommas(maxPrice)}`
-                  : minPrice 
-                    ? `$${formatNumberWithCommas(minPrice)}+`
-                    : maxPrice 
-                      ? `Up to $${formatNumberWithCommas(maxPrice)}`
-                      : "All price ranges"}
+                {getSummaryText()}
               </p>
             )}
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-4 pt-0">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="min-price">Minimum Price</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <Input
-                id="min-price"
-                type="text"
-                inputMode="decimal"
-                value={minPriceDisplay}
-                onChange={(e) => handleMinPriceChange(e.target.value)}
-                onFocus={handleMinPriceFocus}
-                onBlur={handleMinPriceBlur}
-                placeholder="100,000"
-                className={`pl-7 ${errors.minPrice ? 'border-destructive' : ''}`}
-                maxLength={15}
-                disabled={noMin}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="min-price">Minimum Price</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="min-price"
+                    type="text"
+                    inputMode="decimal"
+                    value={minPriceDisplay}
+                    onChange={(e) => handleMinPriceChange(e.target.value)}
+                    onFocus={handleMinPriceFocus}
+                    onBlur={handleMinPriceBlur}
+                    placeholder="100,000"
+                    className={`pl-7 ${errors.minPrice ? 'border-destructive' : ''}`}
+                    maxLength={15}
+                    disabled={hasNoMin}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="no-min"
+                    checked={hasNoMin}
+                    onCheckedChange={(checked) => handleNoMinChange(!!checked)}
+                  />
+                  <label htmlFor="no-min" className="text-sm cursor-pointer">No Minimum</label>
+                </div>
+                {errors.minPrice && (
+                  <p className="text-sm text-destructive">{errors.minPrice}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="max-price">Maximum Price</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="max-price"
+                    type="text"
+                    inputMode="decimal"
+                    value={maxPriceDisplay}
+                    onChange={(e) => handleMaxPriceChange(e.target.value)}
+                    onFocus={handleMaxPriceFocus}
+                    onBlur={handleMaxPriceBlur}
+                    placeholder="500,000"
+                    className={`pl-7 ${errors.maxPrice ? 'border-destructive' : ''}`}
+                    maxLength={15}
+                    disabled={hasNoMax}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="no-max"
+                    checked={hasNoMax}
+                    onCheckedChange={(checked) => handleNoMaxChange(!!checked)}
+                  />
+                  <label htmlFor="no-max" className="text-sm cursor-pointer">No Maximum</label>
+                </div>
+                {errors.maxPrice && (
+                  <p className="text-sm text-destructive">{errors.maxPrice}</p>
+                )}
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="no-min"
-                checked={noMin}
-                onCheckedChange={(checked) => {
-                  setNoMin(!!checked);
-                  if (checked) {
-                    setMinPrice("");
-                    setMinPriceDisplay("");
-                    setErrors(prev => ({ ...prev, minPrice: undefined }));
-                  }
-                }}
-              />
-              <label htmlFor="no-min" className="text-sm cursor-pointer">No Minimum</label>
-            </div>
-            {errors.minPrice && (
-              <p className="text-sm text-destructive">{errors.minPrice}</p>
+
+            {!hasNoMin || !hasNoMax ? (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm">
+                  <span className="font-medium">You will receive notifications for properties priced:</span>
+                  <br />
+                  {!hasNoMin && !hasNoMax && minPrice && maxPrice && (
+                    <span>Between {formatDisplayPrice(minPrice)} and {formatDisplayPrice(maxPrice)}</span>
+                  )}
+                  {!hasNoMin && hasNoMax && minPrice && (
+                    <span>{formatDisplayPrice(minPrice)} and above</span>
+                  )}
+                  {hasNoMin && !hasNoMax && maxPrice && (
+                    <span>Up to {formatDisplayPrice(maxPrice)}</span>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-900 dark:text-blue-100">
+                  <span className="font-medium">No price range set.</span>
+                  <br />
+                  <span className="text-blue-700 dark:text-blue-300">
+                    You will receive notifications for all price ranges.
+                  </span>
+                </p>
+              </div>
             )}
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="max-price">Maximum Price</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <Input
-                id="max-price"
-                type="text"
-                inputMode="decimal"
-                value={maxPriceDisplay}
-                onChange={(e) => handleMaxPriceChange(e.target.value)}
-                onFocus={handleMaxPriceFocus}
-                onBlur={handleMaxPriceBlur}
-                placeholder="500,000"
-                className={`pl-7 ${errors.maxPrice ? 'border-destructive' : ''}`}
-                maxLength={15}
-                disabled={noMax}
-              />
+            <div className="pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  {getSummaryText()}
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={clearPriceRange}
+                  disabled={hasNoMin && hasNoMax && !minPrice && !maxPrice}
+                >
+                  Clear Range
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="no-max"
-                checked={noMax}
-                onCheckedChange={(checked) => {
-                  setNoMax(!!checked);
-                  if (checked) {
-                    setMaxPrice("");
-                    setMaxPriceDisplay("");
-                    setErrors(prev => ({ ...prev, maxPrice: undefined }));
-                  }
-                }}
-              />
-              <label htmlFor="no-max" className="text-sm cursor-pointer">No Maximum</label>
-            </div>
-            {errors.maxPrice && (
-              <p className="text-sm text-destructive">{errors.maxPrice}</p>
-            )}
-          </div>
-        </div>
-
-        {(minPrice || maxPrice) && (
-          <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm">
-              <span className="font-medium">You will receive notifications for properties priced:</span>
-              <br />
-              {minPrice && maxPrice && (
-                <span>Between {formatDisplayPrice(minPrice)} and {formatDisplayPrice(maxPrice)}</span>
-              )}
-              {minPrice && !maxPrice && (
-                <span>{formatDisplayPrice(minPrice)} and above</span>
-              )}
-              {!minPrice && maxPrice && (
-                <span>Up to {formatDisplayPrice(maxPrice)}</span>
-              )}
-            </p>
-          </div>
-        )}
-
-        {!minPrice && !maxPrice && (
-          <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-sm text-blue-900 dark:text-blue-100">
-              <span className="font-medium">No price range set.</span>
-              <br />
-              <span className="text-blue-700 dark:text-blue-300">
-                You will receive notifications for all price ranges.
-              </span>
-            </p>
-          </div>
-        )}
-
-        <div className="pt-4 border-t">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              {minPrice && maxPrice 
-                ? `Range: $${formatNumberWithCommas(minPrice)} - $${formatNumberWithCommas(maxPrice)}`
-                : minPrice 
-                  ? `Min: $${formatNumberWithCommas(minPrice)}`
-                  : maxPrice 
-                    ? `Max: $${formatNumberWithCommas(maxPrice)}`
-                    : "No price range set"}
-            </p>
-            <Button 
-              variant="outline" 
-              onClick={clearPriceRange}
-              disabled={!minPrice && !maxPrice}
-            >
-              Clear Range
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </CollapsibleContent>
-    </Card>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
     </Collapsible>
   );
 };
