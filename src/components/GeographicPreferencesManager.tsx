@@ -5,6 +5,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Loader2, MapPin, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
@@ -56,6 +57,7 @@ const GeographicPreferencesManager = ({
   const [selectedState, setSelectedState] = useState("MA");
   const [selectedCounty, setSelectedCounty] = useState("all");
   const [selectedTowns, setSelectedTowns] = useState<string[]>([]);
+  const [citySearch, setCitySearch] = useState("");
 
   // Use the proven TownsPicker hook
   const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
@@ -131,11 +133,13 @@ const GeographicPreferencesManager = ({
     setSelectedState(newState);
     setSelectedCounty("all");
     setSelectedTowns([]);
+    setCitySearch("");
   };
 
   const handleCountyChange = (newCounty: string) => {
     setSelectedCounty(newCounty);
     setSelectedTowns([]);
+    setCitySearch("");
   };
 
   const handleToggleTown = (town: string) => {
@@ -265,24 +269,31 @@ const GeographicPreferencesManager = ({
 
               {/* Content row */}
               <div className="grid grid-cols-2 gap-4">
-                {/* LEFT: Towns Selector - matching Hot Sheet pattern */}
-                <div className="border rounded-md p-0 bg-background min-h-[200px] max-h-60 overflow-y-auto">
-                  <TownsPicker
-                    towns={townsList}
-                    selectedTowns={selectedTowns}
-                    onToggleTown={handleToggleTown}
-                    expandedCities={expandedCities}
-                    onToggleCityExpansion={toggleCityExpansion}
-                    state={selectedState}
-                    variant="checkbox"
-                    showAreas={true}
-                    showSelectAll={true}
-                    onSelectAll={handleSelectAll}
+                {/* LEFT: Towns Selector - CLONED FROM HOT SHEETS EXACTLY */}
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Type Full or Partial Name"
+                    value={citySearch}
+                    onChange={(e) => setCitySearch(e.target.value)}
+                    className="text-sm"
                   />
+                  <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2 relative z-10">
+                    <TownsPicker
+                      towns={townsList}
+                      selectedTowns={selectedTowns}
+                      onToggleTown={handleToggleTown}
+                      expandedCities={expandedCities}
+                      onToggleCityExpansion={toggleCityExpansion}
+                      state={selectedState}
+                      searchQuery={citySearch}
+                      variant="button"
+                      showAreas={true}
+                    />
+                  </div>
                 </div>
 
                 {/* RIGHT: Selected Towns Panel */}
-                <div className="border rounded-md p-2 bg-background min-h-[200px] max-h-60 overflow-y-auto">
+                <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2 relative z-10">
                   {selectedTowns.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No towns selected</p>
                   ) : (
