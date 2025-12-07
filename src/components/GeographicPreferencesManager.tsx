@@ -5,7 +5,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Loader2, MapPin, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
@@ -53,7 +52,6 @@ const GeographicPreferencesManager = ({
 }: GeographicPreferencesManagerProps) => {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
-  const [townsPopoverOpen, setTownsPopoverOpen] = useState(false);
   
   const [selectedState, setSelectedState] = useState("MA");
   const [selectedCounty, setSelectedCounty] = useState("all");
@@ -267,36 +265,24 @@ const GeographicPreferencesManager = ({
 
               {/* Content row */}
               <div className="grid grid-cols-2 gap-4">
-                {/* LEFT: Towns Selector */}
-                <div>
-                  <Popover open={townsPopoverOpen} onOpenChange={setTownsPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-between">
-                        <span>Select towns...</span>
-                        <ChevronDown className="h-4 w-4 ml-2" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 p-0" align="start">
-                      <div className="max-h-64 overflow-y-auto">
-                        <TownsPicker
-                          towns={townsList}
-                          selectedTowns={selectedTowns}
-                          onToggleTown={handleToggleTown}
-                          expandedCities={expandedCities}
-                          onToggleCityExpansion={toggleCityExpansion}
-                          state={selectedState}
-                          variant="checkbox"
-                          showAreas={true}
-                          showSelectAll={true}
-                          onSelectAll={handleSelectAll}
-                        />
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                {/* LEFT: Towns Selector - matching Hot Sheet pattern */}
+                <div className="border rounded-md p-0 bg-background min-h-[200px] max-h-60 overflow-y-auto">
+                  <TownsPicker
+                    towns={townsList}
+                    selectedTowns={selectedTowns}
+                    onToggleTown={handleToggleTown}
+                    expandedCities={expandedCities}
+                    onToggleCityExpansion={toggleCityExpansion}
+                    state={selectedState}
+                    variant="checkbox"
+                    showAreas={true}
+                    showSelectAll={true}
+                    onSelectAll={handleSelectAll}
+                  />
                 </div>
 
                 {/* RIGHT: Selected Towns Panel */}
-                <div className="border rounded-md p-2 bg-background min-h-[120px] max-h-48 overflow-y-auto">
+                <div className="border rounded-md p-2 bg-background min-h-[200px] max-h-60 overflow-y-auto">
                   {selectedTowns.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No towns selected</p>
                   ) : (
