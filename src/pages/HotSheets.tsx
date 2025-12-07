@@ -345,7 +345,7 @@ const HotSheets = () => {
                   <TableRow>
                     <TableHead className="w-12"></TableHead>
                     <TableHead>Hot Sheet Name</TableHead>
-                    <TableHead>Client Name</TableHead>
+                    <TableHead>Contact Name</TableHead>
                     <TableHead>Contact Info</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
