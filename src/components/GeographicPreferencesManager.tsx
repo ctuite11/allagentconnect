@@ -267,6 +267,36 @@ const GeographicPreferencesManager = ({
                   </div>
                 </PopoverContent>
               </Popover>
+
+              {/* Selected Towns Panel - matches Hot Sheets pattern */}
+              {selectedTowns.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Selected Towns</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedTowns([])}
+                      className="h-7 px-2 text-xs"
+                    >
+                      Remove All
+                    </Button>
+                  </div>
+                  <div className="border rounded-md p-3 bg-background max-h-40 overflow-y-auto">
+                    {selectedTowns.map((town) => (
+                      <button
+                        key={town}
+                        type="button"
+                        onClick={() => handleToggleTown(town)}
+                        className="w-full text-left py-1 px-2 text-sm border-b last:border-b-0 hover:bg-muted rounded cursor-pointer"
+                      >
+                        {town}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {selectedTowns.length > 100 && (
