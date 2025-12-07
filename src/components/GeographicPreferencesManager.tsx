@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Loader2, MapPin, ChevronDown, ChevronUp, AlertTriangle, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Loader2, MapPin, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { US_STATES } from "@/data/usStatesCountiesData";
@@ -52,7 +53,7 @@ const GeographicPreferencesManager = ({
 }: GeographicPreferencesManagerProps) => {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [townsPopoverOpen, setTownsPopoverOpen] = useState(false);
   
   const [selectedState, setSelectedState] = useState("MA");
   const [selectedCounty, setSelectedCounty] = useState("all");
@@ -235,35 +236,37 @@ const GeographicPreferencesManager = ({
               </div>
             )}
 
-            {/* Towns Search */}
+            {/* Towns Selector - Popover with trigger button */}
             <div className="space-y-2">
               <Label>Towns & Neighborhoods</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search towns or neighborhoods..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-
-            {/* Towns Picker - The proven hierarchical renderer */}
-            <div className="border rounded-lg max-h-64 overflow-y-auto">
-              <TownsPicker
-                towns={townsList}
-                selectedTowns={selectedTowns}
-                onToggleTown={handleToggleTown}
-                expandedCities={expandedCities}
-                onToggleCityExpansion={toggleCityExpansion}
-                state={selectedState}
-                searchQuery={searchQuery}
-                variant="checkbox"
-                showAreas={true}
-                showSelectAll={true}
-                onSelectAll={handleSelectAll}
-              />
+              <Popover open={townsPopoverOpen} onOpenChange={setTownsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    <span>
+                      {selectedTowns.length > 0 
+                        ? `${selectedTowns.length} town${selectedTowns.length !== 1 ? 's' : ''} selected`
+                        : "Select towns..."}
+                    </span>
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="start">
+                  <div className="max-h-64 overflow-y-auto">
+                    <TownsPicker
+                      towns={townsList}
+                      selectedTowns={selectedTowns}
+                      onToggleTown={handleToggleTown}
+                      expandedCities={expandedCities}
+                      onToggleCityExpansion={toggleCityExpansion}
+                      state={selectedState}
+                      variant="checkbox"
+                      showAreas={true}
+                      showSelectAll={true}
+                      onSelectAll={handleSelectAll}
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {selectedTowns.length > 100 && (
