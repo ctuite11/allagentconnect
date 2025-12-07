@@ -1,22 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Loader2, MapPin, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
 import { GeographicSelector, GeographicSelection } from "@/components/GeographicSelector";
+
+export interface GeographicData {
+  state: string;
+  county: string;
+  towns: string[];
+}
 
 interface GeographicPreferencesManagerProps {
   agentId: string;
   onFiltersUpdated?: (hasFilters: boolean) => void;
+  onDataChange?: (data: GeographicData) => void;
 }
 
 const GeographicPreferencesManager = ({
   agentId,
-  onFiltersUpdated
+  onFiltersUpdated,
+  onDataChange
 }: GeographicPreferencesManagerProps) => {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   
   const [geoSelection, setGeoSelection] = useState<GeographicSelection>({
@@ -30,15 +36,23 @@ const GeographicPreferencesManager = ({
     loadPreferences();
   }, [agentId]);
 
-  // Auto-save whenever selection changes (debounced)
+  // Notify parent of data changes (no autosave)
+  const notifyChange = useCallback(() => {
+    const hasFilter = geoSelection.towns.length > 0;
+    onFiltersUpdated?.(hasFilter);
+    
+    onDataChange?.({
+      state: geoSelection.state,
+      county: geoSelection.county,
+      towns: geoSelection.towns,
+    });
+  }, [geoSelection, onFiltersUpdated, onDataChange]);
+
   useEffect(() => {
-    if (!loading && agentId) {
-      const handle = setTimeout(() => {
-        autoSave(geoSelection);
-      }, 400);
-      return () => clearTimeout(handle);
+    if (!loading) {
+      notifyChange();
     }
-  }, [geoSelection, agentId, loading]);
+  }, [geoSelection, loading, notifyChange]);
 
   const loadPreferences = async () => {
     if (!agentId) {
@@ -80,66 +94,6 @@ const GeographicPreferencesManager = ({
     }
   };
 
-  const autoSave = async (selection: GeographicSelection) => {
-    if (!agentId || agentId === "") return;
-    if (saving) return;
-    
-    setSaving(true);
-    try {
-      const { error: deleteError } = await supabase
-        .from("agent_buyer_coverage_areas")
-        .delete()
-        .eq("agent_id", agentId)
-        .eq("source", "notifications");
-
-      if (deleteError) throw deleteError;
-
-      if (selection.towns.length > 0) {
-        const uniqueTowns = [...new Set(selection.towns)];
-        const preferencesToInsert = uniqueTowns.map((town, index) => {
-          const syntheticZip = String(index).padStart(5, "0");
-          
-          if (town.includes('-')) {
-            const [city, neighborhood] = town.split('-');
-            return {
-              agent_id: agentId,
-              state: selection.state,
-              county: selection.county === "all" ? null : selection.county,
-              city,
-              neighborhood,
-              zip_code: syntheticZip,
-              source: "notifications",
-            };
-          } else {
-            return {
-              agent_id: agentId,
-              state: selection.state,
-              county: selection.county === "all" ? null : selection.county,
-              city: town,
-              neighborhood: null,
-              zip_code: syntheticZip,
-              source: "notifications",
-            };
-          }
-        });
-
-        const { error: insertError } = await supabase
-          .from("agent_buyer_coverage_areas")
-          .insert(preferencesToInsert);
-
-        if (insertError) throw insertError;
-        onFiltersUpdated?.(true);
-      } else {
-        onFiltersUpdated?.(false);
-      }
-    } catch (error: any) {
-      console.error("Error saving preferences:", error);
-      toast.error(`There was a problem saving your coverage areas: ${error?.message || error?.code || "Unknown error"}`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   if (loading) {
     return (
       <Card>
@@ -161,7 +115,6 @@ const GeographicPreferencesManager = ({
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
                 <CardTitle>Geographic Area</CardTitle>
-                {saving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
               </div>
               {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-primary" />}
             </div>
@@ -172,14 +125,13 @@ const GeographicPreferencesManager = ({
               <p className="text-sm text-muted-foreground mt-1 text-left">
                 {selectedTowns.length > 0 
                   ? `${selectedTowns.length} area${selectedTowns.length !== 1 ? 's' : ''} selected`
-                  : "No geographic areas selected — receiving all"}
+                  : "All areas"}
               </p>
             )}
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-3 pt-0">
-            {/* Unified Geographic Selector */}
             <GeographicSelector
               value={geoSelection}
               onChange={setGeoSelection}
@@ -218,7 +170,6 @@ const GeographicPreferencesManager = ({
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground">
                 {selectedTowns.length} {selectedTowns.length === 1 ? 'town' : 'towns'} selected
-                {saving && " • Saving..."}
               </p>
             </div>
           </CardContent>

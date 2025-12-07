@@ -1854,6 +1854,8 @@ export type Database = {
           created_at: string
           frequency: string
           general_discussion: boolean
+          has_no_max: boolean | null
+          has_no_min: boolean | null
           id: string
           max_price: number | null
           min_price: number | null
@@ -1872,6 +1874,8 @@ export type Database = {
           created_at?: string
           frequency?: string
           general_discussion?: boolean
+          has_no_max?: boolean | null
+          has_no_min?: boolean | null
           id?: string
           max_price?: number | null
           min_price?: number | null
@@ -1890,6 +1894,8 @@ export type Database = {
           created_at?: string
           frequency?: string
           general_discussion?: boolean
+          has_no_max?: boolean | null
+          has_no_min?: boolean | null
           id?: string
           max_price?: number | null
           min_price?: number | null

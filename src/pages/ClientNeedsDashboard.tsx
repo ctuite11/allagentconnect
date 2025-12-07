@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
-import GeographicPreferencesManager from "@/components/GeographicPreferencesManager";
-import PriceRangePreferences from "@/components/PriceRangePreferences";
+import GeographicPreferencesManager, { GeographicData } from "@/components/GeographicPreferencesManager";
+import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePreferences";
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
 import { Pill } from "@/components/ui/pill";
 import { toast } from "sonner";
@@ -44,6 +44,13 @@ const ClientNeedsDashboard = () => {
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saving, setSaving] = useState(false);
+  
+  // Store pending changes from child components
+  const priceDataRef = useRef<PriceRangeData | null>(null);
+  const geoDataRef = useRef<GeographicData | null>(null);
+  const propertyTypesRef = useRef<string[] | null>(null);
+  
   const [summary, setSummary] = useState<PreferenceSummary>({
     receivingCount: 0,
     sendingCount: 0,
@@ -93,10 +100,115 @@ const ClientNeedsDashboard = () => {
     setHasUnsavedChanges(true);
   };
 
+  const handlePriceDataChange = (data: PriceRangeData) => {
+    priceDataRef.current = data;
+    setHasUnsavedChanges(true);
+  };
+
+  const handleGeoDataChange = (data: GeographicData) => {
+    geoDataRef.current = data;
+    setHasUnsavedChanges(true);
+  };
+
+  const handlePropertyTypesChange = (types: string[]) => {
+    propertyTypesRef.current = types;
+    setHasUnsavedChanges(true);
+  };
+
   const handleSavePreferences = async () => {
-    toast.success("Preferences saved successfully");
-    setHasUnsavedChanges(false);
-    await checkPreferences();
+    if (!user?.id) return;
+    
+    setSaving(true);
+    try {
+      // Save price preferences with explicit boolean columns
+      if (priceDataRef.current) {
+        const { error: priceError } = await supabase
+          .from("notification_preferences")
+          .upsert({
+            user_id: user.id,
+            min_price: priceDataRef.current.minPrice,
+            max_price: priceDataRef.current.maxPrice,
+            has_no_min: priceDataRef.current.hasNoMin,
+            has_no_max: priceDataRef.current.hasNoMax,
+          }, {
+            onConflict: 'user_id'
+          });
+        
+        if (priceError) throw priceError;
+      }
+
+      // Save property types
+      if (propertyTypesRef.current) {
+        const { error: propError } = await supabase
+          .from("notification_preferences")
+          .upsert({
+            user_id: user.id,
+            property_types: propertyTypesRef.current,
+          }, {
+            onConflict: 'user_id'
+          });
+        
+        if (propError) throw propError;
+      }
+
+      // Save geographic preferences
+      if (geoDataRef.current) {
+        // First delete existing
+        const { error: deleteError } = await supabase
+          .from("agent_buyer_coverage_areas")
+          .delete()
+          .eq("agent_id", user.id)
+          .eq("source", "notifications");
+
+        if (deleteError) throw deleteError;
+
+        // Insert new ones if any selected
+        if (geoDataRef.current.towns.length > 0) {
+          const uniqueTowns = [...new Set(geoDataRef.current.towns)];
+          const preferencesToInsert = uniqueTowns.map((town, index) => {
+            const syntheticZip = String(index).padStart(5, "0");
+            
+            if (town.includes('-')) {
+              const [city, neighborhood] = town.split('-');
+              return {
+                agent_id: user.id,
+                state: geoDataRef.current!.state,
+                county: geoDataRef.current!.county === "all" ? null : geoDataRef.current!.county,
+                city,
+                neighborhood,
+                zip_code: syntheticZip,
+                source: "notifications",
+              };
+            } else {
+              return {
+                agent_id: user.id,
+                state: geoDataRef.current!.state,
+                county: geoDataRef.current!.county === "all" ? null : geoDataRef.current!.county,
+                city: town,
+                neighborhood: null,
+                zip_code: syntheticZip,
+                source: "notifications",
+              };
+            }
+          });
+
+          const { error: insertError } = await supabase
+            .from("agent_buyer_coverage_areas")
+            .insert(preferencesToInsert);
+
+          if (insertError) throw insertError;
+        }
+      }
+
+      toast.success("Preferences saved successfully");
+      setHasUnsavedChanges(false);
+      await checkPreferences();
+    } catch (error) {
+      console.error("Error saving preferences:", error);
+      toast.error("Failed to save preferences. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const checkPreferences = async () => {
@@ -115,7 +227,11 @@ const ClientNeedsDashboard = () => {
 
       if (prefs) {
         const notificationsEnabled = prefs.client_needs_enabled === true;
-        const hasPriceFilter = prefs.min_price != null || prefs.max_price != null;
+        
+        // Use explicit boolean columns for price filter check
+        const hasNoMin = (prefs as any).has_no_min ?? true;
+        const hasNoMax = (prefs as any).has_no_max ?? true;
+        const hasPriceFilter = !hasNoMin || !hasNoMax || prefs.min_price != null || prefs.max_price != null;
         const hasPropertyTypes = prefs.property_types && Array.isArray(prefs.property_types) && prefs.property_types.length > 0;
         
         const { data: geoPrefs, error: geoError } = await supabase
@@ -129,7 +245,7 @@ const ClientNeedsDashboard = () => {
         }
 
         const hasGeographicFilter = !geoError && geoPrefs && geoPrefs.length > 0;
-        const hasAnyFilters = hasPriceFilter || hasPropertyTypes || hasGeographicFilter;
+        const hasAnyFilters = (hasPriceFilter && !(hasNoMin && hasNoMax)) || hasPropertyTypes || hasGeographicFilter;
 
         let receivingCount = 0;
         if (prefs.buyer_need) receivingCount++;
@@ -138,11 +254,11 @@ const ClientNeedsDashboard = () => {
         if (prefs.general_discussion) receivingCount++;
 
         let priceRange = "All";
-        if (prefs.min_price && prefs.max_price) {
+        if (!hasNoMin && !hasNoMax && prefs.min_price && prefs.max_price) {
           priceRange = `$${prefs.min_price.toLocaleString()} - $${prefs.max_price.toLocaleString()}`;
-        } else if (prefs.min_price) {
+        } else if (!hasNoMin && prefs.min_price) {
           priceRange = `$${prefs.min_price.toLocaleString()}+`;
-        } else if (prefs.max_price) {
+        } else if (!hasNoMax && prefs.max_price) {
           priceRange = `Up to $${prefs.max_price.toLocaleString()}`;
         }
 
@@ -257,6 +373,7 @@ const ClientNeedsDashboard = () => {
             <PriceRangePreferences 
               agentId={user?.id || ""} 
               onFiltersUpdated={handleFiltersUpdated}
+              onDataChange={handlePriceDataChange}
             />
             <PropertyTypePreferences 
               agentId={user?.id || ""} 
@@ -265,6 +382,7 @@ const ClientNeedsDashboard = () => {
             <GeographicPreferencesManager 
               agentId={user?.id || ""} 
               onFiltersUpdated={handleFiltersUpdated}
+              onDataChange={handleGeoDataChange}
             />
           </div>
         </section>
@@ -362,14 +480,24 @@ const ClientNeedsDashboard = () => {
       <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg z-50">
         <div className="container mx-auto px-4 py-4 max-w-5xl flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {hasUnsavedChanges ? "You have unsaved changes" : "All changes auto-saved"}
+            {hasUnsavedChanges ? "You have unsaved changes" : ""}
           </p>
           <Button 
             onClick={handleSavePreferences}
-            className="bg-gradient-to-r from-primary to-accent text-primary-foreground font-semibold px-6 hover:opacity-90 transition-opacity"
+            disabled={saving}
+            className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white font-semibold px-6"
           >
-            <Save className="w-4 h-4 mr-2" />
-            Save Preferences
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Preferences
+              </>
+            )}
           </Button>
         </div>
       </div>
