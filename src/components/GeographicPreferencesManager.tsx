@@ -72,20 +72,21 @@ const GeographicPreferencesManager = ({
       if (prefsError) throw prefsError;
 
       if (prefsData && prefsData.length > 0) {
-        const firstState = prefsData[0].state;
-        const towns = prefsData.map(p => {
-          if (p.neighborhood) {
-            return `${p.city}-${p.neighborhood}`;
-          }
-          return p.city;
-        });
+        // SAFETY GUARD: Filter out any legacy records with neighborhood data
+        // These are artifacts from the old broken selector logic and must never rehydrate
+        const cleanRecords = prefsData.filter(p => !p.neighborhood);
 
-        setGeoSelection({
-          state: firstState || "MA",
-          county: prefsData[0].county || "all",
-          towns: [...new Set(towns)],
-          showAreas: true,
-        });
+        if (cleanRecords.length > 0) {
+          const firstState = cleanRecords[0].state;
+          const towns = cleanRecords.map(p => p.city);
+
+          setGeoSelection({
+            state: firstState || "MA",
+            county: cleanRecords[0].county || "all",
+            towns: [...new Set(towns)],
+            showAreas: true,
+          });
+        }
       }
     } catch (error: any) {
       console.error("Error loading preferences:", error);
