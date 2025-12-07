@@ -2,8 +2,19 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, MapPin, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
-import { GeographicSelector, GeographicSelection } from "@/components/GeographicSelector";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Loader2, MapPin, ChevronDown, ChevronUp, AlertTriangle, Search } from "lucide-react";
+import { useTownsPicker } from "@/hooks/useTownsPicker";
+import { TownsPicker } from "@/components/TownsPicker";
+import { US_STATES } from "@/data/usStatesCountiesData";
+import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
+import { CT_COUNTY_TOWNS } from "@/data/ctCountyTowns";
+import { RI_COUNTY_TOWNS } from "@/data/riCountyTowns";
+import { NH_COUNTY_TOWNS } from "@/data/nhCountyTowns";
+import { VT_COUNTY_TOWNS } from "@/data/vtCountyTowns";
+import { ME_COUNTY_TOWNS } from "@/data/meCountyTowns";
 
 export interface GeographicData {
   state: string;
@@ -17,6 +28,23 @@ interface GeographicPreferencesManagerProps {
   onDataChange?: (data: GeographicData) => void;
 }
 
+// Get counties for a state
+const getCountiesForState = (stateCode: string): string[] => {
+  const countyMaps: Record<string, Record<string, string[]>> = {
+    MA: MA_COUNTY_TOWNS,
+    CT: CT_COUNTY_TOWNS,
+    RI: RI_COUNTY_TOWNS,
+    NH: NH_COUNTY_TOWNS,
+    VT: VT_COUNTY_TOWNS,
+    ME: ME_COUNTY_TOWNS,
+  };
+  const map = countyMaps[stateCode];
+  if (map) {
+    return Object.keys(map).sort();
+  }
+  return [];
+};
+
 const GeographicPreferencesManager = ({
   agentId,
   onFiltersUpdated,
@@ -24,13 +52,21 @@ const GeographicPreferencesManager = ({
 }: GeographicPreferencesManagerProps) => {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   
-  const [geoSelection, setGeoSelection] = useState<GeographicSelection>({
-    state: "MA",
-    county: "all",
-    towns: [],
+  const [selectedState, setSelectedState] = useState("MA");
+  const [selectedCounty, setSelectedCounty] = useState("all");
+  const [selectedTowns, setSelectedTowns] = useState<string[]>([]);
+
+  // Use the proven TownsPicker hook
+  const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
+    state: selectedState,
+    county: selectedCounty,
     showAreas: true,
   });
+
+  // Get available counties for selected state
+  const availableCounties = getCountiesForState(selectedState);
 
   useEffect(() => {
     loadPreferences();
@@ -38,21 +74,21 @@ const GeographicPreferencesManager = ({
 
   // Notify parent of data changes (no autosave)
   const notifyChange = useCallback(() => {
-    const hasFilter = geoSelection.towns.length > 0;
+    const hasFilter = selectedTowns.length > 0;
     onFiltersUpdated?.(hasFilter);
     
     onDataChange?.({
-      state: geoSelection.state,
-      county: geoSelection.county,
-      towns: geoSelection.towns,
+      state: selectedState,
+      county: selectedCounty,
+      towns: selectedTowns,
     });
-  }, [geoSelection, onFiltersUpdated, onDataChange]);
+  }, [selectedState, selectedCounty, selectedTowns, onFiltersUpdated, onDataChange]);
 
   useEffect(() => {
     if (!loading) {
       notifyChange();
     }
-  }, [geoSelection, loading, notifyChange]);
+  }, [selectedState, selectedCounty, selectedTowns, loading, notifyChange]);
 
   const loadPreferences = async () => {
     if (!agentId) {
@@ -80,18 +116,49 @@ const GeographicPreferencesManager = ({
           const firstState = cleanRecords[0].state;
           const towns = cleanRecords.map(p => p.city);
 
-          setGeoSelection({
-            state: firstState || "MA",
-            county: cleanRecords[0].county || "all",
-            towns: [...new Set(towns)],
-            showAreas: true,
-          });
+          setSelectedState(firstState || "MA");
+          setSelectedCounty(cleanRecords[0].county || "all");
+          setSelectedTowns([...new Set(towns)] as string[]);
         }
       }
     } catch (error: any) {
       console.error("Error loading preferences:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStateChange = (newState: string) => {
+    setSelectedState(newState);
+    setSelectedCounty("all");
+    setSelectedTowns([]);
+  };
+
+  const handleCountyChange = (newCounty: string) => {
+    setSelectedCounty(newCounty);
+    setSelectedTowns([]);
+  };
+
+  const handleToggleTown = (town: string) => {
+    setSelectedTowns(prev => {
+      if (prev.includes(town)) {
+        return prev.filter(t => t !== town);
+      } else {
+        return [...prev, town];
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    const topLevelTowns = townsList.filter(t => !t.includes('-'));
+    const allSelected = topLevelTowns.every(t => selectedTowns.includes(t));
+    
+    if (allSelected) {
+      // Deselect all
+      setSelectedTowns([]);
+    } else {
+      // Select all top-level towns
+      setSelectedTowns(topLevelTowns);
     }
   };
 
@@ -104,8 +171,6 @@ const GeographicPreferencesManager = ({
       </Card>
     );
   }
-
-  const selectedTowns = geoSelection.towns;
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -132,16 +197,77 @@ const GeographicPreferencesManager = ({
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="space-y-3 pt-0">
-            <GeographicSelector
-              value={geoSelection}
-              onChange={setGeoSelection}
-              showWrapper={false}
-              defaultCollapsed={false}
-            />
+          <CardContent className="space-y-4 pt-0">
+            {/* State Selector */}
+            <div className="space-y-2">
+              <Label>State</Label>
+              <Select value={selectedState} onValueChange={handleStateChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select state" />
+                </SelectTrigger>
+                <SelectContent>
+                  {US_STATES.map((s) => (
+                    <SelectItem key={s.code} value={s.code}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* County Selector (for New England states) */}
+            {availableCounties.length > 0 && (
+              <div className="space-y-2">
+                <Label>County</Label>
+                <Select value={selectedCounty} onValueChange={handleCountyChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All counties" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Counties</SelectItem>
+                    {availableCounties.map((county) => (
+                      <SelectItem key={county} value={county}>
+                        {county}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Towns Search */}
+            <div className="space-y-2">
+              <Label>Towns & Neighborhoods</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search towns or neighborhoods..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+
+            {/* Towns Picker - The proven hierarchical renderer */}
+            <div className="border rounded-lg max-h-64 overflow-y-auto">
+              <TownsPicker
+                towns={townsList}
+                selectedTowns={selectedTowns}
+                onToggleTown={handleToggleTown}
+                expandedCities={expandedCities}
+                onToggleCityExpansion={toggleCityExpansion}
+                state={selectedState}
+                searchQuery={searchQuery}
+                variant="checkbox"
+                showAreas={true}
+                showSelectAll={true}
+                onSelectAll={handleSelectAll}
+              />
+            </div>
 
             {selectedTowns.length > 100 && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg mt-4">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                   <div>
@@ -157,7 +283,7 @@ const GeographicPreferencesManager = ({
             )}
 
             {selectedTowns.length === 0 && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg mt-4">
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <p className="text-sm text-blue-900 dark:text-blue-100">
                   <span className="font-medium">No geographic areas selected.</span>
                   <br />
