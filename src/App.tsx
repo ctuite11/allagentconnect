@@ -11,7 +11,7 @@ import { RouteGuard } from "./components/RouteGuard";
 import AgentSuccessHub from "./pages/AgentSuccessHub";
 import BuyerAuth from "./pages/BuyerAuth";
 import AgentSearch from "./pages/AgentSearch";
-import OffMarketDashboard from "./pages/OffMarketDashboard";
+
 import SubmitClientNeed from "./pages/SubmitClientNeed";
 import ClientNeedsDashboard from "./pages/ClientNeedsDashboard";
 import ListingIntel from "./pages/ListingIntel";
@@ -112,7 +112,7 @@ const App = () => (
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/my-favorites" element={<MyFavorites />} />
           <Route path="/hot-sheets" element={<RouteGuard requireRole="agent"><HotSheets /></RouteGuard>} />
-          <Route path="/agent/off-market" element={<RouteGuard requireRole="agent"><OffMarketDashboard /></RouteGuard>} />
+          <Route path="/agent/off-market" element={<Navigate to="/agent/listings?status=off_market" replace />} />
           <Route path="/hot-sheets/:id/review" element={<RouteGuard requireRole="agent"><HotSheetReview /></RouteGuard>} />
           <Route path="/my-clients" element={<RouteGuard requireRole="agent"><MyClients /></RouteGuard>} />
           <Route path="/client-invite" element={<ClientInvitationSetup />} />
