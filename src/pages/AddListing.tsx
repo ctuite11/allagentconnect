@@ -1299,33 +1299,56 @@ const AddListing = () => {
     handleAutoFillFromPublicRecords(false);
   };
   
+  // Track whether ATTOM has ever been successfully verified in this session
+  // This is separate from publicRecordStatus to ensure we only show warnings AFTER a verification has occurred
+  const hasEverVerifiedWithAttom = attomVerifiedContext !== null && publicRecordStatus === 'success';
+  
   // Compute if ATTOM verification is stale (context changed since verification)
   const isAttomVerificationStale = useMemo(() => {
-    if (!attomVerifiedContext || publicRecordStatus !== 'success') return false;
+    // CRITICAL: Only consider stale if we have ACTUALLY verified before
+    // Return false if: no verified context, OR status is not success
+    if (!attomVerifiedContext) return false;
+    if (publicRecordStatus !== 'success') return false;
     
     const ctx = attomVerifiedContext;
     // Check if any key field has changed from verified context
     // Use null-safe comparisons to prevent crashes
-    const ctxAddress = (ctx.address || '').toLowerCase();
-    const formAddress = (formData.address || '').toLowerCase();
-    const ctxCity = (ctx.city || '').toLowerCase();
-    const formCity = (formData.city || '').toLowerCase();
+    const ctxPropertyType = (ctx.property_type || '').toLowerCase().trim();
+    const formPropertyType = (formData.property_type || '').toLowerCase().trim();
+    const ctxAddress = (ctx.address || '').toLowerCase().trim();
+    const formAddress = (formData.address || '').toLowerCase().trim();
+    const ctxCity = (ctx.city || '').toLowerCase().trim();
+    const formCity = (formData.city || '').toLowerCase().trim();
+    const ctxZip = (ctx.zip_code || '').trim();
+    const formZip = (formData.zip_code || '').trim();
+    const ctxState = (ctx.state || '').trim();
+    const formState = (formData.state || '').trim();
+    const ctxCounty = (ctx.county || '').toLowerCase().trim();
+    const formCounty = (formData.county || '').toLowerCase().trim();
+    const ctxUnit = (ctx.unit_number || '').toLowerCase().trim();
+    const formUnit = (formData.unit_number || '').toLowerCase().trim();
     
-    return (
-      (ctx.property_type || '') !== (formData.property_type || '') ||
+    // Only return true if ANY of these fields have actually changed
+    const hasChanged = (
+      ctxPropertyType !== formPropertyType ||
       ctxAddress !== formAddress ||
       ctxCity !== formCity ||
-      (ctx.zip_code || '') !== (formData.zip_code || '') ||
-      (ctx.state || '') !== (formData.state || '') ||
-      (ctx.county || '') !== (formData.county || '') ||
-      (ctx.unit_number || '') !== (formData.unit_number || '')
+      ctxZip !== formZip ||
+      ctxState !== formState ||
+      ctxCounty !== formCounty ||
+      ctxUnit !== formUnit
     );
+    
+    return hasChanged;
   }, [attomVerifiedContext, publicRecordStatus, formData.property_type, formData.address, formData.city, formData.zip_code, formData.state, formData.county, formData.unit_number]);
   
   // Detect if user switched to condo after single-family verification
   const isSwitchedToCondo = useMemo(() => {
-    if (!attomVerifiedContext || publicRecordStatus !== 'success') return false;
-    const verifiedType = attomVerifiedContext.property_type || '';
+    // Only check if we've actually verified
+    if (!attomVerifiedContext) return false;
+    if (publicRecordStatus !== 'success') return false;
+    
+    const verifiedType = (attomVerifiedContext.property_type || '').toLowerCase().trim();
     const wasSingleFamily = verifiedType === 'single_family' || verifiedType === 'townhouse';
     const isNowCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
     return wasSingleFamily && isNowCondo;
