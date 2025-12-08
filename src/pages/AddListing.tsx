@@ -164,6 +164,7 @@ const AddListing = () => {
     additional_notes: "",
     annual_property_tax: "",
     tax_year: "",
+    assessed_value: "",
     go_live_date: "",
     auto_activate_on: null as Date | null,
     // New date fields
@@ -633,6 +634,7 @@ const AddListing = () => {
           additional_notes: data.additional_notes || "",
           annual_property_tax: data.annual_property_tax?.toString() || "",
           tax_year: data.tax_year?.toString() || "",
+          assessed_value: data.assessed_value?.toString() || "",
           go_live_date: data.go_live_date || "",
           list_date: data.list_date || "",
           expiration_date: data.expiration_date || "",
@@ -1088,6 +1090,12 @@ const AddListing = () => {
         console.log('[ATTOM] Setting tax_year:', record.taxYear);
       }
       
+      // Assessed value - only fill if empty
+      if (!prev.assessed_value && record.assessedValue) {
+        updates.assessed_value = record.assessedValue.toString();
+        console.log('[ATTOM] Setting assessed_value:', record.assessedValue);
+      }
+      
       // Latitude/longitude - always update if ATTOM provides them
       if (record.latitude != null) {
         updates.latitude = record.latitude;
@@ -1121,6 +1129,8 @@ const AddListing = () => {
         yearBuilt: record.yearBuilt,
         taxAmount: record.taxAmount,
         taxYear: record.taxYear,
+        assessedValue: record.assessedValue,
+        marketValue: record.marketValue,
         latitude: record.latitude,
         longitude: record.longitude,
         property_type: record.property_type
@@ -1799,6 +1809,7 @@ const AddListing = () => {
     // Taxes & Dates
     annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
     tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
+    assessed_value: formData.assessed_value ? parseFloat(formData.assessed_value) : null,
     list_date: formData.list_date || null,
     expiration_date: formData.expiration_date || null,
     go_live_date: formData.go_live_date || null,
@@ -3218,8 +3229,8 @@ const AddListing = () => {
                   )}
                   
                   {/* Tax fields - show when data exists OR after successful ATTOM load */}
-                  {(publicRecordStatus === 'success' || formData.annual_property_tax || formData.tax_year) && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(publicRecordStatus === 'success' || formData.annual_property_tax || formData.tax_year || formData.assessed_value) && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="annual_property_tax">Annual Property Tax</Label>
                         <FormattedInput
@@ -3246,6 +3257,20 @@ const AddListing = () => {
                           placeholder={new Date().getFullYear().toString()}
                         />
                         {publicRecordStatus === 'success' && formData.tax_year && (
+                          <p className="text-xs text-muted-foreground">Loaded from public records</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="assessed_value">Assessed Value</Label>
+                        <FormattedInput
+                          id="assessed_value"
+                          format="currency"
+                          value={formData.assessed_value}
+                          onChange={(value) => setFormData(prev => ({ ...prev, assessed_value: value }))}
+                          decimals={0}
+                          placeholder="350000"
+                        />
+                        {publicRecordStatus === 'success' && formData.assessed_value && (
                           <p className="text-xs text-muted-foreground">Loaded from public records</p>
                         )}
                       </div>

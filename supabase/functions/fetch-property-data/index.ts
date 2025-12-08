@@ -192,6 +192,8 @@ serve(async (req) => {
           lastSalePrice: property.sale?.saleAmt || null,
           taxYear: assessment.tax?.taxYear || null,
           taxAmount: assessment.tax?.taxAmt || null,
+          assessedValue: assessment.assessed?.assdTtlValue || null,
+          marketValue: assessment.market?.mktTtlValue || null,
           latitude: address_info.latitude || null,
           longitude: address_info.longitude || null,
           raw: property,
