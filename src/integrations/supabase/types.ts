@@ -1909,6 +1909,45 @@ export type Database = {
         }
         Relationships: []
       }
+      off_market_views: {
+        Row: {
+          id: string
+          listing_id: string
+          source: string | null
+          viewed_at: string
+          viewer_agent_id: string
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          source?: string | null
+          viewed_at?: string
+          viewer_agent_id: string
+        }
+        Update: {
+          id?: string
+          listing_id?: string
+          source?: string | null
+          viewed_at?: string
+          viewer_agent_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "off_market_views_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "off_market_views_viewer_agent_id_fkey"
+            columns: ["viewer_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null

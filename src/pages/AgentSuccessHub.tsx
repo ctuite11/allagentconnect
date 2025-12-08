@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { 
   Users, Mail, Heart, Bell, 
-  Home, Megaphone, Palette
+  Home, Megaphone, Palette, Lock
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -51,6 +51,7 @@ export default function AgentSuccessHub() {
   const [engagedThisWeekCount, setEngagedThisWeekCount] = useState(0);
   const [invitationsSentCount, setInvitationsSentCount] = useState(0);
   const [activeListingsCount, setActiveListingsCount] = useState(0);
+  const [offMarketCount, setOffMarketCount] = useState(0);
   
   // Lists
   const [buyers, setBuyers] = useState<Buyer[]>([]);
@@ -115,6 +116,14 @@ export default function AgentSuccessHub() {
       .select("*", { count: "exact", head: true })
       .eq("agent_id", agentId)
       .eq("status", "active");
+    
+    // Off-Market Listings
+    const { count: offMarketListingsCount } = await supabase
+      .from("listings")
+      .select("*", { count: "exact", head: true })
+      .eq("agent_id", agentId)
+      .eq("listing_type", "private");
+    setOffMarketCount(offMarketListingsCount || 0);
     setActiveListingsCount(listingsCount || 0);
     
     // Engaged This Week
@@ -371,6 +380,15 @@ export default function AgentSuccessHub() {
       accentColor: "border-l-blue-500",
     },
     {
+      icon: <Lock className="w-6 h-6" />,
+      title: "Off-Market",
+      description: "Private inventory & pocket listings",
+      metricValue: offMarketCount,
+      metricLabel: "Private",
+      route: "/agent/off-market",
+      accentColor: "border-l-amber-500",
+    },
+    {
       icon: <Users className="w-6 h-6" />,
       title: "My Contacts",
       description: "CRM for leads & clients",
@@ -400,7 +418,7 @@ export default function AgentSuccessHub() {
       title: "Profile & Branding",
       description: "Edit your profile and branding",
       route: "/agent-profile-editor",
-      accentColor: "border-l-amber-500",
+      accentColor: "border-l-pink-500",
     },
   ];
 
