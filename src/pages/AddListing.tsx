@@ -1472,21 +1472,34 @@ const AddListing = () => {
   // ===== HARD RESET: Property Type Change =====
   // When property_type changes between condo/apartment ↔ single_family/townhouse/multi_family,
   // we MUST reset ALL ATTOM-related state to prevent stale data corruption
+  // CRITICAL: Skip this during initial load (edit mode) to preserve loaded data
   const prevPropertyTypeRef = useRef(formData.property_type);
+  const hasUserInteractedWithPropertyType = useRef(false);
   
   useEffect(() => {
     const prevType = prevPropertyTypeRef.current;
     const newType = formData.property_type;
     
-    // Skip if same property type or initial render
+    // Skip if same property type
     if (prevType === newType) return;
+    
+    // CRITICAL: Skip reset during initial load (edit mode hydration)
+    // This prevents loadExistingListing from triggering a reset that clears unit_number
+    if (isInitialLoad) {
+      console.log('[ATTOM] Property type change during initial load - skipping reset (edit mode)');
+      prevPropertyTypeRef.current = newType;
+      return;
+    }
+    
+    // Mark that user has interacted
+    hasUserInteractedWithPropertyType.current = true;
     
     // Determine if we're switching between condo/apartment and other types
     const wasCondoLike = prevType === 'condo' || prevType === 'apartment';
     const isCondoLike = newType === 'condo' || newType === 'apartment';
     const typeChanged = wasCondoLike !== isCondoLike;
     
-    console.log('[ATTOM] Property type changed:', prevType, '->', newType, 'Major switch:', typeChanged);
+    console.log('[ATTOM] Property type changed by USER:', prevType, '->', newType, 'Major switch:', typeChanged);
     
     // ALWAYS clear lot_size for condos (existing behavior)
     if (isCondoLike) {
@@ -1523,7 +1536,7 @@ const AddListing = () => {
     
     // Update ref for next comparison
     prevPropertyTypeRef.current = newType;
-  }, [formData.property_type]);
+  }, [formData.property_type, isInitialLoad]);
 
   const handleFileSelect = async (files: FileList | null, type: 'photos' | 'floorplans' | 'documents') => {
     if (!files) return;
