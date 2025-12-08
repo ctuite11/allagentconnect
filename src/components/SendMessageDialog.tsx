@@ -521,7 +521,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     {/* Towns & Neighborhoods Section - Collapsible, CLOSED by default */}
                     <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                       <CollapsibleTrigger className="w-full">
-                        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
+                        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border border-l-4 border-l-teal-500">
                           <Label className="text-sm font-semibold uppercase cursor-pointer">
                             Towns & Neighborhoods
                             {selectedCities.length > 0 && (
@@ -644,7 +644,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   {category !== "general_discussion" && (
                     <Collapsible>
                       <CollapsibleTrigger className="w-full">
-                        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
+                        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border border-l-4 border-l-indigo-500">
                           <Label className="text-sm font-semibold uppercase cursor-pointer">
                             Property Types
                             {propertyTypes.length > 0 && (
@@ -698,7 +698,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   {category !== "general_discussion" && (
                     <Collapsible>
                       <CollapsibleTrigger className="w-full">
-                        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
+                        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border border-l-4 border-l-green-500">
                           <Label className="text-sm font-semibold uppercase cursor-pointer">
                             Price Range
                             {(minPrice || maxPrice) && (
