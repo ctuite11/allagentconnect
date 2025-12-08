@@ -62,6 +62,7 @@ export function TownsPicker({
           // Show neighborhoods if showAreas is enabled and there are neighborhoods
           const showNeighborhoods = showAreas && (hasNeighborhoods || neighborhoods.length > 0);
           const isExpanded = showNeighborhoods ? expandedCities.has(town) : false;
+          console.log(`[TownsPicker] ${town}: showNeighborhoods=${showNeighborhoods}, isExpanded=${isExpanded}, expandedCities.has('${town}')=${expandedCities.has(town)}, neighborhoods.length=${neighborhoods.length}`);
           
           return (
             <div key={town} className="space-y-1">
