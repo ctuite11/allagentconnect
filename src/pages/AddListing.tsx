@@ -824,27 +824,42 @@ const AddListing = () => {
     setAttomFetchStatus("Fetching public record data...");
     
     try {
-      const { data, error } = await supabase.functions.invoke("fetch-property-data", {
-        body: payload,
-      });
+      let data: any = null;
+      let error: any = null;
+      
+      try {
+        const response = await supabase.functions.invoke("fetch-property-data", {
+          body: payload,
+        });
+        data = response.data;
+        error = response.error;
+      } catch (fetchError) {
+        console.error("[AddListing] ATTOM fetch exception:", fetchError);
+        error = fetchError;
+      }
       
       console.log("[AddListing] ATTOM RESPONSE:", { data, error });
       setAutoFillLoading(false);
 
       if (error || !data) {
         setPublicRecordStatus('error');
-        setAttomFetchStatus("No matching public record found. You can enter details manually.");
+        setAttomFetchStatus("Could not connect to public records. You can enter details manually.");
         if (!isAutoTrigger) {
-          toast.error("Could not fetch public record data.");
+          toast.error("Could not fetch public record data. Please try again.");
         }
-        console.error("[AddListing] ATTOM error:", error || data);
+        console.error("[AddListing] ATTOM error:", error || "No data returned");
         // Enable neighborhood dropdown even on failure
-        const areas = getAreasForCity(formData.city, formData.state);
-        setAttomNeighborhoods(areas);
+        try {
+          const areas = getAreasForCity(formData.city, formData.state);
+          setAttomNeighborhoods(areas);
+        } catch (areaError) {
+          console.error("[AddListing] Error getting areas:", areaError);
+        }
         return;
       }
 
-      const results = data.results || [];
+      // Safely extract results with defensive checks
+      const results = Array.isArray(data?.results) ? data.results : [];
       console.log("[AddListing] ATTOM results count:", results.length);
 
       if (results.length === 0) {
@@ -856,8 +871,12 @@ const AddListing = () => {
         setVerificationMessage("Public record not found – please verify address and choose Neighborhood/Area manually.");
         
         // Enable neighborhood dropdown even on failure
-        const areas = getAreasForCity(formData.city, formData.state);
-        setAttomNeighborhoods(areas);
+        try {
+          const areas = getAreasForCity(formData.city, formData.state);
+          setAttomNeighborhoods(areas);
+        } catch (areaError) {
+          console.error("[AddListing] Error getting areas:", areaError);
+        }
         
         if (!isAutoTrigger) {
           toast.error("No property records found for this address.");
@@ -902,13 +921,30 @@ const AddListing = () => {
       console.error("[handleAutoFillFromPublicRecords] Error:", err);
       setPublicRecordStatus('error');
       setAutoFillLoading(false);
+      setAttomFetchStatus("An error occurred. You can enter details manually.");
       if (!isAutoTrigger) {
-        toast.error("An error occurred while fetching public record data.");
+        toast.error("An error occurred while fetching public record data. Please try again.");
+      }
+      // Enable neighborhood dropdown even on error
+      try {
+        const areas = getAreasForCity(formData.city, formData.state);
+        setAttomNeighborhoods(areas);
+      } catch (areaError) {
+        console.error("[AddListing] Error getting areas:", areaError);
       }
     }
   };
 
   const applyAttomData = (record: any) => {
+    // Defensive null check - never crash on missing record
+    if (!record || typeof record !== 'object') {
+      console.error('[ATTOM] applyAttomData called with invalid record:', record);
+      setPublicRecordStatus('error');
+      setAttomFetchStatus("Invalid data received. Please try again.");
+      toast.error("Invalid property data received.");
+      return;
+    }
+    
     console.log('[ATTOM] applyAttomData called with record:', JSON.stringify(record, null, 2));
     
     // Mark that we're applying ATTOM data to prevent re-triggering fetch
@@ -1269,21 +1305,28 @@ const AddListing = () => {
     
     const ctx = attomVerifiedContext;
     // Check if any key field has changed from verified context
+    // Use null-safe comparisons to prevent crashes
+    const ctxAddress = (ctx.address || '').toLowerCase();
+    const formAddress = (formData.address || '').toLowerCase();
+    const ctxCity = (ctx.city || '').toLowerCase();
+    const formCity = (formData.city || '').toLowerCase();
+    
     return (
-      ctx.property_type !== formData.property_type ||
-      ctx.address.toLowerCase() !== formData.address.toLowerCase() ||
-      ctx.city.toLowerCase() !== formData.city.toLowerCase() ||
-      ctx.zip_code !== formData.zip_code ||
-      ctx.state !== formData.state ||
-      ctx.county !== formData.county ||
-      ctx.unit_number !== formData.unit_number
+      (ctx.property_type || '') !== (formData.property_type || '') ||
+      ctxAddress !== formAddress ||
+      ctxCity !== formCity ||
+      (ctx.zip_code || '') !== (formData.zip_code || '') ||
+      (ctx.state || '') !== (formData.state || '') ||
+      (ctx.county || '') !== (formData.county || '') ||
+      (ctx.unit_number || '') !== (formData.unit_number || '')
     );
   }, [attomVerifiedContext, publicRecordStatus, formData.property_type, formData.address, formData.city, formData.zip_code, formData.state, formData.county, formData.unit_number]);
   
   // Detect if user switched to condo after single-family verification
   const isSwitchedToCondo = useMemo(() => {
     if (!attomVerifiedContext || publicRecordStatus !== 'success') return false;
-    const wasSingleFamily = attomVerifiedContext.property_type === 'single_family' || attomVerifiedContext.property_type === 'townhouse';
+    const verifiedType = attomVerifiedContext.property_type || '';
+    const wasSingleFamily = verifiedType === 'single_family' || verifiedType === 'townhouse';
     const isNowCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
     return wasSingleFamily && isNowCondo;
   }, [attomVerifiedContext, publicRecordStatus, formData.property_type]);
