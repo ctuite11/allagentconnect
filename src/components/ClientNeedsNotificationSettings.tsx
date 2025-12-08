@@ -86,7 +86,7 @@ export const ClientNeedsNotificationSettings = () => {
   }
 
   return (
-    <Card className="border-l-4 border-l-primary mb-8">
+    <Card className="border-l-4 border-l-slate-500 mb-8">
       <CardHeader>
         <div className="flex items-center gap-2">
           <Bell className="h-5 w-5" />

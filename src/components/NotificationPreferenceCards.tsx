@@ -125,14 +125,14 @@ export const NotificationPreferenceCards = () => {
       title: "Buyer Need",
       description: "Get notified about buyer needs in your market",
       active: preferences.buyer_need,
-      borderColor: "border-l-primary",
+      borderColor: "border-l-purple-500",
     },
     {
       key: "sales_intel" as keyof NotificationPreferences,
       title: "Sales Intel",
       description: "Receive updates on sales and market intelligence",
       active: preferences.sales_intel,
-      borderColor: "border-l-accent",
+      borderColor: "border-l-purple-500",
     },
     {
       key: "renter_need" as keyof NotificationPreferences,
@@ -146,7 +146,7 @@ export const NotificationPreferenceCards = () => {
       title: "General Discussion",
       description: "Connect for referrals, recommendations, and advice",
       active: preferences.general_discussion,
-      borderColor: "border-l-red-500",
+      borderColor: "border-l-purple-500",
     },
   ];
 
