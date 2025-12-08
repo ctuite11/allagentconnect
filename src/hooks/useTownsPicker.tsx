@@ -15,7 +15,6 @@ interface UseTownsPickerProps {
 }
 
 export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps) {
-  console.log("[useTownsPicker] Hook initialized with:", { state, county, showAreas });
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
 
   // Normalize state to 2-letter code
@@ -98,8 +97,6 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
   }, [state, county, showAreas]);
 
   const toggleCityExpansion = (city: string) => {
-    console.log("[useTownsPicker] toggleCityExpansion called:", city);
-    console.log("[useTownsPicker] Current expandedCities:", Array.from(expandedCities));
     setExpandedCities(prev => {
       const newSet = new Set(prev);
       if (newSet.has(city)) {
@@ -107,7 +104,6 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
       } else {
         newSet.add(city);
       }
-      console.log("[useTownsPicker] New expandedCities will be:", Array.from(newSet));
       return newSet;
     });
   };
@@ -137,10 +133,25 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
 
     return Array.from(selection);
   };
-  // Reset expanded cities when state/county changes (don't auto-expand, let user control)
+  // Auto-expand cities that have neighborhoods when showAreas is enabled
   useEffect(() => {
-    setExpandedCities(new Set());
-  }, [state, county]);
+    if (!showAreas) {
+      setExpandedCities(new Set());
+      return;
+    }
+    
+    // Find all cities that have neighborhoods and auto-expand them
+    const citiesToExpand = new Set<string>();
+    townsList.forEach(town => {
+      if (town.includes('-')) return; // Skip neighborhood entries
+      const neighborhoods = getAreasForCity(town, stateKey || state);
+      if (neighborhoods && neighborhoods.length > 0) {
+        citiesToExpand.add(town);
+      }
+    });
+    
+    setExpandedCities(citiesToExpand);
+  }, [state, county, showAreas, townsList, stateKey]);
 
   return {
     townsList,
