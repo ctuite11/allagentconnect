@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import { RouteGuard } from "./components/RouteGuard";
 import AgentSuccessHub from "./pages/AgentSuccessHub";
 import BuyerAuth from "./pages/BuyerAuth";
-// import removed: AgentSearch (redirect to OurAgents)
+import AgentSearch from "./pages/AgentSearch";
 import SubmitClientNeed from "./pages/SubmitClientNeed";
 import ClientNeedsDashboard from "./pages/ClientNeedsDashboard";
 import ListingIntel from "./pages/ListingIntel";
@@ -107,7 +107,7 @@ const App = () => (
           <Route path="/browse" element={<BrowsePropertiesNew />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/our-agents" element={<OurAgents />} />
-          <Route path="/agent-search" element={<OurAgents />} />
+          <Route path="/agent-search" element={<AgentSearch />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/my-favorites" element={<MyFavorites />} />
           <Route path="/hot-sheets" element={<RouteGuard requireRole="agent"><HotSheets /></RouteGuard>} />
