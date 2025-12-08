@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
-  Users, FileText, TrendingUp, Mail, Heart, Bell, 
-  Home, UserPlus, Megaphone, Palette, MessageSquare, Settings, HelpCircle
+  Users, TrendingUp, Mail, Heart, Bell, 
+  Home, UserPlus, Megaphone, Palette
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -359,34 +359,23 @@ export default function AgentSuccessHub() {
     );
   }
 
+  // Unified hub cards - single entry point per destination
   const hubCards = [
     {
       icon: <Home className="w-6 h-6" />,
       title: "My Listings",
       description: "Manage your active & off-market listings",
       metricValue: activeListingsCount,
-      metricLabel: "Active Listings",
+      metricLabel: "Active",
       route: "/agent/listings",
     },
     {
-      icon: <UserPlus className="w-6 h-6" />,
-      title: "Buyer Registry",
-      description: "Your patented buyer matching system",
+      icon: <Users className="w-6 h-6" />,
+      title: "My Contacts",
+      description: "CRM for leads & clients",
       metricValue: activeBuyersCount,
-      metricLabel: "Buyers",
-      route: "/submit-client-need",
-    },
-    {
-      icon: <MessageSquare className="w-6 h-6" />,
-      title: "Messages & Inquiries",
-      description: "Client and agent messages",
+      metricLabel: "Clients",
       route: "/my-clients",
-    },
-    {
-      icon: <Megaphone className="w-6 h-6" />,
-      title: "Communications Center",
-      description: "Agent-to-agent alerts & discussions",
-      route: "/client-needs",
     },
     {
       icon: <Bell className="w-6 h-6" />,
@@ -397,28 +386,22 @@ export default function AgentSuccessHub() {
       route: "/hot-sheets",
     },
     {
-      icon: <Users className="w-6 h-6" />,
-      title: "My Contacts",
-      description: "CRM for leads & clients",
-      route: "/my-clients",
+      icon: <UserPlus className="w-6 h-6" />,
+      title: "Buyer Registry",
+      description: "Register and match buyer needs",
+      route: "/submit-client-need",
+    },
+    {
+      icon: <Megaphone className="w-6 h-6" />,
+      title: "Communications Center",
+      description: "Agent-to-agent alerts & discussions",
+      route: "/client-needs",
     },
     {
       icon: <Palette className="w-6 h-6" />,
-      title: "My Branding",
-      description: "Logo & listing branding settings",
+      title: "Profile & Branding",
+      description: "Edit your profile and branding",
       route: "/agent-profile-editor",
-    },
-    {
-      icon: <Settings className="w-6 h-6" />,
-      title: "Profile & Settings",
-      description: "Account & preferences",
-      route: "/agent-profile-editor",
-    },
-    {
-      icon: <HelpCircle className="w-6 h-6" />,
-      title: "Resources / Help",
-      description: "Guides, onboarding & support",
-      route: "/",
     },
   ];
 
@@ -432,70 +415,7 @@ export default function AgentSuccessHub() {
           <p className="text-muted-foreground mt-2">Your command center for client success</p>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="border-l-4 border-l-primary">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active Buyers</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <Users className="w-8 h-8 text-primary" />
-                <div>
-                  <p className="text-4xl font-bold text-foreground">{activeBuyersCount}</p>
-                  <p className="text-xs text-muted-foreground">Client relationships</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-accent">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active Hotsheets</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <Bell className="w-8 h-8 text-accent" />
-                <div>
-                  <p className="text-4xl font-bold text-foreground">{activeHotsheetsCount}</p>
-                  <p className="text-xs text-muted-foreground">Tracking matches</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Engaged This Week</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <TrendingUp className="w-8 h-8 text-purple-500" />
-                <div>
-                  <p className="text-4xl font-bold text-foreground">{engagedThisWeekCount}</p>
-                  <p className="text-xs text-muted-foreground">Active clients</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-orange-500">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Invitations Sent</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <Mail className="w-8 h-8 text-orange-500" />
-                <div>
-                  <p className="text-4xl font-bold text-foreground">{invitationsSentCount}</p>
-                  <p className="text-xs text-muted-foreground">Last 7 days</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tech-Forward Hub Cards Grid */}
+        {/* Unified Hub Cards Grid - Merged KPIs with navigation */}
         <div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {hubCards.map((card) => (
