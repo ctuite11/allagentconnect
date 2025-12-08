@@ -1181,22 +1181,29 @@ const AddListing = () => {
   };
 
   const handleImportAttomRecord = (record: any) => {
-    // Get unit from ATTOM record (if any) - this is the ONLY unit that should exist
+    // Get unit from ATTOM record (if any)
     const attomUnit = record.unit_number || '';
+    
+    // CRITICAL: Preserve existing unit_number if ATTOM doesn't provide one
+    // This prevents refresh from wiping user-entered unit numbers
+    const existingUnit = formData.unit_number || '';
+    const finalUnit = attomUnit.trim() !== '' ? attomUnit : existingUnit;
+    
+    console.log('[ATTOM] Unit merge logic (import):', { attomUnit, existingUnit, finalUnit });
     
     applyAttomData(record);
     
-    // Explicitly set unit_number from ATTOM record ONLY
+    // Set unit_number using merge logic (preserve existing if ATTOM has none)
     setFormData(prev => ({ 
       ...prev, 
-      unit_number: attomUnit
+      unit_number: finalUnit
     }));
     
     setIsAttomModalOpen(false);
     
-    // Determine if this is a condo/apartment
+    // Determine if this is a condo/apartment - use finalUnit for validation
     const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
-    const hasUnit = attomUnit.trim() !== '';
+    const hasUnit = finalUnit.trim() !== '';
     const hasTaxData = record.taxAmount != null || record.assessedValue != null;
     
     // CONDO VALIDATION: Only show success if we have unit + tax data
@@ -1235,21 +1242,27 @@ const AddListing = () => {
       return;
     }
     
-    // ===== SOURCE OF TRUTH: Modal payload COMPLETELY replaces form state =====
-    // The ATTOM modal payload is the authoritative source. No previous state persists.
+    // ===== SMART MERGE: ATTOM data merges with existing form state =====
+    // Key rule: If ATTOM provides a unit, use it. If not, PRESERVE existing unit.
     const record = attomPendingRecord;
     
-    // Get unit from ATTOM record (if any) - this is the ONLY unit that should exist
+    // Get unit from ATTOM record (if any)
     const attomUnit = record.unit_number || '';
+    
+    // CRITICAL: Preserve existing unit_number if ATTOM doesn't provide one
+    // This prevents refresh from wiping user-entered unit numbers
+    const existingUnit = formData.unit_number || '';
+    const finalUnit = attomUnit.trim() !== '' ? attomUnit : existingUnit;
+    
+    console.log('[ATTOM] Unit merge logic:', { attomUnit, existingUnit, finalUnit });
     
     // Apply ATTOM data first
     applyAttomData(record);
     
-    // CRITICAL: Explicitly set unit_number from ATTOM record ONLY
-    // This ensures stale unit numbers from previous property types are cleared
+    // Set unit_number using merge logic (preserve existing if ATTOM has none)
     setFormData(prev => ({ 
       ...prev, 
-      unit_number: attomUnit
+      unit_number: finalUnit
     }));
     
     // Determine if this is a condo/apartment
