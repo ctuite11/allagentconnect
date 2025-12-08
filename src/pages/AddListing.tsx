@@ -1181,12 +1181,43 @@ const AddListing = () => {
   };
 
   const handleImportAttomRecord = (record: any) => {
+    // Get unit from ATTOM record (if any) - this is the ONLY unit that should exist
+    const attomUnit = record.unit_number || '';
+    
     applyAttomData(record);
+    
+    // Explicitly set unit_number from ATTOM record ONLY
+    setFormData(prev => ({ 
+      ...prev, 
+      unit_number: attomUnit
+    }));
+    
     setIsAttomModalOpen(false);
-    setPublicRecordStatus('success');
-    setAttomFetchStatus("Public record data loaded successfully.");
+    
+    // Determine if this is a condo/apartment
+    const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
+    const hasUnit = attomUnit.trim() !== '';
+    const hasTaxData = record.taxAmount != null || record.assessedValue != null;
+    
+    // CONDO VALIDATION: Only show success if we have unit + tax data
+    if (isCondo && (!hasUnit || !hasTaxData)) {
+      console.log('[ATTOM] Condo verification incomplete:', { hasUnit, hasTaxData });
+      setPublicRecordStatus('idle');
+      setAttomFetchStatus(
+        !hasUnit 
+          ? "Unit number required for condo records. Please enter unit number below."
+          : "Address confirmed but tax data not available for this unit."
+      );
+      toast.info("Please enter unit number to load complete condo data.");
+    } else {
+      setPublicRecordStatus('success');
+      setAttomFetchStatus("Public record data loaded successfully.");
+      toast.success("Property data imported from public records!");
+    }
+    
     setHasAutoFetched(true);
-    // Store verified context
+    
+    // Store verified context with values FROM THE MODAL PAYLOAD
     setAttomVerifiedContext({
       property_type: formData.property_type,
       address: record.address || formData.address,
@@ -1194,40 +1225,69 @@ const AddListing = () => {
       zip_code: record.zip || formData.zip_code,
       state: record.state || formData.state,
       county: formData.county,
-      unit_number: formData.unit_number,
+      unit_number: attomUnit, // ONLY from modal payload
     });
-    toast.success("Property data imported from public records!");
   };
 
   const handleConfirmAttomAddress = () => {
-    if (attomPendingRecord) {
-      // Capture the agent's unit number BEFORE applying ATTOM data
-      const agentUnit = formData.unit_number;
-      
-      applyAttomData(attomPendingRecord);
-      
-      // IMPORTANT: Explicitly re-set the agent's unit number after ATTOM updates
-      // ATTOM must never clear or change a non-empty unit_number
-      if (agentUnit) {
-        setFormData(prev => ({ ...prev, unit_number: agentUnit }));
-      }
-      
+    if (!attomPendingRecord) {
+      setIsAddressConfirmOpen(false);
+      return;
+    }
+    
+    // ===== SOURCE OF TRUTH: Modal payload COMPLETELY replaces form state =====
+    // The ATTOM modal payload is the authoritative source. No previous state persists.
+    const record = attomPendingRecord;
+    
+    // Get unit from ATTOM record (if any) - this is the ONLY unit that should exist
+    const attomUnit = record.unit_number || '';
+    
+    // Apply ATTOM data first
+    applyAttomData(record);
+    
+    // CRITICAL: Explicitly set unit_number from ATTOM record ONLY
+    // This ensures stale unit numbers from previous property types are cleared
+    setFormData(prev => ({ 
+      ...prev, 
+      unit_number: attomUnit
+    }));
+    
+    // Determine if this is a condo/apartment
+    const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
+    const hasUnit = attomUnit.trim() !== '';
+    const hasTaxData = record.taxAmount != null || record.assessedValue != null;
+    
+    // CONDO VALIDATION: Only show success if we have unit + tax data
+    if (isCondo && (!hasUnit || !hasTaxData)) {
+      console.log('[ATTOM] Condo verification incomplete:', { hasUnit, hasTaxData });
+      setPublicRecordStatus('idle'); // Not verified yet - need unit
+      setAttomFetchStatus(
+        !hasUnit 
+          ? "Unit number required for condo records. Please enter unit number below."
+          : "Address confirmed but tax data not available for this unit."
+      );
+      toast.info("Please enter unit number to load complete condo data.");
+    } else {
+      // Full success - single family OR condo with complete data
       setPublicRecordStatus('success');
       setAttomFetchStatus("Public record data loaded successfully.");
       toast.success("Property data loaded from public records!");
-      setHasAutoFetched(true);
-      setHasConfirmedAttomAddress(true);
-      // Store verified context
-      setAttomVerifiedContext({
-        property_type: formData.property_type,
-        address: attomPendingRecord.address || formData.address,
-        city: attomPendingRecord.city || formData.city,
-        zip_code: attomPendingRecord.zip || formData.zip_code,
-        state: attomPendingRecord.state || formData.state,
-        county: formData.county,
-        unit_number: agentUnit || formData.unit_number,
-      });
     }
+    
+    setHasAutoFetched(true);
+    setHasConfirmedAttomAddress(true);
+    
+    // Store verified context with values FROM THE MODAL PAYLOAD
+    setAttomVerifiedContext({
+      property_type: formData.property_type,
+      address: record.address || formData.address,
+      city: record.city || formData.city,
+      zip_code: record.zip || formData.zip_code,
+      state: record.state || formData.state,
+      county: formData.county,
+      unit_number: attomUnit, // ONLY from modal payload
+    });
+    
     setIsAddressConfirmOpen(false);
     setAttomPendingRecord(null);
   };
@@ -1409,11 +1469,60 @@ const AddListing = () => {
     }
   };
   
-  // Clear lot_size when property type changes to condo/apartment (not applicable)
+  // ===== HARD RESET: Property Type Change =====
+  // When property_type changes between condo/apartment ↔ single_family/townhouse/multi_family,
+  // we MUST reset ALL ATTOM-related state to prevent stale data corruption
+  const prevPropertyTypeRef = useRef(formData.property_type);
+  
   useEffect(() => {
-    if (formData.property_type === 'condo' || formData.property_type === 'apartment') {
+    const prevType = prevPropertyTypeRef.current;
+    const newType = formData.property_type;
+    
+    // Skip if same property type or initial render
+    if (prevType === newType) return;
+    
+    // Determine if we're switching between condo/apartment and other types
+    const wasCondoLike = prevType === 'condo' || prevType === 'apartment';
+    const isCondoLike = newType === 'condo' || newType === 'apartment';
+    const typeChanged = wasCondoLike !== isCondoLike;
+    
+    console.log('[ATTOM] Property type changed:', prevType, '->', newType, 'Major switch:', typeChanged);
+    
+    // ALWAYS clear lot_size for condos (existing behavior)
+    if (isCondoLike) {
       setFormData(prev => ({ ...prev, lot_size: '' }));
     }
+    
+    // HARD RESET: If switching between condo and non-condo types, clear ALL ATTOM state
+    // This prevents stale unit numbers and tax data from persisting
+    if (typeChanged) {
+      console.log('[ATTOM] HARD RESET: Clearing all ATTOM state for property type switch');
+      
+      // Clear unit number when switching FROM condo TO non-condo
+      if (wasCondoLike && !isCondoLike) {
+        setFormData(prev => ({
+          ...prev,
+          unit_number: '',
+          // Also clear tax/assessment since it was for the wrong property type
+          annual_property_tax: '',
+          tax_year: '',
+          assessed_value: '',
+        }));
+      }
+      
+      // Clear all verification state
+      setAttomVerifiedContext(null);
+      setPublicRecordStatus('idle');
+      setAttomFetchStatus('');
+      setHasAutoFetched(false);
+      setHasConfirmedAttomAddress(false);
+      setAttomPendingRecord(null);
+      setAddressVerified(false);
+      setVerificationMessage('');
+    }
+    
+    // Update ref for next comparison
+    prevPropertyTypeRef.current = newType;
   }, [formData.property_type]);
 
   const handleFileSelect = async (files: FileList | null, type: 'photos' | 'floorplans' | 'documents') => {
