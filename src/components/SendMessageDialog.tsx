@@ -465,134 +465,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <div className="space-y-4 pb-4 border-b">
                   <h3 className="text-sm font-medium">Location & Criteria</h3>
 
-                  {/* Property Types */}
-                  <div className="space-y-2">
-                    <Label>Property Types (Optional)</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="select-all-property-types"
-                          checked={propertyTypes.length === 6}
-                          onCheckedChange={selectAllPropertyTypes}
-                        />
-                        <Label
-                          htmlFor="select-all-property-types"
-                          className="font-normal cursor-pointer"
-                        >
-                          Select All
-                        </Label>
-                      </div>
-                      
-                      {[
-                        { value: "single_family", label: "Single Family" },
-                        { value: "condo", label: "Condo" },
-                        { value: "townhouse", label: "Townhouse" },
-                        { value: "multi_family", label: "Multi Family" },
-                        { value: "land", label: "Land" },
-                        { value: "commercial", label: "Commercial" },
-                      ].map((type) => (
-                        <div key={type.value} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`type-${type.value}`}
-                            checked={propertyTypes.includes(type.value)}
-                            onCheckedChange={() => handlePropertyTypeToggle(type.value)}
-                          />
-                          <label
-                            htmlFor={`type-${type.value}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                          >
-                            {type.label}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                    {propertyTypes.length > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {propertyTypes.length} type(s) selected
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Price Range */}
-                  <div className="space-y-2">
-                    <Label>Price Range (Optional)</Label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="minPrice" className="text-xs text-muted-foreground">
-                          Minimum Price
-                        </Label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                          <Input
-                            id="minPrice"
-                            type="text"
-                            inputMode="numeric"
-                            value={minPriceDisplay}
-                            onChange={(e) => handleMinPriceChange(e.target.value)}
-                            placeholder={category === "renter_need" ? "1,000" : "500,000"}
-                            className="pl-7"
-                            disabled={noMinPrice}
-                          />
-                        </div>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Checkbox
-                            id="noMinPrice"
-                            checked={noMinPrice}
-                            onCheckedChange={(checked) => {
-                              setNoMinPrice(checked as boolean);
-                              if (checked) {
-                                setMinPrice("");
-                                setMinPriceDisplay("");
-                              }
-                            }}
-                          />
-                          <label htmlFor="noMinPrice" className="text-xs text-muted-foreground cursor-pointer">
-                            No minimum
-                          </label>
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="maxPrice" className="text-xs text-muted-foreground">
-                          Maximum Price
-                        </Label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                          <Input
-                            id="maxPrice"
-                            type="text"
-                            inputMode="numeric"
-                            value={maxPriceDisplay}
-                            onChange={(e) => handleMaxPriceChange(e.target.value)}
-                            placeholder={category === "renter_need" ? "5,000" : "2,000,000"}
-                            className="pl-7"
-                            disabled={noMaxPrice}
-                          />
-                        </div>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Checkbox
-                            id="noMaxPrice"
-                            checked={noMaxPrice}
-                            onCheckedChange={(checked) => {
-                              setNoMaxPrice(checked as boolean);
-                              if (checked) {
-                                setMaxPrice("");
-                                setMaxPriceDisplay("");
-                              }
-                            }}
-                          />
-                          <label htmlFor="noMaxPrice" className="text-xs text-muted-foreground cursor-pointer">
-                            No maximum
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Location Section - EXACTLY like SubmitClientNeed */}
+                  {/* Location Section - State and County ALWAYS visible */}
                   <div className="space-y-4">
-                    <Label className="text-base font-semibold">Location</Label>
-                    
-                    {/* State and County - Always visible, side by side */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-sm">State</Label>
@@ -627,7 +501,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       </div>
                     </div>
 
-                    {/* Towns & Neighborhoods Section - Collapsible, EXACTLY like SubmitClientNeed */}
+                    {/* Towns & Neighborhoods Section - Collapsible, CLOSED by default */}
                     <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                       <CollapsibleTrigger className="w-full">
                         <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
@@ -748,6 +622,160 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       </CollapsibleContent>
                     </Collapsible>
                   </div>
+
+                  {/* Property Types - Collapsible, CLOSED by default, HIDDEN for general_discussion */}
+                  {category !== "general_discussion" && (
+                    <Collapsible>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
+                          <Label className="text-sm font-semibold uppercase cursor-pointer">
+                            Property Types
+                            {propertyTypes.length > 0 && (
+                              <span className="ml-2 text-xs font-normal text-green-600">
+                                ({propertyTypes.length} selected)
+                              </span>
+                            )}
+                          </Label>
+                          <ChevronDown className="h-4 w-4" />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="space-y-2 pt-4">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="select-all-property-types"
+                                checked={propertyTypes.length === 6}
+                                onCheckedChange={selectAllPropertyTypes}
+                              />
+                              <Label
+                                htmlFor="select-all-property-types"
+                                className="font-normal cursor-pointer"
+                              >
+                                Select All
+                              </Label>
+                            </div>
+                            
+                            {[
+                              { value: "single_family", label: "Single Family" },
+                              { value: "condo", label: "Condo" },
+                              { value: "townhouse", label: "Townhouse" },
+                              { value: "multi_family", label: "Multi Family" },
+                              { value: "land", label: "Land" },
+                              { value: "commercial", label: "Commercial" },
+                            ].map((type) => (
+                              <div key={type.value} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`type-${type.value}`}
+                                  checked={propertyTypes.includes(type.value)}
+                                  onCheckedChange={() => handlePropertyTypeToggle(type.value)}
+                                />
+                                <label
+                                  htmlFor={`type-${type.value}`}
+                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                >
+                                  {type.label}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+
+                  {/* Price Range - Collapsible, CLOSED by default, HIDDEN for general_discussion */}
+                  {category !== "general_discussion" && (
+                    <Collapsible>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
+                          <Label className="text-sm font-semibold uppercase cursor-pointer">
+                            Price Range
+                            {(minPrice || maxPrice) && (
+                              <span className="ml-2 text-xs font-normal text-green-600">
+                                (${minPriceDisplay || '0'} - ${maxPriceDisplay || '∞'})
+                              </span>
+                            )}
+                          </Label>
+                          <ChevronDown className="h-4 w-4" />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="space-y-2 pt-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="minPrice" className="text-xs text-muted-foreground">
+                                Minimum Price
+                              </Label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                <Input
+                                  id="minPrice"
+                                  type="text"
+                                  inputMode="numeric"
+                                  value={minPriceDisplay}
+                                  onChange={(e) => handleMinPriceChange(e.target.value)}
+                                  placeholder={category === "renter_need" ? "1,000" : "500,000"}
+                                  className="pl-7"
+                                  disabled={noMinPrice}
+                                />
+                              </div>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <Checkbox
+                                  id="noMinPrice"
+                                  checked={noMinPrice}
+                                  onCheckedChange={(checked) => {
+                                    setNoMinPrice(checked as boolean);
+                                    if (checked) {
+                                      setMinPrice("");
+                                      setMinPriceDisplay("");
+                                    }
+                                  }}
+                                />
+                                <label htmlFor="noMinPrice" className="text-xs text-muted-foreground cursor-pointer">
+                                  No minimum
+                                </label>
+                              </div>
+                            </div>
+                            <div>
+                              <Label htmlFor="maxPrice" className="text-xs text-muted-foreground">
+                                Maximum Price
+                              </Label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                <Input
+                                  id="maxPrice"
+                                  type="text"
+                                  inputMode="numeric"
+                                  value={maxPriceDisplay}
+                                  onChange={(e) => handleMaxPriceChange(e.target.value)}
+                                  placeholder={category === "renter_need" ? "5,000" : "2,000,000"}
+                                  className="pl-7"
+                                  disabled={noMaxPrice}
+                                />
+                              </div>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <Checkbox
+                                  id="noMaxPrice"
+                                  checked={noMaxPrice}
+                                  onCheckedChange={(checked) => {
+                                    setNoMaxPrice(checked as boolean);
+                                    if (checked) {
+                                      setMaxPrice("");
+                                      setMaxPriceDisplay("");
+                                    }
+                                  }}
+                                />
+                                <label htmlFor="noMaxPrice" className="text-xs text-muted-foreground cursor-pointer">
+                                  No maximum
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
                 </div>
               )}
 
