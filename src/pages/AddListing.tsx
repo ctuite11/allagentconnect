@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -16,7 +16,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
 import { format, differenceInDays } from "date-fns";
@@ -111,6 +111,17 @@ const AddListing = () => {
   const [attomRejectedForAddress, setAttomRejectedForAddress] = useState<string>("");
   // Flag to track if ATTOM address has been confirmed (prevents auto-popup on edit/return)
   const [hasConfirmedAttomAddress, setHasConfirmedAttomAddress] = useState(false);
+  
+  // Track the context that was verified with ATTOM to detect when fields change
+  const [attomVerifiedContext, setAttomVerifiedContext] = useState<{
+    property_type: string;
+    address: string;
+    city: string;
+    zip_code: string;
+    state: string;
+    county: string;
+    unit_number: string;
+  } | null>(null);
   
   // Ref to track when we're applying ATTOM data (to prevent re-triggering fetch)
   const isApplyingAttomDataRef = useRef(false);
@@ -1129,6 +1140,16 @@ const AddListing = () => {
     setPublicRecordStatus('success');
     setAttomFetchStatus("Public record data loaded successfully.");
     setHasAutoFetched(true);
+    // Store verified context
+    setAttomVerifiedContext({
+      property_type: formData.property_type,
+      address: record.address || formData.address,
+      city: record.city || formData.city,
+      zip_code: record.zip || formData.zip_code,
+      state: record.state || formData.state,
+      county: formData.county,
+      unit_number: formData.unit_number,
+    });
     toast.success("Property data imported from public records!");
   };
 
@@ -1150,6 +1171,16 @@ const AddListing = () => {
       toast.success("Property data loaded from public records!");
       setHasAutoFetched(true);
       setHasConfirmedAttomAddress(true);
+      // Store verified context
+      setAttomVerifiedContext({
+        property_type: formData.property_type,
+        address: attomPendingRecord.address || formData.address,
+        city: attomPendingRecord.city || formData.city,
+        zip_code: attomPendingRecord.zip || formData.zip_code,
+        state: attomPendingRecord.state || formData.state,
+        county: formData.county,
+        unit_number: agentUnit || formData.unit_number,
+      });
     }
     setIsAddressConfirmOpen(false);
     setAttomPendingRecord(null);
@@ -1228,8 +1259,34 @@ const AddListing = () => {
     // Reset flags to allow a fresh lookup
     setHasAutoFetched(false);
     setAttomRejectedForAddress("");
+    setAttomVerifiedContext(null); // Clear stale context
     handleAutoFillFromPublicRecords(false);
   };
+  
+  // Compute if ATTOM verification is stale (context changed since verification)
+  const isAttomVerificationStale = useMemo(() => {
+    if (!attomVerifiedContext || publicRecordStatus !== 'success') return false;
+    
+    const ctx = attomVerifiedContext;
+    // Check if any key field has changed from verified context
+    return (
+      ctx.property_type !== formData.property_type ||
+      ctx.address.toLowerCase() !== formData.address.toLowerCase() ||
+      ctx.city.toLowerCase() !== formData.city.toLowerCase() ||
+      ctx.zip_code !== formData.zip_code ||
+      ctx.state !== formData.state ||
+      ctx.county !== formData.county ||
+      ctx.unit_number !== formData.unit_number
+    );
+  }, [attomVerifiedContext, publicRecordStatus, formData.property_type, formData.address, formData.city, formData.zip_code, formData.state, formData.county, formData.unit_number]);
+  
+  // Detect if user switched to condo after single-family verification
+  const isSwitchedToCondo = useMemo(() => {
+    if (!attomVerifiedContext || publicRecordStatus !== 'success') return false;
+    const wasSingleFamily = attomVerifiedContext.property_type === 'single_family' || attomVerifiedContext.property_type === 'townhouse';
+    const isNowCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
+    return wasSingleFamily && isNowCondo;
+  }, [attomVerifiedContext, publicRecordStatus, formData.property_type]);
 
   // Reset auto-fetch flag when address changes significantly
   const prevAddressRef = useRef({ address: "", city: "", zip: "" });
@@ -2559,11 +2616,53 @@ const AddListing = () => {
                     </Button>
                   </div>
                   
-                  {/* Public Record Status - subtle feedback only on success */}
-                  {publicRecordStatus === 'success' && (
-                    <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
+                  {/* ATTOM Verification Status - context-aware */}
+                  {publicRecordStatus === 'success' && !isAttomVerificationStale && (
+                    <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded text-green-700 text-sm dark:bg-green-950/30 dark:border-green-800 dark:text-green-300">
                       <CheckCircle2 className="h-4 w-4" />
                       <span>Public record data loaded successfully.</span>
+                    </div>
+                  )}
+                  
+                  {/* Stale verification warning - Condo switch specific */}
+                  {isAttomVerificationStale && isSwitchedToCondo && (
+                    <div className="flex items-center justify-between gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                        <span>Condo selected — please re-verify address to load unit-level data.</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleManualAttomLookup}
+                        disabled={autoFillLoading}
+                        className="flex-shrink-0 border-amber-400 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/50"
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Re-verify
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {/* Stale verification warning - General field change */}
+                  {isAttomVerificationStale && !isSwitchedToCondo && (
+                    <div className="flex items-center justify-between gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                        <span>Address fields changed — verification data may be outdated.</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleManualAttomLookup}
+                        disabled={autoFillLoading}
+                        className="flex-shrink-0 border-amber-400 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/50"
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Re-verify
+                      </Button>
                     </div>
                   )}
                   
