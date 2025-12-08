@@ -15,6 +15,7 @@ interface UseTownsPickerProps {
 }
 
 export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps) {
+  console.log("[useTownsPicker] Hook initialized with:", { state, county, showAreas });
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
 
   // Normalize state to 2-letter code
@@ -97,6 +98,8 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
   }, [state, county, showAreas]);
 
   const toggleCityExpansion = (city: string) => {
+    console.log("[useTownsPicker] toggleCityExpansion called:", city);
+    console.log("[useTownsPicker] Current expandedCities:", Array.from(expandedCities));
     setExpandedCities(prev => {
       const newSet = new Set(prev);
       if (newSet.has(city)) {
@@ -104,6 +107,7 @@ export function useTownsPicker({ state, county, showAreas }: UseTownsPickerProps
       } else {
         newSet.add(city);
       }
+      console.log("[useTownsPicker] New expandedCities will be:", Array.from(newSet));
       return newSet;
     });
   };
