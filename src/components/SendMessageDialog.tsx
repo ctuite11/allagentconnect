@@ -11,11 +11,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Send, Users, ArrowLeft, Loader2 } from "lucide-react";
+import { Send, Users, ArrowLeft, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { US_STATES } from "@/data/usStatesCountiesData";
-import GeographicSelector, { GeographicSelection } from "@/components/GeographicSelector";
+import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
+import { useTownsPicker } from "@/hooks/useTownsPicker";
+import { TownsPicker } from "@/components/TownsPicker";
+import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -33,13 +37,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [loadingCount, setLoadingCount] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   
-  // Geographic selection using unified component
-  const [geoSelection, setGeoSelection] = useState<GeographicSelection>({
-    state: "",
-    county: "all",
-    towns: [],
-    showAreas: true,
-  });
+  // Geographic selection state - EXACTLY like SubmitClientNeed
+  const [state, setState] = useState("MA");
+  const [selectedCountyId, setSelectedCountyId] = useState<string>("all");
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [citySearch, setCitySearch] = useState("");
+  const [showAreas, setShowAreas] = useState<boolean>(true);
+  const [townsOpen, setTownsOpen] = useState(false);
+  const [counties, setCounties] = useState<Array<{ id: string; name: string; state: string }>>([]);
   
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -48,6 +53,13 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [noMinPrice, setNoMinPrice] = useState(false);
   const [noMaxPrice, setNoMaxPrice] = useState(false);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
+
+  // Use the EXACT same hook pattern as SubmitClientNeed
+  const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
+    state: state,
+    county: selectedCountyId,
+    showAreas: showAreas,
+  });
 
   // Get full state name for display
   const getStateName = (code: string) => {
@@ -61,7 +73,92 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     }
   }, [open, defaultSubject]);
 
-  const showLocationFields = true; // Show filtering for all categories
+  // Load counties for selected state - EXACTLY like SubmitClientNeed
+  useEffect(() => {
+    const loadCounties = async () => {
+      if (!state) {
+        setCounties([]);
+        return;
+      }
+      
+      try {
+        const stateCode = state.length > 2 
+          ? US_STATES.find(s => s.name === state)?.code 
+          : state;
+        
+        if (stateCode && COUNTIES_BY_STATE[stateCode]) {
+          const stateCounties = COUNTIES_BY_STATE[stateCode].map(name => ({
+            id: name.toLowerCase().replace(/\s+/g, '-'),
+            name,
+            state: stateCode
+          }));
+          setCounties(stateCounties);
+        } else {
+          const { data, error } = await supabase
+            .from("counties")
+            .select("*")
+            .eq("state", stateCode || state)
+            .order("name");
+          
+          if (!error && data) {
+            setCounties(data);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading counties:", error);
+      }
+    };
+    
+    loadCounties();
+    setSelectedCountyId("all");
+    setSelectedCities([]);
+  }, [state]);
+
+  const showLocationFields = true;
+
+  // Toggle city - EXACTLY like SubmitClientNeed
+  const toggleCity = (city: string) => {
+    setSelectedCities(prev =>
+      prev.includes(city) ? prev.filter(c => c !== city) : [...prev, city]
+    );
+  };
+
+  // Select all towns - EXACTLY like SubmitClientNeed
+  const selectAllTowns = () => {
+    const allSelections = [...townsList];
+    
+    if (showAreas) {
+      const stateKey = state && state.length > 2 
+        ? (US_STATES.find(s => s.name.toLowerCase() === state.toLowerCase())?.code ?? state)
+        : state?.toUpperCase();
+
+      townsList.forEach(town => {
+        if (town.includes('-')) return;
+        
+        const hasNeighborhoods = hasNeighborhoodData(town, stateKey || state);
+        let neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
+        
+        if ((neighborhoods?.length ?? 0) === 0) {
+          neighborhoods = Array.from(new Set(
+            townsList
+              .filter((t) => t.startsWith(`${town}-`))
+              .map((t) => t.split('-').slice(1).join('-'))
+          ));
+        }
+        
+        if (neighborhoods && neighborhoods.length > 0) {
+          neighborhoods.forEach((n: string) => {
+            const fullEntry = `${town}-${n}`;
+            if (!allSelections.includes(fullEntry)) {
+              allSelections.push(fullEntry);
+            }
+          });
+        }
+      });
+    }
+    
+    setSelectedCities(allSelections);
+  };
 
   const handlePropertyTypeToggle = (type: string) => {
     setPropertyTypes(prev =>
@@ -107,10 +204,10 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     if (open && showLocationFields) {
       fetchRecipientCount();
     }
-  }, [open, geoSelection, propertyTypes, minPrice, maxPrice, noMinPrice, noMaxPrice]);
+  }, [open, state, selectedCountyId, selectedCities, propertyTypes, minPrice, maxPrice, noMinPrice, noMaxPrice]);
 
   const fetchRecipientCount = async () => {
-    if (!geoSelection.state) {
+    if (!state) {
       setRecipientCount(null);
       return;
     }
@@ -125,11 +222,10 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       };
 
       if (showLocationFields) {
-        // Extract cities and neighborhoods from selectedTowns
         const cities: string[] = [];
         const neighborhoods: string[] = [];
         
-        geoSelection.towns.forEach(town => {
+        selectedCities.forEach(town => {
           if (town.includes('-')) {
             const [city, neighborhood] = town.split('-');
             if (!cities.includes(city)) cities.push(city);
@@ -140,8 +236,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         });
 
         requestBody.criteria = {
-          state: geoSelection.state || undefined,
-          counties: geoSelection.county && geoSelection.county !== "all" ? [geoSelection.county] : undefined,
+          state: state || undefined,
+          counties: selectedCountyId && selectedCountyId !== "all" ? [selectedCountyId] : undefined,
           cities: cities.length > 0 ? cities : undefined,
           neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
           minPrice: !noMinPrice && minPrice ? parseFloat(minPrice) : undefined,
@@ -169,7 +265,6 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
   const handleSend = async () => {
     if (!showConfirmation) {
-      // Validate
       if (!subject.trim()) {
         toast.error("Please enter a subject");
         return;
@@ -178,17 +273,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         toast.error("Please enter a message");
         return;
       }
-      if (showLocationFields && !geoSelection.state) {
+      if (showLocationFields && !state) {
         toast.error("Please select a state");
         return;
       }
 
-      // Show confirmation
       setShowConfirmation(true);
       return;
     }
 
-    // Actually send
     setSending(true);
     try {
       const requestBody: any = {
@@ -198,11 +291,10 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
       };
 
       if (showLocationFields) {
-        // Extract cities and neighborhoods from selectedTowns
         const cities: string[] = [];
         const neighborhoods: string[] = [];
         
-        geoSelection.towns.forEach(town => {
+        selectedCities.forEach(town => {
           if (town.includes('-')) {
             const [city, neighborhood] = town.split('-');
             if (!cities.includes(city)) cities.push(city);
@@ -213,8 +305,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         });
 
         requestBody.criteria = {
-          state: geoSelection.state || undefined,
-          counties: geoSelection.county && geoSelection.county !== "all" ? [geoSelection.county] : undefined,
+          state: state || undefined,
+          counties: selectedCountyId && selectedCountyId !== "all" ? [selectedCountyId] : undefined,
           cities: cities.length > 0 ? cities : undefined,
           neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
           minPrice: !noMinPrice && minPrice ? parseFloat(minPrice) : undefined,
@@ -247,7 +339,12 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const handleClose = () => {
     setSubject("");
     setMessage("");
-    setGeoSelection({ state: "", county: "all", towns: [], showAreas: true });
+    setState("MA");
+    setSelectedCountyId("all");
+    setSelectedCities([]);
+    setCitySearch("");
+    setShowAreas(true);
+    setTownsOpen(false);
     setMinPrice("");
     setMaxPrice("");
     setMinPriceDisplay("");
@@ -275,7 +372,6 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         </DialogHeader>
 
         {showConfirmation ? (
-          /* Confirmation View */
           <div className="space-y-6">
             <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
               <div>
@@ -286,16 +382,16 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <Label className="text-sm font-semibold">Message</Label>
                 <p className="mt-1 text-sm whitespace-pre-wrap">{message}</p>
               </div>
-              {geoSelection.state && (
+              {state && (
                 <div>
                   <Label className="text-sm font-semibold">Criteria</Label>
                   <div className="mt-1 text-sm space-y-1">
-                    <p><strong>State:</strong> {getStateName(geoSelection.state)}</p>
-                  {geoSelection.county && geoSelection.county !== "all" && (
-                    <p><strong>County:</strong> {geoSelection.county}</p>
+                    <p><strong>State:</strong> {getStateName(state)}</p>
+                  {selectedCountyId && selectedCountyId !== "all" && (
+                    <p><strong>County:</strong> {selectedCountyId}</p>
                   )}
-                  {geoSelection.towns.length > 0 && (
-                    <p><strong>Towns/Cities:</strong> {geoSelection.towns.length} selected</p>
+                  {selectedCities.length > 0 && (
+                    <p><strong>Towns/Cities:</strong> {selectedCities.length} selected</p>
                   )}
                     {propertyTypes.length > 0 && (
                       <p><strong>Property Types:</strong> {propertyTypes.map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ")}</p>
@@ -346,9 +442,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             </div>
           </div>
         ) : (
-          /* Form View */
           <>
-            {/* Agent Counter - Always show to prevent layout shift */}
             <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-lg mb-6">
               <Users className="h-4 w-4 text-muted-foreground" />
               {loadingCount ? (
@@ -367,7 +461,6 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             </div>
 
             <div className="space-y-6">
-              {/* Location & Criteria using GeographicSelector */}
               {showLocationFields && (
                 <div className="space-y-4 pb-4 border-b">
                   <h3 className="text-sm font-medium">Location & Criteria</h3>
@@ -376,7 +469,6 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   <div className="space-y-2">
                     <Label>Property Types (Optional)</Label>
                     <div className="grid grid-cols-2 gap-3">
-                      {/* Select All Option */}
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="select-all-property-types"
@@ -391,7 +483,6 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         </Label>
                       </div>
                       
-                      {/* Individual Options */}
                       {[
                         { value: "single_family", label: "Single Family" },
                         { value: "condo", label: "Condo" },
@@ -472,7 +563,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                             inputMode="numeric"
                             value={maxPriceDisplay}
                             onChange={(e) => handleMaxPriceChange(e.target.value)}
-                            placeholder={category === "renter_need" ? "20,000" : "500,000"}
+                            placeholder={category === "renter_need" ? "5,000" : "2,000,000"}
                             className="pl-7"
                             disabled={noMaxPrice}
                           />
@@ -497,18 +588,170 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     </div>
                   </div>
 
-                  {/* Geographic Selection - Unified Component */}
-                  <GeographicSelector
-                    value={geoSelection}
-                    onChange={setGeoSelection}
-                    defaultCollapsed={false}
-                    showWrapper={false}
-                    label="Location"
-                  />
+                  {/* Location Section - EXACTLY like SubmitClientNeed */}
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">Location</Label>
+                    
+                    {/* State and County - Always visible, side by side */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm">State</Label>
+                        <Select value={state} onValueChange={(val) => setState(val)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select state" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {US_STATES.map((s) => (
+                              <SelectItem key={s.code} value={s.code}>
+                                {s.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm">County</Label>
+                        <Select value={selectedCountyId} onValueChange={(val) => setSelectedCountyId(val)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All Counties" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Counties</SelectItem>
+                            {counties.map((county) => (
+                              <SelectItem key={county.id} value={county.name}>
+                                {county.name} County
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Towns & Neighborhoods Section - Collapsible, EXACTLY like SubmitClientNeed */}
+                    <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
+                          <Label className="text-sm font-semibold uppercase cursor-pointer">
+                            Towns & Neighborhoods
+                            {selectedCities.length > 0 && (
+                              <span className="ml-2 text-xs font-normal text-green-600">
+                                ({selectedCities.length} selected)
+                              </span>
+                            )}
+                          </Label>
+                          {townsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="space-y-4 pt-4">
+                          {/* Show Areas Yes/No */}
+                          <div className="flex items-center gap-4">
+                            <Label className="text-sm">Show Areas</Label>
+                            <div className="flex gap-4">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="show-yes"
+                                  name="show-areas"
+                                  checked={showAreas === true}
+                                  onChange={() => setShowAreas(true)}
+                                  className="w-4 h-4"
+                                />
+                                <Label htmlFor="show-yes" className="text-sm">Yes</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="show-no"
+                                  name="show-areas"
+                                  checked={showAreas === false}
+                                  onChange={() => setShowAreas(false)}
+                                  className="w-4 h-4"
+                                />
+                                <Label htmlFor="show-no" className="text-sm">No</Label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Two-column: Towns picker + Selected towns */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Input
+                                placeholder="Type Full or Partial Name"
+                                value={citySearch}
+                                onChange={(e) => setCitySearch(e.target.value)}
+                                className="text-sm"
+                              />
+                              <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2 relative z-10">
+                                {selectedCountyId && townsList.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={selectAllTowns}
+                                    className="w-full text-left px-2 py-1.5 text-sm font-semibold hover:bg-muted rounded mb-1 border-b pb-2"
+                                  >
+                                    {selectedCountyId === "all" 
+                                      ? `✓ Add All Towns from All Counties` 
+                                      : `✓ Add All Towns in County (${townsList.length})`}
+                                  </button>
+                                )}
+                                <TownsPicker
+                                  towns={townsList}
+                                  selectedTowns={selectedCities}
+                                  onToggleTown={toggleCity}
+                                  expandedCities={expandedCities}
+                                  onToggleCityExpansion={toggleCityExpansion}
+                                  state={state}
+                                  searchQuery={citySearch}
+                                  variant="button"
+                                  showAreas={showAreas}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-sm">Selected Towns</Label>
+                              <div className="border rounded-md p-3 bg-background min-h-[200px] max-h-60 overflow-y-auto">
+                                {selectedCities.length === 0 ? (
+                                  <p className="text-sm text-muted-foreground">No towns selected</p>
+                                ) : (
+                                  <div className="space-y-1">
+                                    {selectedCities.length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setSelectedCities([])}
+                                        className="text-xs text-destructive hover:underline mb-2"
+                                      >
+                                        Remove All
+                                      </button>
+                                    )}
+                                    {selectedCities.map((city) => (
+                                      <div 
+                                        key={city}
+                                        className="flex items-center justify-between text-sm py-1 px-2 bg-muted rounded"
+                                      >
+                                        <span>{city.includes('-') ? city.replace('-', ' - ') : city}</span>
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleCity(city)}
+                                          className="text-muted-foreground hover:text-destructive text-xs"
+                                        >
+                                          ×
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
                 </div>
               )}
 
-              {/* Subject and Message */}
+              {/* Subject & Message */}
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="subject">Subject *</Label>
@@ -516,7 +759,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     id="subject"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Enter subject"
+                    placeholder="Enter subject line"
                   />
                 </div>
 
@@ -526,29 +769,23 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     id="message"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Enter your message"
-                    rows={6}
+                    placeholder="Enter your message..."
+                    className="min-h-[150px]"
                   />
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex gap-3 justify-end">
-                <Button type="button" variant="outline" onClick={handleClose}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                >
                   Cancel
                 </Button>
-                <Button
-                  onClick={handleSend}
-                  disabled={
-                    !subject.trim() ||
-                    !message.trim() ||
-                    (showLocationFields && !geoSelection.state) ||
-                    loadingCount ||
-                    recipientCount === 0
-                  }
-                >
+                <Button onClick={handleSend}>
                   <Send className="h-4 w-4 mr-2" />
-                  Review & Send
+                  Preview & Send
                 </Button>
               </div>
             </div>
