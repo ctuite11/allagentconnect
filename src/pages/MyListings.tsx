@@ -38,6 +38,7 @@ interface Listing {
   bathrooms?: number | null;
   square_feet?: number | null;
   neighborhood?: string | null;
+  unit_number?: string | null;
   listing_stats?: {
     view_count: number;
     save_count: number;
@@ -103,6 +104,19 @@ function formatDate(value?: string | null) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleDateString();
+}
+
+// Format address with unit number for condos
+function formatAddressWithUnit(listing: Listing): string {
+  const baseAddress = listing.address;
+  const unit = listing.unit_number;
+  const city = listing.city;
+  
+  if (unit && unit.trim()) {
+    // Format: "16 N Mead St #401, Charlestown"
+    return `${baseAddress} #${unit.replace(/^#/, '')}, ${city}`;
+  }
+  return `${baseAddress}, ${city}`;
 }
 
 /**
@@ -432,7 +446,7 @@ function MyListingsView({
 
                 <div className="p-4">
                   <div className="font-semibold text-lg">
-                    {l.address}, {l.city}
+                    {formatAddressWithUnit(l)}
                   </div>
                   <div className="text-muted-foreground text-sm mt-1">${l.price.toLocaleString()}</div>
 
@@ -590,7 +604,7 @@ function MyListingsView({
                   <div className="flex-1 min-w-0">
                     {/* Address */}
                     <div className="font-semibold text-base truncate">
-                      {l.address}, {l.city}
+                      {formatAddressWithUnit(l)}
                     </div>
 
                     {/* Price + AAC + Quick Edit OR Save/Cancel on same row */}
