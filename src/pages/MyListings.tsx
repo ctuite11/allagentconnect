@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3 } from "lucide-react";
+import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { OpenHouseDialog } from "@/components/OpenHouseDialog";
 import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
@@ -130,7 +131,7 @@ function MyListingsView({
   onShare: (id: string) => void;
   onDelete: (id: string) => Promise<void>;
   onBulkDeleteDrafts: (ids: string[]) => Promise<void>;
-  onNewListing: () => void;
+  onNewListing: (status?: string) => void;
   onQuickUpdate: (id: string, updates: Partial<Pick<Listing, "price" | "status">>) => Promise<void>;
   onPhotos: (id: string) => void;
   onOpenHouse: (listing: Listing) => void;
@@ -272,13 +273,38 @@ function MyListingsView({
 
       {/* New Listing Button Row */}
       <div className="mb-2">
-        <button
-          onClick={onNewListing}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition"
-        >
-          <Plus className="h-4 w-4" />
-          New Listing
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition">
+              <Plus className="h-4 w-4" />
+              New Listing
+              <ChevronDown className="h-4 w-4 ml-1" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuItem onClick={() => onNewListing("new")} className="cursor-pointer">
+              <Home className="h-4 w-4 mr-2 text-emerald-500" />
+              <div>
+                <div className="font-medium">New (Active)</div>
+                <div className="text-xs text-muted-foreground">Ready to go live on market</div>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onNewListing("off_market")} className="cursor-pointer">
+              <Lock className="h-4 w-4 mr-2 text-amber-500" />
+              <div>
+                <div className="font-medium">Off-Market (Private)</div>
+                <div className="text-xs text-muted-foreground">Private listing for agents only</div>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onNewListing("coming_soon")} className="cursor-pointer">
+              <Sparkles className="h-4 w-4 mr-2 text-purple-500" />
+              <div>
+                <div className="font-medium">Coming Soon</div>
+                <div className="text-xs text-muted-foreground">Pre-market announcement</div>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Status Tabs + Grid Toggle on same row */}
@@ -837,8 +863,9 @@ const MyListings = () => {
     }
   };
 
-  const handleNewListing = () => {
-    navigate("/agent/listings/new");
+  const handleNewListing = (status?: string) => {
+    const url = status ? `/agent/listings/new?status=${status}` : "/agent/listings/new";
+    navigate(url);
   };
 
   const handleQuickUpdate = async (id: string, updates: Partial<Pick<Listing, "price" | "status">>) => {
@@ -929,13 +956,38 @@ const MyListings = () => {
           <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
             <h1 className="text-3xl font-semibold mb-2">My Listings</h1>
             <p className="text-muted-foreground mb-6">You haven't created any listings yet.</p>
-            <button
-              onClick={handleNewListing}
-              className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition text-lg"
-            >
-              <Plus className="h-5 w-5" />
-              Create Your First Listing
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition text-lg">
+                  <Plus className="h-5 w-5" />
+                  Create Your First Listing
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-56">
+                <DropdownMenuItem onClick={() => handleNewListing("new")} className="cursor-pointer">
+                  <Home className="h-4 w-4 mr-2 text-emerald-500" />
+                  <div>
+                    <div className="font-medium">New (Active)</div>
+                    <div className="text-xs text-muted-foreground">Ready to go live on market</div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleNewListing("off_market")} className="cursor-pointer">
+                  <Lock className="h-4 w-4 mr-2 text-amber-500" />
+                  <div>
+                    <div className="font-medium">Off-Market (Private)</div>
+                    <div className="text-xs text-muted-foreground">Private listing for agents only</div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleNewListing("coming_soon")} className="cursor-pointer">
+                  <Sparkles className="h-4 w-4 mr-2 text-purple-500" />
+                  <div>
+                    <div className="font-medium">Coming Soon</div>
+                    <div className="text-xs text-muted-foreground">Pre-market announcement</div>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
