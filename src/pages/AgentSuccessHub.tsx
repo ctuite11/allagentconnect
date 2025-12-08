@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
-  Users, TrendingUp, Mail, Heart, Bell, 
-  Home, UserPlus, Megaphone, Palette
+  Users, Mail, Heart, Bell, 
+  Home, Megaphone, Palette
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -359,7 +359,7 @@ export default function AgentSuccessHub() {
     );
   }
 
-  // Unified hub cards - single entry point per destination
+  // Unified hub cards - 5 functional navigation cards only
   const hubCards = [
     {
       icon: <Home className="w-6 h-6" />,
@@ -368,6 +368,7 @@ export default function AgentSuccessHub() {
       metricValue: activeListingsCount,
       metricLabel: "Active",
       route: "/agent/listings",
+      accentColor: "border-l-blue-500",
     },
     {
       icon: <Users className="w-6 h-6" />,
@@ -376,32 +377,30 @@ export default function AgentSuccessHub() {
       metricValue: activeBuyersCount,
       metricLabel: "Clients",
       route: "/my-clients",
+      accentColor: "border-l-teal-500",
     },
     {
       icon: <Bell className="w-6 h-6" />,
-      title: "Hotsheets",
+      title: "Hot Sheets",
       description: "Automated buyer and market tracking",
       metricValue: activeHotsheetsCount,
       metricLabel: "Active",
       route: "/hot-sheets",
-    },
-    {
-      icon: <UserPlus className="w-6 h-6" />,
-      title: "Buyer Registry",
-      description: "Register and match buyer needs",
-      route: "/submit-client-need",
+      accentColor: "border-l-purple-500",
     },
     {
       icon: <Megaphone className="w-6 h-6" />,
       title: "Communications Center",
       description: "Agent-to-agent alerts & discussions",
       route: "/client-needs",
+      accentColor: "border-l-green-500",
     },
     {
       icon: <Palette className="w-6 h-6" />,
       title: "Profile & Branding",
       description: "Edit your profile and branding",
       route: "/agent-profile-editor",
+      accentColor: "border-l-amber-500",
     },
   ];
 
@@ -417,7 +416,7 @@ export default function AgentSuccessHub() {
 
         {/* Unified Hub Cards Grid - Merged KPIs with navigation */}
         <div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {hubCards.map((card) => (
               <TechCard
                 key={card.title}
@@ -427,6 +426,7 @@ export default function AgentSuccessHub() {
                 metricValue={card.metricValue}
                 metricLabel={card.metricLabel}
                 onClick={() => navigate(card.route)}
+                accentColor={card.accentColor}
               />
             ))}
           </div>
