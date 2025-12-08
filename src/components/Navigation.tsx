@@ -206,7 +206,7 @@ const Navigation = () => {
                             <Search className="mr-2 h-4 w-4" />
                             Search
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate("/agent-dashboard#my-listings")}>
+                          <DropdownMenuItem onClick={() => navigate("/agent/listings")}>
                             <List className="mr-2 h-4 w-4" />
                             My Listings
                           </DropdownMenuItem>
@@ -332,7 +332,7 @@ const Navigation = () => {
                       </button>
                       <button
                         onClick={() => {
-                          navigate("/agent-dashboard#my-listings");
+                          navigate("/agent/listings");
                           setIsMenuOpen(false);
                         }}
                         className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
