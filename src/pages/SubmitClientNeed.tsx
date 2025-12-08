@@ -7,11 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
-import { GeographicSelector, GeographicSelection } from "@/components/GeographicSelector";
+import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
+import { useTownsPicker } from "@/hooks/useTownsPicker";
+import { TownsPicker } from "@/components/TownsPicker";
+import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 
 const PROPERTY_TYPES = [
   "single_family",
@@ -68,12 +74,23 @@ const SubmitClientNeed = () => {
     description: "",
   });
   
-  // Geographic selection state
-  const [geoSelection, setGeoSelection] = useState<GeographicSelection>({
-    state: "MA",
-    county: "all",
-    towns: [],
-    showAreas: true,
+  // Geographic selection state - EXACTLY like Hot Sheets
+  const [state, setState] = useState("MA");
+  const [selectedCountyId, setSelectedCountyId] = useState<string>("all");
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [citySearch, setCitySearch] = useState("");
+  const [multiTownInput, setMultiTownInput] = useState("");
+  const [showAreas, setShowAreas] = useState<boolean>(true);
+  const [townsOpen, setTownsOpen] = useState(false);
+  
+  // Counties for selected state
+  const [counties, setCounties] = useState<Array<{ id: string; name: string; state: string }>>([]);
+
+  // Use the EXACT same hook pattern as Hot Sheets
+  const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
+    state: state,
+    county: selectedCountyId,
+    showAreas: showAreas,
   });
 
   // Property type helpers
@@ -92,6 +109,113 @@ const SubmitClientNeed = () => {
       propertyTypes: allSelected ? [] : [...PROPERTY_TYPES],
     }));
   };
+
+  // Toggle city - EXACTLY like Hot Sheets
+  const toggleCity = (city: string) => {
+    setSelectedCities(prev =>
+      prev.includes(city) ? prev.filter(c => c !== city) : [...prev, city]
+    );
+  };
+
+  // Select all towns - EXACTLY like Hot Sheets
+  const selectAllTowns = () => {
+    const allSelections = [...townsList];
+    
+    // If showAreas is enabled, include all neighborhoods for each town
+    if (showAreas) {
+      const stateKey = state && state.length > 2 
+        ? (US_STATES.find(s => s.name.toLowerCase() === state.toLowerCase())?.code ?? state)
+        : state?.toUpperCase();
+
+      townsList.forEach(town => {
+        // Skip if this is already a neighborhood entry
+        if (town.includes('-')) return;
+        
+        // Get neighborhoods from the data
+        const hasNeighborhoods = hasNeighborhoodData(town, stateKey || state);
+        let neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
+        
+        // Also check for hyphenated neighborhoods in the towns list
+        if ((neighborhoods?.length ?? 0) === 0) {
+          neighborhoods = Array.from(new Set(
+            townsList
+              .filter((t) => t.startsWith(`${town}-`))
+              .map((t) => t.split('-').slice(1).join('-'))
+          ));
+        }
+        
+        if (neighborhoods && neighborhoods.length > 0) {
+          neighborhoods.forEach((n: string) => {
+            const fullEntry = `${town}-${n}`;
+            if (!allSelections.includes(fullEntry)) {
+              allSelections.push(fullEntry);
+            }
+          });
+        }
+      });
+    }
+    
+    setSelectedCities(allSelections);
+  };
+
+  // Add multiple towns - EXACTLY like Hot Sheets
+  const handleAddMultipleTowns = () => {
+    if (!multiTownInput.trim()) return;
+    
+    const towns = multiTownInput.split(',').map(t => t.trim()).filter(Boolean);
+    const newTowns = towns.filter(t => !selectedCities.includes(t));
+    
+    if (newTowns.length > 0) {
+      setSelectedCities(prev => [...prev, ...newTowns]);
+      toast.success(`Added ${newTowns.length} town(s)`);
+    }
+    
+    setMultiTownInput("");
+  };
+
+  // Load counties for selected state
+  useEffect(() => {
+    const loadCounties = async () => {
+      if (!state) {
+        setCounties([]);
+        return;
+      }
+      
+      try {
+        // First try COUNTIES_BY_STATE
+        const stateCode = state.length > 2 
+          ? US_STATES.find(s => s.name === state)?.code 
+          : state;
+        
+        if (stateCode && COUNTIES_BY_STATE[stateCode]) {
+          const stateCounties = COUNTIES_BY_STATE[stateCode].map(name => ({
+            id: name.toLowerCase().replace(/\s+/g, '-'),
+            name,
+            state: stateCode
+          }));
+          setCounties(stateCounties);
+        } else {
+          // Fallback to database
+          const { data, error } = await supabase
+            .from("counties")
+            .select("*")
+            .eq("state", stateCode || state)
+            .order("name");
+          
+          if (!error && data) {
+            setCounties(data);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading counties:", error);
+      }
+    };
+    
+    loadCounties();
+    // Reset county selection when state changes
+    setSelectedCountyId("all");
+    setSelectedCities([]);
+  }, [state]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -123,14 +247,14 @@ const SubmitClientNeed = () => {
       // Build validation data with locations
       const dataToValidate = {
         ...formData,
-        locations: geoSelection.towns,
+        locations: selectedCities,
       };
       
       // Validate input
       const validatedData = clientNeedSchema.parse(dataToValidate);
 
       // Extract city/state from first selected location for database compatibility
-      const firstLocation = geoSelection.towns[0] || "";
+      const firstLocation = selectedCities[0] || "";
       const city = firstLocation.includes("-") ? firstLocation.split("-")[0] : firstLocation;
 
       const { error: insertError } = await supabase.from("client_needs").insert({
@@ -138,7 +262,7 @@ const SubmitClientNeed = () => {
         property_type: validatedData.propertyTypes[0] as any,
         property_types: validatedData.propertyTypes as any,
         city: city,
-        state: geoSelection.state,
+        state: state,
         max_price: parseFloat(validatedData.maxPrice),
         bedrooms: validatedData.bedrooms ? parseInt(validatedData.bedrooms) : null,
         bathrooms: validatedData.bathrooms ? parseFloat(validatedData.bathrooms) : null,
@@ -203,13 +327,189 @@ const SubmitClientNeed = () => {
                 </div>
               </div>
 
-              <div>
-                <Label>Location</Label>
-                <GeographicSelector
-                  value={geoSelection}
-                  onChange={setGeoSelection}
-                  defaultCollapsed={false}
-                />
+              {/* Location Section - EXACTLY like Hot Sheets */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Location</Label>
+                
+                {/* State and County - Always visible, side by side */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm">State</Label>
+                    <Select value={state} onValueChange={(val) => setState(val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {US_STATES.map((s) => (
+                          <SelectItem key={s.code} value={s.code}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">County</Label>
+                    <Select value={selectedCountyId} onValueChange={(val) => setSelectedCountyId(val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Counties" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Counties</SelectItem>
+                        {counties.map((county) => (
+                          <SelectItem key={county.id} value={county.name}>
+                            {county.name} County
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Towns & Neighborhoods Section - Collapsible, EXACTLY like Hot Sheets */}
+                <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
+                  <CollapsibleTrigger className="w-full">
+                    <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border">
+                      <Label className="text-sm font-semibold uppercase cursor-pointer">
+                        Towns & Neighborhoods
+                        {selectedCities.length > 0 && (
+                          <span className="ml-2 text-xs font-normal text-green-600">
+                            ({selectedCities.length} selected)
+                          </span>
+                        )}
+                      </Label>
+                      {townsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="space-y-4 pt-4">
+                      {/* Show Areas Yes/No */}
+                      <div className="flex items-center gap-4">
+                        <Label className="text-sm">Show Areas</Label>
+                        <div className="flex gap-4">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="show-yes"
+                              name="show-areas"
+                              checked={showAreas === true}
+                              onChange={() => setShowAreas(true)}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor="show-yes" className="text-sm">Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="show-no"
+                              name="show-areas"
+                              checked={showAreas === false}
+                              onChange={() => setShowAreas(false)}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor="show-no" className="text-sm">No</Label>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Two-column: Towns picker + Selected towns */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="Type Full or Partial Name"
+                            value={citySearch}
+                            onChange={(e) => setCitySearch(e.target.value)}
+                            className="text-sm"
+                          />
+                          <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2 relative z-10">
+                            {selectedCountyId && townsList.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={selectAllTowns}
+                                className="w-full text-left px-2 py-1.5 text-sm font-semibold hover:bg-muted rounded mb-1 border-b pb-2"
+                              >
+                                {selectedCountyId === "all" 
+                                  ? `✓ Add All Towns from All Counties` 
+                                  : `✓ Add All Towns in County (${townsList.length})`}
+                              </button>
+                            )}
+                            <TownsPicker
+                              towns={townsList}
+                              selectedTowns={selectedCities}
+                              onToggleTown={toggleCity}
+                              expandedCities={expandedCities}
+                              onToggleCityExpansion={toggleCityExpansion}
+                              state={state}
+                              searchQuery={citySearch}
+                              variant="button"
+                              showAreas={showAreas}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-medium">Selected Towns</Label>
+                            {selectedCities.length > 0 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedCities([])}
+                                className="h-7 px-2 text-xs"
+                              >
+                                Remove All
+                              </Button>
+                            )}
+                          </div>
+                          <div className="border rounded-md p-3 bg-background min-h-[200px] max-h-60 overflow-y-auto">
+                            {selectedCities.length === 0 ? (
+                              <p className="text-sm text-muted-foreground">No towns selected</p>
+                            ) : (
+                              selectedCities.map((city) => (
+                                <button
+                                  key={city}
+                                  type="button"
+                                  onClick={() => toggleCity(city)}
+                                  className="w-full text-left py-1 px-2 text-sm border-b last:border-b-0 hover:bg-muted rounded cursor-pointer"
+                                >
+                                  {city}
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Multi-town input */}
+                      <div className="space-y-2">
+                        <Label className="text-sm">Type Multiple Towns/Areas</Label>
+                        <p className="text-xs text-muted-foreground">Separate multiple towns with commas</p>
+                        <div className="flex gap-2">
+                          <Input
+                            value={multiTownInput}
+                            onChange={(e) => setMultiTownInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddMultipleTowns();
+                              }
+                            }}
+                            placeholder="e.g. Northborough, Worcester, Boston"
+                            className="text-sm flex-1"
+                          />
+                          <Button 
+                            type="button" 
+                            onClick={handleAddMultipleTowns}
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 text-sm"
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
 
               <div>
