@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
@@ -13,7 +13,7 @@ import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-type ListingStatus = "new" | "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon";
+type ListingStatus = "new" | "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon" | "off_market";
 
 interface Listing {
   id: string;
@@ -47,8 +47,9 @@ interface Listing {
 }
 
 const STATUS_TABS: { label: string; value: ListingStatus }[] = [
-  { label: "New", value: "new" },
+  { label: "Off-Market", value: "off_market" },
   { label: "Coming Soon", value: "coming_soon" },
+  { label: "New", value: "new" },
   { label: "Active", value: "active" },
   { label: "Pending", value: "pending" },
   { label: "Sold", value: "sold" },
@@ -60,12 +61,14 @@ const STATUS_TABS: { label: string; value: ListingStatus }[] = [
 
 function statusBadgeClass(status: string) {
   switch (status) {
+    case "off_market":
+      return "bg-amber-500 text-white";
     case "new":
       return "bg-emerald-500 text-white";
     case "active":
       return "bg-blue-500 text-white";
     case "pending":
-      return "bg-amber-500 text-white";
+      return "bg-amber-600 text-white";
     case "sold":
       return "bg-green-500 text-white";
     case "draft":
@@ -137,8 +140,21 @@ function MyListingsView({
   onSocialShare: (listing: Listing) => void;
   onStats: (id: string) => void;
 }) {
-  const [activeStatus, setActiveStatus] = useState<ListingStatus | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusFromUrl = searchParams.get("status") as ListingStatus | null;
+  
+  const [activeStatus, setActiveStatus] = useState<ListingStatus | null>(statusFromUrl);
   const [view, setView] = useState<"grid" | "list">("list");
+  
+  // Sync URL param with state
+  const handleStatusChange = (status: ListingStatus | null) => {
+    setActiveStatus(status);
+    if (status) {
+      setSearchParams({ status });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   // Quick edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -271,7 +287,7 @@ function MyListingsView({
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.value}
-              onClick={() => setActiveStatus(activeStatus === tab.value ? null : tab.value)}
+              onClick={() => handleStatusChange(activeStatus === tab.value ? null : tab.value)}
               className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
                 activeStatus === tab.value
                   ? "bg-primary text-primary-foreground border-primary"

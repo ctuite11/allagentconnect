@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { 
   Users, Mail, Heart, Bell, 
-  Home, Megaphone, Palette, Lock
+  Home, Megaphone, Palette
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -122,7 +122,7 @@ export default function AgentSuccessHub() {
       .from("listings")
       .select("*", { count: "exact", head: true })
       .eq("agent_id", agentId)
-      .eq("listing_type", "private");
+      .eq("status", "off_market");
     setOffMarketCount(offMarketListingsCount || 0);
     setActiveListingsCount(listingsCount || 0);
     
@@ -368,25 +368,16 @@ export default function AgentSuccessHub() {
     );
   }
 
-  // Unified hub cards - 5 functional navigation cards only
+  // Unified hub cards - functional navigation cards only (Off-Market now goes to My Listings with filter)
   const hubCards = [
     {
       icon: <Home className="w-6 h-6" />,
       title: "My Listings",
-      description: "Manage your active & off-market listings",
+      description: "Manage all your listings in one place",
       metricValue: activeListingsCount,
       metricLabel: "Active",
       route: "/agent/listings",
       accentColor: "border-l-blue-500",
-    },
-    {
-      icon: <Lock className="w-6 h-6" />,
-      title: "Off-Market",
-      description: "Private inventory & pocket listings",
-      metricValue: offMarketCount,
-      metricLabel: "Private",
-      route: "/agent/off-market",
-      accentColor: "border-l-amber-500",
     },
     {
       icon: <Users className="w-6 h-6" />,
