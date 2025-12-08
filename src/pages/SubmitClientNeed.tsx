@@ -45,7 +45,8 @@ const clientNeedSchema = z.object({
   propertyTypes: z.array(z.enum(PROPERTY_TYPES)).min(1, "Select at least one property type"),
   locations: z.array(z.string()).min(1, "Select at least one location"),
   maxPrice: z.string()
-    .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number")
+    .transform(val => val.replace(/,/g, ''))
+    .refine((val) => /^\d+(\.\d{1,2})?$/.test(val), "Price must be a valid number")
     .refine((val) => parseFloat(val) > 0 && parseFloat(val) < 100000000, {
       message: "Price must be between $1 and $100,000,000",
     }),
@@ -263,7 +264,7 @@ const SubmitClientNeed = () => {
         property_types: validatedData.propertyTypes as any,
         city: city,
         state: state,
-        max_price: parseFloat(validatedData.maxPrice),
+        max_price: parseFloat(validatedData.maxPrice.replace(/,/g, '')),
         bedrooms: validatedData.bedrooms ? parseInt(validatedData.bedrooms) : null,
         bathrooms: validatedData.bathrooms ? parseFloat(validatedData.bathrooms) : null,
         description: validatedData.description || null,
@@ -513,17 +514,33 @@ const SubmitClientNeed = () => {
               </div>
 
               <div>
-                <Label htmlFor="maxPrice">Maximum Price ($)</Label>
-                <Input
-                  id="maxPrice"
-                  type="number"
-                  required
-                  value={formData.maxPrice}
-                  onChange={(e) =>
-                    setFormData({ ...formData, maxPrice: e.target.value })
-                  }
-                  placeholder="5000000"
-                />
+                <Label htmlFor="maxPrice">Maximum Price</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="maxPrice"
+                    type="text"
+                    inputMode="numeric"
+                    required
+                    value={formData.maxPrice}
+                    onChange={(e) => {
+                      // Remove non-numeric characters except commas
+                      const sanitized = e.target.value.replace(/[^\d,]/g, '');
+                      const numericValue = sanitized.replace(/,/g, '');
+                      
+                      // Format with commas
+                      const num = parseFloat(numericValue);
+                      if (!isNaN(num) && num > 999999999) return;
+                      
+                      const formatted = numericValue 
+                        ? num.toLocaleString('en-US', { maximumFractionDigits: 0 }) 
+                        : "";
+                      setFormData({ ...formData, maxPrice: formatted });
+                    }}
+                    placeholder="5,000,000"
+                    className="pl-7"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
