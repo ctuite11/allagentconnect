@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -83,6 +83,8 @@ const listingSchema = z.object({
 const AddListing = () => {
   const navigate = useNavigate();
   const { id: listingId } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const initialStatus = searchParams.get("status") || "new";
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isLoadingListing, setIsLoadingListing] = useState(false);
@@ -121,7 +123,7 @@ const AddListing = () => {
   const originalStatusRef = useRef<string | null>(null);
 
   const [formData, setFormData] = useState({
-    status: "new",
+    status: initialStatus,
     listing_type: "for_sale",
     property_type: "single_family",
     address: "",
