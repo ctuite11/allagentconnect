@@ -248,7 +248,7 @@ const GeographicPreferencesManager = ({
               </div>
             </div>
 
-            {/* Towns Selector - Two column layout matching Hot Sheets */}
+            {/* Towns Selector - Two column layout matching Hot Sheets/Submit Client Need EXACTLY */}
             <div className="space-y-2">
               {/* Header row with both labels */}
               <div className="grid grid-cols-2 gap-4">
@@ -271,7 +271,7 @@ const GeographicPreferencesManager = ({
 
               {/* Content row */}
               <div className="grid grid-cols-2 gap-4">
-                {/* LEFT: Towns Selector - CLONED FROM HOT SHEETS EXACTLY */}
+                {/* LEFT: Towns Selector - CLONED FROM SUBMIT CLIENT NEED EXACTLY */}
                 <div className="space-y-2">
                   <Input
                     placeholder="Type Full or Partial Name"
@@ -280,6 +280,18 @@ const GeographicPreferencesManager = ({
                     className="text-sm"
                   />
                   <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2 relative z-10">
+                    {/* Add All Towns button - EXACTLY like Submit Client Need */}
+                    {townsList.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleSelectAll}
+                        className="w-full text-left px-2 py-1.5 text-sm font-semibold hover:bg-muted rounded mb-1 border-b pb-2"
+                      >
+                        {selectedCounty === "all" 
+                          ? `✓ Add All Towns from All Counties` 
+                          : `✓ Add All Towns in County (${townsList.length})`}
+                      </button>
+                    )}
                     <TownsPicker
                       towns={townsList}
                       selectedTowns={selectedTowns}
@@ -294,7 +306,7 @@ const GeographicPreferencesManager = ({
                   </div>
                 </div>
 
-                {/* RIGHT: Selected Towns Panel - EXACT CLONE FROM HOT SHEETS */}
+                {/* RIGHT: Selected Towns Panel - EXACT CLONE FROM SUBMIT CLIENT NEED */}
                 <div className="border rounded-md p-3 bg-background min-h-[200px] max-h-60 overflow-y-auto">
                   {selectedTowns.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No towns selected</p>
