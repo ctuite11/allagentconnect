@@ -109,17 +109,6 @@ const Navigation = () => {
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Tools</DropdownMenuLabel>
-                <DropdownMenuGroup>
-                  {user && (
-                    <DropdownMenuItem onClick={() => navigate("/hot-sheets")}>
-                      <Bell className="mr-2 h-4 w-4" />
-                      Hot Sheets
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuGroup>
-                
                 {user && (
                   <>
                     <DropdownMenuSeparator />
@@ -129,14 +118,30 @@ const Navigation = () => {
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         Success Hub
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/agent/listings")}>
+                        <List className="mr-2 h-4 w-4" />
+                        My Listings
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/my-clients")}>
                         <UserCircle className="mr-2 h-4 w-4" />
-                        My Clients
+                        My Contacts
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/hot-sheets")}>
+                        <Bell className="mr-2 h-4 w-4" />
+                        Hot Sheets
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/client-needs")}>
                         <FileText className="mr-2 h-4 w-4" />
-                        Communication Center
+                        Communications Center
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")}>
+                        <UserCog className="mr-2 h-4 w-4" />
+                        Profile & Branding
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Add Listings</DropdownMenuLabel>
+                    <DropdownMenuGroup>
                       <DropdownMenuItem onClick={() => navigate("/agent/listings/new")}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add For Sale Listing
@@ -144,14 +149,6 @@ const Navigation = () => {
                       <DropdownMenuItem onClick={() => navigate("/add-rental-listing")}>
                         <Building2 className="mr-2 h-4 w-4" />
                         Add Rental Listing
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")}>
-                        <UserCog className="mr-2 h-4 w-4" />
-                        Edit Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/manage-team")}>
-                        <Users className="mr-2 h-4 w-4" />
-                        Manage Team
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
                   </>
@@ -195,16 +192,12 @@ const Navigation = () => {
                           <ChevronDown className="w-3 h-3" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56 bg-card border-border shadow-lg z-[100]">
+                <DropdownMenuContent className="w-56 bg-card border-border shadow-lg z-[100]">
                         <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
                         <DropdownMenuGroup>
                           <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
                             <LayoutDashboard className="mr-2 h-4 w-4" />
                             Success Hub
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate("/browse")}>
-                            <Search className="mr-2 h-4 w-4" />
-                            Search
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate("/agent/listings")}>
                             <List className="mr-2 h-4 w-4" />
@@ -220,11 +213,19 @@ const Navigation = () => {
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate("/client-needs")}>
                             <FileText className="mr-2 h-4 w-4" />
-                            Communication Center
+                            Communications Center
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")}>
                             <UserCog className="mr-2 h-4 w-4" />
-                            Edit Profile
+                            Profile & Branding
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>More</DropdownMenuLabel>
+                        <DropdownMenuGroup>
+                          <DropdownMenuItem onClick={() => navigate("/browse")}>
+                            <Search className="mr-2 h-4 w-4" />
+                            Search
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate("/manage-team")}>
                             <Users className="mr-2 h-4 w-4" />
@@ -322,13 +323,13 @@ const Navigation = () => {
                       <p className="text-xs font-semibold text-muted-foreground mb-2 px-2">Agent Tools</p>
                       <button
                         onClick={() => {
-                          navigate("/browse");
+                          navigate("/agent-dashboard");
                           setIsMenuOpen(false);
                         }}
                         className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
                       >
-                        <Search className="w-4 h-4" />
-                        Search
+                        <LayoutDashboard className="w-4 h-4" />
+                        Success Hub
                       </button>
                       <button
                         onClick={() => {
@@ -368,7 +369,7 @@ const Navigation = () => {
                         className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
                       >
                         <FileText className="w-4 h-4" />
-                        Communication Center
+                        Communications Center
                       </button>
                       <button
                         onClick={() => {
@@ -378,17 +379,7 @@ const Navigation = () => {
                         className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
                       >
                         <UserCog className="w-4 h-4" />
-                        Edit Profile
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/manage-team");
-                          setIsMenuOpen(false);
-                        }}
-                        className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-                      >
-                        <Users className="w-4 h-4" />
-                        Manage Team
+                        Profile & Branding
                       </button>
                     </>
                   ) : (
