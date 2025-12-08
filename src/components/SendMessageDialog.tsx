@@ -168,18 +168,35 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     );
   };
 
+  // Property type options - includes "apartment" for renter_need only
+  const getPropertyTypeOptions = () => {
+    const baseTypes = [
+      { value: "single_family", label: "Single Family" },
+      { value: "condo", label: "Condo" },
+      { value: "townhouse", label: "Townhouse" },
+      { value: "multi_family", label: "Multi Family" },
+      { value: "land", label: "Land" },
+      { value: "commercial", label: "Commercial" },
+    ];
+    
+    if (category === "renter_need") {
+      // Insert "apartment" at the beginning for rental flows
+      return [
+        { value: "apartment", label: "Apartment" },
+        ...baseTypes,
+      ];
+    }
+    
+    return baseTypes;
+  };
+
+  const propertyTypeOptions = getPropertyTypeOptions();
+
   const selectAllPropertyTypes = () => {
-    if (propertyTypes.length === 6) {
+    if (propertyTypes.length === propertyTypeOptions.length) {
       setPropertyTypes([]);
     } else {
-      setPropertyTypes([
-        "single_family",
-        "condo",
-        "townhouse",
-        "multi_family",
-        "land",
-        "commercial",
-      ]);
+      setPropertyTypes(propertyTypeOptions.map(t => t.value));
     }
   };
 
@@ -641,11 +658,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <div className="space-y-2 pt-4">
-                          <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-3">
                             <div className="flex items-center space-x-2">
                               <Checkbox
                                 id="select-all-property-types"
-                                checked={propertyTypes.length === 6}
+                                checked={propertyTypes.length === propertyTypeOptions.length}
                                 onCheckedChange={selectAllPropertyTypes}
                               />
                               <Label
@@ -656,14 +673,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                               </Label>
                             </div>
                             
-                            {[
-                              { value: "single_family", label: "Single Family" },
-                              { value: "condo", label: "Condo" },
-                              { value: "townhouse", label: "Townhouse" },
-                              { value: "multi_family", label: "Multi Family" },
-                              { value: "land", label: "Land" },
-                              { value: "commercial", label: "Commercial" },
-                            ].map((type) => (
+                            {propertyTypeOptions.map((type) => (
                               <div key={type.value} className="flex items-center space-x-2">
                                 <Checkbox
                                   id={`type-${type.value}`}
