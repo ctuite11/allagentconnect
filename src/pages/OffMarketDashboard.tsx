@@ -37,7 +37,7 @@ export default function OffMarketDashboard() {
   
   // Filters
   const [searchText, setSearchText] = useState("");
-  const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>("");
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"price" | "created_at" | "interest">("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   
@@ -138,7 +138,7 @@ export default function OffMarketDashboard() {
     }
 
     // Property type filter
-    if (propertyTypeFilter) {
+    if (propertyTypeFilter && propertyTypeFilter !== "all") {
       result = result.filter(l => l.property_type === propertyTypeFilter);
     }
 

@@ -21,7 +21,7 @@ interface OffMarketFiltersProps {
 }
 
 const propertyTypes = [
-  { value: "", label: "All Types" },
+  { value: "all", label: "All Types" },
   { value: "single_family", label: "Single Family" },
   { value: "condo", label: "Condo" },
   { value: "townhouse", label: "Townhouse" },
