@@ -1353,6 +1353,14 @@ const AddListing = () => {
     const isNowCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
     return wasSingleFamily && isNowCondo;
   }, [attomVerifiedContext, publicRecordStatus, formData.property_type]);
+  
+  // Detect if condo/apartment is selected but unit number is missing
+  // This means ATTOM data is incomplete for unit-level verification
+  const isCondoMissingUnit = useMemo(() => {
+    const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
+    const hasUnit = (formData.unit_number || '').trim() !== '';
+    return isCondo && !hasUnit;
+  }, [formData.property_type, formData.unit_number]);
 
   // Reset auto-fetch flag when address changes significantly
   const prevAddressRef = useRef({ address: "", city: "", zip: "" });
@@ -2683,15 +2691,24 @@ const AddListing = () => {
                   </div>
                   
                   {/* ATTOM Verification Status - context-aware */}
-                  {publicRecordStatus === 'success' && !isAttomVerificationStale && (
+                  {/* Show green success ONLY if: verified, not stale, AND not a condo missing unit */}
+                  {publicRecordStatus === 'success' && !isAttomVerificationStale && !isCondoMissingUnit && (
                     <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded text-green-700 text-sm dark:bg-green-950/30 dark:border-green-800 dark:text-green-300">
                       <CheckCircle2 className="h-4 w-4" />
                       <span>Public record data loaded successfully.</span>
                     </div>
                   )}
                   
+                  {/* Condo missing unit number warning - prompt user to enter unit */}
+                  {isCondoMissingUnit && (
+                    <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
+                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                      <span>Unit number required to retrieve condo records. Please enter the unit number below.</span>
+                    </div>
+                  )}
+                  
                   {/* Stale verification warning - Condo switch specific */}
-                  {isAttomVerificationStale && isSwitchedToCondo && (
+                  {isAttomVerificationStale && isSwitchedToCondo && !isCondoMissingUnit && (
                     <div className="flex items-center justify-between gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="h-4 w-4 flex-shrink-0" />
@@ -2712,7 +2729,7 @@ const AddListing = () => {
                   )}
                   
                   {/* Stale verification warning - General field change */}
-                  {isAttomVerificationStale && !isSwitchedToCondo && (
+                  {isAttomVerificationStale && !isSwitchedToCondo && !isCondoMissingUnit && (
                     <div className="flex items-center justify-between gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="h-4 w-4 flex-shrink-0" />
@@ -3160,6 +3177,96 @@ const AddListing = () => {
                       placeholder="Describe the property features, location highlights, and any special details..."
                     />
                   </div>
+                </div>
+
+                {/* Tax & Public Record Data Section - Always visible */}
+                <div className="space-y-4 border-t pt-6">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-lg font-semibold">Tax & Public Record Data</Label>
+                    {publicRecordStatus !== 'success' && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleManualAttomLookup}
+                        disabled={autoFillLoading || !formData.address || !formData.city || !formData.state}
+                        className="gap-2"
+                      >
+                        {autoFillLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            <Cloud className="h-4 w-4" />
+                            Load from Public Records
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Show placeholder when no ATTOM data loaded */}
+                  {publicRecordStatus !== 'success' && !formData.annual_property_tax && !formData.tax_year && (
+                    <div className="p-4 rounded-lg border border-dashed border-muted-foreground/25 bg-muted/20">
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Cloud className="h-4 w-4" />
+                        Verify with ATTOM to load tax and public record data.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Tax fields - show when data exists OR after successful ATTOM load */}
+                  {(publicRecordStatus === 'success' || formData.annual_property_tax || formData.tax_year) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="annual_property_tax">Annual Property Tax</Label>
+                        <FormattedInput
+                          id="annual_property_tax"
+                          format="currency"
+                          value={formData.annual_property_tax}
+                          onChange={(value) => setFormData(prev => ({ ...prev, annual_property_tax: value }))}
+                          decimals={0}
+                          placeholder="5000"
+                        />
+                        {publicRecordStatus === 'success' && formData.annual_property_tax && (
+                          <p className="text-xs text-muted-foreground">Loaded from public records</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="tax_year">Tax Year</Label>
+                        <Input
+                          id="tax_year"
+                          type="number"
+                          min="2000"
+                          max={new Date().getFullYear()}
+                          value={formData.tax_year}
+                          onChange={(e) => setFormData(prev => ({ ...prev, tax_year: e.target.value }))}
+                          placeholder={new Date().getFullYear().toString()}
+                        />
+                        {publicRecordStatus === 'success' && formData.tax_year && (
+                          <p className="text-xs text-muted-foreground">Loaded from public records</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* ATTOM status indicator */}
+                  {publicRecordStatus === 'success' && !isAttomVerificationStale && !isCondoMissingUnit && (
+                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>Public record data verified</span>
+                    </div>
+                  )}
+                  
+                  {/* Condo missing unit warning in tax section */}
+                  {isCondoMissingUnit && (
+                    <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>Enter unit number above to load condo-specific tax data</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Multi-Family FOR SALE Fields */}
