@@ -16,7 +16,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
 import { format, differenceInDays } from "date-fns";
@@ -2390,16 +2390,18 @@ const AddListing = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {!listingId ? (
-                          // CREATE MODE: Only New and Coming Soon
+                          // CREATE MODE: Off-Market, Coming Soon, and New
                           <>
-                            <SelectItem value="new">New</SelectItem>
+                            <SelectItem value="off_market">Off-Market (Private)</SelectItem>
                             <SelectItem value="coming_soon">Coming Soon</SelectItem>
+                            <SelectItem value="new">New (Active)</SelectItem>
                           </>
                         ) : (
                           // EDIT MODE: All status options
                           <>
-                            <SelectItem value="new">New</SelectItem>
+                            <SelectItem value="off_market">Off-Market (Private)</SelectItem>
                             <SelectItem value="coming_soon">Coming Soon</SelectItem>
+                            <SelectItem value="new">New</SelectItem>
                             <SelectItem value="active">Active</SelectItem>
                             <SelectItem value="pending">Pending</SelectItem>
                             <SelectItem value="withdrawn">Withdrawn</SelectItem>
@@ -2411,6 +2413,13 @@ const AddListing = () => {
                         )}
                       </SelectContent>
                     </Select>
+                    {/* Helper text for off-market listings */}
+                    {formData.status === 'off_market' && (
+                      <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
+                        <Lock className="h-3 w-3" />
+                        Private listing — visible only to AAC agents, not on MLS.
+                      </p>
+                    )}
                     {/* Warning for final status states */}
                     {(formData.status === 'cancelled' || formData.status === 'sold') && (
                       <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
