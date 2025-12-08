@@ -1224,7 +1224,7 @@ const AddListing = () => {
     
     setHasAutoFetched(true);
     
-    // Store verified context with values FROM THE MODAL PAYLOAD
+    // Store verified context with MERGED unit value (not just ATTOM)
     setAttomVerifiedContext({
       property_type: formData.property_type,
       address: record.address || formData.address,
@@ -1232,7 +1232,7 @@ const AddListing = () => {
       zip_code: record.zip || formData.zip_code,
       state: record.state || formData.state,
       county: formData.county,
-      unit_number: attomUnit, // ONLY from modal payload
+      unit_number: finalUnit, // Use merged value, not just ATTOM
     });
   };
 
@@ -1265,14 +1265,14 @@ const AddListing = () => {
       unit_number: finalUnit
     }));
     
-    // Determine if this is a condo/apartment
+    // Determine if this is a condo/apartment - use FINAL merged unit for validation
     const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
-    const hasUnit = attomUnit.trim() !== '';
+    const hasUnit = finalUnit.trim() !== '';
     const hasTaxData = record.taxAmount != null || record.assessedValue != null;
     
     // CONDO VALIDATION: Only show success if we have unit + tax data
     if (isCondo && (!hasUnit || !hasTaxData)) {
-      console.log('[ATTOM] Condo verification incomplete:', { hasUnit, hasTaxData });
+      console.log('[ATTOM] Condo verification incomplete:', { hasUnit, hasTaxData, finalUnit });
       setPublicRecordStatus('idle'); // Not verified yet - need unit
       setAttomFetchStatus(
         !hasUnit 
@@ -1290,7 +1290,7 @@ const AddListing = () => {
     setHasAutoFetched(true);
     setHasConfirmedAttomAddress(true);
     
-    // Store verified context with values FROM THE MODAL PAYLOAD
+    // Store verified context with MERGED unit value (not just ATTOM)
     setAttomVerifiedContext({
       property_type: formData.property_type,
       address: record.address || formData.address,
@@ -1298,7 +1298,7 @@ const AddListing = () => {
       zip_code: record.zip || formData.zip_code,
       state: record.state || formData.state,
       county: formData.county,
-      unit_number: attomUnit, // ONLY from modal payload
+      unit_number: finalUnit, // Use merged value, not just ATTOM
     });
     
     setIsAddressConfirmOpen(false);
