@@ -1001,7 +1001,7 @@ export function CreateHotSheetDialog({
 
           {/* Contact Information */}
           <Collapsible open={clientInfoOpen} onOpenChange={setClientInfoOpen}>
-            <Card>
+            <Card className="border-l-4 border-l-indigo-500">
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between">
@@ -1208,7 +1208,7 @@ export function CreateHotSheetDialog({
 
           {/* Search Criteria */}
           <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
-            <Card>
+            <Card className="border-l-4 border-l-teal-500">
               <CollapsibleTrigger className="w-full">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
                   <CardTitle className="text-base">Search Criteria</CardTitle>
@@ -1687,7 +1687,7 @@ export function CreateHotSheetDialog({
 
           {/* Notification Settings */}
           <Collapsible open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-            <Card>
+            <Card className="border-l-4 border-l-amber-500">
               <CollapsibleTrigger className="w-full">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
                   <CardTitle className="text-base">Notification Settings</CardTitle>
