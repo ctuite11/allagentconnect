@@ -1206,17 +1206,21 @@ const AddListing = () => {
     const hasUnit = finalUnit.trim() !== '';
     const hasTaxData = record.taxAmount != null || record.assessedValue != null;
     
-    // CONDO VALIDATION: Only show success if we have unit + tax data
-    if (isCondo && (!hasUnit || !hasTaxData)) {
-      console.log('[ATTOM] Condo verification incomplete:', { hasUnit, hasTaxData });
+    // CONDO VALIDATION: Handle missing unit vs missing tax data separately
+    if (isCondo && !hasUnit) {
+      // Case 1: Condo with NO unit - soft-lock until unit is entered
+      console.log('[ATTOM] Condo missing unit:', { hasUnit, hasTaxData, finalUnit });
       setPublicRecordStatus('idle');
-      setAttomFetchStatus(
-        !hasUnit 
-          ? "Unit number required for condo records. Please enter unit number below."
-          : "Address confirmed but tax data not available for this unit."
-      );
+      setAttomFetchStatus("Unit number required for condo records. Please enter unit number below.");
       toast.info("Please enter unit number to load complete condo data.");
+    } else if (isCondo && hasUnit && !hasTaxData) {
+      // Case 2: Condo WITH unit but NO tax data - allow partial success
+      console.log('[ATTOM] Condo has unit but no tax data:', { hasUnit, hasTaxData, finalUnit });
+      setPublicRecordStatus('success'); // Still success - address verified
+      setAttomFetchStatus("Address verified. Tax records not available for this unit.");
+      toast.warning("Tax records not available for this unit. You may enter tax data manually.");
     } else {
+      // Case 3: Full success - single family OR condo with complete data
       setPublicRecordStatus('success');
       setAttomFetchStatus("Public record data loaded successfully.");
       toast.success("Property data imported from public records!");
@@ -1270,18 +1274,21 @@ const AddListing = () => {
     const hasUnit = finalUnit.trim() !== '';
     const hasTaxData = record.taxAmount != null || record.assessedValue != null;
     
-    // CONDO VALIDATION: Only show success if we have unit + tax data
-    if (isCondo && (!hasUnit || !hasTaxData)) {
-      console.log('[ATTOM] Condo verification incomplete:', { hasUnit, hasTaxData, finalUnit });
-      setPublicRecordStatus('idle'); // Not verified yet - need unit
-      setAttomFetchStatus(
-        !hasUnit 
-          ? "Unit number required for condo records. Please enter unit number below."
-          : "Address confirmed but tax data not available for this unit."
-      );
+    // CONDO VALIDATION: Handle missing unit vs missing tax data separately
+    if (isCondo && !hasUnit) {
+      // Case 1: Condo with NO unit - soft-lock until unit is entered
+      console.log('[ATTOM] Condo missing unit:', { hasUnit, hasTaxData, finalUnit });
+      setPublicRecordStatus('idle');
+      setAttomFetchStatus("Unit number required for condo records. Please enter unit number below.");
       toast.info("Please enter unit number to load complete condo data.");
+    } else if (isCondo && hasUnit && !hasTaxData) {
+      // Case 2: Condo WITH unit but NO tax data - allow partial success
+      console.log('[ATTOM] Condo has unit but no tax data:', { hasUnit, hasTaxData, finalUnit });
+      setPublicRecordStatus('success'); // Still success - address verified
+      setAttomFetchStatus("Address verified. Tax records not available for this unit.");
+      toast.warning("Tax records not available for this unit. You may enter tax data manually.");
     } else {
-      // Full success - single family OR condo with complete data
+      // Case 3: Full success - single family OR condo with complete data
       setPublicRecordStatus('success');
       setAttomFetchStatus("Public record data loaded successfully.");
       toast.success("Property data loaded from public records!");
