@@ -90,29 +90,24 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage, agentIndex = 999 }:
         </div>
 
         {/* Full Name + Inline Badges */}
-        <div className="text-center">
+        <div className="flex items-center justify-center gap-2 flex-wrap">
           <h3 className="font-semibold text-lg text-foreground leading-tight">
             {fullName}
           </h3>
-          {/* Badges inline below name */}
-          {(isVerified || isFoundingMember) && (
-            <div className="flex items-center justify-center gap-2 mt-1.5 flex-wrap">
-              {isVerified && (
-                <span className="inline-flex items-center gap-0.5 text-green-600 dark:text-green-400 text-xs font-medium">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Verified
-                </span>
-              )}
-              {isVerified && isFoundingMember && (
-                <span className="text-muted-foreground text-xs">·</span>
-              )}
-              {isFoundingMember && (
-                <span className="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400 text-xs font-medium">
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  Founding Member
-                </span>
-              )}
-            </div>
+          {isVerified && (
+            <span className="inline-flex items-center gap-0.5 text-green-600 dark:text-green-400 text-xs font-medium">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Verified
+            </span>
+          )}
+          {isVerified && isFoundingMember && (
+            <span className="text-muted-foreground text-xs">·</span>
+          )}
+          {isFoundingMember && (
+            <span className="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400 text-xs font-medium">
+              <Star className="h-3.5 w-3.5 fill-current" />
+              Founding Member
+            </span>
           )}
         </div>
 
