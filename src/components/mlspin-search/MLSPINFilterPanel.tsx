@@ -76,19 +76,35 @@ interface FilterGroupProps {
   accentColor?: 'green' | 'blue' | 'purple' | 'amber' | 'indigo' | 'teal' | 'slate';
 }
 
-const accentBorderClasses = {
-  green: 'border-l-4 border-l-green-500',
-  blue: 'border-l-4 border-l-blue-500',
-  purple: 'border-l-4 border-l-purple-500',
-  amber: 'border-l-4 border-l-amber-500',
-  indigo: 'border-l-4 border-l-indigo-500',
-  teal: 'border-l-4 border-l-teal-500',
-  slate: 'border-l-4 border-l-slate-500',
+// Accent border classes for collapsed state (vibrant)
+const accentBorderClassesVibrant = {
+  green: 'border-l-green-500',
+  blue: 'border-l-blue-500',
+  purple: 'border-l-purple-500',
+  amber: 'border-l-amber-500',
+  indigo: 'border-l-indigo-500',
+  teal: 'border-l-teal-500',
+  slate: 'border-l-slate-500',
+};
+
+// Accent border classes for expanded state (muted)
+const accentBorderClassesMuted = {
+  green: 'border-l-green-200',
+  blue: 'border-l-blue-200',
+  purple: 'border-l-purple-200',
+  amber: 'border-l-amber-200',
+  indigo: 'border-l-indigo-200',
+  teal: 'border-l-teal-200',
+  slate: 'border-l-slate-300',
 };
 
 const FilterGroup = ({ title, defaultOpen = true, children, accentColor }: FilterGroupProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const borderClass = !isOpen && accentColor ? accentBorderClasses[accentColor] : '';
+  
+  // Vibrant border when collapsed, muted when expanded
+  const borderClass = accentColor 
+    ? `border-l-4 ${!isOpen ? accentBorderClassesVibrant[accentColor] : accentBorderClassesMuted[accentColor]}`
+    : '';
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className={`border-b border-border ${borderClass}`}>
