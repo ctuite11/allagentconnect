@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, Mail, MessageSquare, MapPin, Building2, CheckCircle2 } from "lucide-react";
+import { Phone, Mail, MessageSquare, MapPin, Building2, CheckCircle2, Star } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useNavigate } from "react-router-dom";
 
@@ -19,6 +19,7 @@ interface AgentDirectoryCardProps {
     office_name?: string;
     buyer_incentives?: string;
     updated_at?: string;
+    created_at?: string;
     social_links?: {
       website?: string;
       instagram?: string;
@@ -34,9 +35,10 @@ interface AgentDirectoryCardProps {
   };
   isAgentMode: boolean;
   onMessage?: (agentId: string) => void;
+  agentIndex?: number; // Position in the list for founding member check
 }
 
-const AgentDirectoryCard = ({ agent, isAgentMode, onMessage }: AgentDirectoryCardProps) => {
+const AgentDirectoryCard = ({ agent, isAgentMode, onMessage, agentIndex = 999 }: AgentDirectoryCardProps) => {
   const navigate = useNavigate();
   const fullName = `${agent.first_name} ${agent.last_name}`;
   const initials = `${agent.first_name?.[0] || ""}${agent.last_name?.[0] || ""}`.toUpperCase();
@@ -49,6 +51,9 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage }: AgentDirectoryCar
   const hasServiceArea = !!primaryArea;
   const hasContact = !!(phoneNumber || agent.email);
   const isVerified = hasPhoto && hasBrokerage && hasServiceArea && hasContact;
+  
+  // Founding Member: first 100 agents (index 0-99)
+  const isFoundingMember = agentIndex < 100;
 
   const handlePhoneClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -70,7 +75,7 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage }: AgentDirectoryCar
   return (
     <Card className="group overflow-hidden border bg-card transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1.5 hover:border-primary/20">
       <div className="p-5">
-        {/* Large Profile Photo with Halo Ring */}
+        {/* Large Profile Photo with Halo Ring - NO badges on photo */}
         <div className="flex justify-center mb-4 relative">
           <div className="relative">
             {/* Halo ring */}
@@ -81,20 +86,35 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage }: AgentDirectoryCar
                 {initials}
               </AvatarFallback>
             </Avatar>
-            {/* Verified Badge */}
-            {isVerified && (
-              <div className="absolute -top-1 -right-1 z-20 flex items-center gap-0.5 bg-green-50 dark:bg-green-950 text-green-600 dark:text-green-400 text-[10px] font-medium px-1.5 py-0.5 rounded-full border border-green-200 dark:border-green-800 shadow-sm">
-                <CheckCircle2 className="h-3 w-3" />
-                <span>Verified</span>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Full Name - Never Truncated */}
-        <h3 className="font-semibold text-lg text-foreground text-center leading-tight">
-          {fullName}
-        </h3>
+        {/* Full Name + Inline Badges */}
+        <div className="text-center">
+          <h3 className="font-semibold text-lg text-foreground leading-tight">
+            {fullName}
+          </h3>
+          {/* Badges inline below name */}
+          {(isVerified || isFoundingMember) && (
+            <div className="flex items-center justify-center gap-2 mt-1.5 flex-wrap">
+              {isVerified && (
+                <span className="inline-flex items-center gap-0.5 text-green-600 dark:text-green-400 text-xs font-medium">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Verified
+                </span>
+              )}
+              {isVerified && isFoundingMember && (
+                <span className="text-muted-foreground text-xs">·</span>
+              )}
+              {isFoundingMember && (
+                <span className="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400 text-xs font-medium">
+                  <Star className="h-3.5 w-3.5 fill-current" />
+                  Founding Member
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Brokerage */}
         {(agent.company || agent.office_name) && (
