@@ -917,6 +917,44 @@ const AddListing = () => {
           return;
         }
 
+        // ===== UNIT VERIFICATION FOR CONDOS =====
+        // If user entered a unit number but ATTOM didn't return unit-specific data,
+        // this means we only found the building, NOT the specific unit.
+        // We must NOT show a green "confirm" state for a non-verified unit.
+        const userRequestedUnit = formData.unit_number?.trim();
+        const attomReturnedUnit = record.unit_number?.trim();
+        const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
+        
+        if (isCondo && userRequestedUnit && !attomReturnedUnit) {
+          // User asked for unit #X, but ATTOM only returned building-level data
+          // This means the unit could not be verified
+          console.log("[AddListing] ATTOM unit verification FAILED:", {
+            userRequestedUnit,
+            attomReturnedUnit,
+            isCondo
+          });
+          
+          setPublicRecordStatus('idle');
+          setAttomFetchStatus(`We found the building at ${record.address?.split(',')[0] || formData.address}, but we could not verify unit #${userRequestedUnit}.`);
+          setAddressVerified(false);
+          setVerificationMessage(`Unit #${userRequestedUnit} could not be verified. Please confirm the unit exists.`);
+          
+          // Enable neighborhood dropdown for manual entry
+          try {
+            const areas = getAreasForCity(formData.city, formData.state);
+            setAttomNeighborhoods(areas);
+          } catch (areaError) {
+            console.error("[AddListing] Error getting areas:", areaError);
+          }
+          
+          toast.warning(`Building found but unit #${userRequestedUnit} could not be verified.`, {
+            description: "Please verify the unit number is correct. You may enter details manually.",
+          });
+          
+          setHasAutoFetched(true);
+          return;
+        }
+
         // Show confirmation modal instead of auto-applying
         console.log("[AddListing] Opening ATTOM confirmation modal");
         setAttomPendingRecord(record);
