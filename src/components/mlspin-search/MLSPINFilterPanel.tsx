@@ -88,7 +88,7 @@ const accentBorderClasses = {
 
 const FilterGroup = ({ title, defaultOpen = true, children, accentColor }: FilterGroupProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const borderClass = isOpen && accentColor ? accentBorderClasses[accentColor] : '';
+  const borderClass = !isOpen && accentColor ? accentBorderClasses[accentColor] : '';
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className={`border-b border-border ${borderClass}`}>

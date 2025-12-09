@@ -1258,7 +1258,7 @@ export function CreateHotSheetDialog({
                   {/* Towns & Neighborhoods Section - Collapsed by default */}
                   <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border ${townsOpen ? 'border-l-4 border-l-green-500' : ''}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border ${!townsOpen ? 'border-l-4 border-l-green-500' : ''}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Towns & Neighborhoods
                           {selectedCities.length > 0 && (
@@ -1400,7 +1400,7 @@ export function CreateHotSheetDialog({
                   {/* Property Type - Collapsed by default */}
                   <Collapsible open={propertyTypeOpen} onOpenChange={setPropertyTypeOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border ${propertyTypeOpen ? 'border-l-4 border-l-indigo-500' : ''}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border ${!propertyTypeOpen ? 'border-l-4 border-l-indigo-500' : ''}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Property Type
                           {propertyTypes.length > 0 && (
@@ -1449,7 +1449,7 @@ export function CreateHotSheetDialog({
                   {/* Status - Collapsed by default */}
                   <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border ${statusOpen ? 'border-l-4 border-l-blue-500' : ''}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border ${!statusOpen ? 'border-l-4 border-l-blue-500' : ''}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Status
                           {statuses.length > 0 && (
