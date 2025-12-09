@@ -73,13 +73,25 @@ interface FilterGroupProps {
   title: string;
   defaultOpen?: boolean;
   children: React.ReactNode;
+  accentColor?: 'green' | 'blue' | 'purple' | 'amber' | 'indigo' | 'teal' | 'slate';
 }
 
-const FilterGroup = ({ title, defaultOpen = true, children }: FilterGroupProps) => {
+const accentBorderClasses = {
+  green: 'border-l-4 border-l-green-500',
+  blue: 'border-l-4 border-l-blue-500',
+  purple: 'border-l-4 border-l-purple-500',
+  amber: 'border-l-4 border-l-amber-500',
+  indigo: 'border-l-4 border-l-indigo-500',
+  teal: 'border-l-4 border-l-teal-500',
+  slate: 'border-l-4 border-l-slate-500',
+};
+
+const FilterGroup = ({ title, defaultOpen = true, children, accentColor }: FilterGroupProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const borderClass = isOpen && accentColor ? accentBorderClasses[accentColor] : '';
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="border-b border-border">
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className={`border-b border-border ${borderClass}`}>
       <CollapsibleTrigger className="flex items-center justify-between w-full py-2 px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-muted/50 transition-colors">
         <span>{title}</span>
         {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
@@ -156,7 +168,7 @@ const MLSPINFilterPanel = ({
       {/* Scrollable Filters */}
       <div className="flex-1 overflow-y-auto">
         {/* Property Type */}
-        <FilterGroup title="Property Type">
+        <FilterGroup title="Property Type" accentColor="indigo">
           <div className="grid grid-cols-2 gap-1">
             {PROPERTY_TYPES.map(type => (
               <label key={type.value} className="flex items-center gap-1.5 text-xs cursor-pointer py-0.5">
@@ -172,7 +184,7 @@ const MLSPINFilterPanel = ({
         </FilterGroup>
 
         {/* Status */}
-        <FilterGroup title="Status">
+        <FilterGroup title="Status" accentColor="slate">
           <div className="grid grid-cols-2 gap-1">
             {STATUSES.map(status => (
               <label key={status.value} className="flex items-center gap-1.5 text-xs cursor-pointer py-0.5">
@@ -190,7 +202,7 @@ const MLSPINFilterPanel = ({
         </FilterGroup>
 
         {/* Standard Criteria */}
-        <FilterGroup title="Standard Criteria">
+        <FilterGroup title="Standard Criteria" accentColor="amber">
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -294,7 +306,7 @@ const MLSPINFilterPanel = ({
         </FilterGroup>
 
         {/* Price */}
-        <FilterGroup title="Price">
+        <FilterGroup title="Price" accentColor="teal">
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Label className="text-xs text-muted-foreground">Low</Label>
@@ -320,7 +332,7 @@ const MLSPINFilterPanel = ({
         </FilterGroup>
 
         {/* Address */}
-        <FilterGroup title="Address" defaultOpen={false}>
+        <FilterGroup title="Address" defaultOpen={false} accentColor="slate">
           <div className="space-y-2">
             <div className="grid grid-cols-3 gap-2">
               <div>
@@ -372,7 +384,7 @@ const MLSPINFilterPanel = ({
         </FilterGroup>
 
         {/* Towns */}
-        <FilterGroup title="Towns">
+        <FilterGroup title="Towns" accentColor="green">
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -441,7 +453,7 @@ const MLSPINFilterPanel = ({
         </FilterGroup>
 
         {/* Listing Events */}
-        <FilterGroup title="Listing Events" defaultOpen={false}>
+        <FilterGroup title="Listing Events" defaultOpen={false} accentColor="blue">
           <div className="space-y-1">
             <label className="flex items-center gap-2 text-xs cursor-pointer py-0.5">
               <Checkbox
@@ -463,7 +475,7 @@ const MLSPINFilterPanel = ({
         </FilterGroup>
 
         {/* Keywords */}
-        <FilterGroup title="Keywords" defaultOpen={false}>
+        <FilterGroup title="Keywords" defaultOpen={false} accentColor="purple">
           <div className="space-y-2">
             <div>
               <Label className="text-xs text-muted-foreground">Include</Label>
