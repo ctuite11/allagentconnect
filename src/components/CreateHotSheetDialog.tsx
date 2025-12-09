@@ -1001,7 +1001,7 @@ export function CreateHotSheetDialog({
 
           {/* Contact Information */}
           <Collapsible open={clientInfoOpen} onOpenChange={setClientInfoOpen}>
-            <Card className={!clientInfoOpen ? 'border-l-4 border-l-indigo-500' : ''}>
+            <Card className={`border-l-4 ${!clientInfoOpen ? 'border-l-indigo-500' : 'border-l-indigo-200'}`}>
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between">
@@ -1208,7 +1208,7 @@ export function CreateHotSheetDialog({
 
           {/* Search Criteria */}
           <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
-            <Card className={!criteriaOpen ? 'border-l-4 border-l-teal-500' : ''}>
+            <Card className={`border-l-4 ${!criteriaOpen ? 'border-l-teal-500' : 'border-l-teal-200'}`}>
               <CollapsibleTrigger className="w-full">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
                   <CardTitle className="text-base">Search Criteria</CardTitle>
@@ -1258,7 +1258,7 @@ export function CreateHotSheetDialog({
                   {/* Towns & Neighborhoods Section - Collapsed by default */}
                   <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border ${!townsOpen ? 'border-l-4 border-l-green-500' : ''}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border border-l-4 ${!townsOpen ? 'border-l-green-500' : 'border-l-green-200'}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Towns & Neighborhoods
                           {selectedCities.length > 0 && (
@@ -1400,7 +1400,7 @@ export function CreateHotSheetDialog({
                   {/* Property Type - Collapsed by default */}
                   <Collapsible open={propertyTypeOpen} onOpenChange={setPropertyTypeOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border ${!propertyTypeOpen ? 'border-l-4 border-l-purple-500' : ''}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border border-l-4 ${!propertyTypeOpen ? 'border-l-purple-500' : 'border-l-purple-200'}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Property Type
                           {propertyTypes.length > 0 && (
@@ -1449,7 +1449,7 @@ export function CreateHotSheetDialog({
                   {/* Status - Collapsed by default */}
                   <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border ${!statusOpen ? 'border-l-4 border-l-blue-500' : ''}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border border-l-4 ${!statusOpen ? 'border-l-blue-500' : 'border-l-blue-200'}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Status
                           {statuses.length > 0 && (
@@ -1687,7 +1687,7 @@ export function CreateHotSheetDialog({
 
           {/* Notification Settings */}
           <Collapsible open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-            <Card className={!notificationsOpen ? 'border-l-4 border-l-amber-500' : ''}>
+            <Card className={`border-l-4 ${!notificationsOpen ? 'border-l-amber-500' : 'border-l-amber-200'}`}>
               <CollapsibleTrigger className="w-full">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
                   <CardTitle className="text-base">Notification Settings</CardTitle>
