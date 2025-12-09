@@ -65,44 +65,6 @@ const AgentDirectoryFilters = ({
   return (
     <div className="sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border py-3">
       <div className="container mx-auto px-4">
-        {/* Mode Toggle Row - Only for authenticated agents */}
-        {showAgentModeToggle && (
-          <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-sm">
-                <Eye className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">View Mode:</span>
-              </div>
-              <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-                <button
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                    !isAgentMode 
-                      ? 'bg-background text-foreground shadow-sm' 
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  onClick={() => setIsAgentMode(false)}
-                >
-                  Consumer View
-                </button>
-                <button
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors flex items-center gap-1.5 ${
-                    isAgentMode 
-                      ? 'bg-background text-foreground shadow-sm' 
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  onClick={() => setIsAgentMode(true)}
-                >
-                  <Briefcase className="h-3.5 w-3.5" />
-                  Members View
-                </button>
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{resultCount}</span> {isAgentMode ? "members" : "agents"}
-            </div>
-          </div>
-        )}
-
         <div className="flex flex-wrap items-center gap-3">
           {/* Search Input */}
           <div className="relative flex-1 min-w-[200px] max-w-md">
@@ -196,48 +158,16 @@ const AgentDirectoryFilters = ({
             </PopoverContent>
           </Popover>
 
-          {/* Agent-only Quick Toggles */}
-          {isAgentMode && (
-            <div className="flex items-center gap-4 border-l border-border pl-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="filter-incentives"
-                  checked={showBuyerIncentivesOnly}
-                  onCheckedChange={(checked) => setShowBuyerIncentivesOnly(checked as boolean)}
-                />
-                <Label htmlFor="filter-incentives" className="text-sm cursor-pointer whitespace-nowrap">
-                  Buyer Incentives
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="filter-listings"
-                  checked={showListingAgentsOnly}
-                  onCheckedChange={(checked) => setShowListingAgentsOnly(checked as boolean)}
-                />
-                <Label htmlFor="filter-listings" className="text-sm cursor-pointer whitespace-nowrap">
-                  Has Listings
-                </Label>
-              </div>
-            </div>
-          )}
-
-          {/* Sort - Different options per mode */}
+          {/* Sort - Simple for consumers */}
           <div className="flex items-center gap-2 border-l border-border pl-4">
             <Label className="text-sm text-muted-foreground whitespace-nowrap">Sort:</Label>
             <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as "a-z" | "z-a" | "listings" | "recent")}>
-              <SelectTrigger className="w-36 h-9">
+              <SelectTrigger className="w-32 h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="a-z">Name A-Z</SelectItem>
                 <SelectItem value="z-a">Name Z-A</SelectItem>
-                {isAgentMode && (
-                  <>
-                    <SelectItem value="listings">Most Listings</SelectItem>
-                    <SelectItem value="recent">Recently Active</SelectItem>
-                  </>
-                )}
               </SelectContent>
             </Select>
           </div>
@@ -255,12 +185,10 @@ const AgentDirectoryFilters = ({
             </Button>
           )}
 
-          {/* Result Count (shown when toggle is hidden) */}
-          {!showAgentModeToggle && (
-            <div className="ml-auto text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{resultCount}</span> agents
-            </div>
-          )}
+          {/* Result Count */}
+          <div className="ml-auto text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{resultCount}</span> agents
+          </div>
         </div>
       </div>
     </div>
