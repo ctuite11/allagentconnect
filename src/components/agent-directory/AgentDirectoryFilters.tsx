@@ -127,12 +127,15 @@ const AgentDirectoryFilters = ({
           </div>
 
           {/* State Select */}
-          <Select value={selectedState} onValueChange={setSelectedState}>
+          <Select 
+            value={selectedState || "all"} 
+            onValueChange={(val) => setSelectedState(val === "all" ? "" : val)}
+          >
             <SelectTrigger className="w-32 h-9">
               <SelectValue placeholder="State" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All States</SelectItem>
+              <SelectItem value="all">All States</SelectItem>
               {states.map((state) => (
                 <SelectItem key={state} value={state}>
                   {state}
