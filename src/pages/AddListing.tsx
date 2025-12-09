@@ -121,6 +121,7 @@ const AddListing = () => {
     state: string;
     county: string;
     unit_number: string;
+    attom_id: string | null; // Track which property was verified
   } | null>(null);
   
   // Ref to track when we're applying ATTOM data (to prevent re-triggering fetch)
@@ -948,7 +949,7 @@ const AddListing = () => {
     }
   };
 
-  const applyAttomData = (record: any) => {
+  const applyAttomData = (record: any, forceOverwrite: boolean = false) => {
     // Defensive null check - never crash on missing record
     if (!record || typeof record !== 'object') {
       console.error('[ATTOM] applyAttomData called with invalid record:', record);
@@ -958,7 +959,7 @@ const AddListing = () => {
       return;
     }
     
-    console.log('[ATTOM] applyAttomData called with record:', JSON.stringify(record, null, 2));
+    console.log('[ATTOM] applyAttomData called with record:', JSON.stringify(record, null, 2), 'forceOverwrite:', forceOverwrite);
     
     // Mark that we're applying ATTOM data to prevent re-triggering fetch
     isApplyingAttomDataRef.current = true;
@@ -1053,58 +1054,61 @@ const AddListing = () => {
         console.log('[ATTOM] Setting unit_number from ATTOM:', record.unit_number);
       }
       
-      // ===== PROPERTY DETAILS - only fill if empty =====
-      // Bedrooms - only fill if empty
-      if (!prev.bedrooms && record.beds) {
+      // ===== PROPERTY DETAILS =====
+      // When forceOverwrite is true (address changed), overwrite core public-record fields
+      // Otherwise, only fill if empty (preserve agent edits)
+      
+      // Bedrooms - overwrite if force, otherwise only fill if empty
+      if (record.beds && (forceOverwrite || !prev.bedrooms)) {
         updates.bedrooms = record.beds.toString();
-        console.log('[ATTOM] Setting bedrooms:', record.beds);
+        console.log('[ATTOM] Setting bedrooms:', record.beds, forceOverwrite ? '(forced)' : '');
       }
       
-      // Bathrooms - only fill if empty
-      if (!prev.bathrooms && record.baths) {
+      // Bathrooms - overwrite if force, otherwise only fill if empty
+      if (record.baths && (forceOverwrite || !prev.bathrooms)) {
         updates.bathrooms = record.baths.toString();
-        console.log('[ATTOM] Setting bathrooms:', record.baths);
+        console.log('[ATTOM] Setting bathrooms:', record.baths, forceOverwrite ? '(forced)' : '');
       }
       
-      // Square feet - ALWAYS fill if empty and ATTOM has data (per user request, don't skip for condos)
-      if (!prev.square_feet && record.sqft) {
+      // Square feet - overwrite if force, otherwise only fill if empty
+      if (record.sqft && (forceOverwrite || !prev.square_feet)) {
         updates.square_feet = record.sqft.toString();
-        console.log('[ATTOM] Setting square_feet:', record.sqft);
+        console.log('[ATTOM] Setting square_feet:', record.sqft, forceOverwrite ? '(forced)' : '');
       }
       
-      // Lot size - only fill if empty (skip for condos since not applicable)
+      // Lot size - overwrite if force, otherwise only fill if empty (skip for condos)
       const isCondo = prev.property_type === 'condo' || 
         (record.property_type && (
           record.property_type.toLowerCase().includes('condo') ||
           record.property_type.toLowerCase().includes('co-op')
         ));
-      if (!prev.lot_size && record.lotSizeSqft && !isCondo) {
+      if (record.lotSizeSqft && !isCondo && (forceOverwrite || !prev.lot_size)) {
         updates.lot_size = record.lotSizeSqft.toString();
-        console.log('[ATTOM] Setting lot_size:', record.lotSizeSqft);
+        console.log('[ATTOM] Setting lot_size:', record.lotSizeSqft, forceOverwrite ? '(forced)' : '');
       }
       
-      // Year built - only fill if empty
-      if (!prev.year_built && record.yearBuilt) {
+      // Year built - overwrite if force, otherwise only fill if empty
+      if (record.yearBuilt && (forceOverwrite || !prev.year_built)) {
         updates.year_built = record.yearBuilt.toString();
-        console.log('[ATTOM] Setting year_built:', record.yearBuilt);
+        console.log('[ATTOM] Setting year_built:', record.yearBuilt, forceOverwrite ? '(forced)' : '');
       }
       
-      // Tax amount - only fill if empty
-      if (!prev.annual_property_tax && record.taxAmount) {
+      // Tax amount - overwrite if force, otherwise only fill if empty
+      if (record.taxAmount && (forceOverwrite || !prev.annual_property_tax)) {
         updates.annual_property_tax = record.taxAmount.toString();
-        console.log('[ATTOM] Setting annual_property_tax:', record.taxAmount);
+        console.log('[ATTOM] Setting annual_property_tax:', record.taxAmount, forceOverwrite ? '(forced)' : '');
       }
       
-      // Tax year - only fill if empty
-      if (!prev.tax_year && record.taxYear) {
+      // Tax year - overwrite if force, otherwise only fill if empty
+      if (record.taxYear && (forceOverwrite || !prev.tax_year)) {
         updates.tax_year = record.taxYear.toString();
-        console.log('[ATTOM] Setting tax_year:', record.taxYear);
+        console.log('[ATTOM] Setting tax_year:', record.taxYear, forceOverwrite ? '(forced)' : '');
       }
       
-      // Assessed value - only fill if empty
-      if (!prev.assessed_value && record.assessedValue) {
+      // Assessed value - overwrite if force, otherwise only fill if empty
+      if (record.assessedValue && (forceOverwrite || !prev.assessed_value)) {
         updates.assessed_value = record.assessedValue.toString();
-        console.log('[ATTOM] Setting assessed_value:', record.assessedValue);
+        console.log('[ATTOM] Setting assessed_value:', record.assessedValue, forceOverwrite ? '(forced)' : '');
       }
       
       // Latitude/longitude - always update if ATTOM provides them
@@ -1202,7 +1206,17 @@ const AddListing = () => {
     
     console.log('[ATTOM] Unit merge logic (import):', { attomUnit, existingUnit, finalUnit });
     
-    applyAttomData(record);
+    // Detect if this is a DIFFERENT property than what was previously verified
+    // If address changed, we need to force overwrite core fields (sqft, year_built, etc.)
+    const previousAttomId = attomVerifiedContext?.attom_id;
+    const newAttomId = record.attom_id || null;
+    const isAddressChange = previousAttomId && newAttomId && previousAttomId !== newAttomId;
+    
+    if (isAddressChange) {
+      console.log('[ATTOM] Address change detected - forcing overwrite of public record fields', { previousAttomId, newAttomId });
+    }
+    
+    applyAttomData(record, isAddressChange);
     
     // Set unit_number using merge logic (preserve existing if ATTOM has none)
     setFormData(prev => ({ 
@@ -1248,6 +1262,7 @@ const AddListing = () => {
       state: record.state || formData.state,
       county: formData.county,
       unit_number: finalUnit, // Use merged value, not just ATTOM
+      attom_id: record.attom_id || null, // Track which property was verified
     });
   };
 
@@ -1271,8 +1286,18 @@ const AddListing = () => {
     
     console.log('[ATTOM] Unit merge logic:', { attomUnit, existingUnit, finalUnit });
     
+    // Detect if this is a DIFFERENT property than what was previously verified
+    // If address changed, we need to force overwrite core fields (sqft, year_built, etc.)
+    const previousAttomId = attomVerifiedContext?.attom_id;
+    const newAttomId = record.attom_id || null;
+    const isAddressChange = previousAttomId && newAttomId && previousAttomId !== newAttomId;
+    
+    if (isAddressChange) {
+      console.log('[ATTOM] Address change detected - forcing overwrite of public record fields', { previousAttomId, newAttomId });
+    }
+    
     // Apply ATTOM data first
-    applyAttomData(record);
+    applyAttomData(record, isAddressChange);
     
     // Set unit_number using merge logic (preserve existing if ATTOM has none)
     setFormData(prev => ({ 
@@ -1317,6 +1342,7 @@ const AddListing = () => {
       state: record.state || formData.state,
       county: formData.county,
       unit_number: finalUnit, // Use merged value, not just ATTOM
+      attom_id: record.attom_id || null, // Track which property was verified
     });
     
     setIsAddressConfirmOpen(false);
