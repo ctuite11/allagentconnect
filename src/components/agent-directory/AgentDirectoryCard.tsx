@@ -1,10 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, Mail, MessageSquare, MapPin, Building2 } from "lucide-react";
+import { Phone, Mail, MessageSquare, MapPin, Building2, CheckCircle2 } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useNavigate } from "react-router-dom";
-import { formatDistanceToNow } from "date-fns";
 
 interface AgentDirectoryCardProps {
   agent: {
@@ -25,7 +24,6 @@ interface AgentDirectoryCardProps {
       instagram?: string;
       linkedin?: string;
     };
-    // Enriched data for agent mode
     activeListingsCount?: number;
     comingSoonCount?: number;
     offMarketCount?: number;
@@ -43,8 +41,14 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage }: AgentDirectoryCar
   const fullName = `${agent.first_name} ${agent.last_name}`;
   const initials = `${agent.first_name?.[0] || ""}${agent.last_name?.[0] || ""}`.toUpperCase();
   const phoneNumber = agent.cell_phone || agent.phone;
-  // Only show ONE primary service area
   const primaryArea = agent.serviceAreas?.[0] || null;
+
+  // Verified badge logic: has photo, brokerage, service area, and contact method
+  const hasPhoto = !!agent.headshot_url;
+  const hasBrokerage = !!(agent.company || agent.office_name);
+  const hasServiceArea = !!primaryArea;
+  const hasContact = !!(phoneNumber || agent.email);
+  const isVerified = hasPhoto && hasBrokerage && hasServiceArea && hasContact;
 
   const handlePhoneClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -64,16 +68,27 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage }: AgentDirectoryCar
   };
 
   return (
-    <Card className="group overflow-hidden border bg-card hover:shadow-lg transition-all duration-200">
+    <Card className="group overflow-hidden border bg-card transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1.5 hover:border-primary/20">
       <div className="p-5">
-        {/* Large Profile Photo */}
-        <div className="flex justify-center mb-4">
-          <Avatar className="h-24 w-24 border-2 border-border shadow-sm">
-            <AvatarImage src={agent.headshot_url} alt={fullName} />
-            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-2xl">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+        {/* Large Profile Photo with Halo Ring */}
+        <div className="flex justify-center mb-4 relative">
+          <div className="relative">
+            {/* Halo ring */}
+            <div className="absolute inset-0 rounded-full bg-primary/15 blur-sm scale-110" />
+            <Avatar className="h-24 w-24 border-2 border-border shadow-sm relative z-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+              <AvatarImage src={agent.headshot_url} alt={fullName} />
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-2xl">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            {/* Verified Badge */}
+            {isVerified && (
+              <div className="absolute -top-1 -right-1 z-20 flex items-center gap-0.5 bg-green-50 dark:bg-green-950 text-green-600 dark:text-green-400 text-[10px] font-medium px-1.5 py-0.5 rounded-full border border-green-200 dark:border-green-800 shadow-sm">
+                <CheckCircle2 className="h-3 w-3" />
+                <span>Verified</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Full Name - Never Truncated */}
@@ -97,13 +112,13 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage }: AgentDirectoryCar
           </div>
         )}
 
-        {/* Colored Contact Icons */}
+        {/* Colored Contact Icons with Micro-Animations */}
         <div className="flex items-center justify-center gap-3 mt-4">
           {phoneNumber && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-full bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 dark:bg-green-950 dark:text-green-400 dark:hover:bg-green-900"
+              className="h-10 w-10 rounded-full bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 hover:-translate-y-0.5 hover:shadow-md hover:shadow-green-200/50 dark:bg-green-950 dark:text-green-400 dark:hover:bg-green-900 dark:hover:shadow-green-900/50 transition-all duration-200 cursor-pointer"
               onClick={handlePhoneClick}
               title={formatPhoneNumber(phoneNumber)}
             >
@@ -113,7 +128,7 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage }: AgentDirectoryCar
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 dark:bg-blue-950 dark:text-blue-400 dark:hover:bg-blue-900"
+            className="h-10 w-10 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-200/50 dark:bg-blue-950 dark:text-blue-400 dark:hover:bg-blue-900 dark:hover:shadow-blue-900/50 transition-all duration-200 cursor-pointer"
             onClick={handleEmailClick}
             title={agent.email}
           >
@@ -122,7 +137,7 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage }: AgentDirectoryCar
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-700 dark:bg-purple-950 dark:text-purple-400 dark:hover:bg-purple-900"
+            className="h-10 w-10 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-700 hover:-translate-y-0.5 hover:shadow-md hover:shadow-purple-200/50 dark:bg-purple-950 dark:text-purple-400 dark:hover:bg-purple-900 dark:hover:shadow-purple-900/50 transition-all duration-200 cursor-pointer"
             onClick={handleMessageClick}
             title="Send Message"
           >
