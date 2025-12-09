@@ -99,10 +99,16 @@ const Navigation = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Agents</DropdownMenuLabel>
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate("/our-agents")}>
+                  <DropdownMenuItem onClick={() => navigate("/find-agent")}>
                     <Users className="mr-2 h-4 w-4" />
-                    Our Agents
+                    Find an Agent
                   </DropdownMenuItem>
+                  {user && role === "agent" && (
+                    <DropdownMenuItem onClick={() => navigate("/our-members")}>
+                      <Users className="mr-2 h-4 w-4" />
+                      Our Members
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => navigate("/agent-search") }>
                     <Search className="mr-2 h-4 w-4" />
                     Agent Search
@@ -307,14 +313,26 @@ const Navigation = () => {
             </button>
             <button
               onClick={() => {
-                navigate("/our-agents");
+                navigate("/find-agent");
                 setIsMenuOpen(false);
               }}
               className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
             >
               <Users className="w-4 h-4" />
-              Our Agents
+              Find an Agent
             </button>
+            {user && role === "agent" && (
+              <button
+                onClick={() => {
+                  navigate("/our-members");
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
+              >
+                <Users className="w-4 h-4" />
+                Our Members
+              </button>
+            )}
             {user && (
               <>
                 <div className="pt-2 border-t border-border mt-2">
