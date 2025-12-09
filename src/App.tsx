@@ -108,6 +108,8 @@ const App = () => (
           <Route path="/browse" element={<BrowsePropertiesNew />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/our-agents" element={<OurAgents />} />
+          <Route path="/agents" element={<OurAgents />} />
+          <Route path="/members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} /></RouteGuard>} />
           <Route path="/agent-search" element={<MLSPINSearch />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/my-favorites" element={<MyFavorites />} />

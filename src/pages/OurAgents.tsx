@@ -44,7 +44,11 @@ interface County {
   state: string;
 }
 
-const OurAgents = () => {
+interface OurAgentsProps {
+  defaultAgentMode?: boolean;
+}
+
+const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
   const navigate = useNavigate();
   const { user, role, loading: authLoading } = useAuthRole();
   
@@ -60,14 +64,20 @@ const OurAgents = () => {
   const [showListingAgentsOnly, setShowListingAgentsOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<"a-z" | "z-a" | "listings" | "recent">("a-z");
   
-  // View mode
-  const [isAgentMode, setIsAgentMode] = useState(false);
+  // View mode - default based on prop
+  const [isAgentMode, setIsAgentMode] = useState(defaultAgentMode);
   
   // Message dialog
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [messageAgent, setMessageAgent] = useState<EnrichedAgent | null>(null);
 
   const isAuthenticatedAgent = role === "agent";
+  
+  // Page titles based on mode
+  const pageTitle = isAgentMode ? "Our Members" : "Find an Agent";
+  const pageSubtitle = isAgentMode 
+    ? "View member profiles, activity, and connect with colleagues"
+    : "Find experienced real estate professionals in your area";
 
   useEffect(() => {
     fetchData();
@@ -302,10 +312,10 @@ const OurAgents = () => {
         <section className="border-b border-border bg-card py-8">
           <div className="container mx-auto px-4">
             <h1 className="text-2xl font-bold md:text-3xl">
-              Agent Directory
+              {pageTitle}
             </h1>
             <p className="mt-1 text-muted-foreground">
-              Find experienced real estate professionals in your area
+              {pageSubtitle}
             </p>
           </div>
         </section>
