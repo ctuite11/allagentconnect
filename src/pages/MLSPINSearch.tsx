@@ -1,10 +1,9 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import MLSPINFilterPanel from "@/components/mlspin-search/MLSPINFilterPanel";
 import MLSPINResultsTable from "@/components/mlspin-search/MLSPINResultsTable";
 import ListingIntelDrawer from "@/components/mlspin-search/ListingIntelDrawer";
-import { toast } from "sonner";
 import { toast } from "sonner";
 
 interface FilterState {
@@ -71,8 +70,6 @@ const MLSPINSearch = () => {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [selectedListing, setSelectedListing] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [contactDialogOpen, setContactDialogOpen] = useState(false);
-  const [contactListing, setContactListing] = useState<any | null>(null);
 
   // Fetch counties on mount
   useEffect(() => {
@@ -260,8 +257,7 @@ const MLSPINSearch = () => {
   };
 
   const handleMessageAgent = (listing: any) => {
-    setContactListing(listing);
-    setContactDialogOpen(true);
+    toast.info(`Message agent for ${listing.address}`);
   };
 
   const handleSaveListing = async (listing: any) => {
@@ -291,7 +287,7 @@ const MLSPINSearch = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
       
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden pt-16">
         {/* Filter Panel */}
         <MLSPINFilterPanel
           filters={filters}
@@ -314,9 +310,6 @@ const MLSPINSearch = () => {
                   ({selectedIds.length} selected)
                 </span>
               )}
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Bulk actions could go here */}
             </div>
           </div>
 
@@ -342,7 +335,6 @@ const MLSPINSearch = () => {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
       />
-
     </div>
   );
 };
