@@ -172,6 +172,21 @@ const AgentDirectoryFilters = ({
             </Select>
           </div>
 
+          {/* Agent Mode Toggle - Only visible to authenticated agents */}
+          {showAgentModeToggle && (
+            <div className="flex items-center gap-2 border-l border-border pl-4">
+              <Switch
+                id="agent-mode-toggle"
+                checked={isAgentMode}
+                onCheckedChange={setIsAgentMode}
+              />
+              <Label htmlFor="agent-mode-toggle" className="text-sm text-muted-foreground whitespace-nowrap cursor-pointer">
+                <Eye className="h-3.5 w-3.5 inline-block mr-1" />
+                Agent Intel
+              </Label>
+            </div>
+          )}
+
           {/* Clear Filters */}
           {hasActiveFilters && (
             <Button
@@ -187,7 +202,7 @@ const AgentDirectoryFilters = ({
 
           {/* Result Count */}
           <div className="ml-auto text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{resultCount}</span> agents
+            <span className="font-medium text-foreground">{resultCount}</span> {isAgentMode ? "members" : "agents"}
           </div>
         </div>
       </div>
