@@ -109,6 +109,8 @@ const App = () => (
           <Route path="/search" element={<SearchResults />} />
           <Route path="/our-agents" element={<OurAgents />} />
           <Route path="/agents" element={<OurAgents />} />
+          <Route path="/find-agent" element={<OurAgents />} />
+          <Route path="/our-members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} /></RouteGuard>} />
           <Route path="/members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} /></RouteGuard>} />
           <Route path="/agent-search" element={<MLSPINSearch />} />
           <Route path="/favorites" element={<Favorites />} />
