@@ -65,7 +65,7 @@ const AgentDirectoryFilters = ({
   return (
     <div className="sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border py-3">
       <div className="container mx-auto px-4">
-        {/* Mode Toggle Row */}
+        {/* Mode Toggle Row - Only for authenticated agents */}
         {showAgentModeToggle && (
           <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
             <div className="flex items-center gap-3">
@@ -82,7 +82,7 @@ const AgentDirectoryFilters = ({
                   }`}
                   onClick={() => setIsAgentMode(false)}
                 >
-                  Consumer
+                  Consumer View
                 </button>
                 <button
                   className={`px-3 py-1.5 text-sm rounded-md transition-colors flex items-center gap-1.5 ${
@@ -93,12 +93,12 @@ const AgentDirectoryFilters = ({
                   onClick={() => setIsAgentMode(true)}
                 >
                   <Briefcase className="h-3.5 w-3.5" />
-                  Agent Intel
+                  Members View
                 </button>
               </div>
             </div>
             <div className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{resultCount}</span> agents
+              <span className="font-medium text-foreground">{resultCount}</span> {isAgentMode ? "members" : "agents"}
             </div>
           </div>
         )}
@@ -109,7 +109,7 @@ const AgentDirectoryFilters = ({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               type="text"
-              placeholder="Search name, company, email..."
+              placeholder={isAgentMode ? "Search members..." : "Search agents..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-8 h-9"
@@ -196,31 +196,33 @@ const AgentDirectoryFilters = ({
             </PopoverContent>
           </Popover>
 
-          {/* Quick Toggles */}
-          <div className="flex items-center gap-4 border-l border-border pl-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="filter-incentives"
-                checked={showBuyerIncentivesOnly}
-                onCheckedChange={(checked) => setShowBuyerIncentivesOnly(checked as boolean)}
-              />
-              <Label htmlFor="filter-incentives" className="text-sm cursor-pointer whitespace-nowrap">
-                Buyer Incentives
-              </Label>
+          {/* Agent-only Quick Toggles */}
+          {isAgentMode && (
+            <div className="flex items-center gap-4 border-l border-border pl-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="filter-incentives"
+                  checked={showBuyerIncentivesOnly}
+                  onCheckedChange={(checked) => setShowBuyerIncentivesOnly(checked as boolean)}
+                />
+                <Label htmlFor="filter-incentives" className="text-sm cursor-pointer whitespace-nowrap">
+                  Buyer Incentives
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="filter-listings"
+                  checked={showListingAgentsOnly}
+                  onCheckedChange={(checked) => setShowListingAgentsOnly(checked as boolean)}
+                />
+                <Label htmlFor="filter-listings" className="text-sm cursor-pointer whitespace-nowrap">
+                  Has Listings
+                </Label>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="filter-listings"
-                checked={showListingAgentsOnly}
-                onCheckedChange={(checked) => setShowListingAgentsOnly(checked as boolean)}
-              />
-              <Label htmlFor="filter-listings" className="text-sm cursor-pointer whitespace-nowrap">
-                Has Listings
-              </Label>
-            </div>
-          </div>
+          )}
 
-          {/* Sort */}
+          {/* Sort - Different options per mode */}
           <div className="flex items-center gap-2 border-l border-border pl-4">
             <Label className="text-sm text-muted-foreground whitespace-nowrap">Sort:</Label>
             <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as "a-z" | "z-a" | "listings" | "recent")}>
@@ -230,8 +232,12 @@ const AgentDirectoryFilters = ({
               <SelectContent>
                 <SelectItem value="a-z">Name A-Z</SelectItem>
                 <SelectItem value="z-a">Name Z-A</SelectItem>
-                <SelectItem value="listings">Most Listings</SelectItem>
-                <SelectItem value="recent">Recently Active</SelectItem>
+                {isAgentMode && (
+                  <>
+                    <SelectItem value="listings">Most Listings</SelectItem>
+                    <SelectItem value="recent">Recently Active</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
