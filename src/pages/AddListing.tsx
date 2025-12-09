@@ -812,8 +812,19 @@ const AddListing = () => {
     // Normalize state to 2-letter code for ATTOM
     const stateCode = STATE_ABBREVIATIONS[formData.state] || formData.state;
     
+    // Build address with unit number for condos/apartments
+    const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
+    let queryAddress = formData.address;
+    
+    // Append unit number if this is a condo and unit exists
+    if (isCondo && formData.unit_number?.trim()) {
+      const cleanUnit = formData.unit_number.trim().replace(/^#/, '');
+      queryAddress = `${formData.address} #${cleanUnit}`;
+      console.log('[AddListing] Condo detected - appending unit to ATTOM query:', queryAddress);
+    }
+    
     const payload = {
-      address: formData.address,
+      address: queryAddress,
       city: formData.city,
       state: stateCode,
       zip: formData.zip_code,
