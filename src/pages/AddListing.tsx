@@ -779,29 +779,63 @@ const AddListing = () => {
     }
   };
 
-  // Helper to build one-line address string from ATTOM record
-  // ATTOM's address field (from oneLine) is already formatted as full address
-  // unitNumber: explicitly pass the unit to append (avoids timing issues with formData)
+  // =====================================================================
+  // DCMLS PORT: ATTOM ADDRESS STRING FORMAT
+  // Format: "STREET_ADDRESS UNIT, CITY, STATE ZIP5"
+  // Examples: "44 Prince St 401, Boston, MA 02113"
+  //           "300 Commercial Street 3B, Boston, MA 02109"
+  // NOTE: NO # prefix for unit - DCMLS uses space only
+  // =====================================================================
+  const buildDcmlsAttomAddress = (
+    streetAddress: string,
+    city: string,
+    stateCode: string,
+    zip5: string,
+    unitNumber?: string,
+    isCondo?: boolean
+  ): string => {
+    let addressLine = streetAddress;
+    
+    // For condos with unit, append unit with space (NO # prefix per DCMLS)
+    if (isCondo && unitNumber && unitNumber.trim()) {
+      const cleanUnit = unitNumber.trim().replace(/^#/, '');
+      // Check if address already includes unit (avoid duplication)
+      const addressLower = streetAddress.toLowerCase();
+      const unitLower = cleanUnit.toLowerCase();
+      if (!addressLower.includes(` ${unitLower}`) && !addressLower.includes(`#${unitLower}`)) {
+        addressLine = `${streetAddress} ${cleanUnit}`;
+      }
+    }
+    
+    // Normalize ZIP to 5 digits
+    const normalizedZip = zip5 ? zip5.substring(0, 5) : '';
+    
+    return `${addressLine}, ${city}, ${stateCode} ${normalizedZip}`;
+  };
+
+  // Helper to build one-line address string from ATTOM record (for comparison/rejection tracking)
   const buildAttomAddressString = (record: any, unitNumber?: string): string => {
     const baseAddress = record.address || '';
     
-    // If unit number is provided, insert it after the street but before city
     if (unitNumber && unitNumber.trim()) {
       const unit = unitNumber.trim();
-      // ATTOM returns format like "123 MAIN ST, BOSTON, MA 02109"
       const commaIndex = baseAddress.indexOf(',');
       if (commaIndex > 0) {
         const street = baseAddress.substring(0, commaIndex);
         const rest = baseAddress.substring(commaIndex);
-        return `${street} #${unit}${rest}`;
+        return `${street} ${unit}${rest}`; // DCMLS: space, not #
       }
-      // Fallback: just append unit at the end
-      return `${baseAddress} #${unit}`;
+      return `${baseAddress} ${unit}`;
     }
     
     return baseAddress;
   };
 
+  // =====================================================================
+  // DCMLS PORT: ATTOM TRIGGER RULES
+  // - Single Family: Unit NOT required, ATTOM can fire immediately
+  // - Condo/Co-op/Apartment: Unit REQUIRED before ATTOM fires
+  // =====================================================================
   const handleAutoFillFromPublicRecords = async (isAutoTrigger = false) => {
     if (!formData.address || !formData.city || !formData.state) {
       if (!isAutoTrigger) {
@@ -810,25 +844,44 @@ const AddListing = () => {
       return;
     }
 
+    // DCMLS PORT: Condo/Apartment requires unit number before ATTOM fires
+    const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
+    const hasUnit = formData.unit_number?.trim() !== '';
+    
+    if (isCondo && !hasUnit) {
+      console.log('[DCMLS] ATTOM blocked: Condo/Apartment requires unit number');
+      if (!isAutoTrigger) {
+        toast.info("Please enter unit number before verifying condo address.");
+      }
+      setPublicRecordStatus('idle');
+      setAttomFetchStatus("Unit number required for condo/apartment records.");
+      return;
+    }
+
     // Normalize state to 2-letter code for ATTOM
     const stateCode = STATE_ABBREVIATIONS[formData.state] || formData.state;
+    const zip5 = formData.zip_code ? formData.zip_code.substring(0, 5) : '';
     
-    // Build address with unit number for condos/apartments
-    const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
-    let queryAddress = formData.address;
+    // DCMLS PORT: Build address string per DCMLS format
+    // Format: "STREET_ADDRESS UNIT, CITY, STATE ZIP5" (no # prefix for unit)
+    const queryAddress = buildDcmlsAttomAddress(
+      formData.address,
+      formData.city,
+      stateCode,
+      zip5,
+      isCondo ? formData.unit_number : undefined,
+      isCondo
+    );
     
-    // Append unit number if this is a condo and unit exists
-    if (isCondo && formData.unit_number?.trim()) {
-      const cleanUnit = formData.unit_number.trim().replace(/^#/, '');
-      queryAddress = `${formData.address} #${cleanUnit}`;
-      console.log('[AddListing] Condo detected - appending unit to ATTOM query:', queryAddress);
-    }
+    console.log('[DCMLS] ATTOM query address:', queryAddress);
     
     const payload = {
-      address: queryAddress,
+      address: isCondo && formData.unit_number?.trim() 
+        ? `${formData.address} ${formData.unit_number.trim().replace(/^#/, '')}` // Space, not #
+        : formData.address,
       city: formData.city,
       state: stateCode,
-      zip: formData.zip_code,
+      zip: zip5,
     };
     
     console.log("[AddListing] ATTOM REQUEST:", payload);
@@ -917,24 +970,28 @@ const AddListing = () => {
           return;
         }
 
-        // ===== UNIT VERIFICATION FOR CONDOS =====
+        // =====================================================================
+        // DCMLS PORT: UNIT VERIFICATION FOR CONDOS
         // If user entered a unit number but ATTOM didn't return unit-specific data,
         // this means we only found the building, NOT the specific unit.
-        // We must NOT show a green "confirm" state for a non-verified unit.
+        // Per DCMLS: We must NOT show a green "confirm" state for a non-verified unit.
+        // This is a data integrity boundary condition.
+        // =====================================================================
         const userRequestedUnit = formData.unit_number?.trim();
         const attomReturnedUnit = record.unit_number?.trim();
-        const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
+        const isCondoType = formData.property_type === 'condo' || formData.property_type === 'apartment';
         
-        if (isCondo && userRequestedUnit && !attomReturnedUnit) {
+        if (isCondoType && userRequestedUnit && !attomReturnedUnit) {
           // User asked for unit #X, but ATTOM only returned building-level data
-          // This means the unit could not be verified
-          console.log("[AddListing] ATTOM unit verification FAILED:", {
+          // This means the unit could NOT be verified - DO NOT confirm
+          console.log("[DCMLS] UNIT VERIFICATION FAILED - building found but unit not verified:", {
             userRequestedUnit,
             attomReturnedUnit,
-            isCondo
+            isCondoType
           });
           
-          setPublicRecordStatus('idle');
+          // DCMLS PORT: Set to ERROR state (not idle or success)
+          setPublicRecordStatus('error');
           setAttomFetchStatus(`We found the building at ${record.address?.split(',')[0] || formData.address}, but we could not verify unit #${userRequestedUnit}.`);
           setAddressVerified(false);
           setVerificationMessage(`Unit #${userRequestedUnit} could not be verified. Please confirm the unit exists.`);
@@ -944,11 +1001,11 @@ const AddListing = () => {
             const areas = getAreasForCity(formData.city, formData.state);
             setAttomNeighborhoods(areas);
           } catch (areaError) {
-            console.error("[AddListing] Error getting areas:", areaError);
+            console.error("[DCMLS] Error getting areas:", areaError);
           }
           
           toast.warning(`Building found but unit #${userRequestedUnit} could not be verified.`, {
-            description: "Please verify the unit number is correct. You may enter details manually.",
+            description: "The unit number may not exist. Please verify or enter details manually.",
           });
           
           setHasAutoFetched(true);
@@ -987,7 +1044,15 @@ const AddListing = () => {
     }
   };
 
-  const applyAttomData = (record: any, forceOverwrite: boolean = false) => {
+  // =====================================================================
+  // DCMLS PORT: ATTOM DATA APPLICATION
+  // Per DCMLS: New ATTOM verification = SOURCE OF TRUTH
+  // Always overwrite core public-record fields on confirmation:
+  //   beds, full baths, half baths, square feet, year built, lot size,
+  //   annual property tax, tax year, assessed value
+  // This matches DCMLS: listingInfo = { ...listingInfo, ...attomData }
+  // =====================================================================
+  const applyAttomData = (record: any, forceOverwrite: boolean = true) => {
     // Defensive null check - never crash on missing record
     if (!record || typeof record !== 'object') {
       console.error('[ATTOM] applyAttomData called with invalid record:', record);
@@ -997,7 +1062,8 @@ const AddListing = () => {
       return;
     }
     
-    console.log('[ATTOM] applyAttomData called with record:', JSON.stringify(record, null, 2), 'forceOverwrite:', forceOverwrite);
+    // DCMLS PORT: forceOverwrite defaults to TRUE - new verification always overwrites
+    console.log('[DCMLS] applyAttomData called with record:', JSON.stringify(record, null, 2), 'forceOverwrite:', forceOverwrite);
     
     // Mark that we're applying ATTOM data to prevent re-triggering fetch
     isApplyingAttomDataRef.current = true;
@@ -1233,30 +1299,25 @@ const AddListing = () => {
     }, 100);
   };
 
+  // =====================================================================
+  // DCMLS PORT: handleImportAttomRecord
+  // Per DCMLS: New verification = SOURCE OF TRUTH, always overwrite
+  // Simplified states: Success, Warning, or Error only
+  // =====================================================================
   const handleImportAttomRecord = (record: any) => {
     // Get unit from ATTOM record (if any)
     const attomUnit = record.unit_number || '';
     
-    // CRITICAL: Preserve existing unit_number if ATTOM doesn't provide one
-    // This prevents refresh from wiping user-entered unit numbers
+    // Preserve existing unit_number if ATTOM doesn't provide one
     const existingUnit = formData.unit_number || '';
     const finalUnit = attomUnit.trim() !== '' ? attomUnit : existingUnit;
     
-    console.log('[ATTOM] Unit merge logic (import):', { attomUnit, existingUnit, finalUnit });
+    console.log('[DCMLS] handleImportAttomRecord:', { attomUnit, existingUnit, finalUnit });
     
-    // Detect if this is a DIFFERENT property than what was previously verified
-    // If address changed, we need to force overwrite core fields (sqft, year_built, etc.)
-    const previousAttomId = attomVerifiedContext?.attom_id;
-    const newAttomId = record.attom_id || null;
-    const isAddressChange = previousAttomId && newAttomId && previousAttomId !== newAttomId;
+    // DCMLS: Always force overwrite on new verification
+    applyAttomData(record, true);
     
-    if (isAddressChange) {
-      console.log('[ATTOM] Address change detected - forcing overwrite of public record fields', { previousAttomId, newAttomId });
-    }
-    
-    applyAttomData(record, isAddressChange);
-    
-    // Set unit_number using merge logic (preserve existing if ATTOM has none)
+    // Set unit_number using merge logic
     setFormData(prev => ({ 
       ...prev, 
       unit_number: finalUnit
@@ -1264,26 +1325,19 @@ const AddListing = () => {
     
     setIsAttomModalOpen(false);
     
-    // Determine if this is a condo/apartment - use finalUnit for validation
+    // DCMLS PORT: Simplified outcome states - only Success, Warning, or Error
     const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
     const hasUnit = finalUnit.trim() !== '';
     const hasTaxData = record.taxAmount != null || record.assessedValue != null;
     
-    // CONDO VALIDATION: Handle missing unit vs missing tax data separately
-    if (isCondo && !hasUnit) {
-      // Case 1: Condo with NO unit - soft-lock until unit is entered
-      console.log('[ATTOM] Condo missing unit:', { hasUnit, hasTaxData, finalUnit });
-      setPublicRecordStatus('idle');
-      setAttomFetchStatus("Unit number required for condo records. Please enter unit number below.");
-      toast.info("Please enter unit number to load complete condo data.");
-    } else if (isCondo && hasUnit && !hasTaxData) {
-      // Case 2: Condo WITH unit but NO tax data - allow partial success
-      console.log('[ATTOM] Condo has unit but no tax data:', { hasUnit, hasTaxData, finalUnit });
-      setPublicRecordStatus('success'); // Still success - address verified
+    if (isCondo && hasUnit && !hasTaxData) {
+      // WARNING: Address verified but no tax data available
+      console.log('[DCMLS] Warning: Condo verified but no tax data');
+      setPublicRecordStatus('success');
       setAttomFetchStatus("Address verified. Tax records not available for this unit.");
       toast.warning("Tax records not available for this unit. You may enter tax data manually.");
     } else {
-      // Case 3: Full success - single family OR condo with complete data
+      // SUCCESS: Full data loaded
       setPublicRecordStatus('success');
       setAttomFetchStatus("Public record data loaded successfully.");
       toast.success("Property data imported from public records!");
@@ -1291,7 +1345,7 @@ const AddListing = () => {
     
     setHasAutoFetched(true);
     
-    // Store verified context with MERGED unit value (not just ATTOM)
+    // Store verified context
     setAttomVerifiedContext({
       property_type: formData.property_type,
       address: record.address || formData.address,
@@ -1299,70 +1353,56 @@ const AddListing = () => {
       zip_code: record.zip || formData.zip_code,
       state: record.state || formData.state,
       county: formData.county,
-      unit_number: finalUnit, // Use merged value, not just ATTOM
-      attom_id: record.attom_id || null, // Track which property was verified
+      unit_number: finalUnit,
+      attom_id: record.attom_id || null,
     });
   };
 
+  // =====================================================================
+  // DCMLS PORT: handleConfirmAttomAddress
+  // Per DCMLS: New verification = SOURCE OF TRUTH, always overwrite
+  // Confirmation popup is just a review step, not a validator
+  // Simplified states: Success, Warning, or Error only
+  // =====================================================================
   const handleConfirmAttomAddress = () => {
     if (!attomPendingRecord) {
       setIsAddressConfirmOpen(false);
       return;
     }
     
-    // ===== SMART MERGE: ATTOM data merges with existing form state =====
-    // Key rule: If ATTOM provides a unit, use it. If not, PRESERVE existing unit.
     const record = attomPendingRecord;
     
     // Get unit from ATTOM record (if any)
     const attomUnit = record.unit_number || '';
     
-    // CRITICAL: Preserve existing unit_number if ATTOM doesn't provide one
-    // This prevents refresh from wiping user-entered unit numbers
+    // Preserve existing unit_number if ATTOM doesn't provide one
     const existingUnit = formData.unit_number || '';
     const finalUnit = attomUnit.trim() !== '' ? attomUnit : existingUnit;
     
-    console.log('[ATTOM] Unit merge logic:', { attomUnit, existingUnit, finalUnit });
+    console.log('[DCMLS] handleConfirmAttomAddress:', { attomUnit, existingUnit, finalUnit });
     
-    // Detect if this is a DIFFERENT property than what was previously verified
-    // If address changed, we need to force overwrite core fields (sqft, year_built, etc.)
-    const previousAttomId = attomVerifiedContext?.attom_id;
-    const newAttomId = record.attom_id || null;
-    const isAddressChange = previousAttomId && newAttomId && previousAttomId !== newAttomId;
+    // DCMLS: Always force overwrite on confirmation
+    applyAttomData(record, true);
     
-    if (isAddressChange) {
-      console.log('[ATTOM] Address change detected - forcing overwrite of public record fields', { previousAttomId, newAttomId });
-    }
-    
-    // Apply ATTOM data first
-    applyAttomData(record, isAddressChange);
-    
-    // Set unit_number using merge logic (preserve existing if ATTOM has none)
+    // Set unit_number using merge logic
     setFormData(prev => ({ 
       ...prev, 
       unit_number: finalUnit
     }));
     
-    // Determine if this is a condo/apartment - use FINAL merged unit for validation
+    // DCMLS PORT: Simplified outcome states - only Success, Warning, or Error
     const isCondo = formData.property_type === 'condo' || formData.property_type === 'apartment';
     const hasUnit = finalUnit.trim() !== '';
     const hasTaxData = record.taxAmount != null || record.assessedValue != null;
     
-    // CONDO VALIDATION: Handle missing unit vs missing tax data separately
-    if (isCondo && !hasUnit) {
-      // Case 1: Condo with NO unit - soft-lock until unit is entered
-      console.log('[ATTOM] Condo missing unit:', { hasUnit, hasTaxData, finalUnit });
-      setPublicRecordStatus('idle');
-      setAttomFetchStatus("Unit number required for condo records. Please enter unit number below.");
-      toast.info("Please enter unit number to load complete condo data.");
-    } else if (isCondo && hasUnit && !hasTaxData) {
-      // Case 2: Condo WITH unit but NO tax data - allow partial success
-      console.log('[ATTOM] Condo has unit but no tax data:', { hasUnit, hasTaxData, finalUnit });
-      setPublicRecordStatus('success'); // Still success - address verified
+    if (isCondo && hasUnit && !hasTaxData) {
+      // WARNING: Address verified but no tax data available
+      console.log('[DCMLS] Warning: Condo verified but no tax data');
+      setPublicRecordStatus('success');
       setAttomFetchStatus("Address verified. Tax records not available for this unit.");
       toast.warning("Tax records not available for this unit. You may enter tax data manually.");
     } else {
-      // Case 3: Full success - single family OR condo with complete data
+      // SUCCESS: Full data loaded
       setPublicRecordStatus('success');
       setAttomFetchStatus("Public record data loaded successfully.");
       toast.success("Property data loaded from public records!");
@@ -1371,7 +1411,7 @@ const AddListing = () => {
     setHasAutoFetched(true);
     setHasConfirmedAttomAddress(true);
     
-    // Store verified context with MERGED unit value (not just ATTOM)
+    // Store verified context
     setAttomVerifiedContext({
       property_type: formData.property_type,
       address: record.address || formData.address,
@@ -1379,8 +1419,8 @@ const AddListing = () => {
       zip_code: record.zip || formData.zip_code,
       state: record.state || formData.state,
       county: formData.county,
-      unit_number: finalUnit, // Use merged value, not just ATTOM
-      attom_id: record.attom_id || null, // Track which property was verified
+      unit_number: finalUnit,
+      attom_id: record.attom_id || null,
     });
     
     setIsAddressConfirmOpen(false);
