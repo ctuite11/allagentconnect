@@ -305,7 +305,6 @@ const ListingSearchFilters = ({
                   />
                   <span className="text-xs font-medium text-foreground">Select All</span>
                 </label>
-                <div className="border-t border-border my-1.5" />
                 {PROPERTY_TYPES.map(type => (
                   <label
                     key={type.value}
@@ -343,7 +342,6 @@ const ListingSearchFilters = ({
                   />
                   <span className="text-xs font-medium text-foreground">Select All</span>
                 </label>
-                <div className="border-t border-border my-1.5" />
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                   {STATUSES.map(status => (
                     <label
@@ -399,7 +397,7 @@ const ListingSearchFilters = ({
             </div>
             
             {/* PRICE RANGE Section (below Status+Date, full width within this card) */}
-            <div className="border-t border-border px-3 py-3">
+            <div className="px-3 py-3">
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="h-4 w-4 text-green-600" />
                 <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Price Range</span>
