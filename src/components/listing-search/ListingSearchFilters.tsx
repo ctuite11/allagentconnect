@@ -296,21 +296,21 @@ const ListingSearchFilters = ({
   return (
     <div className="bg-muted/30 border-b border-border">
       <div className="container mx-auto px-4 py-4">
-        {/* ROW 1: 3-Column Grid - Property Type (narrow) | Status+Date+Price (wide) | Standard Criteria */}
+        {/* ROW 1: 4 Separate Cards - Property Type | Status | Date/Timeframe | Standard Criteria */}
         <div className="flex gap-4 mb-4">
           
-          {/* PROPERTY TYPE Section (narrow) */}
+          {/* Card 1: PROPERTY TYPE */}
           <div 
             className="w-[160px] shrink-0 bg-card border border-border shadow-sm overflow-hidden"
             style={{ borderLeft: `4px solid ${ACCENT_COLORS.propertyType}` }}
           >
-            <div className="px-5 py-2.5">
+            <div className="px-4 py-2.5">
               <div className="flex items-center gap-2">
                 <Home className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-semibold text-foreground">Property Type</span>
               </div>
             </div>
-            <div className="px-4 pb-4 space-y-2">
+            <div className="px-4 pb-4 space-y-1.5">
               <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-1 rounded transition-colors">
                 <Checkbox
                   checked={filters.propertyTypes.length === PROPERTY_TYPES.length}
@@ -335,21 +335,20 @@ const ListingSearchFilters = ({
             </div>
           </div>
 
-          {/* MIDDLE SECTION: Status + Date/Timeframe (one card) */}
-          <div className="flex-1 bg-card border border-border shadow-sm overflow-hidden"
-               style={{ borderLeft: `4px solid ${ACCENT_COLORS.status}` }}>
-            {/* STATUS Header */}
-            <div className="px-5 py-2.5">
-              <div className="flex items-center gap-2">
-                <Tag className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-semibold text-foreground">Status</span>
+          {/* Card 2: STATUS (with Price Range below) */}
+          <div className="flex flex-col gap-4">
+            {/* STATUS Card */}
+            <div 
+              className="bg-card border border-border shadow-sm overflow-hidden"
+              style={{ borderLeft: `4px solid ${ACCENT_COLORS.status}` }}
+            >
+              <div className="px-4 py-2.5">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-semibold text-foreground">Status</span>
+                </div>
               </div>
-            </div>
-            
-            {/* Status + Date/Timeframe content row */}
-            <div className="px-4 pb-4 flex gap-6">
-              {/* STATUS Section - 2 columns, no scroll */}
-              <div className="flex-1">
+              <div className="px-4 pb-4">
                 <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-1 rounded transition-colors mb-2">
                   <Checkbox
                     checked={filters.statuses.length === STATUSES.length}
@@ -358,7 +357,7 @@ const ListingSearchFilters = ({
                   />
                   <span className="text-xs font-medium text-foreground">Select All</span>
                 </label>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1">
                   {STATUSES.map(status => (
                     <label
                       key={status.value}
@@ -374,131 +373,131 @@ const ListingSearchFilters = ({
                   ))}
                 </div>
               </div>
-              
-              {/* DATE/TIMEFRAME Section (right side) */}
-              <div 
-                className="w-[200px] shrink-0 pl-5"
-                style={{ borderLeft: `4px solid ${ACCENT_COLORS.dateTimeframe}` }}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="h-4 w-4" style={{ color: ACCENT_COLORS.dateTimeframe }} />
-                  <span className="text-sm font-semibold text-foreground">Date / Timeframe</span>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">List Date</Label>
-                    <Input
-                      type="date"
-                      value={filters.listDateFrom}
-                      onChange={e => updateFilter("listDateFrom", e.target.value)}
-                      className="h-8 text-xs bg-background"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Off-Market Timeframe</Label>
-                    <Select 
-                      value={filters.offMarketTimeframe} 
-                      onValueChange={v => updateFilter("offMarketTimeframe", v)}
-                    >
-                      <SelectTrigger className="h-8 text-xs bg-background">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover">
-                        <SelectItem value="3months">Today - 3 Months</SelectItem>
-                        <SelectItem value="6months">Today - 6 Months</SelectItem>
-                        <SelectItem value="12months">Today - 12 Months</SelectItem>
-                        <SelectItem value="24months">Today - 24 Months</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-          
-          {/* PRICE RANGE Section (separate card) */}
-          <div 
-            className="w-[320px] shrink-0 bg-card border border-border shadow-sm overflow-hidden"
-            style={{ borderLeft: `4px solid ${ACCENT_COLORS.priceRange}` }}
-          >
-            <div className="px-5 py-2.5">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" style={{ color: ACCENT_COLORS.priceRange }} />
-                <span className="text-sm font-semibold text-foreground">Price Range</span>
-              </div>
-            </div>
-            <div className="px-4 pb-4 space-y-3">
-              {/* Min Price */}
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-1">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
-                    <Input
-                      type="text"
-                      placeholder="100,000"
-                      value={filters.hasNoMin ? "" : formatNumberWithCommas(filters.priceMin)}
-                      onChange={e => updateFilter("priceMin", parseFormattedNumber(e.target.value))}
-                      disabled={filters.hasNoMin}
-                      className="h-8 text-xs bg-background pl-6 disabled:opacity-50"
-                    />
-                  </div>
-                  <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                    <Checkbox
-                      checked={filters.hasNoMin}
-                      onCheckedChange={(checked) => {
-                        onFiltersChange({ 
-                          ...filters, 
-                          hasNoMin: !!checked,
-                          priceMin: checked ? "" : filters.priceMin
-                        });
-                      }}
-                      className="h-4 w-4"
-                    />
-                    <span className="text-xs text-muted-foreground">No Min</span>
-                  </label>
+
+            {/* PRICE RANGE Card (below Status) */}
+            <div 
+              className="bg-card border border-border shadow-sm overflow-hidden"
+              style={{ borderLeft: `4px solid ${ACCENT_COLORS.priceRange}` }}
+            >
+              <div className="px-4 py-2.5">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" style={{ color: ACCENT_COLORS.priceRange }} />
+                  <span className="text-sm font-semibold text-foreground">Price Range</span>
                 </div>
               </div>
-              {/* Max Price */}
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Max</Label>
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-1">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
-                    <Input
-                      type="text"
-                      placeholder="500,000"
-                      value={filters.hasNoMax ? "" : formatNumberWithCommas(filters.priceMax)}
-                      onChange={e => updateFilter("priceMax", parseFormattedNumber(e.target.value))}
-                      disabled={filters.hasNoMax}
-                      className="h-8 text-xs bg-background pl-6 disabled:opacity-50"
-                    />
+              <div className="px-4 pb-4">
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Min Price */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                      <Input
+                        type="text"
+                        placeholder="100,000"
+                        value={filters.hasNoMin ? "" : formatNumberWithCommas(filters.priceMin)}
+                        onChange={e => updateFilter("priceMin", parseFormattedNumber(e.target.value))}
+                        disabled={filters.hasNoMin}
+                        className="h-8 text-xs bg-background pl-6 disabled:opacity-50"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer mt-2">
+                      <Checkbox
+                        checked={filters.hasNoMin}
+                        onCheckedChange={(checked) => {
+                          onFiltersChange({ 
+                            ...filters, 
+                            hasNoMin: !!checked,
+                            priceMin: checked ? "" : filters.priceMin
+                          });
+                        }}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-xs text-muted-foreground">No Minimum</span>
+                    </label>
                   </div>
-                  <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                    <Checkbox
-                      checked={filters.hasNoMax}
-                      onCheckedChange={(checked) => {
-                        onFiltersChange({ 
-                          ...filters, 
-                          hasNoMax: !!checked,
-                          priceMax: checked ? "" : filters.priceMax
-                        });
-                      }}
-                      className="h-4 w-4"
-                    />
-                    <span className="text-xs text-muted-foreground">No Max</span>
-                  </label>
+                  {/* Max Price */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Max</Label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                      <Input
+                        type="text"
+                        placeholder="500,000"
+                        value={filters.hasNoMax ? "" : formatNumberWithCommas(filters.priceMax)}
+                        onChange={e => updateFilter("priceMax", parseFormattedNumber(e.target.value))}
+                        disabled={filters.hasNoMax}
+                        className="h-8 text-xs bg-background pl-6 disabled:opacity-50"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer mt-2">
+                      <Checkbox
+                        checked={filters.hasNoMax}
+                        onCheckedChange={(checked) => {
+                          onFiltersChange({ 
+                            ...filters, 
+                            hasNoMax: !!checked,
+                            priceMax: checked ? "" : filters.priceMax
+                          });
+                        }}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-xs text-muted-foreground">No Maximum</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* STANDARD SEARCH CRITERIA Section (right) */}
+          {/* Card 3: DATE / TIMEFRAME */}
+          <div 
+            className="w-[200px] shrink-0 bg-card border border-border shadow-sm overflow-hidden"
+            style={{ borderLeft: `4px solid ${ACCENT_COLORS.dateTimeframe}` }}
+          >
+            <div className="px-4 py-2.5">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" style={{ color: ACCENT_COLORS.dateTimeframe }} />
+                <span className="text-sm font-semibold text-foreground">Date / Timeframe</span>
+              </div>
+            </div>
+            <div className="px-4 pb-4 space-y-3">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">List Date</Label>
+                <Input
+                  type="date"
+                  value={filters.listDateFrom}
+                  onChange={e => updateFilter("listDateFrom", e.target.value)}
+                  className="h-8 text-xs bg-background"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Off-Market Timeframe</Label>
+                <Select 
+                  value={filters.offMarketTimeframe} 
+                  onValueChange={v => updateFilter("offMarketTimeframe", v)}
+                >
+                  <SelectTrigger className="h-8 text-xs bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="3months">Today - 3 Months</SelectItem>
+                    <SelectItem value="6months">Today - 6 Months</SelectItem>
+                    <SelectItem value="12months">Today - 12 Months</SelectItem>
+                    <SelectItem value="24months">Today - 24 Months</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: STANDARD SEARCH CRITERIA */}
           <div 
             className="w-[280px] shrink-0 bg-card border border-border shadow-sm overflow-hidden"
             style={{ borderLeft: `4px solid ${ACCENT_COLORS.standardCriteria}` }}
           >
-            <div className="px-5 py-2.5">
+            <div className="px-4 py-2.5">
               <div className="flex items-center gap-2">
                 <Building className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-semibold text-foreground">Standard Search Criteria</span>
@@ -602,7 +601,7 @@ const ListingSearchFilters = ({
           className="bg-card border border-border shadow-sm overflow-hidden mb-4"
           style={{ borderLeft: `4px solid ${ACCENT_COLORS.address}` }}
         >
-          <div className="px-5 py-2.5 border-b border-border">
+          <div className="px-4 py-2.5">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-semibold text-foreground">Address</span>
@@ -688,7 +687,7 @@ const ListingSearchFilters = ({
             className="bg-card border border-border shadow-sm overflow-hidden"
             style={{ borderLeft: `4px solid ${ACCENT_COLORS.towns}` }}
           >
-            <div className="px-5 py-2.5 border-b border-border">
+            <div className="px-4 py-2.5">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-semibold text-foreground">Towns</span>
@@ -828,7 +827,7 @@ const ListingSearchFilters = ({
               className="bg-card border border-border shadow-sm overflow-hidden"
               style={{ borderLeft: `4px solid ${ACCENT_COLORS.listingEvents}` }}
             >
-              <div className="px-5 py-2.5 border-b border-border">
+              <div className="px-4 py-2.5">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-semibold text-foreground">Listing Events</span>
@@ -876,7 +875,7 @@ const ListingSearchFilters = ({
               className="bg-card border border-border shadow-sm overflow-hidden"
               style={{ borderLeft: `4px solid ${ACCENT_COLORS.keywords}` }}
             >
-              <div className="px-5 py-2.5 border-b border-border">
+              <div className="px-4 py-2.5">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-semibold text-foreground">Keywords (Public Remarks only)</span>
