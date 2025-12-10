@@ -297,7 +297,14 @@ const PropertyDetail = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                // Check if there's history to go back to
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate("/listing-search");
+                }
+              }}
               className="gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
