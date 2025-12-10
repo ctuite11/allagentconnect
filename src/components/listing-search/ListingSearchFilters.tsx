@@ -158,35 +158,50 @@ interface ListingSearchFiltersProps {
   onSearch: () => void;
 }
 
-// Section Header Component
+// Section border color mapping using our design system
+const SECTION_COLORS: Record<string, string> = {
+  blue: "border-l-[hsl(217,91%,60%)]",
+  green: "border-l-[hsl(160,84%,39%)]",
+  gold: "border-l-[hsl(38,92%,50%)]",
+  purple: "border-l-[hsl(271,91%,65%)]",
+  teal: "border-l-[hsl(160,84%,39%)]",
+  orange: "border-l-[hsl(25,95%,53%)]",
+  red: "border-l-[hsl(0,84%,60%)]",
+};
+
+// Section Header Component with premium left border
 const SectionHeader = ({ 
   icon: Icon, 
   title, 
   isOpen, 
   onToggle,
-  accentColor = "border-l-primary"
+  accentColor = "blue"
 }: { 
   icon: React.ElementType; 
   title: string; 
   isOpen: boolean; 
   onToggle: () => void;
   accentColor?: string;
-}) => (
-  <button
-    onClick={onToggle}
-    className={`w-full flex items-center justify-between px-3 py-2 bg-card border-l-4 ${accentColor} hover:bg-muted/50 transition-colors`}
-  >
-    <div className="flex items-center gap-2">
-      <Icon className="h-4 w-4 text-muted-foreground" />
-      <span className="text-xs font-semibold uppercase tracking-wide text-foreground">{title}</span>
-    </div>
-    {isOpen ? (
-      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-    ) : (
-      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-    )}
-  </button>
-);
+}) => {
+  const borderClass = SECTION_COLORS[accentColor] || SECTION_COLORS.blue;
+  
+  return (
+    <button
+      onClick={onToggle}
+      className={`w-full flex items-center justify-between px-3 py-2.5 bg-card border-l-[3px] ${borderClass} rounded-tl-sm rounded-bl-sm hover:bg-muted/50 transition-colors`}
+    >
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4 text-muted-foreground" />
+        <span className="text-xs font-semibold uppercase tracking-wide text-foreground">{title}</span>
+      </div>
+      {isOpen ? (
+        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+      ) : (
+        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+      )}
+    </button>
+  );
+};
 
 const ListingSearchFilters = ({
   filters,
@@ -293,7 +308,7 @@ const ListingSearchFilters = ({
               title="Property Type" 
               isOpen={sectionsOpen.propertyType}
               onToggle={() => toggleSection("propertyType")}
-              accentColor="border-l-blue-500"
+              accentColor="blue"
             />
             {sectionsOpen.propertyType && (
               <div className="p-3 space-y-1.5">
@@ -326,7 +341,7 @@ const ListingSearchFilters = ({
           {/* MIDDLE SECTION: Status + Date/Timeframe + Price Range (wide, combined card) */}
           <div className="flex-1 bg-card border border-border rounded-md shadow-sm overflow-hidden">
             {/* STATUS + DATE/TIMEFRAME Header */}
-            <div className="w-full flex items-center gap-2 px-3 py-2 bg-card border-l-4 border-l-teal-500">
+            <div className="w-full flex items-center gap-2 px-3 py-2.5 bg-card border-l-[3px] border-l-[hsl(160,84%,39%)] rounded-tl-sm rounded-bl-sm">
               <Tag className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Status & Date</span>
             </div>
@@ -362,9 +377,9 @@ const ListingSearchFilters = ({
               </div>
               
               {/* DATE/TIMEFRAME Section (right side) */}
-              <div className="w-[180px] shrink-0 border-l border-border pl-4">
+              <div className="w-[180px] shrink-0 border-l-[3px] border-l-[hsl(38,92%,50%)] pl-4 rounded-tl-sm rounded-bl-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-amber-500" />
+                  <Calendar className="h-4 w-4 text-[hsl(38,92%,50%)]" />
                   <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Date / Timeframe</span>
                 </div>
                 <div className="space-y-3">
@@ -399,9 +414,9 @@ const ListingSearchFilters = ({
             </div>
             
             {/* PRICE RANGE Section (below Status+Date, full width within this card) */}
-            <div className="border-t border-border px-3 py-3">
+            <div className="border-t border-border border-l-[3px] border-l-[hsl(160,84%,39%)] px-3 py-3 rounded-bl-sm">
               <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="h-4 w-4 text-green-600" />
+                <DollarSign className="h-4 w-4 text-[hsl(160,84%,39%)]" />
                 <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Price Range</span>
               </div>
               <div className="flex items-end gap-4">
@@ -478,7 +493,7 @@ const ListingSearchFilters = ({
               title="Standard Search Criteria" 
               isOpen={sectionsOpen.standardCriteria}
               onToggle={() => toggleSection("standardCriteria")}
-              accentColor="border-l-purple-500"
+              accentColor="purple"
             />
             {sectionsOpen.standardCriteria && (
               <div className="p-3 space-y-2">
@@ -582,7 +597,7 @@ const ListingSearchFilters = ({
             title="Address" 
             isOpen={sectionsOpen.address}
             onToggle={() => toggleSection("address")}
-            accentColor="border-l-teal-500"
+            accentColor="teal"
           />
           {sectionsOpen.address && (
             <div className="p-3">
@@ -668,7 +683,7 @@ const ListingSearchFilters = ({
               title="Towns" 
               isOpen={sectionsOpen.towns}
               onToggle={() => toggleSection("towns")}
-              accentColor="border-l-teal-500"
+              accentColor="blue"
             />
             {sectionsOpen.towns && (
               <div className="p-3">
@@ -808,7 +823,7 @@ const ListingSearchFilters = ({
                 title="Listing Events" 
                 isOpen={sectionsOpen.listingEvents}
                 onToggle={() => toggleSection("listingEvents")}
-                accentColor="border-l-orange-500"
+                accentColor="gold"
               />
               {sectionsOpen.listingEvents && (
                 <div className="p-3 space-y-2">
