@@ -2,7 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageSquare, Heart, ArrowUpDown, ChevronRight, ExternalLink } from "lucide-react";
+import { ArrowUpDown, ExternalLink, MessageSquare, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Listing {
@@ -22,6 +22,7 @@ interface Listing {
   property_type?: string;
   agent_id: string;
   agent_name?: string;
+  photos?: any;
 }
 
 interface ListingResultsTableProps {
@@ -57,40 +58,42 @@ const getDaysOnMarket = (listDate?: string) => {
   return days >= 0 ? days : "-";
 };
 
+// Status badge with specified colors
 const getStatusBadge = (status: string) => {
-  const statusStyles: Record<string, string> = {
-    new: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-    active: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-    coming_soon: "bg-sky-500/10 text-sky-600 border-sky-500/20",
-    off_market: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-    pending: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-    under_agreement: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-    sold: "bg-slate-500/10 text-slate-600 border-slate-500/20",
-    back_on_market: "bg-teal-500/10 text-teal-600 border-teal-500/20",
-    price_changed: "bg-orange-500/10 text-orange-600 border-orange-500/20",
-    extended: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-    reactivated: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
+  // Green = Active, Orange = Coming Soon, Red = Off-Market, Gray = Sold
+  const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+    active: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Active" },
+    new: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Active" },
+    coming_soon: { bg: "bg-amber-50", text: "text-amber-700", label: "Coming Soon" },
+    off_market: { bg: "bg-rose-50", text: "text-rose-700", label: "Off-Market" },
+    back_on_market: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Back on Market" },
+    price_changed: { bg: "bg-blue-50", text: "text-blue-700", label: "Price Change" },
+    under_agreement: { bg: "bg-violet-50", text: "text-violet-700", label: "Under Agreement" },
+    pending: { bg: "bg-violet-50", text: "text-violet-700", label: "Pending" },
+    sold: { bg: "bg-slate-100", text: "text-slate-600", label: "Sold" },
+    withdrawn: { bg: "bg-slate-100", text: "text-slate-500", label: "Withdrawn" },
+    expired: { bg: "bg-slate-100", text: "text-slate-500", label: "Expired" },
+    cancelled: { bg: "bg-slate-100", text: "text-slate-500", label: "Cancelled" },
   };
 
-  const labels: Record<string, string> = {
-    new: "New",
-    active: "Active",
-    coming_soon: "Coming Soon",
-    off_market: "Off-Market",
-    pending: "Pending",
-    under_agreement: "Under Agmt",
-    sold: "Sold",
-    back_on_market: "Back on Mkt",
-    price_changed: "Price Chg",
-    extended: "Extended",
-    reactivated: "Reactivated",
-  };
+  const config = statusConfig[status] || { bg: "bg-slate-100", text: "text-slate-600", label: status };
 
   return (
-    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 whitespace-nowrap ${statusStyles[status] || ""}`}>
-      {labels[status] || status}
+    <Badge 
+      className={`${config.bg} ${config.text} border-0 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap`}
+    >
+      {config.label}
     </Badge>
   );
+};
+
+// Get thumbnail from photos array
+const getThumbnail = (listing: Listing) => {
+  if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
+    const photo = listing.photos[0];
+    return typeof photo === 'string' ? photo : photo?.url || null;
+  }
+  return null;
 };
 
 const ListingResultsTable = ({
@@ -103,14 +106,24 @@ const ListingResultsTable = ({
 }: ListingResultsTableProps) => {
   const navigate = useNavigate();
 
-  const SortableHeader = ({ column, children, className = "" }: { column: string; children: React.ReactNode; className?: string }) => (
+  const SortableHeader = ({ 
+    column, 
+    children, 
+    className = "" 
+  }: { 
+    column: string; 
+    children: React.ReactNode; 
+    className?: string;
+  }) => (
     <TableHead
-      className={`cursor-pointer hover:bg-muted/50 transition-colors text-xs font-semibold whitespace-nowrap ${className}`}
+      className={`cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold text-slate-600 whitespace-nowrap ${className}`}
       onClick={() => onSort(column)}
     >
       <div className="flex items-center gap-1">
         {children}
-        <ArrowUpDown className={`h-3 w-3 ${sortColumn === column ? "text-primary" : "text-muted-foreground/50"}`} />
+        <ArrowUpDown 
+          className={`h-3 w-3 ${sortColumn === column ? "text-slate-900" : "text-slate-300"}`} 
+        />
       </div>
     </TableHead>
   );
@@ -119,7 +132,7 @@ const ListingResultsTable = ({
     return (
       <div className="p-6 space-y-3">
         {Array.from({ length: 10 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" />
+          <Skeleton key={i} className="h-16 w-full bg-slate-100" />
         ))}
       </div>
     );
@@ -127,68 +140,149 @@ const ListingResultsTable = ({
 
   if (listings.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center py-16 text-muted-foreground">
+      <div className="flex-1 flex items-center justify-center py-20">
         <div className="text-center">
-          <p className="text-base font-medium">No listings found</p>
-          <p className="text-sm mt-1">Try adjusting your search filters</p>
+          <p className="text-base font-medium text-slate-700">No listings found</p>
+          <p className="text-sm text-slate-500 mt-1">Try adjusting your search filters</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="overflow-auto">
+    <div className="overflow-auto bg-white rounded-lg border border-slate-200">
       <Table>
-        <TableHeader className="sticky top-0 bg-card z-10">
-          <TableRow className="hover:bg-transparent border-b-2">
-            <SortableHeader column="listing_number">List #</SortableHeader>
+        <TableHeader>
+          <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-slate-200">
+            <TableHead className="w-16 text-xs font-semibold text-slate-600">Photo</TableHead>
             <SortableHeader column="address">Address</SortableHeader>
-            <SortableHeader column="city">Town</SortableHeader>
             <SortableHeader column="price">Price</SortableHeader>
             <SortableHeader column="bedrooms" className="text-center">Beds</SortableHeader>
             <SortableHeader column="bathrooms" className="text-center">Baths</SortableHeader>
             <SortableHeader column="square_feet" className="text-right">SqFt</SortableHeader>
+            <TableHead className="text-xs font-semibold text-slate-600">Status</TableHead>
             <SortableHeader column="list_date" className="text-center">DOM</SortableHeader>
-            <TableHead className="text-xs font-semibold">Status</TableHead>
-            <TableHead className="text-xs font-semibold">Agent</TableHead>
-            <TableHead className="w-16"></TableHead>
+            <TableHead className="text-xs font-semibold text-slate-600">Agent</TableHead>
+            <TableHead className="text-xs font-semibold text-slate-600 text-right">List #</TableHead>
+            <TableHead className="w-32"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {listings.map(listing => (
-            <TableRow
-              key={listing.id}
-              className="cursor-pointer hover:bg-muted/50 transition-colors group"
-              onClick={() => onRowClick(listing)}
-            >
-              <TableCell className="text-xs font-mono text-muted-foreground">
-                {listing.listing_number}
-              </TableCell>
-              <TableCell className="text-sm font-medium max-w-[220px] truncate">
-                {formatAddress(listing)}
-              </TableCell>
-              <TableCell className="text-sm">{listing.city}</TableCell>
-              <TableCell className="text-sm font-semibold">{formatPrice(listing.price)}</TableCell>
-              <TableCell className="text-sm text-center">{listing.bedrooms || "-"}</TableCell>
-              <TableCell className="text-sm text-center">{listing.bathrooms || "-"}</TableCell>
-              <TableCell className="text-sm text-right">{listing.square_feet?.toLocaleString() || "-"}</TableCell>
-              <TableCell className="text-sm text-center">{getDaysOnMarket(listing.list_date)}</TableCell>
-              <TableCell>{getStatusBadge(listing.status)}</TableCell>
-              <TableCell className="text-sm text-muted-foreground truncate max-w-[140px]">
-                {listing.agent_name || "-"}
-              </TableCell>
-              <TableCell onClick={e => e.stopPropagation()}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => navigate(`/property/${listing.id}`)}
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {listings.map(listing => {
+            const thumbnail = getThumbnail(listing);
+            const isOffMarket = listing.status === "off_market";
+            
+            return (
+              <TableRow
+                key={listing.id}
+                className={`cursor-pointer transition-all group hover:bg-slate-50 hover:shadow-sm ${
+                  isOffMarket ? "bg-rose-50/30" : ""
+                }`}
+                onClick={() => onRowClick(listing)}
+              >
+                {/* Thumbnail */}
+                <TableCell className="py-2">
+                  <div className="w-12 h-12 rounded-md bg-slate-100 overflow-hidden flex-shrink-0">
+                    {thumbnail ? (
+                      <img 
+                        src={thumbnail} 
+                        alt="" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <div className="w-6 h-6 border-2 border-dashed border-slate-300 rounded" />
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+
+                {/* Address */}
+                <TableCell className="py-3">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900 max-w-[220px] truncate">
+                      {formatAddress(listing)}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      {listing.city}, {listing.state}
+                    </div>
+                  </div>
+                </TableCell>
+
+                {/* Price */}
+                <TableCell className="py-3">
+                  <span className="text-base font-bold text-slate-900">
+                    {formatPrice(listing.price)}
+                  </span>
+                </TableCell>
+
+                {/* Beds */}
+                <TableCell className="text-sm text-center text-slate-700">
+                  {listing.bedrooms || "-"}
+                </TableCell>
+
+                {/* Baths */}
+                <TableCell className="text-sm text-center text-slate-700">
+                  {listing.bathrooms || "-"}
+                </TableCell>
+
+                {/* SqFt */}
+                <TableCell className="text-sm text-right text-slate-700">
+                  {listing.square_feet?.toLocaleString() || "-"}
+                </TableCell>
+
+                {/* Status - Large and prominent */}
+                <TableCell className="py-3">
+                  {getStatusBadge(listing.status)}
+                </TableCell>
+
+                {/* DOM */}
+                <TableCell className="text-sm text-center text-slate-600">
+                  {getDaysOnMarket(listing.list_date)}
+                </TableCell>
+
+                {/* Agent */}
+                <TableCell className="text-sm text-slate-600 truncate max-w-[140px]">
+                  {listing.agent_name || "-"}
+                </TableCell>
+
+                {/* List # (far right, subdued) */}
+                <TableCell className="text-xs text-right text-slate-400 font-mono">
+                  {listing.listing_number}
+                </TableCell>
+
+                {/* Quick Actions */}
+                <TableCell className="py-3" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      onClick={() => navigate(`/property/${listing.id}`)}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      title="Contact Agent"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      title="Match to Buyer"
+                    >
+                      <Users className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
