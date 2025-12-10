@@ -304,13 +304,13 @@ const ListingSearchFilters = ({
             className="w-[160px] shrink-0 bg-card border border-border shadow-sm overflow-hidden"
             style={{ borderLeft: `4px solid ${ACCENT_COLORS.propertyType}` }}
           >
-            <div className="px-5 py-2.5 border-b border-border">
+            <div className="px-5 py-2.5">
               <div className="flex items-center gap-2">
                 <Home className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-semibold text-foreground">Property Type</span>
               </div>
             </div>
-            <div className="p-4 space-y-2">
+            <div className="px-4 pb-4 space-y-2">
               <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-1 rounded transition-colors">
                 <Checkbox
                   checked={filters.propertyTypes.length === PROPERTY_TYPES.length}
@@ -319,7 +319,6 @@ const ListingSearchFilters = ({
                 />
                 <span className="text-xs font-medium text-foreground">Select All</span>
               </label>
-              <div className="border-t border-border my-2" />
               {PROPERTY_TYPES.map(type => (
                 <label
                   key={type.value}
@@ -336,21 +335,19 @@ const ListingSearchFilters = ({
             </div>
           </div>
 
-          {/* MIDDLE SECTION: Status + Date/Timeframe + Price Range (wide, combined card) */}
-          <div className="flex-1 bg-card border border-border shadow-sm overflow-hidden">
-            {/* STATUS Section */}
-            <div 
-              className="px-5 py-2.5 border-b border-border"
-              style={{ borderLeft: `4px solid ${ACCENT_COLORS.status}` }}
-            >
+          {/* MIDDLE SECTION: Status + Date/Timeframe (one card) */}
+          <div className="flex-1 bg-card border border-border shadow-sm overflow-hidden"
+               style={{ borderLeft: `4px solid ${ACCENT_COLORS.status}` }}>
+            {/* STATUS Header */}
+            <div className="px-5 py-2.5">
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-semibold text-foreground">Status</span>
               </div>
             </div>
             
-            {/* Top row: Status (left) + Date/Timeframe (right) */}
-            <div className="p-4 flex gap-6">
+            {/* Status + Date/Timeframe content row */}
+            <div className="px-4 pb-4 flex gap-6">
               {/* STATUS Section - 2 columns, no scroll */}
               <div className="flex-1">
                 <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-1 rounded transition-colors mb-2">
@@ -361,7 +358,6 @@ const ListingSearchFilters = ({
                   />
                   <span className="text-xs font-medium text-foreground">Select All</span>
                 </label>
-                <div className="border-t border-border my-2" />
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
                   {STATUSES.map(status => (
                     <label
@@ -418,78 +414,80 @@ const ListingSearchFilters = ({
                 </div>
               </div>
             </div>
-            
-            {/* PRICE RANGE Section (below Status+Date, full width within this card) */}
-            <div 
-              className="border-t border-border px-5 py-4"
-              style={{ borderLeft: `4px solid ${ACCENT_COLORS.priceRange}` }}
-            >
-              <div className="flex items-center gap-2 mb-3">
+          </div>
+          
+          {/* PRICE RANGE Section (separate card) */}
+          <div 
+            className="w-[320px] shrink-0 bg-card border border-border shadow-sm overflow-hidden"
+            style={{ borderLeft: `4px solid ${ACCENT_COLORS.priceRange}` }}
+          >
+            <div className="px-5 py-2.5">
+              <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" style={{ color: ACCENT_COLORS.priceRange }} />
                 <span className="text-sm font-semibold text-foreground">Price Range</span>
               </div>
-              <div className="flex items-end gap-6">
-                {/* Min Price */}
-                <div className="flex-1">
-                  <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
-                  <div className="flex items-center gap-3">
-                    <div className="relative flex-1">
-                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
-                      <Input
-                        type="text"
-                        placeholder="100,000"
-                        value={filters.hasNoMin ? "" : formatNumberWithCommas(filters.priceMin)}
-                        onChange={e => updateFilter("priceMin", parseFormattedNumber(e.target.value))}
-                        disabled={filters.hasNoMin}
-                        className="h-8 text-xs bg-background pl-6 disabled:opacity-50"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                      <Checkbox
-                        checked={filters.hasNoMin}
-                        onCheckedChange={(checked) => {
-                          onFiltersChange({ 
-                            ...filters, 
-                            hasNoMin: !!checked,
-                            priceMin: checked ? "" : filters.priceMin
-                          });
-                        }}
-                        className="h-4 w-4"
-                      />
-                      <span className="text-xs text-muted-foreground">No Minimum</span>
-                    </label>
+            </div>
+            <div className="px-4 pb-4 space-y-3">
+              {/* Min Price */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                    <Input
+                      type="text"
+                      placeholder="100,000"
+                      value={filters.hasNoMin ? "" : formatNumberWithCommas(filters.priceMin)}
+                      onChange={e => updateFilter("priceMin", parseFormattedNumber(e.target.value))}
+                      disabled={filters.hasNoMin}
+                      className="h-8 text-xs bg-background pl-6 disabled:opacity-50"
+                    />
                   </div>
+                  <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                    <Checkbox
+                      checked={filters.hasNoMin}
+                      onCheckedChange={(checked) => {
+                        onFiltersChange({ 
+                          ...filters, 
+                          hasNoMin: !!checked,
+                          priceMin: checked ? "" : filters.priceMin
+                        });
+                      }}
+                      className="h-4 w-4"
+                    />
+                    <span className="text-xs text-muted-foreground">No Min</span>
+                  </label>
                 </div>
-                {/* Max Price */}
-                <div className="flex-1">
-                  <Label className="text-xs text-muted-foreground mb-1 block">Max</Label>
-                  <div className="flex items-center gap-3">
-                    <div className="relative flex-1">
-                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
-                      <Input
-                        type="text"
-                        placeholder="500,000"
-                        value={filters.hasNoMax ? "" : formatNumberWithCommas(filters.priceMax)}
-                        onChange={e => updateFilter("priceMax", parseFormattedNumber(e.target.value))}
-                        disabled={filters.hasNoMax}
-                        className="h-8 text-xs bg-background pl-6 disabled:opacity-50"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                      <Checkbox
-                        checked={filters.hasNoMax}
-                        onCheckedChange={(checked) => {
-                          onFiltersChange({ 
-                            ...filters, 
-                            hasNoMax: !!checked,
-                            priceMax: checked ? "" : filters.priceMax
-                          });
-                        }}
-                        className="h-4 w-4"
-                      />
-                      <span className="text-xs text-muted-foreground">No Maximum</span>
-                    </label>
+              </div>
+              {/* Max Price */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Max</Label>
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                    <Input
+                      type="text"
+                      placeholder="500,000"
+                      value={filters.hasNoMax ? "" : formatNumberWithCommas(filters.priceMax)}
+                      onChange={e => updateFilter("priceMax", parseFormattedNumber(e.target.value))}
+                      disabled={filters.hasNoMax}
+                      className="h-8 text-xs bg-background pl-6 disabled:opacity-50"
+                    />
                   </div>
+                  <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                    <Checkbox
+                      checked={filters.hasNoMax}
+                      onCheckedChange={(checked) => {
+                        onFiltersChange({ 
+                          ...filters, 
+                          hasNoMax: !!checked,
+                          priceMax: checked ? "" : filters.priceMax
+                        });
+                      }}
+                      className="h-4 w-4"
+                    />
+                    <span className="text-xs text-muted-foreground">No Max</span>
+                  </label>
                 </div>
               </div>
             </div>
@@ -500,13 +498,13 @@ const ListingSearchFilters = ({
             className="w-[280px] shrink-0 bg-card border border-border shadow-sm overflow-hidden"
             style={{ borderLeft: `4px solid ${ACCENT_COLORS.standardCriteria}` }}
           >
-            <div className="px-5 py-2.5 border-b border-border">
+            <div className="px-5 py-2.5">
               <div className="flex items-center gap-2">
                 <Building className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-semibold text-foreground">Standard Search Criteria</span>
               </div>
             </div>
-            <div className="p-4 space-y-3">
+            <div className="px-4 pb-4 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Bedrooms</Label>
