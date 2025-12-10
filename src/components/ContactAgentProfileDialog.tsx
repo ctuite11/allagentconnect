@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,21 +23,11 @@ interface ContactAgentProfileDialogProps {
   agentName: string;
   agentEmail: string;
   buttonText?: string;
-  listingId?: string;
-  buyerNeedId?: string;
 }
 
-const ContactAgentProfileDialog = ({ 
-  agentId, 
-  agentName, 
-  agentEmail, 
-  buttonText = "Contact Agent",
-  listingId,
-  buyerNeedId,
-}: ContactAgentProfileDialogProps) => {
+const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText = "Contact Agent" }: ContactAgentProfileDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [formData, setFormData] = useState({
     sender_name: "",
     sender_email: "",
@@ -46,34 +36,6 @@ const ContactAgentProfileDialog = ({
     message: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Check if current user is an authenticated agent
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from("agent_profiles")
-          .select("id, first_name, last_name, email, phone")
-          .eq("id", user.id)
-          .maybeSingle();
-        
-        if (profile) {
-          setCurrentUser({ ...user, profile });
-          // Pre-fill form with agent's info
-          setFormData(prev => ({
-            ...prev,
-            sender_name: `${profile.first_name} ${profile.last_name}`,
-            sender_email: profile.email,
-            sender_phone: profile.phone || "",
-          }));
-        }
-      }
-    };
-    if (open) {
-      checkUser();
-    }
-  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,71 +47,7 @@ const ContactAgentProfileDialog = ({
       
       setLoading(true);
 
-      // If sender is an authenticated agent, create/update conversation
-      if (currentUser?.profile) {
-        const senderId = currentUser.id;
-        const recipientId = agentId;
-
-        // Normalize agent IDs for consistent lookup (smaller ID first)
-        const [agentAId, agentBId] = [senderId, recipientId].sort();
-
-        // Look for existing conversation with same context
-        let conversationId: string | null = null;
-        
-        const query = supabase
-          .from("conversations")
-          .select("id")
-          .eq("agent_a_id", agentAId)
-          .eq("agent_b_id", agentBId);
-        
-        if (listingId) {
-          query.eq("listing_id", listingId);
-        } else {
-          query.is("listing_id", null);
-        }
-        
-        if (buyerNeedId) {
-          query.eq("buyer_need_id", buyerNeedId);
-        } else {
-          query.is("buyer_need_id", null);
-        }
-
-        const { data: existingConvo } = await query.maybeSingle();
-
-        if (existingConvo) {
-          conversationId = existingConvo.id;
-        } else {
-          // Create new conversation
-          const { data: newConvo, error: convoError } = await supabase
-            .from("conversations")
-            .insert({
-              agent_a_id: agentAId,
-              agent_b_id: agentBId,
-              listing_id: listingId || null,
-              buyer_need_id: buyerNeedId || null,
-            })
-            .select("id")
-            .single();
-
-          if (convoError) throw convoError;
-          conversationId = newConvo.id;
-        }
-
-        // Insert message into conversation_messages
-        const { error: msgError } = await supabase
-          .from("conversation_messages")
-          .insert({
-            conversation_id: conversationId,
-            sender_agent_id: senderId,
-            recipient_agent_id: recipientId,
-            subject: validatedData.subject,
-            body: validatedData.message || "",
-          });
-
-        if (msgError) throw msgError;
-      }
-
-      // Also send email notification to agent
+      // Send email notification to agent
       try {
         await supabase.functions.invoke("send-agent-profile-contact", {
           body: {
@@ -164,15 +62,16 @@ const ContactAgentProfileDialog = ({
         });
       } catch (emailError) {
         console.error("Failed to send email notification:", emailError);
-        // Don't fail the whole operation if email fails
+        toast.error("Failed to send message. Please try again.");
+        return;
       }
 
       toast.success("Message sent successfully! The agent will get back to you soon.");
       setOpen(false);
       setFormData({
-        sender_name: currentUser?.profile ? `${currentUser.profile.first_name} ${currentUser.profile.last_name}` : "",
-        sender_email: currentUser?.profile?.email || "",
-        sender_phone: currentUser?.profile?.phone || "",
+        sender_name: "",
+        sender_email: "",
+        sender_phone: "",
         subject: "",
         message: "",
       });
@@ -186,7 +85,6 @@ const ContactAgentProfileDialog = ({
         });
         setErrors(newErrors);
       } else {
-        console.error("Error sending message:", error);
         toast.error("Failed to send message. Please try again.");
       }
     } finally {
@@ -218,7 +116,6 @@ const ContactAgentProfileDialog = ({
               onChange={(e) => setFormData({ ...formData, sender_name: e.target.value })}
               placeholder="Your full name"
               maxLength={100}
-              disabled={!!currentUser?.profile}
             />
             {errors.sender_name && <p className="text-sm text-destructive">{errors.sender_name}</p>}
           </div>
@@ -232,7 +129,6 @@ const ContactAgentProfileDialog = ({
               onChange={(e) => setFormData({ ...formData, sender_email: e.target.value })}
               placeholder="your@email.com"
               maxLength={255}
-              disabled={!!currentUser?.profile}
             />
             {errors.sender_email && <p className="text-sm text-destructive">{errors.sender_email}</p>}
           </div>
@@ -245,7 +141,6 @@ const ContactAgentProfileDialog = ({
               value={formData.sender_phone}
               onChange={(value) => setFormData({ ...formData, sender_phone: value })}
               placeholder="1234567890"
-              disabled={!!currentUser?.profile}
             />
           </div>
 
