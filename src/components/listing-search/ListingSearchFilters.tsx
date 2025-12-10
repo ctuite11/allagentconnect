@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, X, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, X, Search, Minus, Plus } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
 
@@ -80,33 +80,37 @@ export const initialFilters: FilterState = {
 };
 
 const PROPERTY_TYPES = [
-  { value: "single_family", label: "Single Family (SF)" },
-  { value: "condo", label: "Condominium (CC)" },
-  { value: "multi_family", label: "Multi Family (MF)" },
-  { value: "land", label: "Land (LD)" },
-  { value: "commercial", label: "Commercial (CI)" },
-  { value: "business", label: "Business Opp. (BU)" },
-  { value: "residential_rental", label: "Residential Rental (RN)" },
-  { value: "mobile_home", label: "Mobile Home (MH)" },
+  { value: "single_family", label: "Single Family", code: "SF" },
+  { value: "condo", label: "Condominium", code: "CC" },
+  { value: "multi_family", label: "Multi Family", code: "MF" },
+  { value: "land", label: "Land", code: "LD" },
+  { value: "commercial", label: "Commercial", code: "CI" },
+  { value: "business", label: "Business Opp.", code: "BU" },
+  { value: "residential_rental", label: "Residential Rental", code: "RN" },
+  { value: "mobile_home", label: "Mobile Home", code: "MH" },
 ];
 
-const STATUSES = [
-  { value: "new", label: "New (NEW)", highlight: true },
-  { value: "active", label: "Active (ACT)", highlight: true },
-  { value: "price_changed", label: "Price Changed (PCG)", highlight: true },
-  { value: "back_on_market", label: "Back on Market (BOM)", highlight: true },
-  { value: "extended", label: "Extended (EXT)", highlight: true },
-  { value: "reactivated", label: "Reactivated (RAC)", highlight: true },
-  { value: "contingent", label: "Contingent (CTG)", highlight: false },
-  { value: "under_agreement", label: "Under Agreement (UAG)", highlight: false },
-  { value: "sold", label: "Sold (SLD)", highlight: false },
-  { value: "rented", label: "Rented (RNT)", highlight: false },
-  { value: "withdrawn", label: "Temporarily Withdrawn (WDN)", highlight: false },
-  { value: "expired", label: "Expired (EXP)", highlight: false },
-  { value: "cancelled", label: "Canceled (CAN)", highlight: false },
-  { value: "coming_soon", label: "Coming Soon (CSO)", highlight: false },
-  { value: "off_market", label: "Off-Market (Private)", highlight: false, special: true },
+const STATUSES_LEFT = [
+  { value: "new", label: "New", code: "NEW" },
+  { value: "active", label: "Active", code: "ACT" },
+  { value: "price_changed", label: "Price Changed", code: "PCG" },
+  { value: "back_on_market", label: "Back on Market", code: "BOM" },
+  { value: "extended", label: "Extended", code: "EXT" },
+  { value: "reactivated", label: "Reactivated", code: "RAC" },
+  { value: "contingent", label: "Contingent", code: "CTG" },
 ];
+
+const STATUSES_RIGHT = [
+  { value: "under_agreement", label: "Under Agreement", code: "UAG" },
+  { value: "sold", label: "Sold", code: "SLD" },
+  { value: "rented", label: "Rented", code: "RNT" },
+  { value: "withdrawn", label: "Temporarily Withdrawn", code: "WDN" },
+  { value: "expired", label: "Expired", code: "EXP" },
+  { value: "cancelled", label: "Canceled", code: "CAN" },
+  { value: "coming_soon", label: "Coming Soon", code: "CSO" },
+];
+
+const ALL_STATUSES = [...STATUSES_LEFT, ...STATUSES_RIGHT];
 
 interface ListingSearchFiltersProps {
   filters: FilterState;
@@ -114,14 +118,44 @@ interface ListingSearchFiltersProps {
   counties: { id: string; name: string; state: string }[];
 }
 
+// MLS-style section header component
+const SectionHeader = ({ 
+  title, 
+  isOpen, 
+  onToggle,
+  className = ""
+}: { 
+  title: string; 
+  isOpen?: boolean; 
+  onToggle?: () => void;
+  className?: string;
+}) => (
+  <div 
+    className={`bg-amber-400 px-2 py-1 flex items-center justify-between cursor-pointer select-none ${className}`}
+    onClick={onToggle}
+  >
+    <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">{title}</span>
+    {onToggle && (
+      isOpen ? <Minus className="h-3 w-3 text-slate-700" /> : <Plus className="h-3 w-3 text-slate-700" />
+    )}
+  </div>
+);
+
 const ListingSearchFilters = ({
   filters,
   onFiltersChange,
   counties,
 }: ListingSearchFiltersProps) => {
-  const [townsOpen, setTownsOpen] = useState(true);
+  const [propertyTypeOpen, setPropertyTypeOpen] = useState(true);
+  const [statusOpen, setStatusOpen] = useState(true);
+  const [criteriaOpen, setCriteriaOpen] = useState(true);
+  const [priceOpen, setPriceOpen] = useState(true);
   const [addressOpen, setAddressOpen] = useState(false);
+  const [townsOpen, setTownsOpen] = useState(false);
+  const [eventsOpen, setEventsOpen] = useState(false);
+  const [keywordsOpen, setKeywordsOpen] = useState(false);
   const [townSearch, setTownSearch] = useState("");
+  const [showAreas, setShowAreas] = useState(false);
 
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     onFiltersChange({ ...filters, [key]: value });
@@ -148,7 +182,7 @@ const ListingSearchFilters = ({
   };
 
   const toggleAllStatuses = (checked: boolean) => {
-    updateFilter("statuses", checked ? STATUSES.map(s => s.value) : []);
+    updateFilter("statuses", checked ? ALL_STATUSES.map(s => s.value) : []);
   };
 
   const toggleTown = (town: string) => {
@@ -183,511 +217,567 @@ const ListingSearchFilters = ({
     ? availableTowns.filter(t => t.toLowerCase().includes(townSearch.toLowerCase()))
     : availableTowns;
 
-  const filteredCounties = counties.filter(c => c.state === "MA");
+  const filteredCounties = counties.filter(c => c.state === filters.state);
 
   return (
-    <div className="bg-slate-50">
-      <div className="container mx-auto px-4 py-4 space-y-4">
+    <div className="bg-slate-100 border-b border-slate-300">
+      <div className="container mx-auto px-2 py-2">
         
         {/* LIST NUMBER(S) Section */}
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-sm font-semibold text-blue-700 uppercase tracking-wide">List Number(s)</h3>
+        <div className="border border-slate-400 bg-white mb-2">
+          <SectionHeader title="LIST NUMBER(S)" />
+          <div className="p-2">
+            <Input
+              placeholder=""
+              value={filters.listingNumber}
+              onChange={e => updateFilter("listingNumber", e.target.value)}
+              className="h-7 text-sm bg-white border-slate-300 rounded-none"
+            />
           </div>
-          <Input
-            placeholder="Enter MLS list number(s)"
-            value={filters.listingNumber}
-            onChange={e => updateFilter("listingNumber", e.target.value)}
-            className="h-9 bg-white"
-          />
         </div>
 
-        {/* Main 3-Column Filter Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Main 3-Column Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 border border-slate-400 bg-white mb-2">
           
-          {/* PROPERTY TYPE Panel */}
-          <div className="bg-white rounded-lg border border-slate-200 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-blue-700 uppercase tracking-wide">Property Type</h3>
-            </div>
-            <div className="space-y-1">
-              <label className="flex items-center gap-2 py-1 px-2 rounded hover:bg-slate-50 cursor-pointer">
-                <Checkbox
-                  checked={filters.propertyTypes.length === PROPERTY_TYPES.length}
-                  onCheckedChange={(checked) => toggleAllPropertyTypes(!!checked)}
-                />
-                <span className="text-sm font-medium">Select All</span>
-              </label>
-              <div className="border-t border-slate-100 my-1" />
-              {PROPERTY_TYPES.map(type => (
-                <label 
-                  key={type.value} 
-                  className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer transition-colors ${
-                    filters.propertyTypes.includes(type.value) 
-                      ? "bg-blue-50 text-blue-900" 
-                      : "hover:bg-slate-50"
-                  }`}
-                >
+          {/* PROPERTY TYPE Column */}
+          <div className="border-r border-slate-400">
+            <SectionHeader 
+              title="PROPERTY TYPE" 
+              isOpen={propertyTypeOpen} 
+              onToggle={() => setPropertyTypeOpen(!propertyTypeOpen)} 
+            />
+            {propertyTypeOpen && (
+              <div className="p-2">
+                <label className="flex items-center gap-2 py-0.5 cursor-pointer hover:bg-slate-50">
                   <Checkbox
-                    checked={filters.propertyTypes.includes(type.value)}
-                    onCheckedChange={() => togglePropertyType(type.value)}
+                    checked={filters.propertyTypes.length === PROPERTY_TYPES.length}
+                    onCheckedChange={(checked) => toggleAllPropertyTypes(!!checked)}
+                    className="h-3.5 w-3.5 rounded-none"
                   />
-                  <span className="text-sm">{type.label}</span>
+                  <span className="text-xs font-medium">Select All</span>
                 </label>
-              ))}
-            </div>
+                <div className="border-t border-slate-200 my-1" />
+                {PROPERTY_TYPES.map(type => (
+                  <label 
+                    key={type.value} 
+                    className={`flex items-center gap-2 py-0.5 cursor-pointer hover:bg-slate-50 ${
+                      filters.propertyTypes.includes(type.value) ? "bg-blue-50" : ""
+                    }`}
+                  >
+                    <Checkbox
+                      checked={filters.propertyTypes.includes(type.value)}
+                      onCheckedChange={() => togglePropertyType(type.value)}
+                      className="h-3.5 w-3.5 rounded-none"
+                    />
+                    <span className="text-xs">{type.label} ({type.code})</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* STATUS Panel */}
-          <div className="bg-white rounded-lg border border-slate-200 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-blue-700 uppercase tracking-wide">Status</h3>
-            </div>
-            <div className="space-y-1 max-h-80 overflow-y-auto">
-              <label className="flex items-center gap-2 py-1 px-2 rounded hover:bg-slate-50 cursor-pointer">
-                <Checkbox
-                  checked={filters.statuses.length === STATUSES.length}
-                  onCheckedChange={(checked) => toggleAllStatuses(!!checked)}
-                />
-                <span className="text-sm font-medium">Select All</span>
-              </label>
-              <div className="border-t border-slate-100 my-1" />
-              {STATUSES.map(status => (
-                <label 
-                  key={status.value} 
-                  className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer transition-colors ${
-                    filters.statuses.includes(status.value)
-                      ? status.highlight
-                        ? "bg-blue-100 text-blue-900"
-                        : "bg-slate-100"
-                      : "hover:bg-slate-50"
-                  } ${status.special ? "text-amber-700" : ""}`}
-                >
+          {/* STATUS Column */}
+          <div className="border-r border-slate-400">
+            <SectionHeader 
+              title="STATUS" 
+              isOpen={statusOpen} 
+              onToggle={() => setStatusOpen(!statusOpen)} 
+            />
+            {statusOpen && (
+              <div className="p-2">
+                <label className="flex items-center gap-2 py-0.5 cursor-pointer hover:bg-slate-50">
                   <Checkbox
-                    checked={filters.statuses.includes(status.value)}
-                    onCheckedChange={() => toggleStatus(status.value)}
+                    checked={filters.statuses.length === ALL_STATUSES.length}
+                    onCheckedChange={(checked) => toggleAllStatuses(!!checked)}
+                    className="h-3.5 w-3.5 rounded-none"
                   />
-                  <span className="text-sm">{status.label}</span>
+                  <span className="text-xs font-medium">Select All</span>
                 </label>
-              ))}
-            </div>
+                <div className="border-t border-slate-200 my-1" />
+                <div className="grid grid-cols-2 gap-x-2">
+                  {/* Left column statuses */}
+                  <div>
+                    {STATUSES_LEFT.map(status => (
+                      <label 
+                        key={status.value} 
+                        className={`flex items-center gap-1 py-0.5 cursor-pointer hover:bg-slate-50 ${
+                          filters.statuses.includes(status.value) ? "bg-blue-50" : ""
+                        }`}
+                      >
+                        <Checkbox
+                          checked={filters.statuses.includes(status.value)}
+                          onCheckedChange={() => toggleStatus(status.value)}
+                          className="h-3 w-3 rounded-none"
+                        />
+                        <span className="text-[10px] leading-tight">{status.label} ({status.code})</span>
+                      </label>
+                    ))}
+                  </div>
+                  {/* Right column statuses */}
+                  <div>
+                    {STATUSES_RIGHT.map(status => (
+                      <label 
+                        key={status.value} 
+                        className={`flex items-center gap-1 py-0.5 cursor-pointer hover:bg-slate-50 ${
+                          filters.statuses.includes(status.value) ? "bg-blue-50" : ""
+                        }`}
+                      >
+                        <Checkbox
+                          checked={filters.statuses.includes(status.value)}
+                          onCheckedChange={() => toggleStatus(status.value)}
+                          className="h-3 w-3 rounded-none"
+                        />
+                        <span className="text-[10px] leading-tight">{status.label} ({status.code})</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                {/* Off-Market Timeframe */}
+                <div className="mt-2 pt-2 border-t border-slate-200">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-[10px] text-slate-600 whitespace-nowrap">Off-Market Timeframe:</Label>
+                    <Select defaultValue="6months">
+                      <SelectTrigger className="h-6 text-[10px] bg-white border-slate-300 rounded-none flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1month">TODAY - 1 MONTH</SelectItem>
+                        <SelectItem value="3months">TODAY - 3 MONTHS</SelectItem>
+                        <SelectItem value="6months">TODAY - 6 MONTHS</SelectItem>
+                        <SelectItem value="12months">TODAY - 12 MONTHS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* STANDARD SEARCH CRITERIA Panel */}
-          <div className="bg-white rounded-lg border border-slate-200 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-blue-700 uppercase tracking-wide">Standard Search Criteria</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-              <div>
-                <Label className="text-xs text-slate-600">Bedrooms</Label>
-                <Input
-                  type="number"
-                  placeholder="Any"
-                  value={filters.bedsMin}
-                  onChange={e => updateFilter("bedsMin", e.target.value)}
-                  className="h-8 mt-1 bg-white"
-                />
+          {/* STANDARD SEARCH CRITERIA Column */}
+          <div>
+            <SectionHeader 
+              title="STANDARD SEARCH CRITERIA" 
+              isOpen={criteriaOpen} 
+              onToggle={() => setCriteriaOpen(!criteriaOpen)} 
+            />
+            {criteriaOpen && (
+              <div className="p-2">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-[10px] text-slate-600 w-16 shrink-0">Bedrooms</Label>
+                    <Input
+                      type="text"
+                      value={filters.bedsMin}
+                      onChange={e => updateFilter("bedsMin", e.target.value)}
+                      className="h-5 text-[10px] bg-white border-slate-300 rounded-none px-1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-[10px] text-slate-600 w-20 shrink-0">Total Baths</Label>
+                    <Input
+                      type="text"
+                      value={filters.bathsMin}
+                      onChange={e => updateFilter("bathsMin", e.target.value)}
+                      className="h-5 text-[10px] bg-white border-slate-300 rounded-none px-1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-[10px] text-slate-600 w-16 shrink-0">Rooms</Label>
+                    <Input
+                      type="text"
+                      className="h-5 text-[10px] bg-white border-slate-300 rounded-none px-1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-[10px] text-slate-600 w-20 shrink-0">Acres</Label>
+                    <Input
+                      type="text"
+                      value={filters.lotSizeMin}
+                      onChange={e => updateFilter("lotSizeMin", e.target.value)}
+                      className="h-5 text-[10px] bg-white border-slate-300 rounded-none px-1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-[10px] text-slate-600 w-16 shrink-0">SqFt</Label>
+                    <Input
+                      type="text"
+                      value={filters.sqftMin}
+                      onChange={e => updateFilter("sqftMin", e.target.value)}
+                      className="h-5 text-[10px] bg-white border-slate-300 rounded-none px-1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-[10px] text-slate-600 w-20 shrink-0">Price/SqFt</Label>
+                    <Input
+                      type="text"
+                      className="h-5 text-[10px] bg-white border-slate-300 rounded-none px-1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-[10px] text-slate-600 w-16 shrink-0">Year Built</Label>
+                    <Input
+                      type="text"
+                      value={filters.yearBuiltMin}
+                      onChange={e => updateFilter("yearBuiltMin", e.target.value)}
+                      className="h-5 text-[10px] bg-white border-slate-300 rounded-none px-1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-[10px] text-slate-600 w-20 shrink-0">Total Parking</Label>
+                    <Input
+                      type="text"
+                      value={filters.parkingSpaces}
+                      onChange={e => updateFilter("parkingSpaces", e.target.value)}
+                      className="h-5 text-[10px] bg-white border-slate-300 rounded-none px-1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-[10px] text-slate-600 w-16 shrink-0">Garage</Label>
+                    <Input
+                      type="text"
+                      value={filters.garageSpaces}
+                      onChange={e => updateFilter("garageSpaces", e.target.value)}
+                      className="h-5 text-[10px] bg-white border-slate-300 rounded-none px-1"
+                    />
+                  </div>
+                </div>
+                <button className="text-[10px] text-blue-600 underline mt-2 hover:text-blue-800">
+                  ADDITIONAL CRITERIA
+                </button>
               </div>
-              <div>
-                <Label className="text-xs text-slate-600">Total Bathrooms</Label>
-                <Input
-                  type="number"
-                  placeholder="Any"
-                  value={filters.bathsMin}
-                  onChange={e => updateFilter("bathsMin", e.target.value)}
-                  className="h-8 mt-1 bg-white"
-                  step="0.5"
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-slate-600">Living Area Total (SqFt)</Label>
-                <Input
-                  type="number"
-                  placeholder="Any"
-                  value={filters.sqftMin}
-                  onChange={e => updateFilter("sqftMin", e.target.value)}
-                  className="h-8 mt-1 bg-white"
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-slate-600">Acres</Label>
-                <Input
-                  type="number"
-                  placeholder="Any"
-                  value={filters.lotSizeMin}
-                  onChange={e => updateFilter("lotSizeMin", e.target.value)}
-                  className="h-8 mt-1 bg-white"
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-slate-600">Year Built</Label>
-                <Input
-                  type="number"
-                  placeholder="Any"
-                  value={filters.yearBuiltMin}
-                  onChange={e => updateFilter("yearBuiltMin", e.target.value)}
-                  className="h-8 mt-1 bg-white"
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-slate-600">Total Parking Spaces</Label>
-                <Input
-                  type="number"
-                  placeholder="Any"
-                  value={filters.parkingSpaces}
-                  onChange={e => updateFilter("parkingSpaces", e.target.value)}
-                  className="h-8 mt-1 bg-white"
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-slate-600">Garage Spaces</Label>
-                <Input
-                  type="number"
-                  placeholder="Any"
-                  value={filters.garageSpaces}
-                  onChange={e => updateFilter("garageSpaces", e.target.value)}
-                  className="h-8 mt-1 bg-white"
-                />
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
         {/* PRICE Section */}
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-sm font-semibold text-blue-700 uppercase tracking-wide">Price</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-4 max-w-md">
-            <div>
-              <Label className="text-xs text-slate-600">Low</Label>
-              <Input
-                type="number"
-                placeholder="No Min"
-                value={filters.priceMin}
-                onChange={e => updateFilter("priceMin", e.target.value)}
-                className="h-9 mt-1 bg-white"
-              />
+        <div className="border border-slate-400 bg-white mb-2 max-w-md">
+          <SectionHeader 
+            title="PRICE" 
+            isOpen={priceOpen} 
+            onToggle={() => setPriceOpen(!priceOpen)} 
+          />
+          {priceOpen && (
+            <div className="p-2">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Label className="text-[10px] text-slate-600">Low</Label>
+                  <Input
+                    type="text"
+                    value={filters.priceMin}
+                    onChange={e => updateFilter("priceMin", e.target.value)}
+                    className="h-6 w-24 text-xs bg-white border-slate-300 rounded-none px-1"
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Label className="text-[10px] text-slate-600">High</Label>
+                  <Input
+                    type="text"
+                    value={filters.priceMax}
+                    onChange={e => updateFilter("priceMax", e.target.value)}
+                    className="h-6 w-24 text-xs bg-white border-slate-300 rounded-none px-1"
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <Label className="text-xs text-slate-600">High</Label>
-              <Input
-                type="number"
-                placeholder="No Max"
-                value={filters.priceMax}
-                onChange={e => updateFilter("priceMax", e.target.value)}
-                className="h-9 mt-1 bg-white"
-              />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* ADDRESS Section - Collapsible */}
-        <Collapsible open={addressOpen} onOpenChange={setAddressOpen}>
-          <div className="bg-white rounded-lg border border-slate-200">
-            <CollapsibleTrigger className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
-              <h3 className="text-sm font-semibold text-blue-700 uppercase tracking-wide">Address</h3>
-              {addressOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="px-4 pb-4 space-y-4">
-                <div className="flex items-center gap-4">
+        <div className="border border-slate-400 bg-white mb-2">
+          <SectionHeader 
+            title="ADDRESS" 
+            isOpen={addressOpen} 
+            onToggle={() => setAddressOpen(!addressOpen)} 
+          />
+          {addressOpen && (
+            <div className="p-2">
+              <div className="flex items-center gap-4 mb-2">
+                <RadioGroup
+                  value="street"
+                  className="flex items-center gap-4"
+                >
+                  <div className="flex items-center gap-1">
+                    <RadioGroupItem value="street" id="addr-street" className="h-3 w-3" />
+                    <Label htmlFor="addr-street" className="text-[10px] cursor-pointer">Street Address</Label>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <RadioGroupItem value="location" id="addr-location" className="h-3 w-3" />
+                    <Label htmlFor="addr-location" className="text-[10px] cursor-pointer">My Location</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Label className="text-[10px] text-slate-600 whitespace-nowrap">Street #</Label>
+                  <Input
+                    value={filters.streetNumber}
+                    onChange={e => updateFilter("streetNumber", e.target.value)}
+                    className="h-6 w-16 text-xs bg-white border-slate-300 rounded-none px-1"
+                  />
+                </div>
+                <div className="flex items-center gap-1 flex-1">
+                  <Label className="text-[10px] text-slate-600 whitespace-nowrap">Street Name</Label>
+                  <Input
+                    value={filters.streetName}
+                    onChange={e => updateFilter("streetName", e.target.value)}
+                    className="h-6 text-xs bg-white border-slate-300 rounded-none px-1"
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Label className="text-[10px] text-slate-600 whitespace-nowrap">Zip Code</Label>
+                  <Input
+                    value={filters.zipCode}
+                    onChange={e => updateFilter("zipCode", e.target.value)}
+                    className="h-6 w-20 text-xs bg-white border-slate-300 rounded-none px-1"
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Label className="text-[10px] text-slate-600 whitespace-nowrap">Radius (Miles)</Label>
+                  <Input
+                    value={filters.radius}
+                    onChange={e => updateFilter("radius", e.target.value)}
+                    className="h-6 w-12 text-xs bg-white border-slate-300 rounded-none px-1"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* TOWNS Section - Collapsible */}
+        <div className="border border-slate-400 bg-white mb-2">
+          <SectionHeader 
+            title="TOWNS" 
+            isOpen={townsOpen} 
+            onToggle={() => setTownsOpen(!townsOpen)} 
+          />
+          {townsOpen && (
+            <div className="p-2">
+              {/* State, County, Show Areas row */}
+              <div className="flex items-center gap-4 mb-2">
+                <div className="flex items-center gap-1">
+                  <Label className="text-[10px] text-slate-600">State</Label>
+                  <Select value={filters.state} onValueChange={v => updateFilter("state", v)}>
+                    <SelectTrigger className="h-6 w-16 text-[10px] bg-white border-slate-300 rounded-none">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MA">MA</SelectItem>
+                      <SelectItem value="CT">CT</SelectItem>
+                      <SelectItem value="NH">NH</SelectItem>
+                      <SelectItem value="RI">RI</SelectItem>
+                      <SelectItem value="VT">VT</SelectItem>
+                      <SelectItem value="ME">ME</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Label className="text-[10px] text-slate-600">Coverage Areas</Label>
+                  <Select value={filters.county} onValueChange={v => updateFilter("county", v)}>
+                    <SelectTrigger className="h-6 w-32 text-[10px] bg-white border-slate-300 rounded-none">
+                      <SelectValue placeholder="All Counties" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Counties</SelectItem>
+                      {filteredCounties.map(county => (
+                        <SelectItem key={county.id} value={county.id}>{county.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-[10px] text-slate-600">Show Areas:</Label>
                   <RadioGroup
-                    value="street"
-                    className="flex items-center gap-4"
+                    value={showAreas ? "yes" : "no"}
+                    onValueChange={v => setShowAreas(v === "yes")}
+                    className="flex items-center gap-2"
                   >
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="street" id="addr-street" />
-                      <Label htmlFor="addr-street" className="text-sm cursor-pointer">Street Address</Label>
+                    <div className="flex items-center gap-1">
+                      <RadioGroupItem value="yes" id="areas-yes" className="h-3 w-3" />
+                      <Label htmlFor="areas-yes" className="text-[10px] cursor-pointer">Yes</Label>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="location" id="addr-location" />
-                      <Label htmlFor="addr-location" className="text-sm cursor-pointer">My Location</Label>
+                    <div className="flex items-center gap-1">
+                      <RadioGroupItem value="no" id="areas-no" className="h-3 w-3" />
+                      <Label htmlFor="areas-no" className="text-[10px] cursor-pointer">No</Label>
                     </div>
                   </RadioGroup>
                 </div>
-                <div className="grid grid-cols-12 gap-3">
-                  <div className="col-span-2">
-                    <Label className="text-xs text-slate-600">Street #</Label>
-                    <Input
-                      placeholder=""
-                      value={filters.streetNumber}
-                      onChange={e => updateFilter("streetNumber", e.target.value)}
-                      className="h-9 mt-1 bg-white"
-                    />
-                  </div>
-                  <div className="col-span-5">
-                    <Label className="text-xs text-slate-600">Street Name</Label>
-                    <Input
-                      placeholder=""
-                      value={filters.streetName}
-                      onChange={e => updateFilter("streetName", e.target.value)}
-                      className="h-9 mt-1 bg-white"
-                    />
-                  </div>
-                  <div className="col-span-3">
-                    <Label className="text-xs text-slate-600">Zip Code</Label>
-                    <Input
-                      placeholder=""
-                      value={filters.zipCode}
-                      onChange={e => updateFilter("zipCode", e.target.value)}
-                      className="h-9 mt-1 bg-white"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs text-slate-600">Radius</Label>
-                    <div className="flex items-center gap-1">
-                      <Input
-                        type="number"
-                        placeholder=""
-                        value={filters.radius}
-                        onChange={e => updateFilter("radius", e.target.value)}
-                        className="h-9 mt-1 bg-white"
-                      />
-                      <span className="text-xs text-slate-500 mt-1">Miles</span>
-                    </div>
-                  </div>
-                </div>
               </div>
-            </CollapsibleContent>
-          </div>
-        </Collapsible>
 
-        {/* TOWNS Section - Collapsible */}
-        <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
-          <div className="bg-white rounded-lg border border-slate-200">
-            <CollapsibleTrigger className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-blue-700 uppercase tracking-wide">Towns</h3>
-                {filters.selectedTowns.length > 0 && (
-                  <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                    {filters.selectedTowns.length} selected
-                  </span>
-                )}
-              </div>
-              {townsOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="px-4 pb-4">
-                <div className="grid grid-cols-12 gap-4">
-                  {/* Left side - State/County/Town selector */}
-                  <div className="col-span-12 lg:col-span-5 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs text-slate-600">State</Label>
-                        <Select 
-                          value={filters.state} 
-                          onValueChange={v => updateFilter("state", v)}
-                        >
-                          <SelectTrigger className="h-9 mt-1 bg-white">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="MA">MA</SelectItem>
-                            <SelectItem value="CT">CT</SelectItem>
-                            <SelectItem value="NH">NH</SelectItem>
-                            <SelectItem value="RI">RI</SelectItem>
-                            <SelectItem value="VT">VT</SelectItem>
-                            <SelectItem value="ME">ME</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-slate-600">Coverage Areas</Label>
-                        <Select 
-                          value={filters.county} 
-                          onValueChange={v => updateFilter("county", v)}
-                        >
-                          <SelectTrigger className="h-9 mt-1 bg-white">
-                            <SelectValue placeholder="All Counties" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">All Counties</SelectItem>
-                            {filteredCounties.map(county => (
-                              <SelectItem key={county.id} value={county.id}>
-                                {county.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* Town search */}
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input
-                        placeholder="Type Full or Partial Name"
-                        value={townSearch}
-                        onChange={e => setTownSearch(e.target.value)}
-                        className="h-9 pl-9 bg-white"
-                      />
-                      {townSearch && (
-                        <button
-                          onClick={() => setTownSearch("")}
-                          className="absolute right-3 top-1/2 -translate-y-1/2"
-                        >
-                          <X className="h-4 w-4 text-slate-400 hover:text-slate-600" />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Town list */}
-                    <div className="border border-slate-200 rounded-md bg-white max-h-48 overflow-y-auto">
+              {/* Two-column layout: Town list | Selected towns */}
+              <div className="grid grid-cols-2 gap-2">
+                {/* Left: Town search and list */}
+                <div>
+                  <div className="relative mb-1">
+                    <Input
+                      placeholder="Type Full or Partial Name"
+                      value={townSearch}
+                      onChange={e => setTownSearch(e.target.value)}
+                      className="h-6 text-[10px] bg-white border-slate-300 rounded-none pr-6"
+                    />
+                    {townSearch && (
                       <button
-                        onClick={addAllTowns}
-                        className="w-full text-left px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 border-b border-slate-100"
+                        onClick={() => setTownSearch("")}
+                        className="absolute right-1 top-1/2 -translate-y-1/2"
                       >
-                        - Add All Towns -
+                        <X className="h-3 w-3 text-slate-400" />
                       </button>
-                      {filteredTowns.slice(0, 100).map(town => (
-                        <button
-                          key={town}
-                          onClick={() => toggleTown(town)}
-                          className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 transition-colors ${
-                            filters.selectedTowns.includes(town) ? "bg-blue-50 text-blue-700" : ""
-                          }`}
-                        >
-                          {town}, {filters.state}
-                        </button>
-                      ))}
-                    </div>
+                    )}
                   </div>
+                  <div className="border border-slate-300 bg-white h-40 overflow-y-auto">
+                    <button
+                      onClick={addAllTowns}
+                      className="w-full text-left px-1 py-0.5 text-[10px] text-blue-600 hover:bg-blue-50 border-b border-slate-200"
+                    >
+                      - Add All Towns -
+                    </button>
+                    {filteredTowns.slice(0, 100).map(town => (
+                      <button
+                        key={town}
+                        onClick={() => toggleTown(town)}
+                        className={`w-full text-left px-1 py-0.5 text-[10px] hover:bg-slate-100 ${
+                          filters.selectedTowns.includes(town) ? "bg-blue-100 text-blue-800" : ""
+                        }`}
+                      >
+                        {town}, {filters.state}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-                  {/* Right side - Selected Towns */}
-                  <div className="col-span-12 lg:col-span-7">
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-xs text-slate-600">Selected Towns</Label>
-                      {filters.selectedTowns.length > 0 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={removeAllTowns}
-                          className="h-7 text-xs"
-                        >
-                          Remove All
-                        </Button>
-                      )}
-                    </div>
-                    <div className="border border-slate-200 rounded-md bg-white min-h-[200px] p-2">
-                      {filters.selectedTowns.length === 0 ? (
-                        <p className="text-sm text-slate-400 p-2">No towns selected</p>
-                      ) : (
-                        <div className="flex flex-wrap gap-1">
-                          {filters.selectedTowns.map(town => (
-                            <span
-                              key={town}
-                              className="inline-flex items-center px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded cursor-pointer hover:bg-red-100 hover:text-red-700 transition-colors"
-                              onClick={() => toggleTown(town)}
-                            >
-                              {town} <X className="h-3 w-3 ml-1" />
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                {/* Right: Selected towns */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label className="text-[10px] text-slate-600">Selected Towns</Label>
+                    {filters.selectedTowns.length > 0 && (
+                      <button
+                        onClick={removeAllTowns}
+                        className="text-[10px] text-red-600 hover:underline"
+                      >
+                        Remove All
+                      </button>
+                    )}
+                  </div>
+                  <div className="border border-slate-300 bg-white h-40 overflow-y-auto p-1">
+                    {filters.selectedTowns.length === 0 ? (
+                      <p className="text-[10px] text-slate-400 p-1">No towns selected</p>
+                    ) : (
+                      <div className="space-y-0.5">
+                        {filters.selectedTowns.map(town => (
+                          <div
+                            key={town}
+                            onClick={() => toggleTown(town)}
+                            className="flex items-center justify-between px-1 py-0.5 text-[10px] bg-slate-100 hover:bg-red-100 cursor-pointer group"
+                          >
+                            <span>{town}, {filters.state}</span>
+                            <X className="h-3 w-3 text-slate-400 group-hover:text-red-600" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            </CollapsibleContent>
-          </div>
-        </Collapsible>
-
-        {/* Bottom Row - Listing Events + Keywords */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* LISTING EVENTS Panel */}
-          <div className="bg-white rounded-lg border border-slate-200 p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-sm font-semibold text-blue-700 uppercase tracking-wide">Listing Events</h3>
             </div>
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 py-1 cursor-pointer">
+          )}
+        </div>
+
+        {/* LISTING EVENTS Section - Collapsible */}
+        <div className="border border-slate-400 bg-white mb-2">
+          <SectionHeader 
+            title="LISTING EVENTS" 
+            isOpen={eventsOpen} 
+            onToggle={() => setEventsOpen(!eventsOpen)} 
+          />
+          {eventsOpen && (
+            <div className="p-2">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-1 cursor-pointer">
                   <Checkbox
                     checked={filters.openHouses}
                     onCheckedChange={(checked) => updateFilter("openHouses", !!checked)}
+                    className="h-3 w-3 rounded-none"
                   />
-                  <span className="text-sm">🟢 Open Houses</span>
+                  <span className="text-[10px]">🟢 Open Houses</span>
                 </label>
-                <label className="flex items-center gap-2 py-1 cursor-pointer">
+                <label className="flex items-center gap-1 cursor-pointer">
                   <Checkbox
                     checked={filters.brokerTours}
                     onCheckedChange={(checked) => updateFilter("brokerTours", !!checked)}
+                    className="h-3 w-3 rounded-none"
                   />
-                  <span className="text-sm">🔴 Broker Tours</span>
+                  <span className="text-[10px]">🔴 Broker Tours</span>
                 </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs text-slate-600">For:</Label>
-                <Select 
-                  value={filters.listingEventsTimeframe}
-                  onValueChange={v => updateFilter("listingEventsTimeframe", v)}
-                >
-                  <SelectTrigger className="h-8 w-40 bg-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3days">Next 3 Days</SelectItem>
-                    <SelectItem value="7days">Next 7 Days</SelectItem>
-                    <SelectItem value="14days">Next 14 Days</SelectItem>
-                    <SelectItem value="30days">Next 30 Days</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-1">
+                  <Label className="text-[10px] text-slate-600">For:</Label>
+                  <Select value={filters.listingEventsTimeframe} onValueChange={v => updateFilter("listingEventsTimeframe", v)}>
+                    <SelectTrigger className="h-6 w-28 text-[10px] bg-white border-slate-300 rounded-none">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3days">Next 3 Days</SelectItem>
+                      <SelectItem value="7days">Next 7 Days</SelectItem>
+                      <SelectItem value="14days">Next 14 Days</SelectItem>
+                      <SelectItem value="30days">Next 30 Days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* KEYWORDS Panel */}
-          <div className="bg-white rounded-lg border border-slate-200 p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-sm font-semibold text-blue-700 uppercase tracking-wide">Keywords</h3>
-              <span className="text-xs text-slate-500">(Public Remarks only)</span>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-4">
+        {/* KEYWORDS Section - Collapsible */}
+        <div className="border border-slate-400 bg-white mb-2">
+          <SectionHeader 
+            title="KEYWORDS (Public Remarks only)" 
+            isOpen={keywordsOpen} 
+            onToggle={() => setKeywordsOpen(!keywordsOpen)} 
+          />
+          {keywordsOpen && (
+            <div className="p-2">
+              <div className="flex items-center gap-4 mb-2">
                 <RadioGroup
                   value={filters.keywordMode}
                   onValueChange={v => updateFilter("keywordMode", v as "any" | "all")}
-                  className="flex items-center gap-4"
+                  className="flex items-center gap-2"
                 >
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="any" id="kw-any" />
-                    <Label htmlFor="kw-any" className="text-sm cursor-pointer">Any</Label>
+                  <div className="flex items-center gap-1">
+                    <RadioGroupItem value="any" id="kw-any" className="h-3 w-3" />
+                    <Label htmlFor="kw-any" className="text-[10px] cursor-pointer">Any</Label>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="all" id="kw-all" />
-                    <Label htmlFor="kw-all" className="text-sm cursor-pointer">All</Label>
+                  <div className="flex items-center gap-1">
+                    <RadioGroupItem value="all" id="kw-all" className="h-3 w-3" />
+                    <Label htmlFor="kw-all" className="text-[10px] cursor-pointer">All</Label>
                   </div>
                 </RadioGroup>
-                <div className="border-l border-slate-200 h-4" />
+                <div className="h-3 border-l border-slate-300" />
                 <RadioGroup
                   value={filters.keywordType}
                   onValueChange={v => updateFilter("keywordType", v as "include" | "exclude")}
-                  className="flex items-center gap-4"
+                  className="flex items-center gap-2"
                 >
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="include" id="kw-include" />
-                    <Label htmlFor="kw-include" className="text-sm cursor-pointer">Include</Label>
+                  <div className="flex items-center gap-1">
+                    <RadioGroupItem value="include" id="kw-include" className="h-3 w-3" />
+                    <Label htmlFor="kw-include" className="text-[10px] cursor-pointer">Include</Label>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="exclude" id="kw-exclude" />
-                    <Label htmlFor="kw-exclude" className="text-sm cursor-pointer">Exclude</Label>
+                  <div className="flex items-center gap-1">
+                    <RadioGroupItem value="exclude" id="kw-exclude" className="h-3 w-3" />
+                    <Label htmlFor="kw-exclude" className="text-[10px] cursor-pointer">Exclude</Label>
                   </div>
                 </RadioGroup>
               </div>
               <textarea
-                placeholder="Enter keywords separated by commas (e.g., pool, waterfront, renovated)"
+                placeholder="Enter keywords separated by commas"
                 value={filters.keywordType === "include" ? filters.keywordsInclude : filters.keywordsExclude}
                 onChange={e => updateFilter(
                   filters.keywordType === "include" ? "keywordsInclude" : "keywordsExclude", 
                   e.target.value
                 )}
-                className="w-full h-20 px-3 py-2 text-sm border border-slate-200 rounded-md bg-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full h-16 px-2 py-1 text-[10px] border border-slate-300 bg-white resize-none focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
-          </div>
+          )}
         </div>
 
       </div>
