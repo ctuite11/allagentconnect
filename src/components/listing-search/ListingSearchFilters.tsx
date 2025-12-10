@@ -719,80 +719,89 @@ const ListingSearchFilters = ({
                   </div>
                 </div>
                 
-                <div className="relative mb-2">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Search towns..."
-                    value={townSearch}
-                    onChange={e => setTownSearch(e.target.value)}
-                    className="h-7 text-xs bg-background pl-7"
-                  />
-                  {townSearch && (
-                    <button 
-                      onClick={() => setTownSearch("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2"
-                    >
-                      <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-                    </button>
-                  )}
-                </div>
-                
-                <ScrollArea className="h-[150px] border border-border rounded bg-background">
-                  <div className="p-2 space-y-0.5">
-                    <button
-                      onClick={addAllTowns}
-                      className="w-full text-left px-2 py-1 text-xs text-primary hover:bg-muted rounded transition-colors font-medium"
-                    >
-                      - Add All Towns -
-                    </button>
-                    {filteredTowns.map(town => (
-                      <button
-                        key={town}
-                        onClick={() => toggleTown(town)}
-                        className={`w-full text-left px-2 py-1 text-xs rounded transition-colors ${
-                          filters.selectedTowns.includes(town) 
-                            ? "bg-primary/10 text-primary font-medium" 
-                            : "text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        {town}
-                      </button>
-                    ))}
-                  </div>
-                </ScrollArea>
-
-                {/* Selected Towns Display */}
-                {filters.selectedTowns.length > 0 && (
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <Label className="text-xs text-muted-foreground">Selected Towns</Label>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-5 px-1.5 text-xs text-destructive hover:text-destructive"
-                        onClick={() => updateFilter("selectedTowns", [])}
-                      >
-                        Remove All
-                      </Button>
+                {/* Two-column layout: Town Picker | Selected Towns */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Left Column: Town Picker */}
+                  <div>
+                    <div className="relative mb-2">
+                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Search towns..."
+                        value={townSearch}
+                        onChange={e => setTownSearch(e.target.value)}
+                        className="h-7 text-xs bg-background pl-7"
+                      />
+                      {townSearch && (
+                        <button 
+                          onClick={() => setTownSearch("")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2"
+                        >
+                          <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                        </button>
+                      )}
                     </div>
-                    <div className="border border-border rounded bg-background p-2 max-h-[80px] overflow-y-auto">
-                      <div className="flex flex-wrap gap-1">
-                        {filters.selectedTowns.map(town => (
-                          <Badge
+                    
+                    <ScrollArea className="h-[150px] border border-border rounded bg-background">
+                      <div className="p-2 space-y-0.5">
+                        <button
+                          onClick={addAllTowns}
+                          className="w-full text-left px-2 py-1 text-xs text-primary hover:bg-muted rounded transition-colors font-medium"
+                        >
+                          - Add All Towns -
+                        </button>
+                        {filteredTowns.map(town => (
+                          <button
                             key={town}
-                            variant="secondary"
-                            className="h-5 px-1.5 gap-1 text-xs font-normal cursor-pointer hover:bg-destructive/10"
                             onClick={() => toggleTown(town)}
+                            className={`w-full text-left px-2 py-1 text-xs rounded transition-colors ${
+                              filters.selectedTowns.includes(town) 
+                                ? "bg-primary/10 text-primary font-medium" 
+                                : "text-foreground hover:bg-muted"
+                            }`}
                           >
                             {town}
-                            <X className="h-2.5 w-2.5" />
-                          </Badge>
+                          </button>
                         ))}
                       </div>
-                    </div>
+                    </ScrollArea>
                   </div>
-                )}
+
+                  {/* Right Column: Selected Towns */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-xs text-muted-foreground">Selected Towns</Label>
+                      {filters.selectedTowns.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 px-1.5 text-xs text-destructive hover:text-destructive"
+                          onClick={() => updateFilter("selectedTowns", [])}
+                        >
+                          Remove All
+                        </Button>
+                      )}
+                    </div>
+                    <ScrollArea className="h-[150px] border border-border rounded bg-background">
+                      <div className="p-2 space-y-0.5">
+                        {filters.selectedTowns.length === 0 ? (
+                          <p className="text-xs text-muted-foreground italic px-2 py-1">No towns selected</p>
+                        ) : (
+                          filters.selectedTowns.map(town => (
+                            <button
+                              key={town}
+                              onClick={() => toggleTown(town)}
+                              className="w-full text-left px-2 py-1 text-xs rounded transition-colors text-foreground hover:bg-destructive/10 hover:text-destructive flex items-center justify-between group"
+                            >
+                              <span>{town}</span>
+                              <X className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
               </div>
             )}
           </div>
