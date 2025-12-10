@@ -298,8 +298,10 @@ const PropertyDetail = () => {
               variant="ghost"
               size="sm"
               onClick={() => {
-                // Check if there's history to go back to
-                if (window.history.length > 1) {
+                const fromPage = location.state?.from;
+                if (fromPage) {
+                  navigate(fromPage);
+                } else if (window.history.length > 1) {
                   navigate(-1);
                 } else {
                   navigate("/listing-search");

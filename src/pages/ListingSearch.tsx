@@ -267,7 +267,9 @@ const ListingSearch = () => {
   }, [sortColumn, sortDirection]);
 
   const handleRowClick = (listing: any) => {
-    navigate(`/property/${listing.id}`);
+    navigate(`/property/${listing.id}`, { 
+      state: { from: `/listing-search${window.location.search}` } 
+    });
   };
 
   return (
