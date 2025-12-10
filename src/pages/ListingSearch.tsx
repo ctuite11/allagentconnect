@@ -3,11 +3,11 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import ListingSearchTopBar, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchTopBar";
-import MoreFiltersDrawer from "@/components/listing-search/MoreFiltersDrawer";
+import ListingSearchFilters, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import { toast } from "sonner";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, RotateCcw, Eye } from "lucide-react";
 
 const ListingSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,7 +39,6 @@ const ListingSearch = () => {
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [counties, setCounties] = useState<{ id: string; name: string; state: string }[]>([]);
-  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
   const [sortColumn, setSortColumn] = useState("list_date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
@@ -264,40 +263,59 @@ const ListingSearch = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Navigation />
 
       <main className="flex-1 pt-16">
-        {/* Header */}
-        <section className="bg-card border-b border-border py-6">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Search className="h-6 w-6 text-primary" />
+        {/* Action Bar */}
+        <div className="bg-white border-b border-slate-200 sticky top-16 z-30">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button 
+                  onClick={handleSearch}
+                  disabled={loading}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  View Results
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleReset}
+                  className="gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Reset
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleSearch}
+                  disabled={loading}
+                  className="gap-2"
+                >
+                  <Search className="h-4 w-4" />
+                  Search
+                </Button>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold">Property Search</h1>
-                <p className="text-sm text-muted-foreground">
-                  Search listings across Massachusetts with MLS-familiar filters
-                </p>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-slate-600">
+                  Count <span className="font-semibold text-slate-900 bg-blue-100 px-2 py-0.5 rounded ml-1">{loading ? "..." : listings.length} Results</span>
+                </span>
               </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Top Filter Bar */}
-        <ListingSearchTopBar
+        {/* MLS-Style Filter Panels */}
+        <ListingSearchFilters
           filters={filters}
           onFiltersChange={handleFiltersChange}
-          onSearch={handleSearch}
-          onOpenMoreFilters={() => setMoreFiltersOpen(true)}
-          resultCount={listings.length}
-          loading={loading}
           counties={counties}
         />
 
         {/* Results Table */}
-        <section className="flex-1">
+        <section className="flex-1 bg-white">
           <div className="container mx-auto px-4 py-4">
             <ListingResultsTable
               listings={listings}
@@ -310,16 +328,6 @@ const ListingSearch = () => {
           </div>
         </section>
       </main>
-
-      {/* More Filters Drawer */}
-      <MoreFiltersDrawer
-        open={moreFiltersOpen}
-        onOpenChange={setMoreFiltersOpen}
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        onSearch={handleSearch}
-        onReset={handleReset}
-      />
 
       <Footer />
     </div>
