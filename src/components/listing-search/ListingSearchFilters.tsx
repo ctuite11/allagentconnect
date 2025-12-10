@@ -573,12 +573,12 @@ const ListingSearchFilters = ({
                 </div>
                 <div className="flex items-center gap-1">
                   <Label className="text-[10px] text-slate-600">Coverage Areas</Label>
-                  <Select value={filters.county} onValueChange={v => updateFilter("county", v)}>
+                  <Select value={filters.county || "all"} onValueChange={v => updateFilter("county", v === "all" ? "" : v)}>
                     <SelectTrigger className="h-6 w-32 text-[10px] bg-white border-slate-300 rounded-none">
                       <SelectValue placeholder="All Counties" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Counties</SelectItem>
+                      <SelectItem value="all">All Counties</SelectItem>
                       {filteredCounties.map(county => (
                         <SelectItem key={county.id} value={county.id}>{county.name}</SelectItem>
                       ))}
