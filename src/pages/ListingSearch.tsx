@@ -324,6 +324,7 @@ const ListingSearch = () => {
               sortDirection={sortDirection}
               onSort={handleSort}
               onRowClick={handleRowClick}
+              filters={filters}
             />
           </div>
         </section>

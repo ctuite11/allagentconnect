@@ -4,8 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowUpDown, ExternalLink, MessageSquare, Users, Check, Share2, Heart } from "lucide-react";
+import { ArrowUpDown, ExternalLink, MessageSquare, Users, Check, Share2, FileSpreadsheet, Eye, EyeOff, Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+
+import { FilterState } from "@/components/listing-search/ListingSearchFilters";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Listing {
   id: string;
@@ -34,6 +41,7 @@ interface ListingResultsTableProps {
   sortDirection: "asc" | "desc";
   onSort: (column: string) => void;
   onRowClick: (listing: Listing) => void;
+  filters?: FilterState;
 }
 
 const formatPrice = (price: number) => {
@@ -105,16 +113,96 @@ const ListingResultsTable = ({
   sortDirection,
   onSort,
   onRowClick,
+  filters,
 }: ListingResultsTableProps) => {
   const navigate = useNavigate();
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState("date_new");
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+  const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
+  const [hotSheetName, setHotSheetName] = useState("");
+  const [savingHotSheet, setSavingHotSheet] = useState(false);
+
+  // Filter listings based on selected-only mode
+  const displayedListings = showSelectedOnly 
+    ? listings.filter(l => selectedRows.has(l.id))
+    : listings;
 
   const toggleSelectAll = () => {
-    if (selectedRows.size === listings.length) {
+    if (selectedRows.size === displayedListings.length) {
       setSelectedRows(new Set());
     } else {
-      setSelectedRows(new Set(listings.map(l => l.id)));
+      setSelectedRows(new Set(displayedListings.map(l => l.id)));
+    }
+  };
+
+  const handleKeepSelected = () => {
+    if (showSelectedOnly) {
+      setShowSelectedOnly(false);
+    } else {
+      setShowSelectedOnly(true);
+    }
+  };
+
+  const handleSaveSearch = () => {
+    // Save current URL to localStorage
+    const searchUrl = window.location.href;
+    const savedSearches = JSON.parse(localStorage.getItem("savedSearches") || "[]");
+    savedSearches.push({
+      url: searchUrl,
+      savedAt: new Date().toISOString(),
+      name: `Search ${savedSearches.length + 1}`
+    });
+    localStorage.setItem("savedSearches", JSON.stringify(savedSearches));
+    toast.success("Search saved successfully");
+  };
+
+  // Build hot sheet criteria from filters
+  const handleSaveHotSheet = async () => {
+    if (!hotSheetName.trim()) {
+      toast.error("Please enter a name for this hot sheet");
+      return;
+    }
+
+    setSavingHotSheet(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please sign in to save hot sheets");
+        return;
+      }
+
+      const criteria = {
+        state: filters?.state,
+        county: filters?.county,
+        cities: filters?.selectedTowns,
+        property_types: filters?.propertyTypes,
+        min_price: filters?.priceMin ? parseInt(filters.priceMin) : null,
+        max_price: filters?.priceMax ? parseInt(filters.priceMax) : null,
+        bedrooms: filters?.bedsMin ? parseInt(filters.bedsMin) : null,
+        bathrooms: filters?.bathsMin ? parseFloat(filters.bathsMin) : null,
+        statuses: filters?.statuses,
+      };
+
+      const { error } = await supabase
+        .from("hot_sheets")
+        .insert({
+          user_id: user.id,
+          name: hotSheetName.trim(),
+          criteria,
+          is_active: true,
+        });
+
+      if (error) throw error;
+
+      toast.success("Hot sheet saved! You'll be notified of new matching listings.");
+      setHotSheetDialogOpen(false);
+      setHotSheetName("");
+    } catch (error: any) {
+      console.error("Error saving hot sheet:", error);
+      toast.error("Failed to save hot sheet");
+    } finally {
+      setSavingHotSheet(false);
     }
   };
 
@@ -183,38 +271,61 @@ const ListingResultsTable = ({
             onClick={toggleSelectAll}
             className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
           >
-            Select All
+            {selectedRows.size === displayedListings.length && displayedListings.length > 0 ? "Deselect All" : "Select All"}
           </Button>
           <Button
             variant="outline"
             size="sm"
-            disabled={selectedRows.size === 0}
+            disabled={selectedRows.size === 0 && !showSelectedOnly}
+            onClick={handleKeepSelected}
             className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
-            Keep Selected
+            {showSelectedOnly ? (
+              <>
+                <Eye className="h-4 w-4 mr-1.5" />
+                Show All
+              </>
+            ) : (
+              <>
+                <EyeOff className="h-4 w-4 mr-1.5" />
+                Keep Selected
+              </>
+            )}
           </Button>
           <Button
             variant="outline"
             size="sm"
+            onClick={handleSaveSearch}
             className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
           >
+            <Bookmark className="h-4 w-4 mr-1.5" />
             Save Search
           </Button>
           <Button
             variant="outline"
             size="sm"
             disabled={selectedRows.size === 0}
+            onClick={() => {
+              if (selectedRows.size === 0) return;
+              // Open email share modal with simple email approach
+              const listingIds = Array.from(selectedRows);
+              const shareUrl = `${window.location.origin}/listing-search?ids=${listingIds.join(",")}`;
+              navigator.clipboard.writeText(shareUrl);
+              toast.success(`Copied link to ${selectedRows.size} listing${selectedRows.size > 1 ? 's' : ''}`);
+            }}
             className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
+            <Share2 className="h-4 w-4 mr-1.5" />
             Share
           </Button>
           <Button
             variant="outline"
             size="sm"
-            disabled={selectedRows.size === 0}
-            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            onClick={() => setHotSheetDialogOpen(true)}
+            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
           >
-            Save To Wish Lists
+            <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+            Save as Hot Sheet
           </Button>
         </div>
 
@@ -238,6 +349,52 @@ const ListingResultsTable = ({
 
       {/* Results Table */}
       <div className="overflow-auto bg-white rounded-lg border border-slate-200">
+
+        {/* Hot Sheet Dialog */}
+        <Dialog open={hotSheetDialogOpen} onOpenChange={setHotSheetDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Save Search as Hot Sheet</DialogTitle>
+              <DialogDescription>
+                Get notified when new listings match your current filters
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="hotSheetName">Hot Sheet Name *</Label>
+                <Input
+                  id="hotSheetName"
+                  placeholder="e.g., Boston 3BR Under 500k"
+                  value={hotSheetName}
+                  onChange={(e) => setHotSheetName(e.target.value)}
+                />
+              </div>
+              {filters && (
+                <div className="text-sm text-slate-500 space-y-1">
+                  <p className="font-medium text-slate-700">Current filters:</p>
+                  {filters.selectedTowns.length > 0 && (
+                    <p>Towns: {filters.selectedTowns.join(", ")}</p>
+                  )}
+                  {filters.propertyTypes.length > 0 && (
+                    <p>Types: {filters.propertyTypes.join(", ")}</p>
+                  )}
+                  {(filters.priceMin || filters.priceMax) && (
+                    <p>Price: {filters.priceMin || "Any"} - {filters.priceMax || "Any"}</p>
+                  )}
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setHotSheetDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveHotSheet} disabled={savingHotSheet}>
+                {savingHotSheet ? "Saving..." : "Save Hot Sheet"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Table>
         <TableHeader>
           <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-slate-200">
@@ -246,7 +403,7 @@ const ListingResultsTable = ({
                 className="w-4 h-4 border border-slate-300 rounded cursor-pointer flex items-center justify-center hover:bg-slate-100"
                 onClick={toggleSelectAll}
               >
-                {selectedRows.size === listings.length && listings.length > 0 && (
+                {selectedRows.size === displayedListings.length && displayedListings.length > 0 && (
                   <Check className="w-3 h-3 text-slate-700" />
                 )}
               </div>
@@ -265,7 +422,7 @@ const ListingResultsTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {listings.map(listing => {
+          {displayedListings.map(listing => {
             const thumbnail = getThumbnail(listing);
             const isOffMarket = listing.status === "off_market";
             
