@@ -6,8 +6,8 @@ import Footer from "@/components/Footer";
 import ListingSearchFilters, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import { toast } from "sonner";
+import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Search, RotateCcw, Eye } from "lucide-react";
 
 const ListingSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -107,13 +107,21 @@ const ListingSearch = () => {
           year_built,
           garage_spaces,
           total_parking_spaces,
-          description
+          description,
+          photos
         `)
         .limit(500);
 
       // Apply status filter
       if (filters.statuses.length > 0) {
         query = query.in("status", filters.statuses);
+      }
+
+      // Apply internal filter override
+      if (filters.internalFilter === "off_market") {
+        query = query.eq("status", "off_market");
+      } else if (filters.internalFilter === "coming_soon") {
+        query = query.eq("status", "coming_soon");
       }
 
       // Apply property type filter
@@ -267,55 +275,47 @@ const ListingSearch = () => {
       <Navigation />
 
       <main className="flex-1 pt-16">
-        {/* Action Bar */}
-        <div className="bg-white border-b border-slate-200 sticky top-16 z-30">
-          <div className="container mx-auto px-4 py-3">
+        {/* Page Header */}
+        <div className="bg-white border-b border-slate-200">
+          <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">Listing Search</h1>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Search MLS and off-market inventory
+                </p>
+              </div>
               <div className="flex items-center gap-3">
-                <Button 
-                  onClick={handleSearch}
-                  disabled={loading}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  View Results
-                </Button>
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={handleReset}
-                  className="gap-2"
+                  className="h-8 gap-1.5 text-sm border-slate-200 hover:bg-slate-50"
                 >
-                  <RotateCcw className="h-4 w-4" />
+                  <RotateCcw className="h-3.5 w-3.5" />
                   Reset
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleSearch}
-                  disabled={loading}
-                  className="gap-2"
-                >
-                  <Search className="h-4 w-4" />
-                  Search
-                </Button>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-slate-600">
-                  Count <span className="font-semibold text-slate-900 bg-blue-100 px-2 py-0.5 rounded ml-1">{loading ? "..." : listings.length} Results</span>
-                </span>
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <span className="font-medium text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md">
+                    {loading ? "..." : listings.length}
+                  </span>
+                  <span>results</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* MLS-Style Filter Panels */}
+        {/* Filter Bar */}
         <ListingSearchFilters
           filters={filters}
           onFiltersChange={handleFiltersChange}
           counties={counties}
+          onSearch={handleSearch}
         />
 
         {/* Results Table */}
-        <section className="flex-1 bg-white">
+        <section className="flex-1">
           <div className="container mx-auto px-4 py-4">
             <ListingResultsTable
               listings={listings}
