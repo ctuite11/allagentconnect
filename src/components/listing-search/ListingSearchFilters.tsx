@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, X, Search } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
 
 export interface FilterState {
   propertyTypes: string[];
@@ -121,9 +122,6 @@ const ListingSearchFilters = ({
   const [townsOpen, setTownsOpen] = useState(true);
   const [addressOpen, setAddressOpen] = useState(false);
   const [townSearch, setTownSearch] = useState("");
-  
-  // Import MA county towns data
-  const { MA_COUNTY_TOWNS } = require("@/data/maCountyTowns");
 
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     onFiltersChange({ ...filters, [key]: value });
