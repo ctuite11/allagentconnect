@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowUpDown, ExternalLink, MessageSquare, Users } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowUpDown, ExternalLink, MessageSquare, Users, Check, Share2, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Listing {
@@ -105,6 +107,27 @@ const ListingResultsTable = ({
   onRowClick,
 }: ListingResultsTableProps) => {
   const navigate = useNavigate();
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState("date_new");
+
+  const toggleSelectAll = () => {
+    if (selectedRows.size === listings.length) {
+      setSelectedRows(new Set());
+    } else {
+      setSelectedRows(new Set(listings.map(l => l.id)));
+    }
+  };
+
+  const toggleRowSelection = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newSelected = new Set(selectedRows);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedRows(newSelected);
+  };
 
   const SortableHeader = ({ 
     column, 
@@ -150,10 +173,84 @@ const ListingResultsTable = ({
   }
 
   return (
-    <div className="overflow-auto bg-white rounded-lg border border-slate-200">
-      <Table>
+    <div className="space-y-3">
+      {/* Action Bar */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleSelectAll}
+            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            Select All
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={selectedRows.size === 0}
+            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            Keep Selected
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            Save Search
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={selectedRows.size === 0}
+            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            Share
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={selectedRows.size === 0}
+            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            Save To Wish Lists
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-600">Sort by:</span>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[150px] h-9 text-sm border-slate-300">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date_new">Date (New)</SelectItem>
+              <SelectItem value="date_old">Date (Old)</SelectItem>
+              <SelectItem value="price_high">Price (High)</SelectItem>
+              <SelectItem value="price_low">Price (Low)</SelectItem>
+              <SelectItem value="sqft">Square Feet</SelectItem>
+              <SelectItem value="beds">Bedrooms</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Results Table */}
+      <div className="overflow-auto bg-white rounded-lg border border-slate-200">
+        <Table>
         <TableHeader>
           <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-slate-200">
+            <TableHead className="w-10 text-xs font-semibold text-slate-600">
+              <div 
+                className="w-4 h-4 border border-slate-300 rounded cursor-pointer flex items-center justify-center hover:bg-slate-100"
+                onClick={toggleSelectAll}
+              >
+                {selectedRows.size === listings.length && listings.length > 0 && (
+                  <Check className="w-3 h-3 text-slate-700" />
+                )}
+              </div>
+            </TableHead>
             <TableHead className="w-16 text-xs font-semibold text-slate-600">Photo</TableHead>
             <SortableHeader column="address">Address</SortableHeader>
             <SortableHeader column="price">Price</SortableHeader>
@@ -177,9 +274,24 @@ const ListingResultsTable = ({
                 key={listing.id}
                 className={`cursor-pointer transition-all group hover:bg-slate-50 hover:shadow-sm ${
                   isOffMarket ? "bg-rose-50/30" : ""
-                }`}
+                } ${selectedRows.has(listing.id) ? "bg-blue-50" : ""}`}
                 onClick={() => onRowClick(listing)}
               >
+                {/* Checkbox */}
+                <TableCell className="py-2" onClick={(e) => toggleRowSelection(listing.id, e)}>
+                  <div 
+                    className={`w-4 h-4 border rounded cursor-pointer flex items-center justify-center ${
+                      selectedRows.has(listing.id) 
+                        ? "bg-slate-700 border-slate-700" 
+                        : "border-slate-300 hover:bg-slate-100"
+                    }`}
+                  >
+                    {selectedRows.has(listing.id) && (
+                      <Check className="w-3 h-3 text-white" />
+                    )}
+                  </div>
+                </TableCell>
+
                 {/* Thumbnail */}
                 <TableCell className="py-2">
                   <div className="w-12 h-12 rounded-md bg-slate-100 overflow-hidden flex-shrink-0">
@@ -285,6 +397,7 @@ const ListingResultsTable = ({
           })}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 };
