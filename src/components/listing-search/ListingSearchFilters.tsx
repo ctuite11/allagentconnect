@@ -20,7 +20,8 @@ import {
   Building,
   FileText
 } from "lucide-react";
-import { MA_COUNTY_TOWNS } from "@/data/maCountyTowns";
+import { useTownsPicker } from "@/hooks/useTownsPicker";
+import { TownsPicker } from "@/components/TownsPicker";
 
 export interface FilterState {
   propertyTypes: string[];
@@ -196,6 +197,7 @@ const ListingSearchFilters = ({
 }: ListingSearchFiltersProps) => {
   const [townSearch, setTownSearch] = useState("");
   const [addressType, setAddressType] = useState<"street" | "location">("street");
+  const [showAreas, setShowAreas] = useState(true);
   
   // Collapsible section states
   const [sectionsOpen, setSectionsOpen] = useState({
@@ -208,6 +210,18 @@ const ListingSearchFilters = ({
     listingEvents: true,
     keywords: true,
     additionalCriteria: false,
+  });
+
+  // Get county name from ID for the hook
+  const selectedCountyName = filters.county 
+    ? counties.find(c => c.id === filters.county)?.name || ""
+    : "";
+
+  // Use the canonical towns picker hook
+  const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
+    state: filters.state,
+    county: selectedCountyName,
+    showAreas,
   });
 
   const toggleSection = (section: keyof typeof sectionsOpen) => {
@@ -259,24 +273,8 @@ const ListingSearchFilters = ({
   };
 
   const addAllTowns = () => {
-    const allTowns = getAvailableTowns();
-    updateFilter("selectedTowns", [...new Set([...filters.selectedTowns, ...allTowns])]);
+    updateFilter("selectedTowns", [...new Set([...filters.selectedTowns, ...townsList])]);
   };
-
-  const getAvailableTowns = (): string[] => {
-    if (filters.county) {
-      const county = counties.find(c => c.id === filters.county);
-      if (county && MA_COUNTY_TOWNS[county.name]) {
-        return MA_COUNTY_TOWNS[county.name];
-      }
-    }
-    return Object.values(MA_COUNTY_TOWNS).flat() as string[];
-  };
-
-  const availableTowns = getAvailableTowns();
-  const filteredTowns = townSearch
-    ? availableTowns.filter(t => t.toLowerCase().includes(townSearch.toLowerCase()))
-    : availableTowns;
 
   const filteredCounties = counties.filter(c => c.state === filters.state);
 
@@ -707,12 +705,24 @@ const ListingSearchFilters = ({
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Areas</Label>
                     <div className="flex items-center gap-2 h-7">
-                      <label className="flex items-center gap-1 text-xs">
-                        <input type="radio" name="areas" defaultChecked className="h-3 w-3" />
+                      <label className="flex items-center gap-1 text-xs cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="areas" 
+                          checked={showAreas === true}
+                          onChange={() => setShowAreas(true)}
+                          className="h-3 w-3" 
+                        />
                         Yes
                       </label>
-                      <label className="flex items-center gap-1 text-xs">
-                        <input type="radio" name="areas" className="h-3 w-3" />
+                      <label className="flex items-center gap-1 text-xs cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="areas" 
+                          checked={showAreas === false}
+                          onChange={() => setShowAreas(false)}
+                          className="h-3 w-3" 
+                        />
                         No
                       </label>
                     </div>
@@ -742,29 +752,25 @@ const ListingSearchFilters = ({
                       )}
                     </div>
                     
-                    <ScrollArea className="h-[150px] border border-border rounded bg-background">
-                      <div className="p-2 space-y-0.5">
-                        <button
-                          onClick={addAllTowns}
-                          className="w-full text-left px-2 py-1 text-xs text-primary hover:bg-muted rounded transition-colors font-medium"
-                        >
-                          - Add All Towns -
-                        </button>
-                        {filteredTowns.map(town => (
-                          <button
-                            key={town}
-                            onClick={() => toggleTown(town)}
-                            className={`w-full text-left px-2 py-1 text-xs rounded transition-colors ${
-                              filters.selectedTowns.includes(town) 
-                                ? "bg-primary/10 text-primary font-medium" 
-                                : "text-foreground hover:bg-muted"
-                            }`}
-                          >
-                            {town}
-                          </button>
-                        ))}
-                      </div>
-                    </ScrollArea>
+                    <div className="h-[150px] border border-border rounded bg-background overflow-y-auto p-2">
+                      <button
+                        onClick={addAllTowns}
+                        className="w-full text-left px-2 py-1 text-xs text-primary hover:bg-muted rounded transition-colors font-medium mb-1"
+                      >
+                        - Add All Towns ({townsList.length}) -
+                      </button>
+                      <TownsPicker
+                        towns={townsList}
+                        selectedTowns={filters.selectedTowns}
+                        onToggleTown={toggleTown}
+                        expandedCities={expandedCities}
+                        onToggleCityExpansion={toggleCityExpansion}
+                        state={filters.state}
+                        searchQuery={townSearch}
+                        variant="button"
+                        showAreas={showAreas}
+                      />
+                    </div>
                   </div>
 
                   {/* Right Column: Selected Towns */}
@@ -782,12 +788,12 @@ const ListingSearchFilters = ({
                         </Button>
                       )}
                     </div>
-                    <ScrollArea className="h-[150px] border border-border rounded bg-background">
-                      <div className="p-2 space-y-0.5">
-                        {filters.selectedTowns.length === 0 ? (
-                          <p className="text-xs text-muted-foreground italic px-2 py-1">No towns selected</p>
-                        ) : (
-                          filters.selectedTowns.map(town => (
+                    <div className="h-[150px] border border-border rounded bg-background overflow-y-auto p-2">
+                      {filters.selectedTowns.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic px-2 py-1">No towns selected</p>
+                      ) : (
+                        <div className="space-y-0.5">
+                          {filters.selectedTowns.map(town => (
                             <button
                               key={town}
                               onClick={() => toggleTown(town)}
@@ -796,10 +802,10 @@ const ListingSearchFilters = ({
                               <span>{town}</span>
                               <X className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </button>
-                          ))
-                        )}
-                      </div>
-                    </ScrollArea>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
