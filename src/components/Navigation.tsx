@@ -144,6 +144,10 @@ const Navigation = () => {
                         <UserCog className="mr-2 h-4 w-4" />
                         Profile & Branding
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/listing-search")}>
+                        <Search className="mr-2 h-4 w-4" />
+                        Listing Search
+                      </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel>Add Listings</DropdownMenuLabel>
@@ -224,6 +228,10 @@ const Navigation = () => {
                           <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")}>
                             <UserCog className="mr-2 h-4 w-4" />
                             Profile & Branding
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate("/listing-search")}>
+                            <Search className="mr-2 h-4 w-4" />
+                            Listing Search
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
