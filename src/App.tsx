@@ -57,6 +57,7 @@ import ManageListingPhotos from "./pages/ManageListingPhotos";
 // EditListing no longer used - edit route now uses AddListing
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
+import AllAgentConnectHome from "./pages/AllAgentConnectHome";
 import ShareLinkHandler from "./pages/ShareLinkHandler";
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
@@ -85,6 +86,7 @@ const App = () => (
             <Navigation />
             <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/allagentconnect" element={<AllAgentConnectHome />} />
           <Route path="/coming-soon" element={<ComingSoon />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
