@@ -283,11 +283,11 @@ const ListingSearchFilters = ({
   return (
     <div className="bg-muted/30 border-b border-border">
       <div className="container mx-auto px-4 py-4">
-        {/* ROW 1: 4-Column Grid - Property Type | Status+Price | Date | Standard Criteria */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        {/* ROW 1: 3-Column Grid - Property Type (narrow) | Status+Date+Price (wide) | Standard Criteria */}
+        <div className="flex gap-4 mb-4">
           
-          {/* PROPERTY TYPE Section */}
-          <div className="bg-card border border-border rounded-md shadow-sm overflow-hidden">
+          {/* PROPERTY TYPE Section (narrow) */}
+          <div className="w-[160px] shrink-0 bg-card border border-border rounded-md shadow-sm overflow-hidden">
             <SectionHeader 
               icon={Home} 
               title="Property Type" 
@@ -323,59 +323,93 @@ const ListingSearchFilters = ({
             )}
           </div>
 
-          {/* STATUS + PRICE RANGE Column (stacked) */}
-          <div className="flex flex-col gap-4">
-            {/* STATUS Section */}
-            <div className="bg-card border border-border rounded-md shadow-sm overflow-hidden">
-              <SectionHeader 
-                icon={Tag} 
-                title="Status" 
-                isOpen={sectionsOpen.status}
-                onToggle={() => toggleSection("status")}
-                accentColor="border-l-teal-500"
-              />
-              {sectionsOpen.status && (
-                <ScrollArea className="h-[160px]">
-                  <div className="p-3 space-y-1.5">
-                    <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded transition-colors">
+          {/* MIDDLE SECTION: Status + Date/Timeframe + Price Range (wide, combined card) */}
+          <div className="flex-1 bg-card border border-border rounded-md shadow-sm overflow-hidden">
+            {/* STATUS + DATE/TIMEFRAME Header */}
+            <div className="w-full flex items-center gap-2 px-3 py-2 bg-card border-l-4 border-l-teal-500">
+              <Tag className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Status & Date</span>
+            </div>
+            
+            {/* Top row: Status (left) + Date/Timeframe (right) */}
+            <div className="p-3 flex gap-4">
+              {/* STATUS Section - 2 columns, no scroll */}
+              <div className="flex-1">
+                <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded transition-colors mb-1">
+                  <Checkbox
+                    checked={filters.statuses.length === STATUSES.length}
+                    onCheckedChange={toggleAllStatuses}
+                    className="h-3.5 w-3.5"
+                  />
+                  <span className="text-xs font-medium text-foreground">Select All</span>
+                </label>
+                <div className="border-t border-border my-1.5" />
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                  {STATUSES.map(status => (
+                    <label
+                      key={status.value}
+                      className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded transition-colors"
+                    >
                       <Checkbox
-                        checked={filters.statuses.length === STATUSES.length}
-                        onCheckedChange={toggleAllStatuses}
+                        checked={filters.statuses.includes(status.value)}
+                        onCheckedChange={() => toggleStatus(status.value)}
                         className="h-3.5 w-3.5"
                       />
-                      <span className="text-xs font-medium text-foreground">Select All</span>
+                      <span className="text-xs text-foreground whitespace-nowrap">{status.label}</span>
                     </label>
-                    <div className="border-t border-border my-1.5" />
-                    {STATUSES.map(status => (
-                      <label
-                        key={status.value}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded transition-colors"
-                      >
-                        <Checkbox
-                          checked={filters.statuses.includes(status.value)}
-                          onCheckedChange={() => toggleStatus(status.value)}
-                          className="h-3.5 w-3.5"
-                        />
-                        <span className="text-xs text-foreground">{status.label}</span>
-                      </label>
-                    ))}
+                  ))}
+                </div>
+              </div>
+              
+              {/* DATE/TIMEFRAME Section (right side) */}
+              <div className="w-[180px] shrink-0 border-l border-border pl-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="h-4 w-4 text-amber-500" />
+                  <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Date / Timeframe</span>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">List Date</Label>
+                    <Input
+                      type="date"
+                      value={filters.listDateFrom}
+                      onChange={e => updateFilter("listDateFrom", e.target.value)}
+                      className="h-7 text-xs bg-background"
+                    />
                   </div>
-                </ScrollArea>
-              )}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Off-Market Timeframe</Label>
+                    <Select 
+                      value={filters.offMarketTimeframe} 
+                      onValueChange={v => updateFilter("offMarketTimeframe", v)}
+                    >
+                      <SelectTrigger className="h-7 text-xs bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        <SelectItem value="3months">Today - 3 Months</SelectItem>
+                        <SelectItem value="6months">Today - 6 Months</SelectItem>
+                        <SelectItem value="12months">Today - 12 Months</SelectItem>
+                        <SelectItem value="24months">Today - 24 Months</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
             </div>
-
-            {/* PRICE RANGE Section (directly below Status) */}
-            <div className="bg-card border border-border rounded-md shadow-sm overflow-hidden">
-              <div className="w-full flex items-center gap-2 px-3 py-2 bg-card border-l-4 border-l-green-500">
+            
+            {/* PRICE RANGE Section (below Status+Date, full width within this card) */}
+            <div className="border-t border-border px-3 py-3">
+              <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="h-4 w-4 text-green-600" />
                 <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Price Range</span>
               </div>
-              <div className="p-3 space-y-2">
-                {/* Min/Max side by side */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
-                    <div className="relative">
+              <div className="flex items-end gap-4">
+                {/* Min Price */}
+                <div className="flex-1">
+                  <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
                       <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
                       <Input
                         type="text"
@@ -386,10 +420,27 @@ const ListingSearchFilters = ({
                         className="h-7 text-xs bg-background pl-5 disabled:opacity-50"
                       />
                     </div>
+                    <label className="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                      <Checkbox
+                        checked={filters.hasNoMin}
+                        onCheckedChange={(checked) => {
+                          onFiltersChange({ 
+                            ...filters, 
+                            hasNoMin: !!checked,
+                            priceMin: checked ? "" : filters.priceMin
+                          });
+                        }}
+                        className="h-3 w-3"
+                      />
+                      <span className="text-[10px] text-muted-foreground">No Min</span>
+                    </label>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Max</Label>
-                    <div className="relative">
+                </div>
+                {/* Max Price */}
+                <div className="flex-1">
+                  <Label className="text-xs text-muted-foreground mb-1 block">Max</Label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
                       <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
                       <Input
                         type="text"
@@ -400,86 +451,28 @@ const ListingSearchFilters = ({
                         className="h-7 text-xs bg-background pl-5 disabled:opacity-50"
                       />
                     </div>
+                    <label className="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                      <Checkbox
+                        checked={filters.hasNoMax}
+                        onCheckedChange={(checked) => {
+                          onFiltersChange({ 
+                            ...filters, 
+                            hasNoMax: !!checked,
+                            priceMax: checked ? "" : filters.priceMax
+                          });
+                        }}
+                        className="h-3 w-3"
+                      />
+                      <span className="text-[10px] text-muted-foreground">No Max</span>
+                    </label>
                   </div>
-                </div>
-                {/* Checkboxes side by side */}
-                <div className="grid grid-cols-2 gap-2">
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <Checkbox
-                      checked={filters.hasNoMin}
-                      onCheckedChange={(checked) => {
-                        onFiltersChange({ 
-                          ...filters, 
-                          hasNoMin: !!checked,
-                          priceMin: checked ? "" : filters.priceMin
-                        });
-                      }}
-                      className="h-3 w-3"
-                    />
-                    <span className="text-[10px] text-muted-foreground">No Min</span>
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <Checkbox
-                      checked={filters.hasNoMax}
-                      onCheckedChange={(checked) => {
-                        onFiltersChange({ 
-                          ...filters, 
-                          hasNoMax: !!checked,
-                          priceMax: checked ? "" : filters.priceMax
-                        });
-                      }}
-                      className="h-3 w-3"
-                    />
-                    <span className="text-[10px] text-muted-foreground">No Max</span>
-                  </label>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* DATE/TIMEFRAME Section (Price removed) */}
-          <div className="bg-card border border-border rounded-md shadow-sm overflow-hidden">
-            <SectionHeader 
-              icon={Calendar} 
-              title="Date / Timeframe" 
-              isOpen={sectionsOpen.dateTimeframe}
-              onToggle={() => toggleSection("dateTimeframe")}
-              accentColor="border-l-amber-500"
-            />
-            {sectionsOpen.dateTimeframe && (
-              <div className="p-3 space-y-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">List Date</Label>
-                  <Input
-                    type="date"
-                    value={filters.listDateFrom}
-                    onChange={e => updateFilter("listDateFrom", e.target.value)}
-                    className="h-7 text-xs bg-background"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Off-Market Timeframe</Label>
-                  <Select 
-                    value={filters.offMarketTimeframe} 
-                    onValueChange={v => updateFilter("offMarketTimeframe", v)}
-                  >
-                    <SelectTrigger className="h-7 text-xs bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      <SelectItem value="3months">Today - 3 Months</SelectItem>
-                      <SelectItem value="6months">Today - 6 Months</SelectItem>
-                      <SelectItem value="12months">Today - 12 Months</SelectItem>
-                      <SelectItem value="24months">Today - 24 Months</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* STANDARD SEARCH CRITERIA Section */}
-          <div className="bg-card border border-border rounded-md shadow-sm overflow-hidden">
+          {/* STANDARD SEARCH CRITERIA Section (right) */}
+          <div className="w-[280px] shrink-0 bg-card border border-border rounded-md shadow-sm overflow-hidden">
             <SectionHeader 
               icon={Building} 
               title="Standard Search Criteria" 
@@ -825,7 +818,7 @@ const ListingSearchFilters = ({
                       onCheckedChange={checked => updateFilter("openHouses", checked as boolean)}
                       className="h-3.5 w-3.5"
                     />
-                    <span className="text-xs text-foreground">Open Houses</span>
+                    <span className="text-xs text-foreground">🎈 Open Houses</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
@@ -833,7 +826,7 @@ const ListingSearchFilters = ({
                       onCheckedChange={checked => updateFilter("brokerTours", checked as boolean)}
                       className="h-3.5 w-3.5"
                     />
-                    <span className="text-xs text-foreground">Broker Tours</span>
+                    <span className="text-xs text-foreground">🚗 Broker Tours</span>
                   </label>
                   <div className="pt-1">
                     <Label className="text-xs text-muted-foreground mb-1 block">For:</Label>
