@@ -1,54 +1,61 @@
-import { Radio, Lock, RefreshCw, MessageCircle } from "lucide-react";
+import { Radio, Home, RefreshCw, ArrowLeftRight } from "lucide-react";
 
 const CoreFeatures = () => {
   const features = [
     {
       icon: Radio,
       title: "Buyer Need Broadcasting",
-      description: "Broadcast qualified buyer needs directly to agents with matching inventory.",
+      description: "Reach listing agents instantly when you have a qualified buyer.",
     },
     {
-      icon: Lock,
+      icon: Home,
       title: "Off-Market Inventory",
-      description: "Access exclusive inventory before it hits the public market.",
+      description: "Access exclusive listings before they hit the public market.",
     },
     {
       icon: RefreshCw,
       title: "Referral Exchange",
-      description: "Seamless referral management with transparent commission tracking.",
+      description: "Connect with agents in other markets for seamless referrals.",
     },
     {
-      icon: MessageCircle,
+      icon: ArrowLeftRight,
       title: "Direct Connections",
       description: "Agent-to-agent communication without platform interference.",
     },
   ];
 
   return (
-    <section className="py-24 bg-slate-900">
+    <section className="py-24 bg-slate-50">
       <div className="container mx-auto px-6">
         {/* Section header */}
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4">
-            Core Capabilities
+        <div className="max-w-2xl mx-auto text-center mb-16">
+          <p className="text-sm font-medium tracking-wide uppercase text-blue-600 mb-3">
+            Features
           </p>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
-            Built for How Agents Actually Work
+          <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
+            Everything You Need to Close More Deals
           </h2>
+          <p className="text-slate-500 text-lg">
+            Tools designed by agents who understand real transaction workflows.
+          </p>
         </div>
 
-        {/* Feature grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-slate-700/30 max-w-6xl mx-auto">
+        {/* Features grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="bg-slate-900 p-8"
+              className="p-6 rounded-2xl bg-white border border-slate-200"
             >
-              <div className="w-10 h-10 rounded-sm bg-slate-800 border border-slate-700 flex items-center justify-center mb-5">
-                <feature.icon className="w-5 h-5 text-blue-500" />
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-5">
+                <feature.icon className="w-5 h-5 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-3">{feature.title}</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                {feature.description}
+              </p>
             </div>
           ))}
         </div>

@@ -1,64 +1,44 @@
-import { Home, Building2, Users, Share2, Sparkles, Award } from "lucide-react";
+import { Home, Building2, Users, Share2, GraduationCap, Award } from "lucide-react";
 
 const AudienceGrid = () => {
   const audiences = [
-    {
-      icon: Home,
-      title: "Residential Agents",
-      description: "Single-family and multi-family specialists",
-    },
-    {
-      icon: Building2,
-      title: "Commercial Brokers",
-      description: "Office, retail, and industrial professionals",
-    },
-    {
-      icon: Users,
-      title: "Teams",
-      description: "Collaborative groups seeking network leverage",
-    },
-    {
-      icon: Share2,
-      title: "Referral Specialists",
-      description: "Agents focused on geographic referral flow",
-    },
-    {
-      icon: Sparkles,
-      title: "New Agents",
-      description: "Professionals building their network foundation",
-    },
-    {
-      icon: Award,
-      title: "Veteran Brokers",
-      description: "Experienced professionals expanding reach",
-    },
+    { icon: Home, title: "Residential Agents" },
+    { icon: Building2, title: "Commercial Brokers" },
+    { icon: Users, title: "Teams" },
+    { icon: Share2, title: "Referral Specialists" },
+    { icon: GraduationCap, title: "New Agents" },
+    { icon: Award, title: "Veteran Brokers" },
   ];
 
   return (
-    <section className="py-24 bg-slate-950">
+    <section className="py-24 bg-white">
       <div className="container mx-auto px-6">
         {/* Section header */}
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4">
+        <div className="max-w-2xl mx-auto text-center mb-16">
+          <p className="text-sm font-medium tracking-wide uppercase text-blue-600 mb-3">
             Who It's For
           </p>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
             Built for Every Type of Agent
           </h2>
+          <p className="text-slate-500 text-lg">
+            Whether you're starting out or running a team, there's a place for you.
+          </p>
         </div>
 
         {/* Audience grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-700/30 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">
           {audiences.map((audience, index) => (
             <div
               key={index}
-              className="bg-slate-900 p-8"
+              className="text-center p-6 rounded-2xl bg-slate-50"
             >
-              <div className="w-10 h-10 rounded-sm bg-slate-800 border border-slate-700 flex items-center justify-center mb-5">
-                <audience.icon className="w-5 h-5 text-blue-500" />
+              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <audience.icon className="w-5 h-5 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{audience.title}</h3>
-              <p className="text-sm text-slate-400">{audience.description}</p>
+              <div className="text-sm font-medium text-slate-700">
+                {audience.title}
+              </div>
             </div>
           ))}
         </div>
