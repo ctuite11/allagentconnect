@@ -68,29 +68,29 @@ const getDaysOnMarket = (listDate?: string) => {
   return days >= 0 ? days : "-";
 };
 
-// Status badge with specified colors
+// Premium status badge with consistent styling
 const getStatusBadge = (status: string) => {
-  // Green = Active, Orange = Coming Soon, Red = Off-Market, Gray = Sold
+  // Using design system colors for badges
   const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-    active: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Active" },
-    new: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Active" },
-    coming_soon: { bg: "bg-amber-50", text: "text-amber-700", label: "Coming Soon" },
-    off_market: { bg: "bg-rose-50", text: "text-rose-700", label: "Off-Market" },
-    back_on_market: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Back on Market" },
-    price_changed: { bg: "bg-blue-50", text: "text-blue-700", label: "Price Change" },
-    under_agreement: { bg: "bg-violet-50", text: "text-violet-700", label: "Under Agreement" },
-    pending: { bg: "bg-violet-50", text: "text-violet-700", label: "Pending" },
-    sold: { bg: "bg-slate-100", text: "text-slate-600", label: "Sold" },
-    withdrawn: { bg: "bg-slate-100", text: "text-slate-500", label: "Withdrawn" },
-    expired: { bg: "bg-slate-100", text: "text-slate-500", label: "Expired" },
-    cancelled: { bg: "bg-slate-100", text: "text-slate-500", label: "Cancelled" },
+    active: { bg: "bg-[hsl(142,76%,95%)]", text: "text-[hsl(142,76%,22%)]", label: "Active" },
+    new: { bg: "bg-[hsl(142,76%,95%)]", text: "text-[hsl(142,76%,22%)]", label: "Active" },
+    coming_soon: { bg: "bg-[hsl(45,93%,94%)]", text: "text-[hsl(32,95%,30%)]", label: "Coming Soon" },
+    off_market: { bg: "bg-[hsl(270,91%,96%)]", text: "text-[hsl(271,91%,30%)]", label: "Off-Market" },
+    back_on_market: { bg: "bg-[hsl(142,76%,95%)]", text: "text-[hsl(142,76%,22%)]", label: "Back on Market" },
+    price_changed: { bg: "bg-[hsl(217,91%,95%)]", text: "text-[hsl(217,91%,35%)]", label: "Price Change" },
+    under_agreement: { bg: "bg-[hsl(270,91%,96%)]", text: "text-[hsl(271,91%,30%)]", label: "Under Agreement" },
+    pending: { bg: "bg-[hsl(270,91%,96%)]", text: "text-[hsl(271,91%,30%)]", label: "Pending" },
+    sold: { bg: "bg-[hsl(220,14%,96%)]", text: "text-[hsl(220,9%,35%)]", label: "Sold" },
+    withdrawn: { bg: "bg-[hsl(220,14%,96%)]", text: "text-[hsl(220,9%,46%)]", label: "Withdrawn" },
+    expired: { bg: "bg-[hsl(220,14%,96%)]", text: "text-[hsl(220,9%,46%)]", label: "Expired" },
+    cancelled: { bg: "bg-[hsl(220,14%,96%)]", text: "text-[hsl(220,9%,46%)]", label: "Cancelled" },
   };
 
-  const config = statusConfig[status] || { bg: "bg-slate-100", text: "text-slate-600", label: status };
+  const config = statusConfig[status] || { bg: "bg-[hsl(220,14%,96%)]", text: "text-[hsl(220,9%,35%)]", label: status };
 
   return (
     <Badge 
-      className={`${config.bg} ${config.text} border-0 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap`}
+      className={`${config.bg} ${config.text} border-0 text-[11px] font-medium px-2.5 py-1 whitespace-nowrap rounded-xl`}
     >
       {config.label}
     </Badge>
@@ -266,19 +266,19 @@ const ListingResultsTable = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
+            variant="secondary-outline"
             size="sm"
             onClick={toggleSelectAll}
-            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
+            className="h-9 px-4 text-sm font-medium"
           >
             {selectedRows.size === displayedListings.length && displayedListings.length > 0 ? "Deselect All" : "Select All"}
           </Button>
           <Button
-            variant="outline"
+            variant="secondary-outline"
             size="sm"
             disabled={selectedRows.size === 0 && !showSelectedOnly}
             onClick={handleKeepSelected}
-            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="h-9 px-4 text-sm font-medium disabled:opacity-50"
           >
             {showSelectedOnly ? (
               <>
@@ -293,36 +293,35 @@ const ListingResultsTable = ({
             )}
           </Button>
           <Button
-            variant="outline"
+            variant="secondary-outline"
             size="sm"
             onClick={handleSaveSearch}
-            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
+            className="h-9 px-4 text-sm font-medium"
           >
             <Bookmark className="h-4 w-4 mr-1.5" />
             Save Search
           </Button>
           <Button
-            variant="outline"
+            variant="secondary-outline"
             size="sm"
             disabled={selectedRows.size === 0}
             onClick={() => {
               if (selectedRows.size === 0) return;
-              // Open email share modal with simple email approach
               const listingIds = Array.from(selectedRows);
               const shareUrl = `${window.location.origin}/listing-search?ids=${listingIds.join(",")}`;
               navigator.clipboard.writeText(shareUrl);
               toast.success(`Copied link to ${selectedRows.size} listing${selectedRows.size > 1 ? 's' : ''}`);
             }}
-            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="h-9 px-4 text-sm font-medium disabled:opacity-50"
           >
             <Share2 className="h-4 w-4 mr-1.5" />
             Share
           </Button>
           <Button
-            variant="outline"
+            variant="secondary-outline"
             size="sm"
             onClick={() => setHotSheetDialogOpen(true)}
-            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
+            className="h-9 px-4 text-sm font-medium"
           >
             <FileSpreadsheet className="h-4 w-4 mr-1.5" />
             Save as Hot Sheet
@@ -429,9 +428,9 @@ const ListingResultsTable = ({
             return (
               <TableRow
                 key={listing.id}
-                className={`cursor-pointer transition-all group hover:bg-slate-50 hover:shadow-sm ${
-                  isOffMarket ? "bg-rose-50/30" : ""
-                } ${selectedRows.has(listing.id) ? "bg-blue-50" : ""}`}
+                className={`cursor-pointer transition-all group hover:bg-[hsl(220,14%,98%)] hover:shadow-[0_1px_3px_hsl(0,0%,0%,0.06)] ${
+                  isOffMarket ? "bg-[hsl(270,91%,98%)]" : ""
+                } ${selectedRows.has(listing.id) ? "bg-[hsl(217,91%,97%)]" : ""}`}
                 onClick={() => onRowClick(listing)}
               >
                 {/* Checkbox */}
