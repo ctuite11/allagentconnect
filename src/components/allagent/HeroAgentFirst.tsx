@@ -13,28 +13,24 @@ const HeroAgentFirst = () => {
   ];
 
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center bg-slate-950 overflow-hidden">
-      {/* Subtle grid pattern */}
+    <section className="relative min-h-[85vh] flex items-center justify-center bg-white overflow-hidden">
+      {/* Subtle background pattern */}
       <div 
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.4]"
         style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px'
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgb(209 213 219) 1px, transparent 0)`,
+          backgroundSize: '32px 32px'
         }}
       />
-      
-      {/* Gradient accent - subtle top glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/8 rounded-full blur-[120px]" />
 
-      <div className="container mx-auto px-6 relative z-10 py-20">
+      <div className="container mx-auto px-6 relative z-10 py-24">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge strip */}
-          <div className="flex flex-wrap justify-center gap-3 mb-10">
+          <div className="flex flex-wrap justify-center gap-3 mb-12">
             {badges.map((badge, index) => (
               <span
                 key={index}
-                className="px-4 py-1.5 text-xs font-medium tracking-wide uppercase text-slate-400 border border-slate-700/50 rounded-sm bg-slate-900/50"
+                className="px-4 py-2 text-xs font-medium tracking-wide uppercase text-slate-600 border border-slate-200 rounded-full bg-white shadow-sm"
               >
                 {badge}
               </span>
@@ -42,16 +38,16 @@ const HeroAgentFirst = () => {
           </div>
 
           {/* Main headline */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-white mb-6 leading-[0.95]">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-slate-900 mb-8 leading-[1.1]">
             More Agents.
             <br />
             More Listings.
             <br />
-            <span className="text-blue-500">More Deals.</span>
+            <span className="text-blue-600">More Deals.</span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
+          <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-14 leading-relaxed">
             The agent-first collaboration network where real connections create real deal flow.
           </p>
 
@@ -60,7 +56,7 @@ const HeroAgentFirst = () => {
             <Button
               size="lg"
               onClick={() => navigate("/auth")}
-              className="bg-white text-slate-950 hover:bg-slate-100 font-semibold px-8 py-6 text-base rounded-sm"
+              className="bg-slate-900 text-white hover:bg-slate-800 font-medium px-8 py-6 text-base rounded-full shadow-sm"
             >
               Join the Network
               <ArrowRight className="ml-2 w-4 h-4" />
@@ -69,7 +65,7 @@ const HeroAgentFirst = () => {
               variant="outline"
               size="lg"
               onClick={() => navigate("/submit-client-need")}
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white font-medium px-8 py-6 text-base rounded-sm bg-transparent"
+              className="border-slate-300 text-slate-700 hover:bg-slate-50 font-medium px-8 py-6 text-base rounded-full"
             >
               Post a Buyer Need
               <ChevronRight className="ml-1 w-4 h-4" />
@@ -77,9 +73,6 @@ const HeroAgentFirst = () => {
           </div>
         </div>
       </div>
-
-      {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-900 to-transparent" />
     </section>
   );
 };

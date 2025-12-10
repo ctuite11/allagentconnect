@@ -23,38 +23,38 @@ const NetworkEffect = () => {
   ];
 
   return (
-    <section className="py-24 bg-slate-950">
+    <section className="py-24 bg-white">
       <div className="container mx-auto px-6">
         {/* Section header */}
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4">
+        <div className="max-w-2xl mx-auto text-center mb-16">
+          <p className="text-sm font-medium tracking-wide uppercase text-blue-600 mb-3">
             Network Effect
           </p>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
             The More Agents, the More Powerful It Gets
           </h2>
-          <p className="text-slate-400 text-lg">
+          <p className="text-slate-500 text-lg">
             Participation creates momentum. Momentum creates deal velocity.
           </p>
         </div>
 
         {/* Stats grid */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="text-center p-8 border border-slate-800 bg-slate-900/50"
+              className="text-center p-8 rounded-2xl bg-slate-50"
             >
-              <div className="w-10 h-10 rounded-sm bg-blue-600/10 border border-blue-600/20 flex items-center justify-center mx-auto mb-6">
-                <stat.icon className="w-5 h-5 text-blue-500" />
+              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <stat.icon className="w-5 h-5 text-blue-600" />
               </div>
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
+              <div className="text-4xl font-semibold text-slate-900 mb-2 tracking-tight">
                 {stat.value}
               </div>
-              <div className="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-2">
+              <div className="text-sm font-medium text-slate-700 mb-1">
                 {stat.label}
               </div>
-              <div className="text-sm text-slate-500">
+              <div className="text-sm text-slate-400">
                 {stat.description}
               </div>
             </div>
