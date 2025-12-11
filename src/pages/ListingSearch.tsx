@@ -298,12 +298,22 @@ const ListingSearch = () => {
                     <RotateCcw className="h-3.5 w-3.5" />
                     Reset
                   </Button>
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <span className="font-medium text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md">
+                  <button
+                    onClick={() => {
+                      if (!loading && listings.length > 0) {
+                        const params = new URLSearchParams(window.location.search);
+                        window.open(`/listing-search?${params.toString()}`, '_blank');
+                      }
+                    }}
+                    disabled={loading || listings.length === 0}
+                    className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 disabled:opacity-50 disabled:cursor-default cursor-pointer transition-colors"
+                    title={listings.length > 0 ? "Open results in new tab" : ""}
+                  >
+                    <span className="font-medium text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md hover:bg-slate-200 transition-colors">
                       {loading ? "..." : listings.length}
                     </span>
                     <span>results</span>
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
