@@ -22,6 +22,7 @@ import AddListing from "./pages/AddListing";
 import AddRentalListing from "./pages/AddRentalListing";
 // EditListing removed - now handled by AddListing with :id param
 import PropertyDetail from "./pages/PropertyDetail";
+import AgentListingDetail from "./pages/AgentListingDetail";
 import ConsumerPropertyDetail from "./pages/ConsumerPropertyDetail";
 import AgentProfile from "./pages/AgentProfile";
 import AgentProfileEditor from "./pages/AgentProfileEditor";
@@ -98,6 +99,7 @@ const App = () => (
           <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent"><ManageListingPhotos /></RouteGuard>} />
           <Route path="/agent/listings/:id/floor-plans" element={<RouteGuard requireRole="agent"><ManageListingPhotos mode="floorPlans" /></RouteGuard>} />
           <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
+          <Route path="/agent/listings/:id" element={<RouteGuard requireRole="agent"><AgentListingDetail /></RouteGuard>} />
           <Route path="/buyer/auth" element={<BuyerAuth />} />
           <Route path="/submit-client-need" element={<SubmitClientNeed />} />
           <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
