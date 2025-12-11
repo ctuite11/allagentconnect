@@ -19,6 +19,7 @@ import {
   Mail,
   Share2,
   Eye,
+  EyeOff,
   Home,
   FileText,
   ChevronLeft,
@@ -26,12 +27,15 @@ import {
   Video,
   Globe,
   Maximize2,
-  Expand
+  Expand,
+  Edit2,
+  Send
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
+import { useAuthRole } from "@/hooks/useAuthRole";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColumn";
@@ -96,6 +100,12 @@ const PropertyDetail = () => {
   const [stats, setStats] = useState({ matches: 0, views: 0 });
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'video' | 'tour' | 'website'>('photos');
+  
+  // Role detection for dual-view
+  const { user, role, loading: roleLoading } = useAuthRole();
+  const isAgent = role === "agent";
+  const [viewAsClient, setViewAsClient] = useState(false);
+  const isAgentView = isAgent && !viewAsClient;
 
   // Track listing view
   useListingView(id);
@@ -314,6 +324,42 @@ const PropertyDetail = () => {
             </Button>
 
             <div className="flex items-center gap-2">
+              {/* Agent-only buttons */}
+              {isAgentView && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/agent/listings/edit/${id}`)}
+                    className="gap-2"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit Listing
+                  </Button>
+                </>
+              )}
+
+              {/* Agent View / Client View Toggle */}
+              {isAgent && (
+                <button
+                  type="button"
+                  onClick={() => setViewAsClient((v) => !v)}
+                  className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
+                >
+                  {viewAsClient ? (
+                    <>
+                      <Eye className="h-4 w-4" />
+                      Agent View
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="h-4 w-4" />
+                      Client View
+                    </>
+                  )}
+                </button>
+              )}
+
               <SocialShareMenu
                 url={getListingShareUrl(id!)}
                 title={`${listing.address}, ${listing.city}, ${listing.state}`}
@@ -525,13 +571,18 @@ const PropertyDetail = () => {
                   {daysOnMarket}
                 </div>
               )}
-              <div>
-                <span className="text-muted-foreground">Matches:</span> {stats.matches}
-              </div>
-              <div className="flex items-center gap-1">
-                <Eye className="w-4 h-4" />
-                <span>{stats.views}</span>
-              </div>
+              {/* Agent-only stats */}
+              {isAgentView && (
+                <>
+                  <div>
+                    <span className="text-muted-foreground">Matches:</span> {stats.matches}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Eye className="w-4 h-4" />
+                    <span>{stats.views}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -562,7 +613,7 @@ const PropertyDetail = () => {
               <ListingDetailSections 
                 listing={listing} 
                 agent={agentProfile}
-                isAgentView={true}
+                isAgentView={isAgentView}
               />
             </div>
 
@@ -570,7 +621,7 @@ const PropertyDetail = () => {
             <PropertyDetailRightColumn 
               listing={listing} 
               agent={agentProfile}
-              isAgentView={true}
+              isAgentView={isAgentView}
             />
           </div>
         </div>
