@@ -285,8 +285,8 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
           {/* Geographic Selection - Required */}
           <Collapsible open={geoExpanded} onOpenChange={setGeoExpanded}>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <CollapsibleTrigger className="w-full">
-                <div className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors">
+              <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
+                <div className={`flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors ${geoExpanded ? 'border-l-2 border-l-teal-500' : ''}`}>
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-teal-500/10 flex items-center justify-center">
                       <MapPin className="h-4 w-4 text-teal-600 dark:text-teal-400" />
@@ -393,8 +393,8 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
           {/* Property Types */}
           <Collapsible open={propertyExpanded} onOpenChange={setPropertyExpanded}>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <CollapsibleTrigger className="w-full">
-                <div className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors">
+              <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
+                <div className={`flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors ${propertyExpanded ? 'border-l-2 border-l-indigo-500' : ''}`}>
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
                       <Home className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
@@ -436,8 +436,8 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
           {/* Price Range */}
           <Collapsible open={priceExpanded} onOpenChange={setPriceExpanded}>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <CollapsibleTrigger className="w-full">
-                <div className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors">
+              <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
+                <div className={`flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors ${priceExpanded ? 'border-l-2 border-l-green-500' : ''}`}>
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
                       <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
