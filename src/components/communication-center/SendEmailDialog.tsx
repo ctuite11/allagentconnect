@@ -253,54 +253,60 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Send Email</DialogTitle>
-          <DialogDescription>
-            Send a targeted email to users whose preferences match your selected geography
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+        <div className="p-6 pb-0">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">Send Email</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Send a targeted email to users whose preferences match your selected geography
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <div className="space-y-6 mt-4">
+        <div className="space-y-5 p-6">
           {/* Recipient Count */}
-          <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                {loadingCount ? (
-                  <span className="text-sm text-muted-foreground">Calculating recipients...</span>
-                ) : recipientCount !== null ? (
-                  <span className="text-sm">
-                    This email will be sent to <strong className="text-foreground">{recipientCount}</strong> users
-                  </span>
-                ) : (
-                  <span className="text-sm text-muted-foreground">Select criteria to see recipient count</span>
-                )}
+          <div className="bg-secondary/50 border border-border rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Users className="h-4 w-4 text-primary" />
               </div>
-            </CardContent>
-          </Card>
+              {loadingCount ? (
+                <span className="text-sm text-muted-foreground">Calculating recipients...</span>
+              ) : recipientCount !== null ? (
+                <span className="text-sm">
+                  This email will be sent to <strong className="text-primary font-semibold">{recipientCount}</strong> users
+                </span>
+              ) : (
+                <span className="text-sm text-muted-foreground">Select criteria to see recipient count</span>
+              )}
+            </div>
+          </div>
 
           {/* Geographic Selection - Required */}
           <Collapsible open={geoExpanded} onOpenChange={setGeoExpanded}>
-            <Card className="border-l-4 border-l-teal-500">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <CollapsibleTrigger className="w-full">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-teal-500" />
-                    <span className="font-medium">Geographic Area</span>
-                    <span className="text-xs text-red-500">*Required</span>
+                <div className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-teal-500/10 flex items-center justify-center">
+                      <MapPin className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                    </div>
+                    <span className="font-medium text-foreground">Geographic Area</span>
+                    <span className="text-xs font-medium text-destructive">*Required</span>
                   </div>
-                  {geoExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </CardContent>
+                  <div className="h-6 w-6 rounded-md bg-secondary flex items-center justify-center">
+                    {geoExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                  </div>
+                </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="px-4 pb-4 space-y-4">
+                <div className="px-4 pb-5 pt-2 space-y-4 border-t border-border bg-secondary/20">
                   {/* State and County */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm">State</Label>
+                      <Label className="text-sm font-medium text-foreground">State</Label>
                       <Select value={state} onValueChange={setState}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-10 rounded-lg border-border bg-background">
                           <SelectValue placeholder="Select state" />
                         </SelectTrigger>
                         <SelectContent>
@@ -313,9 +319,9 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm">County</Label>
+                      <Label className="text-sm font-medium text-foreground">County</Label>
                       <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-10 rounded-lg border-border bg-background">
                           <SelectValue placeholder="All counties" />
                         </SelectTrigger>
                         <SelectContent>
@@ -333,26 +339,26 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                   {/* Towns */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm">Towns</Label>
+                      <Label className="text-sm font-medium text-foreground">Towns</Label>
                       <Popover open={townsOpen} onOpenChange={setTownsOpen}>
                         <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start font-normal">
+                          <Button variant="outline" className="w-full justify-start font-normal h-10 rounded-lg border-border bg-background hover:bg-secondary/50">
                             {selectedCities.length > 0 
                               ? `${selectedCities.length} selected` 
                               : "Select towns..."}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0" align="start">
-                          <div className="p-2 border-b">
+                        <PopoverContent className="w-[320px] p-0 rounded-xl border-border shadow-lg" align="start">
+                          <div className="p-3 border-b border-border bg-secondary/30">
                             <Input
                               placeholder="Search towns..."
                               value={citySearch}
                               onChange={(e) => setCitySearch(e.target.value)}
-                              className="h-8"
+                              className="h-9 rounded-lg border-border bg-background"
                             />
                           </div>
-                          <ScrollArea className="h-[200px]">
-                            <div className="p-2">
+                          <ScrollArea className="h-[220px]">
+                            <div className="p-2 bg-background">
                               <TownsPicker
                                 towns={townsList.filter(t => 
                                   !citySearch || t.toLowerCase().includes(citySearch.toLowerCase())
@@ -370,8 +376,8 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                       </Popover>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm">Selected</Label>
-                      <div className="min-h-[38px] p-2 border rounded-md bg-muted/30 text-sm">
+                      <Label className="text-sm font-medium text-foreground">Selected</Label>
+                      <div className="min-h-[40px] p-3 border border-border rounded-lg bg-secondary/30 text-sm">
                         {selectedCities.length > 0 
                           ? selectedCities.slice(0, 3).join(", ") + (selectedCities.length > 3 ? ` +${selectedCities.length - 3} more` : "")
                           : <span className="text-muted-foreground">No towns selected</span>
@@ -381,35 +387,42 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                   </div>
                 </div>
               </CollapsibleContent>
-            </Card>
+            </div>
           </Collapsible>
 
           {/* Property Types */}
           <Collapsible open={propertyExpanded} onOpenChange={setPropertyExpanded}>
-            <Card className="border-l-4 border-l-indigo-500">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <CollapsibleTrigger className="w-full">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Home className="h-4 w-4 text-indigo-500" />
-                    <span className="font-medium">Property Types</span>
+                <div className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                      <Home className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <span className="font-medium text-foreground">Property Types</span>
                     {propertyTypes.length > 0 && (
-                      <span className="text-xs text-muted-foreground">({propertyTypes.length} selected)</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium">
+                        {propertyTypes.length} selected
+                      </span>
                     )}
                   </div>
-                  {propertyExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </CardContent>
+                  <div className="h-6 w-6 rounded-md bg-secondary flex items-center justify-center">
+                    {propertyExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                  </div>
+                </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="px-4 pb-4">
-                  <div className="grid grid-cols-3 gap-2">
+                <div className="px-4 pb-5 pt-2 border-t border-border bg-secondary/20">
+                  <div className="grid grid-cols-3 gap-x-6 gap-y-3">
                     {PROPERTY_TYPES.map((type) => (
-                      <div key={type.value} className="flex items-center space-x-2">
+                      <div key={type.value} className="flex items-center space-x-2.5">
                         <Checkbox
                           id={type.value}
                           checked={propertyTypes.includes(type.value)}
                           onCheckedChange={() => handlePropertyTypeToggle(type.value)}
+                          className="rounded-[4px] border-border data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                         />
-                        <label htmlFor={type.value} className="text-sm cursor-pointer">
+                        <label htmlFor={type.value} className="text-sm cursor-pointer text-foreground">
                           {type.label}
                         </label>
                       </div>
@@ -417,56 +430,62 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                   </div>
                 </div>
               </CollapsibleContent>
-            </Card>
+            </div>
           </Collapsible>
 
           {/* Price Range */}
           <Collapsible open={priceExpanded} onOpenChange={setPriceExpanded}>
-            <Card className="border-l-4 border-l-green-500">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <CollapsibleTrigger className="w-full">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-500" />
-                    <span className="font-medium">Price Range</span>
+                <div className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                      <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
+                    <span className="font-medium text-foreground">Price Range</span>
                     {(minPrice || maxPrice) && (
-                      <span className="text-xs text-muted-foreground">
-                        ({minPrice ? `$${parseInt(minPrice).toLocaleString()}` : "Any"} - {maxPrice ? `$${parseInt(maxPrice).toLocaleString()}` : "Any"})
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium">
+                        {minPrice ? `$${parseInt(minPrice).toLocaleString()}` : "Any"} - {maxPrice ? `$${parseInt(maxPrice).toLocaleString()}` : "Any"}
                       </span>
                     )}
                   </div>
-                  {priceExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </CardContent>
+                  <div className="h-6 w-6 rounded-md bg-secondary flex items-center justify-center">
+                    {priceExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                  </div>
+                </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="px-4 pb-4">
+                <div className="px-4 pb-5 pt-2 border-t border-border bg-secondary/20">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm">Min Price</Label>
+                      <Label className="text-sm font-medium text-foreground">Min Price</Label>
                       <Input
                         placeholder="No minimum"
                         value={minPrice}
                         onChange={(e) => setMinPrice(e.target.value.replace(/[^0-9]/g, ''))}
+                        className="h-10 rounded-lg border-border bg-background"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm">Max Price</Label>
+                      <Label className="text-sm font-medium text-foreground">Max Price</Label>
                       <Input
                         placeholder="No maximum"
                         value={maxPrice}
                         onChange={(e) => setMaxPrice(e.target.value.replace(/[^0-9]/g, ''))}
+                        className="h-10 rounded-lg border-border bg-background"
                       />
                     </div>
                   </div>
                 </div>
               </CollapsibleContent>
-            </Card>
+            </div>
           </Collapsible>
 
           {/* Template Selection */}
-          <div className="space-y-2">
-            <Label>Template</Label>
+          <div className="space-y-2.5">
+            <Label className="text-sm font-medium text-foreground">Template</Label>
             <Select value={template} onValueChange={setTemplate}>
-              <SelectTrigger>
+              <SelectTrigger className="h-10 rounded-lg border-border bg-background">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -480,31 +499,33 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
           </div>
 
           {/* Subject */}
-          <div className="space-y-2">
-            <Label>Subject *</Label>
+          <div className="space-y-2.5">
+            <Label className="text-sm font-medium text-foreground">Subject *</Label>
             <Input
               placeholder="Email subject..."
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               maxLength={200}
+              className="h-10 rounded-lg border-border bg-background"
             />
           </div>
 
           {/* Message */}
-          <div className="space-y-2">
-            <Label>Message *</Label>
+          <div className="space-y-2.5">
+            <Label className="text-sm font-medium text-foreground">Message *</Label>
             <Textarea
               placeholder="Your message..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={6}
               maxLength={5000}
+              className="rounded-lg border-border bg-background resize-none"
             />
             <p className="text-xs text-muted-foreground text-right">{message.length}/5000</p>
           </div>
 
           {/* Reply Notice */}
-          <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl">
             <Info className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <p className="text-sm text-amber-800 dark:text-amber-200">
               Replies will be delivered to your email inbox, not to DirectConnectMLS.
@@ -512,14 +533,14 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={handleClose} disabled={sending}>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={handleClose} disabled={sending} className="rounded-lg">
               Cancel
             </Button>
             <Button 
               onClick={handleSend} 
               disabled={sending || !subject.trim() || !message.trim() || !state}
-              className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white"
+              className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white rounded-lg"
             >
               {sending ? (
                 <>
