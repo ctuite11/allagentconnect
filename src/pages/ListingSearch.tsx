@@ -173,40 +173,43 @@ const ListingSearch = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
 
       <main className="flex-1 pt-20">
-        <div className="max-w-[1280px] mx-auto px-6">
+        <div className="max-w-[1280px] mx-auto px-6 py-6">
           {/* Page Header */}
-          <div className="bg-white border border-slate-200 rounded-lg shadow-sm mb-4">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-foreground font-display">Listing Search</h1>
+            <p className="text-muted-foreground mt-1">
+              Search MLS and off-market inventory
+            </p>
+          </div>
+          
+          {/* Action Bar */}
+          <div className="bg-card border border-border rounded-lg shadow-sm mb-4">
             <div className="px-4 py-3">
               <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-xl font-semibold text-slate-900">Listing Search</h1>
-                  <p className="text-sm text-slate-500 mt-0.5">
-                    Search MLS and off-market inventory
-                  </p>
-                </div>
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleReset}
-                    className="h-8 gap-1.5 text-sm border-slate-200 hover:bg-slate-50"
+                    className="h-8 gap-1.5 text-sm"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                     Reset
                   </Button>
-                  
+                </div>
+                <div className="flex items-center gap-3">
                   {/* Results counter - clickable */}
                   <button
                     onClick={handleViewResults}
                     disabled={countLoading || resultCount === 0}
-                    className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 disabled:opacity-50 disabled:cursor-default cursor-pointer transition-colors group"
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-default cursor-pointer transition-colors group"
                     title={resultCount !== null && resultCount > 0 ? "View results" : ""}
                   >
-                    <span className="font-medium text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md group-hover:bg-slate-200 transition-colors">
+                    <span className="font-medium text-foreground bg-muted px-2.5 py-1 rounded-md group-hover:bg-muted/80 transition-colors">
                       {countLoading ? "..." : resultCount ?? 0}
                     </span>
                     <span>results</span>
@@ -227,7 +230,7 @@ const ListingSearch = () => {
                     size="sm"
                     onClick={handleViewResultsNewTab}
                     disabled={countLoading || resultCount === 0}
-                    className="h-8 gap-1.5 text-sm border-slate-200 hover:bg-slate-50"
+                    className="h-8 gap-1.5 text-sm"
                     title="Open results in new tab"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
