@@ -751,7 +751,7 @@ const ListingSearchFilters = ({
                       )}
                     </div>
                     
-                    <div className="h-[150px] border border-border rounded bg-background overflow-y-auto p-2">
+                    <div className="min-h-[280px] max-h-[320px] border border-border rounded bg-background overflow-y-auto p-2">
                       <button
                         onClick={addAllTowns}
                         className="w-full text-left px-2 py-1 text-xs text-primary hover:bg-muted rounded transition-colors font-medium mb-1"
@@ -787,7 +787,7 @@ const ListingSearchFilters = ({
                         </Button>
                       )}
                     </div>
-                    <div className="h-[150px] border border-border rounded bg-background overflow-y-auto p-2">
+                    <div className="min-h-[280px] max-h-[320px] border border-border rounded bg-background overflow-y-auto p-2">
                       {filters.selectedTowns.length === 0 ? (
                         <p className="text-xs text-muted-foreground italic px-2 py-1">No towns selected</p>
                       ) : (
@@ -957,7 +957,6 @@ const ListingSearchFilters = ({
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
