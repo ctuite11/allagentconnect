@@ -400,8 +400,8 @@ export default function AgentSuccessHub() {
     {
       icon: <Megaphone className="w-6 h-6" />,
       title: "Communications Center",
-      description: "Agent-to-agent alerts & discussions",
-      route: "/client-needs",
+      description: "Outbound email campaigns & logs",
+      route: "/communication-center",
       accentColor: "border-l-green-500",
     },
     {
