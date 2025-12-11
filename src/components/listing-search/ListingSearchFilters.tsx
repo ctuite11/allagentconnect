@@ -81,7 +81,7 @@ const parseFormattedNumber = (value: string): string => {
 
 export const initialFilters: FilterState = {
   propertyTypes: [],
-  statuses: ["active", "new", "price_changed", "back_on_market", "coming_soon"],
+  statuses: ["new", "active", "price_changed", "back_on_market", "extended", "reactivated", "coming_soon", "private"],
   bedsMin: "",
   bedsMax: "",
   bathsMin: "",
@@ -139,17 +139,17 @@ const STATUSES = [
   { value: "back_on_market", label: "Back on Market" },
   { value: "extended", label: "Extended" },
   { value: "reactivated", label: "Reactivated" },
+  { value: "coming_soon", label: "Coming Soon" },
+  { value: "private", label: "Private" },
   { value: "under_agreement", label: "Under Agreement" },
   { value: "pending", label: "Pending" },
   { value: "contingent", label: "Contingent" },
-  { value: "sold", label: "Sold" },
-  { value: "rented", label: "Rented" },
   { value: "temporarily_withdrawn", label: "Temporarily Withdrawn" },
   { value: "withdrawn", label: "Withdrawn" },
   { value: "expired", label: "Expired" },
   { value: "canceled", label: "Canceled" },
-  { value: "coming_soon", label: "Coming Soon" },
-  { value: "off_market", label: "Off-Market" },
+  { value: "sold", label: "Sold" },
+  { value: "rented", label: "Rented" },
 ];
 
 interface ListingSearchFiltersProps {
