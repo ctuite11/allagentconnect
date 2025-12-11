@@ -16,6 +16,7 @@ import ListingSearchResults from "./pages/ListingSearchResults";
 
 import SubmitClientNeed from "./pages/SubmitClientNeed";
 import ClientNeedsDashboard from "./pages/ClientNeedsDashboard";
+import CommunicationCenter from "./pages/CommunicationCenter";
 import ListingIntel from "./pages/ListingIntel";
 import AddListing from "./pages/AddListing";
 import AddRentalListing from "./pages/AddRentalListing";
@@ -100,6 +101,7 @@ const App = () => (
           <Route path="/buyer/auth" element={<BuyerAuth />} />
           <Route path="/submit-client-need" element={<SubmitClientNeed />} />
           <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
+          <Route path="/communication-center" element={<RouteGuard requireRole="agent"><CommunicationCenter /></RouteGuard>} />
           <Route path="/listing-intel" element={<RouteGuard requireRole="agent"><ListingIntel /></RouteGuard>} />
           <Route path="/add-rental-listing" element={<RouteGuard requireRole="agent"><AddRentalListing /></RouteGuard>} />
           <Route path="/property/:id" element={<PropertyDetail />} />
