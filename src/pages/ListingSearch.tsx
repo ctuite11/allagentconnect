@@ -277,48 +277,48 @@ const ListingSearch = () => {
       <Navigation />
 
       <main className="flex-1 pt-16">
-        {/* Page Header */}
-        <div className="bg-white border-b border-slate-200">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-xl font-semibold text-slate-900">Listing Search</h1>
-                <p className="text-sm text-slate-500 mt-0.5">
-                  Search MLS and off-market inventory
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleReset}
-                  className="h-8 gap-1.5 text-sm border-slate-200 hover:bg-slate-50"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  Reset
-                </Button>
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <span className="font-medium text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md">
-                    {loading ? "..." : listings.length}
-                  </span>
-                  <span>results</span>
+        <div className="max-w-[1280px] mx-auto px-6">
+          {/* Page Header */}
+          <div className="bg-white border-b border-slate-200 -mx-6 px-6">
+            <div className="py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-xl font-semibold text-slate-900">Listing Search</h1>
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    Search MLS and off-market inventory
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReset}
+                    className="h-8 gap-1.5 text-sm border-slate-200 hover:bg-slate-50"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Reset
+                  </Button>
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <span className="font-medium text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md">
+                      {loading ? "..." : listings.length}
+                    </span>
+                    <span>results</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Filter Bar */}
-        <ListingSearchFilters
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          counties={counties}
-          onSearch={handleSearch}
-        />
+          {/* Filter Bar */}
+          <ListingSearchFilters
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            counties={counties}
+            onSearch={handleSearch}
+          />
 
-        {/* Results Table */}
-        <section className="flex-1">
-          <div className="container mx-auto px-4 py-4">
+          {/* Results Table */}
+          <section className="py-4">
             <ListingResultsTable
               listings={listings}
               loading={loading}
@@ -328,8 +328,8 @@ const ListingSearch = () => {
               onRowClick={handleRowClick}
               filters={filters}
             />
-          </div>
-        </section>
+          </section>
+        </div>
       </main>
 
       <Footer />

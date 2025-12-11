@@ -279,8 +279,7 @@ const ListingSearchFilters = ({
   const filteredCounties = counties.filter(c => c.state === filters.state);
 
   return (
-    <div className="bg-muted/30 border-b border-border">
-      <div className="container mx-auto px-4 py-4">
+    <div className="bg-muted/30 border-b border-border -mx-6 px-6 py-4">
         {/* ROW 1: 3-Column Grid - Property Type (narrow) | Status+Date+Price (wide) | Standard Criteria */}
         <div className="flex gap-4 mb-4">
           
@@ -958,7 +957,6 @@ const ListingSearchFilters = ({
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
