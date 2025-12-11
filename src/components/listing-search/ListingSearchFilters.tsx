@@ -957,6 +957,7 @@ const ListingSearchFilters = ({
           </div>
         </div>
       </div>
+    </div>
   );
 };
 
