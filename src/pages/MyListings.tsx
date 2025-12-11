@@ -276,7 +276,7 @@ function MyListingsView({
   };
 
   return (
-    <div className="flex-1 max-w-[1280px] mx-auto px-6 py-6 space-y-6">
+    <div className="max-w-[1280px] mx-auto px-6 py-6 space-y-6">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground font-display">My Listings</h1>
@@ -434,13 +434,13 @@ function MyListingsView({
 
       {/* GRID VIEW */}
       {view === "grid" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             return (
               <div
                 key={l.id}
-                className="border border-border rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-lg transition"
+                className="border border-border rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition"
               >
                 <div className="w-full h-48 bg-muted overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
                   <img src={thumbnail || "/placeholder.svg"} alt={l.address} className="w-full h-full object-cover" />
@@ -507,7 +507,7 @@ function MyListingsView({
       {/* LIST VIEW – MLS-style tools + quick edit near price/status */}
       {/* LIST VIEW – MLS-style tools + quick edit near price/status */}
       {view === "list" && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             const isEditing = editingId === l.id;
@@ -526,10 +526,10 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-                className="border border-border rounded-xl bg-card p-4 shadow-sm hover:shadow-md transition"
+                className="border border-border rounded-lg bg-card shadow-sm hover:shadow-md transition overflow-hidden"
               >
-                {/* Top tools bar – NO Views here */}
-                <div className="flex flex-wrap items-center gap-3 text-xs border-b border-border pb-2 mb-3">
+                {/* Top tools bar */}
+                <div className="flex flex-wrap items-center gap-2 text-xs px-4 py-2 bg-muted/30 border-b border-border">
                   <button
                     className="px-3 py-1 rounded-full bg-card border border-border text-foreground hover:bg-accent transition"
                     onClick={() => onPhotos(l.id)}
@@ -540,8 +540,8 @@ function MyListingsView({
                   <button
                     className={`px-3 py-1 rounded-full transition flex items-center gap-1 ${
                       hasPublicOpenHouse 
-                        ? "bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100"
-                        : "bg-green-50 border border-green-200 text-green-700 hover:bg-green-100"
+                        ? "bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300"
+                        : "bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300"
                     }`}
                     onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                   >
@@ -550,8 +550,8 @@ function MyListingsView({
                   <button
                     className={`px-3 py-1 rounded-full transition flex items-center gap-1 ${
                       hasBrokerTour 
-                        ? "bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100"
-                        : "bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100"
+                        ? "bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300"
+                        : "bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-300"
                     }`}
                     onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                   >
@@ -581,7 +581,9 @@ function MyListingsView({
                   </button>
                 </div>
 
-                <div className="flex items-center gap-4">
+                {/* Main content section */}
+                <div className="p-4">
+                  <div className="flex items-center gap-4">
                   {/* Checkbox for draft selection */}
                   {activeStatus === "draft" && l.status === "draft" && (
                     <div className="shrink-0">
@@ -725,6 +727,7 @@ function MyListingsView({
                       >
                         <Trash2 size={18} />
                       </button>
+                    </div>
                     </div>
                   </div>
                 </div>
