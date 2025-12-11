@@ -12,6 +12,7 @@ import AgentSuccessHub from "./pages/AgentSuccessHub";
 import BuyerAuth from "./pages/BuyerAuth";
 import MLSPINSearch from "./pages/MLSPINSearch";
 import ListingSearch from "./pages/ListingSearch";
+import ListingSearchResults from "./pages/ListingSearchResults";
 
 import SubmitClientNeed from "./pages/SubmitClientNeed";
 import ClientNeedsDashboard from "./pages/ClientNeedsDashboard";
@@ -117,6 +118,7 @@ const App = () => (
           <Route path="/members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} /></RouteGuard>} />
           <Route path="/agent-search" element={<MLSPINSearch />} />
           <Route path="/listing-search" element={<ListingSearch />} />
+          <Route path="/listing-results" element={<ListingSearchResults />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/my-favorites" element={<MyFavorites />} />
           <Route path="/hot-sheets" element={<RouteGuard requireRole="agent"><HotSheets /></RouteGuard>} />

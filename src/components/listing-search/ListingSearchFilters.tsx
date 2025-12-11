@@ -279,109 +279,104 @@ const ListingSearchFilters = ({
   const filteredCounties = counties.filter(c => c.state === filters.state);
 
   return (
-    <div className="bg-muted/30 border-b border-border -mx-6 px-6 py-4">
+    <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-4">
         {/* ROW 1: 3-Column Grid - Property Type (narrow) | Status+Date+Price (wide) | Standard Criteria */}
         <div className="flex gap-4 mb-4">
           
           {/* PROPERTY TYPE Section (narrow) */}
-          <div className="w-[160px] shrink-0 bg-card border border-border rounded-md shadow-sm overflow-hidden">
-            <SectionHeader 
-              icon={Home} 
-              title="Property Type" 
-              isOpen={sectionsOpen.propertyType}
-              onToggle={() => toggleSection("propertyType")}
-              accentColor="border-l-blue-500"
-            />
-            {sectionsOpen.propertyType && (
-              <div className="p-3 space-y-1.5">
-                <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded transition-colors">
+          <div className="w-[160px] shrink-0 bg-slate-50 border border-slate-200 rounded-md overflow-hidden">
+            <div className="w-full flex items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-200">
+              <Home className="h-4 w-4 text-blue-500" />
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-700">Property Type</span>
+            </div>
+            <div className="p-3 space-y-1.5">
+              <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded transition-colors">
+                <Checkbox
+                  checked={filters.propertyTypes.length === PROPERTY_TYPES.length}
+                  onCheckedChange={toggleAllPropertyTypes}
+                  className="h-3.5 w-3.5"
+                />
+                <span className="text-xs font-medium text-slate-700">Select All</span>
+              </label>
+              {PROPERTY_TYPES.map(type => (
+                <label
+                  key={type.value}
+                  className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded transition-colors"
+                >
                   <Checkbox
-                    checked={filters.propertyTypes.length === PROPERTY_TYPES.length}
-                    onCheckedChange={toggleAllPropertyTypes}
+                    checked={filters.propertyTypes.includes(type.value)}
+                    onCheckedChange={() => togglePropertyType(type.value)}
                     className="h-3.5 w-3.5"
                   />
-                  <span className="text-xs font-medium text-foreground">Select All</span>
+                  <span className="text-xs text-slate-600">{type.label}</span>
                 </label>
-                {PROPERTY_TYPES.map(type => (
-                  <label
-                    key={type.value}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded transition-colors"
-                  >
-                    <Checkbox
-                      checked={filters.propertyTypes.includes(type.value)}
-                      onCheckedChange={() => togglePropertyType(type.value)}
-                      className="h-3.5 w-3.5"
-                    />
-                    <span className="text-xs text-foreground">{type.label}</span>
-                  </label>
-                ))}
-              </div>
-            )}
+              ))}
+            </div>
           </div>
 
           {/* MIDDLE SECTION: Status + Date/Timeframe + Price Range (wide, combined card) */}
-          <div className="flex-1 bg-card border border-border rounded-md shadow-sm overflow-hidden">
+          <div className="flex-1 bg-slate-50 border border-slate-200 rounded-md overflow-hidden">
             {/* STATUS + DATE/TIMEFRAME Header */}
-            <div className="w-full flex items-center gap-2 px-3 py-2 bg-card border-l-4 border-l-teal-500">
-              <Tag className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Status & Date</span>
+            <div className="w-full flex items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-200">
+              <Tag className="h-4 w-4 text-teal-500" />
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-700">Status & Date</span>
             </div>
             
-            {/* Top row: Status (left) + Date/Timeframe (right) */}
+            {/* Top row: Status (left) + Date/Timeframe (right, vertically centered) */}
             <div className="p-3 flex gap-4">
               {/* STATUS Section - 2 columns, no scroll */}
               <div className="flex-1">
-                <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded transition-colors mb-1">
+                <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded transition-colors mb-1">
                   <Checkbox
                     checked={filters.statuses.length === STATUSES.length}
                     onCheckedChange={toggleAllStatuses}
                     className="h-3.5 w-3.5"
                   />
-                  <span className="text-xs font-medium text-foreground">Select All</span>
+                  <span className="text-xs font-medium text-slate-700">Select All</span>
                 </label>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                   {STATUSES.map(status => (
                     <label
                       key={status.value}
-                      className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded transition-colors"
+                      className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded transition-colors"
                     >
                       <Checkbox
                         checked={filters.statuses.includes(status.value)}
                         onCheckedChange={() => toggleStatus(status.value)}
                         className="h-3.5 w-3.5"
                       />
-                      <span className="text-xs text-foreground whitespace-nowrap">{status.label}</span>
+                      <span className="text-xs text-slate-600 whitespace-nowrap">{status.label}</span>
                     </label>
                   ))}
                 </div>
               </div>
               
-              {/* DATE/TIMEFRAME Section (right side) */}
-              <div className="w-[180px] shrink-0 pl-4">
-                <div className="flex items-center gap-2 mb-2">
+              {/* DATE/TIMEFRAME Section (right side, vertically centered) */}
+              <div className="w-[180px] shrink-0 pl-4 border-l border-slate-200 flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-3">
                   <Calendar className="h-4 w-4 text-amber-500" />
-                  <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Date / Timeframe</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-700">Date / Timeframe</span>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">List Date</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">List Date</Label>
                     <Input
                       type="date"
                       value={filters.listDateFrom}
                       onChange={e => updateFilter("listDateFrom", e.target.value)}
-                      className="h-7 text-xs bg-background"
+                      className="h-7 text-xs bg-white border-slate-200"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Off-Market Timeframe</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">Off-Market Timeframe</Label>
                     <Select 
                       value={filters.offMarketTimeframe} 
                       onValueChange={v => updateFilter("offMarketTimeframe", v)}
                     >
-                      <SelectTrigger className="h-7 text-xs bg-background">
+                      <SelectTrigger className="h-7 text-xs bg-white border-slate-200">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover">
+                      <SelectContent className="bg-white">
                         <SelectItem value="3months">Today - 3 Months</SelectItem>
                         <SelectItem value="6months">Today - 6 Months</SelectItem>
                         <SelectItem value="12months">Today - 12 Months</SelectItem>
@@ -394,25 +389,25 @@ const ListingSearchFilters = ({
             </div>
             
             {/* PRICE RANGE Section (below Status+Date, full width within this card) */}
-            <div className="px-3 py-3">
+            <div className="px-3 py-3 border-t border-slate-200">
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="h-4 w-4 text-green-600" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Price Range</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-700">Price Range</span>
               </div>
               <div className="flex items-end gap-4">
                 {/* Min Price */}
                 <div className="flex-1">
-                  <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
+                  <Label className="text-xs text-slate-500 mb-1 block">Min</Label>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
-                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">$</span>
                       <Input
                         type="text"
                         placeholder="100,000"
                         value={filters.hasNoMin ? "" : formatNumberWithCommas(filters.priceMin)}
                         onChange={e => updateFilter("priceMin", parseFormattedNumber(e.target.value))}
                         disabled={filters.hasNoMin}
-                        className="h-7 text-xs bg-background pl-5 disabled:opacity-50"
+                        className="h-7 text-xs bg-white border-slate-200 pl-5 disabled:opacity-50"
                       />
                     </div>
                     <label className="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
@@ -427,23 +422,23 @@ const ListingSearchFilters = ({
                         }}
                         className="h-3 w-3"
                       />
-                      <span className="text-[10px] text-muted-foreground">No Min</span>
+                      <span className="text-[10px] text-slate-500">No Min</span>
                     </label>
                   </div>
                 </div>
                 {/* Max Price */}
                 <div className="flex-1">
-                  <Label className="text-xs text-muted-foreground mb-1 block">Max</Label>
+                  <Label className="text-xs text-slate-500 mb-1 block">Max</Label>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
-                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">$</span>
                       <Input
                         type="text"
                         placeholder="500,000"
                         value={filters.hasNoMax ? "" : formatNumberWithCommas(filters.priceMax)}
                         onChange={e => updateFilter("priceMax", parseFormattedNumber(e.target.value))}
                         disabled={filters.hasNoMax}
-                        className="h-7 text-xs bg-background pl-5 disabled:opacity-50"
+                        className="h-7 text-xs bg-white border-slate-200 pl-5 disabled:opacity-50"
                       />
                     </div>
                     <label className="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
@@ -458,7 +453,7 @@ const ListingSearchFilters = ({
                         }}
                         className="h-3 w-3"
                       />
-                      <span className="text-[10px] text-muted-foreground">No Max</span>
+                      <span className="text-[10px] text-slate-500">No Max</span>
                     </label>
                   </div>
                 </div>
