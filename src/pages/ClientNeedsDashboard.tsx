@@ -321,33 +321,6 @@ const ClientNeedsDashboard = () => {
           </p>
         </div>
 
-        {/* Summary Bar */}
-        {preferencesLoaded && (
-          <div className="mb-8 p-4 rounded-xl bg-card border border-border shadow-custom-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <Bell className="h-4 w-4 text-primary" />
-              <span className="font-semibold text-sm">Your Active Preferences</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Pill 
-                label={`${summary.receivingCount} topics receiving`}
-                variant={summary.receivingCount > 0 ? "primary" : "neutral"} 
-              />
-              <Pill 
-                label={summary.propertyTypesCount > 0 ? `${summary.propertyTypesCount} property types` : "All property types"}
-                variant={summary.propertyTypesCount > 0 ? "primary" : "neutral"} 
-              />
-              <Pill 
-                label={summary.geoCount > 0 ? `${summary.geoCount} areas` : "All areas"}
-                variant={summary.geoCount > 0 ? "primary" : "neutral"} 
-              />
-              <Pill 
-                label={summary.notificationSchedule}
-                variant="primary" 
-              />
-            </div>
-          </div>
-        )}
 
         {/* Topics / Channels Section */}
         <section className="mb-8">

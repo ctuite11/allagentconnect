@@ -552,7 +552,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                   <div className="rounded-xl border border-border bg-card overflow-hidden">
                     <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                      <div className={`flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors ${townsOpen ? 'border-l-2 border-l-teal-500' : ''}`}>
+                      <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded-lg bg-teal-500/10 flex items-center justify-center">
                             <svg className="h-4 w-4 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -684,7 +684,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   <Collapsible open={propertyTypesOpen} onOpenChange={setPropertyTypesOpen}>
                     <div className="rounded-xl border border-border bg-card overflow-hidden">
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                        <div className={`flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors ${propertyTypesOpen ? 'border-l-2 border-l-indigo-500' : ''}`}>
+                        <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
                               <svg className="h-4 w-4 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -749,7 +749,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   <Collapsible open={priceRangeOpen} onOpenChange={setPriceRangeOpen}>
                     <div className="rounded-xl border border-border bg-card overflow-hidden">
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                        <div className={`flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors ${priceRangeOpen ? 'border-l-2 border-l-green-500' : ''}`}>
+                        <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
                               <svg className="h-4 w-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
