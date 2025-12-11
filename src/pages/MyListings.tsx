@@ -276,11 +276,11 @@ function MyListingsView({
   };
 
   return (
-    <div className="flex-1 container mx-auto p-6 pt-8 space-y-6">
+    <div className="flex-1 max-w-[1280px] mx-auto px-6 py-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">My Listings</h1>
-        <p className="text-sm text-muted-foreground">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-foreground font-display">My Listings</h1>
+        <p className="text-muted-foreground mt-1">
           Manage your active, pending, and past listings from one place.
         </p>
       </div>
@@ -322,41 +322,43 @@ function MyListingsView({
       </div>
 
       {/* Status Tabs + Grid Toggle on same row */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-wrap gap-2">
-          {STATUS_TABS.map((tab) => (
+      <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-2">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => handleStatusChange(activeStatus === tab.value ? null : tab.value)}
+                className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
+                  activeStatus === tab.value
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card text-foreground border-border hover:bg-accent"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* View toggle */}
+          <div className="flex items-center gap-1 border border-border rounded-lg p-1 bg-muted">
             <button
-              key={tab.value}
-              onClick={() => handleStatusChange(activeStatus === tab.value ? null : tab.value)}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                activeStatus === tab.value
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background text-foreground border-border hover:bg-accent"
+              onClick={() => setView("grid")}
+              className={`p-1.5 rounded ${
+                view === "grid" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
               }`}
             >
-              {tab.label}
+              <Grid size={16} />
             </button>
-          ))}
-        </div>
-
-        {/* View toggle */}
-        <div className="flex items-center gap-1 border border-border rounded-lg p-1 bg-muted">
-          <button
-            onClick={() => setView("grid")}
-            className={`p-1.5 rounded ${
-              view === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            <Grid size={16} />
-          </button>
-          <button
-            onClick={() => setView("list")}
-            className={`p-1.5 rounded ${
-              view === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            <ListIcon size={16} />
-          </button>
+            <button
+              onClick={() => setView("list")}
+              className={`p-1.5 rounded ${
+                view === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+              }`}
+            >
+              <ListIcon size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -529,7 +531,7 @@ function MyListingsView({
                 {/* Top tools bar – NO Views here */}
                 <div className="flex flex-wrap items-center gap-3 text-xs border-b border-border pb-2 mb-3">
                   <button
-                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
+                    className="px-3 py-1 rounded-full bg-card border border-border text-foreground hover:bg-accent transition"
                     onClick={() => onPhotos(l.id)}
                     title="Manage photos"
                   >
@@ -556,21 +558,21 @@ function MyListingsView({
                     🚗 {hasBrokerTour ? "View Schedule" : "Broker Open House"}
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
+                    className="px-3 py-1 rounded-full bg-card border border-border text-foreground hover:bg-accent transition"
                     onClick={() => onMatches(l)}
                     title="Contact matching buyers"
                   >
                     Matches ({matchCount})
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition"
+                    className="px-3 py-1 rounded-full bg-card border border-border text-foreground hover:bg-accent transition"
                     onClick={() => onSocialShare(l)}
                     title="Share on social media"
                   >
                     Social Share
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-white border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
+                    className="px-3 py-1 rounded-full bg-card border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
                     onClick={() => onStats(l.id)}
                     title="View analytics"
                   >
@@ -682,7 +684,7 @@ function MyListingsView({
                       )}
 
                       {l.neighborhood && (
-                        <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                        <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                           {l.neighborhood}
                         </span>
                       )}
@@ -966,9 +968,9 @@ const MyListings = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navigation />
-        <div className="flex-1 container mx-auto p-6 pt-24">
+        <div className="flex-1 max-w-[1280px] mx-auto px-6 py-6 pt-24">
           <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-            <h1 className="text-3xl font-semibold mb-2">My Listings</h1>
+            <h1 className="text-3xl font-bold text-foreground font-display mb-2">My Listings</h1>
             <p className="text-muted-foreground mb-6">You haven't created any listings yet.</p>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
