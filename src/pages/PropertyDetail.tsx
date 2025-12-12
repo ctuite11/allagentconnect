@@ -245,11 +245,6 @@ const PropertyDetail = () => {
     await trackShare(id!, 'copy_link');
   };
 
-  const handleCopyClientLink = () => {
-    const url = `${window.location.origin}/property/${listing?.id}?view=client`;
-    navigator.clipboard.writeText(url);
-    toast.success("Client link copied to clipboard");
-  };
 
   const handlePreviewClientView = () => {
     window.open(`${window.location.origin}/property/${listing?.id}?view=client`, '_blank');
@@ -587,26 +582,21 @@ const PropertyDetail = () => {
               {/* ========== ADDRESS + PRICE + STATS (INSIDE LEFT COLUMN) ========== */}
               <div className="mt-4">
                 {/* ROW 1: Address Left, Price Right - Same baseline */}
-                <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
-                  {/* LEFT: Address - Title Case, smaller */}
-                  <div>
-                    <h1 className="text-base md:text-lg font-semibold text-foreground flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      {buildDisplayAddress(listing)}
-                    </h1>
-                    <p className="text-xs text-muted-foreground ml-5">
-                      {listing.city}, {listing.state} {listing.zip_code}
-                    </p>
-                  </div>
+                <div className="flex items-baseline justify-between gap-4">
+                  {/* LEFT: Address - Title Case */}
+                  <h1 className="text-base md:text-lg font-semibold text-foreground flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    {buildDisplayAddress(listing)}, {listing.city}, {listing.state} {listing.zip_code}
+                  </h1>
                   
-                  {/* RIGHT: Price - baseline aligned, ~15% smaller */}
-                  <div className="text-left sm:text-right ml-5 sm:ml-0 flex-shrink-0">
-                    <div className="text-lg md:text-xl font-bold text-foreground">
+                  {/* RIGHT: Price - same baseline */}
+                  <div className="text-right flex-shrink-0">
+                    <span className="text-lg md:text-xl font-bold text-foreground">
                       ${listing.price.toLocaleString()}
                       {listing.listing_type === 'for_rent' && (
                         <span className="text-xs text-muted-foreground font-normal">/mo</span>
                       )}
-                    </div>
+                    </span>
                     {listing.square_feet && (
                       <p className="text-xs text-muted-foreground">
                         ${Math.round(listing.price / listing.square_feet).toLocaleString()} / sq ft
@@ -616,45 +606,45 @@ const PropertyDetail = () => {
                 </div>
 
                 {/* ROW 2: Stats - directly under, no gap */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-1.5 pb-2 border-b">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 pb-2 border-b">
                   {listing.bedrooms && (
                     <div className="flex items-center gap-1">
-                      <Bed className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                      <span className="font-bold text-foreground">{listing.bedrooms}</span>
+                      <Bed className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-semibold text-foreground">{listing.bedrooms}</span>
                       <span className="text-xs text-muted-foreground">Beds</span>
                     </div>
                   )}
                   {listing.bathrooms && (
                     <div className="flex items-center gap-1">
-                      <Bath className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                      <span className="font-bold text-foreground">{listing.bathrooms}</span>
+                      <Bath className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-semibold text-foreground">{listing.bathrooms}</span>
                       <span className="text-xs text-muted-foreground">Baths</span>
                     </div>
                   )}
                   {listing.square_feet && (
                     <div className="flex items-center gap-1">
-                      <Square className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                      <span className="font-bold text-foreground">{listing.square_feet.toLocaleString()}</span>
+                      <Square className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span>
                       <span className="text-xs text-muted-foreground">Sq Ft</span>
                     </div>
                   )}
                   {daysOnMarket !== null && (
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                      <span className="font-bold text-foreground">{daysOnMarket}</span>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-semibold text-foreground">{daysOnMarket}</span>
                       <span className="text-xs text-muted-foreground">DOM</span>
                     </div>
                   )}
                   {isAgentView && (
                     <>
                       <div className="flex items-center gap-1">
-                        <Eye className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                        <span className="font-bold text-foreground">{stats.views}</span>
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold text-foreground">{stats.views}</span>
                         <span className="text-xs text-muted-foreground">Views</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Users className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                        <span className="font-bold text-foreground">{stats.matches}</span>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold text-foreground">{stats.matches}</span>
                         <span className="text-xs text-muted-foreground">Matches</span>
                       </div>
                     </>
@@ -785,15 +775,6 @@ const PropertyDetail = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleCopyClientLink}
-                      className="w-full justify-start gap-2"
-                    >
-                      <Copy className="w-4 h-4" />
-                      Copy Consumer Link
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
                       onClick={handlePreviewClientView}
                       className="w-full justify-start gap-2"
                     >
@@ -810,7 +791,7 @@ const PropertyDetail = () => {
                       className="w-full justify-start gap-2"
                     >
                       <Activity className="w-4 h-4" />
-                      View Internal Tools
+                      View Agent Tools
                     </Button>
                   </CardContent>
                 </Card>
@@ -882,42 +863,40 @@ const PropertyDetail = () => {
 
             {/* RIGHT COLUMN - Consumer-facing content (not in hero sidebar) */}
             <div className="space-y-6">
-              {/* Buyer Agent Compensation - Client View Only (single line) */}
+              {/* Buyer Agent Compensation - Client View Only (single line with info popup) */}
               {!isAgentView && compensationDisplay && (
-                <Card className="rounded-3xl border border-emerald-100 bg-emerald-50/40 dark:bg-emerald-950/20">
-                  <CardContent className="py-4">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-emerald-700 flex-shrink-0" />
-                      <span className="font-semibold text-emerald-900 dark:text-emerald-100">
+                <Card className="rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
+                  <CardContent className="py-3 px-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <DollarSign className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                      <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
                         Buyer Agent Compensation: {compensationDisplay} (paid by seller)
                       </span>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <button className="text-muted-foreground hover:text-foreground ml-1">
+                          <button className="text-emerald-600 hover:text-emerald-800 ml-auto">
                             <HelpCircle className="w-4 h-4" />
                           </button>
                         </DialogTrigger>
                         <DialogContent className="max-w-md">
                           <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
-                              <DollarSign className="w-5 h-5 text-green-600" />
-                              Understanding Buyer Agent Compensation
+                              <DollarSign className="w-5 h-5 text-emerald-600" />
+                              Buyer Agent Compensation
                             </DialogTitle>
                           </DialogHeader>
-                          <div className="space-y-4 py-4 text-sm text-muted-foreground">
+                          <div className="space-y-3 py-4 text-sm text-muted-foreground">
                             <p>
-                              <strong className="text-foreground">What do buyer agents do?</strong><br />
-                              Buyer agents represent your interests during the home buying process, helping you 
-                              find properties, negotiate offers, and navigate the transaction.
+                              This compensation is <strong className="text-foreground">paid by the seller</strong> and 
+                              offered to buyer agents who bring qualified buyers.
                             </p>
                             <p>
                               <strong className="text-foreground">Is this negotiable?</strong><br />
-                              Yes, compensation may be negotiable. You should discuss this with your buyer's agent 
-                              or the listing agent for details.
+                              Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
                             </p>
                             <p>
-                              <strong className="text-foreground">What should I do?</strong><br />
-                              Ask your agent about their compensation structure and how it relates to this offer.
+                              <strong className="text-foreground">Note:</strong> Actual compensation may vary based on 
+                              your buyer representation agreement. Ask your agent about their fee structure.
                             </p>
                           </div>
                         </DialogContent>
@@ -953,7 +932,7 @@ const PropertyDetail = () => {
           </div>
         </div>
 
-        {/* ========== AGENT TOOLS SECTION (Agent-Only, NOT sticky) ========== */}
+        {/* ========== AGENT TOOLS SECTION (Agent-Only, NOT sticky) - 50/50 layout ========== */}
         {isAgentView && (
           <div id="agent-tools-section" className="mx-auto max-w-6xl px-4 pb-8">
             <div className="border-t pt-6 mt-4">
@@ -963,28 +942,9 @@ const PropertyDetail = () => {
                 <Badge variant="outline" className="ml-2 text-xs">Internal Only</Badge>
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Buyer Agent Compensation */}
-                {compensationDisplay && (
-                  <Card className="rounded-2xl border-green-200 bg-green-50/50 dark:bg-green-950/20">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="flex items-center gap-2 text-sm text-green-900 dark:text-green-100">
-                        <DollarSign className="w-4 h-4" />
-                        Buyer Agent Compensation
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                      <p className="text-sm font-medium">{compensationDisplay} (paid by seller)</p>
-                      {listing.commission_notes && (
-                        <p className="text-xs text-foreground/80 mt-2 border-t pt-2">
-                          {listing.commission_notes}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Showing Instructions */}
+              {/* 50/50 Two-Column Layout */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* LEFT COLUMN: Showing Instructions (full height) */}
                 <Card className="rounded-2xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
                   <CardHeader className="pb-2 pt-4 px-4">
                     <CardTitle className="flex items-center gap-2 text-sm text-blue-900 dark:text-blue-100">
@@ -992,8 +952,8 @@ const PropertyDetail = () => {
                       Showing Instructions
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="px-4 pb-4 space-y-2">
-                    <div className="space-y-1 text-sm">
+                  <CardContent className="px-4 pb-4 space-y-3">
+                    <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Appointment Required</span>
                         <span className="font-medium">{listing.appointment_required ? 'Yes' : 'No'}</span>
@@ -1007,45 +967,90 @@ const PropertyDetail = () => {
                       {listing.lockbox_code && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Lockbox Code</span>
-                          <span className="font-medium">{listing.lockbox_code}</span>
+                          <span className="font-mono font-medium">{listing.lockbox_code}</span>
                         </div>
                       )}
                       {listing.showing_contact_name && (
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Showing Contact</span>
+                          <span className="text-muted-foreground">Contact</span>
                           <span className="font-medium">{listing.showing_contact_name}</span>
                         </div>
                       )}
                       {listing.showing_contact_phone && (
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Showing Phone</span>
+                          <span className="text-muted-foreground">Phone</span>
                           <span className="font-medium">{formatPhoneNumber(listing.showing_contact_phone)}</span>
                         </div>
                       )}
                     </div>
                     {listing.showing_instructions && (
-                      <div className="pt-2 border-t">
-                        <p className="text-xs text-muted-foreground mb-1">Instructions:</p>
-                        <p className="text-sm whitespace-pre-wrap">{listing.showing_instructions}</p>
+                      <div className="pt-3 border-t">
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">Instructions:</p>
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{listing.showing_instructions}</p>
                       </div>
                     )}
                   </CardContent>
                 </Card>
 
-                {/* Disclosures & Exclusions */}
-                {(listing.disclosures || listing.listing_exclusions) && (
+                {/* RIGHT COLUMN: Stacked cards */}
+                <div className="space-y-4">
+                  {/* Buyer Agent Compensation */}
+                  {compensationDisplay && (
+                    <Card className="rounded-2xl border-green-200 bg-green-50/50 dark:bg-green-950/20">
+                      <CardContent className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-4 h-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                            Buyer Agent Compensation: {compensationDisplay} (paid by seller)
+                          </span>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button className="text-green-600 hover:text-green-800 ml-auto">
+                                <HelpCircle className="w-4 h-4" />
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                  <DollarSign className="w-5 h-5 text-green-600" />
+                                  Buyer Agent Compensation
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-3 py-4 text-sm text-muted-foreground">
+                                <p>
+                                  This compensation is <strong className="text-foreground">paid by the seller</strong> and 
+                                  offered to buyer agents who bring qualified buyers.
+                                </p>
+                                <p>
+                                  <strong className="text-foreground">Is this negotiable?</strong><br />
+                                  Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
+                                </p>
+                                {listing.commission_notes && (
+                                  <p className="bg-muted p-2 rounded text-foreground/80">
+                                    <strong>Notes:</strong> {listing.commission_notes}
+                                  </p>
+                                )}
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Disclosures, Exclusions & Listing Agreement - Combined */}
                   <Card className="rounded-2xl border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
                     <CardHeader className="pb-2 pt-4 px-4">
                       <CardTitle className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-100">
                         <FileText className="w-4 h-4" />
-                        Disclosures & Exclusions
+                        Disclosures, Exclusions & Agreement
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="px-4 pb-4 space-y-2">
+                    <CardContent className="px-4 pb-4 space-y-3 text-sm">
                       {listing.disclosures && (
                         <div>
                           <p className="text-xs font-semibold text-muted-foreground mb-1">Disclosures:</p>
-                          <p className="text-sm">
+                          <p>
                             {typeof listing.disclosures === 'string' 
                               ? listing.disclosures 
                               : formatArray(listing.disclosures) || 'None specified'}
@@ -1055,78 +1060,66 @@ const PropertyDetail = () => {
                       {listing.listing_exclusions && (
                         <div className="pt-2 border-t">
                           <p className="text-xs font-semibold text-muted-foreground mb-1">Exclusions:</p>
-                          <p className="text-sm">{listing.listing_exclusions}</p>
+                          <p>{listing.listing_exclusions}</p>
+                        </div>
+                      )}
+                      {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
+                        <div className="pt-2 border-t">
+                          <p className="text-xs font-semibold text-muted-foreground mb-1">Listing Agreement:</p>
+                          <p className="font-medium">{formatArray(listing.listing_agreement_types)}</p>
                         </div>
                       )}
                       {listing.documents && Array.isArray(listing.documents) && listing.documents.length > 0 && (
                         <div className="pt-2 border-t">
-                          <p className="text-xs font-semibold text-muted-foreground mb-1">Documents Available:</p>
-                          <p className="text-sm text-primary">{listing.documents.length} document(s)</p>
+                          <p className="text-xs font-semibold text-muted-foreground mb-1">Documents:</p>
+                          <p className="text-primary">{listing.documents.length} document(s) available</p>
                         </div>
                       )}
                     </CardContent>
                   </Card>
-                )}
 
-                {/* Listing Agreement Type */}
-                {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
-                  <Card className="rounded-2xl border-purple-200 bg-purple-50/50 dark:bg-purple-950/20">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="flex items-center gap-2 text-sm text-purple-900 dark:text-purple-100">
-                        <ClipboardList className="w-4 h-4" />
-                        Listing Agreement
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                      <p className="text-sm font-medium">{formatArray(listing.listing_agreement_types)}</p>
-                    </CardContent>
-                  </Card>
-                )}
+                  {/* Firm Remarks (Agent-Only) */}
+                  {listing.broker_comments && (
+                    <Card className="rounded-2xl border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <CardTitle className="flex items-center gap-2 text-sm text-orange-900 dark:text-orange-100">
+                          <ClipboardList className="w-4 h-4" />
+                          Firm Remarks
+                          <Badge variant="outline" className="text-xs ml-auto">Agent Only</Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4">
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{listing.broker_comments}</p>
+                      </CardContent>
+                    </Card>
+                  )}
 
-                {/* Activity & Stats */}
-                <Card className="rounded-2xl border-slate-200 bg-slate-50/50 dark:bg-slate-950/20">
-                  <CardHeader className="pb-2 pt-4 px-4">
-                    <CardTitle className="flex items-center gap-2 text-sm text-slate-900 dark:text-slate-100">
-                      <Activity className="w-4 h-4" />
-                      Activity & Stats
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <p className="text-2xl font-bold">{stats.views}</p>
-                        <p className="text-xs text-muted-foreground">Views</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold">{stats.matches}</p>
-                        <p className="text-xs text-muted-foreground">Matches</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Send to Matching Agents */}
-                <Card className="rounded-2xl border-primary/20 bg-primary/5">
-                  <CardHeader className="pb-2 pt-4 px-4">
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <Send className="w-4 h-4" />
-                      Broadcast Listing
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4">
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Send this listing to agents with matching buyer needs
-                    </p>
+                  {/* Activity & Stats + Broadcast - inline row */}
+                  <div className="flex gap-4">
+                    <Card className="rounded-2xl border-slate-200 bg-slate-50/50 dark:bg-slate-950/20 flex-1">
+                      <CardContent className="py-3 px-4">
+                        <div className="flex items-center justify-around">
+                          <div className="text-center">
+                            <p className="text-xl font-bold">{stats.views}</p>
+                            <p className="text-xs text-muted-foreground">Views</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xl font-bold">{stats.matches}</p>
+                            <p className="text-xs text-muted-foreground">Matches</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                     <Button
                       size="sm"
                       onClick={() => navigate(`/communication-center?listing=${listing.id}`)}
-                      className="w-full"
+                      className="flex-shrink-0 self-center"
                     >
                       <Send className="w-4 h-4 mr-2" />
-                      Send to Matching Agents
+                      Broadcast
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
