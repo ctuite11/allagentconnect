@@ -665,8 +665,8 @@ const PropertyDetail = () => {
             </div>
 
 
-            {/* RIGHT COLUMN - Hero Sidebar (~32%) */}
-            <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
+            {/* RIGHT COLUMN - Hero Sidebar (~32%) - Clean, no internal scrolling */}
+            <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
               
               {/* Listing Agent Card - PRIMARY (top) */}
               {agentProfile && (
@@ -769,203 +769,51 @@ const PropertyDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* ========== AGENT-ONLY CARDS ========== */}
+              {/* ========== AGENT QUICK ACTIONS (stays in sidebar) ========== */}
               {isAgentView && (
-                <>
-              {/* Agent Actions Card */}
-                  <Card className="rounded-2xl border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-                    <CardContent className="py-4 px-4 space-y-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/agent/listings/edit/${id}`)}
-                        className="w-full justify-start gap-2"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                        Edit Listing
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCopyClientLink}
-                        className="w-full justify-start gap-2"
-                      >
-                        <Copy className="w-4 h-4" />
-                        Copy Consumer Link
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handlePreviewClientView}
-                        className="w-full justify-start gap-2"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Preview Client View
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/communication-center?listing=${listing.id}`)}
-                        className="w-full justify-start gap-2"
-                      >
-                        <Send className="w-4 h-4" />
-                        Send to Matching Agents
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  {/* Buyer Agent Compensation - AGENT VIEW (single line) */}
-                  {compensationDisplay && (
-                    <Card className="rounded-2xl border-green-200 bg-green-50/50 dark:bg-green-950/20">
-                      <CardContent className="py-3 px-4">
-                        <div className="flex items-center gap-2 text-sm">
-                          <DollarSign className="w-4 h-4 text-green-700 flex-shrink-0" />
-                          <span className="font-medium text-green-900 dark:text-green-100">
-                            Buyer Agent Compensation: {compensationDisplay} (paid by seller)
-                          </span>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <button className="text-muted-foreground hover:text-foreground ml-1">
-                                <HelpCircle className="w-4 h-4" />
-                              </button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-md">
-                              <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2">
-                                  <DollarSign className="w-5 h-5 text-green-600" />
-                                  Understanding Buyer Agent Compensation
-                                </DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4 py-4 text-sm text-muted-foreground">
-                                <p>
-                                  <strong className="text-foreground">What is this?</strong><br />
-                                  This is the compensation the seller is offering to pay a buyer's agent for bringing a buyer to this property.
-                                </p>
-                                <p>
-                                  <strong className="text-foreground">Is it negotiable?</strong><br />
-                                  Yes, compensation may be negotiable. You should discuss this with your buyer's agent or the listing agent for details.
-                                </p>
-                                <p>
-                                  <strong className="text-foreground">What should buyers do?</strong><br />
-                                  Ask your agent about their compensation structure and how it relates to this offer.
-                                </p>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                        {listing.commission_notes && (
-                          <p className="text-xs text-foreground/80 mt-2 border-t pt-2 ml-6">
-                            {listing.commission_notes}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Showing Instructions */}
-                  <Card className="rounded-2xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="flex items-center gap-2 text-sm text-blue-900 dark:text-blue-100">
-                        <KeyRound className="w-4 h-4" />
-                        Showing Instructions
-                        <Badge variant="outline" className="ml-auto text-xs">Agent Only</Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4 space-y-2">
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Appointment Required</span>
-                          <span className="font-medium">{listing.appointment_required ? 'Yes' : 'No'}</span>
-                        </div>
-                        {listing.entry_only !== undefined && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Entry Only</span>
-                            <span className="font-medium">{listing.entry_only ? 'Yes' : 'No'}</span>
-                          </div>
-                        )}
-                        {listing.lockbox_code && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Lockbox Code</span>
-                            <span className="font-medium">{listing.lockbox_code}</span>
-                          </div>
-                        )}
-                        {listing.showing_contact_name && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Showing Contact</span>
-                            <span className="font-medium">{listing.showing_contact_name}</span>
-                          </div>
-                        )}
-                        {listing.showing_contact_phone && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Showing Phone</span>
-                            <span className="font-medium">{formatPhoneNumber(listing.showing_contact_phone)}</span>
-                          </div>
-                        )}
-                      </div>
-                      {listing.showing_instructions && (
-                        <div className="pt-2 border-t">
-                          <p className="text-xs text-muted-foreground mb-1">Instructions:</p>
-                          <p className="text-sm whitespace-pre-wrap">{listing.showing_instructions}</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Disclosures & Exclusions */}
-                  {(listing.disclosures || listing.listing_exclusions) && (
-                    <Card className="rounded-2xl border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
-                      <CardHeader className="pb-2 pt-4 px-4">
-                        <CardTitle className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-100">
-                          <FileText className="w-4 h-4" />
-                          Disclosures & Exclusions
-                          <Badge variant="outline" className="ml-auto text-xs">Agent Only</Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="px-4 pb-4 space-y-2">
-                        {listing.disclosures && (
-                          <div>
-                            <p className="text-xs font-semibold text-muted-foreground mb-1">Disclosures:</p>
-                            <p className="text-sm">
-                              {typeof listing.disclosures === 'string' 
-                                ? listing.disclosures 
-                                : formatArray(listing.disclosures) || 'None specified'}
-                            </p>
-                          </div>
-                        )}
-                        {listing.listing_exclusions && (
-                          <div className="pt-2 border-t">
-                            <p className="text-xs font-semibold text-muted-foreground mb-1">Exclusions:</p>
-                            <p className="text-sm">{listing.listing_exclusions}</p>
-                          </div>
-                        )}
-                        {listing.documents && Array.isArray(listing.documents) && listing.documents.length > 0 && (
-                          <div className="pt-2 border-t">
-                            <p className="text-xs font-semibold text-muted-foreground mb-1">Documents Available:</p>
-                            <p className="text-sm text-primary">{listing.documents.length} document(s)</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Listing Agreement Type */}
-                  {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
-                    <Card className="rounded-2xl border-purple-200 bg-purple-50/50 dark:bg-purple-950/20">
-                      <CardHeader className="pb-2 pt-4 px-4">
-                        <CardTitle className="flex items-center gap-2 text-sm text-purple-900 dark:text-purple-100">
-                          <ClipboardList className="w-4 h-4" />
-                          Listing Agreement
-                          <Badge variant="outline" className="ml-auto text-xs">Agent Only</Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="px-4 pb-4">
-                        <p className="text-sm font-medium">{formatArray(listing.listing_agreement_types)}</p>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Activity Stats moved to hero band */}
-                </>
+                <Card className="rounded-2xl border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                  <CardContent className="py-4 px-4 space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/agent/listings/edit/${id}`)}
+                      className="w-full justify-start gap-2"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Edit Listing
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyClientLink}
+                      className="w-full justify-start gap-2"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Copy Consumer Link
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePreviewClientView}
+                      className="w-full justify-start gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Preview Client View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const el = document.getElementById('agent-tools-section');
+                        el?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="w-full justify-start gap-2"
+                    >
+                      <Activity className="w-4 h-4" />
+                      View Internal Tools
+                    </Button>
+                  </CardContent>
+                </Card>
               )}
             </div>
           </div>
@@ -1104,6 +952,185 @@ const PropertyDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* ========== AGENT TOOLS SECTION (Agent-Only, NOT sticky) ========== */}
+        {isAgentView && (
+          <div id="agent-tools-section" className="mx-auto max-w-6xl px-4 pb-8">
+            <div className="border-t pt-6 mt-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                <Activity className="w-5 h-5 text-muted-foreground" />
+                Agent Tools
+                <Badge variant="outline" className="ml-2 text-xs">Internal Only</Badge>
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Buyer Agent Compensation */}
+                {compensationDisplay && (
+                  <Card className="rounded-2xl border-green-200 bg-green-50/50 dark:bg-green-950/20">
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <CardTitle className="flex items-center gap-2 text-sm text-green-900 dark:text-green-100">
+                        <DollarSign className="w-4 h-4" />
+                        Buyer Agent Compensation
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4">
+                      <p className="text-sm font-medium">{compensationDisplay} (paid by seller)</p>
+                      {listing.commission_notes && (
+                        <p className="text-xs text-foreground/80 mt-2 border-t pt-2">
+                          {listing.commission_notes}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Showing Instructions */}
+                <Card className="rounded-2xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+                  <CardHeader className="pb-2 pt-4 px-4">
+                    <CardTitle className="flex items-center gap-2 text-sm text-blue-900 dark:text-blue-100">
+                      <KeyRound className="w-4 h-4" />
+                      Showing Instructions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4 space-y-2">
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Appointment Required</span>
+                        <span className="font-medium">{listing.appointment_required ? 'Yes' : 'No'}</span>
+                      </div>
+                      {listing.entry_only !== undefined && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Entry Only</span>
+                          <span className="font-medium">{listing.entry_only ? 'Yes' : 'No'}</span>
+                        </div>
+                      )}
+                      {listing.lockbox_code && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Lockbox Code</span>
+                          <span className="font-medium">{listing.lockbox_code}</span>
+                        </div>
+                      )}
+                      {listing.showing_contact_name && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Showing Contact</span>
+                          <span className="font-medium">{listing.showing_contact_name}</span>
+                        </div>
+                      )}
+                      {listing.showing_contact_phone && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Showing Phone</span>
+                          <span className="font-medium">{formatPhoneNumber(listing.showing_contact_phone)}</span>
+                        </div>
+                      )}
+                    </div>
+                    {listing.showing_instructions && (
+                      <div className="pt-2 border-t">
+                        <p className="text-xs text-muted-foreground mb-1">Instructions:</p>
+                        <p className="text-sm whitespace-pre-wrap">{listing.showing_instructions}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Disclosures & Exclusions */}
+                {(listing.disclosures || listing.listing_exclusions) && (
+                  <Card className="rounded-2xl border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <CardTitle className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-100">
+                        <FileText className="w-4 h-4" />
+                        Disclosures & Exclusions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 space-y-2">
+                      {listing.disclosures && (
+                        <div>
+                          <p className="text-xs font-semibold text-muted-foreground mb-1">Disclosures:</p>
+                          <p className="text-sm">
+                            {typeof listing.disclosures === 'string' 
+                              ? listing.disclosures 
+                              : formatArray(listing.disclosures) || 'None specified'}
+                          </p>
+                        </div>
+                      )}
+                      {listing.listing_exclusions && (
+                        <div className="pt-2 border-t">
+                          <p className="text-xs font-semibold text-muted-foreground mb-1">Exclusions:</p>
+                          <p className="text-sm">{listing.listing_exclusions}</p>
+                        </div>
+                      )}
+                      {listing.documents && Array.isArray(listing.documents) && listing.documents.length > 0 && (
+                        <div className="pt-2 border-t">
+                          <p className="text-xs font-semibold text-muted-foreground mb-1">Documents Available:</p>
+                          <p className="text-sm text-primary">{listing.documents.length} document(s)</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Listing Agreement Type */}
+                {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
+                  <Card className="rounded-2xl border-purple-200 bg-purple-50/50 dark:bg-purple-950/20">
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <CardTitle className="flex items-center gap-2 text-sm text-purple-900 dark:text-purple-100">
+                        <ClipboardList className="w-4 h-4" />
+                        Listing Agreement
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4">
+                      <p className="text-sm font-medium">{formatArray(listing.listing_agreement_types)}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Activity & Stats */}
+                <Card className="rounded-2xl border-slate-200 bg-slate-50/50 dark:bg-slate-950/20">
+                  <CardHeader className="pb-2 pt-4 px-4">
+                    <CardTitle className="flex items-center gap-2 text-sm text-slate-900 dark:text-slate-100">
+                      <Activity className="w-4 h-4" />
+                      Activity & Stats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold">{stats.views}</p>
+                        <p className="text-xs text-muted-foreground">Views</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold">{stats.matches}</p>
+                        <p className="text-xs text-muted-foreground">Matches</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Send to Matching Agents */}
+                <Card className="rounded-2xl border-primary/20 bg-primary/5">
+                  <CardHeader className="pb-2 pt-4 px-4">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Send className="w-4 h-4" />
+                      Broadcast Listing
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4">
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Send this listing to agents with matching buyer needs
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate(`/communication-center?listing=${listing.id}`)}
+                      className="w-full"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Send to Matching Agents
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Photo Gallery Dialog */}
