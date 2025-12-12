@@ -127,8 +127,8 @@ export function ShareListingsDialog({
 
           {/* Listing Preview Chip */}
           {listingPreview ? (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-3">
-              <div className="mt-0.5 rounded-xl bg-primary/10 ring-1 ring-primary/15 p-2">
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-primary/30 bg-background p-3">
+              <div className="mt-0.5 rounded-xl border border-primary/20 bg-background p-2">
                 <Home className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0">
@@ -177,10 +177,10 @@ export function ShareListingsDialog({
             <Button
               type="button"
               variant="outline"
-              className="w-full rounded-2xl border-primary/30 bg-primary/5 hover:bg-primary/10"
+              className="w-full rounded-2xl border-primary/40 bg-background hover:bg-muted/50"
               onClick={() => setManualMode(!manualMode)}
             >
-              <PencilLine className="mr-2 h-4 w-4" />
+              <PencilLine className="mr-2 h-4 w-4 text-primary" />
               Enter Manually
             </Button>
 
@@ -216,7 +216,7 @@ export function ShareListingsDialog({
           </section>
 
           {/* Sender Info Card */}
-          <section className="rounded-2xl border border-primary/15 bg-primary/5 p-4 space-y-4">
+          <section className="rounded-2xl border border-primary/25 bg-background p-4 space-y-4">
             <div className="text-sm font-semibold">Sender Info</div>
 
             <div className="space-y-2">
@@ -279,7 +279,7 @@ export function ShareListingsDialog({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-primary/25 bg-primary/5 text-primary hover:bg-primary/10"
+                  className="rounded-full border-primary/40 bg-background text-primary hover:bg-muted/50"
                   onClick={() => setMessage(message ? `${message}\n${t}` : t)}
                 >
                   {t}
