@@ -446,8 +446,8 @@ const PropertyDetail = () => {
         )}
 
         {/* ========== NEW FLOATING HERO LAYOUT ========== */}
-        <div className="mx-auto max-w-6xl px-4 pt-4 lg:pt-6">
-          <div className="flex flex-col lg:flex-row gap-8">
+        <div className="mx-auto max-w-6xl px-4 pt-8 lg:pt-12">
+          <div className="flex flex-col lg:flex-row gap-10">
             
             {/* LEFT COLUMN - Floating Photo Carousel (~70%) */}
             <div className="lg:w-[70%]">
@@ -927,7 +927,7 @@ const PropertyDetail = () => {
         </div>
 
         {/* ========== TITLE, PRICE & BASICS - BELOW HERO ========== */}
-        <div className="mx-auto max-w-6xl px-4 mt-8">
+        <div className="mx-auto max-w-6xl px-4 mt-4">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-semibold">{listing.address}</h1>
