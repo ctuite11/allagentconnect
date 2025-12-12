@@ -372,6 +372,27 @@ const PropertyDetail = () => {
       </div>
 
       <main className="flex-1">
+        {/* Agent/Client View Banner */}
+        {isAgent && (
+          <div className="container mx-auto px-4 pt-4" style={{ maxWidth: '1600px' }}>
+            <div className={`rounded-lg px-4 py-2.5 text-sm ${
+              isAgentView 
+                ? 'bg-sky-50 text-sky-800 dark:bg-sky-950/50 dark:text-sky-200 border border-sky-200 dark:border-sky-800' 
+                : 'bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-200 border border-amber-200 dark:border-amber-800'
+            }`}>
+              {isAgentView ? (
+                <>
+                  <strong>Agent View</strong> – includes broker-only information (compensation, showing instructions, broker remarks). Switch to Client View before screen-sharing with clients.
+                </>
+              ) : (
+                <>
+                  <strong>Client View</strong> – you're viewing this listing as a consumer would. Broker-only information is hidden.
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Hero Section - Max Width 1600px */}
         <div className="container mx-auto px-4 py-6" style={{ maxWidth: '1600px' }}>
           {/* Hero Photo Card with Overlays */}

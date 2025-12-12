@@ -96,13 +96,14 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView }: Prope
         </Card>
       )}
 
-      {/* Buyer Agent Compensation */}
-      {(listing.commission_rate || listing.commission_type || listing.commission_notes) && (
-        <Card>
+      {/* Buyer Agent Compensation - Agent Only */}
+      {isAgentView && (listing.commission_rate || listing.commission_type || listing.commission_notes) && (
+        <Card className="border-green-200 bg-green-50/50 dark:bg-green-950/20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-lg text-green-900 dark:text-green-100">
               <DollarSign className="w-5 h-5" />
               Buyer Agent Compensation
+              <Badge variant="outline" className="ml-2">Agent Only</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -123,20 +124,33 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView }: Prope
                 </div>
               )}
             </div>
-            {!isAgentView && (
-              <p className="text-xs text-muted-foreground mt-3 italic">
-                Ask your agent for details
-              </p>
-            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Office / Agent Information (Expanded) */}
-      {isAgentView && agent && (
+      {/* Consumer-facing: Contact CTA when not in agent view */}
+      {!isAgentView && !agent && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Office / Agent Information (Expanded)</CardTitle>
+            <CardTitle className="text-lg">Interested in this property?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Contact the listing agent for more information, schedule a showing, or ask about buyer agent compensation.
+            </p>
+            <Button className="w-full">Contact Agent</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Office / Agent Information (Expanded) - Agent Only */}
+      {isAgentView && agent && (
+        <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg text-blue-900 dark:text-blue-100">
+              Office / Agent Information
+              <Badge variant="outline" className="ml-2">Agent Only</Badge>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <DetailGrid>
