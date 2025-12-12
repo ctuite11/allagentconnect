@@ -52,17 +52,31 @@ export function buildDisplayAddress(
     }
   }
 
-  // Ensure city/state/zip appear if missing
+  // Check if city/state/zip are already in the address
   const lowerBase = base.toLowerCase();
   const hasCity = city && lowerBase.includes(city.toLowerCase());
   const hasState = state && new RegExp(`\\b${state}\\b`, 'i').test(base);
   const hasZip = zip && base.includes(zip);
 
-  if (!hasCity && !hasState && !hasZip) {
-    const tail = [city && `${city}, ${state} ${zip}`]
-      .filter(Boolean)
-      .join(', ');
-    if (tail) base = [base, tail].filter(Boolean).join(', ');
+  // Build the final address, avoiding duplicate city/state/zip
+  // If address already contains city, just ensure state and zip are present
+  if (hasCity && hasState && hasZip) {
+    // All present, just convert to title case
+    return toTitleCase(base);
+  }
+  
+  // If address has city but not full location, append missing parts
+  if (hasCity) {
+    // City is there, check if we need state/zip
+    if (!hasState || !hasZip) {
+      // Replace the city part with full city, state zip
+      const cityRegex = new RegExp(`(${city})(?:,?\\s*)?`, 'i');
+      base = base.replace(cityRegex, `$1, ${state} ${zip}`);
+    }
+  } else {
+    // No city in address, append full location
+    const tail = `${city}, ${state} ${zip}`;
+    base = `${base}, ${tail}`;
   }
 
   // Convert to Title Case before returning

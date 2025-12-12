@@ -520,11 +520,21 @@ const PropertyDetail = () => {
                       </div>
                     )}
 
-                    {/* Expand Button - Bottom Right */}
+                    {/* PRICE OVERLAY - Bottom Right of Photo */}
+                    <div className="absolute bottom-4 right-4 bg-primary/90 backdrop-blur-sm text-white px-4 py-2 rounded-xl">
+                      <span className="text-base font-bold">
+                        ${listing.price.toLocaleString()}
+                        {listing.square_feet && (
+                          <span className="text-sm font-normal opacity-90"> · ${Math.round(listing.price / listing.square_feet).toLocaleString()}/sq ft</span>
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Expand Button - Top of Bottom Right (above price) */}
                     {activeMediaTab === 'photos' && (
                       <button
                         onClick={handleExpandGallery}
-                        className="absolute bottom-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
+                        className="absolute bottom-20 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
                         aria-label="Expand gallery"
                       >
                         <Expand className="w-5 h-5" />
@@ -533,8 +543,8 @@ const PropertyDetail = () => {
                   </div>
               </div>
 
-              {/* Media Type Tabs - Below Photo */}
-              <div className="flex items-center gap-2 mt-4">
+              {/* Media Type Tabs - Below Photo with more spacing to clear shadow */}
+              <div className="flex items-center gap-2 mt-6">
                 <Button
                   variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
                   size="sm"
@@ -579,75 +589,46 @@ const PropertyDetail = () => {
                 )}
               </div>
 
-              {/* ========== ADDRESS + PRICE + STATS (INSIDE LEFT COLUMN) ========== */}
+              {/* ========== ADDRESS + STATS (INSIDE LEFT COLUMN) - Price is now in photo ========== */}
               <div className="mt-4">
-                {/* ROW 1: Address Left, Price Right - Same baseline */}
-                <div className="flex items-baseline justify-between gap-4">
-                  {/* LEFT: Address - Title Case */}
-                  <h1 className="text-base md:text-lg font-semibold text-foreground flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    {buildDisplayAddress(listing)}, {listing.city}, {listing.state} {listing.zip_code}
-                  </h1>
-                  
-                  {/* RIGHT: Price - same baseline */}
-                  <div className="text-right flex-shrink-0">
-                    <span className="text-lg md:text-xl font-bold text-foreground">
-                      ${listing.price.toLocaleString()}
-                      {listing.listing_type === 'for_rent' && (
-                        <span className="text-xs text-muted-foreground font-normal">/mo</span>
-                      )}
-                    </span>
-                    {listing.square_feet && (
-                      <p className="text-xs text-muted-foreground">
-                        ${Math.round(listing.price / listing.square_feet).toLocaleString()} / sq ft
-                      </p>
-                    )}
-                  </div>
-                </div>
+                {/* ROW 1: Address - Title Case, no duplicate city */}
+                <h1 className="text-base md:text-lg font-semibold text-foreground flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+                  {buildDisplayAddress(listing)}
+                  {listing.listing_type === 'for_rent' && (
+                    <span className="text-sm text-muted-foreground font-normal ml-2">(For Rent)</span>
+                  )}
+                </h1>
 
                 {/* ROW 2: Stats - directly under, no gap */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 pb-2 border-b">
                   {listing.bedrooms && (
                     <div className="flex items-center gap-1">
-                      <Bed className="h-4 w-4 text-muted-foreground" />
+                      <Bed className="h-4 w-4 text-primary" />
                       <span className="font-semibold text-foreground">{listing.bedrooms}</span>
                       <span className="text-xs text-muted-foreground">Beds</span>
                     </div>
                   )}
                   {listing.bathrooms && (
                     <div className="flex items-center gap-1">
-                      <Bath className="h-4 w-4 text-muted-foreground" />
+                      <Bath className="h-4 w-4 text-primary" />
                       <span className="font-semibold text-foreground">{listing.bathrooms}</span>
                       <span className="text-xs text-muted-foreground">Baths</span>
                     </div>
                   )}
                   {listing.square_feet && (
                     <div className="flex items-center gap-1">
-                      <Square className="h-4 w-4 text-muted-foreground" />
+                      <Square className="h-4 w-4 text-primary" />
                       <span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span>
                       <span className="text-xs text-muted-foreground">Sq Ft</span>
                     </div>
                   )}
                   {daysOnMarket !== null && (
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <Calendar className="h-4 w-4 text-primary" />
                       <span className="font-semibold text-foreground">{daysOnMarket}</span>
                       <span className="text-xs text-muted-foreground">DOM</span>
                     </div>
-                  )}
-                  {isAgentView && (
-                    <>
-                      <div className="flex items-center gap-1">
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-semibold text-foreground">{stats.views}</span>
-                        <span className="text-xs text-muted-foreground">Views</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-semibold text-foreground">{stats.matches}</span>
-                        <span className="text-xs text-muted-foreground">Matches</span>
-                      </div>
-                    </>
                   )}
                 </div>
               </div>
@@ -936,16 +917,39 @@ const PropertyDetail = () => {
         {isAgentView && (
           <div id="agent-tools-section" className="mx-auto max-w-6xl px-4 pb-8">
             <div className="border-t pt-6 mt-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                <Activity className="w-5 h-5 text-muted-foreground" />
-                Agent Tools
-                <Badge variant="outline" className="ml-2 text-xs">Internal Only</Badge>
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-muted-foreground" />
+                  Agent Tools
+                  <Badge variant="outline" className="ml-2 text-xs">Internal Only</Badge>
+                </h2>
+                {/* Views & Matches grouped with Broadcast */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="flex items-center gap-1">
+                      <Eye className="w-4 h-4 text-primary" />
+                      <strong>{stats.views}</strong> Views
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="w-4 h-4 text-primary" />
+                      <strong>{stats.matches}</strong> Matches
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => navigate(`/communication-center?listing=${listing.id}`)}
+                    className="px-4"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Message All Matches
+                  </Button>
+                </div>
+              </div>
               
-              {/* 50/50 Two-Column Layout */}
+              {/* 50/50 Two-Column Layout - Equal Height Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* LEFT COLUMN: Showing Instructions (full height) */}
-                <Card className="rounded-2xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+                {/* LEFT COLUMN (Blue): Showing Instructions */}
+                <Card className="rounded-2xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 h-full">
                   <CardHeader className="pb-2 pt-4 px-4">
                     <CardTitle className="flex items-center gap-2 text-sm text-blue-900 dark:text-blue-100">
                       <KeyRound className="w-4 h-4" />
@@ -992,135 +996,96 @@ const PropertyDetail = () => {
                   </CardContent>
                 </Card>
 
-                {/* RIGHT COLUMN: Stacked cards */}
-                <div className="space-y-4">
-                  {/* Buyer Agent Compensation */}
-                  {compensationDisplay && (
-                    <Card className="rounded-2xl border-green-200 bg-green-50/50 dark:bg-green-950/20">
-                      <CardContent className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="w-4 h-4 text-green-600" />
-                          <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                            Buyer Agent Compensation: {compensationDisplay} (paid by seller)
-                          </span>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <button className="text-green-600 hover:text-green-800 ml-auto">
-                                <HelpCircle className="w-4 h-4" />
-                              </button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-md">
-                              <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2">
-                                  <DollarSign className="w-5 h-5 text-green-600" />
-                                  Buyer Agent Compensation
-                                </DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-3 py-4 text-sm text-muted-foreground">
-                                <p>
-                                  This compensation is <strong className="text-foreground">paid by the seller</strong> and 
-                                  offered to buyer agents who bring qualified buyers.
-                                </p>
-                                <p>
-                                  <strong className="text-foreground">Is this negotiable?</strong><br />
-                                  Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
-                                </p>
-                                {listing.commission_notes && (
-                                  <p className="bg-muted p-2 rounded text-foreground/80">
-                                    <strong>Notes:</strong> {listing.commission_notes}
-                                  </p>
-                                )}
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Disclosures, Exclusions & Listing Agreement - Combined */}
-                  <Card className="rounded-2xl border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-100">
-                        <FileText className="w-4 h-4" />
-                        Disclosures, Exclusions & Agreement
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4 space-y-3 text-sm">
-                      {listing.disclosures && (
-                        <div>
-                          <p className="text-xs font-semibold text-muted-foreground mb-1">Disclosures:</p>
-                          <p>
-                            {typeof listing.disclosures === 'string' 
-                              ? listing.disclosures 
-                              : formatArray(listing.disclosures) || 'None specified'}
-                          </p>
-                        </div>
-                      )}
-                      {listing.listing_exclusions && (
-                        <div className="pt-2 border-t">
-                          <p className="text-xs font-semibold text-muted-foreground mb-1">Exclusions:</p>
-                          <p>{listing.listing_exclusions}</p>
-                        </div>
-                      )}
-                      {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
-                        <div className="pt-2 border-t">
-                          <p className="text-xs font-semibold text-muted-foreground mb-1">Listing Agreement:</p>
-                          <p className="font-medium">{formatArray(listing.listing_agreement_types)}</p>
-                        </div>
-                      )}
-                      {listing.documents && Array.isArray(listing.documents) && listing.documents.length > 0 && (
-                        <div className="pt-2 border-t">
-                          <p className="text-xs font-semibold text-muted-foreground mb-1">Documents:</p>
-                          <p className="text-primary">{listing.documents.length} document(s) available</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Firm Remarks (Agent-Only) */}
-                  {listing.broker_comments && (
-                    <Card className="rounded-2xl border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
-                      <CardHeader className="pb-2 pt-4 px-4">
-                        <CardTitle className="flex items-center gap-2 text-sm text-orange-900 dark:text-orange-100">
-                          <ClipboardList className="w-4 h-4" />
+                {/* RIGHT COLUMN (Yellow): Disclosures, Exclusions, Listing Agreement, Firm Remarks */}
+                <Card className="rounded-2xl border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 h-full">
+                  <CardHeader className="pb-2 pt-4 px-4">
+                    <CardTitle className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-100">
+                      <FileText className="w-4 h-4" />
+                      Disclosures, Exclusions & Listing Agreement
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4 space-y-3 text-sm">
+                    {listing.disclosures && (
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">Disclosures:</p>
+                        <p>
+                          {typeof listing.disclosures === 'string' 
+                            ? listing.disclosures 
+                            : formatArray(listing.disclosures) || 'None specified'}
+                        </p>
+                      </div>
+                    )}
+                    {listing.listing_exclusions && (
+                      <div className="pt-2 border-t">
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">Exclusions:</p>
+                        <p>{listing.listing_exclusions}</p>
+                      </div>
+                    )}
+                    {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
+                      <div className="pt-2 border-t">
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">Listing Agreement:</p>
+                        <p className="font-medium">{formatArray(listing.listing_agreement_types)}</p>
+                      </div>
+                    )}
+                    {listing.documents && Array.isArray(listing.documents) && listing.documents.length > 0 && (
+                      <div className="pt-2 border-t">
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">Documents:</p>
+                        <p className="text-primary">{listing.documents.length} document(s) available</p>
+                      </div>
+                    )}
+                    {/* Firm Remarks inside yellow card */}
+                    {listing.broker_comments && (
+                      <div className="pt-2 border-t">
+                        <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
                           Firm Remarks
-                          <Badge variant="outline" className="text-xs ml-auto">Agent Only</Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="px-4 pb-4">
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{listing.broker_comments}</p>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Activity & Stats + Broadcast - inline row */}
-                  <div className="flex gap-4">
-                    <Card className="rounded-2xl border-slate-200 bg-slate-50/50 dark:bg-slate-950/20 flex-1">
-                      <CardContent className="py-3 px-4">
-                        <div className="flex items-center justify-around">
-                          <div className="text-center">
-                            <p className="text-xl font-bold">{stats.views}</p>
-                            <p className="text-xs text-muted-foreground">Views</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-xl font-bold">{stats.matches}</p>
-                            <p className="text-xs text-muted-foreground">Matches</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Button
-                      size="sm"
-                      onClick={() => navigate(`/communication-center?listing=${listing.id}`)}
-                      className="flex-shrink-0 self-center"
-                    >
-                      <Send className="w-4 h-4 mr-2" />
-                      Broadcast
-                    </Button>
-                  </div>
-                </div>
+                          <Badge variant="outline" className="text-[10px] ml-1">Agent Only</Badge>
+                        </p>
+                        <p className="whitespace-pre-wrap leading-relaxed">{listing.broker_comments}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
+
+              {/* Buyer Agent Compensation - BELOW the two cards, single line */}
+              {compensationDisplay && (
+                <div className="mt-4 flex items-center gap-2 text-sm">
+                  <DollarSign className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span className="font-medium text-foreground">
+                    Buyer Agent Compensation: {compensationDisplay} (paid by seller)
+                  </span>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button className="text-muted-foreground hover:text-foreground">
+                        <HelpCircle className="w-4 h-4" />
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <DollarSign className="w-5 h-5 text-green-600" />
+                          Buyer Agent Compensation
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-3 py-4 text-sm text-muted-foreground">
+                        <p>
+                          This compensation is <strong className="text-foreground">paid by the seller</strong> and 
+                          offered to buyer agents who bring qualified buyers.
+                        </p>
+                        <p>
+                          <strong className="text-foreground">Is this negotiable?</strong><br />
+                          Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
+                        </p>
+                        {listing.commission_notes && (
+                          <p className="bg-muted p-2 rounded text-foreground/80">
+                            <strong>Notes:</strong> {listing.commission_notes}
+                          </p>
+                        )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
             </div>
           </div>
         )}
