@@ -416,13 +416,13 @@ const PropertyDetail = () => {
           </div>
         )}
 
-        {/* ========== NEW FLOATING HERO LAYOUT ========== */}
-        <div className="mx-auto max-w-6xl px-4 pt-2 lg:pt-4">
-          <div className="flex flex-col lg:flex-row gap-6">
+        {/* ========== FLOATING HERO LAYOUT ========== */}
+        <div className="mx-auto max-w-6xl px-4 pt-1">
+          <div className="flex flex-col lg:flex-row gap-5">
             
-            {/* LEFT COLUMN - Floating Photo Carousel (~70%) */}
-            <div className="lg:w-[70%]">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[280px] sm:h-[360px] lg:h-[440px]">
+            {/* LEFT COLUMN - Floating Photo Carousel (~65-70%) */}
+            <div className="lg:w-[68%]">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[300px] sm:h-[400px] lg:h-[480px]">
                 <div className="absolute inset-0 bg-slate-950">
                   {/* Media Content */}
                     {activeMediaTab === 'photos' && (
@@ -680,8 +680,8 @@ const PropertyDetail = () => {
             </div>
 
 
-            {/* RIGHT COLUMN - Hero Sidebar (~30%) */}
-            <div className="lg:w-[30%] space-y-4 lg:sticky lg:top-24 lg:self-start">
+            {/* RIGHT COLUMN - Hero Sidebar (~32%) */}
+            <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
               
               {/* Listing Agent Card - PRIMARY (top) */}
               {agentProfile && (
@@ -1019,42 +1019,50 @@ const PropertyDetail = () => {
               {/* Buyer Agent Compensation - Client View Only */}
               {!isAgentView && compensationDisplay && (
                 <Card className="rounded-3xl border border-emerald-100 bg-emerald-50/40 dark:bg-emerald-950/20">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-emerald-700" />
-                        <CardTitle className="text-base">Buyer Agent Compensation</CardTitle>
-                        <span className="text-xs text-muted-foreground">(Paid by Seller)</span>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <button className="text-muted-foreground hover:text-foreground">
-                              <HelpCircle className="w-4 h-4" />
-                            </button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-md">
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center gap-2">
-                                <DollarSign className="w-5 h-5 text-green-600" />
-                                Understanding Buyer Agent Compensation
-                              </DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4 text-sm text-muted-foreground">
-                              <p>
-                                This is the compensation the seller is offering to pay a buyer's agent.
-                              </p>
-                              <p>
-                                <strong className="text-foreground">It may be negotiable.</strong> Ask the listing agent for details.
-                              </p>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-emerald-700" />
+                      <CardTitle className="text-base">Buyer Agent Compensation</CardTitle>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="text-muted-foreground hover:text-foreground ml-1">
+                            <HelpCircle className="w-4 h-4" />
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                              <DollarSign className="w-5 h-5 text-green-600" />
+                              Understanding Buyer Agent Compensation
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4 text-sm text-muted-foreground">
+                            <p>
+                              <strong className="text-foreground">What do buyer agents do?</strong><br />
+                              Buyer agents represent your interests during the home buying process, helping you 
+                              find properties, negotiate offers, and navigate the transaction.
+                            </p>
+                            <p>
+                              <strong className="text-foreground">Is this negotiable?</strong><br />
+                              Yes, compensation may be negotiable. You should discuss this with your buyer's agent 
+                              or the listing agent for details.
+                            </p>
+                            <p>
+                              <strong className="text-foreground">What should I do?</strong><br />
+                              Ask your agent about their compensation structure and how it relates to this offer.
+                            </p>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-2xl font-semibold text-emerald-700 dark:text-emerald-400">
+                    <div className="text-2xl font-semibold text-emerald-700 dark:text-emerald-400 mb-2">
                       {compensationDisplay}
                     </div>
+                    <p className="text-sm text-muted-foreground">
+                      Compensation is offered by the seller of this home to a buyer's agent.
+                    </p>
                   </CardContent>
                 </Card>
               )}
