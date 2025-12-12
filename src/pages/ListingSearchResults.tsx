@@ -6,10 +6,11 @@ import Footer from "@/components/Footer";
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import ListingCard from "@/components/ListingCard";
 import { toast } from "sonner";
-import { ArrowLeft, LayoutGrid, List } from "lucide-react";
+import { ArrowLeft, LayoutGrid, List, CheckSquare, Eye, EyeOff, Bookmark, Share2, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+
 
 const ListingSearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -44,6 +45,7 @@ const ListingSearchResults = () => {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
 
   const handleSelectListing = (id: string) => {
     setSelectedListings(prev => {
@@ -56,6 +58,37 @@ const ListingSearchResults = () => {
       return newSet;
     });
   };
+
+  const toggleSelectAll = () => {
+    if (selectedListings.size === displayedListings.length) {
+      setSelectedListings(new Set());
+    } else {
+      setSelectedListings(new Set(displayedListings.map(l => l.id)));
+    }
+  };
+
+  const handleKeepSelected = () => {
+    setShowSelectedOnly(!showSelectedOnly);
+  };
+
+  const handleSaveSearch = () => {
+    const searchUrl = window.location.href;
+    const savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+    savedSearches.push({ url: searchUrl, savedAt: new Date().toISOString() });
+    localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
+    toast.success('Search saved successfully');
+  };
+
+  const handleShare = async () => {
+    const selectedIds = Array.from(selectedListings);
+    const shareUrl = `${window.location.origin}/listing-results?ids=${selectedIds.join(',')}`;
+    await navigator.clipboard.writeText(shareUrl);
+    toast.success(`Link copied with ${selectedIds.length} listings`);
+  };
+
+  const displayedListings = showSelectedOnly 
+    ? listings.filter(l => selectedListings.has(l.id))
+    : listings;
 
   const handleSearch = useCallback(async () => {
     setLoading(true);
@@ -324,29 +357,89 @@ const ListingSearchResults = () => {
               />
             </section>
           ) : (
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {loading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="bg-white border border-slate-200 rounded-lg h-72 animate-pulse" />
-                ))
-              ) : listings.length === 0 ? (
-                <div className="col-span-full text-center py-12 text-slate-500">
-                  No listings found matching your criteria
+            <>
+              {/* Grid View Action Buttons */}
+              <div className="bg-white border border-slate-200 rounded-lg shadow-sm mb-4">
+                <div className="px-4 py-2 flex items-center gap-2 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleSelectAll}
+                    className="h-8 gap-1.5 text-sm"
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                    {selectedListings.size === displayedListings.length && displayedListings.length > 0 ? 'Deselect All' : 'Select All'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleKeepSelected}
+                    disabled={selectedListings.size === 0}
+                    className="h-8 gap-1.5 text-sm"
+                  >
+                    {showSelectedOnly ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showSelectedOnly ? 'Show All' : 'Keep Selected'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSaveSearch}
+                    className="h-8 gap-1.5 text-sm"
+                  >
+                    <Bookmark className="h-4 w-4" />
+                    Save Search
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleShare}
+                    disabled={selectedListings.size === 0}
+                    className="h-8 gap-1.5 text-sm"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Share
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toast.info('Hot Sheet feature coming soon')}
+                    className="h-8 gap-1.5 text-sm"
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                    Save as Hot Sheet
+                  </Button>
+                  {selectedListings.size > 0 && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      {selectedListings.size} selected
+                    </span>
+                  )}
                 </div>
-              ) : (
-                listings.map((listing) => (
-                  <ListingCard
-                    key={listing.id}
-                    listing={listing}
-                    viewMode="grid"
-                    showActions={false}
-                    agentInfo={listing.agent_name ? { name: listing.agent_name } : null}
-                    onSelect={handleSelectListing}
-                    isSelected={selectedListings.has(listing.id)}
-                  />
-                ))
-              )}
-            </section>
+              </div>
+
+              <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {loading ? (
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="bg-white border border-slate-200 rounded-lg h-72 animate-pulse" />
+                  ))
+                ) : displayedListings.length === 0 ? (
+                  <div className="col-span-full text-center py-12 text-slate-500">
+                    No listings found matching your criteria
+                  </div>
+                ) : (
+                  displayedListings.map((listing) => (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      viewMode="grid"
+                      showActions={false}
+                      agentInfo={listing.agent_name ? { name: listing.agent_name } : null}
+                      onSelect={handleSelectListing}
+                      isSelected={selectedListings.has(listing.id)}
+                    />
+                  ))
+                )}
+              </section>
+            </>
           )}
         </div>
       </main>

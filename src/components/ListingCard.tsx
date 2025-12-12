@@ -1082,10 +1082,10 @@ const ListingCard = ({
           </div>
         )}
         
-        {/* Selection Checkbox - Top Left */}
+        {/* Selection Checkbox - Top Right */}
         {onSelect && (
           <div 
-            className="absolute top-2 left-2 z-10"
+            className="absolute top-2 right-2 z-10"
             onClick={(e) => e.stopPropagation()}
           >
             <Checkbox
@@ -1137,18 +1137,13 @@ const ListingCard = ({
 
       <CardContent className="p-3">
         {/* Address Row with Icon */}
-        <div className="flex justify-between items-start gap-2 mb-1">
+        <div className="flex justify-between items-start gap-2 mb-2">
           <div className="flex items-start gap-1.5 min-w-0 flex-1">
             <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-foreground leading-tight line-clamp-1">
-                {listing.address}
-                {unitNumber && <span className="text-muted-foreground font-normal"> Unit {unitNumber}</span>}
-              </h3>
-              <div className="text-xs text-muted-foreground">
-                {listing.city}, {listing.state} {listing.zip_code}
-              </div>
-            </div>
+            <h3 className="text-sm font-semibold text-foreground leading-tight line-clamp-1">
+              {listing.address?.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
+              {unitNumber && <span className="text-muted-foreground font-normal"> Unit {unitNumber}</span>}
+            </h3>
           </div>
           <div className="text-right flex-shrink-0">
             <div className="text-sm font-bold text-foreground">
