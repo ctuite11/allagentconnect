@@ -130,11 +130,14 @@ const PropertyDetail = () => {
   const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'video' | 'tour' | 'website'>('photos');
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   
-  // Role detection for dual-view
+  // Role detection + URL-based client mode
   const { user, role, loading: roleLoading } = useAuthRole();
   const isAgent = role === "agent";
-  const [viewAsClient, setViewAsClient] = useState(false);
-  const isAgentView = isAgent && !viewAsClient;
+  
+  // Check for client mode via URL query param or path suffix
+  const searchParams = new URLSearchParams(location.search);
+  const isClientMode = searchParams.get('view') === 'client' || location.pathname.endsWith('/client');
+  const isAgentView = isAgent && !isClientMode;
 
   // Track listing view
   useListingView(id);
@@ -227,10 +230,14 @@ const PropertyDetail = () => {
     await trackShare(id!, 'copy_link');
   };
 
-  const handleCopyConsumerLink = () => {
-    const url = `${window.location.origin}/property/${listing?.id}`;
+  const handleCopyClientLink = () => {
+    const url = `${window.location.origin}/property/${listing?.id}?view=client`;
     navigator.clipboard.writeText(url);
-    toast.success("Consumer link copied!");
+    toast.success("Client link copied to clipboard");
+  };
+
+  const handlePreviewClientView = () => {
+    window.open(`${window.location.origin}/property/${listing?.id}?view=client`, '_blank');
   };
 
   const handlePrint = () => {
@@ -393,28 +400,27 @@ const PropertyDetail = () => {
                     <Edit2 className="w-4 h-4" />
                     Edit Listing
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyClientLink}
+                    className="gap-2"
+                    title="Client-friendly view with agent-only info removed"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copy Client Link
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handlePreviewClientView}
+                    className="gap-2"
+                    title="Preview what clients see"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Preview
+                  </Button>
                 </>
-              )}
-
-              {/* Agent View / Client View Toggle */}
-              {isAgent && (
-                <button
-                  type="button"
-                  onClick={() => setViewAsClient((v) => !v)}
-                  className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
-                >
-                  {viewAsClient ? (
-                    <>
-                      <Eye className="h-4 w-4" />
-                      Agent View
-                    </>
-                  ) : (
-                    <>
-                      <EyeOff className="h-4 w-4" />
-                      Client View
-                    </>
-                  )}
-                </button>
               )}
 
               <SocialShareMenu
@@ -429,24 +435,13 @@ const PropertyDetail = () => {
       </div>
 
       <main className="flex-1 pt-4">
-        {/* Agent/Client View Banner */}
-        {isAgent && (
-          <div className="mx-auto max-w-6xl px-4 mb-4">
-            <div className={`rounded-lg px-4 py-2.5 text-sm ${
-              isAgentView 
-                ? 'bg-sky-50 text-sky-800 dark:bg-sky-950/50 dark:text-sky-200 border border-sky-200 dark:border-sky-800' 
-                : 'bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-200 border border-amber-200 dark:border-amber-800'
-            }`}>
-              {isAgentView ? (
-                <>
-                  <strong>Agent View</strong> – includes broker-only information (compensation, showing instructions, broker remarks). Switch to Client View before screen-sharing with clients.
-                </>
-              ) : (
-                <>
-                  <strong>Client View</strong> – you're viewing this listing as a consumer would. Broker-only information is hidden.
-                </>
-              )}
-            </div>
+        {/* Subtle Agent View Indicator - replaces banners */}
+        {isAgentView && (
+          <div className="mx-auto max-w-6xl px-4 mb-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <Info className="w-3 h-3" />
+              Internal view – not shown to clients
+            </span>
           </div>
         )}
 
@@ -601,29 +596,7 @@ const PropertyDetail = () => {
             {/* RIGHT COLUMN - Hero Sidebar (~30%) */}
             <div className="lg:w-[30%] space-y-4 lg:sticky lg:top-24 lg:self-start">
               
-              {/* Brokerage Card - Always Visible (Ad-style, larger logo) */}
-              <Card className="rounded-3xl shadow-md">
-                <CardContent className="p-5">
-                  <div className="flex flex-col items-center text-center">
-                    <div className="h-[140px] w-full rounded-2xl bg-slate-50 flex items-center justify-center overflow-hidden mb-4">
-                      <img
-                        src={agentLogo}
-                        alt={`${agentProfile?.company || 'Brokerage'} logo`}
-                        className="max-h-[120px] max-w-[200px] object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
-                        }}
-                      />
-                    </div>
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Listing Brokerage</p>
-                    <p className="text-base md:text-lg font-semibold">
-                      {agentProfile?.company || "Brokerage"}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Listing Agent Card - Always Visible */}
+              {/* Listing Agent Card - PRIMARY (top) */}
               {agentProfile && (
                 <Card className="rounded-3xl shadow-md">
                   <CardContent className="p-5 space-y-4">
@@ -696,13 +669,33 @@ const PropertyDetail = () => {
                       agentId={listing.agent_id}
                       listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
                     />
-                    
-                    <p className="text-xs text-slate-500 pt-2 border-t">
-                      Listing courtesy of {agentProfile.company || "Brokerage"}
-                    </p>
                   </CardContent>
                 </Card>
               )}
+              
+              {/* Brokerage Strip - SECONDARY (below agent) */}
+              <Card className="rounded-2xl shadow-sm border border-slate-100">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <img
+                        src={agentLogo}
+                        alt={`${agentProfile?.company || 'Brokerage'} logo`}
+                        className="h-full w-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
+                        }}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Listing Brokerage</p>
+                      <p className="text-sm font-medium truncate">
+                        {agentProfile?.company || "Brokerage"}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* ========== AGENT-ONLY CARDS ========== */}
               {isAgentView && (
@@ -722,11 +715,11 @@ const PropertyDetail = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={handleCopyConsumerLink}
+                        onClick={handleCopyClientLink}
                         className="w-full justify-start gap-2"
                       >
                         <Copy className="w-4 h-4" />
-                        Copy Consumer Link
+                        Copy Client Link
                       </Button>
                     </CardContent>
                   </Card>
@@ -958,25 +951,25 @@ const PropertyDetail = () => {
           </div>
 
           {/* Key Stats Row */}
-          <div className="flex flex-wrap items-center gap-4 text-sm md:text-base py-4 border-y mt-4">
+          <div className="flex flex-wrap items-center gap-5 text-sm md:text-base py-4 border-y mt-4">
             {listing.bedrooms && (
               <div className="flex items-center gap-2">
-                <Bed className="h-5 w-5 md:h-6 md:w-6 text-slate-700" />
-                <span className="font-semibold">{listing.bedrooms}</span>
+                <Bed className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
+                <span className="font-bold text-foreground">{listing.bedrooms}</span>
                 <span className="text-slate-500">Beds</span>
               </div>
             )}
             {listing.bathrooms && (
               <div className="flex items-center gap-2">
-                <Bath className="h-5 w-5 md:h-6 md:w-6 text-slate-700" />
-                <span className="font-semibold">{listing.bathrooms}</span>
+                <Bath className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
+                <span className="font-bold text-foreground">{listing.bathrooms}</span>
                 <span className="text-slate-500">Baths</span>
               </div>
             )}
             {listing.square_feet && (
               <div className="flex items-center gap-2">
-                <Square className="h-5 w-5 md:h-6 md:w-6 text-slate-700" />
-                <span className="font-semibold">{listing.square_feet.toLocaleString()}</span>
+                <Square className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
+                <span className="font-bold text-foreground">{listing.square_feet.toLocaleString()}</span>
                 <span className="text-slate-500">Sq Ft</span>
               </div>
             )}
