@@ -44,6 +44,7 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [savingContact, setSavingContact] = useState(false);
+  const [savePromptDismissed, setSavePromptDismissed] = useState(false);
   const clientSearchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,6 +59,7 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
       setClientResults([]);
       setShowClientDropdown(false);
       setShowManualEntry(false);
+      setSavePromptDismissed(false);
     }
   }, [open]);
 
@@ -302,20 +304,29 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
               </div>
               
               {/* Save to My Contacts prompt */}
-              {recipientName && recipientEmail && (
+              {recipientName && recipientEmail && !savePromptDismissed && (
                 <div className="p-3 bg-muted/50 rounded-md border border-dashed">
                   <p className="text-sm text-muted-foreground mb-2">
                     Save "{recipientName}" to My Contacts?
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSaveNewContact}
-                    disabled={savingContact}
-                  >
-                    <UserPlus className="h-4 w-4 mr-1.5" />
-                    {savingContact ? "Saving..." : "Save to My Contacts"}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSaveNewContact}
+                      disabled={savingContact}
+                    >
+                      <UserPlus className="h-4 w-4 mr-1.5" />
+                      {savingContact ? "Saving..." : "Save to My Contacts"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSavePromptDismissed(true)}
+                    >
+                      No thanks
+                    </Button>
+                  </div>
                 </div>
               )}
             </>
