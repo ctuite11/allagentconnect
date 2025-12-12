@@ -21,9 +21,11 @@ interface ContactAgentDialogProps {
   listingId: string;
   agentId: string;
   listingAddress: string;
+  buttonSize?: "sm" | "default" | "lg";
+  buttonVariant?: "default" | "outline" | "secondary";
 }
 
-const ContactAgentDialog = ({ listingId, agentId, listingAddress }: ContactAgentDialogProps) => {
+const ContactAgentDialog = ({ listingId, agentId, listingAddress, buttonSize = "lg", buttonVariant = "outline" }: ContactAgentDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -110,9 +112,14 @@ const ContactAgentDialog = ({ listingId, agentId, listingAddress }: ContactAgent
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="lg" className="gap-2">
-          <Mail className="h-5 w-5" />
-          Contact Agent
+        <Button 
+          variant={buttonVariant} 
+          size={buttonSize} 
+          className="gap-1.5 flex-shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Mail className={buttonSize === "sm" ? "h-3.5 w-3.5" : "h-5 w-5"} />
+          {buttonSize === "sm" ? "Contact" : "Contact Agent"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
