@@ -2,20 +2,29 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Users, Phone, ExternalLink } from "lucide-react";
+import { Users, Phone, ExternalLink, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+
+const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
 interface BuyerAgent {
   id: string;
   first_name: string;
   last_name: string;
   headshot_url: string | null;
+  logo_url: string | null;
   company: string | null;
   title: string | null;
   cell_phone: string | null;
   phone: string | null;
+  social_links: {
+    website?: string;
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+    twitter?: string;
+  } | null;
 }
 
 interface BuyerAgentShowcaseProps {
@@ -43,14 +52,14 @@ export const BuyerAgentShowcase = ({ listingZip, listingId }: BuyerAgentShowcase
           
           const { data: agentData } = await supabase
             .from("agent_profiles")
-            .select("id, first_name, last_name, headshot_url, company, title, cell_phone, phone")
+            .select("id, first_name, last_name, headshot_url, logo_url, company, title, cell_phone, phone, social_links")
             .in("id", agentIds);
 
           if (agentData) {
             // Shuffle and take 3, seeded by listingId + date for daily rotation
             const today = new Date().toISOString().split('T')[0];
             const seed = `${listingId}-${today}`;
-            const shuffled = shuffleWithSeed(agentData, seed);
+            const shuffled = shuffleWithSeed(agentData as BuyerAgent[], seed);
             setAgents(shuffled.slice(0, 3));
           }
         }
@@ -80,6 +89,14 @@ export const BuyerAgentShowcase = ({ listingZip, listingId }: BuyerAgentShowcase
     return shuffled;
   };
 
+  const getAgentWebsite = (agent: BuyerAgent): string | null => {
+    if (!agent.social_links) return null;
+    const socialLinks = typeof agent.social_links === 'string' 
+      ? JSON.parse(agent.social_links) 
+      : agent.social_links;
+    return socialLinks?.website || null;
+  };
+
   if (loading || agents.length === 0) {
     return null;
   }
@@ -93,53 +110,68 @@ export const BuyerAgentShowcase = ({ listingZip, listingId }: BuyerAgentShowcase
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {agents.map((agent) => (
-          <div
-            key={agent.id}
-            className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
-          >
-            <Avatar className="w-12 h-12">
-              {agent.headshot_url ? (
-                <AvatarImage src={agent.headshot_url} />
-              ) : (
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {agent.first_name[0]}{agent.last_name[0]}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm">
-                {agent.first_name} {agent.last_name}
-              </p>
-              {agent.company && (
-                <p className="text-xs text-muted-foreground truncate">{agent.company}</p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {(agent.cell_phone || agent.phone) && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  asChild
-                >
-                  <a href={`tel:${agent.cell_phone || agent.phone}`}>
-                    <Phone className="w-4 h-4" />
+        {agents.map((agent) => {
+          const websiteUrl = getAgentWebsite(agent);
+          
+          return (
+            <div
+              key={agent.id}
+              className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
+            >
+              <Avatar className="w-12 h-12">
+                {agent.headshot_url ? (
+                  <AvatarImage src={agent.headshot_url} />
+                ) : (
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {agent.first_name[0]}{agent.last_name[0]}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">
+                  {agent.first_name} {agent.last_name}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {agent.company || "Brokerage"}
+                </p>
+                {websiteUrl && (
+                  <a
+                    href={websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-0.5"
+                  >
+                    <Globe className="w-3 h-3" />
+                    Website
                   </a>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {(agent.cell_phone || agent.phone) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    asChild
+                  >
+                    <a href={`tel:${agent.cell_phone || agent.phone}`}>
+                      <Phone className="w-4 h-4" />
+                    </a>
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/agent/${agent.id}`)}
+                  className="text-xs"
+                >
+                  <ExternalLink className="w-3 h-3 mr-1" />
+                  Profile
                 </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/agent/${agent.id}`)}
-                className="text-xs"
-              >
-                <ExternalLink className="w-3 h-3 mr-1" />
-                Profile
-              </Button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         <p className="text-xs text-muted-foreground text-center pt-2 border-t">
           Agents shown serve this area. Selection is random; this is not a paid placement.
