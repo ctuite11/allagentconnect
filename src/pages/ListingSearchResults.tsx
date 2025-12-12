@@ -43,6 +43,19 @@ const ListingSearchResults = () => {
   const [sortColumn, setSortColumn] = useState("list_date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
+
+  const handleSelectListing = (id: string) => {
+    setSelectedListings(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
 
   const handleSearch = useCallback(async () => {
     setLoading(true);
@@ -328,6 +341,8 @@ const ListingSearchResults = () => {
                     viewMode="grid"
                     showActions={false}
                     agentInfo={listing.agent_name ? { name: listing.agent_name } : null}
+                    onSelect={handleSelectListing}
+                    isSelected={selectedListings.has(listing.id)}
                   />
                 ))
               )}
