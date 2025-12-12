@@ -545,10 +545,9 @@ const PropertyDetail = () => {
                     )}
                   </div>
               </div>
-            </div>
 
-            {/* Media Type Tabs - Below Photo Card */}
-            <div className="flex items-center gap-2 mt-4 lg:hidden">
+              {/* Media Type Tabs - Below Photo */}
+              <div className="flex items-center gap-2 mt-4">
                 <Button
                   variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
                   size="sm"
@@ -591,7 +590,76 @@ const PropertyDetail = () => {
                     Website
                   </Button>
                 )}
+              </div>
+
+              {/* ========== TITLE, PRICE & BASICS - DIRECTLY BELOW PHOTO ========== */}
+              <div className="mt-5">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                  <div className="flex-1">
+                    <h1 className="text-2xl md:text-3xl font-semibold">{listing.address}</h1>
+                    <p className="text-sm md:text-base text-slate-500">
+                      {listing.city}, {listing.state} {listing.zip_code}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-4xl font-bold text-primary">
+                      ${listing.price.toLocaleString()}
+                      {listing.listing_type === 'for_rent' && (
+                        <span className="text-xl text-muted-foreground">/month</span>
+                      )}
+                    </div>
+                    {listing.square_feet && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        ${Math.round(listing.price / listing.square_feet).toLocaleString()} / sq ft
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Key Stats Row */}
+                <div className="flex flex-wrap items-center gap-5 text-sm md:text-base py-4 border-y mt-4">
+                  {listing.bedrooms && (
+                    <div className="flex items-center gap-2">
+                      <Bed className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
+                      <span className="font-bold text-foreground">{listing.bedrooms}</span>
+                      <span className="text-slate-500">Beds</span>
+                    </div>
+                  )}
+                  {listing.bathrooms && (
+                    <div className="flex items-center gap-2">
+                      <Bath className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
+                      <span className="font-bold text-foreground">{listing.bathrooms}</span>
+                      <span className="text-slate-500">Baths</span>
+                    </div>
+                  )}
+                  {listing.square_feet && (
+                    <div className="flex items-center gap-2">
+                      <Square className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
+                      <span className="font-bold text-foreground">{listing.square_feet.toLocaleString()}</span>
+                      <span className="text-slate-500">Sq Ft</span>
+                    </div>
+                  )}
+                  <Separator orientation="vertical" className="h-6 hidden md:block" />
+                  {daysOnMarket !== null && (
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <Calendar className="h-4 w-4" />
+                      <span>{daysOnMarket} Days on Market</span>
+                    </div>
+                  )}
+                  {/* Agent-only inline stats */}
+                  {isAgentView && (
+                    <div className="flex items-center gap-4 text-slate-500">
+                      <span>Matches: <span className="font-medium text-foreground">{stats.matches}</span></span>
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-4 h-4" />
+                        <span className="font-medium text-foreground">{stats.views}</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+
 
             {/* RIGHT COLUMN - Hero Sidebar (~30%) */}
             <div className="lg:w-[30%] space-y-4 lg:sticky lg:top-24 lg:self-start">
@@ -879,118 +947,6 @@ const PropertyDetail = () => {
             </div>
           </div>
 
-          {/* Media Type Tabs - Desktop (visible on lg) */}
-          <div className="hidden lg:flex items-center gap-2 mt-3">
-            <Button
-              variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleMediaTabChange('photos')}
-              className="rounded-full"
-            >
-              <Home className="w-4 h-4 mr-2" />
-              Photos
-            </Button>
-            {listing.video_url && (
-              <Button
-                variant={activeMediaTab === 'video' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleMediaTabChange('video')}
-                className="rounded-full"
-              >
-                <Video className="w-4 h-4 mr-2" />
-                Video
-              </Button>
-            )}
-            {listing.virtual_tour_url && (
-              <Button
-                variant={activeMediaTab === 'tour' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleMediaTabChange('tour')}
-                className="rounded-full"
-              >
-                <Maximize2 className="w-4 h-4 mr-2" />
-                3D Tour
-              </Button>
-            )}
-            {listing.property_website_url && (
-              <Button
-                variant={activeMediaTab === 'website' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleMediaTabChange('website')}
-                className="rounded-full"
-              >
-                <Globe className="w-4 h-4 mr-2" />
-                Website
-              </Button>
-            )}
-          </div>
-
-          {/* ========== TITLE, PRICE & BASICS - DIRECTLY BELOW PHOTO ========== */}
-          <div className="mt-5">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-              <div className="flex-1">
-                <h1 className="text-2xl md:text-3xl font-semibold">{listing.address}</h1>
-                <p className="text-sm md:text-base text-slate-500">
-                  {listing.city}, {listing.state} {listing.zip_code}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-4xl font-bold text-primary">
-                  ${listing.price.toLocaleString()}
-                  {listing.listing_type === 'for_rent' && (
-                    <span className="text-xl text-muted-foreground">/month</span>
-                  )}
-                </div>
-                {listing.square_feet && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    ${Math.round(listing.price / listing.square_feet).toLocaleString()} / sq ft
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Key Stats Row */}
-            <div className="flex flex-wrap items-center gap-5 text-sm md:text-base py-4 border-y mt-4">
-              {listing.bedrooms && (
-                <div className="flex items-center gap-2">
-                  <Bed className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
-                  <span className="font-bold text-foreground">{listing.bedrooms}</span>
-                  <span className="text-slate-500">Beds</span>
-                </div>
-              )}
-              {listing.bathrooms && (
-                <div className="flex items-center gap-2">
-                  <Bath className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
-                  <span className="font-bold text-foreground">{listing.bathrooms}</span>
-                  <span className="text-slate-500">Baths</span>
-                </div>
-              )}
-              {listing.square_feet && (
-                <div className="flex items-center gap-2">
-                  <Square className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
-                  <span className="font-bold text-foreground">{listing.square_feet.toLocaleString()}</span>
-                  <span className="text-slate-500">Sq Ft</span>
-                </div>
-              )}
-              <Separator orientation="vertical" className="h-6 hidden md:block" />
-              {daysOnMarket !== null && (
-                <div className="flex items-center gap-2 text-slate-500">
-                  <Calendar className="h-4 w-4" />
-                  <span>{daysOnMarket} Days on Market</span>
-                </div>
-              )}
-              {/* Agent-only inline stats */}
-              {isAgentView && (
-                <div className="flex items-center gap-4 text-slate-500">
-                  <span>Matches: <span className="font-medium text-foreground">{stats.matches}</span></span>
-                  <span className="flex items-center gap-1">
-                    <Eye className="w-4 h-4" />
-                    <span className="font-medium text-foreground">{stats.views}</span>
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
 
