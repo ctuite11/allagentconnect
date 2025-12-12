@@ -452,11 +452,11 @@ const PropertyDetail = () => {
 
         {/* ========== NEW FLOATING HERO LAYOUT ========== */}
         <div className="mx-auto max-w-6xl px-4 pt-4 lg:pt-6">
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col lg:flex-row gap-8">
             
-            {/* LEFT COLUMN - Floating Photo Carousel (70%) */}
-            <div className="lg:w-2/3">
-              <div className="relative rounded-3xl overflow-hidden shadow-lg bg-slate-100 aspect-[5/3]">
+            {/* LEFT COLUMN - Floating Photo Carousel (~70%) */}
+            <div className="lg:w-[70%]">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[320px] sm:h-[400px] lg:h-[540px]">
                 <div className="absolute inset-0 bg-slate-950">
                   {/* Media Content */}
                     {activeMediaTab === 'photos' && (
@@ -598,25 +598,25 @@ const PropertyDetail = () => {
                 )}
             </div>
 
-            {/* RIGHT COLUMN - Hero Sidebar (30%) */}
-            <div className="lg:w-1/3 space-y-4">
+            {/* RIGHT COLUMN - Hero Sidebar (~30%) */}
+            <div className="lg:w-[30%] space-y-4 lg:sticky lg:top-24 lg:self-start">
               
-              {/* Brokerage Card - Always Visible (Ad-style) */}
+              {/* Brokerage Card - Always Visible (Ad-style, larger logo) */}
               <Card className="rounded-3xl shadow-md">
-                <CardContent className="flex items-center gap-4 p-5">
-                  <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    <img
-                      src={agentLogo}
-                      alt={`${agentProfile?.company || 'Brokerage'} logo`}
-                      className="h-full w-full object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
-                      }}
-                    />
-                  </div>
-                  <div className="min-w-0">
+                <CardContent className="p-5">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="h-[140px] w-full rounded-2xl bg-slate-50 flex items-center justify-center overflow-hidden mb-4">
+                      <img
+                        src={agentLogo}
+                        alt={`${agentProfile?.company || 'Brokerage'} logo`}
+                        className="max-h-[120px] max-w-[200px] object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
+                        }}
+                      />
+                    </div>
                     <p className="text-xs uppercase tracking-wide text-slate-500">Listing Brokerage</p>
-                    <p className="text-base md:text-lg font-semibold truncate">
+                    <p className="text-base md:text-lg font-semibold">
                       {agentProfile?.company || "Brokerage"}
                     </p>
                   </div>
@@ -625,7 +625,7 @@ const PropertyDetail = () => {
 
               {/* Listing Agent Card - Always Visible */}
               {agentProfile && (
-                <Card className="rounded-3xl shadow-md lg:sticky lg:top-24">
+                <Card className="rounded-3xl shadow-md">
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-center gap-4">
                       <Avatar className="w-14 h-14">
