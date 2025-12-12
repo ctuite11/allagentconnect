@@ -108,26 +108,28 @@ export function ShareListingsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="p-0 sm:max-w-xl"
+        className="flex max-h-[85vh] flex-col p-0 sm:max-w-xl"
         hideCloseButton={false}
         onKeyDown={handleKeyDown}
       >
         {/* Header */}
-        <div className="border-b px-6 py-5">
+        <div className="shrink-0 border-b px-6 py-5">
           <DialogHeader className="space-y-1">
-            <DialogTitle className="text-lg">
+            <DialogTitle className="text-lg text-primary">
               Share {selectedCount} Listing{selectedCount === 1 ? "" : "s"}
             </DialogTitle>
             <DialogDescription>
               Send the selected listing{selectedCount === 1 ? "" : "s"} to a contact via email.
             </DialogDescription>
           </DialogHeader>
+          {/* Accent bar */}
+          <div className="mt-4 h-[2px] w-16 rounded-full bg-primary/80" />
 
           {/* Listing Preview Chip */}
           {listingPreview ? (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border bg-muted/30 p-3">
-              <div className="mt-0.5 rounded-xl border bg-background p-2">
-                <Home className="h-4 w-4 text-muted-foreground" />
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-3">
+              <div className="mt-0.5 rounded-xl bg-primary/10 ring-1 ring-primary/15 p-2">
+                <Home className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium">{listingPreview.address}</div>
@@ -137,7 +139,7 @@ export function ShareListingsDialog({
                   </div>
                 ) : null}
                 <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  {listingPreview.price ? <span>{listingPreview.price}</span> : null}
+                  {listingPreview.price ? <span className="font-medium text-foreground">{listingPreview.price}</span> : null}
                   {typeof listingPreview.beds === "number" ? <span>{listingPreview.beds} bd</span> : null}
                   {typeof listingPreview.baths === "number" ? <span>{listingPreview.baths} ba</span> : null}
                   {typeof listingPreview.sqft === "number" ? (
@@ -149,8 +151,8 @@ export function ShareListingsDialog({
           ) : null}
         </div>
 
-        {/* Body */}
-        <div className="max-h-[70vh] overflow-y-auto px-6 py-5 space-y-6">
+        {/* Body - scrollable */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 space-y-6">
           {/* Contact Search */}
           <section className="space-y-3">
             <div className="text-sm font-medium">Search Contact</div>
@@ -167,15 +169,15 @@ export function ShareListingsDialog({
             </div>
 
             <div className="flex items-center gap-3">
-              <Separator className="flex-1" />
-              <span className="text-xs text-muted-foreground">OR</span>
-              <Separator className="flex-1" />
+              <Separator className="flex-1 bg-primary/20" />
+              <span className="text-xs font-medium text-primary/70">OR</span>
+              <Separator className="flex-1 bg-primary/20" />
             </div>
 
             <Button
               type="button"
               variant="outline"
-              className="w-full rounded-2xl"
+              className="w-full rounded-2xl border-primary/30 bg-primary/5 hover:bg-primary/10"
               onClick={() => setManualMode(!manualMode)}
             >
               <PencilLine className="mr-2 h-4 w-4" />
@@ -214,7 +216,7 @@ export function ShareListingsDialog({
           </section>
 
           {/* Sender Info Card */}
-          <section className="rounded-2xl border bg-muted/20 p-4 space-y-4">
+          <section className="rounded-2xl border border-primary/15 bg-primary/5 p-4 space-y-4">
             <div className="text-sm font-semibold">Sender Info</div>
 
             <div className="space-y-2">
@@ -277,7 +279,7 @@ export function ShareListingsDialog({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-full"
+                  className="rounded-full border-primary/25 bg-primary/5 text-primary hover:bg-primary/10"
                   onClick={() => setMessage(message ? `${message}\n${t}` : t)}
                 >
                   {t}
@@ -294,8 +296,8 @@ export function ShareListingsDialog({
           </section>
         </div>
 
-        {/* Footer */}
-        <DialogFooter className="border-t px-6 py-4">
+        {/* Footer - sticky */}
+        <DialogFooter className="shrink-0 border-t px-6 py-4">
           <div className="flex w-full items-center justify-between gap-3">
             <DialogClose asChild>
               <Button type="button" variant="ghost" className="rounded-2xl">
@@ -307,7 +309,7 @@ export function ShareListingsDialog({
               type="button"
               onClick={onSubmit}
               disabled={!canSubmit || submitting}
-              className="rounded-2xl"
+              className="rounded-2xl shadow-sm"
             >
               <Send className="mr-2 h-4 w-4" />
               {submitting ? "Sending…" : `Share Listing${selectedCount === 1 ? "" : "s"}`}
