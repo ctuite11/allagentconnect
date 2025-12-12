@@ -124,12 +124,12 @@ export function ShareListingsDialog({
             </DialogDescription>
           </DialogHeader>
           {/* Accent bar */}
-          <div className="mt-4 h-[2px] w-16 rounded-full bg-primary/80" />
+          <div className="mt-4 h-[2px] w-16 rounded-full bg-primary" />
 
           {/* Listing Preview / Summary */}
           {selectedCount === 1 && listingPreview ? (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[5px] border-l-primary">
-              <div className="mt-0.5 rounded-xl border border-border bg-background p-2">
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[6px] border-l-primary">
+              <div className="mt-0.5 rounded-xl border border-primary/30 bg-primary/5 p-2">
                 <Home className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0">
@@ -150,8 +150,8 @@ export function ShareListingsDialog({
               </div>
             </div>
           ) : selectedCount > 1 ? (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[5px] border-l-primary">
-              <div className="mt-0.5 rounded-xl border border-border bg-background p-2">
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[6px] border-l-primary">
+              <div className="mt-0.5 rounded-xl border border-primary/30 bg-primary/5 p-2">
                 <Layers className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0">
@@ -229,7 +229,7 @@ export function ShareListingsDialog({
           </section>
 
           {/* Sender Info Card */}
-          <section className="rounded-2xl border border-border bg-background p-4 space-y-4 border-l-[5px] border-l-primary">
+          <section className="rounded-2xl border border-border bg-background p-4 space-y-4 border-l-[6px] border-l-primary">
             <div className="text-sm font-semibold tracking-wide">Sender Info</div>
 
             <div className="space-y-2">
@@ -283,7 +283,7 @@ export function ShareListingsDialog({
           </section>
 
           {/* Message */}
-          <section className="rounded-2xl border border-border bg-background p-4 space-y-3 border-l-[5px] border-l-primary">
+          <section className="rounded-2xl border border-border bg-background p-4 space-y-3 border-l-[6px] border-l-primary">
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold tracking-wide">Personal Message</div>
               <div className="text-xs text-muted-foreground">Cmd/Ctrl + Enter to send</div>
