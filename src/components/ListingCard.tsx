@@ -1138,13 +1138,18 @@ const ListingCard = ({
       <CardContent className="p-3">
         {/* Address Row with Icon */}
         <div className="flex justify-between items-start gap-2 mb-2">
-          <div className="flex items-start gap-1.5 min-w-0 flex-1">
-            <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-            <h3 className="text-sm font-semibold text-foreground leading-tight line-clamp-1">
-              {listing.address?.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
-              {unitNumber && <span className="text-muted-foreground font-normal"> Unit {unitNumber}</span>}
-            </h3>
-          </div>
+            <div className="flex items-start gap-1.5 min-w-0 flex-1">
+              <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-foreground leading-tight line-clamp-1">
+                  {listing.address?.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                  {unitNumber && <span className="text-muted-foreground font-normal"> Unit {unitNumber}</span>}
+                </h3>
+                <div className="text-xs text-muted-foreground">
+                  {listing.city?.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}, {listing.state} {listing.zip_code}
+                </div>
+              </div>
+            </div>
           <div className="text-right flex-shrink-0">
             <div className="text-sm font-bold text-foreground">
               {formatPrice(listing.price)}
