@@ -379,36 +379,32 @@ const PropertyDetail = () => {
       
       <Navigation />
 
-      {/* Compact Header Bar - No border */}
-      <div className="bg-card sticky top-16 z-10 mt-8">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-10">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                const fromPage = location.state?.from;
-                if (fromPage) {
-                  navigate(fromPage);
-                } else if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate("/listing-search");
-                }
-              }}
-              className="gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Button>
-          </div>
-        </div>
+      {/* Back Button Row - Own row with proper top margin */}
+      <div className="mx-auto max-w-6xl px-4 mt-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            const fromPage = location.state?.from;
+            if (fromPage) {
+              navigate(fromPage);
+            } else if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate("/listing-search");
+            }
+          }}
+          className="gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Button>
       </div>
 
-      <main className="flex-1 pt-2">
-        {/* Subtle Agent View Indicator - replaces banners */}
+      <main className="flex-1 pt-4">
+        {/* Subtle Agent View Indicator */}
         {isAgentView && (
-          <div className="mx-auto max-w-6xl px-4 mb-2">
+          <div className="mx-auto max-w-6xl px-4 mb-3">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
               <Info className="w-3 h-3" />
               Internal view – not shown to clients
@@ -416,13 +412,13 @@ const PropertyDetail = () => {
           </div>
         )}
 
-        {/* ========== FLOATING HERO LAYOUT ========== */}
-        <div className="mx-auto max-w-6xl px-4 pt-1">
-          <div className="flex flex-col lg:flex-row gap-5">
+        {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="flex flex-col lg:flex-row gap-6">
             
             {/* LEFT COLUMN - Floating Photo Carousel (~65-70%) */}
             <div className="lg:w-[68%]">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[320px] sm:h-[420px] lg:h-[500px]">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[340px] sm:h-[440px] lg:h-[520px]">
                 <div className="absolute inset-0 bg-slate-950">
                   {/* Media Content */}
                     {activeMediaTab === 'photos' && (
@@ -588,83 +584,6 @@ const PropertyDetail = () => {
                 )}
               </div>
 
-              {/* ========== HERO BAND - ADDRESS / PRICE / STATS (ONE COMPACT UNIT) ========== */}
-              <div className="mt-3 border-b pb-3">
-                {/* ROW 1: Address Left, Price Right */}
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1">
-                  {/* LEFT: Address */}
-                  <div>
-                    <h1 className="text-lg md:text-xl font-semibold text-foreground flex items-center gap-1.5">
-                      <MapPin className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                      {buildDisplayAddress(listing)}
-                    </h1>
-                    <p className="text-sm text-muted-foreground ml-6">
-                      {listing.city}, {listing.state} {listing.zip_code}
-                    </p>
-                  </div>
-                  
-                  {/* RIGHT: Price */}
-                  <div className="text-left sm:text-right ml-6 sm:ml-0 mt-1 sm:mt-0">
-                    <div className="text-2xl md:text-3xl font-bold text-foreground">
-                      ${listing.price.toLocaleString()}
-                      {listing.listing_type === 'for_rent' && (
-                        <span className="text-base text-muted-foreground font-normal">/mo</span>
-                      )}
-                    </div>
-                    {listing.square_feet && (
-                      <p className="text-sm text-muted-foreground">
-                        ${Math.round(listing.price / listing.square_feet).toLocaleString()} / sq ft
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* ROW 2: Stats (immediately under Row 1, NO gap) */}
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-2">
-                  {listing.bedrooms && (
-                    <div className="flex items-center gap-1.5">
-                      <Bed className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                      <span className="font-bold text-foreground">{listing.bedrooms}</span>
-                      <span className="text-sm text-muted-foreground">Beds</span>
-                    </div>
-                  )}
-                  {listing.bathrooms && (
-                    <div className="flex items-center gap-1.5">
-                      <Bath className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                      <span className="font-bold text-foreground">{listing.bathrooms}</span>
-                      <span className="text-sm text-muted-foreground">Baths</span>
-                    </div>
-                  )}
-                  {listing.square_feet && (
-                    <div className="flex items-center gap-1.5">
-                      <Square className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                      <span className="font-bold text-foreground">{listing.square_feet.toLocaleString()}</span>
-                      <span className="text-sm text-muted-foreground">Sq Ft</span>
-                    </div>
-                  )}
-                  {daysOnMarket !== null && (
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                      <span className="font-bold text-foreground">{daysOnMarket}</span>
-                      <span className="text-sm text-muted-foreground">DOM</span>
-                    </div>
-                  )}
-                  {isAgentView && (
-                    <>
-                      <div className="flex items-center gap-1.5">
-                        <Eye className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                        <span className="font-bold text-foreground">{stats.views}</span>
-                        <span className="text-sm text-muted-foreground">Views</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Users className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                        <span className="font-bold text-foreground">{stats.matches}</span>
-                        <span className="text-sm text-muted-foreground">Matches</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
             </div>
 
 
@@ -819,21 +738,47 @@ const PropertyDetail = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Buyer Agent Compensation - AGENT VIEW */}
+                  {/* Buyer Agent Compensation - AGENT VIEW (single line) */}
                   {compensationDisplay && (
                     <Card className="rounded-2xl border-green-200 bg-green-50/50 dark:bg-green-950/20">
-                      <CardHeader className="pb-2 pt-4 px-4">
-                        <CardTitle className="flex items-center gap-2 text-sm text-green-900 dark:text-green-100">
-                          <DollarSign className="w-4 h-4" />
-                          Buyer Agent Compensation
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="px-4 pb-4">
-                        <p className="text-xl font-bold text-green-700 dark:text-green-300">
-                          {compensationDisplay}
-                        </p>
+                      <CardContent className="py-3 px-4">
+                        <div className="flex items-center gap-2 text-sm">
+                          <DollarSign className="w-4 h-4 text-green-700 flex-shrink-0" />
+                          <span className="font-medium text-green-900 dark:text-green-100">
+                            Buyer Agent Compensation: {compensationDisplay} (paid by seller)
+                          </span>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button className="text-muted-foreground hover:text-foreground ml-1">
+                                <HelpCircle className="w-4 h-4" />
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                  <DollarSign className="w-5 h-5 text-green-600" />
+                                  Understanding Buyer Agent Compensation
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4 py-4 text-sm text-muted-foreground">
+                                <p>
+                                  <strong className="text-foreground">What is this?</strong><br />
+                                  This is the compensation the seller is offering to pay a buyer's agent for bringing a buyer to this property.
+                                </p>
+                                <p>
+                                  <strong className="text-foreground">Is it negotiable?</strong><br />
+                                  Yes, compensation may be negotiable. You should discuss this with your buyer's agent or the listing agent for details.
+                                </p>
+                                <p>
+                                  <strong className="text-foreground">What should buyers do?</strong><br />
+                                  Ask your agent about their compensation structure and how it relates to this offer.
+                                </p>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
                         {listing.commission_notes && (
-                          <p className="text-xs text-foreground/80 mt-2 border-t pt-2">
+                          <p className="text-xs text-foreground/80 mt-2 border-t pt-2 ml-6">
                             {listing.commission_notes}
                           </p>
                         )}
@@ -949,11 +894,87 @@ const PropertyDetail = () => {
             </div>
           </div>
 
+          {/* ========== ADDRESS + PRICE ROW (IMMEDIATELY UNDER HERO) ========== */}
+          <div className="mt-4 border-b pb-3">
+            {/* ROW 1: Address Left, Price Right - Same baseline */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+              {/* LEFT: Address */}
+              <div>
+                <h1 className="text-lg md:text-xl font-semibold text-foreground flex items-center gap-1.5">
+                  <MapPin className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                  {buildDisplayAddress(listing)}
+                </h1>
+                <p className="text-sm text-muted-foreground ml-6">
+                  {listing.city}, {listing.state} {listing.zip_code}
+                </p>
+              </div>
+              
+              {/* RIGHT: Price - reduced ~15-20% */}
+              <div className="text-left sm:text-right ml-6 sm:ml-0">
+                <div className="text-xl md:text-2xl font-bold text-foreground">
+                  ${listing.price.toLocaleString()}
+                  {listing.listing_type === 'for_rent' && (
+                    <span className="text-sm text-muted-foreground font-normal">/mo</span>
+                  )}
+                </div>
+                {listing.square_feet && (
+                  <p className="text-sm text-muted-foreground">
+                    ${Math.round(listing.price / listing.square_feet).toLocaleString()} / sq ft
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* ROW 2: Stats - directly under address, no gap */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-2">
+              {listing.bedrooms && (
+                <div className="flex items-center gap-1.5">
+                  <Bed className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                  <span className="font-bold text-foreground">{listing.bedrooms}</span>
+                  <span className="text-sm text-muted-foreground">Beds</span>
+                </div>
+              )}
+              {listing.bathrooms && (
+                <div className="flex items-center gap-1.5">
+                  <Bath className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                  <span className="font-bold text-foreground">{listing.bathrooms}</span>
+                  <span className="text-sm text-muted-foreground">Baths</span>
+                </div>
+              )}
+              {listing.square_feet && (
+                <div className="flex items-center gap-1.5">
+                  <Square className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                  <span className="font-bold text-foreground">{listing.square_feet.toLocaleString()}</span>
+                  <span className="text-sm text-muted-foreground">Sq Ft</span>
+                </div>
+              )}
+              {daysOnMarket !== null && (
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                  <span className="font-bold text-foreground">{daysOnMarket}</span>
+                  <span className="text-sm text-muted-foreground">DOM</span>
+                </div>
+              )}
+              {isAgentView && (
+                <>
+                  <div className="flex items-center gap-1.5">
+                    <Eye className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                    <span className="font-bold text-foreground">{stats.views}</span>
+                    <span className="text-sm text-muted-foreground">Views</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Users className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                    <span className="font-bold text-foreground">{stats.matches}</span>
+                    <span className="text-sm text-muted-foreground">Matches</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
-
         {/* ========== MAIN CONTENT BELOW HERO ========== */}
-        <div className="mx-auto max-w-6xl px-4 pt-2 pb-8">
+        <div className="mx-auto max-w-6xl px-4 pt-4 pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* LEFT COLUMN - Main Content */}
             <div className="lg:col-span-2 space-y-4">
@@ -1013,13 +1034,15 @@ const PropertyDetail = () => {
 
             {/* RIGHT COLUMN - Consumer-facing content (not in hero sidebar) */}
             <div className="space-y-6">
-              {/* Buyer Agent Compensation - Client View Only */}
+              {/* Buyer Agent Compensation - Client View Only (single line) */}
               {!isAgentView && compensationDisplay && (
                 <Card className="rounded-3xl border border-emerald-100 bg-emerald-50/40 dark:bg-emerald-950/20">
-                  <CardHeader className="pb-2">
+                  <CardContent className="py-4">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-emerald-700" />
-                      <CardTitle className="text-base">Buyer Agent Compensation</CardTitle>
+                      <DollarSign className="h-5 w-5 text-emerald-700 flex-shrink-0" />
+                      <span className="font-semibold text-emerald-900 dark:text-emerald-100">
+                        Buyer Agent Compensation: {compensationDisplay} (paid by seller)
+                      </span>
                       <Dialog>
                         <DialogTrigger asChild>
                           <button className="text-muted-foreground hover:text-foreground ml-1">
@@ -1052,14 +1075,6 @@ const PropertyDetail = () => {
                         </DialogContent>
                       </Dialog>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="text-2xl font-semibold text-emerald-700 dark:text-emerald-400 mb-2">
-                      {compensationDisplay}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Compensation is offered by the seller of this home to a buyer's agent.
-                    </p>
                   </CardContent>
                 </Card>
               )}
