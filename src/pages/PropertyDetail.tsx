@@ -371,9 +371,9 @@ const PropertyDetail = () => {
       <Navigation />
 
       {/* Compact Header Bar - No border */}
-      <div className="bg-card sticky top-16 z-10 mt-2">
+      <div className="bg-card sticky top-16 z-10 mt-6">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-12">
+          <div className="flex items-center justify-between h-10">
             <Button
               variant="ghost"
               size="sm"
@@ -584,53 +584,62 @@ const PropertyDetail = () => {
                     Website
                   </Button>
                 )}
+                <SocialShareMenu
+                  url={getListingShareUrl(id!)}
+                  title={`${listing.address}, ${listing.city}, ${listing.state}`}
+                  description={listing.description || ''}
+                  listingId={id!}
+                  trigger={
+                    <Button variant="outline" size="sm" className="rounded-full">
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Share
+                    </Button>
+                  }
+                />
               </div>
 
-              {/* ========== TITLE, PRICE & BASICS - DIRECTLY BELOW PHOTO ========== */}
-              <div className="mt-5">
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-start gap-2">
-                      <MapPin className="w-5 h-5 mt-1 text-muted-foreground flex-shrink-0" />
-                      <h1 className="text-2xl md:text-3xl font-semibold">
-                        {buildDisplayAddress(listing)}
-                      </h1>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-bold text-primary">
-                      ${listing.price.toLocaleString()}
-                      {listing.listing_type === 'for_rent' && (
-                        <span className="text-xl text-muted-foreground">/month</span>
-                      )}
-                    </div>
-                    {listing.square_feet && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        ${Math.round(listing.price / listing.square_feet).toLocaleString()} / sq ft
-                      </p>
-                    )}
-                  </div>
+              {/* ========== PRICE, ADDRESS & BASICS - DIRECTLY BELOW PHOTO ========== */}
+              <div className="mt-3">
+                {/* Price - smaller, directly below tabs */}
+                <div className="text-2xl font-bold text-primary">
+                  ${listing.price.toLocaleString()}
+                  {listing.listing_type === 'for_rent' && (
+                    <span className="text-base text-muted-foreground">/month</span>
+                  )}
+                  {listing.square_feet && (
+                    <span className="text-sm text-muted-foreground font-normal ml-2">
+                      (${Math.round(listing.price / listing.square_feet).toLocaleString()} / sq ft)
+                    </span>
+                  )}
+                </div>
+
+                {/* Address - smaller, one line */}
+                <div className="flex items-center gap-1.5 mt-1">
+                  <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <h1 className="text-base md:text-lg font-medium text-foreground">
+                    {buildDisplayAddress(listing)}
+                  </h1>
                 </div>
 
                 {/* Key Stats Row */}
-                <div className="flex flex-wrap items-center gap-5 text-sm md:text-base py-4 border-y mt-4">
+                <div className="flex flex-wrap items-center gap-4 text-sm py-3 border-y mt-3">
                   {listing.bedrooms && (
-                    <div className="flex items-center gap-2">
-                      <Bed className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
+                    <div className="flex items-center gap-1.5">
+                      <Bed className="h-4 w-4 text-slate-600" strokeWidth={2} />
                       <span className="font-bold text-foreground">{listing.bedrooms}</span>
                       <span className="text-slate-500">Beds</span>
                     </div>
                   )}
                   {listing.bathrooms && (
-                    <div className="flex items-center gap-2">
-                      <Bath className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
+                    <div className="flex items-center gap-1.5">
+                      <Bath className="h-4 w-4 text-slate-600" strokeWidth={2} />
                       <span className="font-bold text-foreground">{listing.bathrooms}</span>
                       <span className="text-slate-500">Baths</span>
                     </div>
                   )}
                   {listing.square_feet && (
-                    <div className="flex items-center gap-2">
-                      <Square className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
+                    <div className="flex items-center gap-1.5">
+                      <Square className="h-4 w-4 text-slate-600" strokeWidth={2} />
                       <span className="font-bold text-foreground">{listing.square_feet.toLocaleString()}</span>
                       <span className="text-slate-500">Sq Ft</span>
                     </div>
@@ -710,12 +719,6 @@ const PropertyDetail = () => {
                             <span className="font-medium">Website</span>
                           </a>
                         )}
-                        <SocialShareMenu
-                          url={getListingShareUrl(id!)}
-                          title={`${listing.address}, ${listing.city}, ${listing.state}`}
-                          description={listing.description || ''}
-                          listingId={id!}
-                        />
                       </div>
                     </div>
 

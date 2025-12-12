@@ -13,9 +13,10 @@ interface SocialShareMenuProps {
   title: string;
   description?: string;
   listingId?: string;
+  trigger?: React.ReactNode;
 }
 
-const SocialShareMenu = ({ url, title, description = "", listingId }: SocialShareMenuProps) => {
+const SocialShareMenu = ({ url, title, description = "", listingId, trigger }: SocialShareMenuProps) => {
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
   const encodedDescription = encodeURIComponent(description);
@@ -50,10 +51,12 @@ const SocialShareMenu = ({ url, title, description = "", listingId }: SocialShar
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="lg" className="gap-2">
-          <Share2 className="w-4 h-4" />
-          Share
-        </Button>
+        {trigger || (
+          <Button variant="secondary" size="lg" className="gap-2">
+            <Share2 className="w-4 h-4" />
+            Share
+          </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem onClick={() => handleShare("facebook")} className="gap-2 cursor-pointer">
