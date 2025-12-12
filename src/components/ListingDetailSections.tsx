@@ -185,7 +185,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
       <Card className="rounded-3xl">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Info className="w-5 h-5" />
+            <Info className="w-5 h-5 text-primary" />
             Property Features
           </CardTitle>
         </CardHeader>
@@ -219,9 +219,9 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
       {/* Property Details - OPEN BY DEFAULT */}
       {propertyDetailRows.length > 0 && (
         <Card className="rounded-3xl">
-          <CardHeader className="pb-3">
+        <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Home className="w-5 h-5" />
+              <Home className="w-5 h-5 text-primary" />
               Property Details
             </CardTitle>
           </CardHeader>
@@ -249,7 +249,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
         <Card className="rounded-3xl">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Building2 className="w-5 h-5" />
+              <Building2 className="w-5 h-5 text-primary" />
               Additional Property Details
             </CardTitle>
           </CardHeader>
@@ -298,7 +298,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
         <Card className="rounded-3xl">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <DollarSign className="w-5 h-5" />
+              <DollarSign className="w-5 h-5 text-primary" />
               Tax Information
             </CardTitle>
           </CardHeader>
@@ -317,7 +317,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
         <Card className="rounded-3xl">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="w-5 h-5" />
+              <Calendar className="w-5 h-5 text-primary" />
               Market Information
             </CardTitle>
           </CardHeader>
