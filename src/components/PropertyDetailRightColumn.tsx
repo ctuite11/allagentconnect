@@ -14,13 +14,16 @@ import {
   Edit2, 
   Copy, 
   Send,
-  Calendar
+  Calendar,
+  Globe
 } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { BuyerAgentShowcase } from "./BuyerAgentShowcase";
 import { BuyerCompensationInfoModal } from "./BuyerCompensationInfoModal";
+
+const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
 interface PropertyDetailRightColumnProps {
   listing: any;
@@ -246,7 +249,28 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
       {/* Listing Agent Card */}
       {agent && (
         <Card>
-          <CardHeader>
+          {/* Logo Section - Top of Panel */}
+          <div className="p-4 border-b flex justify-center">
+            <div className="w-32 h-16 flex items-center justify-center">
+              <img
+                src={agent.logo_url || DEFAULT_BROKERAGE_LOGO_URL}
+                alt={`${agent.company || 'Brokerage'} logo`}
+                className="max-w-full max-h-full object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
+                }}
+              />
+            </div>
+          </div>
+          
+          {/* Brokerage Name under logo */}
+          <div className="px-4 pt-3 pb-1 text-center">
+            <p className="text-sm font-medium text-muted-foreground">
+              {agent.company || "Brokerage"}
+            </p>
+          </div>
+
+          <CardHeader className="pt-2">
             <CardTitle className="text-lg">Listing Agent</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -267,9 +291,9 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
                 {agent.title && (
                   <p className="text-sm text-muted-foreground">{agent.title}</p>
                 )}
-                {agent.company && (
-                  <p className="text-sm text-muted-foreground">{agent.company}</p>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  {agent.company || "Brokerage"}
+                </p>
               </div>
             </div>
 
@@ -290,6 +314,18 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
                   <Mail className="w-4 h-4 text-muted-foreground" />
                   <span className="break-all">{agent.email}</span>
                 </div>
+              )}
+              {/* Agent Website */}
+              {agent.social_links?.website && (
+                <a
+                  href={agent.social_links.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-sm text-primary hover:underline"
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>Visit Website</span>
+                </a>
               )}
             </div>
 
