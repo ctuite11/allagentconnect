@@ -29,7 +29,12 @@ import {
   Maximize2,
   Expand,
   Edit2,
-  Send
+  Send,
+  DollarSign,
+  KeyRound,
+  ClipboardList,
+  Activity,
+  Copy
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -38,11 +43,14 @@ import { useListingView } from "@/hooks/useListingView";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
-import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColumn";
+import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
+import { BuyerCompensationInfoModal } from "@/components/BuyerCompensationInfoModal";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
+
+const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
 interface Listing {
   id: string;
@@ -74,6 +82,16 @@ interface Listing {
   commission_type?: string | null;
   commission_notes?: string | null;
   broker_comments?: string | null;
+  appointment_required?: boolean;
+  entry_only?: boolean;
+  lockbox_code?: string | null;
+  showing_contact_name?: string | null;
+  showing_contact_phone?: string | null;
+  showing_instructions?: string | null;
+  disclosures?: any;
+  listing_exclusions?: string | null;
+  documents?: any[] | null;
+  listing_agreement_types?: any;
 }
 
 interface AgentProfile {
@@ -87,6 +105,13 @@ interface AgentProfile {
   company?: string;
   headshot_url?: string;
   logo_url?: string;
+  social_links?: {
+    website?: string;
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+  };
 }
 
 const PropertyDetail = () => {
@@ -132,12 +157,12 @@ const PropertyDetail = () => {
           if (data.agent_id) {
             const { data: profile } = await supabase
               .from("agent_profiles")
-              .select("id, first_name, last_name, email, cell_phone, phone, title, company, headshot_url, logo_url")
+              .select("id, first_name, last_name, email, cell_phone, phone, title, company, headshot_url, logo_url, social_links")
               .eq("id", data.agent_id)
               .maybeSingle();
 
             if (profile) {
-              setAgentProfile(profile);
+              setAgentProfile(profile as AgentProfile);
             }
           }
 
@@ -199,6 +224,12 @@ const PropertyDetail = () => {
     await trackShare(id!, 'copy_link');
   };
 
+  const handleCopyConsumerLink = () => {
+    const url = `${window.location.origin}/property/${listing?.id}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Consumer link copied!");
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -246,6 +277,25 @@ const PropertyDetail = () => {
     }
   };
 
+  const formatArray = (arr: any[] | null | undefined) => {
+    if (!arr || !Array.isArray(arr) || arr.length === 0) return null;
+    return arr.map((item: any) => {
+      if (typeof item === 'string') return item;
+      if (typeof item === 'object' && item !== null) {
+        return item.name || item.label || item.value || JSON.stringify(item);
+      }
+      return String(item);
+    }).join(', ');
+  };
+
+  const getCompensationDisplay = () => {
+    if (!listing?.commission_rate) return null;
+    if (listing.commission_type === 'percentage') {
+      return `${listing.commission_rate}%`;
+    }
+    return `$${listing.commission_rate.toLocaleString()}`;
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -283,6 +333,9 @@ const PropertyDetail = () => {
   const daysOnMarket = listDate 
     ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
     : null;
+
+  const compensationDisplay = getCompensationDisplay();
+  const agentLogo = agentProfile?.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
 
   return (
     <div className="min-h-screen bg-background">
@@ -372,10 +425,10 @@ const PropertyDetail = () => {
         </div>
       </div>
 
-      <main className="flex-1 pt-20">
+      <main className="flex-1 pt-4">
         {/* Agent/Client View Banner */}
         {isAgent && (
-          <div className="container mx-auto px-4 pt-4" style={{ maxWidth: '1600px' }}>
+          <div className="mx-auto max-w-6xl px-4 mb-4">
             <div className={`rounded-lg px-4 py-2.5 text-sm ${
               isAgentView 
                 ? 'bg-sky-50 text-sky-800 dark:bg-sky-950/50 dark:text-sky-200 border border-sky-200 dark:border-sky-800' 
@@ -394,224 +447,515 @@ const PropertyDetail = () => {
           </div>
         )}
 
-        {/* Hero Section - Max Width 1600px */}
-        <div className="container mx-auto px-4 py-6" style={{ maxWidth: '1600px' }}>
-          {/* Hero Photo Card with Overlays */}
-          <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted mx-auto shadow-lg">
-            {/* Media Content */}
-            {activeMediaTab === 'photos' && (
-              <img
-                src={mainPhoto}
-                alt={listing.address}
-                className="w-full h-full object-cover cursor-pointer"
-                onClick={handleExpandGallery}
-              />
-            )}
-            {activeMediaTab === 'video' && listing.video_url && (
-              <iframe
-                src={listing.video_url}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            )}
-            {activeMediaTab === 'tour' && listing.virtual_tour_url && (
-              <iframe
-                src={listing.virtual_tour_url}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            )}
-            {activeMediaTab === 'website' && listing.property_website_url && (
-              <iframe
-                src={listing.property_website_url}
-                className="w-full h-full"
-              />
-            )}
+        {/* ========== NEW FLOATING HERO LAYOUT ========== */}
+        <div className="mx-auto max-w-6xl px-4 pt-4 lg:pt-6">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] items-start">
             
-            {/* Status Badge & AAC ID - Top Left Overlay */}
-            <div className="absolute top-4 left-4 flex items-center gap-2">
-              {listing.listing_number && (
-                <Badge variant="outline" className="font-mono text-xs bg-white/90 backdrop-blur-sm">
-                  AAC #{listing.listing_number}
-                </Badge>
-              )}
-              <Badge className={`${getStatusColor(listing.status)} bg-white/90 backdrop-blur-sm`}>
-                {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
-              </Badge>
-            </div>
+            {/* LEFT COLUMN - Floating Photo Carousel */}
+            <section className="relative">
+              <div className="relative -mt-2 lg:-mt-4">
+                <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-black/5 bg-slate-950">
+                  {/* Media Content */}
+                  <div className="relative aspect-[16/10]">
+                    {activeMediaTab === 'photos' && (
+                      <img
+                        src={mainPhoto}
+                        alt={listing.address}
+                        className="w-full h-full object-cover cursor-pointer"
+                        onClick={handleExpandGallery}
+                      />
+                    )}
+                    {activeMediaTab === 'video' && listing.video_url && (
+                      <iframe
+                        src={listing.video_url}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    )}
+                    {activeMediaTab === 'tour' && listing.virtual_tour_url && (
+                      <iframe
+                        src={listing.virtual_tour_url}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    )}
+                    {activeMediaTab === 'website' && listing.property_website_url && (
+                      <iframe
+                        src={listing.property_website_url}
+                        className="w-full h-full"
+                      />
+                    )}
+                    
+                    {/* Status Badge & AAC ID - Top Left Overlay */}
+                    <div className="absolute top-4 left-4 flex items-center gap-2">
+                      {listing.listing_number && (
+                        <Badge variant="outline" className="font-mono text-xs bg-white/90 backdrop-blur-sm">
+                          AAC #{listing.listing_number}
+                        </Badge>
+                      )}
+                      <Badge className={`${getStatusColor(listing.status)} bg-white/90 backdrop-blur-sm`}>
+                        {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
+                      </Badge>
+                    </div>
 
-            {/* Share Button - Top Right Overlay */}
-            <button
-              onClick={handleCopyLink}
-              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
-              aria-label="Share property"
-            >
-              <Share2 className="w-5 h-5" />
-            </button>
-            
-            {/* Carousel Arrow Controls - Only for Photos */}
-            {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 1 && (
-              <>
-                <button
-                  onClick={handlePrevPhoto}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
-                  aria-label="Previous photo"
+                    {/* Share Button - Top Right Overlay */}
+                    <button
+                      onClick={handleCopyLink}
+                      className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
+                      aria-label="Share property"
+                    >
+                      <Share2 className="w-5 h-5" />
+                    </button>
+                    
+                    {/* Carousel Arrow Controls - Only for Photos */}
+                    {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 1 && (
+                      <>
+                        <button
+                          onClick={handlePrevPhoto}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
+                          aria-label="Previous photo"
+                        >
+                          <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        <button
+                          onClick={handleNextPhoto}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
+                          aria-label="Next photo"
+                        >
+                          <ChevronRight className="w-6 h-6" />
+                        </button>
+                      </>
+                    )}
+                    
+                    {/* Photo Counter - Bottom Left Overlay */}
+                    {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 0 && (
+                      <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
+                        {currentPhotoIndex + 1} / {listing.photos.length}
+                      </div>
+                    )}
+
+                    {/* Expand Button - Bottom Right */}
+                    {activeMediaTab === 'photos' && (
+                      <button
+                        onClick={handleExpandGallery}
+                        className="absolute bottom-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
+                        aria-label="Expand gallery"
+                      >
+                        <Expand className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Media Type Tabs - Below Photo Card */}
+              <div className="flex items-center gap-2 mt-4">
+                <Button
+                  variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleMediaTabChange('photos')}
+                  className="rounded-full"
                 >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <button
-                  onClick={handleNextPhoto}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
-                  aria-label="Next photo"
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-              </>
-            )}
-            
-            {/* Photo Counter - Bottom Left Overlay */}
-            {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 0 && (
-              <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
-                {currentPhotoIndex + 1} / {listing.photos.length}
+                  <Home className="w-4 h-4 mr-2" />
+                  Photos
+                </Button>
+                {listing.video_url && (
+                  <Button
+                    variant={activeMediaTab === 'video' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleMediaTabChange('video')}
+                    className="rounded-full"
+                  >
+                    <Video className="w-4 h-4 mr-2" />
+                    Video
+                  </Button>
+                )}
+                {listing.virtual_tour_url && (
+                  <Button
+                    variant={activeMediaTab === 'tour' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleMediaTabChange('tour')}
+                    className="rounded-full"
+                  >
+                    <Maximize2 className="w-4 h-4 mr-2" />
+                    3D Tour
+                  </Button>
+                )}
+                {listing.property_website_url && (
+                  <Button
+                    variant={activeMediaTab === 'website' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleMediaTabChange('website')}
+                    className="rounded-full"
+                  >
+                    <Globe className="w-4 h-4 mr-2" />
+                    Website
+                  </Button>
+                )}
               </div>
-            )}
-          </div>
+            </section>
 
-          {/* Media Type Tabs - Below Photo Card */}
-          <div className="flex items-center gap-2 mt-4 mx-auto">
-            <Button
-              variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleMediaTabChange('photos')}
-              className="rounded-full"
-            >
-              <Home className="w-4 h-4 mr-2" />
-              Photos
-            </Button>
-            {listing.video_url && (
-              <Button
-                variant={activeMediaTab === 'video' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleMediaTabChange('video')}
-                className="rounded-full"
-              >
-                <Video className="w-4 h-4 mr-2" />
-                Video
-              </Button>
-            )}
-            {listing.virtual_tour_url && (
-              <Button
-                variant={activeMediaTab === 'tour' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleMediaTabChange('tour')}
-                className="rounded-full"
-              >
-                <Maximize2 className="w-4 h-4 mr-2" />
-                3D Tour
-              </Button>
-            )}
-            {listing.property_website_url && (
-              <Button
-                variant={activeMediaTab === 'website' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleMediaTabChange('website')}
-                className="rounded-full"
-              >
-                <Globe className="w-4 h-4 mr-2" />
-                Website
-              </Button>
-            )}
-          </div>
+            {/* RIGHT COLUMN - Hero Sidebar */}
+            <aside className="space-y-4 lg:sticky lg:top-24">
+              
+              {/* Brokerage Card - Always Visible */}
+              <Card className="rounded-2xl border-slate-100 bg-white shadow-sm">
+                <CardContent className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <img
+                        src={agentLogo}
+                        alt={`${agentProfile?.company || 'Brokerage'} logo`}
+                        className="max-w-full max-h-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
+                        }}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">Listing Brokerage</p>
+                      <p className="text-sm font-medium truncate">
+                        {agentProfile?.company || "Brokerage"}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Price & Address */}
-          <div className="mx-auto mt-6">
-            <div className="flex items-start gap-2 mb-2">
-              <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold">{listing.address}</h1>
-                <p className="text-lg text-muted-foreground">
-                  {listing.city}, {listing.state} {listing.zip_code}
-                </p>
-              </div>
-            </div>
-            <div className="text-4xl font-bold text-primary mt-2">
-              ${listing.price.toLocaleString()}
-              {listing.listing_type === 'for_rent' && (
-                <span className="text-xl text-muted-foreground">/month</span>
-              )}
-            </div>
+              {/* Listing Agent Card - Always Visible */}
+              {agentProfile && (
+                <Card className="rounded-2xl border-slate-100 bg-white shadow-sm">
+                  <CardHeader className="pb-2 pt-4 px-4">
+                    <p className="text-xs text-muted-foreground">Listing Agent</p>
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="w-12 h-12">
+                        {agentProfile.headshot_url ? (
+                          <AvatarImage src={agentProfile.headshot_url} />
+                        ) : (
+                          <AvatarFallback className="text-base">
+                            {agentProfile.first_name[0]}{agentProfile.last_name[0]}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold">
+                          {agentProfile.first_name} {agentProfile.last_name}
+                        </p>
+                        {agentProfile.title && (
+                          <p className="text-xs text-muted-foreground">{agentProfile.title}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {agentProfile.company || "Brokerage"}
+                        </p>
+                      </div>
+                    </div>
 
-            {/* Contact Agent Button */}
-            {agentProfile && (
-              <div className="mt-4">
-                <ContactAgentDialog
-                  listingId={listing.id}
-                  agentId={listing.agent_id}
-                  listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
-                />
-              </div>
-            )}
+                    <div className="space-y-2">
+                      {(agentProfile.cell_phone || agentProfile.phone) && (
+                        <a
+                          href={`tel:${agentProfile.cell_phone || agentProfile.phone}`}
+                          className="flex items-center gap-2 text-sm hover:text-primary transition"
+                        >
+                          <Phone className="w-4 h-4 text-muted-foreground" />
+                          <span>{formatPhoneNumber(agentProfile.cell_phone || agentProfile.phone)}</span>
+                        </a>
+                      )}
+                      {agentProfile.email && (
+                        <a
+                          href={`mailto:${agentProfile.email}`}
+                          className="flex items-center gap-2 text-sm hover:text-primary transition"
+                        >
+                          <Mail className="w-4 h-4 text-muted-foreground" />
+                          <span className="truncate">{agentProfile.email}</span>
+                        </a>
+                      )}
+                      {agentProfile.social_links?.website && (
+                        <a
+                          href={agentProfile.social_links.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-primary hover:underline"
+                        >
+                          <Globe className="w-4 h-4" />
+                          <span>Visit Website</span>
+                        </a>
+                      )}
+                    </div>
 
-            {/* Key Stats Row */}
-            <div className="flex flex-wrap items-center gap-6 py-4 border-y mt-4">
-              {listing.bedrooms && (
-                <div className="flex items-center gap-2">
-                  <Bed className="w-5 h-5 text-muted-foreground" />
-                  <span className="font-semibold">{listing.bedrooms}</span>
-                  <span className="text-muted-foreground text-sm">Beds</span>
-                </div>
+                    <ContactAgentDialog
+                      listingId={listing.id}
+                      agentId={listing.agent_id}
+                      listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                    />
+                  </CardContent>
+                </Card>
               )}
-              {listing.bathrooms && (
-                <div className="flex items-center gap-2">
-                  <Bath className="w-5 h-5 text-muted-foreground" />
-                  <span className="font-semibold">{listing.bathrooms}</span>
-                  <span className="text-muted-foreground text-sm">Baths</span>
-                </div>
-              )}
-              {listing.square_feet && (
-                <div className="flex items-center gap-2">
-                  <Square className="w-5 h-5 text-muted-foreground" />
-                  <span className="font-semibold">{listing.square_feet.toLocaleString()}</span>
-                  <span className="text-muted-foreground text-sm">Sq Ft</span>
-                </div>
-              )}
-            </div>
 
-            {/* Metadata Row */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-foreground font-medium mt-3">
-              {listDate && (
-                <div>
-                  <span className="text-muted-foreground">Listed:</span>{' '}
-                  {new Date(listDate).toLocaleDateString()}
-                </div>
-              )}
-              {daysOnMarket && (
-                <div>
-                  <span className="text-muted-foreground">DOM:</span>{' '}
-                  {daysOnMarket}
-                </div>
-              )}
-              {/* Agent-only stats */}
+              {/* ========== AGENT-ONLY CARDS ========== */}
               {isAgentView && (
                 <>
-                  <div>
-                    <span className="text-muted-foreground">Matches:</span> {stats.matches}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-4 h-4" />
-                    <span>{stats.views}</span>
-                  </div>
+                  {/* Agent Actions Card */}
+                  <Card className="rounded-2xl border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                    <CardContent className="py-4 px-4 space-y-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/communication-center?listing=${listing.id}`)}
+                        className="w-full justify-start gap-2"
+                      >
+                        <Send className="w-4 h-4" />
+                        Send to Matching Agents
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyConsumerLink}
+                        className="w-full justify-start gap-2"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Copy Consumer Link
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Buyer Agent Compensation */}
+                  {compensationDisplay && (
+                    <Card className="rounded-2xl border-green-200 bg-green-50/50 dark:bg-green-950/20">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <CardTitle className="flex items-center gap-2 text-sm text-green-900 dark:text-green-100">
+                          <DollarSign className="w-4 h-4" />
+                          Buyer Agent Compensation
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4">
+                        <p className="text-xl font-bold text-green-700 dark:text-green-300">
+                          {compensationDisplay}
+                        </p>
+                        {listing.commission_notes && (
+                          <p className="text-xs text-foreground/80 mt-2 border-t pt-2">
+                            {listing.commission_notes}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Showing Instructions */}
+                  <Card className="rounded-2xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <CardTitle className="flex items-center gap-2 text-sm text-blue-900 dark:text-blue-100">
+                        <KeyRound className="w-4 h-4" />
+                        Showing Instructions
+                        <Badge variant="outline" className="ml-auto text-xs">Agent Only</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 space-y-2">
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Appointment Required</span>
+                          <span className="font-medium">{listing.appointment_required ? 'Yes' : 'No'}</span>
+                        </div>
+                        {listing.entry_only !== undefined && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Entry Only</span>
+                            <span className="font-medium">{listing.entry_only ? 'Yes' : 'No'}</span>
+                          </div>
+                        )}
+                        {listing.lockbox_code && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Lockbox Code</span>
+                            <span className="font-medium">{listing.lockbox_code}</span>
+                          </div>
+                        )}
+                        {listing.showing_contact_name && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Showing Contact</span>
+                            <span className="font-medium">{listing.showing_contact_name}</span>
+                          </div>
+                        )}
+                        {listing.showing_contact_phone && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Showing Phone</span>
+                            <span className="font-medium">{formatPhoneNumber(listing.showing_contact_phone)}</span>
+                          </div>
+                        )}
+                      </div>
+                      {listing.showing_instructions && (
+                        <div className="pt-2 border-t">
+                          <p className="text-xs text-muted-foreground mb-1">Instructions:</p>
+                          <p className="text-sm whitespace-pre-wrap">{listing.showing_instructions}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Disclosures & Exclusions */}
+                  {(listing.disclosures || listing.listing_exclusions) && (
+                    <Card className="rounded-2xl border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <CardTitle className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-100">
+                          <FileText className="w-4 h-4" />
+                          Disclosures & Exclusions
+                          <Badge variant="outline" className="ml-auto text-xs">Agent Only</Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 space-y-2">
+                        {listing.disclosures && (
+                          <div>
+                            <p className="text-xs font-semibold text-muted-foreground mb-1">Disclosures:</p>
+                            <p className="text-sm">
+                              {typeof listing.disclosures === 'string' 
+                                ? listing.disclosures 
+                                : formatArray(listing.disclosures) || 'None specified'}
+                            </p>
+                          </div>
+                        )}
+                        {listing.listing_exclusions && (
+                          <div className="pt-2 border-t">
+                            <p className="text-xs font-semibold text-muted-foreground mb-1">Exclusions:</p>
+                            <p className="text-sm">{listing.listing_exclusions}</p>
+                          </div>
+                        )}
+                        {listing.documents && Array.isArray(listing.documents) && listing.documents.length > 0 && (
+                          <div className="pt-2 border-t">
+                            <p className="text-xs font-semibold text-muted-foreground mb-1">Documents Available:</p>
+                            <p className="text-sm text-primary">{listing.documents.length} document(s)</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Listing Agreement Type */}
+                  {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
+                    <Card className="rounded-2xl border-purple-200 bg-purple-50/50 dark:bg-purple-950/20">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <CardTitle className="flex items-center gap-2 text-sm text-purple-900 dark:text-purple-100">
+                          <ClipboardList className="w-4 h-4" />
+                          Listing Agreement
+                          <Badge variant="outline" className="ml-auto text-xs">Agent Only</Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4">
+                        <p className="text-sm font-medium">{formatArray(listing.listing_agreement_types)}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Activity Stats */}
+                  <Card className="rounded-2xl border-teal-200 bg-teal-50/50 dark:bg-teal-950/20">
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <CardTitle className="flex items-center gap-2 text-sm text-teal-900 dark:text-teal-100">
+                        <Activity className="w-4 h-4" />
+                        Activity & Stats
+                        <Badge variant="outline" className="ml-auto text-xs">Agent Only</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="text-center p-3 rounded-lg bg-white/60 dark:bg-white/5 border">
+                          <div className="text-lg font-bold text-teal-700 dark:text-teal-300">
+                            {stats.matches}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Matches</div>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-white/60 dark:bg-white/5 border">
+                          <div className="text-lg font-bold text-teal-700 dark:text-teal-300">
+                            {stats.views}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Views</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </>
               )}
-            </div>
+            </aside>
           </div>
         </div>
 
-        {/* Two-Column Layout for Details - Max Width 1600px */}
-        <div className="mx-auto px-4 py-6" style={{ maxWidth: '1600px' }}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ========== TITLE, PRICE & BASICS - BELOW HERO ========== */}
+        <div className="mx-auto max-w-6xl px-4 mt-8">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-start gap-2 mb-2">
+                <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h1 className="text-3xl font-bold">{listing.address}</h1>
+                  <p className="text-lg text-muted-foreground">
+                    {listing.city}, {listing.state} {listing.zip_code}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-4xl font-bold text-primary">
+                ${listing.price.toLocaleString()}
+                {listing.listing_type === 'for_rent' && (
+                  <span className="text-xl text-muted-foreground">/month</span>
+                )}
+              </div>
+              {listing.square_feet && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  ${Math.round(listing.price / listing.square_feet).toLocaleString()} / sq ft
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Key Stats Row */}
+          <div className="flex flex-wrap items-center gap-6 py-4 border-y mt-4">
+            {listing.bedrooms && (
+              <div className="flex items-center gap-2">
+                <Bed className="w-5 h-5 text-muted-foreground" />
+                <span className="font-semibold">{listing.bedrooms}</span>
+                <span className="text-muted-foreground text-sm">Beds</span>
+              </div>
+            )}
+            {listing.bathrooms && (
+              <div className="flex items-center gap-2">
+                <Bath className="w-5 h-5 text-muted-foreground" />
+                <span className="font-semibold">{listing.bathrooms}</span>
+                <span className="text-muted-foreground text-sm">Baths</span>
+              </div>
+            )}
+            {listing.square_feet && (
+              <div className="flex items-center gap-2">
+                <Square className="w-5 h-5 text-muted-foreground" />
+                <span className="font-semibold">{listing.square_feet.toLocaleString()}</span>
+                <span className="text-muted-foreground text-sm">Sq Ft</span>
+              </div>
+            )}
+            {daysOnMarket !== null && (
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-muted-foreground" />
+                <span className="font-semibold">{daysOnMarket}</span>
+                <span className="text-muted-foreground text-sm">Days on Market</span>
+              </div>
+            )}
+            {/* Agent-only inline stats */}
+            {isAgentView && (
+              <>
+                <div className="flex items-center gap-1 text-sm">
+                  <span className="text-muted-foreground">Matches:</span>
+                  <span className="font-semibold">{stats.matches}</span>
+                </div>
+                <div className="flex items-center gap-1 text-sm">
+                  <Eye className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-semibold">{stats.views}</span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ========== MAIN CONTENT BELOW HERO ========== */}
+        <div className="mx-auto max-w-6xl px-4 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* LEFT COLUMN - Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Overview/Description */}
@@ -654,13 +998,54 @@ const PropertyDetail = () => {
               />
             </div>
 
-            {/* RIGHT COLUMN - Agent Card, Compensation, Showing, Office Info */}
-            <PropertyDetailRightColumn 
-              listing={listing} 
-              agent={agentProfile}
-              isAgentView={isAgentView}
-              stats={stats}
-            />
+            {/* RIGHT COLUMN - Consumer-facing content (not in hero sidebar) */}
+            <div className="space-y-6">
+              {/* Buyer Agent Compensation - Public Version (Client View Only) */}
+              {!isAgentView && compensationDisplay && (
+                <Card className="border-green-200 bg-green-50/30 dark:bg-green-950/10">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <DollarSign className="w-5 h-5 text-green-600" />
+                      Buyer Agent Compensation
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xl font-bold text-green-700 dark:text-green-300">
+                        {compensationDisplay}
+                      </p>
+                      <BuyerCompensationInfoModal compensationDisplay={compensationDisplay} />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      This is the compensation offered by the listing brokerage to a buyer's agent.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Buyer Agent Showcase - Client View Only */}
+              {!isAgentView && (
+                <BuyerAgentShowcase 
+                  listingZip={listing.zip_code} 
+                  listingId={listing.id} 
+                />
+              )}
+
+              {/* Fallback if no agent */}
+              {!agentProfile && !isAgentView && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Interested in this property?</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Contact the listing agent for more information or to schedule a showing.
+                    </p>
+                    <Button className="w-full">Contact Agent</Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
         </div>
       </main>
