@@ -73,6 +73,7 @@ interface Listing {
   commission_rate?: number | null;
   commission_type?: string | null;
   commission_notes?: string | null;
+  broker_comments?: string | null;
 }
 
 interface AgentProfile {
@@ -622,10 +623,25 @@ const PropertyDetail = () => {
                       Overview
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
                     <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">
                       {listing.description}
                     </p>
+                    
+                    {/* Agent-Only: Broker Remarks */}
+                    {isAgentView && listing.broker_comments && (
+                      <div className="mt-4 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
+                            Broker Remarks
+                          </span>
+                          <Badge variant="outline" className="text-xs">Agent Only</Badge>
+                        </div>
+                        <p className="text-sm text-orange-900 dark:text-orange-100 whitespace-pre-wrap">
+                          {listing.broker_comments}
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -643,6 +659,7 @@ const PropertyDetail = () => {
               listing={listing} 
               agent={agentProfile}
               isAgentView={isAgentView}
+              stats={stats}
             />
           </div>
         </div>

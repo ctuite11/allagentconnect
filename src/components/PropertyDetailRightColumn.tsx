@@ -3,16 +3,17 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, DollarSign, Info } from "lucide-react";
+import { Phone, Mail, DollarSign, Info, Users, Activity, Eye, Send, TrendingUp, MessageSquare } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 interface PropertyDetailRightColumnProps {
   listing: any;
   agent?: any;
   isAgentView: boolean;
+  stats?: { matches: number; views: number };
 }
 
-export const PropertyDetailRightColumn = ({ listing, agent, isAgentView }: PropertyDetailRightColumnProps) => {
+export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }: PropertyDetailRightColumnProps) => {
   const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (!value && value !== 0) return null;
     return (
@@ -41,6 +42,90 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView }: Prope
 
   return (
     <div className="space-y-6">
+      {/* Agent-Only: Matches & Buyers Intel Card */}
+      {isAgentView && (
+        <Card className="border-purple-200 bg-gradient-to-br from-purple-50/80 to-indigo-50/50 dark:from-purple-950/30 dark:to-indigo-950/20 dark:border-purple-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg text-purple-900 dark:text-purple-100">
+              <Users className="w-5 h-5" />
+              Matches & Buyers
+              <Badge variant="outline" className="ml-auto text-xs">Intel</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 rounded-lg bg-white/60 dark:bg-white/5 border border-purple-100 dark:border-purple-800">
+                <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                  {stats?.matches || 0}
+                </div>
+                <div className="text-xs text-muted-foreground">Matching Agents</div>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-white/60 dark:bg-white/5 border border-purple-100 dark:border-purple-800">
+                <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
+                  {stats?.views || 0}
+                </div>
+                <div className="text-xs text-muted-foreground">Total Views</div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button variant="outline" size="sm" className="w-full justify-start gap-2 bg-white/50 dark:bg-white/5">
+                <Eye className="w-4 h-4" />
+                View Matching Agents
+              </Button>
+              <Button variant="outline" size="sm" className="w-full justify-start gap-2 bg-white/50 dark:bg-white/5">
+                <Send className="w-4 h-4" />
+                Email Matching Agents
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Agent-Only: Activity & Engagement Card */}
+      {isAgentView && (
+        <Card className="border-teal-200 bg-gradient-to-br from-teal-50/80 to-emerald-50/50 dark:from-teal-950/30 dark:to-emerald-950/20 dark:border-teal-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg text-teal-900 dark:text-teal-100">
+              <Activity className="w-5 h-5" />
+              Activity & Engagement
+              <Badge variant="outline" className="ml-auto text-xs">Stats</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-2 border-b border-teal-100 dark:border-teal-800">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Eye className="w-4 h-4" />
+                  Listing Views
+                </div>
+                <span className="font-semibold text-foreground">{stats?.views || 0}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-teal-100 dark:border-teal-800">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Send className="w-4 h-4" />
+                  Emails Sent
+                </div>
+                <span className="font-semibold text-foreground">—</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-teal-100 dark:border-teal-800">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MessageSquare className="w-4 h-4" />
+                  Lead Inquiries
+                </div>
+                <span className="font-semibold text-foreground">—</span>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <TrendingUp className="w-4 h-4" />
+                  Favorites
+                </div>
+                <span className="font-semibold text-foreground">—</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Listing Agent Card */}
       {agent && (
         <Card>
