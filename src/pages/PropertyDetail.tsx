@@ -372,7 +372,7 @@ const PropertyDetail = () => {
         </div>
       </div>
 
-      <main className="flex-1">
+      <main className="flex-1 pt-20">
         {/* Agent/Client View Banner */}
         {isAgent && (
           <div className="container mx-auto px-4 pt-4" style={{ maxWidth: '1600px' }}>
