@@ -370,8 +370,8 @@ const PropertyDetail = () => {
       
       <Navigation />
 
-      {/* Compact Header Bar */}
-      <div className="border-b bg-card sticky top-16 z-10">
+      {/* Compact Header Bar - No border */}
+      <div className="bg-card sticky top-16 z-10">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             <Button
@@ -392,15 +392,6 @@ const PropertyDetail = () => {
               <ArrowLeft className="w-4 h-4" />
               Back
             </Button>
-
-            <div className="flex items-center gap-2">
-              <SocialShareMenu
-                url={getListingShareUrl(id!)}
-                title={`${listing.address}, ${listing.city}, ${listing.state}`}
-                description={listing.description || ''}
-                listingId={id!}
-              />
-            </div>
           </div>
         </div>
       </div>
@@ -594,12 +585,9 @@ const PropertyDetail = () => {
                   <div className="flex-1">
                     <div className="flex items-start gap-2">
                       <MapPin className="w-5 h-5 mt-1 text-muted-foreground flex-shrink-0" />
-                      <div>
-                        <h1 className="text-2xl md:text-3xl font-semibold">{listing.address}</h1>
-                        <p className="text-sm md:text-base text-slate-500">
-                          {listing.city}, {listing.state} {listing.zip_code}
-                        </p>
-                      </div>
+                      <h1 className="text-2xl md:text-3xl font-semibold">
+                        {buildDisplayAddress(listing)}
+                      </h1>
                     </div>
                   </div>
                   <div className="text-right">
@@ -679,7 +667,7 @@ const PropertyDetail = () => {
                           </AvatarFallback>
                         )}
                       </Avatar>
-                      <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0">
                         <p className="text-xs uppercase tracking-wide text-slate-500">Listing Agent</p>
                         <p className="font-semibold">
                           {agentProfile.first_name} {agentProfile.last_name}
@@ -720,17 +708,25 @@ const PropertyDetail = () => {
                           <span className="font-medium truncate">{agentProfile.email}</span>
                         </a>
                       )}
-                      {agentProfile.social_links?.website && (
-                        <a
-                          href={agentProfile.social_links.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-primary hover:underline"
-                        >
-                          <Globe className="w-4 h-4" />
-                          <span className="font-medium">Visit Website</span>
-                        </a>
-                      )}
+                      <div className="flex items-center gap-3">
+                        {agentProfile.social_links?.website && (
+                          <a
+                            href={agentProfile.social_links.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-primary hover:underline"
+                          >
+                            <Globe className="w-4 h-4" />
+                            <span className="font-medium">Website</span>
+                          </a>
+                        )}
+                        <SocialShareMenu
+                          url={getListingShareUrl(id!)}
+                          title={`${listing.address}, ${listing.city}, ${listing.state}`}
+                          description={listing.description || ''}
+                          listingId={id!}
+                        />
+                      </div>
                     </div>
 
                     <ContactAgentDialog
