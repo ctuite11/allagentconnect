@@ -52,99 +52,109 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
 
   return (
     <>
-      {/* Features & Amenities */}
-      <Card>
+      {/* Features & Amenities - Now as Bullets */}
+      <Card className="rounded-3xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Info className="w-5 h-5" />
             Property Features
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <DetailGrid>
-            {listing.heating_types && formatArray(listing.heating_types) && (
-              <DetailRow label="Heating" value={formatArray(listing.heating_types)} />
-            )}
-            {listing.cooling_types && formatArray(listing.cooling_types) && (
-              <DetailRow label="Cooling" value={formatArray(listing.cooling_types)} />
-            )}
-            <DetailRow label="Basement" value={listing.has_basement ? 'Yes' : null} />
-            {listing.basement_types && formatArray(listing.basement_types) && (
-              <DetailRow label="Basement Type" value={formatArray(listing.basement_types)} />
-            )}
-            {listing.basement_features_list && formatArray(listing.basement_features_list) && (
-              <DetailRow label="Basement Features" value={formatArray(listing.basement_features_list)} />
-            )}
-            {listing.basement_floor_types && formatArray(listing.basement_floor_types) && (
-              <DetailRow label="Basement Flooring" value={formatArray(listing.basement_floor_types)} />
-            )}
-            {/* Property Features - combined from property_features + amenities, deduplicated */}
-            {(() => {
-              const features = listing.property_features || [];
-              const amenities = listing.amenities || [];
-              const combined = [...new Set([...features, ...amenities])];
-              const formatted = formatArray(combined);
-              return formatted ? <DetailRow label="Property Features" value={formatted} /> : null;
-            })()}
-            {listing.exterior_features_list && formatArray(listing.exterior_features_list) && (
-              <DetailRow label="Exterior Features" value={formatArray(listing.exterior_features_list)} />
-            )}
-            {listing.parking_features_list && formatArray(listing.parking_features_list) && (
-              <DetailRow label="Parking Features" value={formatArray(listing.parking_features_list)} />
-            )}
-            {listing.garage_features_list && formatArray(listing.garage_features_list) && (
-              <DetailRow label="Garage Features" value={formatArray(listing.garage_features_list)} />
-            )}
-            {listing.garage_additional_features_list && formatArray(listing.garage_additional_features_list) && (
-              <DetailRow label="Additional Garage Features" value={formatArray(listing.garage_additional_features_list)} />
-            )}
-            {listing.parking_comments && <DetailRow label="Parking Notes" value={listing.parking_comments} />}
-            {listing.garage_comments && <DetailRow label="Garage Notes" value={listing.garage_comments} />}
-            {listing.foundation_types && formatArray(listing.foundation_types) && (
-              <DetailRow label="Foundation" value={formatArray(listing.foundation_types)} />
-            )}
-            {listing.roof_materials && formatArray(listing.roof_materials) && (
-              <DetailRow label="Roof" value={formatArray(listing.roof_materials)} />
-            )}
-            {listing.construction_features && formatArray(listing.construction_features) && (
-              <DetailRow label="Construction" value={formatArray(listing.construction_features)} />
-            )}
-            {listing.green_features && formatArray(listing.green_features) && (
-              <DetailRow label="Green Features" value={formatArray(listing.green_features)} />
-            )}
-            <DetailRow label="Waterfront" value={listing.waterfront ? 'Yes' : null} />
-            <DetailRow label="Water View" value={listing.water_view ? listing.water_view_type || 'Yes' : null} />
-            <DetailRow label="Beach Nearby" value={listing.beach_nearby ? 'Yes' : null} />
-            {listing.area_amenities && listing.area_amenities.length > 0 && (
-              <DetailRow label="Community Features" value={listing.area_amenities.join(', ')} />
-            )}
-            {listing.outdoor_space && formatArray(listing.outdoor_space) && (
-              <DetailRow label="Outdoor Space" value={formatArray(listing.outdoor_space)} />
-            )}
-            {listing.laundry_type && <DetailRow label="Laundry" value={listing.laundry_type} />}
-            <DetailRow label="Fireplaces" value={listing.num_fireplaces} />
-            {listing.pet_options && formatArray(listing.pet_options) && (
-              <DetailRow label="Pets" value={formatArray(listing.pet_options)} />
-            )}
-            {listing.pets_comment && <DetailRow label="Pet Notes" value={listing.pets_comment} />}
-            {listing.storage_options && formatArray(listing.storage_options) && (
-              <DetailRow label="Storage" value={formatArray(listing.storage_options)} />
-            )}
-            <DetailRow label="Handicap Accessible" value={listing.handicap_accessible} />
-            {listing.handicap_access && <DetailRow label="Handicap Access Details" value={listing.handicap_access} />}
-            {listing.disclosures && formatArray(listing.disclosures) && (
-              <DetailRow label="Disclosures" value={formatArray(listing.disclosures)} />
-            )}
-            {listing.disclosures_other && <DetailRow label="Other Disclosures" value={listing.disclosures_other} />}
-            <DetailRow label="Lead Paint" value={listing.lead_paint} />
-          </DetailGrid>
+        <CardContent className="pt-0 pb-5">
+          {(() => {
+            // Gather all feature items
+            const features: string[] = [];
+            
+            if (listing.heating_types && formatArray(listing.heating_types)) {
+              features.push(`Heating: ${formatArray(listing.heating_types)}`);
+            }
+            if (listing.cooling_types && formatArray(listing.cooling_types)) {
+              features.push(`Cooling: ${formatArray(listing.cooling_types)}`);
+            }
+            if (listing.has_basement) {
+              const basementInfo = listing.basement_types && formatArray(listing.basement_types) 
+                ? `Basement: ${formatArray(listing.basement_types)}`
+                : 'Basement';
+              features.push(basementInfo);
+            }
+            if (listing.basement_features_list && formatArray(listing.basement_features_list)) {
+              features.push(`Basement Features: ${formatArray(listing.basement_features_list)}`);
+            }
+            
+            // Combined property features + amenities
+            const propFeatures = listing.property_features || [];
+            const amenities = listing.amenities || [];
+            const combined = [...new Set([...propFeatures, ...amenities])];
+            combined.forEach((item: any) => {
+              const name = typeof item === 'string' ? item : item.name || item.label || item.value;
+              if (name) features.push(name);
+            });
+            
+            if (listing.exterior_features_list && formatArray(listing.exterior_features_list)) {
+              formatArray(listing.exterior_features_list)?.split(', ').forEach(f => features.push(f));
+            }
+            if (listing.parking_features_list && formatArray(listing.parking_features_list)) {
+              features.push(`Parking: ${formatArray(listing.parking_features_list)}`);
+            }
+            if (listing.garage_features_list && formatArray(listing.garage_features_list)) {
+              features.push(`Garage: ${formatArray(listing.garage_features_list)}`);
+            }
+            if (listing.foundation_types && formatArray(listing.foundation_types)) {
+              features.push(`Foundation: ${formatArray(listing.foundation_types)}`);
+            }
+            if (listing.roof_materials && formatArray(listing.roof_materials)) {
+              features.push(`Roof: ${formatArray(listing.roof_materials)}`);
+            }
+            if (listing.construction_features && formatArray(listing.construction_features)) {
+              features.push(`Construction: ${formatArray(listing.construction_features)}`);
+            }
+            if (listing.green_features && formatArray(listing.green_features)) {
+              features.push(`Green: ${formatArray(listing.green_features)}`);
+            }
+            if (listing.waterfront) features.push('Waterfront');
+            if (listing.water_view) features.push(listing.water_view_type ? `Water View: ${listing.water_view_type}` : 'Water View');
+            if (listing.beach_nearby) features.push('Beach Nearby');
+            if (listing.area_amenities && listing.area_amenities.length > 0) {
+              listing.area_amenities.forEach((a: string) => features.push(a));
+            }
+            if (listing.outdoor_space && formatArray(listing.outdoor_space)) {
+              features.push(`Outdoor: ${formatArray(listing.outdoor_space)}`);
+            }
+            if (listing.laundry_type) features.push(`Laundry: ${listing.laundry_type}`);
+            if (listing.num_fireplaces) features.push(`${listing.num_fireplaces} Fireplace(s)`);
+            if (listing.pet_options && formatArray(listing.pet_options)) {
+              features.push(`Pets: ${formatArray(listing.pet_options)}`);
+            }
+            if (listing.storage_options && formatArray(listing.storage_options)) {
+              features.push(`Storage: ${formatArray(listing.storage_options)}`);
+            }
+            if (listing.handicap_accessible) features.push('Handicap Accessible');
+
+            // Dedupe
+            const uniqueFeatures = [...new Set(features)];
+            
+            if (uniqueFeatures.length === 0) {
+              return <p className="text-sm text-muted-foreground">No features listed</p>;
+            }
+            
+            return (
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-700 dark:text-slate-300">
+                {uniqueFeatures.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-slate-400 flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            );
+          })()}
         </CardContent>
       </Card>
 
       {/* Property Information */}
-      <Card>
+      <Card className="rounded-3xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Home className="w-5 h-5" />
             Property Information
           </CardTitle>
@@ -225,10 +235,10 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
         </Card>
       )}
 
-      {/* Tax Information - MOVED HIGHER */}
-      <Card>
+      {/* Tax Information */}
+      <Card className="rounded-3xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <DollarSign className="w-5 h-5" />
             Tax Information
           </CardTitle>
@@ -240,16 +250,15 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
             <DetailRow label="Tax Assessment" value={listing.tax_assessment_value ? `$${listing.tax_assessment_value.toLocaleString()}` : null} />
             <DetailRow label="Assessed Value" value={listing.assessed_value ? `$${listing.assessed_value.toLocaleString()}` : null} />
             <DetailRow label="Fiscal Year" value={listing.fiscal_year} />
-            {listing.attom_id && <DetailRow label="Parcel ID / APN" value={listing.attom_id} />}
             <DetailRow label="Residential Exemption" value={listing.residential_exemption} />
           </DetailGrid>
         </CardContent>
       </Card>
 
       {/* Market Information */}
-      <Card>
+      <Card className="rounded-3xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Calendar className="w-5 h-5" />
             Market Information
           </CardTitle>
@@ -269,36 +278,13 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
         </CardContent>
       </Card>
 
-      {/* Other Property Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Other Property Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DetailGrid>
-            <DetailRow label="Short Sale" value={listing.short_sale ? 'Yes' : null} />
-            <DetailRow label="Lender Owned" value={listing.lender_owned ? 'Yes' : null} />
-            {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
-              <DetailRow label="Agreement Type" value={formatArray(listing.listing_agreement_types)} />
-            )}
-            {listing.listing_exclusions && <DetailRow label="Exclusions" value={listing.listing_exclusions} />}
-            {listing.property_website_url && (
-              <DetailRow label="Property Website" value={listing.property_website_url} />
-            )}
-            {listing.video_url && <DetailRow label="Video Tour" value={listing.video_url} />}
-            {listing.virtual_tour_url && <DetailRow label="Virtual Tour" value={listing.virtual_tour_url} />}
-          </DetailGrid>
-        </CardContent>
-      </Card>
+      {/* Removed "Other Property Information" section - content folded into Property Information and Market Information */}
 
       {/* Agent-Only: Firm Remarks */}
       {isAgentView && listing.broker_comments && (
-        <Card className="border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
+        <Card className="rounded-3xl border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-900 dark:text-orange-100">
+            <CardTitle className="flex items-center gap-2 text-lg text-orange-900 dark:text-orange-100">
               <FileText className="w-5 h-5" />
               Firm Remarks
               <Badge variant="outline" className="ml-2">Agent Only</Badge>

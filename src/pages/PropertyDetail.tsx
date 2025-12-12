@@ -34,7 +34,9 @@ import {
   KeyRound,
   ClipboardList,
   Activity,
-  Copy
+  Copy,
+  Building2,
+  Info
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -126,6 +128,7 @@ const PropertyDetail = () => {
   const [stats, setStats] = useState({ matches: 0, views: 0 });
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'video' | 'tour' | 'website'>('photos');
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   
   // Role detection for dual-view
   const { user, role, loading: roleLoading } = useAuthRole();
@@ -449,14 +452,13 @@ const PropertyDetail = () => {
 
         {/* ========== NEW FLOATING HERO LAYOUT ========== */}
         <div className="mx-auto max-w-6xl px-4 pt-4 lg:pt-6">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] items-start">
+          <div className="flex flex-col lg:flex-row gap-6">
             
-            {/* LEFT COLUMN - Floating Photo Carousel */}
-            <section className="relative">
-              <div className="relative -mt-2 lg:-mt-4">
-                <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-black/5 bg-slate-950">
+            {/* LEFT COLUMN - Floating Photo Carousel (70%) */}
+            <div className="lg:w-2/3">
+              <div className="relative rounded-3xl overflow-hidden shadow-lg bg-slate-100 aspect-[5/3]">
+                <div className="absolute inset-0 bg-slate-950">
                   {/* Media Content */}
-                  <div className="relative aspect-[16/10]">
                     {activeMediaTab === 'photos' && (
                       <img
                         src={mainPhoto}
@@ -547,11 +549,11 @@ const PropertyDetail = () => {
                       </button>
                     )}
                   </div>
-                </div>
               </div>
+            </div>
 
-              {/* Media Type Tabs - Below Photo Card */}
-              <div className="flex items-center gap-2 mt-4">
+            {/* Media Type Tabs - Below Photo Card */}
+            <div className="flex items-center gap-2 mt-4 lg:hidden">
                 <Button
                   variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
                   size="sm"
@@ -594,45 +596,39 @@ const PropertyDetail = () => {
                     Website
                   </Button>
                 )}
-              </div>
-            </section>
+            </div>
 
-            {/* RIGHT COLUMN - Hero Sidebar */}
-            <aside className="space-y-4 lg:sticky lg:top-24">
+            {/* RIGHT COLUMN - Hero Sidebar (30%) */}
+            <div className="lg:w-1/3 space-y-4">
               
-              {/* Brokerage Card - Always Visible */}
-              <Card className="rounded-2xl border-slate-100 bg-white shadow-sm">
-                <CardContent className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0">
-                      <img
-                        src={agentLogo}
-                        alt={`${agentProfile?.company || 'Brokerage'} logo`}
-                        className="max-w-full max-h-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
-                        }}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">Listing Brokerage</p>
-                      <p className="text-sm font-medium truncate">
-                        {agentProfile?.company || "Brokerage"}
-                      </p>
-                    </div>
+              {/* Brokerage Card - Always Visible (Ad-style) */}
+              <Card className="rounded-3xl shadow-md">
+                <CardContent className="flex items-center gap-4 p-5">
+                  <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <img
+                      src={agentLogo}
+                      alt={`${agentProfile?.company || 'Brokerage'} logo`}
+                      className="h-full w-full object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
+                      }}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Listing Brokerage</p>
+                    <p className="text-base md:text-lg font-semibold truncate">
+                      {agentProfile?.company || "Brokerage"}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Listing Agent Card - Always Visible */}
               {agentProfile && (
-                <Card className="rounded-2xl border-slate-100 bg-white shadow-sm">
-                  <CardHeader className="pb-2 pt-4 px-4">
-                    <p className="text-xs text-muted-foreground">Listing Agent</p>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4 space-y-4">
-                    <div className="flex items-start gap-3">
-                      <Avatar className="w-12 h-12">
+                <Card className="rounded-3xl shadow-md lg:sticky lg:top-24">
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-14 h-14">
                         {agentProfile.headshot_url ? (
                           <AvatarImage src={agentProfile.headshot_url} />
                         ) : (
@@ -642,35 +638,44 @@ const PropertyDetail = () => {
                         )}
                       </Avatar>
                       <div className="flex-1 min-w-0">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">Listing Agent</p>
                         <p className="font-semibold">
                           {agentProfile.first_name} {agentProfile.last_name}
                         </p>
-                        {agentProfile.title && (
-                          <p className="text-xs text-muted-foreground">{agentProfile.title}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {agentProfile.company || "Brokerage"}
+                        <p className="text-xs text-slate-500">
+                          {agentProfile.title || 'Realtor'} · {agentProfile.company || "Brokerage"}
                         </p>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      {(agentProfile.cell_phone || agentProfile.phone) && (
+                    <div className="space-y-2 text-sm">
+                      {agentProfile.cell_phone && (
                         <a
-                          href={`tel:${agentProfile.cell_phone || agentProfile.phone}`}
-                          className="flex items-center gap-2 text-sm hover:text-primary transition"
+                          href={`tel:${agentProfile.cell_phone}`}
+                          className="flex items-center gap-2 hover:text-primary transition"
                         >
                           <Phone className="w-4 h-4 text-muted-foreground" />
-                          <span>{formatPhoneNumber(agentProfile.cell_phone || agentProfile.phone)}</span>
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
+                          <span className="text-slate-500 text-xs">Mobile</span>
+                        </a>
+                      )}
+                      {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
+                        <a
+                          href={`tel:${agentProfile.phone}`}
+                          className="flex items-center gap-2 hover:text-primary transition"
+                        >
+                          <Building2 className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
+                          <span className="text-slate-500 text-xs">Office</span>
                         </a>
                       )}
                       {agentProfile.email && (
                         <a
                           href={`mailto:${agentProfile.email}`}
-                          className="flex items-center gap-2 text-sm hover:text-primary transition"
+                          className="flex items-center gap-2 hover:text-primary transition"
                         >
                           <Mail className="w-4 h-4 text-muted-foreground" />
-                          <span className="truncate">{agentProfile.email}</span>
+                          <span className="font-medium truncate">{agentProfile.email}</span>
                         </a>
                       )}
                       {agentProfile.social_links?.website && (
@@ -678,10 +683,10 @@ const PropertyDetail = () => {
                           href={agentProfile.social_links.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sm text-primary hover:underline"
+                          className="flex items-center gap-2 text-primary hover:underline"
                         >
                           <Globe className="w-4 h-4" />
-                          <span>Visit Website</span>
+                          <span className="font-medium">Visit Website</span>
                         </a>
                       )}
                     </div>
@@ -691,6 +696,10 @@ const PropertyDetail = () => {
                       agentId={listing.agent_id}
                       listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
                     />
+                    
+                    <p className="text-xs text-slate-500 pt-2 border-t">
+                      Listing courtesy of {agentProfile.company || "Brokerage"}
+                    </p>
                   </CardContent>
                 </Card>
               )}
@@ -874,7 +883,53 @@ const PropertyDetail = () => {
                   </Card>
                 </>
               )}
-            </aside>
+            </div>
+          </div>
+
+          {/* Media Type Tabs - Desktop (visible on lg) */}
+          <div className="hidden lg:flex items-center gap-2 mt-4">
+            <Button
+              variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleMediaTabChange('photos')}
+              className="rounded-full"
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Photos
+            </Button>
+            {listing.video_url && (
+              <Button
+                variant={activeMediaTab === 'video' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleMediaTabChange('video')}
+                className="rounded-full"
+              >
+                <Video className="w-4 h-4 mr-2" />
+                Video
+              </Button>
+            )}
+            {listing.virtual_tour_url && (
+              <Button
+                variant={activeMediaTab === 'tour' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleMediaTabChange('tour')}
+                className="rounded-full"
+              >
+                <Maximize2 className="w-4 h-4 mr-2" />
+                3D Tour
+              </Button>
+            )}
+            {listing.property_website_url && (
+              <Button
+                variant={activeMediaTab === 'website' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleMediaTabChange('website')}
+                className="rounded-full"
+              >
+                <Globe className="w-4 h-4 mr-2" />
+                Website
+              </Button>
+            )}
           </div>
         </div>
 
@@ -882,15 +937,10 @@ const PropertyDetail = () => {
         <div className="mx-auto max-w-6xl px-4 mt-8">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="flex-1">
-              <div className="flex items-start gap-2 mb-2">
-                <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <h1 className="text-3xl font-bold">{listing.address}</h1>
-                  <p className="text-lg text-muted-foreground">
-                    {listing.city}, {listing.state} {listing.zip_code}
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-2xl md:text-3xl font-semibold">{listing.address}</h1>
+              <p className="text-sm md:text-base text-slate-500">
+                {listing.city}, {listing.state} {listing.zip_code}
+              </p>
             </div>
             <div className="text-right">
               <div className="text-4xl font-bold text-primary">
@@ -908,47 +958,44 @@ const PropertyDetail = () => {
           </div>
 
           {/* Key Stats Row */}
-          <div className="flex flex-wrap items-center gap-6 py-4 border-y mt-4">
+          <div className="flex flex-wrap items-center gap-4 text-sm md:text-base py-4 border-y mt-4">
             {listing.bedrooms && (
               <div className="flex items-center gap-2">
-                <Bed className="w-5 h-5 text-muted-foreground" />
+                <Bed className="h-5 w-5 md:h-6 md:w-6 text-slate-700" />
                 <span className="font-semibold">{listing.bedrooms}</span>
-                <span className="text-muted-foreground text-sm">Beds</span>
+                <span className="text-slate-500">Beds</span>
               </div>
             )}
             {listing.bathrooms && (
               <div className="flex items-center gap-2">
-                <Bath className="w-5 h-5 text-muted-foreground" />
+                <Bath className="h-5 w-5 md:h-6 md:w-6 text-slate-700" />
                 <span className="font-semibold">{listing.bathrooms}</span>
-                <span className="text-muted-foreground text-sm">Baths</span>
+                <span className="text-slate-500">Baths</span>
               </div>
             )}
             {listing.square_feet && (
               <div className="flex items-center gap-2">
-                <Square className="w-5 h-5 text-muted-foreground" />
+                <Square className="h-5 w-5 md:h-6 md:w-6 text-slate-700" />
                 <span className="font-semibold">{listing.square_feet.toLocaleString()}</span>
-                <span className="text-muted-foreground text-sm">Sq Ft</span>
+                <span className="text-slate-500">Sq Ft</span>
               </div>
             )}
+            <Separator orientation="vertical" className="h-6 hidden md:block" />
             {daysOnMarket !== null && (
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-muted-foreground" />
-                <span className="font-semibold">{daysOnMarket}</span>
-                <span className="text-muted-foreground text-sm">Days on Market</span>
+              <div className="flex items-center gap-2 text-slate-500">
+                <Calendar className="h-4 w-4" />
+                <span>{daysOnMarket} Days on Market</span>
               </div>
             )}
             {/* Agent-only inline stats */}
             {isAgentView && (
-              <>
-                <div className="flex items-center gap-1 text-sm">
-                  <span className="text-muted-foreground">Matches:</span>
-                  <span className="font-semibold">{stats.matches}</span>
-                </div>
-                <div className="flex items-center gap-1 text-sm">
-                  <Eye className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-semibold">{stats.views}</span>
-                </div>
-              </>
+              <div className="flex items-center gap-4 text-slate-500">
+                <span>Matches: <span className="font-medium text-foreground">{stats.matches}</span></span>
+                <span className="flex items-center gap-1">
+                  <Eye className="w-4 h-4" />
+                  <span className="font-medium text-foreground">{stats.views}</span>
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -958,37 +1005,51 @@ const PropertyDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* LEFT COLUMN - Main Content */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Overview/Description */}
-              {listing.description && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="w-5 h-5" />
-                      Overview
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">
-                      {listing.description}
-                    </p>
-                    
-                    {/* Agent-Only: Broker Remarks */}
-                    {isAgentView && listing.broker_comments && (
-                      <div className="mt-4 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
-                            Broker Remarks
-                          </span>
-                          <Badge variant="outline" className="text-xs">Agent Only</Badge>
+              {/* Overview/Description with Read More */}
+              {listing.description && (() => {
+                const MAX_CHARS = 650;
+                const full = listing.description || '';
+                const isLong = full.length > MAX_CHARS;
+                const visibleText = !isLong || descriptionExpanded ? full : `${full.slice(0, MAX_CHARS)}…`;
+                
+                return (
+                  <Card className="rounded-3xl">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <FileText className="w-5 h-5" />
+                        Overview
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 space-y-4">
+                      <p className="whitespace-pre-wrap">{visibleText}</p>
+                      {isLong && (
+                        <button
+                          type="button"
+                          onClick={() => setDescriptionExpanded(v => !v)}
+                          className="text-primary font-medium text-sm"
+                        >
+                          {descriptionExpanded ? 'Read less' : 'Read more'}
+                        </button>
+                      )}
+                      
+                      {/* Agent-Only: Broker Remarks */}
+                      {isAgentView && listing.broker_comments && (
+                        <div className="mt-4 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
+                              Broker Remarks
+                            </span>
+                            <Badge variant="outline" className="text-xs">Agent Only</Badge>
+                          </div>
+                          <p className="text-sm text-orange-900 dark:text-orange-100 whitespace-pre-wrap">
+                            {listing.broker_comments}
+                          </p>
                         </div>
-                        <p className="text-sm text-orange-900 dark:text-orange-100 whitespace-pre-wrap">
-                          {listing.broker_comments}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })()}
 
               {/* MLS-Style Detail Sections */}
               <ListingDetailSections 
@@ -1000,24 +1061,29 @@ const PropertyDetail = () => {
 
             {/* RIGHT COLUMN - Consumer-facing content (not in hero sidebar) */}
             <div className="space-y-6">
-              {/* Buyer Agent Compensation - Public Version (Client View Only) */}
+              {/* Buyer Agent Fee - Public Version (Client View Only) */}
               {!isAgentView && compensationDisplay && (
-                <Card className="border-green-200 bg-green-50/30 dark:bg-green-950/10">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <DollarSign className="w-5 h-5 text-green-600" />
-                      Buyer Agent Compensation
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xl font-bold text-green-700 dark:text-green-300">
-                        {compensationDisplay}
-                      </p>
+                <Card className="rounded-3xl border border-emerald-100 bg-emerald-50/40 dark:bg-emerald-950/20">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="h-5 w-5 text-emerald-700" />
+                          <CardTitle className="text-base">Buyer Agent Fee</CardTitle>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Compensation paid by the seller of this home.
+                        </p>
+                      </div>
                       <BuyerCompensationInfoModal compensationDisplay={compensationDisplay} />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      This is the compensation offered by the listing brokerage to a buyer's agent.
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-semibold text-emerald-700 dark:text-emerald-400">
+                      {compensationDisplay}
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Offered by the listing brokerage to a buyer's agent at closing.
                     </p>
                   </CardContent>
                 </Card>
