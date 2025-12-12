@@ -422,7 +422,7 @@ const PropertyDetail = () => {
             
             {/* LEFT COLUMN - Floating Photo Carousel (~65-70%) */}
             <div className="lg:w-[68%]">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[300px] sm:h-[400px] lg:h-[480px]">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[320px] sm:h-[420px] lg:h-[500px]">
                 <div className="absolute inset-0 bg-slate-950">
                   {/* Media Content */}
                     {activeMediaTab === 'photos' && (
@@ -586,18 +586,6 @@ const PropertyDetail = () => {
                     Website
                   </Button>
                 )}
-                <SocialShareMenu
-                  url={getListingShareUrl(id!)}
-                  title={`${listing.address}, ${listing.city}, ${listing.state}`}
-                  description={listing.description || ''}
-                  listingId={id!}
-                  trigger={
-                    <Button variant="outline" size="sm" className="rounded-full">
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Share
-                    </Button>
-                  }
-                />
               </div>
 
               {/* ========== HERO BAND - ADDRESS / PRICE / STATS (ONE COMPACT UNIT) ========== */}
@@ -777,7 +765,7 @@ const PropertyDetail = () => {
                       />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Listing Brokerage</p>
+                      <p className="text-xs text-slate-500">Listing courtesy of</p>
                       <p className="text-sm font-medium truncate">
                         {agentProfile?.company || "Brokerage"}
                       </p>
@@ -800,6 +788,15 @@ const PropertyDetail = () => {
                       >
                         <Edit2 className="w-4 h-4" />
                         Edit Listing
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyClientLink}
+                        className="w-full justify-start gap-2"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Copy Consumer Link
                       </Button>
                       <Button
                         variant="outline"
@@ -956,10 +953,10 @@ const PropertyDetail = () => {
 
 
         {/* ========== MAIN CONTENT BELOW HERO ========== */}
-        <div className="mx-auto max-w-6xl px-4 pt-4 pb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="mx-auto max-w-6xl px-4 pt-2 pb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* LEFT COLUMN - Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4">
               {/* Overview/Description with Read More */}
               {listing.description && (() => {
                 const MAX_CHARS = 650;
