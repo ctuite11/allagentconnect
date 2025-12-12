@@ -5,6 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Convert string to Title Case
+function toTitleCase(str: string): string {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 export function buildDisplayAddress(
   listing: { address: string; city: string; state: string; zip_code: string; condo_details?: any }
 ) {
@@ -56,7 +65,8 @@ export function buildDisplayAddress(
     if (tail) base = [base, tail].filter(Boolean).join(', ');
   }
 
-  return base;
+  // Convert to Title Case before returning
+  return toTitleCase(base);
 }
 
 /**
