@@ -6,7 +6,8 @@ import Footer from "@/components/Footer";
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import ListingCard from "@/components/ListingCard";
 import { toast } from "sonner";
-import { ArrowLeft, LayoutGrid, List, CheckSquare, Eye, EyeOff, Bookmark, Share2, FileSpreadsheet } from "lucide-react";
+import { ArrowLeft, LayoutGrid, List, CheckSquare, Eye, EyeOff, Bookmark, FileSpreadsheet } from "lucide-react";
+import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -79,12 +80,6 @@ const ListingSearchResults = () => {
     toast.success('Search saved successfully');
   };
 
-  const handleShare = async () => {
-    const selectedIds = Array.from(selectedListings);
-    const shareUrl = `${window.location.origin}/listing-results?ids=${selectedIds.join(',')}`;
-    await navigator.clipboard.writeText(shareUrl);
-    toast.success(`Link copied with ${selectedIds.length} listings`);
-  };
 
   const displayedListings = showSelectedOnly 
     ? listings.filter(l => selectedListings.has(l.id))
@@ -389,16 +384,12 @@ const ListingSearchResults = () => {
                     <Bookmark className="h-4 w-4" />
                     Save Search
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleShare}
-                    disabled={selectedListings.size === 0}
-                    className="h-8 gap-1.5 text-sm"
-                  >
-                    <Share2 className="h-4 w-4" />
-                    Share
-                  </Button>
+                  {selectedListings.size > 0 && (
+                    <BulkShareListingsDialog
+                      listingIds={Array.from(selectedListings)}
+                      listingCount={selectedListings.size}
+                    />
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
