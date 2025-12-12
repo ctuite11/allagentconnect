@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormattedInput } from "@/components/ui/formatted-input";
-import { Share2, Search } from "lucide-react";
+import { Share2, Search, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -42,6 +42,8 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
   const [clientSearch, setClientSearch] = useState("");
   const [clientResults, setClientResults] = useState<Client[]>([]);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [showSaveContactPrompt, setShowSaveContactPrompt] = useState(false);
+  const [savingContact, setSavingContact] = useState(false);
   const clientSearchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,6 +57,7 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
       setClientSearch("");
       setClientResults([]);
       setShowClientDropdown(false);
+      setShowSaveContactPrompt(false);
     }
   }, [open]);
 
@@ -92,8 +95,11 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
           .limit(5);
 
         if (error) throw error;
-        setClientResults(data || []);
-        setShowClientDropdown((data || []).length > 0);
+        const results = data || [];
+        setClientResults(results);
+        setShowClientDropdown(results.length > 0);
+        // Show save prompt when no results found
+        setShowSaveContactPrompt(results.length === 0);
       } catch (error) {
         console.error("Error searching clients:", error);
       }
@@ -129,6 +135,44 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
     setRecipientEmail(client.email);
     setClientSearch(`${client.first_name} ${client.last_name}`);
     setShowClientDropdown(false);
+    setShowSaveContactPrompt(false);
+  };
+
+  const handleSaveNewContact = async () => {
+    if (!recipientName.trim() || !recipientEmail.trim()) {
+      toast.error("Please enter both name and email to save contact");
+      return;
+    }
+
+    setSavingContact(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const nameParts = recipientName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      const { error } = await supabase
+        .from("clients")
+        .insert({
+          agent_id: user.id,
+          first_name: firstName,
+          last_name: lastName,
+          email: recipientEmail.trim(),
+          client_type: 'buyer'
+        });
+
+      if (error) throw error;
+      
+      toast.success(`${recipientName} saved to My Contacts`);
+      setShowSaveContactPrompt(false);
+    } catch (error) {
+      console.error("Error saving contact:", error);
+      toast.error("Failed to save contact");
+    } finally {
+      setSavingContact(false);
+    }
   };
 
   const handleShare = async () => {
@@ -215,6 +259,23 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
               </div>
             )}
           </div>
+          
+          {showSaveContactPrompt && !showClientDropdown && recipientName && recipientEmail && (
+            <div className="p-3 bg-muted/50 rounded-md border border-dashed">
+              <p className="text-sm text-muted-foreground mb-2">
+                Contact not found. Would you like to save "{recipientName}" to My Contacts?
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSaveNewContact}
+                disabled={savingContact}
+              >
+                <UserPlus className="h-4 w-4 mr-1.5" />
+                {savingContact ? "Saving..." : "Save to My Contacts"}
+              </Button>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="recipientName">Recipient Name *</Label>
             <Input
