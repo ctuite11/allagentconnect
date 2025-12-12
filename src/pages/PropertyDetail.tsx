@@ -379,8 +379,8 @@ const PropertyDetail = () => {
       
       <Navigation />
 
-      {/* Back Button Row - Own row with proper top margin */}
-      <div className="mx-auto max-w-6xl px-4 mt-6">
+      {/* Back Button Row - Own row with proper top spacing */}
+      <div className="mx-auto max-w-6xl px-4 pt-20 pb-2">
         <Button
           variant="ghost"
           size="sm"
@@ -401,7 +401,7 @@ const PropertyDetail = () => {
         </Button>
       </div>
 
-      <main className="flex-1 pt-4">
+      <main className="flex-1">
         {/* Subtle Agent View Indicator */}
         {isAgentView && (
           <div className="mx-auto max-w-6xl px-4 mb-3">
@@ -416,9 +416,9 @@ const PropertyDetail = () => {
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col lg:flex-row gap-6">
             
-            {/* LEFT COLUMN - Floating Photo Carousel (~65-70%) */}
+            {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
             <div className="lg:w-[68%]">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[340px] sm:h-[440px] lg:h-[520px]">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[380px] sm:h-[480px] lg:h-[560px]">
                 <div className="absolute inset-0 bg-slate-950">
                   {/* Media Content */}
                     {activeMediaTab === 'photos' && (
@@ -592,72 +592,70 @@ const PropertyDetail = () => {
               
               {/* Listing Agent Card - PRIMARY (top) */}
               {agentProfile && (
-                <Card className="rounded-3xl shadow-md">
+                <Card className="rounded-3xl shadow-md border-2">
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-center gap-4">
-                      <Avatar className="w-14 h-14">
+                      <Avatar className="w-16 h-16 border-2 border-primary/20">
                         {agentProfile.headshot_url ? (
                           <AvatarImage src={agentProfile.headshot_url} />
                         ) : (
-                          <AvatarFallback className="text-base">
+                          <AvatarFallback className="text-lg font-semibold bg-primary/10">
                             {agentProfile.first_name[0]}{agentProfile.last_name[0]}
                           </AvatarFallback>
                         )}
                       </Avatar>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-xs uppercase tracking-wide text-slate-500">Listing Agent</p>
-                        <p className="font-semibold">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Listing Agent</p>
+                        <p className="font-bold text-lg leading-tight">
                           {agentProfile.first_name} {agentProfile.last_name}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-sm text-muted-foreground">
                           {agentProfile.title || 'Realtor'} · {agentProfile.company || "Brokerage"}
                         </p>
                       </div>
                     </div>
 
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-2.5 text-sm">
                       {agentProfile.cell_phone && (
                         <a
                           href={`tel:${agentProfile.cell_phone}`}
-                          className="flex items-center gap-2 hover:text-primary transition"
+                          className="flex items-center gap-2.5 hover:text-primary transition"
                         >
-                          <Phone className="w-4 h-4 text-muted-foreground" />
+                          <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                           <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
-                          <span className="text-slate-500 text-xs">Mobile</span>
+                          <span className="text-muted-foreground text-xs ml-auto">Mobile</span>
                         </a>
                       )}
                       {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
                         <a
                           href={`tel:${agentProfile.phone}`}
-                          className="flex items-center gap-2 hover:text-primary transition"
+                          className="flex items-center gap-2.5 hover:text-primary transition"
                         >
-                          <Building2 className="w-4 h-4 text-muted-foreground" />
+                          <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                           <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
-                          <span className="text-slate-500 text-xs">Office</span>
+                          <span className="text-muted-foreground text-xs ml-auto">Office</span>
                         </a>
                       )}
                       {agentProfile.email && (
                         <a
                           href={`mailto:${agentProfile.email}`}
-                          className="flex items-center gap-2 hover:text-primary transition"
+                          className="flex items-center gap-2.5 hover:text-primary transition"
                         >
-                          <Mail className="w-4 h-4 text-muted-foreground" />
+                          <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                           <span className="font-medium truncate">{agentProfile.email}</span>
                         </a>
                       )}
-                      <div className="flex items-center gap-3">
-                        {agentProfile.social_links?.website && (
-                          <a
-                            href={agentProfile.social_links.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-primary hover:underline"
-                          >
-                            <Globe className="w-4 h-4" />
-                            <span className="font-medium">Website</span>
-                          </a>
-                        )}
-                      </div>
+                      {agentProfile.social_links?.website && (
+                        <a
+                          href={agentProfile.social_links.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2.5 text-primary hover:underline"
+                        >
+                          <Globe className="w-4 h-4 flex-shrink-0" />
+                          <span className="font-medium">Website</span>
+                        </a>
+                      )}
                     </div>
 
                     <ContactAgentDialog
@@ -670,10 +668,10 @@ const PropertyDetail = () => {
               )}
               
               {/* Brokerage Strip - SECONDARY (below agent) */}
-              <Card className="rounded-2xl shadow-sm border border-slate-100">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <Card className="rounded-2xl shadow-sm border">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                       <img
                         src={agentLogo}
                         alt={`${agentProfile?.company || 'Brokerage'} logo`}
@@ -684,7 +682,7 @@ const PropertyDetail = () => {
                       />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs text-slate-500">Listing courtesy of</p>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Listing courtesy of</p>
                       <p className="text-sm font-medium truncate">
                         {agentProfile?.company || "Brokerage"}
                       </p>
@@ -893,11 +891,14 @@ const PropertyDetail = () => {
               )}
             </div>
           </div>
+        </div>
+        {/* END HERO GRID */}
 
-          {/* ========== ADDRESS + PRICE ROW (IMMEDIATELY UNDER HERO) ========== */}
-          <div className="mt-4 border-b pb-3">
+        {/* ========== ADDRESS + PRICE ROW (OUTSIDE HERO, DIRECTLY UNDER) ========== */}
+        <div className="mx-auto max-w-6xl px-4 mt-4">
+          <div className="border-b pb-3">
             {/* ROW 1: Address Left, Price Right - Same baseline */}
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2">
               {/* LEFT: Address */}
               <div>
                 <h1 className="text-lg md:text-xl font-semibold text-foreground flex items-center gap-1.5">
@@ -910,7 +911,7 @@ const PropertyDetail = () => {
               </div>
               
               {/* RIGHT: Price - reduced ~15-20% */}
-              <div className="text-left sm:text-right ml-6 sm:ml-0">
+              <div className="text-left sm:text-right ml-6 sm:ml-0 flex-shrink-0">
                 <div className="text-xl md:text-2xl font-bold text-foreground">
                   ${listing.price.toLocaleString()}
                   {listing.listing_type === 'for_rent' && (
@@ -925,7 +926,7 @@ const PropertyDetail = () => {
               </div>
             </div>
 
-            {/* ROW 2: Stats - directly under address, no gap */}
+            {/* ROW 2: Stats - directly under address, tight spacing */}
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-2">
               {listing.bedrooms && (
                 <div className="flex items-center gap-1.5">
@@ -974,8 +975,8 @@ const PropertyDetail = () => {
         </div>
 
         {/* ========== MAIN CONTENT BELOW HERO ========== */}
-        <div className="mx-auto max-w-6xl px-4 pt-4 pb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="mx-auto max-w-6xl px-4 pt-3 pb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* LEFT COLUMN - Main Content */}
             <div className="lg:col-span-2 space-y-4">
               {/* Overview/Description with Read More */}
