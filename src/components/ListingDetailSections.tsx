@@ -1,11 +1,6 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Home, DollarSign, Building2, FileText, Calendar, Info } from "lucide-react";
 
 interface ListingDetailSectionsProps {
@@ -22,6 +17,13 @@ export const formatField = (value: any): string => {
 };
 
 export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDetailSectionsProps) => {
+  const [showAllFeatures, setShowAllFeatures] = useState(false);
+  const [showAllPropertyDetails, setShowAllPropertyDetails] = useState(false);
+  const [showAllTaxInfo, setShowAllTaxInfo] = useState(false);
+  
+  const FEATURES_LIMIT = 16;
+  const DETAIL_ROWS_LIMIT = 6;
+
   const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (!value && value !== 0) return null;
     return (
@@ -129,10 +131,57 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
   };
 
   const features = getFeatures();
+  const displayedFeatures = showAllFeatures ? features : features.slice(0, FEATURES_LIMIT);
+
+  // Build property details rows
+  const propertyDetailRows = [
+    { label: "Property Type", value: listing.property_type },
+    { label: "Living Area", value: listing.square_feet ? `${listing.square_feet.toLocaleString()} sq ft` : null },
+    { label: "Lot Size", value: listing.lot_size ? `${listing.lot_size} acres` : null },
+    { label: "Year Built", value: listing.year_built },
+    { label: "Stories/Floors", value: listing.floors },
+    { label: "Bedrooms", value: listing.bedrooms },
+    { label: "Bathrooms", value: listing.bathrooms },
+    { label: "Total Parking Spaces", value: listing.total_parking_spaces },
+    { label: "Garage Spaces", value: listing.garage_spaces },
+    { label: "Unit Number", value: listing.unit_number },
+    { label: "Building Name", value: listing.building_name },
+    { label: "County", value: listing.county },
+    { label: "Town", value: listing.town },
+    { label: "Neighborhood", value: listing.neighborhood },
+    { label: "Property Style", value: listing.property_styles ? formatArray(listing.property_styles) : null },
+    { label: "Parcel ID / APN", value: listing.attom_id },
+    { label: "Facing Direction", value: listing.facing_direction ? formatArray(listing.facing_direction) : null },
+  ].filter(row => row.value);
+  
+  const displayedPropertyRows = showAllPropertyDetails ? propertyDetailRows : propertyDetailRows.slice(0, DETAIL_ROWS_LIMIT);
+
+  // Build tax info rows
+  const taxInfoRows = [
+    { label: "Annual Tax", value: listing.annual_property_tax ? `$${listing.annual_property_tax.toLocaleString()}` : null },
+    { label: "Tax Year", value: listing.tax_year },
+    { label: "Tax Assessment", value: listing.tax_assessment_value ? `$${listing.tax_assessment_value.toLocaleString()}` : null },
+    { label: "Assessed Value", value: listing.assessed_value ? `$${listing.assessed_value.toLocaleString()}` : null },
+    { label: "Fiscal Year", value: listing.fiscal_year },
+    { label: "Residential Exemption", value: listing.residential_exemption },
+  ].filter(row => row.value);
+
+  // Market info rows (always fully open since typically few rows)
+  const marketInfoRows = [
+    { label: "Listing Date", value: listDate ? new Date(listDate).toLocaleDateString() : null },
+    { label: "Days on Market", value: daysOnMarket },
+    { label: "Status", value: listing.status ? listing.status.charAt(0).toUpperCase() + listing.status.slice(1) : null },
+    { label: "Listing Type", value: listing.listing_type === 'for_sale' ? 'For Sale' : listing.listing_type === 'for_rent' ? 'For Rent' : listing.listing_type },
+    { label: "Listing Number (AAC ID)", value: listing.listing_number },
+    { label: "Go Live Date", value: listing.go_live_date ? new Date(listing.go_live_date).toLocaleDateString() : null },
+    { label: "Activation Date", value: listing.activation_date ? new Date(listing.activation_date).toLocaleDateString() : null },
+    { label: "Expiration Date", value: listing.auto_activate_on ? new Date(listing.auto_activate_on).toLocaleDateString() : null },
+    { label: "Off Market Date", value: listing.cancelled_at ? new Date(listing.cancelled_at).toLocaleDateString() : null },
+  ].filter(row => row.value);
 
   return (
     <>
-      {/* Property Features - Bullet Points, Two Columns */}
+      {/* Property Features - Bullet Points, Two Columns - OPEN BY DEFAULT */}
       <Card className="rounded-3xl">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -144,151 +193,147 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
           {features.length === 0 ? (
             <p className="text-sm text-muted-foreground">No features listed</p>
           ) : (
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-foreground">
-              {features.map((feature, idx) => (
-                <li key={idx} className="flex items-start gap-2">
-                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary/60 flex-shrink-0" />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-foreground">
+                {displayedFeatures.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary/60 flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              {features.length > FEATURES_LIMIT && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllFeatures(v => !v)}
+                  className="text-primary font-medium text-sm mt-3"
+                >
+                  {showAllFeatures ? 'Show less' : `Show ${features.length - FEATURES_LIMIT} more`}
+                </button>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
 
-      {/* Collapsible Details Sections */}
-      <Accordion type="multiple" className="space-y-3">
-        {/* Property Information - Collapsed by Default */}
-        <AccordionItem value="property-info" className="border rounded-2xl px-4 bg-card">
-          <AccordionTrigger className="py-4 hover:no-underline">
-            <div className="flex items-center gap-2 text-base font-semibold">
-              <Home className="w-5 h-5 text-muted-foreground" />
+      {/* Property Details - OPEN BY DEFAULT */}
+      {propertyDetailRows.length > 0 && (
+        <Card className="rounded-3xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Home className="w-5 h-5" />
               Property Details
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pb-4">
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 pb-5">
             <DetailGrid>
-              <DetailRow label="Property Type" value={listing.property_type} />
-              <DetailRow label="Living Area" value={listing.square_feet ? `${listing.square_feet.toLocaleString()} sq ft` : null} />
-              <DetailRow label="Lot Size" value={listing.lot_size ? `${listing.lot_size} acres` : null} />
-              <DetailRow label="Year Built" value={listing.year_built} />
-              <DetailRow label="Stories/Floors" value={listing.floors} />
-              <DetailRow label="Bedrooms" value={listing.bedrooms} />
-              <DetailRow label="Bathrooms" value={listing.bathrooms} />
-              <DetailRow label="Total Parking Spaces" value={listing.total_parking_spaces} />
-              <DetailRow label="Garage Spaces" value={listing.garage_spaces} />
-              {listing.unit_number && <DetailRow label="Unit Number" value={listing.unit_number} />}
-              {listing.building_name && <DetailRow label="Building Name" value={listing.building_name} />}
-              {listing.county && <DetailRow label="County" value={listing.county} />}
-              {listing.town && <DetailRow label="Town" value={listing.town} />}
-              {listing.neighborhood && <DetailRow label="Neighborhood" value={listing.neighborhood} />}
-              {listing.property_styles && formatArray(listing.property_styles) && (
-                <DetailRow label="Property Style" value={formatArray(listing.property_styles)} />
+              {displayedPropertyRows.map((row, idx) => (
+                <DetailRow key={idx} label={row.label} value={row.value} />
+              ))}
+            </DetailGrid>
+            {propertyDetailRows.length > DETAIL_ROWS_LIMIT && (
+              <button
+                type="button"
+                onClick={() => setShowAllPropertyDetails(v => !v)}
+                className="text-primary font-medium text-sm mt-3"
+              >
+                {showAllPropertyDetails ? 'Show less' : `Show ${propertyDetailRows.length - DETAIL_ROWS_LIMIT} more`}
+              </button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Additional Property Details (Condo/Multi-Family/Commercial) - OPEN BY DEFAULT */}
+      {(listing.condo_details || listing.multi_family_details || listing.commercial_details) && (
+        <Card className="rounded-3xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Building2 className="w-5 h-5" />
+              Additional Property Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 pb-5">
+            <DetailGrid>
+              {listing.condo_details && typeof listing.condo_details === 'object' && (
+                <>
+                  {listing.condo_details.hoa_fee && (
+                    <DetailRow label="HOA Fee" value={`$${listing.condo_details.hoa_fee}/month`} />
+                  )}
+                  {listing.condo_details.hoa_includes && (
+                    <DetailRow label="HOA Includes" value={listing.condo_details.hoa_includes} />
+                  )}
+                  {listing.condo_details.association_name && (
+                    <DetailRow label="Association" value={listing.condo_details.association_name} />
+                  )}
+                </>
               )}
-              {listing.attom_id && <DetailRow label="Parcel ID / APN" value={listing.attom_id} />}
-              {listing.facing_direction && formatArray(listing.facing_direction) && (
-                <DetailRow label="Facing Direction" value={formatArray(listing.facing_direction)} />
+              {listing.multi_family_details && typeof listing.multi_family_details === 'object' && (
+                <>
+                  {listing.multi_family_details.units && (
+                    <DetailRow label="Number of Units" value={listing.multi_family_details.units} />
+                  )}
+                  {listing.multi_family_details.income && (
+                    <DetailRow label="Annual Income" value={`$${listing.multi_family_details.income.toLocaleString()}`} />
+                  )}
+                </>
+              )}
+              {listing.commercial_details && typeof listing.commercial_details === 'object' && (
+                <>
+                  {listing.commercial_details.zoning && (
+                    <DetailRow label="Zoning" value={listing.commercial_details.zoning} />
+                  )}
+                  {listing.commercial_details.building_class && (
+                    <DetailRow label="Building Class" value={listing.commercial_details.building_class} />
+                  )}
+                </>
               )}
             </DetailGrid>
-          </AccordionContent>
-        </AccordionItem>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Condo/Multi-Family/Commercial Details */}
-        {(listing.condo_details || listing.multi_family_details || listing.commercial_details) && (
-          <AccordionItem value="additional-details" className="border rounded-2xl px-4 bg-card">
-            <AccordionTrigger className="py-4 hover:no-underline">
-              <div className="flex items-center gap-2 text-base font-semibold">
-                <Building2 className="w-5 h-5 text-muted-foreground" />
-                Additional Property Details
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pb-4">
-              <DetailGrid>
-                {listing.condo_details && typeof listing.condo_details === 'object' && (
-                  <>
-                    {listing.condo_details.hoa_fee && (
-                      <DetailRow label="HOA Fee" value={`$${listing.condo_details.hoa_fee}/month`} />
-                    )}
-                    {listing.condo_details.hoa_includes && (
-                      <DetailRow label="HOA Includes" value={listing.condo_details.hoa_includes} />
-                    )}
-                    {listing.condo_details.association_name && (
-                      <DetailRow label="Association" value={listing.condo_details.association_name} />
-                    )}
-                  </>
-                )}
-                {listing.multi_family_details && typeof listing.multi_family_details === 'object' && (
-                  <>
-                    {listing.multi_family_details.units && (
-                      <DetailRow label="Number of Units" value={listing.multi_family_details.units} />
-                    )}
-                    {listing.multi_family_details.income && (
-                      <DetailRow label="Annual Income" value={`$${listing.multi_family_details.income.toLocaleString()}`} />
-                    )}
-                  </>
-                )}
-                {listing.commercial_details && typeof listing.commercial_details === 'object' && (
-                  <>
-                    {listing.commercial_details.zoning && (
-                      <DetailRow label="Zoning" value={listing.commercial_details.zoning} />
-                    )}
-                    {listing.commercial_details.building_class && (
-                      <DetailRow label="Building Class" value={listing.commercial_details.building_class} />
-                    )}
-                  </>
-                )}
-              </DetailGrid>
-            </AccordionContent>
-          </AccordionItem>
-        )}
-
-        {/* Tax Information - Collapsed */}
-        <AccordionItem value="tax-info" className="border rounded-2xl px-4 bg-card">
-          <AccordionTrigger className="py-4 hover:no-underline">
-            <div className="flex items-center gap-2 text-base font-semibold">
-              <DollarSign className="w-5 h-5 text-muted-foreground" />
+      {/* Tax Information - OPEN BY DEFAULT */}
+      {taxInfoRows.length > 0 && (
+        <Card className="rounded-3xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <DollarSign className="w-5 h-5" />
               Tax Information
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pb-4">
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 pb-5">
             <DetailGrid>
-              <DetailRow label="Annual Tax" value={listing.annual_property_tax ? `$${listing.annual_property_tax.toLocaleString()}` : null} />
-              <DetailRow label="Tax Year" value={listing.tax_year} />
-              <DetailRow label="Tax Assessment" value={listing.tax_assessment_value ? `$${listing.tax_assessment_value.toLocaleString()}` : null} />
-              <DetailRow label="Assessed Value" value={listing.assessed_value ? `$${listing.assessed_value.toLocaleString()}` : null} />
-              <DetailRow label="Fiscal Year" value={listing.fiscal_year} />
-              <DetailRow label="Residential Exemption" value={listing.residential_exemption} />
+              {taxInfoRows.map((row, idx) => (
+                <DetailRow key={idx} label={row.label} value={row.value} />
+              ))}
             </DetailGrid>
-          </AccordionContent>
-        </AccordionItem>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Market Information - Collapsed */}
-        <AccordionItem value="market-info" className="border rounded-2xl px-4 bg-card">
-          <AccordionTrigger className="py-4 hover:no-underline">
-            <div className="flex items-center gap-2 text-base font-semibold">
-              <Calendar className="w-5 h-5 text-muted-foreground" />
+      {/* Market Information - OPEN BY DEFAULT */}
+      {marketInfoRows.length > 0 && (
+        <Card className="rounded-3xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Calendar className="w-5 h-5" />
               Market Information
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pb-4">
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 pb-5">
             <DetailGrid>
-              {listDate && <DetailRow label="Listing Date" value={new Date(listDate).toLocaleDateString()} />}
-              {daysOnMarket !== null && <DetailRow label="Days on Market" value={daysOnMarket} />}
-              <DetailRow label="Status" value={listing.status.charAt(0).toUpperCase() + listing.status.slice(1)} />
-              <DetailRow label="Listing Type" value={listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'} />
-              {listing.listing_number && <DetailRow label="Listing Number (AAC ID)" value={listing.listing_number} />}
-              {listing.go_live_date && <DetailRow label="Go Live Date" value={new Date(listing.go_live_date).toLocaleDateString()} />}
-              {listing.activation_date && <DetailRow label="Activation Date" value={new Date(listing.activation_date).toLocaleDateString()} />}
-              {listing.auto_activate_on && <DetailRow label="Expiration Date" value={new Date(listing.auto_activate_on).toLocaleDateString()} />}
-              {listing.cancelled_at && <DetailRow label="Off Market Date" value={new Date(listing.cancelled_at).toLocaleDateString()} />}
+              {marketInfoRows.map((row, idx) => (
+                <DetailRow key={idx} label={row.label} value={row.value} />
+              ))}
             </DetailGrid>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Agent-Only: Firm Remarks */}
       {isAgentView && listing.broker_comments && (
-        <Card className="rounded-3xl border-orange-200 bg-orange-50/50 dark:bg-orange-950/20 mt-3">
+        <Card className="rounded-3xl border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base text-orange-900 dark:text-orange-100">
               <FileText className="w-5 h-5" />
