@@ -261,9 +261,9 @@ const Navigation = () => {
                     </Button>
                   </>
                 ) : null}
-                <Button variant="outline" onClick={() => navigate("/browse")}>
+                <Button variant="outline" onClick={() => navigate(role === "agent" ? "/listing-search" : "/browse")}>
                   <Search className="w-4 h-4 mr-2" />
-                  Search Homes
+                  {role === "agent" ? "Listing Search" : "Search Homes"}
                 </Button>
                 <Button variant="outline" onClick={handleLogout}>
                   <LogOut className="w-4 h-4 mr-2" />
@@ -301,13 +301,13 @@ const Navigation = () => {
             </button>
             <button
               onClick={() => {
-                navigate("/browse");
+                navigate(role === "agent" ? "/listing-search" : "/browse");
                 setIsMenuOpen(false);
               }}
               className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
             >
               <Search className="w-4 h-4" />
-              Search Homes
+              {role === "agent" ? "Listing Search" : "Search Homes"}
             </button>
             <button
               onClick={() => {
