@@ -2,19 +2,22 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { ReverseProspectDialog } from "./ReverseProspectDialog";
 import MarketInsightsDialog from "./MarketInsightsDialog";
+import ContactAgentDialog from "./ContactAgentDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { buildDisplayAddress, propertyTypeToEnum } from "@/lib/utils";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 interface ListingCardProps {
   listing: {
     id: string;
@@ -84,11 +87,44 @@ const ListingCard = ({
   const [quickOHStartTime, setQuickOHStartTime] = useState('');
   const [quickOHEndTime, setQuickOHEndTime] = useState('');
   const [quickOHNotes, setQuickOHNotes] = useState('');
+  const [agentProfile, setAgentProfile] = useState<{
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone?: string | null;
+    headshot_url?: string | null;
+    company?: string | null;
+  } | null>(null);
+
   useEffect(() => {
     loadMatchCount();
     loadStatusHistory();
     loadPriceHistory();
   }, [listing.id]);
+
+  // Fetch agent profile for grid view
+  useEffect(() => {
+    const fetchAgentProfile = async () => {
+      if (!listing.agent_id || viewMode !== 'grid') return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("agent_profiles")
+          .select("id, first_name, last_name, email, phone, headshot_url, company")
+          .eq("id", listing.agent_id)
+          .single();
+        
+        if (!error && data) {
+          setAgentProfile(data);
+        }
+      } catch (error) {
+        console.error("Error fetching agent profile:", error);
+      }
+    };
+
+    fetchAgentProfile();
+  }, [listing.agent_id, viewMode]);
   const loadStatusHistory = async () => {
     try {
       const {
@@ -1022,298 +1058,183 @@ const ListingCard = ({
     </Card>;
   }
 
-  // Grid view
-  return <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="relative aspect-[4/3]">
-        {photoUrl ? <img src={photoUrl} alt={listing.address} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-muted flex items-center justify-center">
+  // Grid view - Clean design for listing search results
+  const currentPhoto = getPhotoByIndex(currentPhotoIndex);
+  const totalPhotos = getTotalPhotos();
+  const pricePerSqft = listing.square_feet && listing.square_feet > 0 
+    ? Math.round(listing.price / listing.square_feet) 
+    : null;
+
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+      {/* Photo Container with scrolling */}
+      <div className="relative aspect-[4/3] group">
+        {currentPhoto ? (
+          <img 
+            src={currentPhoto} 
+            alt={listing.address} 
+            className="w-full h-full object-cover" 
+          />
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center">
             <Home className="w-12 h-12 text-muted-foreground" />
-          </div>}
+          </div>
+        )}
         
-        {/* Status Change Banner (top priority) */}
-        {statusBanner && <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-sm font-bold px-3 py-2 text-center flex items-center justify-center gap-2`}>
-            {statusBanner.iconType === 'sparkles' ? <Sparkles className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
-            {statusBanner.text}
-          </div>}
-        
-        {/* Price Change Banner (second priority, positioned below status banner if both exist) */}
-        {priceChangeBanner && <div className={`absolute ${statusBanner ? 'top-10' : 'top-0'} left-0 right-0 ${priceChangeBanner.color} text-white text-sm font-bold px-3 py-2 text-center flex items-center justify-center gap-2`}>
-            <TrendingDown className="w-4 h-4" />
-            {priceChangeBanner.text}
-          </div>}
-        
-        {/* Open House Banner (third priority, positioned below previous banners if they exist) */}
-        {openHouseBanner && <div className={`absolute ${statusBanner && priceChangeBanner ? 'top-20' : statusBanner || priceChangeBanner ? 'top-10' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-sm font-bold px-3 py-2 text-center`}>
-            {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.date} • {openHouseBanner.time}
-          </div>}
-        
-        {/* Photo count badge */}
-        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-          {listing.photos?.length || 0} Photos
-        </div>
-      </div>
-      <CardContent className="p-3">
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex-1">
-            <h3 className="text-base font-semibold mb-1">
-              {listing.address}
-              {unitNumber && <Badge variant="secondary" className="ml-2 text-xs">
-                  Unit {unitNumber}
-                </Badge>}
-            </h3>
-            <div className="flex items-center text-muted-foreground text-xs mb-1.5">
-              <MapPin className="w-3 h-3 mr-1" />
-              {listing.city}, {listing.state} {listing.zip_code}
+        {/* Photo Navigation Arrows */}
+        {totalPhotos > 1 && (
+          <>
+            <button
+              onClick={handlePreviousPhoto}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleNextPhoto}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            {/* Photo indicator dots */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {Array.from({ length: Math.min(totalPhotos, 5) }).map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`w-1.5 h-1.5 rounded-full ${i === currentPhotoIndex % 5 ? 'bg-white' : 'bg-white/50'}`} 
+                />
+              ))}
+              {totalPhotos > 5 && <span className="text-white text-xs ml-1">+{totalPhotos - 5}</span>}
             </div>
-            {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
-              <div className="text-xs text-muted-foreground mb-1.5">
-                <Badge variant="secondary" className="text-xs">
-                  {listing.neighborhood || (listing as any).attom_data?.neighborhood}
-                </Badge>
+          </>
+        )}
+        
+        {/* Property Type Pill - Bottom Right Corner */}
+        {listing.property_type && (
+          <Badge 
+            variant="secondary" 
+            className="absolute bottom-2 right-2 text-xs bg-black/70 text-white border-0 hover:bg-black/70"
+          >
+            {listing.property_type}
+          </Badge>
+        )}
+      </div>
+
+      <CardContent className="p-3">
+        {/* Address + Price Row */}
+        <div className="flex justify-between items-start gap-2 mb-2">
+          <h3 className="text-sm font-semibold text-foreground leading-tight line-clamp-1">
+            {listing.address}
+            {unitNumber && <span className="text-muted-foreground font-normal"> Unit {unitNumber}</span>}
+          </h3>
+          <div className="text-right flex-shrink-0">
+            <div className="text-sm font-bold text-foreground">
+              {formatPrice(listing.price)}
+            </div>
+            {pricePerSqft && (
+              <div className="text-xs text-muted-foreground">
+                ${pricePerSqft}/sqft
               </div>
             )}
-            <div className="flex flex-col gap-0.5">
-              {listing.listing_number && <div className="text-xs text-muted-foreground">
-                  Listing #{listing.listing_number}
-                </div>}
-              <div className="flex flex-wrap items-center gap-1">
-                {listing.is_relisting && <Badge variant="secondary" className="text-xs">
-                    Relisted - History Preserved
-                  </Badge>}
-                {daysOnMarket > 0 && <Badge variant="outline" className="text-xs flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'}
-                  </Badge>}
-                {listing.listing_stats?.cumulative_active_days && listing.listing_stats.cumulative_active_days > daysOnMarket && <Badge variant="secondary" className="text-xs">
-                    {listing.listing_stats.cumulative_active_days} total
-                  </Badge>}
-              </div>
-            </div>
           </div>
-          <Badge variant={listing.status === "active" ? "default" : "secondary"} className="text-xs">
-            {listing.status}
-          </Badge>
         </div>
 
-        <div className="text-lg font-bold text-primary mb-2">
-          {formatPrice(listing.price)}
+        {/* Beds, Baths, SqFt Row with Blue Icons */}
+        <div className="flex gap-4 mb-2 text-sm font-medium text-foreground">
+          {listing.bedrooms !== null && (
+            <div className="flex items-center gap-1">
+              <Bed className="w-4 h-4 text-primary" />
+              <span>{listing.bedrooms}</span>
+            </div>
+          )}
+          {listing.bathrooms !== null && (
+            <div className="flex items-center gap-1">
+              <Bath className="w-4 h-4 text-primary" />
+              <span>{listing.bathrooms}</span>
+            </div>
+          )}
+          {listing.square_feet !== null && (
+            <div className="flex items-center gap-1">
+              <Home className="w-4 h-4 text-primary" />
+              <span>{listing.square_feet.toLocaleString()}</span>
+            </div>
+          )}
         </div>
 
-        <div className="flex gap-3 mb-2 text-xs text-muted-foreground">
-          {listing.bedrooms && <div className="flex items-center">
-              <Bed className="w-4 h-4 mr-1" />
-              {listing.bedrooms} beds
-            </div>}
-          {listing.bathrooms && <div className="flex items-center">
-              <Bath className="w-4 h-4 mr-1" />
-              {listing.bathrooms} baths
-            </div>}
-          {listing.square_feet && <div className="flex items-center">
-              <Home className="w-4 h-4 mr-1" />
-              {listing.square_feet.toLocaleString()} sqft
-            </div>}
-        </div>
-        
-        {/* Open House Info */}
-        {nextOpenHouse && (
-          <div className={`flex items-center gap-2 text-xs p-2 rounded-md mb-2 ${nextOpenHouse.type === 'broker' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300'}`}>
-            <Calendar className="h-3.5 w-3.5" />
-            <span className="font-medium">
-              {nextOpenHouse.type === 'broker' ? 'Broker' : 'Open'}: {format(new Date(nextOpenHouse.date), "MMM d")} • {nextOpenHouse.start_time}
-            </span>
+        {/* Listing Number */}
+        {listing.listing_number && (
+          <div className="text-xs text-muted-foreground mb-3">
+            #{listing.listing_number}
           </div>
         )}
 
-        {(listing.status === 'active' || listing.status === 'coming_soon') && <Button size="sm" variant={matchButtonStyle.variant} onClick={() => setProspectDialogOpen(true)} disabled={matchCount === 0 || loadingMatches} className={`mb-2 w-full text-xs h-7 ${matchButtonStyle.className}`}>
-            <Users className="w-3 h-3 mr-1" />
-            {loadingMatches ? "Loading..." : matchCount > 0 ? `${matchCount} matches` : "0 matches"}
-          </Button>}
+        {/* Divider */}
+        <div className="border-t border-border my-3" />
 
-        {/* Listing Stats */}
-        {listing.listing_stats && <div className="grid grid-cols-2 gap-1.5 mb-2 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1 p-1.5 rounded bg-muted/50">
-              <Eye className="w-3 h-3" />
-              <span>{listing.listing_stats.view_count}</span>
+        {/* Agent Section */}
+        {agentProfile ? (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 flex-shrink-0">
+              <AvatarImage src={agentProfile.headshot_url || undefined} alt={`${agentProfile.first_name} ${agentProfile.last_name}`} />
+              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                {agentProfile.first_name?.[0]}{agentProfile.last_name?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-foreground truncate">
+                {agentProfile.first_name} {agentProfile.last_name}
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {agentProfile.phone && (
+                  <span className="flex items-center gap-1">
+                    <Phone className="w-3 h-3" />
+                    {formatPhoneNumber(agentProfile.phone)}
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-1 p-1.5 rounded bg-muted/50">
-              <Heart className="w-3 h-3" />
-              <span>{listing.listing_stats.save_count}</span>
-            </div>
-            <div className="flex items-center gap-1 p-1.5 rounded bg-muted/50">
-              <Mail className="w-3 h-3" />
-              <span>{listing.listing_stats.contact_count}</span>
-            </div>
-            <div className="flex items-center gap-1 p-1.5 rounded bg-muted/50">
-              <Calendar className="w-3 h-3" />
-              <span>{listing.listing_stats.showing_request_count}</span>
-            </div>
-          </div>}
-
-        {listing.property_type && <Badge variant="outline" className="mb-2 text-xs">
-            {listing.property_type}
-          </Badge>}
-
-        <div className="flex gap-1.5 mt-2">
-          <Button variant="outline" size="sm" className="flex-1" onClick={() => {
-          sessionStorage.setItem('fromAgentDashboard', 'true');
-          navigate(`/property/${listing.id}?from=my-listings`, {
-            state: {
-              fromAgentDashboard: true
-            }
-          });
-        }}>
-            <Eye className="w-4 h-4 mr-2" />
-            View
-          </Button>
-          <Button variant="outline" size="sm" className="flex-1" onClick={() => navigate(`/analytics/${listing.id}`)}>
-            <BarChart3 className="w-4 h-4 mr-2" />
-            Stats
-          </Button>
-          <Button variant="outline" size="sm" className="flex-1" onClick={e => {
-          e.stopPropagation();
-          setMarketInsightsOpen(true);
-        }}>
-            <TrendingDown className="w-4 h-4 mr-2" />
-            Market
-          </Button>
-          <div className="flex items-center gap-2 flex-1">
-            <span className="text-2xl animate-pulse flex-shrink-0">🎈</span>
-            <Button variant="outline" size="sm" className="flex-1" onClick={(e) => {
-              e.stopPropagation();
-              setQuickOpenHouseDialogOpen(true);
-            }}>
-              Schedule
-            </Button>
+            <ContactAgentDialog
+              listingId={listing.id}
+              agentId={agentProfile.id}
+              listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+              buttonSize="sm"
+              buttonVariant="default"
+            />
           </div>
-          <Button variant="default" size="sm" className="flex-1" onClick={() => navigate(`/agent/listings/edit/${listing.id}`)}>
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
-          {listing.status === 'draft' && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" className="flex-1" onClick={(e) => e.stopPropagation()}>
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Draft Listing</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete this draft listing? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    {deleting ? 'Deleting...' : 'Delete'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          {listing.status === 'cancelled' && onReactivate && <Button variant="default" size="sm" onClick={() => onReactivate(listing.id)} className="bg-green-600 hover:bg-green-700">
-              <RefreshCw className="w-4 h-4 mr-1" />
-              Reactivate
-            </Button>}
-        </div>
+        ) : agentInfo ? (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 flex-shrink-0">
+              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                <User className="w-4 h-4" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-foreground truncate">
+                {agentInfo.name}
+              </div>
+              {agentInfo.company && (
+                <div className="text-xs text-muted-foreground truncate">
+                  {agentInfo.company}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 flex-shrink-0">
+              <AvatarFallback className="bg-muted text-muted-foreground">
+                <User className="w-4 h-4" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-muted-foreground">
+                Listing Agent
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
-      <ReverseProspectDialog open={prospectDialogOpen} onOpenChange={setProspectDialogOpen} listing={listing} matchCount={matchCount} />
-      <MarketInsightsDialog open={marketInsightsOpen} onOpenChange={setMarketInsightsOpen} listing={{
-      address: listing.address,
-      city: listing.city,
-      state: listing.state,
-      zip_code: listing.zip_code,
-      price: listing.price,
-      property_type: listing.property_type
-    }} />
-      
-      <Dialog open={quickOpenHouseDialogOpen} onOpenChange={setQuickOpenHouseDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Schedule Open House</DialogTitle>
-            <DialogDescription>
-              Add an open house for {listing.address}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Type</Label>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant={quickOHType === 'public' ? 'default' : 'outline'}
-                  onClick={() => setQuickOHType('public')}
-                  className="flex-1"
-                >
-                  Public Open House
-                </Button>
-                <Button
-                  type="button"
-                  variant={quickOHType === 'broker' ? 'default' : 'outline'}
-                  onClick={() => setQuickOHType('broker')}
-                  className="flex-1"
-                >
-                  Broker Open House
-                </Button>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="quick-oh-date">Date</Label>
-              <Input
-                id="quick-oh-date"
-                type="date"
-                value={quickOHDate}
-                onChange={(e) => setQuickOHDate(e.target.value)}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="quick-oh-start">Start Time</Label>
-                <Input
-                  id="quick-oh-start"
-                  type="time"
-                  value={quickOHStartTime}
-                  onChange={(e) => setQuickOHStartTime(e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="quick-oh-end">End Time</Label>
-                <Input
-                  id="quick-oh-end"
-                  type="time"
-                  value={quickOHEndTime}
-                  onChange={(e) => setQuickOHEndTime(e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="quick-oh-notes">Notes (optional)</Label>
-              <Textarea
-                id="quick-oh-notes"
-                value={quickOHNotes}
-                onChange={(e) => setQuickOHNotes(e.target.value)}
-                placeholder="Any special instructions..."
-                rows={3}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setQuickOpenHouseDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleQuickAddOpenHouse}>
-              Add Open House
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </Card>;
+    </Card>
+  );
 };
 export default ListingCard;
