@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
+import ListingCard from "@/components/ListingCard";
 import { toast } from "sonner";
-import { ArrowLeft, RotateCcw } from "lucide-react";
+import { ArrowLeft, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const ListingSearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -40,6 +42,7 @@ const ListingSearchResults = () => {
   const [loading, setLoading] = useState(true);
   const [sortColumn, setSortColumn] = useState("list_date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   const handleSearch = useCallback(async () => {
     setLoading(true);
@@ -267,23 +270,69 @@ const ListingSearchResults = () => {
                     </span>
                     {" "}listings found
                   </span>
+                  <div className="h-5 w-px bg-slate-200" />
+                  <ToggleGroup 
+                    type="single" 
+                    value={viewMode} 
+                    onValueChange={(value) => value && setViewMode(value as "list" | "grid")}
+                    className="bg-slate-100 rounded-md p-0.5"
+                  >
+                    <ToggleGroupItem 
+                      value="list" 
+                      aria-label="List view"
+                      className="h-7 w-7 p-0 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+                    >
+                      <List className="h-4 w-4" />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem 
+                      value="grid" 
+                      aria-label="Grid view"
+                      className="h-7 w-7 p-0 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </ToggleGroupItem>
+                  </ToggleGroup>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Results Table */}
-          <section className="bg-white border border-slate-200 rounded-lg shadow-sm">
-            <ListingResultsTable
-              listings={listings}
-              loading={loading}
-              sortColumn={sortColumn}
-              sortDirection={sortDirection}
-              onSort={handleSort}
-              onRowClick={handleRowClick}
-              filters={filters}
-            />
-          </section>
+          {/* Results */}
+          {viewMode === "list" ? (
+            <section className="bg-white border border-slate-200 rounded-lg shadow-sm">
+              <ListingResultsTable
+                listings={listings}
+                loading={loading}
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                onRowClick={handleRowClick}
+                filters={filters}
+              />
+            </section>
+          ) : (
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {loading ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="bg-white border border-slate-200 rounded-lg h-72 animate-pulse" />
+                ))
+              ) : listings.length === 0 ? (
+                <div className="col-span-full text-center py-12 text-slate-500">
+                  No listings found matching your criteria
+                </div>
+              ) : (
+                listings.map((listing) => (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    viewMode="grid"
+                    showActions={false}
+                    agentInfo={listing.agent_name ? { name: listing.agent_name } : null}
+                  />
+                ))
+              )}
+            </section>
+          )}
         </div>
       </main>
 
