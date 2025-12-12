@@ -51,6 +51,12 @@ import ContactAgentDialog from "@/components/ContactAgentDialog";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
@@ -388,41 +394,6 @@ const PropertyDetail = () => {
             </Button>
 
             <div className="flex items-center gap-2">
-              {/* Agent-only buttons */}
-              {isAgentView && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/agent/listings/edit/${id}`)}
-                    className="gap-2"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    Edit Listing
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopyClientLink}
-                    className="gap-2"
-                    title="Client-friendly view with agent-only info removed"
-                  >
-                    <Copy className="w-4 h-4" />
-                    Copy Client Link
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handlePreviewClientView}
-                    className="gap-2"
-                    title="Preview what clients see"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Preview
-                  </Button>
-                </>
-              )}
-
               <SocialShareMenu
                 url={getListingShareUrl(id!)}
                 title={`${listing.address}, ${listing.city}, ${listing.state}`}
@@ -498,13 +469,38 @@ const PropertyDetail = () => {
                     </div>
 
                     {/* Share Button - Top Right Overlay */}
-                    <button
-                      onClick={handleCopyLink}
-                      className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
-                      aria-label="Share property"
-                    >
-                      <Share2 className="w-5 h-5" />
-                    </button>
+                    <div className="absolute top-4 right-4">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all backdrop-blur-sm"
+                            aria-label="Share property"
+                          >
+                            <Share2 className="w-6 h-6" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">
+                            Facebook
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">
+                            Twitter
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">
+                            LinkedIn
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">
+                            WhatsApp
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => window.open(`mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">
+                            Email
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleCopyLink} className="gap-2 cursor-pointer">
+                            Copy Link
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                     
                     {/* Carousel Arrow Controls - Only for Photos */}
                     {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 1 && (
@@ -596,10 +592,15 @@ const PropertyDetail = () => {
               <div className="mt-5">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                   <div className="flex-1">
-                    <h1 className="text-2xl md:text-3xl font-semibold">{listing.address}</h1>
-                    <p className="text-sm md:text-base text-slate-500">
-                      {listing.city}, {listing.state} {listing.zip_code}
-                    </p>
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-5 h-5 mt-1 text-muted-foreground flex-shrink-0" />
+                      <div>
+                        <h1 className="text-2xl md:text-3xl font-semibold">{listing.address}</h1>
+                        <p className="text-sm md:text-base text-slate-500">
+                          {listing.city}, {listing.state} {listing.zip_code}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   <div className="text-right">
                     <div className="text-4xl font-bold text-primary">
@@ -774,20 +775,29 @@ const PropertyDetail = () => {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => navigate(`/agent/listings/edit/${id}`)}
+                        className="w-full justify-start gap-2"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        Edit Listing
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePreviewClientView}
+                        className="w-full justify-start gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Preview Client View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => navigate(`/communication-center?listing=${listing.id}`)}
                         className="w-full justify-start gap-2"
                       >
                         <Send className="w-4 h-4" />
                         Send to Matching Agents
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCopyClientLink}
-                        className="w-full justify-start gap-2"
-                      >
-                        <Copy className="w-4 h-4" />
-                        Copy Client Link
                       </Button>
                     </CardContent>
                   </Card>
