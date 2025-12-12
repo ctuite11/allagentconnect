@@ -600,25 +600,23 @@ const PropertyDetail = () => {
                 />
               </div>
 
-              {/* ========== HERO BAND - ADDRESS / PRICE / STATS ========== */}
-              <div className="mt-4 border-b pb-4">
-                {/* Address Left, Price Right */}
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+              {/* ========== HERO BAND - ADDRESS / PRICE / STATS (ONE COMPACT UNIT) ========== */}
+              <div className="mt-3 border-b pb-3">
+                {/* ROW 1: Address Left, Price Right */}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1">
                   {/* LEFT: Address */}
                   <div>
-                    <div className="flex items-center gap-1.5">
+                    <h1 className="text-lg md:text-xl font-semibold text-foreground flex items-center gap-1.5">
                       <MapPin className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                      <h1 className="text-lg md:text-xl font-semibold text-foreground">
-                        {buildDisplayAddress(listing)}
-                      </h1>
-                    </div>
+                      {buildDisplayAddress(listing)}
+                    </h1>
                     <p className="text-sm text-muted-foreground ml-6">
                       {listing.city}, {listing.state} {listing.zip_code}
                     </p>
                   </div>
                   
                   {/* RIGHT: Price */}
-                  <div className="text-right sm:text-right ml-6 sm:ml-0">
+                  <div className="text-left sm:text-right ml-6 sm:ml-0 mt-1 sm:mt-0">
                     <div className="text-2xl md:text-3xl font-bold text-foreground">
                       ${listing.price.toLocaleString()}
                       {listing.listing_type === 'for_rent' && (
@@ -633,47 +631,47 @@ const PropertyDetail = () => {
                   </div>
                 </div>
 
-                {/* Stats Row - Below Address/Price */}
-                <div className="flex flex-wrap items-center gap-6 mt-4">
+                {/* ROW 2: Stats (immediately under Row 1, NO gap) */}
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-2">
                   {listing.bedrooms && (
-                    <div className="flex items-center gap-2">
-                      <Bed className="h-5 w-5 text-slate-700 dark:text-slate-300" strokeWidth={2.5} />
-                      <span className="font-bold text-lg text-foreground">{listing.bedrooms}</span>
+                    <div className="flex items-center gap-1.5">
+                      <Bed className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                      <span className="font-bold text-foreground">{listing.bedrooms}</span>
                       <span className="text-sm text-muted-foreground">Beds</span>
                     </div>
                   )}
                   {listing.bathrooms && (
-                    <div className="flex items-center gap-2">
-                      <Bath className="h-5 w-5 text-slate-700 dark:text-slate-300" strokeWidth={2.5} />
-                      <span className="font-bold text-lg text-foreground">{listing.bathrooms}</span>
+                    <div className="flex items-center gap-1.5">
+                      <Bath className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                      <span className="font-bold text-foreground">{listing.bathrooms}</span>
                       <span className="text-sm text-muted-foreground">Baths</span>
                     </div>
                   )}
                   {listing.square_feet && (
-                    <div className="flex items-center gap-2">
-                      <Square className="h-5 w-5 text-slate-700 dark:text-slate-300" strokeWidth={2.5} />
-                      <span className="font-bold text-lg text-foreground">{listing.square_feet.toLocaleString()}</span>
+                    <div className="flex items-center gap-1.5">
+                      <Square className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                      <span className="font-bold text-foreground">{listing.square_feet.toLocaleString()}</span>
                       <span className="text-sm text-muted-foreground">Sq Ft</span>
                     </div>
                   )}
                   {daysOnMarket !== null && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-slate-700 dark:text-slate-300" strokeWidth={2.5} />
-                      <span className="font-bold text-lg text-foreground">{daysOnMarket}</span>
-                      <span className="text-sm text-muted-foreground">Days</span>
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                      <span className="font-bold text-foreground">{daysOnMarket}</span>
+                      <span className="text-sm text-muted-foreground">DOM</span>
                     </div>
                   )}
                   {isAgentView && (
                     <>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-5 w-5 text-slate-700 dark:text-slate-300" strokeWidth={2.5} />
-                        <span className="font-bold text-lg text-foreground">{stats.matches}</span>
-                        <span className="text-sm text-muted-foreground">Matches</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Eye className="h-5 w-5 text-slate-700 dark:text-slate-300" strokeWidth={2.5} />
-                        <span className="font-bold text-lg text-foreground">{stats.views}</span>
+                      <div className="flex items-center gap-1.5">
+                        <Eye className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                        <span className="font-bold text-foreground">{stats.views}</span>
                         <span className="text-sm text-muted-foreground">Views</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Users className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                        <span className="font-bold text-foreground">{stats.matches}</span>
+                        <span className="text-sm text-muted-foreground">Matches</span>
                       </div>
                     </>
                   )}
@@ -1018,48 +1016,39 @@ const PropertyDetail = () => {
 
             {/* RIGHT COLUMN - Consumer-facing content (not in hero sidebar) */}
             <div className="space-y-6">
-              {/* Buyer Agent Fee - Public Version (Client View Only) */}
+              {/* Buyer Agent Compensation - Client View Only */}
               {!isAgentView && compensationDisplay && (
                 <Card className="rounded-3xl border border-emerald-100 bg-emerald-50/40 dark:bg-emerald-950/20">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-5 w-5 text-emerald-700" />
-                          <CardTitle className="text-base">Buyer Agent Fee</CardTitle>
-                          <span className="text-xs text-muted-foreground">(paid by seller)</span>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5 text-emerald-700" />
+                        <CardTitle className="text-base">Buyer Agent Compensation</CardTitle>
+                        <span className="text-xs text-muted-foreground">(Paid by Seller)</span>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <button className="text-muted-foreground hover:text-foreground">
+                              <HelpCircle className="w-4 h-4" />
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center gap-2">
+                                <DollarSign className="w-5 h-5 text-green-600" />
+                                Understanding Buyer Agent Compensation
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4 text-sm text-muted-foreground">
+                              <p>
+                                This is the compensation the seller is offering to pay a buyer's agent.
+                              </p>
+                              <p>
+                                <strong className="text-foreground">It may be negotiable.</strong> Ask the listing agent for details.
+                              </p>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </div>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground hover:text-foreground h-7 px-2">
-                            <HelpCircle className="w-3.5 h-3.5" />
-                            Learn more
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md">
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <DollarSign className="w-5 h-5 text-green-600" />
-                              Understanding Buyer Agent Fee
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4 py-4 text-sm text-muted-foreground">
-                            <p>
-                              This is the amount the seller is offering to pay a buyer's agent for 
-                              bringing a successful buyer to this transaction.
-                            </p>
-                            <p>
-                              <strong className="text-foreground">This amount may be negotiable.</strong> Ask your 
-                              agent or the listing agent for more details about compensation.
-                            </p>
-                            <p>
-                              You may have a separate agreement with your buyer's agent that outlines 
-                              their compensation. The amount offered by this listing may differ from your agreement.
-                            </p>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
