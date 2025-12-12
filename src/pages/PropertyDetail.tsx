@@ -894,88 +894,86 @@ const PropertyDetail = () => {
         </div>
         {/* END HERO GRID */}
 
-        {/* ========== ADDRESS + PRICE ROW (OUTSIDE HERO, DIRECTLY UNDER) ========== */}
-        <div className="mx-auto max-w-6xl px-4 mt-4">
-          <div className="border-b pb-3">
-            {/* ROW 1: Address Left, Price Right - Same baseline */}
-            <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2">
-              {/* LEFT: Address */}
-              <div>
-                <h1 className="text-lg md:text-xl font-semibold text-foreground flex items-center gap-1.5">
-                  <MapPin className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                  {buildDisplayAddress(listing)}
-                </h1>
-                <p className="text-sm text-muted-foreground ml-6">
-                  {listing.city}, {listing.state} {listing.zip_code}
-                </p>
-              </div>
-              
-              {/* RIGHT: Price - reduced ~15-20% */}
-              <div className="text-left sm:text-right ml-6 sm:ml-0 flex-shrink-0">
-                <div className="text-xl md:text-2xl font-bold text-foreground">
-                  ${listing.price.toLocaleString()}
-                  {listing.listing_type === 'for_rent' && (
-                    <span className="text-sm text-muted-foreground font-normal">/mo</span>
-                  )}
-                </div>
-                {listing.square_feet && (
-                  <p className="text-sm text-muted-foreground">
-                    ${Math.round(listing.price / listing.square_feet).toLocaleString()} / sq ft
-                  </p>
+        {/* ========== ADDRESS + PRICE + STATS (TIGHT SPACING UNDER HERO) ========== */}
+        <div className="mx-auto max-w-6xl px-4 mt-2">
+          {/* ROW 1: Address Left, Price Right - Same baseline */}
+          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
+            {/* LEFT: Address - Title Case, smaller */}
+            <div>
+              <h1 className="text-base md:text-lg font-semibold text-foreground flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                {buildDisplayAddress(listing)}
+              </h1>
+              <p className="text-xs text-muted-foreground ml-5">
+                {listing.city}, {listing.state} {listing.zip_code}
+              </p>
+            </div>
+            
+            {/* RIGHT: Price - baseline aligned, ~15% smaller */}
+            <div className="text-left sm:text-right ml-5 sm:ml-0 flex-shrink-0">
+              <div className="text-lg md:text-xl font-bold text-foreground">
+                ${listing.price.toLocaleString()}
+                {listing.listing_type === 'for_rent' && (
+                  <span className="text-xs text-muted-foreground font-normal">/mo</span>
                 )}
               </div>
-            </div>
-
-            {/* ROW 2: Stats - directly under address, tight spacing */}
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-2">
-              {listing.bedrooms && (
-                <div className="flex items-center gap-1.5">
-                  <Bed className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                  <span className="font-bold text-foreground">{listing.bedrooms}</span>
-                  <span className="text-sm text-muted-foreground">Beds</span>
-                </div>
-              )}
-              {listing.bathrooms && (
-                <div className="flex items-center gap-1.5">
-                  <Bath className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                  <span className="font-bold text-foreground">{listing.bathrooms}</span>
-                  <span className="text-sm text-muted-foreground">Baths</span>
-                </div>
-              )}
               {listing.square_feet && (
-                <div className="flex items-center gap-1.5">
-                  <Square className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                  <span className="font-bold text-foreground">{listing.square_feet.toLocaleString()}</span>
-                  <span className="text-sm text-muted-foreground">Sq Ft</span>
-                </div>
-              )}
-              {daysOnMarket !== null && (
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                  <span className="font-bold text-foreground">{daysOnMarket}</span>
-                  <span className="text-sm text-muted-foreground">DOM</span>
-                </div>
-              )}
-              {isAgentView && (
-                <>
-                  <div className="flex items-center gap-1.5">
-                    <Eye className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                    <span className="font-bold text-foreground">{stats.views}</span>
-                    <span className="text-sm text-muted-foreground">Views</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Users className="h-5 w-5 text-foreground" strokeWidth={2.5} />
-                    <span className="font-bold text-foreground">{stats.matches}</span>
-                    <span className="text-sm text-muted-foreground">Matches</span>
-                  </div>
-                </>
+                <p className="text-xs text-muted-foreground">
+                  ${Math.round(listing.price / listing.square_feet).toLocaleString()} / sq ft
+                </p>
               )}
             </div>
           </div>
+
+          {/* ROW 2: Stats - directly under, no gap */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-1.5 pb-2 border-b">
+            {listing.bedrooms && (
+              <div className="flex items-center gap-1">
+                <Bed className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                <span className="font-bold text-foreground">{listing.bedrooms}</span>
+                <span className="text-xs text-muted-foreground">Beds</span>
+              </div>
+            )}
+            {listing.bathrooms && (
+              <div className="flex items-center gap-1">
+                <Bath className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                <span className="font-bold text-foreground">{listing.bathrooms}</span>
+                <span className="text-xs text-muted-foreground">Baths</span>
+              </div>
+            )}
+            {listing.square_feet && (
+              <div className="flex items-center gap-1">
+                <Square className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                <span className="font-bold text-foreground">{listing.square_feet.toLocaleString()}</span>
+                <span className="text-xs text-muted-foreground">Sq Ft</span>
+              </div>
+            )}
+            {daysOnMarket !== null && (
+              <div className="flex items-center gap-1">
+                <Calendar className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                <span className="font-bold text-foreground">{daysOnMarket}</span>
+                <span className="text-xs text-muted-foreground">DOM</span>
+              </div>
+            )}
+            {isAgentView && (
+              <>
+                <div className="flex items-center gap-1">
+                  <Eye className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                  <span className="font-bold text-foreground">{stats.views}</span>
+                  <span className="text-xs text-muted-foreground">Views</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Users className="h-5 w-5 text-foreground" strokeWidth={2.5} />
+                  <span className="font-bold text-foreground">{stats.matches}</span>
+                  <span className="text-xs text-muted-foreground">Matches</span>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* ========== MAIN CONTENT BELOW HERO ========== */}
-        <div className="mx-auto max-w-6xl px-4 pt-3 pb-8">
+        {/* ========== MAIN CONTENT BELOW (MINIMAL GAP) ========== */}
+        <div className="mx-auto max-w-6xl px-4 pt-2 pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* LEFT COLUMN - Main Content */}
             <div className="lg:col-span-2 space-y-4">
