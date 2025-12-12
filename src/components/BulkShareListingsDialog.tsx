@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormattedInput } from "@/components/ui/formatted-input";
-import { Share2, Search, UserPlus } from "lucide-react";
+import { Share2, Search, UserPlus, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -42,7 +42,7 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
   const [clientSearch, setClientSearch] = useState("");
   const [clientResults, setClientResults] = useState<Client[]>([]);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
-  const [showSaveContactPrompt, setShowSaveContactPrompt] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
   const [savingContact, setSavingContact] = useState(false);
   const clientSearchRef = useRef<HTMLDivElement>(null);
 
@@ -57,7 +57,7 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
       setClientSearch("");
       setClientResults([]);
       setShowClientDropdown(false);
-      setShowSaveContactPrompt(false);
+      setShowManualEntry(false);
     }
   }, [open]);
 
@@ -98,8 +98,6 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
         const results = data || [];
         setClientResults(results);
         setShowClientDropdown(results.length > 0);
-        // Show save prompt when no results found
-        setShowSaveContactPrompt(results.length === 0);
       } catch (error) {
         console.error("Error searching clients:", error);
       }
@@ -135,7 +133,7 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
     setRecipientEmail(client.email);
     setClientSearch(`${client.first_name} ${client.last_name}`);
     setShowClientDropdown(false);
-    setShowSaveContactPrompt(false);
+    setShowManualEntry(false);
   };
 
   const handleSaveNewContact = async () => {
@@ -166,7 +164,7 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
       if (error) throw error;
       
       toast.success(`${recipientName} saved to My Contacts`);
-      setShowSaveContactPrompt(false);
+      setShowManualEntry(false);
     } catch (error) {
       console.error("Error saving contact:", error);
       toast.error("Failed to save contact");
@@ -260,41 +258,68 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
             )}
           </div>
           
-          {showSaveContactPrompt && !showClientDropdown && recipientName && recipientEmail && (
-            <div className="p-3 bg-muted/50 rounded-md border border-dashed">
-              <p className="text-sm text-muted-foreground mb-2">
-                Contact not found. Would you like to save "{recipientName}" to My Contacts?
-              </p>
+          {/* Enter Manually option - shown when no contact selected */}
+          {!recipientName && !showManualEntry && (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 border-t border-muted" />
+                <span className="text-xs text-muted-foreground">or</span>
+                <div className="flex-1 border-t border-muted" />
+              </div>
               <Button
                 variant="outline"
-                size="sm"
-                onClick={handleSaveNewContact}
-                disabled={savingContact}
+                type="button"
+                className="w-full"
+                onClick={() => setShowManualEntry(true)}
               >
-                <UserPlus className="h-4 w-4 mr-1.5" />
-                {savingContact ? "Saving..." : "Save to My Contacts"}
+                <Edit className="h-4 w-4 mr-1.5" />
+                Enter Manually
               </Button>
-            </div>
+            </>
           )}
-          <div className="space-y-2">
-            <Label htmlFor="recipientName">Recipient Name *</Label>
-            <Input
-              id="recipientName"
-              value={recipientName}
-              onChange={(e) => setRecipientName(e.target.value)}
-              placeholder="Enter recipient's name"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="recipientEmail">Recipient Email *</Label>
-            <Input
-              id="recipientEmail"
-              type="email"
-              value={recipientEmail}
-              onChange={(e) => setRecipientEmail(e.target.value)}
-              placeholder="recipient@example.com"
-            />
-          </div>
+
+          {/* Manual entry fields - only when showManualEntry is true */}
+          {showManualEntry && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="recipientName">Recipient Name *</Label>
+                <Input
+                  id="recipientName"
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
+                  placeholder="Enter recipient's name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="recipientEmail">Recipient Email *</Label>
+                <Input
+                  id="recipientEmail"
+                  type="email"
+                  value={recipientEmail}
+                  onChange={(e) => setRecipientEmail(e.target.value)}
+                  placeholder="recipient@example.com"
+                />
+              </div>
+              
+              {/* Save to My Contacts prompt */}
+              {recipientName && recipientEmail && (
+                <div className="p-3 bg-muted/50 rounded-md border border-dashed">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Save "{recipientName}" to My Contacts?
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSaveNewContact}
+                    disabled={savingContact}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1.5" />
+                    {savingContact ? "Saving..." : "Save to My Contacts"}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
           <div className="space-y-2">
             <Label htmlFor="agentName">Your Name *</Label>
             <Input
