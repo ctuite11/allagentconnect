@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowUpDown, ExternalLink, MessageSquare, Users, Check, Share2, FileSpreadsheet, Eye, EyeOff, Bookmark } from "lucide-react";
+import { ArrowUpDown, ExternalLink, MessageSquare, Users, Check, FileSpreadsheet, Eye, EyeOff, Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 
 interface Listing {
   id: string;
@@ -301,23 +302,12 @@ const ListingResultsTable = ({
             <Bookmark className="h-4 w-4 mr-1.5" />
             Save Search
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={selectedRows.size === 0}
-            onClick={() => {
-              if (selectedRows.size === 0) return;
-              // Open email share modal with simple email approach
-              const listingIds = Array.from(selectedRows);
-              const shareUrl = `${window.location.origin}/listing-search?ids=${listingIds.join(",")}`;
-              navigator.clipboard.writeText(shareUrl);
-              toast.success(`Copied link to ${selectedRows.size} listing${selectedRows.size > 1 ? 's' : ''}`);
-            }}
-            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          >
-            <Share2 className="h-4 w-4 mr-1.5" />
-            Share
-          </Button>
+          {selectedRows.size > 0 && (
+            <BulkShareListingsDialog
+              listingIds={Array.from(selectedRows)}
+              listingCount={selectedRows.size}
+            />
+          )}
           <Button
             variant="outline"
             size="sm"
