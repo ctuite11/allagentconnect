@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Home, Mail, Phone, Search, Send, User, PencilLine } from "lucide-react";
+import { Home, Mail, Phone, Search, Send, User, PencilLine, Layers } from "lucide-react";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 import {
   Dialog,
@@ -125,9 +126,9 @@ export function ShareListingsDialog({
           {/* Accent bar */}
           <div className="mt-4 h-[2px] w-16 rounded-full bg-primary/80" />
 
-          {/* Listing Preview Chip */}
-          {listingPreview ? (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-4 border-l-primary">
+          {/* Listing Preview / Summary */}
+          {selectedCount === 1 && listingPreview ? (
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[5px] border-l-primary">
               <div className="mt-0.5 rounded-xl border border-border bg-background p-2">
                 <Home className="h-4 w-4 text-primary" />
               </div>
@@ -145,6 +146,18 @@ export function ShareListingsDialog({
                   {typeof listingPreview.sqft === "number" ? (
                     <span>{listingPreview.sqft.toLocaleString()} sf</span>
                   ) : null}
+                </div>
+              </div>
+            </div>
+          ) : selectedCount > 1 ? (
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[5px] border-l-primary">
+              <div className="mt-0.5 rounded-xl border border-border bg-background p-2">
+                <Layers className="h-4 w-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-medium">Sharing {selectedCount} Listings</div>
+                <div className="text-xs text-muted-foreground">
+                  Based on your current search criteria and filters
                 </div>
               </div>
             </div>
@@ -216,8 +229,8 @@ export function ShareListingsDialog({
           </section>
 
           {/* Sender Info Card */}
-          <section className="rounded-2xl border border-border bg-background p-4 space-y-4 border-l-4 border-l-primary">
-            <div className="text-sm font-semibold">Sender Info</div>
+          <section className="rounded-2xl border border-border bg-background p-4 space-y-4 border-l-[5px] border-l-primary">
+            <div className="text-sm font-semibold tracking-wide">Sender Info</div>
 
             <div className="space-y-2">
               <div className="text-sm font-medium">Your Name *</div>
@@ -252,6 +265,12 @@ export function ShareListingsDialog({
                 <Input
                   value={senderPhone}
                   onChange={(e) => setSenderPhone(e.target.value)}
+                  onBlur={(e) => {
+                    const formatted = formatPhoneNumber(e.target.value);
+                    if (formatted && formatted !== "—") {
+                      setSenderPhone(formatted);
+                    }
+                  }}
                   placeholder="(617) 555-0123"
                   className="pl-9 rounded-2xl"
                 />
@@ -264,11 +283,9 @@ export function ShareListingsDialog({
           </section>
 
           {/* Message */}
-          <section className="space-y-3">
+          <section className="rounded-2xl border border-border bg-background p-4 space-y-3 border-l-[5px] border-l-primary">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">
-                Personal Message <span className="text-muted-foreground">(optional)</span>
-              </div>
+              <div className="text-sm font-semibold tracking-wide">Personal Message</div>
               <div className="text-xs text-muted-foreground">Cmd/Ctrl + Enter to send</div>
             </div>
 
