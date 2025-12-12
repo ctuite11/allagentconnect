@@ -371,9 +371,9 @@ const PropertyDetail = () => {
       <Navigation />
 
       {/* Compact Header Bar - No border */}
-      <div className="bg-card sticky top-16 z-10">
+      <div className="bg-card sticky top-16 z-10 mt-2">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
+          <div className="flex items-center justify-between h-12">
             <Button
               variant="ghost"
               size="sm"
@@ -396,7 +396,7 @@ const PropertyDetail = () => {
         </div>
       </div>
 
-      <main className="flex-1 pt-4">
+      <main className="flex-1 pt-2">
         {/* Subtle Agent View Indicator - replaces banners */}
         {isAgentView && (
           <div className="mx-auto max-w-6xl px-4 mb-2">
@@ -408,13 +408,20 @@ const PropertyDetail = () => {
         )}
 
         {/* ========== NEW FLOATING HERO LAYOUT ========== */}
-        <div className="mx-auto max-w-6xl px-4 pt-8 lg:pt-12">
+        <div className="mx-auto max-w-6xl px-4 pt-2 lg:pt-4">
           <div className="flex flex-col lg:flex-row gap-10">
             
             {/* LEFT COLUMN - Floating Photo Carousel (~70%) */}
             <div className="lg:w-[70%]">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[320px] sm:h-[400px] lg:h-[540px]">
                 <div className="absolute inset-0 bg-slate-950">
+                  {/* Days on Market Badge - Bottom Right */}
+                  {daysOnMarket !== null && (
+                    <div className="absolute bottom-4 right-4 z-20 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-sm">
+                      <Calendar className="w-4 h-4" />
+                      <span className="font-medium">{daysOnMarket} Days</span>
+                    </div>
+                  )}
                   {/* Media Content */}
                     {activeMediaTab === 'photos' && (
                       <img
@@ -626,23 +633,6 @@ const PropertyDetail = () => {
                       <Square className="h-5 w-5 md:h-6 md:w-6 text-slate-600" strokeWidth={2} />
                       <span className="font-bold text-foreground">{listing.square_feet.toLocaleString()}</span>
                       <span className="text-slate-500">Sq Ft</span>
-                    </div>
-                  )}
-                  <Separator orientation="vertical" className="h-6 hidden md:block" />
-                  {daysOnMarket !== null && (
-                    <div className="flex items-center gap-2 text-slate-500">
-                      <Calendar className="h-4 w-4" />
-                      <span>{daysOnMarket} Days on Market</span>
-                    </div>
-                  )}
-                  {/* Agent-only inline stats */}
-                  {isAgentView && (
-                    <div className="flex items-center gap-4 text-slate-500">
-                      <span>Matches: <span className="font-medium text-foreground">{stats.matches}</span></span>
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-4 h-4" />
-                        <span className="font-medium text-foreground">{stats.views}</span>
-                      </span>
                     </div>
                   )}
                 </div>
