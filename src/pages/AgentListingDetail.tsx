@@ -19,6 +19,7 @@ import {
   Mail,
   Share2,
   Eye,
+  EyeOff,
   Home,
   FileText,
   ChevronLeft,
@@ -146,6 +147,10 @@ const AgentListingDetail = () => {
   const [stats, setStats] = useState({ matches: 0, views: 0 });
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
+  
+  // Agent vs Client view toggle - agents default to agent view
+  const [viewAsClient, setViewAsClient] = useState(false);
+  const isAgentView = !viewAsClient;
 
   useListingView(id);
 
@@ -345,37 +350,61 @@ const AgentListingDetail = () => {
             </Button>
 
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => navigate(`/agent/listings/edit/${id}`)}
-                className="gap-2"
+              {/* Agent-only action buttons */}
+              {isAgentView && (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(`/agent/listings/edit/${id}`)}
+                    className="gap-2"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit Listing
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.open(`/property/${id}`, '_blank')}
+                    className="gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Preview
+                  </Button>
+                  <SocialShareMenu
+                    url={getListingShareUrl(id!)}
+                    title={`${displayAddress}, ${listing.city}, ${listing.state}`}
+                    description={listing.description || ''}
+                    listingId={id!}
+                  />
+                  <Button 
+                    size="sm"
+                    className="gap-2 bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600"
+                  >
+                    <Send className="w-4 h-4" />
+                    Send to Agents
+                  </Button>
+                </>
+              )}
+              
+              {/* Agent View / Client View toggle */}
+              <button
+                type="button"
+                onClick={() => setViewAsClient((v) => !v)}
+                className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/80 transition-colors"
               >
-                <Edit className="w-4 h-4" />
-                Edit Listing
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.open(`/property/${id}`, '_blank')}
-                className="gap-2"
-              >
-                <Eye className="w-4 h-4" />
-                Preview
-              </Button>
-              <SocialShareMenu
-                url={getListingShareUrl(id!)}
-                title={`${displayAddress}, ${listing.city}, ${listing.state}`}
-                description={listing.description || ''}
-                listingId={id!}
-              />
-              <Button 
-                size="sm"
-                className="gap-2 bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600"
-              >
-                <Send className="w-4 h-4" />
-                Send to Agents
-              </Button>
+                {viewAsClient ? (
+                  <>
+                    <Eye className="h-4 w-4" />
+                    Agent View
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="h-4 w-4" />
+                    Client View
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -722,63 +751,65 @@ const AgentListingDetail = () => {
               </Card>
             )}
 
-            {/* Market History */}
-            <Card className="bg-card border-border rounded-xl shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-muted-foreground" />
-                  Market History
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  {listDate && (
-                    <div className="text-center p-3 rounded-lg bg-muted/50">
-                      <p className="text-sm text-muted-foreground">List Date</p>
-                      <p className="font-semibold">{new Date(listDate).toLocaleDateString()}</p>
-                    </div>
-                  )}
-                  {daysOnMarket !== null && (
-                    <div className="text-center p-3 rounded-lg bg-muted/50">
-                      <p className="text-sm text-muted-foreground">Days on Market</p>
-                      <p className="font-semibold">{daysOnMarket}</p>
-                    </div>
-                  )}
-                  {listing.expiration_date && (
-                    <div className="text-center p-3 rounded-lg bg-muted/50">
-                      <p className="text-sm text-muted-foreground">Expiration</p>
-                      <p className="font-semibold">{new Date(listing.expiration_date).toLocaleDateString()}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Price History */}
-                {priceHistory.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <p className="text-sm font-medium text-muted-foreground mb-3">Price Changes</p>
-                    <div className="space-y-2">
-                      {priceHistory.map((change, index) => (
-                        <div key={change.id} className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0">
-                          <span className="text-muted-foreground">
-                            {new Date(change.changed_at).toLocaleDateString()}
-                          </span>
-                          <div className="flex items-center gap-3">
-                            {change.old_price && (
-                              <span className="text-muted-foreground line-through">
-                                ${change.old_price.toLocaleString()}
-                              </span>
-                            )}
-                            <span className="font-medium text-foreground">
-                              ${change.new_price.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+            {/* Market History - Agent Only */}
+            {isAgentView && (
+              <Card className="bg-card border-border rounded-xl shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-muted-foreground" />
+                    Market History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    {listDate && (
+                      <div className="text-center p-3 rounded-lg bg-muted/50">
+                        <p className="text-sm text-muted-foreground">List Date</p>
+                        <p className="font-semibold">{new Date(listDate).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                    {daysOnMarket !== null && (
+                      <div className="text-center p-3 rounded-lg bg-muted/50">
+                        <p className="text-sm text-muted-foreground">Days on Market</p>
+                        <p className="font-semibold">{daysOnMarket}</p>
+                      </div>
+                    )}
+                    {listing.expiration_date && (
+                      <div className="text-center p-3 rounded-lg bg-muted/50">
+                        <p className="text-sm text-muted-foreground">Expiration</p>
+                        <p className="font-semibold">{new Date(listing.expiration_date).toLocaleDateString()}</p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+
+                  {/* Price History */}
+                  {priceHistory.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <p className="text-sm font-medium text-muted-foreground mb-3">Price Changes</p>
+                      <div className="space-y-2">
+                        {priceHistory.map((change, index) => (
+                          <div key={change.id} className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0">
+                            <span className="text-muted-foreground">
+                              {new Date(change.changed_at).toLocaleDateString()}
+                            </span>
+                            <div className="flex items-center gap-3">
+                              {change.old_price && (
+                                <span className="text-muted-foreground line-through">
+                                  ${change.old_price.toLocaleString()}
+                                </span>
+                              )}
+                              <span className="font-medium text-foreground">
+                                ${change.new_price.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right Sidebar */}
@@ -861,8 +892,8 @@ const AgentListingDetail = () => {
               </Card>
             )}
 
-            {/* Buyer Agent Compensation */}
-            {(listing.commission_rate || listing.commission_notes) && (
+            {/* Buyer Agent Compensation - Agent Only */}
+            {isAgentView && (listing.commission_rate || listing.commission_notes) && (
               <Card className="bg-card border-border rounded-xl shadow-sm">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -886,44 +917,46 @@ const AgentListingDetail = () => {
               </Card>
             )}
 
-            {/* Showing Instructions (Agent Only) */}
-            <Card className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-800/50 rounded-xl shadow-sm">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold flex items-center gap-2 text-blue-900 dark:text-blue-100">
-                    <Info className="w-5 h-5" />
-                    Showing Instructions
-                  </CardTitle>
-                  <Badge variant="outline" className="text-xs border-blue-300 text-blue-700 dark:text-blue-300">
-                    Agent Only
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <DetailRow 
-                  label="Appointment Required" 
-                  value={listing.appointment_required ? 'Yes' : 'No'} 
-                />
-                {listing.lockbox_code && (
-                  <DetailRow label="Lockbox Code" value={listing.lockbox_code} />
-                )}
-                {listing.showing_contact_name && (
-                  <DetailRow label="Contact Name" value={listing.showing_contact_name} />
-                )}
-                {listing.showing_contact_phone && (
-                  <DetailRow label="Contact Phone" value={formatPhoneNumber(listing.showing_contact_phone)} />
-                )}
-                {listing.showing_instructions && (
-                  <div className="pt-2 mt-2 border-t border-blue-200/50">
-                    <p className="text-sm text-muted-foreground mb-1">Instructions:</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{listing.showing_instructions}</p>
+            {/* Showing Instructions - Agent Only */}
+            {isAgentView && (
+              <Card className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-800/50 rounded-xl shadow-sm">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2 text-blue-900 dark:text-blue-100">
+                      <Info className="w-5 h-5" />
+                      Showing Instructions
+                    </CardTitle>
+                    <Badge variant="outline" className="text-xs border-blue-300 text-blue-700 dark:text-blue-300">
+                      Agent Only
+                    </Badge>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <DetailRow 
+                    label="Appointment Required" 
+                    value={listing.appointment_required ? 'Yes' : 'No'} 
+                  />
+                  {listing.lockbox_code && (
+                    <DetailRow label="Lockbox Code" value={listing.lockbox_code} />
+                  )}
+                  {listing.showing_contact_name && (
+                    <DetailRow label="Contact Name" value={listing.showing_contact_name} />
+                  )}
+                  {listing.showing_contact_phone && (
+                    <DetailRow label="Contact Phone" value={formatPhoneNumber(listing.showing_contact_phone)} />
+                  )}
+                  {listing.showing_instructions && (
+                    <div className="pt-2 mt-2 border-t border-blue-200/50">
+                      <p className="text-sm text-muted-foreground mb-1">Instructions:</p>
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{listing.showing_instructions}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
-            {/* Broker Remarks (Agent Only) */}
-            {listing.broker_comments && (
+            {/* Broker Remarks - Agent Only */}
+            {isAgentView && listing.broker_comments && (
               <Card className="bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/50 dark:border-amber-800/50 rounded-xl shadow-sm">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
