@@ -371,7 +371,7 @@ const PropertyDetail = () => {
       <Navigation />
 
       {/* Compact Header Bar - No border */}
-      <div className="bg-card sticky top-16 z-10 mt-6">
+      <div className="bg-card sticky top-16 z-10 mt-8">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-10">
             <Button
@@ -409,11 +409,11 @@ const PropertyDetail = () => {
 
         {/* ========== NEW FLOATING HERO LAYOUT ========== */}
         <div className="mx-auto max-w-6xl px-4 pt-2 lg:pt-4">
-          <div className="flex flex-col lg:flex-row gap-10">
+          <div className="flex flex-col lg:flex-row gap-6">
             
             {/* LEFT COLUMN - Floating Photo Carousel (~70%) */}
             <div className="lg:w-[70%]">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[320px] sm:h-[400px] lg:h-[540px]">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[280px] sm:h-[360px] lg:h-[440px]">
                 <div className="absolute inset-0 bg-slate-950">
                   {/* Days on Market Badge - Bottom Right */}
                   {daysOnMarket !== null && (
@@ -950,7 +950,7 @@ const PropertyDetail = () => {
 
 
         {/* ========== MAIN CONTENT BELOW HERO ========== */}
-        <div className="mx-auto max-w-6xl px-4 py-8">
+        <div className="mx-auto max-w-6xl px-4 pt-4 pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* LEFT COLUMN - Main Content */}
             <div className="lg:col-span-2 space-y-6">
