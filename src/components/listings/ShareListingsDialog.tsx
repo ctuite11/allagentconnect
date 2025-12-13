@@ -171,12 +171,12 @@ export function ShareListingsDialog({
             <div className="text-sm font-medium">Search Contact</div>
 
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
               <Input
                 value={contactQuery}
                 onChange={(e) => setContactQuery(e.target.value)}
                 placeholder="Search by name or email…"
-                className="pl-9 rounded-2xl"
+                className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
                 autoFocus
               />
             </div>
@@ -202,12 +202,12 @@ export function ShareListingsDialog({
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Recipient Name</div>
                   <div className="relative">
-                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
                     <Input
                       value={recipientName}
                       onChange={(e) => setRecipientName(e.target.value)}
                       placeholder="Jane Buyer"
-                      className="pl-9 rounded-2xl"
+                      className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
                     />
                   </div>
                 </div>
@@ -215,12 +215,12 @@ export function ShareListingsDialog({
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Recipient Email</div>
                   <div className="relative">
-                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
                     <Input
                       value={recipientEmail}
                       onChange={(e) => setRecipientEmail(e.target.value)}
                       placeholder="jane@email.com"
-                      className="pl-9 rounded-2xl"
+                      className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
                     />
                   </div>
                 </div>
@@ -235,11 +235,11 @@ export function ShareListingsDialog({
             <div className="space-y-2">
               <div className="text-sm font-medium">Your Name *</div>
               <div className="relative">
-                <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
                 <Input
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
-                  className="pl-9 rounded-2xl"
+                  className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
                 />
               </div>
             </div>
@@ -247,11 +247,11 @@ export function ShareListingsDialog({
             <div className="space-y-2">
               <div className="text-sm font-medium">Your Email *</div>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
                 <Input
                   value={senderEmail}
                   onChange={(e) => setSenderEmail(e.target.value)}
-                  className="pl-9 rounded-2xl"
+                  className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
                 />
               </div>
             </div>
@@ -261,7 +261,7 @@ export function ShareListingsDialog({
                 Your Phone <span className="text-muted-foreground">(optional)</span>
               </div>
               <div className="relative">
-                <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
                 <Input
                   value={senderPhone}
                   onChange={(e) => setSenderPhone(e.target.value)}
@@ -272,7 +272,7 @@ export function ShareListingsDialog({
                     }
                   }}
                   placeholder="(617) 555-0123"
-                  className="pl-9 rounded-2xl"
+                  className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
                 />
               </div>
             </div>
@@ -308,7 +308,7 @@ export function ShareListingsDialog({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Add a short note…"
-              className="min-h-[110px] rounded-2xl"
+              className="min-h-[110px] rounded-2xl border-foreground/30 focus-visible:ring-primary"
             />
           </section>
         </div>
