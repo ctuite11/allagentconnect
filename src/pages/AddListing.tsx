@@ -2010,22 +2010,36 @@ const AddListing = () => {
   const buildListingDataFromForm = (
     uploadedMedia: { photos: any[]; floorPlans: any[]; documents: any[] },
     overrideStatus?: string
-  ) => ({
-    // Agent
-    agent_id: user?.id,
-    
-    // Status & Type
-    status: overrideStatus || formData.status,
-    listing_type: formData.listing_type,
-    property_type: formData.property_type || null,
-    
-    // Location
-    address: (formData.address || "Draft").trim(),
-    city: formData.city?.trim() || "TBD",
-    state: formData.state?.trim() || "MA",
-    zip_code: formData.zip_code?.trim() || "00000",
-    county: selectedCounty !== "all" ? selectedCounty : null,
-    neighborhood: formData.neighborhood || null,
+  ) => {
+    // Normalize Boston neighborhoods at save time - safety net for all code paths
+    let finalCity = formData.city?.trim() || "TBD";
+    let finalNeighborhood = formData.neighborhood || null;
+
+    // Check if the "city" is actually a Boston neighborhood
+    if (finalCity && bostonNeighborhoods.some(n => n.toLowerCase() === finalCity.toLowerCase())) {
+      const matchedNeighborhood = bostonNeighborhoods.find(
+        n => n.toLowerCase() === finalCity.toLowerCase()
+      );
+      finalNeighborhood = matchedNeighborhood || finalCity;
+      finalCity = "Boston";
+    }
+
+    return {
+      // Agent
+      agent_id: user?.id,
+      
+      // Status & Type
+      status: overrideStatus || formData.status,
+      listing_type: formData.listing_type,
+      property_type: formData.property_type || null,
+      
+      // Location
+      address: (formData.address || "Draft").trim(),
+      city: finalCity,
+      state: formData.state?.trim() || "MA",
+      zip_code: formData.zip_code?.trim() || "00000",
+      county: selectedCounty !== "all" ? selectedCounty : null,
+      neighborhood: finalNeighborhood,
     latitude: formData.latitude,
     longitude: formData.longitude,
     
@@ -2096,7 +2110,8 @@ const AddListing = () => {
       pets_comment: formData.pets_comment || null,
       pet_options: petOptions,
     } : {}),
-  });
+    };
+  };
 
   const handleSaveDraft = async (isAutoSave = false) => {
     try {
