@@ -190,7 +190,7 @@ export function ShareListingsDialog({
             <Button
               type="button"
               variant="outline"
-              className="w-full rounded-2xl border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              className="w-full rounded-2xl border-primary text-primary hover:bg-muted hover:text-primary hover:border-primary"
               onClick={() => setManualMode(!manualMode)}
             >
               <PencilLine className="mr-2 h-4 w-4" />
@@ -296,7 +296,7 @@ export function ShareListingsDialog({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-foreground/30 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary"
+                  className="rounded-full border-primary text-primary hover:bg-muted hover:text-primary hover:border-primary"
                   onClick={() => setMessage(message ? `${message}\n${t}` : t)}
                 >
                   {t}
