@@ -452,7 +452,15 @@ const ListingSearchResults = () => {
                   <Button
                     variant="brandOutline"
                     size="sm"
-                    onClick={() => setHotSheetDialogOpen(true)}
+                    onClick={() => {
+                      if (selectedListings.size === 0) {
+                        toast("You haven't selected any properties", {
+                          description: "Select one or more properties from the results to save a hotsheet.",
+                        });
+                        return;
+                      }
+                      setHotSheetDialogOpen(true);
+                    }}
                     className="h-8 gap-1.5 text-sm"
                   >
                     <FileSpreadsheet className="h-4 w-4" />
@@ -466,6 +474,7 @@ const ListingSearchResults = () => {
                 open={hotSheetDialogOpen}
                 onOpenChange={setHotSheetDialogOpen}
                 currentSearch={buildHotSheetCriteria()}
+                selectedListingIds={Array.from(selectedListings)}
               />
 
               <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
