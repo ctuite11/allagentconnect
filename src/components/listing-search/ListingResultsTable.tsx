@@ -288,13 +288,13 @@ const ListingResultsTable = ({
     className?: string;
   }) => (
     <TableHead
-      className={`cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold text-slate-600 whitespace-nowrap ${className}`}
+      className={`cursor-pointer hover:bg-muted transition-colors text-xs font-semibold text-muted-foreground whitespace-nowrap ${className}`}
       onClick={() => onSort(column)}
     >
       <div className="flex items-center gap-1">
         {children}
         <ArrowUpDown 
-          className={`h-3 w-3 ${sortColumn === column ? "text-slate-900" : "text-slate-300"}`} 
+          className={`h-3 w-3 ${sortColumn === column ? "text-foreground" : "text-muted-foreground/50"}`} 
         />
       </div>
     </TableHead>
@@ -304,7 +304,7 @@ const ListingResultsTable = ({
     return (
       <div className="p-6 space-y-3">
         {Array.from({ length: 10 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full bg-slate-100" />
+          <Skeleton key={i} className="h-16 w-full bg-muted" />
         ))}
       </div>
     );
@@ -314,8 +314,8 @@ const ListingResultsTable = ({
     return (
       <div className="flex-1 flex items-center justify-center py-20">
         <div className="text-center">
-          <p className="text-base font-medium text-slate-700">No listings found</p>
-          <p className="text-sm text-slate-500 mt-1">Try adjusting your search filters</p>
+          <p className="text-base font-medium text-foreground">No listings found</p>
+          <p className="text-sm text-muted-foreground mt-1">Try adjusting your search filters</p>
         </div>
       </div>
     );
@@ -323,82 +323,89 @@ const ListingResultsTable = ({
 
   return (
     <div className="space-y-3">
-      {/* Action Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleSelectAll}
-            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
-          >
-            {selectedRows.size === displayedListings.length && displayedListings.length > 0 ? "Deselect All" : "Select All"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={selectedRows.size === 0 && !showSelectedOnly}
-            onClick={handleKeepSelected}
-            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          >
-            {showSelectedOnly ? (
-              <>
-                <Eye className="h-4 w-4 mr-1.5" />
-                Show All
-              </>
-            ) : (
-              <>
-                <EyeOff className="h-4 w-4 mr-1.5" />
-                Keep Selected
-              </>
+      {/* Sticky Action Bar */}
+      <div className="sticky top-16 z-20 bg-background border border-border rounded-lg p-3 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleSelectAll}
+              className="h-9 px-4 text-sm font-medium"
+            >
+              {selectedRows.size === displayedListings.length && displayedListings.length > 0 ? "Deselect All" : "Select All"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selectedRows.size === 0 && !showSelectedOnly}
+              onClick={handleKeepSelected}
+              className="h-9 px-4 text-sm font-medium disabled:opacity-50"
+            >
+              {showSelectedOnly ? (
+                <>
+                  <Eye className="h-4 w-4 mr-1.5" />
+                  Show All
+                </>
+              ) : (
+                <>
+                  <EyeOff className="h-4 w-4 mr-1.5" />
+                  Keep Selected
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSaveSearch}
+              className="h-9 px-4 text-sm font-medium"
+            >
+              <Bookmark className="h-4 w-4 mr-1.5" />
+              Save Search
+            </Button>
+            {selectedRows.size > 0 && (
+              <BulkShareListingsDialog
+                listingIds={Array.from(selectedRows)}
+                listingCount={selectedRows.size}
+              />
             )}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSaveSearch}
-            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
-          >
-            <Bookmark className="h-4 w-4 mr-1.5" />
-            Save Search
-          </Button>
-          {selectedRows.size > 0 && (
-            <BulkShareListingsDialog
-              listingIds={Array.from(selectedRows)}
-              listingCount={selectedRows.size}
-            />
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setHotSheetDialogOpen(true)}
-            className="h-9 px-4 text-sm font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
-          >
-            <FileSpreadsheet className="h-4 w-4 mr-1.5" />
-            Save as Hot Sheet
-          </Button>
-        </div>
+            <Button
+              variant="brandOutline"
+              size="sm"
+              onClick={() => setHotSheetDialogOpen(true)}
+              className="h-9 px-4 text-sm font-medium"
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+              Save as Hot Sheet
+            </Button>
+            {selectedRows.size > 0 && (
+              <span className="text-sm text-muted-foreground ml-2 font-medium">
+                {selectedRows.size} selected
+              </span>
+            )}
+          </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-600">Sort by:</span>
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[150px] h-9 text-sm border-slate-300">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date_new">Date (New)</SelectItem>
-              <SelectItem value="date_old">Date (Old)</SelectItem>
-              <SelectItem value="price_high">Price (High)</SelectItem>
-              <SelectItem value="price_low">Price (Low)</SelectItem>
-              <SelectItem value="sqft">Square Feet</SelectItem>
-              <SelectItem value="beds">Bedrooms</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Sort by:</span>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[150px] h-9 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date_new">Date (New)</SelectItem>
+                <SelectItem value="date_old">Date (Old)</SelectItem>
+                <SelectItem value="price_high">Price (High)</SelectItem>
+                <SelectItem value="price_low">Price (Low)</SelectItem>
+                <SelectItem value="sqft">Square Feet</SelectItem>
+                <SelectItem value="beds">Bedrooms</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
       {/* Results Table */}
-      <div className="overflow-auto bg-white rounded-lg border border-slate-200">
+      <div className="overflow-auto bg-background rounded-lg border border-border">
 
         {/* Hot Sheet Dialog */}
         <Dialog open={hotSheetDialogOpen} onOpenChange={setHotSheetDialogOpen}>
@@ -447,26 +454,26 @@ const ListingResultsTable = ({
 
         <Table>
         <TableHeader>
-          <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-slate-200">
-            <TableHead className="w-10 text-xs font-semibold text-slate-600">
+          <TableRow className="bg-muted/50 hover:bg-muted/50 border-b border-border">
+            <TableHead className="w-10 text-xs font-semibold text-muted-foreground">
               <div 
-                className="w-4 h-4 border border-slate-300 rounded cursor-pointer flex items-center justify-center hover:bg-slate-100"
+                className="w-4 h-4 border border-border rounded cursor-pointer flex items-center justify-center hover:bg-muted"
                 onClick={toggleSelectAll}
               >
                 {selectedRows.size === displayedListings.length && displayedListings.length > 0 && (
-                  <Check className="w-3 h-3 text-slate-700" />
+                  <Check className="w-3 h-3 text-foreground" />
                 )}
               </div>
             </TableHead>
-            <TableHead className="w-32 text-xs font-semibold text-slate-600 pl-2">Photo</TableHead>
+            <TableHead className="w-32 text-xs font-semibold text-muted-foreground pl-2">Photo</TableHead>
             <SortableHeader column="address" className="min-w-[180px]">Address</SortableHeader>
             <SortableHeader column="price" className="pl-1">Price</SortableHeader>
             <SortableHeader column="bedrooms" className="text-center px-1">Beds</SortableHeader>
             <SortableHeader column="bathrooms" className="text-center px-1">Baths</SortableHeader>
             <SortableHeader column="square_feet" className="text-right px-1">SqFt</SortableHeader>
-            <TableHead className="text-xs font-semibold text-slate-600 px-1">Status</TableHead>
+            <TableHead className="text-xs font-semibold text-muted-foreground px-1">Status</TableHead>
             <SortableHeader column="list_date" className="text-center px-1">DOM</SortableHeader>
-            <TableHead className="text-xs font-semibold text-slate-600 px-1">Agent</TableHead>
+            <TableHead className="text-xs font-semibold text-muted-foreground px-1">Agent</TableHead>
             <TableHead className="w-36"></TableHead>
           </TableRow>
         </TableHeader>
@@ -480,9 +487,9 @@ const ListingResultsTable = ({
             return (
               <TableRow
                 key={listing.id}
-                className={`cursor-pointer transition-all group hover:bg-slate-50 hover:shadow-sm ${
-                  isOffMarket ? "bg-rose-50/30" : ""
-                } ${selectedRows.has(listing.id) ? "bg-blue-50" : ""}`}
+                className={`cursor-pointer transition-all group hover:bg-muted hover:shadow-sm ${
+                  isOffMarket ? "bg-destructive/5" : ""
+                } ${selectedRows.has(listing.id) ? "bg-primary/5" : ""}`}
                 onClick={() => onRowClick(listing)}
               >
                 {/* Checkbox */}
@@ -490,19 +497,19 @@ const ListingResultsTable = ({
                   <div 
                     className={`w-4 h-4 border rounded cursor-pointer flex items-center justify-center mt-1 ${
                       selectedRows.has(listing.id) 
-                        ? "bg-slate-700 border-slate-700" 
-                        : "border-slate-300 hover:bg-slate-100"
+                        ? "bg-primary border-primary" 
+                        : "border-border hover:bg-muted"
                     }`}
                   >
                     {selectedRows.has(listing.id) && (
-                      <Check className="w-3 h-3 text-white" />
+                      <Check className="w-3 h-3 text-primary-foreground" />
                     )}
                   </div>
                 </TableCell>
 
                 {/* Thumbnail */}
                 <TableCell className="py-3 align-top">
-                  <div className="relative w-32 h-20 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 shadow-sm">
+                  <div className="relative w-32 h-20 rounded-lg bg-muted overflow-hidden flex-shrink-0 shadow-sm">
                     {thumbnail ? (
                       <img 
                         src={thumbnail} 
@@ -510,8 +517,8 @@ const ListingResultsTable = ({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400">
-                        <Home className="w-8 h-8 text-slate-300" />
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <Home className="w-8 h-8 text-muted-foreground/50" />
                       </div>
                     )}
                     {getPhotoCount(listing) > 0 && (
@@ -533,20 +540,20 @@ const ListingResultsTable = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="text-sm font-semibold text-slate-900 hover:text-primary hover:underline block"
+                      className="text-sm font-semibold text-foreground hover:text-primary hover:underline block"
                     >
                       {listing.address}{listing.unit_number ? ` #${listing.unit_number}` : ''}
                     </a>
                     {/* City, State ZIP */}
-                    <div className="text-xs text-slate-600">
+                    <div className="text-xs text-muted-foreground">
                       {listing.city}, {listing.state} {listing.zip_code}
                     </div>
                     {listing.neighborhood && (
-                      <div className="text-xs text-slate-500">{listing.neighborhood}</div>
+                      <div className="text-xs text-muted-foreground">{listing.neighborhood}</div>
                     )}
                     
                     {/* Property Details Row */}
-                    <div className="flex items-center gap-2 text-xs text-slate-600 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                       {getPropertyStyle(listing) && (
                         <span className="font-medium">{getPropertyStyle(listing)}</span>
                       )}
@@ -563,7 +570,7 @@ const ListingResultsTable = ({
                         </span>
                       )}
                       {openHouseInfo?.hasBrokerOpen && (
-                        <span className="inline-flex items-center gap-1 text-blue-600 font-medium">
+                        <span className="inline-flex items-center gap-1 text-primary font-medium">
                           <CalendarDays className="w-3 h-3" />
                           Broker
                         </span>
@@ -586,27 +593,27 @@ const ListingResultsTable = ({
                 {/* Price with $/SqFt below */}
                 <TableCell className="py-3 align-top pl-1">
                   <div>
-                    <span className="text-sm font-bold text-slate-900">
+                    <span className="text-sm font-bold text-foreground">
                       {formatPrice(listing.price)}
                     </span>
-                    <div className="text-xs text-slate-500 mt-0.5">
+                    <div className="text-xs text-muted-foreground mt-0.5">
                       {pricePerSqFt ? `$${pricePerSqFt}/sqft` : ''}
                     </div>
                   </div>
                 </TableCell>
 
                 {/* Beds */}
-                <TableCell className="text-sm text-center text-slate-800 py-3 align-top">
+                <TableCell className="text-sm text-center text-foreground py-3 align-top">
                   {listing.bedrooms || "-"}
                 </TableCell>
 
                 {/* Baths */}
-                <TableCell className="text-sm text-center text-slate-800 py-3 align-top">
+                <TableCell className="text-sm text-center text-foreground py-3 align-top">
                   {listing.bathrooms || "-"}
                 </TableCell>
 
                 {/* SqFt */}
-                <TableCell className="text-sm text-right text-slate-800 py-3 align-top">
+                <TableCell className="text-sm text-right text-foreground py-3 align-top">
                   {listing.square_feet?.toLocaleString() || "-"}
                 </TableCell>
 
@@ -616,13 +623,13 @@ const ListingResultsTable = ({
                 </TableCell>
 
                 {/* DOM */}
-                <TableCell className="text-sm text-center text-slate-800 py-3 align-top">
+                <TableCell className="text-sm text-center text-foreground py-3 align-top">
                   {getDaysOnMarket(listing.list_date)}
                 </TableCell>
 
                 {/* Agent */}
                 <TableCell className="py-3 align-top">
-                  <span className="text-xs text-slate-700 truncate max-w-[80px] block">
+                  <span className="text-xs text-muted-foreground truncate max-w-[80px] block">
                     {listing.agent_name || "-"}
                   </span>
                 </TableCell>
@@ -631,7 +638,7 @@ const ListingResultsTable = ({
                 <TableCell className="py-3 align-top" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center gap-1">
                     <Button
-                      variant="outline"
+                      variant="brandOutline"
                       size="sm"
                       className="h-6 px-2 text-xs"
                     >
