@@ -88,32 +88,35 @@ const ListingSearchResults = () => {
   const handleSearch = useCallback(async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from("listings")
-        .select(`
-          id,
-          listing_number,
-          address,
-          unit_number,
-          city,
-          state,
-          zip_code,
-          price,
-          bedrooms,
-          bathrooms,
-          square_feet,
-          status,
-          list_date,
-          property_type,
-          agent_id,
-          lot_size,
-          year_built,
-          garage_spaces,
-          total_parking_spaces,
-          description,
-          photos
-        `)
-        .limit(500);
+    let query = supabase
+      .from("listings")
+      .select(`
+        id,
+        listing_number,
+        address,
+        unit_number,
+        city,
+        state,
+        zip_code,
+        price,
+        bedrooms,
+        bathrooms,
+        square_feet,
+        status,
+        list_date,
+        property_type,
+        agent_id,
+        lot_size,
+        year_built,
+        garage_spaces,
+        total_parking_spaces,
+        description,
+        photos,
+        neighborhood,
+        open_houses,
+        property_styles
+      `)
+      .limit(500);
 
       // Apply status filter
       if (filters.statuses.length > 0) {
