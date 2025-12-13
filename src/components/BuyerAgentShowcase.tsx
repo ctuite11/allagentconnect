@@ -122,7 +122,7 @@ export const BuyerAgentShowcase = ({ listingZip, listingId }: BuyerAgentShowcase
                 {agent.headshot_url ? (
                   <AvatarImage src={agent.headshot_url} />
                 ) : (
-                  <AvatarFallback className="bg-primary/10 text-primary">
+                  <AvatarFallback className="bg-muted text-foreground">
                     {agent.first_name[0]}{agent.last_name[0]}
                   </AvatarFallback>
                 )}

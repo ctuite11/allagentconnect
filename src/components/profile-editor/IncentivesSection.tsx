@@ -42,7 +42,7 @@ const IncentivesSection = ({
       <Card className="border-2 hover:border-primary/50 transition-colors">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-3 text-base">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-full bg-muted border border-border flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-primary" />
             </div>
             Seller Incentives

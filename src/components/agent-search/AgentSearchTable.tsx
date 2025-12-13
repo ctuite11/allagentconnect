@@ -151,7 +151,7 @@ const AgentSearchTable = ({ agents, loading, sortOrder, onSortChange }: AgentSea
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 border border-border">
                         {agent.headshot_url && <AvatarImage src={agent.headshot_url} alt={agentName} />}
-                        <AvatarFallback className="text-sm font-medium bg-primary/10 text-primary">
+                        <AvatarFallback className="text-sm font-medium bg-muted text-foreground">
                           {initials}
                         </AvatarFallback>
                       </Avatar>

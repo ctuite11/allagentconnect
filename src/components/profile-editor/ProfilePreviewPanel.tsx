@@ -82,11 +82,11 @@ const ProfilePreviewPanel = ({
               <img
                 src={headshotUrl}
                 alt={fullName}
-                className="w-20 h-20 rounded-full object-cover border-4 border-primary/20 shadow-lg"
+                className="w-20 h-20 rounded-full object-cover border-4 border-border shadow-lg"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center border-4 border-primary/20 shadow-lg">
-                <span className="text-xl font-bold text-primary">
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-4 border-border shadow-lg">
+                <span className="text-xl font-bold text-foreground">
                   {firstName?.[0] || "Y"}{lastName?.[0] || "N"}
                 </span>
               </div>
@@ -120,11 +120,11 @@ const ProfilePreviewPanel = ({
 
         {/* Badges - matches public profile style */}
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="gap-2 px-3 py-1 rounded-full border-primary/30 bg-primary/5 text-primary text-xs">
+          <Badge variant="outline" className="gap-2 px-3 py-1 rounded-full border-border bg-muted text-foreground text-xs">
             <Users className="h-3 w-3" />
             DirectConnect Friendly
           </Badge>
-          <Badge variant="outline" className="gap-2 px-3 py-1 rounded-full border-accent/30 bg-accent/5 text-accent text-xs">
+          <Badge variant="outline" className="gap-2 px-3 py-1 rounded-full border-border bg-muted text-foreground text-xs">
             <ShieldCheck className="h-3 w-3" />
             Verified Agent
           </Badge>
@@ -211,7 +211,7 @@ const ProfilePreviewPanel = ({
                   <Card className="shadow-md border-0 overflow-hidden">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-xl bg-primary/10 flex-shrink-0">
+                        <div className="p-2 rounded-xl bg-muted border border-border flex-shrink-0">
                           <TrendingUp className="h-5 w-5 text-primary" />
                         </div>
                         <div>
