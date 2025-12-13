@@ -465,17 +465,17 @@ const ListingResultsTable = ({
                 )}
               </div>
             </TableHead>
-            <TableHead className="w-44 text-xs font-semibold text-slate-600">Photo</TableHead>
+            <TableHead className="w-40 text-xs font-semibold text-slate-600">Photo</TableHead>
             <SortableHeader column="address">Address</SortableHeader>
             <SortableHeader column="price">Price</SortableHeader>
-            <TableHead className="text-xs font-semibold text-slate-600 text-right">$/SqFt</TableHead>
-            <SortableHeader column="bedrooms" className="text-center">Beds</SortableHeader>
-            <SortableHeader column="bathrooms" className="text-center">Baths</SortableHeader>
-            <SortableHeader column="square_feet" className="text-right">SqFt</SortableHeader>
-            <TableHead className="text-xs font-semibold text-slate-600">Status</TableHead>
-            <SortableHeader column="list_date" className="text-center">DOM</SortableHeader>
-            <TableHead className="text-xs font-semibold text-slate-600">Agent</TableHead>
-            <TableHead className="w-40"></TableHead>
+            <TableHead className="text-xs font-semibold text-slate-600 text-right pr-2">$/SqFt</TableHead>
+            <SortableHeader column="bedrooms" className="text-center px-2">Beds</SortableHeader>
+            <SortableHeader column="bathrooms" className="text-center px-2">Baths</SortableHeader>
+            <SortableHeader column="square_feet" className="text-right px-2">SqFt</SortableHeader>
+            <TableHead className="text-xs font-semibold text-slate-600 px-2">Status</TableHead>
+            <SortableHeader column="list_date" className="text-center px-2">DOM</SortableHeader>
+            <TableHead className="text-xs font-semibold text-slate-600 px-2">Agent</TableHead>
+            <TableHead className="w-48"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -494,7 +494,7 @@ const ListingResultsTable = ({
                 onClick={() => onRowClick(listing)}
               >
                 {/* Checkbox */}
-                <TableCell className="py-4 align-top" onClick={(e) => toggleRowSelection(listing.id, e)}>
+                <TableCell className="py-4 align-top px-2" onClick={(e) => toggleRowSelection(listing.id, e)}>
                   <div 
                     className={`w-4 h-4 border rounded cursor-pointer flex items-center justify-center mt-1 ${
                       selectedRows.has(listing.id) 
@@ -509,8 +509,8 @@ const ListingResultsTable = ({
                 </TableCell>
 
                 {/* Thumbnail - 2x larger with photo count */}
-                <TableCell className="py-5 align-top">
-                  <div className="relative w-40 h-28 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 shadow-sm">
+                <TableCell className="py-4 align-top">
+                  <div className="relative w-36 h-24 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 shadow-sm">
                     {thumbnail ? (
                       <img 
                         src={thumbnail} 
@@ -531,25 +531,33 @@ const ListingResultsTable = ({
                 </TableCell>
 
                 {/* Address with property details and bottom info bar */}
-                <TableCell className="py-5">
-                  <div className="space-y-2">
-                    {/* Address */}
+                <TableCell className="py-4">
+                  <div className="space-y-1.5">
+                    {/* Address - clickable to Google Maps */}
                     <div>
-                      <div className="text-sm font-semibold text-slate-900 max-w-[280px] truncate">
+                      <a
+                        href={`https://www.google.com/maps/search/${encodeURIComponent(
+                          `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-sm font-semibold text-slate-900 hover:text-primary hover:underline max-w-[260px] truncate block"
+                      >
                         {formatAddress(listing)}
-                      </div>
-                      <div className="text-xs text-slate-500 mt-0.5">
+                      </a>
+                      <div className="text-xs text-slate-700 mt-0.5">
                         {listing.city}, {listing.state} {listing.zip_code}
                         {listing.neighborhood && (
-                          <span className="ml-1 text-slate-400">• {listing.neighborhood}</span>
+                          <span className="ml-1 text-slate-500">• {listing.neighborhood}</span>
                         )}
                       </div>
                     </div>
                     
                     {/* Property Details Row */}
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
+                    <div className="flex items-center gap-3 text-xs text-slate-700">
                       {getPropertyStyle(listing) && (
-                        <span className="font-medium text-slate-600">{getPropertyStyle(listing)}</span>
+                        <span className="font-medium text-slate-800">{getPropertyStyle(listing)}</span>
                       )}
                       {listing.year_built && (
                         <span>Built {listing.year_built}</span>
@@ -578,7 +586,7 @@ const ListingResultsTable = ({
                           Broker Open
                         </span>
                       )}
-                      <span className="text-xs text-slate-400 font-mono">
+                      <span className="text-xs text-slate-500 font-mono">
                         #{listing.listing_number}
                       </span>
                     </div>
@@ -586,51 +594,51 @@ const ListingResultsTable = ({
                 </TableCell>
 
                 {/* Price */}
-                <TableCell className="py-5 align-top">
+                <TableCell className="py-4 align-top">
                   <span className="text-base font-bold text-slate-900">
                     {formatPrice(listing.price)}
                   </span>
                 </TableCell>
 
                 {/* $/SqFt */}
-                <TableCell className="py-5 align-top text-right">
-                  <span className="text-sm text-slate-600">
+                <TableCell className="py-4 align-top text-right">
+                  <span className="text-sm text-slate-800">
                     {pricePerSqFt ? `$${pricePerSqFt.toLocaleString()}` : "-"}
                   </span>
                 </TableCell>
 
                 {/* Beds */}
-                <TableCell className="text-sm text-center text-slate-700 py-5 align-top">
+                <TableCell className="text-sm text-center text-slate-800 py-4 align-top">
                   {listing.bedrooms || "-"}
                 </TableCell>
 
                 {/* Baths */}
-                <TableCell className="text-sm text-center text-slate-700 py-5 align-top">
+                <TableCell className="text-sm text-center text-slate-800 py-4 align-top">
                   {listing.bathrooms || "-"}
                 </TableCell>
 
                 {/* SqFt */}
-                <TableCell className="text-sm text-right text-slate-700 py-5 align-top">
+                <TableCell className="text-sm text-right text-slate-800 py-4 align-top">
                   {listing.square_feet?.toLocaleString() || "-"}
                 </TableCell>
 
                 {/* Status - Large and prominent */}
-                <TableCell className="py-5 align-top">
+                <TableCell className="py-4 align-top">
                   {getStatusBadge(listing.status)}
                 </TableCell>
 
                 {/* DOM */}
-                <TableCell className="text-sm text-center text-slate-600 py-5 align-top">
+                <TableCell className="text-sm text-center text-slate-800 py-4 align-top">
                   {getDaysOnMarket(listing.list_date)}
                 </TableCell>
 
                 {/* Agent */}
-                <TableCell className="text-sm text-slate-600 truncate max-w-[140px] py-5 align-top">
+                <TableCell className="text-sm text-slate-800 truncate max-w-[120px] py-4 align-top">
                   {listing.agent_name || "-"}
                 </TableCell>
 
                 {/* Quick Actions */}
-                <TableCell className="py-5 align-top" onClick={e => e.stopPropagation()}>
+                <TableCell className="py-4 align-top" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
@@ -642,12 +650,13 @@ const ListingResultsTable = ({
                       Contact
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="h-8 px-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-8 px-3 text-xs font-medium border-slate-300 text-slate-700 hover:bg-slate-50"
                       onClick={() => navigate(`/property/${listing.id}`)}
                     >
-                      <ExternalLink className="h-4 w-4" />
+                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                      View Listing
                     </Button>
                   </div>
                 </TableCell>
