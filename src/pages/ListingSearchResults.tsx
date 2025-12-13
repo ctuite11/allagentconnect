@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SectionCard } from "@/components/ui/section-card";
+import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 
 
 const ListingSearchResults = () => {
@@ -48,6 +49,20 @@ const ListingSearchResults = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+  const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
+
+  // Build current search criteria for hot sheet
+  const buildHotSheetCriteria = () => ({
+    state: filters?.state,
+    county: filters?.county,
+    cities: filters?.selectedTowns,
+    propertyTypes: filters?.propertyTypes,
+    minPrice: filters?.priceMin ? parseInt(filters.priceMin) : null,
+    maxPrice: filters?.priceMax ? parseInt(filters.priceMax) : null,
+    bedrooms: filters?.bedsMin ? parseInt(filters.bedsMin) : null,
+    bathrooms: filters?.bathsMin ? parseFloat(filters.bathsMin) : null,
+    statuses: filters?.statuses,
+  });
 
   const handleSelectListing = (id: string) => {
     setSelectedListings(prev => {
@@ -437,7 +452,7 @@ const ListingSearchResults = () => {
                   <Button
                     variant="brandOutline"
                     size="sm"
-                    onClick={() => toast.info('Hot Sheet feature coming soon')}
+                    onClick={() => setHotSheetDialogOpen(true)}
                     className="h-8 gap-1.5 text-sm"
                   >
                     <FileSpreadsheet className="h-4 w-4" />
@@ -445,6 +460,13 @@ const ListingSearchResults = () => {
                   </Button>
                 </div>
               </SectionCard>
+
+              {/* Hot Sheet Dialog */}
+              <SaveToHotSheetDialog
+                open={hotSheetDialogOpen}
+                onOpenChange={setHotSheetDialogOpen}
+                currentSearch={buildHotSheetCriteria()}
+              />
 
               <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {loading ? (

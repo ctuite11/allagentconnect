@@ -9,13 +9,10 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { FilterState } from "@/components/listing-search/ListingSearchFilters";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { buildDisplayAddress } from "@/lib/utils";
 import { SectionCard } from "@/components/ui/section-card";
+import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 
 interface Listing {
   id: string;
@@ -182,8 +179,6 @@ const ListingResultsTable = ({
   const [sortBy, setSortBy] = useState("date_new");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
-  const [hotSheetName, setHotSheetName] = useState("");
-  const [savingHotSheet, setSavingHotSheet] = useState(false);
 
   // Filter listings based on selected-only mode
   const displayedListings = showSelectedOnly 
@@ -219,54 +214,18 @@ const ListingResultsTable = ({
     toast.success("Search saved successfully");
   };
 
-  // Build hot sheet criteria from filters
-  const handleSaveHotSheet = async () => {
-    if (!hotSheetName.trim()) {
-      toast.error("Please enter a name for this hot sheet");
-      return;
-    }
-
-    setSavingHotSheet(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Please sign in to save hot sheets");
-        return;
-      }
-
-      const criteria = {
-        state: filters?.state,
-        county: filters?.county,
-        cities: filters?.selectedTowns,
-        property_types: filters?.propertyTypes,
-        min_price: filters?.priceMin ? parseInt(filters.priceMin) : null,
-        max_price: filters?.priceMax ? parseInt(filters.priceMax) : null,
-        bedrooms: filters?.bedsMin ? parseInt(filters.bedsMin) : null,
-        bathrooms: filters?.bathsMin ? parseFloat(filters.bathsMin) : null,
-        statuses: filters?.statuses,
-      };
-
-      const { error } = await supabase
-        .from("hot_sheets")
-        .insert({
-          user_id: user.id,
-          name: hotSheetName.trim(),
-          criteria,
-          is_active: true,
-        });
-
-      if (error) throw error;
-
-      toast.success("Hot sheet saved! You'll be notified of new matching listings.");
-      setHotSheetDialogOpen(false);
-      setHotSheetName("");
-    } catch (error: any) {
-      console.error("Error saving hot sheet:", error);
-      toast.error("Failed to save hot sheet");
-    } finally {
-      setSavingHotSheet(false);
-    }
-  };
+  // Build current search criteria for hot sheet
+  const buildHotSheetCriteria = () => ({
+    state: filters?.state,
+    county: filters?.county,
+    cities: filters?.selectedTowns,
+    propertyTypes: filters?.propertyTypes,
+    minPrice: filters?.priceMin ? parseInt(filters.priceMin) : null,
+    maxPrice: filters?.priceMax ? parseInt(filters.priceMax) : null,
+    bedrooms: filters?.bedsMin ? parseInt(filters.bedsMin) : null,
+    bathrooms: filters?.bathsMin ? parseFloat(filters.bathsMin) : null,
+    statuses: filters?.statuses,
+  });
 
   const toggleRowSelection = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -409,49 +368,11 @@ const ListingResultsTable = ({
       <div className="overflow-auto bg-background rounded-lg border border-border">
 
         {/* Hot Sheet Dialog */}
-        <Dialog open={hotSheetDialogOpen} onOpenChange={setHotSheetDialogOpen}>
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>Save Search as Hot Sheet</DialogTitle>
-              <DialogDescription>
-                Get notified when new listings match your current filters
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="hotSheetName">Hot Sheet Name *</Label>
-                <Input
-                  id="hotSheetName"
-                  placeholder="e.g., Boston 3BR Under 500k"
-                  value={hotSheetName}
-                  onChange={(e) => setHotSheetName(e.target.value)}
-                />
-              </div>
-              {filters && (
-                <div className="text-sm text-slate-500 space-y-1">
-                  <p className="font-medium text-slate-700">Current filters:</p>
-                  {filters.selectedTowns.length > 0 && (
-                    <p>Towns: {filters.selectedTowns.join(", ")}</p>
-                  )}
-                  {filters.propertyTypes.length > 0 && (
-                    <p>Types: {filters.propertyTypes.join(", ")}</p>
-                  )}
-                  {(filters.priceMin || filters.priceMax) && (
-                    <p>Price: {filters.priceMin || "Any"} - {filters.priceMax || "Any"}</p>
-                  )}
-                </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setHotSheetDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSaveHotSheet} disabled={savingHotSheet}>
-                {savingHotSheet ? "Saving..." : "Save Hot Sheet"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <SaveToHotSheetDialog
+          open={hotSheetDialogOpen}
+          onOpenChange={setHotSheetDialogOpen}
+          currentSearch={buildHotSheetCriteria()}
+        />
 
         <Table>
         <TableHeader>
