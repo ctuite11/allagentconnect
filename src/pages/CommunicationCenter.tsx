@@ -38,6 +38,7 @@ import { format, subDays } from "date-fns";
 import { toast } from "sonner";
 import { EmailDetailDrawer } from "@/components/communication-center/EmailDetailDrawer";
 import { SendEmailDialog } from "@/components/communication-center/SendEmailDialog";
+import { SectionCard } from "@/components/ui/section-card";
 
 interface Campaign {
   id: string;
@@ -195,104 +196,84 @@ const CommunicationCenter = () => {
           </div>
 
           {/* Info Banner */}
-          <Card className="border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-foreground">This is an outbound email hub, not an inbox.</p>
-                  <p className="text-muted-foreground mt-1">
-                    Replies to your emails will be delivered directly to your email address (Gmail/Outlook), not back into DirectConnectMLS.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <SectionCard 
+            icon={<Info className="h-5 w-5" />}
+            className="border-l-blue-500"
+          >
+            <div className="text-sm">
+              <p className="font-medium text-foreground">This is an outbound email hub, not an inbox.</p>
+              <p className="text-muted-foreground mt-1">
+                Replies to your emails will be delivered directly to your email address (Gmail/Outlook), not back into DirectConnectMLS.
+              </p>
+            </div>
+          </SectionCard>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="border border-border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                  <Mail className="h-4 w-4" />
-                  Total Sent
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{totalSent}</div>
-              </CardContent>
-            </Card>
+            <SectionCard className="p-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                <Mail className="h-4 w-4 text-primary" />
+                Total Sent
+              </div>
+              <div className="text-2xl font-bold">{totalSent}</div>
+            </SectionCard>
 
-            <Card className="border border-border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  Campaigns
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{campaigns.length}</div>
-              </CardContent>
-            </Card>
+            <SectionCard className="p-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                <Users className="h-4 w-4 text-primary" />
+                Campaigns
+              </div>
+              <div className="text-2xl font-bold">{campaigns.length}</div>
+            </SectionCard>
 
-            <Card className="border border-border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                  <Eye className="h-4 w-4" />
-                  Avg Open Rate
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{avgOpenRate}%</div>
-              </CardContent>
-            </Card>
+            <SectionCard className="p-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                <Eye className="h-4 w-4 text-primary" />
+                Avg Open Rate
+              </div>
+              <div className="text-2xl font-bold">{avgOpenRate}%</div>
+            </SectionCard>
 
-            <Card className="border border-border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                  <MousePointer className="h-4 w-4" />
-                  Avg Click Rate
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{avgClickRate}%</div>
-              </CardContent>
-            </Card>
+            <SectionCard className="p-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                <MousePointer className="h-4 w-4 text-primary" />
+                Avg Click Rate
+              </div>
+              <div className="text-2xl font-bold">{avgClickRate}%</div>
+            </SectionCard>
           </div>
 
           {/* Email Log Section */}
-          <Card className="border border-border shadow-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold">Email Log</CardTitle>
-                <div className="flex items-center gap-3">
-                  {/* Search */}
-                  <div className="relative">
-                    <Input 
-                      placeholder="Search by subject..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-[200px] h-9 pl-3 pr-3 text-sm"
-                    />
-                  </div>
-                  
-                  {/* Date Filter */}
-                  <Select value={dateFilter} onValueChange={setDateFilter}>
-                    <SelectTrigger className="w-[140px] h-9">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="7">Last 7 days</SelectItem>
-                      <SelectItem value="30">Last 30 days</SelectItem>
-                      <SelectItem value="90">Last 90 days</SelectItem>
-                      <SelectItem value="365">Last year</SelectItem>
-                    </SelectContent>
-                  </Select>
+          <SectionCard 
+            title="Email Log"
+            rightSlot={
+              <div className="flex items-center gap-3">
+                {/* Search */}
+                <div className="relative">
+                  <Input 
+                    placeholder="Search by subject..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-[200px] h-9 pl-3 pr-3 text-sm"
+                  />
                 </div>
+                
+                {/* Date Filter */}
+                <Select value={dateFilter} onValueChange={setDateFilter}>
+                  <SelectTrigger className="w-[140px] h-9">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7">Last 7 days</SelectItem>
+                    <SelectItem value="30">Last 30 days</SelectItem>
+                    <SelectItem value="90">Last 90 days</SelectItem>
+                    <SelectItem value="365">Last year</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
+            }
+          >
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -370,8 +351,7 @@ const CommunicationCenter = () => {
                   </Table>
                 </div>
               )}
-            </CardContent>
-          </Card>
+          </SectionCard>
         </div>
       </main>
 
