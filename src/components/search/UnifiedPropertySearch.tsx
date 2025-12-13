@@ -288,8 +288,8 @@ export const UnifiedPropertySearch = ({
                       className={cn(
                         "flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all",
                         isSelected
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/50 hover:bg-accent/50"
+                          ? "border-primary bg-muted"
+                          : "border-border hover:border-primary hover:bg-muted"
                       )}
                     >
                       <Checkbox checked={isSelected} />

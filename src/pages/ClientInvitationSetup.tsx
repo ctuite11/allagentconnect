@@ -333,7 +333,7 @@ const ClientInvitationSetup = () => {
             <Card className="shadow-lg text-center">
               <CardContent className="p-10 space-y-6">
                 <div className="flex justify-center">
-                  <div className="rounded-full bg-primary/10 p-4">
+                  <div className="rounded-full bg-muted p-4">
                     <CheckCircle2 className="h-12 w-12 text-primary" />
                   </div>
                 </div>

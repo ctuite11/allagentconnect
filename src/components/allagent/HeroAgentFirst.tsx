@@ -43,7 +43,7 @@ const HeroAgentFirst = () => {
             <br />
             More Listings.
             <br />
-            <span className="text-blue-600">More Deals.</span>
+            <span className="text-primary">More Deals.</span>
           </h1>
 
           {/* Subheadline */}

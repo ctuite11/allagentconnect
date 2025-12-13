@@ -93,7 +93,7 @@ const AgentIntelDrawer = ({ agent, open, onOpenChange }: AgentIntelDrawerProps) 
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16">
               {agent.headshot_url && <AvatarImage src={agent.headshot_url} alt={agentName} />}
-              <AvatarFallback className="text-lg font-semibold bg-primary/10 text-primary">
+              <AvatarFallback className="text-lg font-semibold bg-muted text-foreground">
                 {initials}
               </AvatarFallback>
             </Avatar>

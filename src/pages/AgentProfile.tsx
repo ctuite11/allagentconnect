@@ -239,10 +239,10 @@ const AgentProfile = () => {
                     </Card>
                   )}
                   {agent.seller_incentives && (
-                    <Card className="border shadow-sm rounded-xl bg-primary/5">
+                    <Card className="border shadow-sm rounded-xl bg-card">
                       <CardContent className="p-5">
                         <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                          <div className="p-2 rounded-lg bg-muted flex-shrink-0">
                             <TrendingUp className="h-5 w-5 text-primary" />
                           </div>
                           <div>
@@ -269,7 +269,7 @@ const AgentProfile = () => {
                   {testimonials.slice(0, 3).map((testimonial) => (
                     <Card key={testimonial.id} className="border shadow-md rounded-xl overflow-hidden">
                       <CardContent className="p-6 relative">
-                        <Quote className="absolute top-4 right-4 h-8 w-8 text-primary/10" />
+                        <Quote className="absolute top-4 right-4 h-8 w-8 text-muted-foreground/20" />
                         {testimonial.rating && (
                           <div className="flex gap-0.5 mb-3">
                             {[...Array(5)].map((_, i) => (

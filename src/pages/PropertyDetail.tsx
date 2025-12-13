@@ -288,7 +288,7 @@ const PropertyDetail = () => {
       case 'pending':
         return 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20';
       case 'sold':
-        return 'bg-blue-500/10 text-blue-700 border-blue-500/20';
+        return 'bg-muted text-muted-foreground border-border';
       case 'cancelled':
       case 'expired':
         return 'bg-gray-500/10 text-gray-700 border-gray-500/20';
@@ -647,11 +647,11 @@ const PropertyDetail = () => {
                 <Card className="rounded-3xl shadow-md border-2">
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-center gap-4">
-                      <Avatar className="w-16 h-16 border-2 border-primary/20">
+                      <Avatar className="w-16 h-16 border-2 border-border">
                         {agentProfile.headshot_url ? (
                           <AvatarImage src={agentProfile.headshot_url} />
                         ) : (
-                          <AvatarFallback className="text-lg font-semibold bg-primary/10">
+                          <AvatarFallback className="text-lg font-semibold bg-muted">
                             {agentProfile.first_name[0]}{agentProfile.last_name[0]}
                           </AvatarFallback>
                         )}

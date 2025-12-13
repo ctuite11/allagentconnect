@@ -686,14 +686,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                         <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
                           <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                              <svg className="h-4 w-4 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                              <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                               </svg>
                             </div>
                             <span className="font-medium text-foreground">Property Types</span>
                             {propertyTypes.length > 0 && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-foreground font-medium">
                                 {propertyTypes.length} selected
                               </span>
                             )}
@@ -711,7 +711,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                 id="select-all-property-types"
                                 checked={propertyTypes.length === propertyTypeOptions.length}
                                 onCheckedChange={selectAllPropertyTypes}
-                                className="rounded-[4px] border-border data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                                className="rounded-[4px] border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                               />
                               <Label
                                 htmlFor="select-all-property-types"
@@ -727,7 +727,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                   id={`type-${type.value}`}
                                   checked={propertyTypes.includes(type.value)}
                                   onCheckedChange={() => handlePropertyTypeToggle(type.value)}
-                                  className="rounded-[4px] border-border data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                                  className="rounded-[4px] border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                 />
                                 <label
                                   htmlFor={`type-${type.value}`}

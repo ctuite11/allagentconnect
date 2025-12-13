@@ -493,7 +493,7 @@ const AgentDashboard = () => {
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Listings</CardTitle>
-              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                 <Home className="h-4 w-4 text-primary" />
               </div>
             </CardHeader>
@@ -608,8 +608,8 @@ const AgentDashboard = () => {
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">Communication Center</CardTitle>
-              <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Bell className="h-4 w-4 text-blue-500" />
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <Bell className="h-4 w-4 text-primary" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
@@ -628,7 +628,7 @@ const AgentDashboard = () => {
                   <CardTitle className="text-sm font-semibold">Recent Activity</CardTitle>
                   <CardDescription className="text-xs">Latest updates and interactions</CardDescription>
                 </div>
-                <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                   <Activity className="h-4 w-4 text-primary" />
                 </div>
               </CardHeader>
@@ -644,7 +644,7 @@ const AgentDashboard = () => {
                           <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0">{formatTimestamp(activity.timestamp)}</span>
                         </div>
                         <p className="text-[10px] text-muted-foreground line-clamp-2">{activity.description}</p>
-                        {activity.status && <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium rounded-full bg-primary/10 text-primary capitalize mt-1">
+                        {activity.status && <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium rounded-full bg-muted text-foreground capitalize mt-1">
                             {activity.status}
                           </span>}
                       </div>

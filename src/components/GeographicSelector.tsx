@@ -383,9 +383,9 @@ export function GeographicSelector({
             {selectedTowns.map((town) => (
               <div
                 key={town}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-xs font-medium hover:bg-primary/20 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted border border-border rounded-full text-xs font-medium hover:bg-muted/80 transition-colors"
               >
-                <span className="text-primary">{getDisplayName(town)}</span>
+                <span className="text-foreground">{getDisplayName(town)}</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -396,7 +396,7 @@ export function GeographicSelector({
                       toggleTown(town);
                     }
                   }}
-                  className="text-primary/70 hover:text-primary"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-3 w-3" />
                 </button>

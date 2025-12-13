@@ -46,7 +46,7 @@ export const TechCard = ({
       onClick={onClick}
     >
       {/* Icon with animated background */}
-      <div className="relative w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 transition-all duration-300 group-hover:bg-primary/20 group-hover:scale-110">
+      <div className="relative w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4 transition-all duration-300 group-hover:bg-muted/80 group-hover:scale-110">
         <div className="text-primary transition-transform duration-300 group-hover:scale-110">{icon}</div>
       </div>
 
@@ -73,7 +73,7 @@ export const TechCard = ({
       <Button
         variant="ghost"
         size="sm"
-        className="group/btn text-primary hover:text-primary hover:bg-primary/10 p-0 h-auto font-medium"
+        className="group/btn text-primary hover:text-primary hover:bg-muted p-0 h-auto font-medium"
       >
         Open
         <ArrowRight className="w-4 h-4 ml-1 transition-transform duration-300 group-hover/btn:translate-x-2" />

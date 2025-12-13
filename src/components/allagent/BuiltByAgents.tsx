@@ -11,7 +11,7 @@ const BuiltByAgents = () => {
       <div className="container mx-auto px-6">
         <div className="max-w-3xl mx-auto text-center">
           {/* Section header */}
-          <p className="text-sm font-medium tracking-wide uppercase text-blue-600 mb-3">
+          <p className="text-sm font-medium tracking-wide uppercase text-muted-foreground mb-3">
             Our Story
           </p>
           <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">

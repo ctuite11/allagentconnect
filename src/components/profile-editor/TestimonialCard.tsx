@@ -37,7 +37,7 @@ const TestimonialCard = ({ testimonial, onDelete }: TestimonialCardProps) => {
 
             {/* Quote */}
             <div className="relative">
-              <Quote className="absolute -left-1 -top-1 h-6 w-6 text-primary/20" />
+              <Quote className="absolute -left-1 -top-1 h-6 w-6 text-muted-foreground/30" />
               <p className="text-sm text-muted-foreground italic pl-5 leading-relaxed">
                 "{testimonial.testimonial_text}"
               </p>

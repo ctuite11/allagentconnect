@@ -396,12 +396,12 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
               <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                 <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                      <Home className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                      <Home className="h-4 w-4 text-primary" />
                     </div>
                     <span className="font-medium text-foreground">Property Types</span>
                     {propertyTypes.length > 0 && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-foreground font-medium">
                         {propertyTypes.length} selected
                       </span>
                     )}
@@ -420,7 +420,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                           id={type.value}
                           checked={propertyTypes.includes(type.value)}
                           onCheckedChange={() => handlePropertyTypeToggle(type.value)}
-                          className="rounded-[4px] border-border data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                          className="rounded-[4px] border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                         <label htmlFor={type.value} className="text-sm cursor-pointer text-foreground">
                           {type.label}

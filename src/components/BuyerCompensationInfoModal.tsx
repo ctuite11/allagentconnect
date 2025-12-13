@@ -31,8 +31,8 @@ export const BuyerCompensationInfoModal = ({ compensationDisplay }: BuyerCompens
         
         <div className="space-y-5 py-4">
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
-              <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+              <Users className="w-4 h-4 text-primary" />
             </div>
             <div>
               <h4 className="font-semibold text-sm">What is a Buyer's Agent?</h4>
