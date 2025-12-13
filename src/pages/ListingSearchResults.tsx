@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import ListingCard from "@/components/ListingCard";
 import { toast } from "sonner";
-import { ArrowLeft, LayoutGrid, List, CheckSquare, Eye, EyeOff, Bookmark, FileSpreadsheet } from "lucide-react";
+import { ArrowLeft, LayoutGrid, List, CheckSquare, Eye, EyeOff, Bookmark, FileSpreadsheet, X } from "lucide-react";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
@@ -283,13 +283,13 @@ const ListingSearchResults = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
 
       <main className="flex-1 pt-20">
         <div className="max-w-[1400px] mx-auto px-6">
           {/* Page Header */}
-          <div className="bg-white border border-slate-200 rounded-lg shadow-sm mb-4">
+          <div className="bg-background border border-border rounded-lg shadow-sm mb-4">
             <div className="px-4 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -297,41 +297,41 @@ const ListingSearchResults = () => {
                     variant="ghost"
                     size="sm"
                     onClick={handleBackToSearch}
-                    className="h-8 gap-1.5 text-sm text-slate-600 hover:text-slate-900"
+                    className="h-8 gap-1.5 text-sm text-muted-foreground hover:text-foreground"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Search
                   </Button>
-                  <div className="h-5 w-px bg-slate-200" />
+                  <div className="h-5 w-px bg-border" />
                   <div>
-                    <h1 className="text-lg font-semibold text-slate-900">Search Results</h1>
+                    <h1 className="text-lg font-semibold text-foreground">Search Results</h1>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-slate-500">
-                    <span className="font-medium text-slate-900 bg-slate-100 px-2 py-0.5 rounded">
+                  <span className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground bg-muted px-2 py-0.5 rounded">
                       {loading ? "..." : listings.length}
                     </span>
                     {" "}listings found
                   </span>
-                  <div className="h-5 w-px bg-slate-200" />
+                  <div className="h-5 w-px bg-border" />
                   <ToggleGroup 
                     type="single" 
                     value={viewMode} 
                     onValueChange={(value) => value && setViewMode(value as "list" | "grid")}
-                    className="bg-slate-100 rounded-md p-0.5"
+                    className="bg-muted rounded-md p-0.5"
                   >
                     <ToggleGroupItem 
                       value="list" 
                       aria-label="List view"
-                      className="h-7 w-7 p-0 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+                      className="h-7 w-7 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm"
                     >
                       <List className="h-4 w-4" />
                     </ToggleGroupItem>
                     <ToggleGroupItem 
                       value="grid" 
                       aria-label="Grid view"
-                      className="h-7 w-7 p-0 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+                      className="h-7 w-7 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm"
                     >
                       <LayoutGrid className="h-4 w-4" />
                     </ToggleGroupItem>
@@ -341,9 +341,57 @@ const ListingSearchResults = () => {
             </div>
           </div>
 
+          {/* Sticky Bulk Action Bar */}
+          {selectedListings.size > 0 && (
+            <div className="sticky top-16 z-30 bg-primary text-primary-foreground rounded-lg shadow-lg mb-4 px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckSquare className="h-5 w-5" />
+                  <span className="font-semibold">{selectedListings.size} Selected</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => toast.info("Message feature coming soon")}
+                  >
+                    <List className="h-4 w-4 mr-1.5" />
+                    Message
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => toast.info("Add to Hotsheet coming soon")}
+                  >
+                    <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+                    Add to Hotsheet
+                  </Button>
+                  <BulkShareListingsDialog
+                    listingIds={Array.from(selectedListings)}
+                    listingCount={selectedListings.size}
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => {
+                      setSelectedListings(new Set());
+                      setShowSelectedOnly(false);
+                    }}
+                  >
+                    <X className="h-4 w-4 mr-1.5" />
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Results */}
           {viewMode === "list" ? (
-            <section className="bg-white border border-slate-200 rounded-lg shadow-sm">
+            <section className="bg-background border border-border rounded-lg shadow-sm">
               <ListingResultsTable
                 listings={listings}
                 loading={loading}
@@ -357,7 +405,7 @@ const ListingSearchResults = () => {
           ) : (
             <>
               {/* Grid View Action Buttons */}
-              <div className="bg-white border border-slate-200 rounded-lg shadow-sm mb-4">
+              <div className="bg-background border border-border rounded-lg shadow-sm mb-4">
                 <div className="px-4 py-2 flex items-center gap-2 flex-wrap">
                   <Button
                     variant="outline"
@@ -387,14 +435,8 @@ const ListingSearchResults = () => {
                     <Bookmark className="h-4 w-4" />
                     Save Search
                   </Button>
-                  {selectedListings.size > 0 && (
-                    <BulkShareListingsDialog
-                      listingIds={Array.from(selectedListings)}
-                      listingCount={selectedListings.size}
-                    />
-                  )}
                   <Button
-                    variant="outline"
+                    variant="brandOutline"
                     size="sm"
                     onClick={() => toast.info('Hot Sheet feature coming soon')}
                     className="h-8 gap-1.5 text-sm"
@@ -402,21 +444,16 @@ const ListingSearchResults = () => {
                     <FileSpreadsheet className="h-4 w-4" />
                     Save as Hot Sheet
                   </Button>
-                  {selectedListings.size > 0 && (
-                    <span className="text-sm text-muted-foreground ml-2">
-                      {selectedListings.size} selected
-                    </span>
-                  )}
                 </div>
               </div>
 
               <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {loading ? (
                   Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="bg-white border border-slate-200 rounded-lg h-72 animate-pulse" />
+                    <div key={i} className="bg-background border border-border rounded-lg h-72 animate-pulse" />
                   ))
                 ) : displayedListings.length === 0 ? (
-                  <div className="col-span-full text-center py-12 text-slate-500">
+                  <div className="col-span-full text-center py-12 text-muted-foreground">
                     No listings found matching your criteria
                   </div>
                 ) : (
