@@ -284,9 +284,9 @@ const ListingSearchFilters = ({
         <div className="flex gap-4 mb-4">
           
           {/* PROPERTY TYPE Section (narrow) */}
-          <div className="w-[160px] shrink-0 bg-muted/50 border border-border rounded-md overflow-hidden">
-            <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted border-b border-border">
-              <Home className="h-4 w-4 text-blue-500" />
+          <div className="w-[160px] shrink-0 bg-card border border-border border-l-4 border-l-primary rounded-md overflow-hidden">
+            <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted border-l-4 border-l-primary border-b border-border">
+              <Home className="h-4 w-4 text-primary" />
               <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Property Type</span>
             </div>
             <div className="p-3 space-y-1.5">
@@ -315,9 +315,9 @@ const ListingSearchFilters = ({
           </div>
 
           {/* MIDDLE SECTION: Status + Date/Timeframe + Price Range (wide, combined card) */}
-          <div className="flex-1 bg-muted/50 border border-border rounded-md overflow-hidden">
+          <div className="flex-1 bg-card border border-border border-l-4 border-l-primary rounded-md overflow-hidden">
             {/* STATUS + DATE/TIMEFRAME Header */}
-            <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted border-b border-border">
+            <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted border-l-4 border-l-primary border-b border-border">
               <Tag className="h-4 w-4 text-teal-500" />
               <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Status & Date</span>
             </div>
