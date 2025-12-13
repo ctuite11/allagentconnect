@@ -1136,41 +1136,44 @@ const ListingCard = ({
       </div>
 
       <CardContent className="p-3">
-        {/* Street Address + Price Row */}
-        <div className="flex justify-between items-start gap-2 mb-0.5">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
-            <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
-              {(() => {
-                // Extract street address only, remove city/state/zip if embedded
-                let street = listing.address || '';
-                const city = listing.city || '';
-                const state = listing.state || '';
-                const zip = listing.zip_code || '';
-                // Remove trailing USA/United States
-                street = street.replace(/,?\s*(USA|United States)$/i, '');
-                // Remove city, state, zip if present at end
-                if (city) {
-                  street = street.replace(new RegExp(`,?\\s*${city}.*$`, 'i'), '');
-                }
-                // Convert to Title Case
-                return street.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-              })()}
-            </h3>
+        {/* Address & Price Section - Two Column Grid */}
+        <div className="grid grid-cols-[1fr_auto] gap-x-3 mb-2">
+          {/* Left Column - Address */}
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+              <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
+                {(() => {
+                  // Extract street address only, remove city/state/zip if embedded
+                  let street = listing.address || '';
+                  const city = listing.city || '';
+                  // Remove trailing USA/United States
+                  street = street.replace(/,?\s*(USA|United States)$/i, '');
+                  // Remove city, state, zip if present at end
+                  if (city) {
+                    street = street.replace(new RegExp(`,?\\s*${city}.*$`, 'i'), '');
+                  }
+                  // Convert to Title Case
+                  return street.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+                })()}
+              </h3>
+            </div>
+            <p className="text-xs text-muted-foreground pl-5 mt-0.5">
+              {listing.city}, {listing.state} {listing.zip_code}
+            </p>
           </div>
-          <div className="text-lg font-bold text-primary flex-shrink-0">
-            {formatPrice(listing.price)}
+          
+          {/* Right Column - Price (stacked, right-aligned) */}
+          <div className="text-right flex-shrink-0">
+            <div className="text-lg font-bold text-primary">
+              {formatPrice(listing.price)}
+            </div>
+            {pricePerSqft && (
+              <div className="text-xs text-muted-foreground mt-0.5">
+                ${pricePerSqft}/sqft
+              </div>
+            )}
           </div>
-        </div>
-        
-        {/* City, State ZIP + $/sqft Row */}
-        <div className="flex justify-between items-center mb-2 pl-5">
-          <span className="text-xs text-muted-foreground">
-            {listing.city}, {listing.state} {listing.zip_code}
-          </span>
-          {pricePerSqft && (
-            <span className="text-xs text-muted-foreground">${pricePerSqft}/sqft</span>
-          )}
         </div>
 
         {/* Beds, Baths, SqFt Row with Blue Icons */}
