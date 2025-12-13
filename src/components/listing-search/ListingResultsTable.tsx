@@ -334,7 +334,7 @@ const ListingResultsTable = ({
               size="sm"
               onClick={() => {
                 if (selectedRows.size === 0) {
-                  toast("You haven't selected any properties", {
+                  toast.error("You haven't selected any properties", {
                     description: "Select one or more properties from the results to save a hotsheet.",
                   });
                   return;
