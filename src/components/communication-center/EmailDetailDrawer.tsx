@@ -99,16 +99,16 @@ export function EmailDetailDrawer({
 
           {/* Subject */}
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Subject</label>
-            <p className="mt-1 text-foreground font-medium">{campaign.subject}</p>
+            <label className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Subject</label>
+            <p className="mt-1 text-foreground font-semibold text-lg">{campaign.subject}</p>
           </div>
 
           {/* Message Body */}
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Message</label>
-            <div className="mt-2 p-4 bg-muted/50 rounded-lg border">
+            <label className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Message</label>
+            <div className="mt-2 p-4 bg-background rounded-lg border border-border">
               <div 
-                className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap"
+                className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap text-foreground"
                 dangerouslySetInnerHTML={{ __html: campaign.message }}
               />
             </div>
@@ -119,20 +119,20 @@ export function EmailDetailDrawer({
             <>
               <Separator />
               <div>
-                <label className="text-sm font-medium text-muted-foreground mb-3 block">Performance</label>
+                <label className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3 block">Performance</label>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-muted/50 rounded-lg border text-center">
-                    <div className="text-2xl font-bold">{campaign.unique_opens || 0}</div>
-                    <div className="text-xs text-muted-foreground">Opens</div>
+                  <div className="p-3 bg-background rounded-lg border border-border text-center">
+                    <div className="text-2xl font-bold text-foreground">{campaign.unique_opens || 0}</div>
+                    <div className="text-xs font-medium text-muted-foreground">Opens</div>
                     {campaign.recipient_count > 0 && (
                       <div className="text-xs text-muted-foreground mt-1">
                         {((campaign.unique_opens || 0) / campaign.recipient_count * 100).toFixed(1)}% rate
                       </div>
                     )}
                   </div>
-                  <div className="p-3 bg-muted/50 rounded-lg border text-center">
-                    <div className="text-2xl font-bold">{campaign.unique_clicks || 0}</div>
-                    <div className="text-xs text-muted-foreground">Clicks</div>
+                  <div className="p-3 bg-background rounded-lg border border-border text-center">
+                    <div className="text-2xl font-bold text-foreground">{campaign.unique_clicks || 0}</div>
+                    <div className="text-xs font-medium text-muted-foreground">Clicks</div>
                     {campaign.recipient_count > 0 && (
                       <div className="text-xs text-muted-foreground mt-1">
                         {((campaign.unique_clicks || 0) / campaign.recipient_count * 100).toFixed(1)}% rate
@@ -157,7 +157,7 @@ export function EmailDetailDrawer({
           {/* Actions */}
           <div className="flex flex-col gap-2">
             <Button 
-              variant="outline" 
+              variant="brandOutline" 
               onClick={handleCopyContent}
               className="w-full justify-start"
             >
@@ -165,7 +165,7 @@ export function EmailDetailDrawer({
               Copy Content
             </Button>
             <Button 
-              variant="outline" 
+              variant="brandOutline" 
               onClick={handleOpenMailClient}
               className="w-full justify-start"
             >

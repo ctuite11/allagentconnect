@@ -307,52 +307,54 @@ const CommunicationCenter = () => {
                 <div className="border-t">
                   <Table>
                     <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[180px]">Date/Time</TableHead>
-                        <TableHead>Subject</TableHead>
-                        <TableHead className="w-[120px] text-center">Recipients</TableHead>
-                        <TableHead className="w-[100px] text-center">Opens</TableHead>
-                        <TableHead className="w-[100px] text-center">Clicks</TableHead>
-                        <TableHead className="w-[100px] text-center">Status</TableHead>
+                      <TableRow className="hover:bg-transparent bg-muted/50">
+                        <TableHead className="w-[180px] text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date/Time</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Subject</TableHead>
+                        <TableHead className="w-[120px] text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recipients</TableHead>
+                        <TableHead className="w-[100px] text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Opens</TableHead>
+                        <TableHead className="w-[100px] text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Clicks</TableHead>
+                        <TableHead className="w-[100px] text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredCampaigns.map((campaign) => (
                         <TableRow 
                           key={campaign.id}
-                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          className="cursor-pointer hover:bg-muted/50 transition-colors group"
                           onClick={() => handleRowClick(campaign)}
                         >
-                          <TableCell className="text-sm text-muted-foreground">
+                          <TableCell className="text-sm text-muted-foreground relative">
+                            {/* Left indicator rail for visual anchor */}
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                             {format(new Date(campaign.sent_at), "MMM d, yyyy h:mm a")}
                           </TableCell>
-                          <TableCell className="font-medium max-w-[300px] truncate">
+                          <TableCell className="font-semibold text-foreground max-w-[300px] truncate">
                             {campaign.subject}
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge variant="secondary" className="font-normal">
+                            <Badge variant="secondary" className="font-medium bg-muted text-foreground">
                               {campaign.recipient_count}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className="text-sm">
+                            <span className="text-sm font-medium text-foreground">
                               {campaign.unique_opens}
-                              {campaign.recipient_count > 0 && (
-                                <span className="text-muted-foreground ml-1">
-                                  ({((campaign.unique_opens / campaign.recipient_count) * 100).toFixed(0)}%)
-                                </span>
-                              )}
                             </span>
+                            {campaign.recipient_count > 0 && (
+                              <span className="text-muted-foreground text-xs ml-1">
+                                ({((campaign.unique_opens / campaign.recipient_count) * 100).toFixed(0)}%)
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className="text-sm">
+                            <span className="text-sm font-medium text-foreground">
                               {campaign.unique_clicks}
-                              {campaign.recipient_count > 0 && (
-                                <span className="text-muted-foreground ml-1">
-                                  ({((campaign.unique_clicks / campaign.recipient_count) * 100).toFixed(0)}%)
-                                </span>
-                              )}
                             </span>
+                            {campaign.recipient_count > 0 && (
+                              <span className="text-muted-foreground text-xs ml-1">
+                                ({((campaign.unique_clicks / campaign.recipient_count) * 100).toFixed(0)}%)
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge 
