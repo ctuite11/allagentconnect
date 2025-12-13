@@ -27,7 +27,7 @@ const NetworkEffect = () => {
       <div className="container mx-auto px-6">
         {/* Section header */}
         <div className="max-w-2xl mx-auto text-center mb-16">
-          <p className="text-sm font-medium tracking-wide uppercase text-blue-600 mb-3">
+          <p className="text-sm font-medium tracking-wide uppercase text-muted-foreground mb-3">
             Network Effect
           </p>
           <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
@@ -46,7 +46,7 @@ const NetworkEffect = () => {
               className="text-center p-8 rounded-2xl bg-slate-50"
             >
               <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center mx-auto mb-6 shadow-sm">
-                <stat.icon className="w-5 h-5 text-blue-600" />
+                <stat.icon className="w-5 h-5 text-primary" />
               </div>
               <div className="text-4xl font-semibold text-slate-900 mb-2 tracking-tight">
                 {stat.value}

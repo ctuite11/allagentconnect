@@ -385,7 +385,7 @@ const ListingCard = ({
     if (currentStatus === 'coming_soon') {
       return {
         text: "COMING SOON",
-        color: "bg-indigo-600",
+        color: "bg-purple-600",
         iconType: "sparkles" as const
       };
     }
@@ -502,7 +502,7 @@ const ListingCard = ({
       // Low demand - blue/default
       return {
         variant: "outline" as const,
-        className: "border-primary/50 text-primary hover:bg-primary/10"
+        className: "border-border text-foreground hover:bg-muted"
       };
     }
   };
@@ -1222,7 +1222,7 @@ const ListingCard = ({
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 flex-shrink-0">
               <AvatarImage src={agentProfile.headshot_url || undefined} alt={`${agentProfile.first_name} ${agentProfile.last_name}`} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+              <AvatarFallback className="bg-muted text-foreground text-xs">
                 {agentProfile.first_name?.[0]}{agentProfile.last_name?.[0]}
               </AvatarFallback>
             </Avatar>
@@ -1250,7 +1250,7 @@ const ListingCard = ({
         ) : agentInfo ? (
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 flex-shrink-0">
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+              <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                 <User className="w-4 h-4" />
               </AvatarFallback>
             </Avatar>
