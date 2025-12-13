@@ -1141,13 +1141,16 @@ const ListingCard = ({
             <div className="flex items-start gap-1.5 min-w-0 flex-1">
               <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-foreground leading-tight line-clamp-2">
-                  {displayAddress}
+                <h3 className="text-sm font-semibold text-foreground leading-tight">
+                  {listing.address}
                 </h3>
+                <p className="text-xs text-muted-foreground">
+                  {listing.city}, {listing.state} {listing.zip_code}
+                </p>
               </div>
             </div>
           <div className="text-right flex-shrink-0">
-            <div className="text-sm font-bold text-foreground">
+            <div className="text-lg font-bold text-primary">
               {formatPrice(listing.price)}
             </div>
             {pricePerSqft && (
@@ -1159,22 +1162,22 @@ const ListingCard = ({
         </div>
 
         {/* Beds, Baths, SqFt Row with Blue Icons */}
-        <div className="flex gap-4 mb-2 text-sm font-medium text-foreground">
+        <div className="flex gap-4 mb-2 text-base font-semibold text-foreground">
           {listing.bedrooms !== null && (
-            <div className="flex items-center gap-1">
-              <Bed className="w-4 h-4 text-primary" />
+            <div className="flex items-center gap-1.5">
+              <Bed className="w-5 h-5 text-primary" />
               <span>{listing.bedrooms}</span>
             </div>
           )}
           {listing.bathrooms !== null && (
-            <div className="flex items-center gap-1">
-              <Bath className="w-4 h-4 text-primary" />
+            <div className="flex items-center gap-1.5">
+              <Bath className="w-5 h-5 text-primary" />
               <span>{listing.bathrooms}</span>
             </div>
           )}
           {listing.square_feet !== null && (
-            <div className="flex items-center gap-1">
-              <Home className="w-4 h-4 text-primary" />
+            <div className="flex items-center gap-1.5">
+              <Home className="w-5 h-5 text-primary" />
               <span>{listing.square_feet.toLocaleString()}</span>
             </div>
           )}
@@ -1182,10 +1185,10 @@ const ListingCard = ({
 
         {/* Listing Number - blue and clickable */}
         {listing.listing_number && (
-          <div className="text-xs mb-3">
+          <div className="text-sm mb-3">
             <button
               type="button"
-              className="text-primary font-mono hover:underline"
+              className="text-primary font-mono font-medium hover:underline"
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/property/${listing.id}`);
