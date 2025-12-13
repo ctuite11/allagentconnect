@@ -1157,8 +1157,9 @@ const ListingCard = ({
               </h3>
             </div>
             <p className="text-xs text-muted-foreground pl-5 mt-0.5">
-              {/* Show neighborhood if available, then city */}
-              {listing.neighborhood ? `${listing.neighborhood}, ` : ''}{listing.city}, {listing.state} {listing.zip_code}
+              {/* Show neighborhood if available, then city - convert to Title Case */}
+              {listing.neighborhood ? `${listing.neighborhood.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}, ` : ''}
+              {listing.city?.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}, {listing.state?.toUpperCase()} {listing.zip_code}
             </p>
           </div>
           
