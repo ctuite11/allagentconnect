@@ -129,7 +129,7 @@ export function ShareListingsDialog({
           {/* Listing Preview / Summary */}
           {selectedCount === 1 && listingPreview ? (
             <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[6px] border-l-primary">
-              <div className="mt-0.5 rounded-xl border border-primary/30 bg-primary/5 p-2">
+              <div className="mt-0.5 rounded-xl border border-border bg-muted p-2">
                 <Home className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0">
@@ -151,7 +151,7 @@ export function ShareListingsDialog({
             </div>
           ) : selectedCount > 1 ? (
             <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[6px] border-l-primary">
-              <div className="mt-0.5 rounded-xl border border-primary/30 bg-primary/5 p-2">
+              <div className="mt-0.5 rounded-xl border border-border bg-muted p-2">
                 <Layers className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0">
@@ -190,7 +190,7 @@ export function ShareListingsDialog({
             <Button
               type="button"
               variant="outline"
-              className="w-full rounded-2xl border-primary text-primary hover:bg-primary/5"
+              className="w-full rounded-2xl border-primary text-primary hover:bg-muted hover:text-primary"
               onClick={() => setManualMode(!manualMode)}
             >
               <PencilLine className="mr-2 h-4 w-4 text-primary" />
@@ -296,7 +296,7 @@ export function ShareListingsDialog({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-primary text-primary hover:bg-primary/5"
+                  className="rounded-full border-primary text-primary hover:bg-muted hover:text-primary"
                   onClick={() => setMessage(message ? `${message}\n${t}` : t)}
                 >
                   {t}
