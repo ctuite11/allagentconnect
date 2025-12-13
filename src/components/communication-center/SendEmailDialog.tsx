@@ -534,7 +534,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={handleClose} disabled={sending} className="rounded-lg">
+            <Button variant="brandOutline" onClick={handleClose} disabled={sending} className="rounded-lg">
               Cancel
             </Button>
             <Button 
