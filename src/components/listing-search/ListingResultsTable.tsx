@@ -332,7 +332,15 @@ const ListingResultsTable = ({
             <Button
               variant="brandOutline"
               size="sm"
-              onClick={() => setHotSheetDialogOpen(true)}
+              onClick={() => {
+                if (selectedRows.size === 0) {
+                  toast("You haven't selected any properties", {
+                    description: "Select one or more properties from the results to save a hotsheet.",
+                  });
+                  return;
+                }
+                setHotSheetDialogOpen(true);
+              }}
               className="h-9 px-4 text-sm font-medium"
             >
               <FileSpreadsheet className="h-4 w-4 mr-1.5" />
@@ -372,6 +380,7 @@ const ListingResultsTable = ({
           open={hotSheetDialogOpen}
           onOpenChange={setHotSheetDialogOpen}
           currentSearch={buildHotSheetCriteria()}
+          selectedListingIds={Array.from(selectedRows)}
         />
 
         <Table>

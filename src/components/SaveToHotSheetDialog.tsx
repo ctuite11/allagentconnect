@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -12,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Bell, X, Search, UserPlus, Users, Filter } from "lucide-react";
+import { X, Search, UserPlus, Users, Filter, Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -28,6 +27,7 @@ interface Client {
 interface SaveToHotSheetDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  selectedListingIds: string[];
   currentSearch?: {
     min_price?: number;
     max_price?: number;
@@ -47,7 +47,7 @@ interface SaveToHotSheetDialogProps {
   };
 }
 
-const SaveToHotSheetDialog = ({ open, onOpenChange, currentSearch }: SaveToHotSheetDialogProps) => {
+const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentSearch }: SaveToHotSheetDialogProps) => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   
@@ -63,6 +63,28 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, currentSearch }: SaveToHotSh
   const [manualLastName, setManualLastName] = useState("");
   const [manualEmail, setManualEmail] = useState("");
   const [manualPhone, setManualPhone] = useState("");
+
+  // Generate default name from search
+  useEffect(() => {
+    if (open && !name) {
+      const parts: string[] = [];
+      if (currentSearch?.cities?.length) {
+        parts.push(currentSearch.cities[0]);
+      } else if (currentSearch?.city) {
+        parts.push(currentSearch.city);
+      }
+      if (currentSearch?.propertyTypes?.length) {
+        const typeLabel = currentSearch.propertyTypes[0]?.replace(/_/g, ' ');
+        if (typeLabel) parts.push(typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1) + 's');
+      }
+      if (currentSearch?.bedrooms) {
+        parts.push(`${currentSearch.bedrooms}+ Bed`);
+      }
+      if (parts.length > 0) {
+        setName(parts.join(' – '));
+      }
+    }
+  }, [open, currentSearch]);
 
   // Reset state when dialog closes
   useEffect(() => {
@@ -200,6 +222,11 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, currentSearch }: SaveToHotSh
       return;
     }
 
+    if (selectedListingIds.length === 0) {
+      toast.error("No properties selected");
+      return;
+    }
+
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -223,6 +250,8 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, currentSearch }: SaveToHotSh
         state: currentSearch?.state || null,
         statuses: currentSearch?.statuses || [],
         listing_type: currentSearch?.listing_type || "for_sale",
+        // Store selected listing IDs in criteria
+        selectedListingIds: selectedListingIds,
       };
 
       // Create hot sheet
@@ -258,7 +287,7 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, currentSearch }: SaveToHotSh
         }
       }
 
-      toast.success("Hot sheet saved! You'll be notified of new matching listings.");
+      toast.success("Hot sheet saved successfully!");
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error saving hot sheet:", error);
@@ -320,24 +349,20 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, currentSearch }: SaveToHotSh
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[540px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />
-            Save Search as Hot Sheet
+          <DialogTitle className="text-lg font-semibold">
+            Save Hotsheet
           </DialogTitle>
-          <DialogDescription>
-            Get notified when new listings match your criteria
-          </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-5 py-4">
-          {/* Hot Sheet Name */}
+          {/* Section 1: Hotsheet Name */}
           <div className="grid gap-2">
             <Label htmlFor="name" className="text-sm font-medium">
-              Hot Sheet Name <span className="text-destructive">*</span>
+              Hotsheet Name <span className="text-destructive">*</span>
             </Label>
             <Input
               id="name"
-              placeholder="e.g., Boston 3BR Under 500k"
+              placeholder="Boston Waterfront Condos – 2+ Bed"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="h-10"
@@ -346,12 +371,12 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, currentSearch }: SaveToHotSh
 
           <Separator />
 
-          {/* Contacts Section */}
+          {/* Section 2: Contacts */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium flex items-center gap-2">
                 <Users className="h-4 w-4 text-primary" />
-                Contacts (Optional)
+                Contacts
               </Label>
               {selectedClients.length > 0 && (
                 <Badge variant="secondary" className="text-xs">
@@ -359,6 +384,9 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, currentSearch }: SaveToHotSh
                 </Badge>
               )}
             </div>
+            <p className="text-sm text-muted-foreground">
+              Attach one or more contacts to track interest for this hotsheet.
+            </p>
 
             {/* Selected Clients */}
             {selectedClients.length > 0 && (
@@ -487,42 +515,70 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, currentSearch }: SaveToHotSh
 
           <Separator />
 
-          {/* Saved Search Preferences Summary */}
+          {/* Section 3: Selected Properties */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Home className="h-4 w-4 text-primary" />
+              Selected Properties
+            </Label>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-sm font-semibold">
+                {selectedListingIds.length}
+              </Badge>
+              <span className="text-sm text-foreground">
+                {selectedListingIds.length === 1 ? 'property' : 'properties'} selected
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              These properties will be saved to the hotsheet.
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* Section 4: Saved Search Preferences */}
           <div className="space-y-2">
             <Label className="text-sm font-medium flex items-center gap-2">
               <Filter className="h-4 w-4 text-primary" />
-              Saved Search Criteria
+              Saved Search Preferences
             </Label>
+            <p className="text-sm text-muted-foreground">
+              The current search criteria will be saved with this hotsheet for reference.
+            </p>
             {filterSummary.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
                 {filterSummary.map((item, index) => (
                   <Badge 
                     key={index} 
-                    variant="secondary" 
-                    className="text-xs font-normal bg-muted"
+                    variant="outline" 
+                    className="text-xs bg-muted/50"
                   >
                     {item}
                   </Badge>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No filters applied - will match all active listings
+              <p className="text-sm text-muted-foreground italic">
+                No additional filters applied
               </p>
             )}
           </div>
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
-          <Button 
-            onClick={handleSave} 
+          <Button
+            onClick={handleSave}
             disabled={loading || !name.trim()}
             className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white"
           >
-            {loading ? "Saving..." : "Save Hot Sheet"}
+            {loading ? "Saving..." : "Save Hotsheet"}
           </Button>
         </DialogFooter>
       </DialogContent>
