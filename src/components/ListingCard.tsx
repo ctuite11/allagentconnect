@@ -1144,14 +1144,12 @@ const ListingCard = ({
               <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
               <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
                 {(() => {
-                  // Extract street address only, remove city/state/zip if embedded
+                  // Extract just the street address (first part before any comma)
                   let street = listing.address || '';
-                  const city = listing.city || '';
-                  // Remove trailing USA/United States
-                  street = street.replace(/,?\s*(USA|United States)$/i, '');
-                  // Remove city, state, zip if present at end
-                  if (city) {
-                    street = street.replace(new RegExp(`,?\\s*${city}.*$`, 'i'), '');
+                  // Take only the first segment before any comma
+                  const firstComma = street.indexOf(',');
+                  if (firstComma > 0) {
+                    street = street.substring(0, firstComma);
                   }
                   // Convert to Title Case
                   return street.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
@@ -1159,7 +1157,8 @@ const ListingCard = ({
               </h3>
             </div>
             <p className="text-xs text-muted-foreground pl-5 mt-0.5">
-              {listing.city}, {listing.state} {listing.zip_code}
+              {/* Show neighborhood if available, then city */}
+              {listing.neighborhood ? `${listing.neighborhood}, ` : ''}{listing.city}, {listing.state} {listing.zip_code}
             </p>
           </div>
           
