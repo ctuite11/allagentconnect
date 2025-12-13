@@ -539,8 +539,8 @@ const ListingAnalytics = () => {
                           <span className="text-sm font-medium">Views</span>
                           <span className="text-sm text-muted-foreground">{currentStats.view_count}</span>
                         </div>
-                        <div className="w-full h-4 bg-blue-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-blue-600" style={{ width: "100%" }} />
+                        <div className="w-full h-4 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-primary" style={{ width: "100%" }} />
                         </div>
                       </div>
 
@@ -602,13 +602,13 @@ const ListingAnalytics = () => {
               <TabsContent value="lifecycle" className="space-y-6">
                 {/* Relisting Information Alert */}
                 {selectedListingData && (selectedListingData as any).is_relisting && (
-                  <Card className="border-blue-200 bg-blue-50/50">
+                  <Card className="border-border bg-muted/50">
                     <CardContent className="pt-6">
                       <div className="flex items-start gap-3">
-                        <RefreshCw className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <RefreshCw className="h-5 w-5 text-primary mt-0.5" />
                         <div>
-                          <h4 className="font-semibold text-blue-900 mb-1">Relisted Property</h4>
-                          <p className="text-sm text-blue-700">
+                          <h4 className="font-semibold text-foreground mb-1">Relisted Property</h4>
+                          <p className="text-sm text-muted-foreground">
                             This listing was relisted within 30 days by the same agent. 
                             Days on market and status history have been preserved from the previous listing.
                           </p>
