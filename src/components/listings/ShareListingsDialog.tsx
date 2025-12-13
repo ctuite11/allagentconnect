@@ -69,6 +69,9 @@ const MESSAGE_CHIPS = [
   "Happy to answer any questions.",
 ];
 
+// Hardcoded blue to ensure pixel-identical color everywhere
+const BLUE = "hsl(215,95%,55%)";
+
 export function ShareListingsDialog({
   open,
   onOpenChange,
@@ -116,7 +119,7 @@ export function ShareListingsDialog({
         {/* Header */}
         <div className="shrink-0 border-b px-6 py-5">
           <DialogHeader className="space-y-1">
-            <DialogTitle className="text-lg text-primary">
+            <DialogTitle className={`text-lg text-[${BLUE}]`}>
               Share {selectedCount} Listing{selectedCount === 1 ? "" : "s"}
             </DialogTitle>
             <DialogDescription>
@@ -124,13 +127,13 @@ export function ShareListingsDialog({
             </DialogDescription>
           </DialogHeader>
           {/* Accent bar */}
-          <div className="mt-4 h-[2px] w-16 rounded-full bg-primary" />
+          <div className={`mt-4 h-[2px] w-16 rounded-full bg-[${BLUE}]`} />
 
           {/* Listing Preview / Summary */}
           {selectedCount === 1 && listingPreview ? (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[6px] border-l-primary">
+            <div className={`mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[6px] border-l-[${BLUE}]`}>
               <div className="mt-0.5 rounded-xl border border-border bg-muted p-2">
-                <Home className="h-4 w-4 text-primary" />
+                <Home className={`h-4 w-4 text-[${BLUE}]`} />
               </div>
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium">{listingPreview.address}</div>
@@ -150,9 +153,9 @@ export function ShareListingsDialog({
               </div>
             </div>
           ) : selectedCount > 1 ? (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[6px] border-l-primary">
+            <div className={`mt-4 flex items-start gap-3 rounded-2xl border border-border bg-background p-3 border-l-[6px] border-l-[${BLUE}]`}>
               <div className="mt-0.5 rounded-xl border border-border bg-muted p-2">
-                <Layers className="h-4 w-4 text-primary" />
+                <Layers className={`h-4 w-4 text-[${BLUE}]`} />
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-medium">Sharing {selectedCount} Listings</div>
@@ -171,26 +174,26 @@ export function ShareListingsDialog({
             <div className="text-sm font-medium">Search Contact</div>
 
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+              <Search className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[${BLUE}]`} />
               <Input
                 value={contactQuery}
                 onChange={(e) => setContactQuery(e.target.value)}
                 placeholder="Search by name or email…"
-                className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
+                className={`pl-9 rounded-2xl border-foreground/30 focus-visible:ring-[${BLUE}]`}
                 autoFocus
               />
             </div>
 
             <div className="flex items-center gap-3">
               <Separator className="flex-1" />
-              <span className="text-xs font-medium text-primary">OR</span>
+              <span className={`text-xs font-medium text-[${BLUE}]`}>OR</span>
               <Separator className="flex-1" />
             </div>
 
             <Button
               type="button"
               variant="outline"
-              className="w-full rounded-2xl border-primary text-primary hover:bg-muted hover:text-primary hover:border-primary"
+              className={`w-full rounded-2xl border-[${BLUE}] text-[${BLUE}] hover:bg-muted hover:text-[${BLUE}] hover:border-[${BLUE}]`}
               onClick={() => setManualMode(!manualMode)}
             >
               <PencilLine className="mr-2 h-4 w-4" />
@@ -202,12 +205,12 @@ export function ShareListingsDialog({
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Recipient Name</div>
                   <div className="relative">
-                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                    <User className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[${BLUE}]`} />
                     <Input
                       value={recipientName}
                       onChange={(e) => setRecipientName(e.target.value)}
                       placeholder="Jane Buyer"
-                      className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
+                      className={`pl-9 rounded-2xl border-foreground/30 focus-visible:ring-[${BLUE}]`}
                     />
                   </div>
                 </div>
@@ -215,12 +218,12 @@ export function ShareListingsDialog({
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Recipient Email</div>
                   <div className="relative">
-                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                    <Mail className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[${BLUE}]`} />
                     <Input
                       value={recipientEmail}
                       onChange={(e) => setRecipientEmail(e.target.value)}
                       placeholder="jane@email.com"
-                      className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
+                      className={`pl-9 rounded-2xl border-foreground/30 focus-visible:ring-[${BLUE}]`}
                     />
                   </div>
                 </div>
@@ -229,17 +232,17 @@ export function ShareListingsDialog({
           </section>
 
           {/* Sender Info Card */}
-          <section className="rounded-2xl border border-border bg-background p-4 space-y-4 border-l-[6px] border-l-primary">
+          <section className={`rounded-2xl border border-border bg-background p-4 space-y-4 border-l-[6px] border-l-[${BLUE}]`}>
             <div className="text-sm font-semibold tracking-wide">Sender Info</div>
 
             <div className="space-y-2">
               <div className="text-sm font-medium">Your Name *</div>
               <div className="relative">
-                <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                <User className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[${BLUE}]`} />
                 <Input
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
-                  className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
+                  className={`pl-9 rounded-2xl border-foreground/30 focus-visible:ring-[${BLUE}]`}
                 />
               </div>
             </div>
@@ -247,11 +250,11 @@ export function ShareListingsDialog({
             <div className="space-y-2">
               <div className="text-sm font-medium">Your Email *</div>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                <Mail className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[${BLUE}]`} />
                 <Input
                   value={senderEmail}
                   onChange={(e) => setSenderEmail(e.target.value)}
-                  className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
+                  className={`pl-9 rounded-2xl border-foreground/30 focus-visible:ring-[${BLUE}]`}
                 />
               </div>
             </div>
@@ -261,7 +264,7 @@ export function ShareListingsDialog({
                 Your Phone <span className="text-muted-foreground">(optional)</span>
               </div>
               <div className="relative">
-                <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                <Phone className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[${BLUE}]`} />
                 <Input
                   value={senderPhone}
                   onChange={(e) => setSenderPhone(e.target.value)}
@@ -272,7 +275,7 @@ export function ShareListingsDialog({
                     }
                   }}
                   placeholder="(617) 555-0123"
-                  className="pl-9 rounded-2xl border-foreground/30 focus-visible:ring-primary"
+                  className={`pl-9 rounded-2xl border-foreground/30 focus-visible:ring-[${BLUE}]`}
                 />
               </div>
             </div>
@@ -283,7 +286,7 @@ export function ShareListingsDialog({
           </section>
 
           {/* Message */}
-          <section className="rounded-2xl border border-border bg-background p-4 space-y-3 border-l-[6px] border-l-primary">
+          <section className={`rounded-2xl border border-border bg-background p-4 space-y-3 border-l-[6px] border-l-[${BLUE}]`}>
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold tracking-wide">Personal Message</div>
               <div className="text-xs text-muted-foreground">Cmd/Ctrl + Enter to send</div>
@@ -296,7 +299,7 @@ export function ShareListingsDialog({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-primary text-primary hover:bg-muted hover:text-primary hover:border-primary"
+                  className={`rounded-full border-[${BLUE}] text-[${BLUE}] hover:bg-muted hover:text-[${BLUE}] hover:border-[${BLUE}]`}
                   onClick={() => setMessage(message ? `${message}\n${t}` : t)}
                 >
                   {t}
@@ -308,7 +311,7 @@ export function ShareListingsDialog({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Add a short note…"
-              className="min-h-[110px] rounded-2xl border-foreground/30 focus-visible:ring-primary"
+              className={`min-h-[110px] rounded-2xl border-foreground/30 focus-visible:ring-[${BLUE}]`}
             />
           </section>
         </div>
