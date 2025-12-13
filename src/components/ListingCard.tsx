@@ -1141,13 +1141,9 @@ const ListingCard = ({
             <div className="flex items-start gap-1.5 min-w-0 flex-1">
               <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-foreground leading-tight line-clamp-1">
-                  {listing.address?.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                  {unitNumber && <span className="text-muted-foreground font-normal"> Unit {unitNumber}</span>}
+                <h3 className="text-sm font-semibold text-foreground leading-tight line-clamp-2">
+                  {displayAddress}
                 </h3>
-                <div className="text-xs text-muted-foreground">
-                  {listing.city?.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}, {listing.state} {listing.zip_code}
-                </div>
               </div>
             </div>
           <div className="text-right flex-shrink-0">
@@ -1184,10 +1180,19 @@ const ListingCard = ({
           )}
         </div>
 
-        {/* Listing Number */}
+        {/* Listing Number - blue and clickable */}
         {listing.listing_number && (
-          <div className="text-xs text-muted-foreground mb-3">
-            #{listing.listing_number}
+          <div className="text-xs mb-3">
+            <button
+              type="button"
+              className="text-primary font-mono hover:underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/property/${listing.id}`);
+              }}
+            >
+              #{listing.listing_number}
+            </button>
           </div>
         )}
 
