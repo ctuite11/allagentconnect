@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Search, X, MapPin, ChevronDown, RotateCcw, FileSpreadsheet, Filter, Users, Gift, Home } from "lucide-react";
 import { toast } from "sonner";
+import { SectionCard } from "@/components/ui/section-card";
 
 interface County {
   id: string;
@@ -92,7 +93,7 @@ const AgentSearchFilters = ({
         {/* Filter Sections Row */}
         <div className="flex flex-wrap items-stretch gap-3">
           {/* Search Section Card */}
-          <div className="flex-1 min-w-[200px] max-w-md bg-background border border-border rounded-lg border-l-[6px] border-l-primary">
+          <SectionCard className="flex-1 min-w-[200px] max-w-md p-0">
             <div className="relative p-2">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary h-4 w-4" />
               <Input
@@ -113,13 +114,13 @@ const AgentSearchFilters = ({
                 </Button>
               )}
             </div>
-          </div>
+          </SectionCard>
 
           {/* Service Areas Section Card */}
-          <div className="bg-background border border-border rounded-lg border-l-[6px] border-l-primary">
+          <SectionCard className="p-0">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" className="h-full px-4 gap-2 hover:bg-muted">
+                <Button variant="ghost" className="h-full px-4 gap-2 hover:bg-muted rounded-l-none">
                   <MapPin className="h-4 w-4 text-primary" />
                   <span className="text-sm font-medium">Service Areas</span>
                   {selectedCounties.length > 0 && (
@@ -167,10 +168,10 @@ const AgentSearchFilters = ({
                 </div>
               </PopoverContent>
             </Popover>
-          </div>
+          </SectionCard>
 
           {/* Quick Toggles Section Card */}
-          <div className="bg-background border border-border rounded-lg border-l-[6px] border-l-primary p-2 flex items-center gap-4">
+          <SectionCard className="p-2 flex items-center gap-4">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="filter-incentives"
@@ -193,10 +194,10 @@ const AgentSearchFilters = ({
                 Has Listings
               </Label>
             </div>
-          </div>
+          </SectionCard>
 
           {/* Sort Section Card */}
-          <div className="bg-background border border-border rounded-lg border-l-[6px] border-l-primary p-2 flex items-center gap-2">
+          <SectionCard className="p-2 flex items-center gap-2">
             <Label className="text-sm text-muted-foreground whitespace-nowrap">Sort:</Label>
             <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as "a-z" | "z-a" | "listings")}>
               <SelectTrigger className="w-36 h-9 border-0 shadow-none">
@@ -208,7 +209,7 @@ const AgentSearchFilters = ({
                 <SelectItem value="listings">Most Listings</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </SectionCard>
 
           {/* Result Count */}
           <div className="flex items-center ml-auto text-sm text-muted-foreground">
@@ -220,14 +221,14 @@ const AgentSearchFilters = ({
 
         {/* Active Filters Summary Bar */}
         {hasActiveFilters && (
-          <div className="flex items-center gap-2 flex-wrap bg-muted/50 rounded-lg px-3 py-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+          <SectionCard className="p-2 flex items-center gap-2 flex-wrap">
+            <Filter className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-muted-foreground">Active:</span>
             
             {activeFilterPills.map((pill, index) => (
               <span
                 key={index}
-                className="inline-flex items-center gap-1 bg-background border border-border rounded-md px-2 py-1 text-xs font-medium text-foreground"
+                className="inline-flex items-center gap-1 bg-muted border border-border rounded-md px-2 py-1 text-xs font-medium text-foreground"
               >
                 {pill.label}
                 <button
@@ -260,7 +261,7 @@ const AgentSearchFilters = ({
               <FileSpreadsheet className="h-3 w-3 mr-1" />
               Save as Hotsheet
             </Button>
-          </div>
+          </SectionCard>
         )}
       </div>
     </div>

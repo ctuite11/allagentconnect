@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { buildDisplayAddress } from "@/lib/utils";
+import { SectionCard } from "@/components/ui/section-card";
 
 interface Listing {
   id: string;
@@ -324,7 +325,7 @@ const ListingResultsTable = ({
   return (
     <div className="space-y-3">
       {/* Sticky Action Bar */}
-      <div className="sticky top-16 z-20 bg-background border border-border rounded-lg p-3 shadow-sm">
+      <SectionCard className="sticky top-16 z-20 p-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
@@ -402,7 +403,7 @@ const ListingResultsTable = ({
             </Select>
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Results Table */}
       <div className="overflow-auto bg-background rounded-lg border border-border">

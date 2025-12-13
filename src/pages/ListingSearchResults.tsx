@@ -11,6 +11,7 @@ import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { SectionCard } from "@/components/ui/section-card";
 
 
 const ListingSearchResults = () => {
@@ -289,63 +290,61 @@ const ListingSearchResults = () => {
       <main className="flex-1 pt-20">
         <div className="max-w-[1400px] mx-auto px-6">
           {/* Page Header */}
-          <div className="bg-background border border-border rounded-lg shadow-sm mb-4">
-            <div className="px-4 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBackToSearch}
-                    className="h-8 gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to Search
-                  </Button>
-                  <div className="h-5 w-px bg-border" />
-                  <div>
-                    <h1 className="text-lg font-semibold text-foreground">Search Results</h1>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground bg-muted px-2 py-0.5 rounded">
-                      {loading ? "..." : listings.length}
-                    </span>
-                    {" "}listings found
-                  </span>
-                  <div className="h-5 w-px bg-border" />
-                  <ToggleGroup 
-                    type="single" 
-                    value={viewMode} 
-                    onValueChange={(value) => value && setViewMode(value as "list" | "grid")}
-                    className="bg-muted rounded-md p-0.5"
-                  >
-                    <ToggleGroupItem 
-                      value="list" 
-                      aria-label="List view"
-                      className="h-7 w-7 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm"
-                    >
-                      <List className="h-4 w-4" />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem 
-                      value="grid" 
-                      aria-label="Grid view"
-                      className="h-7 w-7 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm"
-                    >
-                      <LayoutGrid className="h-4 w-4" />
-                    </ToggleGroupItem>
-                  </ToggleGroup>
+          <SectionCard className="mb-4 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBackToSearch}
+                  className="h-8 gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Search
+                </Button>
+                <div className="h-5 w-px bg-border" />
+                <div>
+                  <h1 className="text-lg font-semibold text-foreground">Search Results</h1>
                 </div>
               </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground bg-muted px-2 py-0.5 rounded">
+                    {loading ? "..." : listings.length}
+                  </span>
+                  {" "}listings found
+                </span>
+                <div className="h-5 w-px bg-border" />
+                <ToggleGroup 
+                  type="single" 
+                  value={viewMode} 
+                  onValueChange={(value) => value && setViewMode(value as "list" | "grid")}
+                  className="bg-muted rounded-md p-0.5"
+                >
+                  <ToggleGroupItem 
+                    value="list" 
+                    aria-label="List view"
+                    className="h-7 w-7 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                  >
+                    <List className="h-4 w-4" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem 
+                    value="grid" 
+                    aria-label="Grid view"
+                    className="h-7 w-7 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
             </div>
-          </div>
+          </SectionCard>
 
           {/* Sticky Bulk Action Bar */}
           {selectedListings.size > 0 && (
-            <div className="sticky top-16 z-30 bg-primary text-primary-foreground rounded-lg shadow-lg mb-4 px-4 py-3">
+            <SectionCard className="sticky top-16 z-30 mb-4 p-3 bg-primary border-l-primary-foreground">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-primary-foreground">
                   <CheckSquare className="h-5 w-5" />
                   <span className="font-semibold">{selectedListings.size} Selected</span>
                 </div>
@@ -386,7 +385,7 @@ const ListingSearchResults = () => {
                   </Button>
                 </div>
               </div>
-            </div>
+            </SectionCard>
           )}
 
           {/* Results */}
@@ -405,8 +404,8 @@ const ListingSearchResults = () => {
           ) : (
             <>
               {/* Grid View Action Buttons */}
-              <div className="bg-background border border-border rounded-lg shadow-sm mb-4">
-                <div className="px-4 py-2 flex items-center gap-2 flex-wrap">
+              <SectionCard className="mb-4 p-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
@@ -445,7 +444,7 @@ const ListingSearchResults = () => {
                     Save as Hot Sheet
                   </Button>
                 </div>
-              </div>
+              </SectionCard>
 
               <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {loading ? (
