@@ -200,8 +200,7 @@ export function ShareListingsDialog({
             <Button
               type="button"
               variant="outline"
-              className="w-full rounded-2xl hover:bg-muted"
-              style={{ borderColor: BLUE, color: BLUE }}
+              className="w-full rounded-2xl border-primary text-primary hover:bg-muted hover:text-primary hover:border-primary"
               onClick={() => setManualMode(!manualMode)}
             >
               <PencilLine className="mr-2 h-4 w-4" />
@@ -318,8 +317,7 @@ export function ShareListingsDialog({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-full hover:bg-muted"
-                  style={{ borderColor: BLUE, color: BLUE }}
+                  className="rounded-full border-primary text-primary hover:bg-muted hover:text-primary hover:border-primary"
                   onClick={() => setMessage(message ? `${message}\n${t}` : t)}
                 >
                   {t}
