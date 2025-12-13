@@ -35,6 +35,11 @@ interface Listing {
   photos?: any;
   neighborhood?: string;
   open_houses?: any[];
+  year_built?: number;
+  lot_size?: number;
+  garage_spaces?: number;
+  total_parking_spaces?: number;
+  property_styles?: any;
 }
 
 interface ListingResultsTableProps {
@@ -137,6 +142,36 @@ const getOpenHouseInfo = (listing: Listing) => {
   );
   
   return { hasBrokerOpen, hasPublicOpen };
+};
+
+// Get property style display
+const getPropertyStyle = (listing: Listing) => {
+  if (listing.property_styles) {
+    if (Array.isArray(listing.property_styles) && listing.property_styles.length > 0) {
+      return listing.property_styles[0];
+    }
+    if (typeof listing.property_styles === 'string') {
+      return listing.property_styles;
+    }
+  }
+  return listing.property_type || null;
+};
+
+// Format lot size
+const formatLotSize = (lotSize?: number) => {
+  if (!lotSize) return null;
+  if (lotSize >= 43560) {
+    return `${(lotSize / 43560).toFixed(2)} acres`;
+  }
+  return `${lotSize.toLocaleString()} sf lot`;
+};
+
+// Get photo count
+const getPhotoCount = (listing: Listing) => {
+  if (listing.photos && Array.isArray(listing.photos)) {
+    return listing.photos.length;
+  }
+  return 0;
 };
 
 const ListingResultsTable = ({
@@ -430,7 +465,7 @@ const ListingResultsTable = ({
                 )}
               </div>
             </TableHead>
-            <TableHead className="w-28 text-xs font-semibold text-slate-600">Photo</TableHead>
+            <TableHead className="w-44 text-xs font-semibold text-slate-600">Photo</TableHead>
             <SortableHeader column="address">Address</SortableHeader>
             <SortableHeader column="price">Price</SortableHeader>
             <TableHead className="text-xs font-semibold text-slate-600 text-right">$/SqFt</TableHead>
@@ -473,9 +508,9 @@ const ListingResultsTable = ({
                   </div>
                 </TableCell>
 
-                {/* Thumbnail - 3x larger */}
-                <TableCell className="py-4 align-top">
-                  <div className="w-24 h-20 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 shadow-sm">
+                {/* Thumbnail - 2x larger with photo count */}
+                <TableCell className="py-5 align-top">
+                  <div className="relative w-40 h-28 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 shadow-sm">
                     {thumbnail ? (
                       <img 
                         src={thumbnail} 
@@ -484,17 +519,23 @@ const ListingResultsTable = ({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-slate-400">
-                        <Home className="w-8 h-8 text-slate-300" />
+                        <Home className="w-10 h-10 text-slate-300" />
+                      </div>
+                    )}
+                    {getPhotoCount(listing) > 0 && (
+                      <div className="absolute bottom-1.5 left-1.5 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                        {getPhotoCount(listing)} photos
                       </div>
                     )}
                   </div>
                 </TableCell>
 
-                {/* Address with bottom info bar */}
-                <TableCell className="py-4">
+                {/* Address with property details and bottom info bar */}
+                <TableCell className="py-5">
                   <div className="space-y-2">
+                    {/* Address */}
                     <div>
-                      <div className="text-sm font-semibold text-slate-900 max-w-[240px] truncate">
+                      <div className="text-sm font-semibold text-slate-900 max-w-[280px] truncate">
                         {formatAddress(listing)}
                       </div>
                       <div className="text-xs text-slate-500 mt-0.5">
@@ -504,7 +545,26 @@ const ListingResultsTable = ({
                         )}
                       </div>
                     </div>
-                    {/* Bottom info bar */}
+                    
+                    {/* Property Details Row */}
+                    <div className="flex items-center gap-3 text-xs text-slate-500">
+                      {getPropertyStyle(listing) && (
+                        <span className="font-medium text-slate-600">{getPropertyStyle(listing)}</span>
+                      )}
+                      {listing.year_built && (
+                        <span>Built {listing.year_built}</span>
+                      )}
+                      {formatLotSize(listing.lot_size) && (
+                        <span>{formatLotSize(listing.lot_size)}</span>
+                      )}
+                      {(listing.garage_spaces || listing.total_parking_spaces) && (
+                        <span>
+                          {listing.garage_spaces ? `${listing.garage_spaces} Garage` : `${listing.total_parking_spaces} Parking`}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Bottom info bar - Open House icons and Listing # */}
                     <div className="flex items-center gap-3 text-xs">
                       {openHouseInfo?.hasPublicOpen && (
                         <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
@@ -526,51 +586,51 @@ const ListingResultsTable = ({
                 </TableCell>
 
                 {/* Price */}
-                <TableCell className="py-4 align-top">
+                <TableCell className="py-5 align-top">
                   <span className="text-base font-bold text-slate-900">
                     {formatPrice(listing.price)}
                   </span>
                 </TableCell>
 
                 {/* $/SqFt */}
-                <TableCell className="py-4 align-top text-right">
+                <TableCell className="py-5 align-top text-right">
                   <span className="text-sm text-slate-600">
                     {pricePerSqFt ? `$${pricePerSqFt.toLocaleString()}` : "-"}
                   </span>
                 </TableCell>
 
                 {/* Beds */}
-                <TableCell className="text-sm text-center text-slate-700 py-4 align-top">
+                <TableCell className="text-sm text-center text-slate-700 py-5 align-top">
                   {listing.bedrooms || "-"}
                 </TableCell>
 
                 {/* Baths */}
-                <TableCell className="text-sm text-center text-slate-700 py-4 align-top">
+                <TableCell className="text-sm text-center text-slate-700 py-5 align-top">
                   {listing.bathrooms || "-"}
                 </TableCell>
 
                 {/* SqFt */}
-                <TableCell className="text-sm text-right text-slate-700 py-4 align-top">
+                <TableCell className="text-sm text-right text-slate-700 py-5 align-top">
                   {listing.square_feet?.toLocaleString() || "-"}
                 </TableCell>
 
                 {/* Status - Large and prominent */}
-                <TableCell className="py-4 align-top">
+                <TableCell className="py-5 align-top">
                   {getStatusBadge(listing.status)}
                 </TableCell>
 
                 {/* DOM */}
-                <TableCell className="text-sm text-center text-slate-600 py-4 align-top">
+                <TableCell className="text-sm text-center text-slate-600 py-5 align-top">
                   {getDaysOnMarket(listing.list_date)}
                 </TableCell>
 
                 {/* Agent */}
-                <TableCell className="text-sm text-slate-600 truncate max-w-[140px] py-4 align-top">
+                <TableCell className="text-sm text-slate-600 truncate max-w-[140px] py-5 align-top">
                   {listing.agent_name || "-"}
                 </TableCell>
 
                 {/* Quick Actions */}
-                <TableCell className="py-4 align-top" onClick={e => e.stopPropagation()}>
+                <TableCell className="py-5 align-top" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
