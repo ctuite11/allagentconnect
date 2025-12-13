@@ -465,17 +465,17 @@ const ListingResultsTable = ({
                 )}
               </div>
             </TableHead>
-            <TableHead className="w-40 text-xs font-semibold text-slate-600">Photo</TableHead>
-            <SortableHeader column="address">Address</SortableHeader>
-            <SortableHeader column="price">Price</SortableHeader>
-            <TableHead className="text-xs font-semibold text-slate-600 text-right pr-2">$/SqFt</TableHead>
-            <SortableHeader column="bedrooms" className="text-center px-2">Beds</SortableHeader>
-            <SortableHeader column="bathrooms" className="text-center px-2">Baths</SortableHeader>
-            <SortableHeader column="square_feet" className="text-right px-2">SqFt</SortableHeader>
-            <TableHead className="text-xs font-semibold text-slate-600 px-2">Status</TableHead>
-            <SortableHeader column="list_date" className="text-center px-2">DOM</SortableHeader>
-            <TableHead className="text-xs font-semibold text-slate-600 px-2">Agent</TableHead>
-            <TableHead className="w-48"></TableHead>
+            <TableHead className="w-36 text-xs font-semibold text-slate-600 pl-2">Photo</TableHead>
+            <SortableHeader column="address" className="min-w-[200px]">Address</SortableHeader>
+            <SortableHeader column="price" className="pl-2">Price</SortableHeader>
+            <TableHead className="text-xs font-semibold text-slate-600 text-right px-1">$/SqFt</TableHead>
+            <SortableHeader column="bedrooms" className="text-center px-1">Beds</SortableHeader>
+            <SortableHeader column="bathrooms" className="text-center px-1">Baths</SortableHeader>
+            <SortableHeader column="square_feet" className="text-right px-1">SqFt</SortableHeader>
+            <TableHead className="text-xs font-semibold text-slate-600 px-1">Status</TableHead>
+            <SortableHeader column="list_date" className="text-center px-1">DOM</SortableHeader>
+            <TableHead className="text-xs font-semibold text-slate-600 px-1">Agent</TableHead>
+            <TableHead className="w-44"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -586,9 +586,17 @@ const ListingResultsTable = ({
                           Broker Open
                         </span>
                       )}
-                      <span className="text-xs text-slate-500 font-mono">
+                      <a
+                        href={`/property/${listing.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          navigate(`/property/${listing.id}`);
+                        }}
+                        className="text-xs text-primary font-mono hover:underline"
+                      >
                         #{listing.listing_number}
-                      </span>
+                      </a>
                     </div>
                   </div>
                 </TableCell>
