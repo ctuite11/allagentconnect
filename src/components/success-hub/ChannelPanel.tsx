@@ -49,7 +49,7 @@ export const ChannelPanel = ({
         {/* Icon */}
         <div className={cn(
           "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
-          "bg-primary/10"
+          "bg-muted border border-border"
         )}>
           <div className="text-primary">{icon}</div>
         </div>
@@ -71,8 +71,8 @@ export const ChannelPanel = ({
               onClick={onSend}
               className={cn(
                 "flex-1 h-9 text-xs font-medium border-2",
-                "border-neon-green/50 text-foreground",
-                "hover:border-neon-green hover:bg-neon-green/10",
+                "border-border text-foreground",
+                "hover:border-border hover:bg-muted",
                 "transition-all duration-200"
               )}
             >

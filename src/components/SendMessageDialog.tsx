@@ -431,11 +431,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             {!loadingCount && recipientCount !== null && (
               <div className="bg-secondary/50 border border-border rounded-xl p-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-lg bg-muted border border-border flex items-center justify-center">
                     <Users className="h-4 w-4 text-primary" />
                   </div>
                   <span className="text-sm">
-                    This will be sent to <strong className="text-primary font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
+                    This will be sent to <strong className="text-foreground font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
                   </span>
                 </div>
               </div>
@@ -476,7 +476,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             {/* Recipient Count */}
             <div className="bg-secondary/50 border border-border rounded-xl p-4">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-lg bg-muted border border-border flex items-center justify-center">
                   <Users className="h-4 w-4 text-primary" />
                 </div>
                 {loadingCount ? (
@@ -485,7 +485,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   </span>
                 ) : recipientCount !== null ? (
                   <span className="text-sm">
-                    Sending to <strong className="text-primary font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
+                    Sending to <strong className="text-foreground font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
                   </span>
                 ) : (
                   <span className="text-sm text-muted-foreground">

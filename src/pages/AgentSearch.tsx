@@ -165,7 +165,7 @@ const AgentSearch = () => {
         <section className="bg-card border-b border-border py-6">
           <div className="container mx-auto px-4">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="h-12 w-12 rounded-lg bg-muted border border-border flex items-center justify-center">
                 <Users className="h-6 w-6 text-primary" />
               </div>
               <div>

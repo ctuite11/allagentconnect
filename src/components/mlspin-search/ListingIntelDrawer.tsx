@@ -225,7 +225,7 @@ const ListingIntelDrawer = ({ listing, open, onOpenChange }: ListingIntelDrawerP
                             className="h-10 w-10 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <div className="h-10 w-10 rounded-full bg-muted border border-border flex items-center justify-center">
                             <User className="h-5 w-5 text-primary" />
                           </div>
                         )}

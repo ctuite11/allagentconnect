@@ -1074,7 +1074,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                               coverageAreas.map((area) => (
                               <div 
                                   key={area.id}
-                                  className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 rounded-full group"
+                                  className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-muted border border-border rounded-full group"
                                 >
                                   <MapPin className="h-4 w-4 text-primary" />
                                   <span className="font-medium text-sm">{area.zip_code}</span>

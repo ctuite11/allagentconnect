@@ -420,7 +420,7 @@ const ListingResultsTable = ({
                 key={listing.id}
                 className={`cursor-pointer transition-all group hover:bg-muted hover:shadow-sm ${
                   isOffMarket ? "bg-destructive/5" : ""
-                } ${selectedRows.has(listing.id) ? "bg-primary/5" : ""}`}
+                } ${selectedRows.has(listing.id) ? "bg-muted" : ""}`}
                 onClick={() => onRowClick(listing)}
               >
                 {/* Checkbox */}

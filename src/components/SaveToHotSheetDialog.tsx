@@ -459,7 +459,7 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
                 Add new contact
               </Button>
             ) : (
-              <div className="space-y-3 p-3 border border-border rounded-lg bg-muted/30">
+              <div className="space-y-3 p-3 border border-border rounded-lg bg-muted">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">New Contact</span>
                   <Button
@@ -551,7 +551,7 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
                   <Badge 
                     key={index} 
                     variant="outline" 
-                    className="text-xs bg-muted/50"
+                    className="text-xs bg-muted"
                   >
                     {item}
                   </Badge>

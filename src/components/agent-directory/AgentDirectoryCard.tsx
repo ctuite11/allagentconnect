@@ -155,10 +155,10 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage, agentIndex = 999 }:
         <div className="flex justify-center mb-4 relative">
           <div className="relative">
             {/* Halo ring */}
-            <div className="absolute inset-0 rounded-full bg-primary/15 blur-sm scale-110" />
-            <Avatar className="h-24 w-24 border-2 border-border shadow-sm relative z-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+            <div className="absolute inset-0 rounded-full bg-muted blur-sm scale-110" />
+            <Avatar className="h-24 w-24 border-2 border-border shadow-sm relative z-10 ring-2 ring-border ring-offset-2 ring-offset-background">
               <AvatarImage src={agent.headshot_url} alt={fullName} />
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-2xl">
+              <AvatarFallback className="bg-muted text-foreground font-semibold text-2xl">
                 {initials}
               </AvatarFallback>
             </Avatar>

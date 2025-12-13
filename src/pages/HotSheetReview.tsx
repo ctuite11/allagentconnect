@@ -370,7 +370,7 @@ if (agentIds.length > 0) {
                   {getCriteriaDisplay().map((criterion, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                      className="px-3 py-1 bg-muted border border-border text-foreground rounded-full text-sm"
                     >
                       {criterion}
                     </span>

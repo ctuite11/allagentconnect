@@ -207,7 +207,7 @@ const MLSPINResultsTable = ({
               <TableCell>{getStatusBadge(listing.status)}</TableCell>
               <TableCell>
                 {listing.buyer_match_count && listing.buyer_match_count > 0 ? (
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary">
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-muted text-foreground">
                     {listing.buyer_match_count} match{listing.buyer_match_count > 1 ? "es" : ""}
                   </Badge>
                 ) : (

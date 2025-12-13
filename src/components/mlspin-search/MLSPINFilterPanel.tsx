@@ -457,7 +457,7 @@ const MLSPINFilterPanel = ({
                 {filters.selectedTowns.map(town => (
                   <span
                     key={town}
-                    className="inline-flex items-center px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded cursor-pointer hover:bg-primary/20"
+                    className="inline-flex items-center px-1.5 py-0.5 text-xs bg-muted border border-border text-foreground rounded cursor-pointer hover:bg-muted/80"
                     onClick={() => handleTownSelect(town)}
                   >
                     {town} ×
