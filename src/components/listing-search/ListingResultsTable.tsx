@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
+import { buildDisplayAddress } from "@/lib/utils";
 
 interface Listing {
   id: string;
@@ -58,14 +59,6 @@ const formatPrice = (price: number) => {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(price);
-};
-
-const formatAddress = (listing: Listing) => {
-  let addr = listing.address;
-  if (listing.unit_number) {
-    addr += ` #${listing.unit_number}`;
-  }
-  return addr;
 };
 
 const getDaysOnMarket = (listDate?: string) => {
@@ -533,25 +526,24 @@ const ListingResultsTable = ({
                 {/* Address with property details and bottom info bar */}
                 <TableCell className="py-4">
                   <div className="space-y-1.5">
-                    {/* Address - clickable to Google Maps */}
+                    {/* Address - single line using shared helper to avoid duplicate city/state/zip */}
                     <div>
                       <a
                         href={`https://www.google.com/maps/search/${encodeURIComponent(
-                          `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`
+                          buildDisplayAddress(listing as any)
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
                         className="text-sm font-semibold text-slate-900 hover:text-primary hover:underline max-w-[260px] truncate block"
                       >
-                        {formatAddress(listing)}
+                        {buildDisplayAddress(listing as any)}
                       </a>
-                      <div className="text-xs text-slate-700 mt-0.5">
-                        {listing.city}, {listing.state} {listing.zip_code}
-                        {listing.neighborhood && (
-                          <span className="ml-1 text-slate-500">• {listing.neighborhood}</span>
-                        )}
-                      </div>
+                      {listing.neighborhood && (
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          {listing.neighborhood}
+                        </div>
+                      )}
                     </div>
                     
                     {/* Property Details Row */}
