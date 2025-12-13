@@ -933,23 +933,14 @@ const ListingSearchFilters = ({
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onFiltersChange(initialFilters)}
-              className="h-8 text-xs"
-            >
-              Clear All
-            </Button>
-            <Button 
-              onClick={onSearch}
-              className="h-8 px-4 bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
-            >
-              <Search className="h-4 w-4" />
-              Search
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onFiltersChange(initialFilters)}
+            className="h-8 text-xs"
+          >
+            Clear All
+          </Button>
         </div>
       </div>
   );
