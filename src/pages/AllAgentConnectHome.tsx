@@ -123,8 +123,10 @@ const AllAgentConnectHome = () => {
         <div className="max-w-[1280px] mx-auto px-6 py-12">
           {/* Page Header */}
           <div className="mb-10">
-            <h1 className="text-2xl font-semibold text-heading-page tracking-tight">
-              Success Hub
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+              <span className="text-[hsl(220,10%,35%)]">All Agent</span>
+              {" "}
+              <span className="text-[hsl(220,10%,50%)]">Connect</span>
             </h1>
           </div>
 
