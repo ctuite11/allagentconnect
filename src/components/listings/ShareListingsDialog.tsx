@@ -166,6 +166,20 @@ export function ShareListingsDialog({
             <DialogDescription className="text-muted-foreground">
               Send the selected listing{selectedCount === 1 ? "" : "s"} to a contact via email.
             </DialogDescription>
+            {/* Show added recipients below title */}
+            {(recipients.length > 0 || recipientName.trim()) && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm">
+                <span className="text-muted-foreground">To:</span>
+                {recipients.map((r, idx) => (
+                  <span key={idx} className="font-medium text-foreground">
+                    {r.name}{idx < recipients.length - 1 || recipientName.trim() ? "," : ""}
+                  </span>
+                ))}
+                {recipientName.trim() && (
+                  <span className="font-medium text-foreground">{recipientName.trim()}</span>
+                )}
+              </div>
+            )}
           </DialogHeader>
           {/* Thin accent underline */}
           <div className="mt-4 h-[2px] w-16 rounded-full bg-primary" />
