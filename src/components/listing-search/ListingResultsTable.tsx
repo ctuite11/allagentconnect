@@ -521,7 +521,6 @@ const ListingResultsTable = ({
             <SortableHeader column="bathrooms" className="text-center">Baths</SortableHeader>
             <SortableHeader column="square_feet" className="text-right">SqFt</SortableHeader>
             <SortableHeader column="list_date" className="text-center">DOM</SortableHeader>
-            <TableHead className="text-xs font-semibold text-muted-foreground">Facts</TableHead>
             <TableHead className="text-xs font-semibold text-muted-foreground min-w-[180px]">Agent</TableHead>
             <TableHead className="w-24"></TableHead>
           </TableRow>
@@ -616,30 +615,13 @@ const ListingResultsTable = ({
                             </div>
                           )}
 
-                          {/* Chips Row - horizontal, no wrap */}
-                          <div className="mt-2 flex items-center gap-2 flex-nowrap overflow-hidden [mask-image:linear-gradient(to_right,black_85%,transparent)]">
-                            {getPropertyStyle(listing) && (
-                              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] text-muted-foreground border border-neutral-200/70 whitespace-nowrap">
-                                {getPropertyStyle(listing)}
-                              </span>
-                            )}
-                            {listing.year_built && (
-                              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] text-muted-foreground border border-neutral-200/70 whitespace-nowrap">
-                                Built {listing.year_built}
-                              </span>
-                            )}
-                            {formatLotSize(listing.lot_size) && (
-                              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] text-muted-foreground border border-neutral-200/70 whitespace-nowrap">
-                                {formatLotSize(listing.lot_size)}
-                              </span>
-                            )}
-                            <button
-                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`); }}
-                              className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] font-mono text-primary border border-neutral-200/70 whitespace-nowrap hover:underline"
-                            >
-                              #{listing.listing_number}
-                            </button>
-                          </div>
+                          {/* Listing Number link */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`); }}
+                            className="mt-1 text-[11px] font-mono text-primary hover:underline"
+                          >
+                            #{listing.listing_number}
+                          </button>
                         </>
                       );
                     })()}
@@ -668,17 +650,6 @@ const ListingResultsTable = ({
                   {/* DOM */}
                   <TableCell className="px-3 py-3 align-top text-sm">
                     {getDaysOnMarket(listing.list_date)}
-                  </TableCell>
-
-                  {/* Facts (Taxes/HOA/Parking) */}
-                  <TableCell className="px-3 py-3 align-top text-xs whitespace-nowrap">
-                    <div className="text-muted-foreground">
-                      {[
-                        listing.annual_property_tax ? `Tax $${listing.annual_property_tax.toLocaleString()}` : "",
-                        listing.hoa_monthly ? `HOA $${listing.hoa_monthly}/mo` : "",
-                        listing.total_parking_spaces ? `Pk ${listing.total_parking_spaces}` : ""
-                      ].filter(Boolean).join(" • ") || ""}
-                    </div>
                   </TableCell>
 
                   {/* Agent (stacked: name, office, phone, contact link) */}
@@ -775,7 +746,8 @@ const ListingResultsTable = ({
                             </div>
                           </div>
 
-                          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {/* Property Details (moved from main table) */}
+                          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                             <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
                               <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Beds</div>
                               <div className="mt-1 text-sm font-semibold">{listing.bedrooms || "—"}</div>
@@ -794,6 +766,36 @@ const ListingResultsTable = ({
                               <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Status</div>
                               <div className="mt-1">{getStatusBadge(listing.status)}</div>
                             </div>
+                            {getPropertyStyle(listing) && (
+                              <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
+                                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Type</div>
+                                <div className="mt-1 text-sm font-semibold">{getPropertyStyle(listing)}</div>
+                              </div>
+                            )}
+                            {listing.year_built && (
+                              <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
+                                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Year Built</div>
+                                <div className="mt-1 text-sm font-semibold">{listing.year_built}</div>
+                              </div>
+                            )}
+                            {listing.lot_size && (
+                              <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
+                                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Lot Size</div>
+                                <div className="mt-1 text-sm font-semibold">{formatLotSize(listing.lot_size)}</div>
+                              </div>
+                            )}
+                            {listing.total_parking_spaces && (
+                              <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
+                                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Parking</div>
+                                <div className="mt-1 text-sm font-semibold">{listing.total_parking_spaces}</div>
+                              </div>
+                            )}
+                            {listing.annual_property_tax && (
+                              <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
+                                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Annual Tax</div>
+                                <div className="mt-1 text-sm font-semibold">${listing.annual_property_tax.toLocaleString()}</div>
+                              </div>
+                            )}
                           </div>
 
                           {/* Open houses */}
