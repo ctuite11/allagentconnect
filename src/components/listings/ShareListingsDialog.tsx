@@ -280,21 +280,12 @@ export function ShareListingsDialog({
                 <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={senderPhone}
-                  onChange={(e) => {
-                    // Strip to digits only, allow partial input
-                    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
-                    // Format as user types
-                    let formatted = "";
-                    if (digits.length > 0) {
-                      formatted = "(" + digits.slice(0, 3);
-                      if (digits.length >= 3) {
-                        formatted += ") " + digits.slice(3, 6);
-                        if (digits.length >= 6) {
-                          formatted += "-" + digits.slice(6);
-                        }
-                      }
+                  onChange={(e) => setSenderPhone(e.target.value)}
+                  onBlur={() => {
+                    const formatted = formatPhoneNumber(senderPhone);
+                    if (formatted && formatted !== "—") {
+                      setSenderPhone(formatted);
                     }
-                    setSenderPhone(formatted);
                   }}
                   placeholder="(617) 555-0123"
                   className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-primary focus:ring-primary/20"
