@@ -1,4 +1,5 @@
 import { useState, Fragment } from "react";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -660,9 +661,9 @@ const ListingResultsTable = ({
                         {listing.list_office}
                       </div>
                     )}
-                    {listing.list_agent_phone && (
+                    {listing.list_agent_phone && formatPhoneNumber(listing.list_agent_phone) !== "—" && (
                       <div className="mt-0.5 text-xs text-muted-foreground">
-                        {listing.list_agent_phone}
+                        {formatPhoneNumber(listing.list_agent_phone)}
                       </div>
                     )}
                     <button
