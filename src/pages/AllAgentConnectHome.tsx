@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, FileStack, MessageSquare, Users, Shield, ArrowRight } from "lucide-react";
+import { WelcomeInterstitial } from "@/components/WelcomeInterstitial";
 
 const AllAgentConnectHome = () => {
   const navigate = useNavigate();
+  const [showInterstitial, setShowInterstitial] = useState(false);
 
   return (
     <>
@@ -175,6 +178,12 @@ const AllAgentConnectHome = () => {
               </div>
               <div className="flex items-center gap-6 text-sm text-muted-foreground">
                 <button 
+                  onClick={() => setShowInterstitial(true)}
+                  className="hover:text-foreground transition-colors"
+                >
+                  Preview Interstitial
+                </button>
+                <button 
                   onClick={() => navigate("/auth")}
                   className="hover:text-foreground transition-colors"
                 >
@@ -190,6 +199,10 @@ const AllAgentConnectHome = () => {
             </div>
           </div>
         </footer>
+
+        {showInterstitial && (
+          <WelcomeInterstitial onComplete={() => setShowInterstitial(false)} />
+        )}
       </div>
     </>
   );
