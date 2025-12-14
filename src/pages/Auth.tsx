@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormattedInput } from "@/components/ui/formatted-input";
+import { WelcomeInterstitial } from "@/components/WelcomeInterstitial";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import { z } from "zod";
+
+const INTERSTITIAL_SHOWN_KEY = "aac_interstitial_shown";
 
 const signUpSchema = z.object({
   email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
@@ -35,6 +38,7 @@ const Auth = () => {
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showInterstitial, setShowInterstitial] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -44,6 +48,21 @@ const Auth = () => {
     phone: "",
     company: "",
   });
+
+  // Check if interstitial should show when switching to sign-up
+  useEffect(() => {
+    if (!isLogin && !isForgotPassword && !isResettingPassword) {
+      const hasSeenInterstitial = localStorage.getItem(INTERSTITIAL_SHOWN_KEY);
+      if (!hasSeenInterstitial) {
+        setShowInterstitial(true);
+      }
+    }
+  }, [isLogin, isForgotPassword, isResettingPassword]);
+
+  const handleInterstitialComplete = () => {
+    localStorage.setItem(INTERSTITIAL_SHOWN_KEY, "true");
+    setShowInterstitial(false);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -288,6 +307,10 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  if (showInterstitial) {
+    return <WelcomeInterstitial onComplete={handleInterstitialComplete} />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
