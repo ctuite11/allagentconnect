@@ -145,9 +145,9 @@ const ContactAgentDialog = ({
       )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Contact the Listing Agent</DialogTitle>
+          <DialogTitle>Listing Inquiry – {listingAddress}</DialogTitle>
           <DialogDescription>
-            Send a message about {listingAddress}
+            Send a message to the listing agent
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">

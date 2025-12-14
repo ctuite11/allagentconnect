@@ -823,16 +823,20 @@ const ListingResultsTable = ({
       </div>
 
       {/* Contact Agent Dialog (controlled) */}
-      {contactListing && (
-        <ContactAgentDialog
-          listingId={contactListing.id}
-          agentId={contactListing.agent_id}
-          listingAddress={`${contactListing.address}, ${contactListing.city} ${contactListing.state}`}
-          open={!!contactListing}
-          onOpenChange={(open) => !open && setContactListing(null)}
-          hideTrigger
-        />
-      )}
+      {contactListing && (() => {
+        const loc = getLocation(contactListing);
+        const fullAddress = `${loc.street}${contactListing.unit_number ? ` #${contactListing.unit_number}` : ""}, ${loc.city} ${loc.state}`;
+        return (
+          <ContactAgentDialog
+            listingId={contactListing.id}
+            agentId={contactListing.agent_id}
+            listingAddress={fullAddress}
+            open={!!contactListing}
+            onOpenChange={(open) => !open && setContactListing(null)}
+            hideTrigger
+          />
+        );
+      })()}
     </div>
   );
 };
