@@ -520,7 +520,7 @@ const ListingResultsTable = ({
             <SortableHeader column="price">Price</SortableHeader>
             <SortableHeader column="bedrooms" className="text-center">Beds</SortableHeader>
             <SortableHeader column="bathrooms" className="text-center">Baths</SortableHeader>
-            <SortableHeader column="square_feet" className="text-right">SqFt</SortableHeader>
+            <SortableHeader column="square_feet" className="text-center">SqFt</SortableHeader>
             <SortableHeader column="list_date" className="text-center">DOM</SortableHeader>
             <TableHead className="text-xs font-semibold text-muted-foreground min-w-[180px]">Agent</TableHead>
             <TableHead className="w-24"></TableHead>
@@ -637,19 +637,19 @@ const ListingResultsTable = ({
                   </TableCell>
 
                   {/* Beds */}
-                  <TableCell className="px-3 py-3 align-top text-sm">{listing.bedrooms || "-"}</TableCell>
+                  <TableCell className="px-3 py-3 align-top text-sm text-center">{listing.bedrooms || "-"}</TableCell>
 
                   {/* Baths */}
-                  <TableCell className="px-3 py-3 align-top text-sm">{listing.bathrooms || "-"}</TableCell>
+                  <TableCell className="px-3 py-3 align-top text-sm text-center">{listing.bathrooms || "-"}</TableCell>
 
                   {/* SqFt */}
-                  <TableCell className="px-3 py-3 align-top text-sm">
+                  <TableCell className="px-3 py-3 align-top text-sm text-center">
                     {listing.square_feet?.toLocaleString() || "-"}
                   </TableCell>
 
 
                   {/* DOM */}
-                  <TableCell className="px-3 py-3 align-top text-sm">
+                  <TableCell className="px-3 py-3 align-top text-sm text-center">
                     {getDaysOnMarket(listing.list_date)}
                   </TableCell>
 
