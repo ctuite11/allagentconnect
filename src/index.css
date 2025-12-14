@@ -160,19 +160,21 @@ All colors MUST be HSL.
 
   /* AAC Card System */
   .aac-card {
-    @apply bg-background border border-neutral-200 transition-all duration-200 ease-out will-change-transform;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.12);
+    @apply border border-neutral-200 will-change-transform;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(255,255,255,1));
+    box-shadow: 0 2px 3px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.12);
+    transition: all 150ms cubic-bezier(.2,.8,.2,1);
   }
 
   .aac-card:hover {
     @apply border-neutral-300;
     transform: translateY(-1px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.10), 0 18px 40px rgba(0,0,0,0.16);
+    box-shadow: 0 6px 10px rgba(0,0,0,0.10), 0 20px 44px rgba(0,0,0,0.16);
   }
 
   .aac-card:active {
     transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.12);
+    box-shadow: 0 2px 3px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.12);
   }
 
   /* Tier sizing */
