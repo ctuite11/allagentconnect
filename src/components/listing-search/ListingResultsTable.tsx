@@ -1,4 +1,4 @@
-import { useState, Fragment } from "react";
+import { useState, Fragment, useMemo } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,9 @@ import { FilterState } from "@/components/listing-search/ListingSearchFilters";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { SectionCard } from "@/components/ui/section-card";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
+import SaveSearchDialog from "@/components/SaveSearchDialog";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
+
 
 interface Listing {
   id: string;
@@ -256,10 +258,12 @@ const ListingResultsTable = ({
   const [sortBy, setSortBy] = useState("date_new");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
+  const [saveSearchDialogOpen, setSaveSearchDialogOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [contactListing, setContactListing] = useState<Listing | null>(null);
   const rowRefs = useState(() => new Map<string, HTMLTableRowElement>())[0];
+
 
   const toggleExpand = (id: string) => setExpandedId(prev => (prev === id ? null : id));
 
@@ -327,18 +331,37 @@ const ListingResultsTable = ({
     }
   };
 
-  const handleSaveSearch = () => {
-    // Save current URL to localStorage
-    const searchUrl = window.location.href;
-    const savedSearches = JSON.parse(localStorage.getItem("savedSearches") || "[]");
-    savedSearches.push({
-      url: searchUrl,
-      savedAt: new Date().toISOString(),
-      name: `Search ${savedSearches.length + 1}`
-    });
-    localStorage.setItem("savedSearches", JSON.stringify(savedSearches));
-    toast.success("Search saved successfully");
-  };
+  // Generate search summary for default name
+  const searchSummary = useMemo(() => {
+    const parts: string[] = [];
+    
+    // Towns
+    if (filters?.selectedTowns && filters.selectedTowns.length > 0) {
+      parts.push(filters.selectedTowns.slice(0, 2).join(", ") + (filters.selectedTowns.length > 2 ? ` +${filters.selectedTowns.length - 2}` : ""));
+    } else if (filters?.state) {
+      parts.push(filters.state);
+    }
+    
+    // Beds
+    if (filters?.bedsMin) {
+      parts.push(`${filters.bedsMin}+ Beds`);
+    }
+    
+    // Price
+    if (filters?.priceMin || filters?.priceMax) {
+      const min = filters.priceMin ? `$${Math.round(parseInt(filters.priceMin) / 1000)}k` : "";
+      const max = filters.priceMax ? `$${Math.round(parseInt(filters.priceMax) / 1000)}k` : "";
+      if (min && max) {
+        parts.push(`${min}–${max}`);
+      } else if (min) {
+        parts.push(`${min}+`);
+      } else if (max) {
+        parts.push(`Up to ${max}`);
+      }
+    }
+    
+    return parts.join(" • ") || `Search ${new Date().toLocaleDateString()}`;
+  }, [filters]);
 
   // Build current search criteria for hot sheet
   const buildHotSheetCriteria = () => ({
@@ -352,6 +375,7 @@ const ListingResultsTable = ({
     bathrooms: filters?.bathsMin ? parseFloat(filters.bathsMin) : null,
     statuses: filters?.statuses,
   });
+
 
   const toggleRowSelection = (id: string, e?: React.SyntheticEvent) => {
     e?.stopPropagation?.();
@@ -445,7 +469,7 @@ const ListingResultsTable = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={handleSaveSearch}
+              onClick={() => setSaveSearchDialogOpen(true)}
               className="h-9 px-4 text-sm font-medium"
             >
               <Bookmark className="h-4 w-4 mr-1.5" />
@@ -510,6 +534,14 @@ const ListingResultsTable = ({
           currentSearch={buildHotSheetCriteria()}
           selectedListingIds={Array.from(selectedRows)}
         />
+
+        {/* Save Search Dialog */}
+        <SaveSearchDialog
+          open={saveSearchDialogOpen}
+          onOpenChange={setSaveSearchDialogOpen}
+          searchSummary={searchSummary}
+        />
+
 
         <div className="w-full overflow-x-auto">
         <Table className="min-w-[1350px]">
