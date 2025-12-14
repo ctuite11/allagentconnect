@@ -1,27 +1,19 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   ChevronDown, 
   ChevronUp, 
   X, 
   Search, 
-  Home, 
-  Calendar, 
-  DollarSign, 
-  MapPin, 
-  Tag,
-  Building,
-  FileText
+  MapPin
 } from "lucide-react";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
+import { cn } from "@/lib/utils";
 
 export interface FilterState {
   propertyTypes: string[];
@@ -65,6 +57,7 @@ export interface FilterState {
   rooms: string;
   acres: string;
   pricePerSqFt: string;
+  listDatePreset: string;
 }
 
 // Format number with commas for display
@@ -81,7 +74,7 @@ const parseFormattedNumber = (value: string): string => {
 
 export const initialFilters: FilterState = {
   propertyTypes: [],
-  statuses: ["new", "active", "price_changed", "back_on_market", "extended", "reactivated", "coming_soon", "private"],
+  statuses: ["new", "active", "price_changed", "back_on_market", "coming_soon"],
   bedsMin: "",
   bedsMax: "",
   bathsMin: "",
@@ -121,6 +114,7 @@ export const initialFilters: FilterState = {
   rooms: "",
   acres: "",
   pricePerSqFt: "",
+  listDatePreset: "any",
 };
 
 const PROPERTY_TYPES = [
@@ -129,27 +123,48 @@ const PROPERTY_TYPES = [
   { value: "multi_family", label: "Multi-Family" },
   { value: "land", label: "Land" },
   { value: "commercial", label: "Commercial" },
-  { value: "residential_rental", label: "Residential Rental" },
+  { value: "residential_rental", label: "Rental" },
 ];
 
-const STATUSES = [
-  { value: "new", label: "New" },
+const PRIMARY_STATUSES = [
   { value: "active", label: "Active" },
+  { value: "new", label: "New" },
   { value: "price_changed", label: "Price Changed" },
   { value: "back_on_market", label: "Back on Market" },
+  { value: "coming_soon", label: "Coming Soon" },
+  { value: "under_agreement", label: "Under Agreement" },
+  { value: "sold", label: "Sold" },
+];
+
+const MORE_STATUSES = [
+  { value: "private", label: "Private" },
   { value: "extended", label: "Extended" },
   { value: "reactivated", label: "Reactivated" },
-  { value: "coming_soon", label: "Coming Soon" },
-  { value: "private", label: "Private" },
-  { value: "under_agreement", label: "Under Agreement" },
   { value: "pending", label: "Pending" },
   { value: "contingent", label: "Contingent" },
-  { value: "temporarily_withdrawn", label: "Temporarily Withdrawn" },
+  { value: "temporarily_withdrawn", label: "Temp. Withdrawn" },
   { value: "withdrawn", label: "Withdrawn" },
   { value: "expired", label: "Expired" },
   { value: "canceled", label: "Canceled" },
-  { value: "sold", label: "Sold" },
   { value: "rented", label: "Rented" },
+];
+
+const LIST_DATE_PRESETS = [
+  { value: "any", label: "Any Time" },
+  { value: "today", label: "Today" },
+  { value: "3days", label: "Last 3 Days" },
+  { value: "7days", label: "Last 7 Days" },
+  { value: "14days", label: "Last 14 Days" },
+  { value: "30days", label: "Last 30 Days" },
+  { value: "90days", label: "Last 90 Days" },
+];
+
+const PRICE_CHIPS = [
+  { value: "500000", label: "$500k" },
+  { value: "750000", label: "$750k" },
+  { value: "1000000", label: "$1M" },
+  { value: "1500000", label: "$1.5M" },
+  { value: "2000000", label: "$2M+" },
 ];
 
 interface ListingSearchFiltersProps {
@@ -159,35 +174,90 @@ interface ListingSearchFiltersProps {
   onSearch: () => void;
 }
 
-// Section Header Component - ALL rails use primary blue, icons use semantic colors
-const SectionHeader = ({ 
-  icon: Icon, 
-  title, 
-  isOpen, 
-  onToggle,
-  iconColor = "text-muted-foreground"
+// Toggle Pill Component
+const TogglePill = ({ 
+  label, 
+  active, 
+  onClick 
 }: { 
-  icon: React.ElementType; 
-  title: string; 
-  isOpen: boolean; 
-  onToggle: () => void;
-  iconColor?: string;
+  label: string; 
+  active: boolean; 
+  onClick: () => void;
 }) => (
   <button
-    onClick={onToggle}
-    className="w-full flex items-center justify-between px-3 py-2 bg-card border-l-4 border-l-primary hover:bg-muted/50 transition-colors"
-  >
-    <div className="flex items-center gap-2">
-      <Icon className={`h-4 w-4 ${iconColor}`} />
-      <span className="text-xs font-semibold uppercase tracking-wide text-foreground">{title}</span>
-    </div>
-    {isOpen ? (
-      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-    ) : (
-      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+    onClick={onClick}
+    className={cn(
+      "px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150",
+      active 
+        ? "bg-primary text-primary-foreground border-primary" 
+        : "bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
     )}
+  >
+    {label}
   </button>
 );
+
+// Section Card with subtle styling
+const SectionCard = ({ 
+  title, 
+  children, 
+  rightSlot,
+  className 
+}: { 
+  title: string; 
+  children: React.ReactNode; 
+  rightSlot?: React.ReactNode;
+  className?: string;
+}) => (
+  <div className={cn("bg-card border border-border rounded-lg", className)}>
+    <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
+      {rightSlot}
+    </div>
+    <div className="p-4">
+      {children}
+    </div>
+  </div>
+);
+
+// Collapsible Section
+const CollapsibleSection = ({ 
+  title, 
+  children,
+  defaultOpen = true,
+  rightSlot
+}: { 
+  title: string; 
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+  rightSlot?: React.ReactNode;
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  
+  return (
+    <div className="bg-card border border-border rounded-lg">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/50 transition-colors"
+      >
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
+        <div className="flex items-center gap-2">
+          {rightSlot}
+          {isOpen ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </div>
+      </button>
+      {isOpen && (
+        <div className="px-4 pb-4 border-t border-border pt-3">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ListingSearchFilters = ({
   filters,
@@ -196,21 +266,8 @@ const ListingSearchFilters = ({
   onSearch,
 }: ListingSearchFiltersProps) => {
   const [townSearch, setTownSearch] = useState("");
-  const [addressType, setAddressType] = useState<"street" | "location">("street");
   const [showAreas, setShowAreas] = useState(true);
-  
-  // Collapsible section states
-  const [sectionsOpen, setSectionsOpen] = useState({
-    propertyType: true,
-    status: true,
-    dateTimeframe: true,
-    standardCriteria: true,
-    address: true,
-    towns: true,
-    listingEvents: true,
-    keywords: true,
-    additionalCriteria: false,
-  });
+  const [showMoreStatuses, setShowMoreStatuses] = useState(false);
 
   // Get county name from ID for the hook
   const selectedCountyName = filters.county 
@@ -224,10 +281,6 @@ const ListingSearchFilters = ({
     showAreas,
   });
 
-  const toggleSection = (section: keyof typeof sectionsOpen) => {
-    setSectionsOpen(prev => ({ ...prev, [section]: !prev[section] }));
-  };
-
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     onFiltersChange({ ...filters, [key]: value });
   };
@@ -240,28 +293,12 @@ const ListingSearchFilters = ({
     updateFilter("propertyTypes", updated);
   };
 
-  const toggleAllPropertyTypes = () => {
-    if (filters.propertyTypes.length === PROPERTY_TYPES.length) {
-      updateFilter("propertyTypes", []);
-    } else {
-      updateFilter("propertyTypes", PROPERTY_TYPES.map(p => p.value));
-    }
-  };
-
   const toggleStatus = (status: string) => {
     const current = filters.statuses;
     const updated = current.includes(status)
       ? current.filter(s => s !== status)
       : [...current, status];
     updateFilter("statuses", updated);
-  };
-
-  const toggleAllStatuses = () => {
-    if (filters.statuses.length === STATUSES.length) {
-      updateFilter("statuses", []);
-    } else {
-      updateFilter("statuses", STATUSES.map(s => s.value));
-    }
   };
 
   const toggleTown = (town: string) => {
@@ -276,673 +313,435 @@ const ListingSearchFilters = ({
     updateFilter("selectedTowns", [...new Set([...filters.selectedTowns, ...townsList])]);
   };
 
+  const clearCriteria = () => {
+    onFiltersChange({
+      ...filters,
+      bedsMin: "",
+      bathsMin: "",
+      sqftMin: "",
+      yearBuiltMin: "",
+      parkingSpaces: "",
+      acres: "",
+      pricePerSqFt: "",
+      rooms: "",
+    });
+  };
+
   const filteredCounties = counties.filter(c => c.state === filters.state);
 
   return (
-    <div className="bg-card border border-border rounded-lg shadow-sm p-4">
-        {/* ROW 1: 3-Column Grid - Property Type (narrow) | Status+Date+Price (wide) | Standard Criteria */}
-        <div className="flex gap-4 mb-4">
-          
-          {/* PROPERTY TYPE Section (narrow) */}
-          <div className="w-[160px] shrink-0 bg-card border border-border border-l-4 border-l-primary rounded-md overflow-hidden">
-            <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted border-l-4 border-l-primary border-b border-border">
-              <Home className="h-4 w-4 text-primary" />
-              <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Property Type</span>
-            </div>
-            <div className="p-3 space-y-1.5">
-              <label className="flex items-center gap-2 cursor-pointer hover:bg-muted px-1 py-0.5 rounded transition-colors">
-                <Checkbox
-                  checked={filters.propertyTypes.length === PROPERTY_TYPES.length}
-                  onCheckedChange={toggleAllPropertyTypes}
-                  className="h-3.5 w-3.5"
+    <div className="space-y-4">
+      {/* ROW 1: 3-Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr_1fr] gap-4">
+        
+        {/* LEFT: Property Type */}
+        <SectionCard title="Property Type">
+          <div className="flex flex-wrap gap-2">
+            {PROPERTY_TYPES.map(type => (
+              <TogglePill
+                key={type.value}
+                label={type.label}
+                active={filters.propertyTypes.includes(type.value)}
+                onClick={() => togglePropertyType(type.value)}
+              />
+            ))}
+          </div>
+        </SectionCard>
+
+        {/* MIDDLE: Status + Date + Price */}
+        <div className="space-y-4">
+          {/* Status */}
+          <SectionCard title="Status">
+            <div className="flex flex-wrap gap-2">
+              {PRIMARY_STATUSES.map(status => (
+                <TogglePill
+                  key={status.value}
+                  label={status.label}
+                  active={filters.statuses.includes(status.value)}
+                  onClick={() => toggleStatus(status.value)}
                 />
-                <span className="text-xs font-medium text-foreground">Select All</span>
-              </label>
-              {PROPERTY_TYPES.map(type => (
-                <label
-                  key={type.value}
-                  className="flex items-center gap-2 cursor-pointer hover:bg-muted px-1 py-0.5 rounded transition-colors"
-                >
-                  <Checkbox
-                    checked={filters.propertyTypes.includes(type.value)}
-                    onCheckedChange={() => togglePropertyType(type.value)}
-                    className="h-3.5 w-3.5"
-                  />
-                  <span className="text-xs text-muted-foreground">{type.label}</span>
-                </label>
               ))}
+              <button
+                onClick={() => setShowMoreStatuses(!showMoreStatuses)}
+                className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showMoreStatuses ? "Less" : "More..."}
+              </button>
             </div>
+            {showMoreStatuses && (
+              <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
+                {MORE_STATUSES.map(status => (
+                  <TogglePill
+                    key={status.value}
+                    label={status.label}
+                    active={filters.statuses.includes(status.value)}
+                    onClick={() => toggleStatus(status.value)}
+                  />
+                ))}
+              </div>
+            )}
+          </SectionCard>
+
+          {/* Date + Price Row */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Listed */}
+            <SectionCard title="Listed">
+              <Select 
+                value={filters.listDatePreset} 
+                onValueChange={v => updateFilter("listDatePreset", v)}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LIST_DATE_PRESETS.map(preset => (
+                    <SelectItem key={preset.value} value={preset.value}>{preset.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </SectionCard>
+
+            {/* Off-Market Timeframe */}
+            <SectionCard title="Off-Market Window">
+              <Select 
+                value={filters.offMarketTimeframe} 
+                onValueChange={v => updateFilter("offMarketTimeframe", v)}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3months">3 Months</SelectItem>
+                  <SelectItem value="6months">6 Months</SelectItem>
+                  <SelectItem value="12months">12 Months</SelectItem>
+                  <SelectItem value="24months">24 Months</SelectItem>
+                </SelectContent>
+              </Select>
+            </SectionCard>
           </div>
 
-          {/* MIDDLE SECTION: Status + Date/Timeframe + Price Range (wide, combined card) */}
-          <div className="flex-1 bg-card border border-border border-l-4 border-l-primary rounded-md overflow-hidden">
-            {/* STATUS + DATE/TIMEFRAME Header */}
-            <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted border-l-4 border-l-primary border-b border-border">
-              <Tag className="h-4 w-4 text-teal-500" />
-              <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Status & Date</span>
-            </div>
-            
-            {/* Top row: Status (left) + Date/Timeframe (right, vertically centered) */}
-            <div className="p-3 flex gap-4">
-              {/* STATUS Section - 2 columns, no scroll */}
-              <div className="flex-1">
-                <label className="flex items-center gap-2 cursor-pointer hover:bg-muted px-1 py-0.5 rounded transition-colors mb-1">
-                  <Checkbox
-                    checked={filters.statuses.length === STATUSES.length}
-                    onCheckedChange={toggleAllStatuses}
-                    className="h-3.5 w-3.5"
-                  />
-                  <span className="text-xs font-medium text-foreground">Select All</span>
-                </label>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                  {STATUSES.map(status => (
-                    <label
-                      key={status.value}
-                      className="flex items-center gap-2 cursor-pointer hover:bg-muted px-1 py-0.5 rounded transition-colors"
-                    >
-                      <Checkbox
-                        checked={filters.statuses.includes(status.value)}
-                        onCheckedChange={() => toggleStatus(status.value)}
-                        className="h-3.5 w-3.5"
-                      />
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">{status.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              {/* DATE/TIMEFRAME Section (right side, vertically centered) */}
-              <div className="w-[180px] shrink-0 pl-4 border-l border-border flex flex-col justify-center">
-                <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="h-4 w-4 text-amber-500" />
-                  <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Date / Timeframe</span>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">List Date</Label>
-                    <Input
-                      type="date"
-                      value={filters.listDateFrom}
-                      onChange={e => updateFilter("listDateFrom", e.target.value)}
-                      className="h-7 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Off-Market Timeframe</Label>
-                    <Select 
-                      value={filters.offMarketTimeframe} 
-                      onValueChange={v => updateFilter("offMarketTimeframe", v)}
-                    >
-                      <SelectTrigger className="h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="3months">Today - 3 Months</SelectItem>
-                        <SelectItem value="6months">Today - 6 Months</SelectItem>
-                        <SelectItem value="12months">Today - 12 Months</SelectItem>
-                        <SelectItem value="24months">Today - 24 Months</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* PRICE RANGE Section (below Status+Date, full width within this card) */}
-            <div className="px-3 py-3 border-t border-border">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="h-4 w-4 text-green-600" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-foreground">Price Range</span>
-              </div>
-              <div className="flex items-end gap-4">
-                {/* Min Price */}
+          {/* Price Range */}
+          <SectionCard title="Price Range">
+            <div className="space-y-3">
+              <div className="flex gap-3">
                 <div className="flex-1">
                   <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
-                      <Input
-                        type="text"
-                        placeholder="100,000"
-                        value={filters.hasNoMin ? "" : formatNumberWithCommas(filters.priceMin)}
-                        onChange={e => updateFilter("priceMin", parseFormattedNumber(e.target.value))}
-                        disabled={filters.hasNoMin}
-                        className="h-7 text-xs pl-5 disabled:opacity-50"
-                      />
-                    </div>
-                    <label className="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
-                      <Checkbox
-                        checked={filters.hasNoMin}
-                        onCheckedChange={(checked) => {
-                          onFiltersChange({ 
-                            ...filters, 
-                            hasNoMin: !!checked,
-                            priceMin: checked ? "" : filters.priceMin
-                          });
-                        }}
-                        className="h-3 w-3"
-                      />
-                      <span className="text-[10px] text-muted-foreground">No Min</span>
-                    </label>
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                    <Input
+                      type="text"
+                      placeholder="Any"
+                      value={formatNumberWithCommas(filters.priceMin)}
+                      onChange={e => updateFilter("priceMin", parseFormattedNumber(e.target.value))}
+                      className="h-8 text-sm pl-6"
+                    />
                   </div>
                 </div>
-                {/* Max Price */}
                 <div className="flex-1">
                   <Label className="text-xs text-muted-foreground mb-1 block">Max</Label>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
-                      <Input
-                        type="text"
-                        placeholder="500,000"
-                        value={filters.hasNoMax ? "" : formatNumberWithCommas(filters.priceMax)}
-                        onChange={e => updateFilter("priceMax", parseFormattedNumber(e.target.value))}
-                        disabled={filters.hasNoMax}
-                        className="h-7 text-xs pl-5 disabled:opacity-50"
-                      />
-                    </div>
-                    <label className="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
-                      <Checkbox
-                        checked={filters.hasNoMax}
-                        onCheckedChange={(checked) => {
-                          onFiltersChange({ 
-                            ...filters, 
-                            hasNoMax: !!checked,
-                            priceMax: checked ? "" : filters.priceMax
-                          });
-                        }}
-                        className="h-3 w-3"
-                      />
-                      <span className="text-[10px] text-muted-foreground">No Max</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* STANDARD SEARCH CRITERIA Section (right) */}
-          <div className="w-[280px] shrink-0 bg-card border border-border border-l-4 border-l-primary rounded-md shadow-sm overflow-hidden">
-            <SectionHeader 
-              icon={Building} 
-              title="Standard Search Criteria" 
-              isOpen={sectionsOpen.standardCriteria}
-              onToggle={() => toggleSection("standardCriteria")}
-              iconColor="text-purple-500"
-            />
-            {sectionsOpen.standardCriteria && (
-              <div className="p-3 space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Bedrooms</Label>
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
                     <Input
                       type="text"
-                      placeholder="Min"
-                      value={filters.bedsMin}
-                      onChange={e => updateFilter("bedsMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-7 text-xs bg-background"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Total Baths</Label>
-                    <Input
-                      type="text"
-                      placeholder="Min"
-                      value={filters.bathsMin}
-                      onChange={e => updateFilter("bathsMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-7 text-xs bg-background"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Rooms</Label>
-                    <Input
-                      type="text"
-                      placeholder="Min"
-                      value={filters.rooms}
-                      onChange={e => updateFilter("rooms", e.target.value.replace(/\D/g, ""))}
-                      className="h-7 text-xs bg-background"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Acres</Label>
-                    <Input
-                      type="text"
-                      placeholder="Min"
-                      value={filters.acres}
-                      onChange={e => updateFilter("acres", e.target.value)}
-                      className="h-7 text-xs bg-background"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Living Area</Label>
-                    <Input
-                      type="text"
-                      placeholder="Min SqFt"
-                      value={filters.sqftMin}
-                      onChange={e => updateFilter("sqftMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-7 text-xs bg-background"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Price/SqFt</Label>
-                    <Input
-                      type="text"
-                      placeholder="Max"
-                      value={filters.pricePerSqFt}
-                      onChange={e => updateFilter("pricePerSqFt", e.target.value.replace(/\D/g, ""))}
-                      className="h-7 text-xs bg-background"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Year Built</Label>
-                    <Input
-                      type="text"
-                      placeholder="From"
-                      value={filters.yearBuiltMin}
-                      onChange={e => updateFilter("yearBuiltMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-7 text-xs bg-background"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Parking</Label>
-                    <Input
-                      type="text"
-                      placeholder="Min"
-                      value={filters.parkingSpaces}
-                      onChange={e => updateFilter("parkingSpaces", e.target.value.replace(/\D/g, ""))}
-                      className="h-7 text-xs bg-background"
+                      placeholder="Any"
+                      value={formatNumberWithCommas(filters.priceMax)}
+                      onChange={e => updateFilter("priceMax", parseFormattedNumber(e.target.value))}
+                      className="h-8 text-sm pl-6"
                     />
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* ROW 2: ADDRESS Section (Full Width) */}
-        <div className="bg-card border border-border border-l-4 border-l-primary rounded-md shadow-sm overflow-hidden mb-4">
-          <SectionHeader 
-            icon={MapPin} 
-            title="Address" 
-            isOpen={sectionsOpen.address}
-            onToggle={() => toggleSection("address")}
-            iconColor="text-teal-500"
-          />
-          {sectionsOpen.address && (
-            <div className="p-3">
-              <RadioGroup 
-                value={addressType} 
-                onValueChange={(v) => setAddressType(v as "street" | "location")}
-                className="flex items-center gap-4 mb-3"
-              >
-                <div className="flex items-center gap-1.5">
-                  <RadioGroupItem value="street" id="street" className="h-3.5 w-3.5" />
-                  <Label htmlFor="street" className="text-xs text-foreground cursor-pointer">Street Address</Label>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <RadioGroupItem value="location" id="location" className="h-3.5 w-3.5" />
-                  <Label htmlFor="location" className="text-xs text-foreground cursor-pointer">My Location</Label>
-                </div>
-              </RadioGroup>
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Street #</Label>
-                  <Input
-                    type="text"
-                    placeholder=""
-                    value={filters.streetNumber}
-                    onChange={e => updateFilter("streetNumber", e.target.value)}
-                    className="h-7 text-xs bg-background"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label className="text-xs text-muted-foreground mb-1 block">Street Name</Label>
-                  <Input
-                    type="text"
-                    placeholder=""
-                    value={filters.streetName}
-                    onChange={e => updateFilter("streetName", e.target.value)}
-                    className="h-7 text-xs bg-background"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Zip Code</Label>
-                  <Input
-                    type="text"
-                    placeholder=""
-                    value={filters.zipCode}
-                    onChange={e => updateFilter("zipCode", e.target.value.replace(/\D/g, ""))}
-                    className="h-7 text-xs bg-background"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Radius</Label>
-                  <Input
-                    type="text"
-                    placeholder=""
-                    value={filters.radius}
-                    onChange={e => updateFilter("radius", e.target.value)}
-                    className="h-7 text-xs bg-background"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Miles</Label>
-                  <Select defaultValue="miles">
-                    <SelectTrigger className="h-7 text-xs bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      <SelectItem value="miles">Miles</SelectItem>
-                      <SelectItem value="km">Kilometers</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ROW 3: 2-Column Grid for Towns + Events/Keywords */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-          
-          {/* TOWNS Section */}
-          <div className="bg-card border border-border border-l-4 border-l-primary rounded-md shadow-sm overflow-hidden">
-            <SectionHeader 
-              icon={MapPin} 
-              title="Towns" 
-              isOpen={sectionsOpen.towns}
-              onToggle={() => toggleSection("towns")}
-              iconColor="text-teal-500"
-            />
-            {sectionsOpen.towns && (
-              <div className="p-3">
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">State</Label>
-                    <Select value={filters.state} onValueChange={v => updateFilter("state", v)}>
-                      <SelectTrigger className="h-7 text-xs bg-background">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover">
-                        <SelectItem value="MA">MA</SelectItem>
-                        <SelectItem value="NH">NH</SelectItem>
-                        <SelectItem value="RI">RI</SelectItem>
-                        <SelectItem value="CT">CT</SelectItem>
-                        <SelectItem value="ME">ME</SelectItem>
-                        <SelectItem value="VT">VT</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">County</Label>
-                    <Select 
-                      value={filters.county || "all"} 
-                      onValueChange={v => updateFilter("county", v === "all" ? "" : v)}
-                    >
-                      <SelectTrigger className="h-7 text-xs bg-background">
-                        <SelectValue placeholder="All" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover">
-                        <SelectItem value="all">All Counties</SelectItem>
-                        {filteredCounties.map(county => (
-                          <SelectItem key={county.id} value={county.id}>{county.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Areas</Label>
-                    <div className="flex items-center gap-2 h-7">
-                      <label className="flex items-center gap-1 text-xs cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="areas" 
-                          checked={showAreas === true}
-                          onChange={() => setShowAreas(true)}
-                          className="h-3 w-3" 
-                        />
-                        Yes
-                      </label>
-                      <label className="flex items-center gap-1 text-xs cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="areas" 
-                          checked={showAreas === false}
-                          onChange={() => setShowAreas(false)}
-                          className="h-3 w-3" 
-                        />
-                        No
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Two-column layout: Town Picker | Selected Towns */}
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Left Column: Town Picker */}
-                  <div>
-                    <div className="relative mb-2">
-                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                      <Input
-                        type="text"
-                        placeholder="Search towns..."
-                        value={townSearch}
-                        onChange={e => setTownSearch(e.target.value)}
-                        className="h-7 text-xs bg-background pl-7"
-                      />
-                      {townSearch && (
-                        <button 
-                          onClick={() => setTownSearch("")}
-                          className="absolute right-2 top-1/2 -translate-y-1/2"
-                        >
-                          <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-                        </button>
-                      )}
-                    </div>
-                    
-                    <div className="min-h-[280px] max-h-[320px] border border-border rounded bg-background overflow-y-auto p-2">
-                      <button
-                        onClick={addAllTowns}
-                        className="w-full text-left px-2 py-1 text-xs text-primary hover:bg-muted rounded transition-colors font-medium mb-1"
-                      >
-                        - Add All Towns ({townsList.length}) -
-                      </button>
-                      <TownsPicker
-                        towns={townsList}
-                        selectedTowns={filters.selectedTowns}
-                        onToggleTown={toggleTown}
-                        expandedCities={expandedCities}
-                        onToggleCityExpansion={toggleCityExpansion}
-                        state={filters.state}
-                        searchQuery={townSearch}
-                        variant="button"
-                        showAreas={showAreas}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Right Column: Selected Towns */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-xs text-muted-foreground">Selected Towns</Label>
-                      {filters.selectedTowns.length > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 px-1.5 text-xs text-destructive hover:text-destructive"
-                          onClick={() => updateFilter("selectedTowns", [])}
-                        >
-                          Remove All
-                        </Button>
-                      )}
-                    </div>
-                    <div className="min-h-[280px] max-h-[320px] border border-border rounded bg-background overflow-y-auto p-2">
-                      {filters.selectedTowns.length === 0 ? (
-                        <p className="text-xs text-muted-foreground italic px-2 py-1">No towns selected</p>
-                      ) : (
-                        <div className="space-y-0.5">
-                          {filters.selectedTowns.map(town => (
-                            <button
-                              key={town}
-                              onClick={() => toggleTown(town)}
-                              className="w-full text-left px-2 py-1 text-xs rounded transition-colors text-foreground hover:bg-destructive/10 hover:text-destructive flex items-center justify-between group"
-                            >
-                              <span>{town}</span>
-                              <X className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* LISTING EVENTS + KEYWORDS Section */}
-          <div className="space-y-4">
-            {/* Listing Events */}
-            <div className="bg-card border border-border border-l-4 border-l-primary rounded-md shadow-sm overflow-hidden">
-              <SectionHeader 
-                icon={Calendar} 
-                title="Listing Events" 
-                isOpen={sectionsOpen.listingEvents}
-                onToggle={() => toggleSection("listingEvents")}
-                iconColor="text-amber-500"
-              />
-              {sectionsOpen.listingEvents && (
-                <div className="p-3 space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox
-                      checked={filters.openHouses}
-                      onCheckedChange={checked => updateFilter("openHouses", checked as boolean)}
-                      className="h-3.5 w-3.5"
-                    />
-                    <span className="text-xs text-foreground">🎈 Open Houses</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox
-                      checked={filters.brokerTours}
-                      onCheckedChange={checked => updateFilter("brokerTours", checked as boolean)}
-                      className="h-3.5 w-3.5"
-                    />
-                    <span className="text-xs text-foreground">🚗 Broker Tours</span>
-                  </label>
-                  <div className="pt-1">
-                    <Label className="text-xs text-muted-foreground mb-1 block">For:</Label>
-                    <Select 
-                      value={filters.listingEventsTimeframe} 
-                      onValueChange={v => updateFilter("listingEventsTimeframe", v)}
-                    >
-                      <SelectTrigger className="h-7 text-xs bg-background w-40">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover">
-                        <SelectItem value="today">Today</SelectItem>
-                        <SelectItem value="3days">Next 3 Days</SelectItem>
-                        <SelectItem value="7days">Next 7 Days</SelectItem>
-                        <SelectItem value="14days">Next 14 Days</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Keywords */}
-            <div className="bg-card border border-border border-l-4 border-l-primary rounded-md shadow-sm overflow-hidden">
-              <SectionHeader 
-                icon={FileText} 
-                title="Keywords (Public Remarks only)" 
-                isOpen={sectionsOpen.keywords}
-                onToggle={() => toggleSection("keywords")}
-                iconColor="text-purple-500"
-              />
-              {sectionsOpen.keywords && (
-                <div className="p-3 space-y-2">
-                  <div className="flex items-center gap-4 mb-2">
-                    <RadioGroup 
-                      value={filters.keywordMode} 
-                      onValueChange={(v) => updateFilter("keywordMode", v as "any" | "all")}
-                      className="flex items-center gap-3"
-                    >
-                      <div className="flex items-center gap-1">
-                        <RadioGroupItem value="any" id="any" className="h-3 w-3" />
-                        <Label htmlFor="any" className="text-xs text-foreground cursor-pointer">Any</Label>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <RadioGroupItem value="all" id="all" className="h-3 w-3" />
-                        <Label htmlFor="all" className="text-xs text-foreground cursor-pointer">All</Label>
-                      </div>
-                    </RadioGroup>
-                    <div className="border-l border-border h-4" />
-                    <RadioGroup 
-                      value={filters.keywordType} 
-                      onValueChange={(v) => updateFilter("keywordType", v as "include" | "exclude")}
-                      className="flex items-center gap-3"
-                    >
-                      <div className="flex items-center gap-1">
-                        <RadioGroupItem value="include" id="include" className="h-3 w-3" />
-                        <Label htmlFor="include" className="text-xs text-foreground cursor-pointer">Include</Label>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <RadioGroupItem value="exclude" id="exclude" className="h-3 w-3" />
-                        <Label htmlFor="exclude" className="text-xs text-foreground cursor-pointer">Exclude</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder="Enter keywords separated by commas..."
-                    value={filters.keywordType === "include" ? filters.keywordsInclude : filters.keywordsExclude}
-                    onChange={e => updateFilter(
-                      filters.keywordType === "include" ? "keywordsInclude" : "keywordsExclude", 
-                      e.target.value
+              {/* Quick chips */}
+              <div className="flex flex-wrap gap-1.5">
+                {PRICE_CHIPS.map(chip => (
+                  <button
+                    key={chip.value}
+                    onClick={() => updateFilter("priceMax", chip.value)}
+                    className={cn(
+                      "px-2 py-0.5 text-[11px] rounded border transition-colors",
+                      filters.priceMax === chip.value
+                        ? "bg-primary/10 border-primary text-primary"
+                        : "bg-muted/50 border-transparent text-muted-foreground hover:text-foreground"
                     )}
-                    className="h-8 text-xs bg-background"
-                  />
-                </div>
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+
+        {/* RIGHT: Standard Criteria */}
+        <SectionCard 
+          title="Criteria" 
+          rightSlot={
+            <button 
+              onClick={clearCriteria}
+              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Clear
+            </button>
+          }
+        >
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Beds (min)</Label>
+                <Input
+                  type="text"
+                  placeholder="Any"
+                  value={filters.bedsMin}
+                  onChange={e => updateFilter("bedsMin", e.target.value.replace(/\D/g, ""))}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Baths (min)</Label>
+                <Input
+                  type="text"
+                  placeholder="Any"
+                  value={filters.bathsMin}
+                  onChange={e => updateFilter("bathsMin", e.target.value.replace(/\D/g, ""))}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">SqFt (min)</Label>
+                <Input
+                  type="text"
+                  placeholder="Any"
+                  value={filters.sqftMin}
+                  onChange={e => updateFilter("sqftMin", e.target.value.replace(/\D/g, ""))}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">$/SqFt (max)</Label>
+                <Input
+                  type="text"
+                  placeholder="Any"
+                  value={filters.pricePerSqFt}
+                  onChange={e => updateFilter("pricePerSqFt", e.target.value.replace(/\D/g, ""))}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Year Built (from)</Label>
+                <Input
+                  type="text"
+                  placeholder="Any"
+                  value={filters.yearBuiltMin}
+                  onChange={e => updateFilter("yearBuiltMin", e.target.value.replace(/\D/g, ""))}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Parking (min)</Label>
+                <Input
+                  type="text"
+                  placeholder="Any"
+                  value={filters.parkingSpaces}
+                  onChange={e => updateFilter("parkingSpaces", e.target.value.replace(/\D/g, ""))}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Acres (min)</Label>
+              <Input
+                type="text"
+                placeholder="Any"
+                value={filters.acres}
+                onChange={e => updateFilter("acres", e.target.value)}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        </SectionCard>
+      </div>
+
+      {/* ROW 2: Geography */}
+      <CollapsibleSection title="Geography" defaultOpen={true}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left: State/County + Town Picker */}
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">State</Label>
+                <Select value={filters.state} onValueChange={v => updateFilter("state", v)}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MA">Massachusetts</SelectItem>
+                    <SelectItem value="NH">New Hampshire</SelectItem>
+                    <SelectItem value="RI">Rhode Island</SelectItem>
+                    <SelectItem value="CT">Connecticut</SelectItem>
+                    <SelectItem value="ME">Maine</SelectItem>
+                    <SelectItem value="VT">Vermont</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">County</Label>
+                <Select 
+                  value={filters.county || "all"} 
+                  onValueChange={v => updateFilter("county", v === "all" ? "" : v)}
+                >
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="All Counties" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Counties</SelectItem>
+                    {filteredCounties.map(county => (
+                      <SelectItem key={county.id} value={county.id}>{county.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Town Search */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search towns..."
+                value={townSearch}
+                onChange={e => setTownSearch(e.target.value)}
+                className="h-8 text-sm pl-8"
+              />
+              {townSearch && (
+                <button 
+                  onClick={() => setTownSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2"
+                >
+                  <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                </button>
               )}
+            </div>
+
+            {/* Town Picker */}
+            <div className="h-[240px] border border-border rounded-lg bg-background overflow-hidden">
+              <ScrollArea className="h-full p-2">
+                <button
+                  onClick={addAllTowns}
+                  className="w-full text-left px-2 py-1.5 text-xs text-primary hover:bg-muted rounded transition-colors font-medium mb-1"
+                >
+                  Add All Towns ({townsList.length})
+                </button>
+                <TownsPicker
+                  towns={townsList}
+                  selectedTowns={filters.selectedTowns}
+                  onToggleTown={toggleTown}
+                  expandedCities={expandedCities}
+                  onToggleCityExpansion={toggleCityExpansion}
+                  state={filters.state}
+                  searchQuery={townSearch}
+                  variant="button"
+                  showAreas={showAreas}
+                />
+              </ScrollArea>
+            </div>
+          </div>
+
+          {/* Right: Selected Towns */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-xs text-muted-foreground">
+                Selected Towns ({filters.selectedTowns.length})
+              </Label>
+              {filters.selectedTowns.length > 0 && (
+                <button
+                  onClick={() => updateFilter("selectedTowns", [])}
+                  className="text-[10px] text-destructive hover:text-destructive/80 transition-colors"
+                >
+                  Remove All
+                </button>
+              )}
+            </div>
+            <div className="h-[280px] border border-border rounded-lg bg-background overflow-hidden">
+              <ScrollArea className="h-full p-2">
+                {filters.selectedTowns.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic px-2 py-3 text-center">
+                    No towns selected
+                  </p>
+                ) : (
+                  <div className="space-y-0.5">
+                    {filters.selectedTowns.map(town => (
+                      <button
+                        key={town}
+                        onClick={() => toggleTown(town)}
+                        className="w-full text-left px-2 py-1.5 text-xs rounded transition-colors text-foreground hover:bg-destructive/10 hover:text-destructive flex items-center justify-between group"
+                      >
+                        <span>{town}</span>
+                        <X className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
             </div>
           </div>
         </div>
+      </CollapsibleSection>
 
-        {/* Action Bar */}
-        <div className="flex items-center justify-between pt-2 border-t border-border">
-          <div className="flex items-center gap-2">
-            {filters.selectedTowns.length > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {filters.selectedTowns.length} towns selected
-              </Badge>
-            )}
-            {filters.propertyTypes.length > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {filters.propertyTypes.length} property types
-              </Badge>
-            )}
-            {filters.statuses.length > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {filters.statuses.length} statuses
-              </Badge>
-            )}
+      {/* ROW 3: Address + Keywords (collapsed by default) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <CollapsibleSection title="Address Search" defaultOpen={false}>
+          <div className="grid grid-cols-4 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Street #</Label>
+              <Input
+                type="text"
+                placeholder=""
+                value={filters.streetNumber}
+                onChange={e => updateFilter("streetNumber", e.target.value)}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs text-muted-foreground mb-1 block">Street Name</Label>
+              <Input
+                type="text"
+                placeholder=""
+                value={filters.streetName}
+                onChange={e => updateFilter("streetName", e.target.value)}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Zip Code</Label>
+              <Input
+                type="text"
+                placeholder=""
+                value={filters.zipCode}
+                onChange={e => updateFilter("zipCode", e.target.value.replace(/\D/g, ""))}
+                className="h-8 text-sm"
+              />
+            </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onFiltersChange(initialFilters)}
-            className="h-8 text-xs"
-          >
-            Clear All
-          </Button>
-        </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Keywords" defaultOpen={false}>
+          <Input
+            type="text"
+            placeholder="Enter keywords separated by commas..."
+            value={filters.keywordsInclude}
+            onChange={e => updateFilter("keywordsInclude", e.target.value)}
+            className="h-8 text-sm"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1.5">
+            Searches public remarks only
+          </p>
+        </CollapsibleSection>
       </div>
+    </div>
   );
 };
 
