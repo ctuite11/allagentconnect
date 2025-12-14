@@ -136,7 +136,7 @@ const AllAgentConnectHome = () => {
           {/* Tier 1 – Command Panels */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Listing Search */}
-            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-neutral-50 hover:border-neutral-400 hover:shadow-sm transition-all">
+            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-background hover:border-neutral-400 hover:shadow-sm transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
@@ -156,7 +156,7 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Hotsheets */}
-            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-neutral-50 hover:border-neutral-400 hover:shadow-sm transition-all">
+            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-background hover:border-neutral-400 hover:shadow-sm transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
@@ -181,7 +181,7 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Comm Center */}
-            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-neutral-50 hover:border-neutral-400 hover:shadow-sm transition-all">
+            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-background hover:border-neutral-400 hover:shadow-sm transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
