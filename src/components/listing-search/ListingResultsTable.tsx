@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowUpDown, ExternalLink, MessageSquare, Users, Check, FileSpreadsheet, Eye, EyeOff, Bookmark, CalendarDays, Home } from "lucide-react";
+import { ArrowUpDown, ExternalLink, Users, Check, FileSpreadsheet, Eye, EyeOff, Bookmark, CalendarDays, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -12,6 +12,7 @@ import { FilterState } from "@/components/listing-search/ListingSearchFilters";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { SectionCard } from "@/components/ui/section-card";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
+import ContactAgentDialog from "@/components/ContactAgentDialog";
 
 interface Listing {
   id: string;
@@ -256,6 +257,7 @@ const ListingResultsTable = ({
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const [contactListing, setContactListing] = useState<Listing | null>(null);
   const rowRefs = useState(() => new Map<string, HTMLTableRowElement>())[0];
 
   const toggleExpand = (id: string) => setExpandedId(prev => (prev === id ? null : id));
@@ -520,9 +522,8 @@ const ListingResultsTable = ({
             <SortableHeader column="square_feet" className="text-right">SqFt</SortableHeader>
             <SortableHeader column="list_date" className="text-center">DOM</SortableHeader>
             <TableHead className="text-xs font-semibold text-muted-foreground">Facts</TableHead>
-            <TableHead className="text-xs font-semibold text-muted-foreground">Office</TableHead>
-            <TableHead className="text-xs font-semibold text-muted-foreground">Agent</TableHead>
-            <TableHead className="w-36"></TableHead>
+            <TableHead className="text-xs font-semibold text-muted-foreground min-w-[180px]">Agent</TableHead>
+            <TableHead className="w-24"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -680,29 +681,33 @@ const ListingResultsTable = ({
                     </div>
                   </TableCell>
 
-                  {/* Office */}
-                  <TableCell className="px-3 py-3 align-top text-sm">
-                    <div className="max-w-[180px] truncate text-muted-foreground">{listing.list_office || ""}</div>
-                  </TableCell>
-
-                  {/* Agent */}
+                  {/* Agent (stacked: name, office, phone, contact link) */}
                   <TableCell className="px-3 py-3 align-top">
-                    <div className="text-sm font-medium truncate max-w-[140px] whitespace-nowrap">{listing.agent_name || ""}</div>
-                    {(listing.list_agent_phone || listing.list_agent_email) && (
-                      <div className="mt-1 text-xs text-muted-foreground truncate max-w-[140px]">
-                        {listing.list_agent_phone || listing.list_agent_email}
+                    <div className="text-sm font-semibold truncate max-w-[180px]">{listing.agent_name || ""}</div>
+                    {listing.list_office && (
+                      <div className="mt-0.5 text-xs text-muted-foreground truncate max-w-[180px]">
+                        {listing.list_office}
                       </div>
                     )}
+                    {listing.list_agent_phone && (
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        {listing.list_agent_phone}
+                      </div>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setContactListing(listing);
+                      }}
+                      className="mt-1 text-xs text-primary hover:underline"
+                    >
+                      Contact
+                    </button>
                   </TableCell>
 
                   {/* Actions */}
                   <TableCell className="px-3 py-3 align-top">
-                    <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                      <Button size="sm" variant="secondary" onClick={() => {/* existing contact logic */}}>
-                        <MessageSquare className="h-4 w-4" />
-                        <span className="ml-2 hidden lg:inline">Contact</span>
-                      </Button>
-
+                    <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                       <Button
                         size="sm"
                         variant="outline"
@@ -814,6 +819,18 @@ const ListingResultsTable = ({
         </Table>
         </div>
       </div>
+
+      {/* Contact Agent Dialog (controlled) */}
+      {contactListing && (
+        <ContactAgentDialog
+          listingId={contactListing.id}
+          agentId={contactListing.agent_id}
+          listingAddress={`${contactListing.address}, ${contactListing.city} ${contactListing.state}`}
+          open={!!contactListing}
+          onOpenChange={(open) => !open && setContactListing(null)}
+          hideTrigger
+        />
+      )}
     </div>
   );
 };
