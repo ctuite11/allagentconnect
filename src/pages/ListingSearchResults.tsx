@@ -238,22 +238,33 @@ const ListingSearchResults = () => {
         return;
       }
 
-      // Fetch agent names for listings
+      // Fetch agent info for listings
       if (data && data.length > 0) {
         const agentIds = [...new Set(data.map(l => l.agent_id))];
         const { data: agents } = await supabase
           .from("agent_profiles")
-          .select("id, first_name, last_name")
+          .select("id, first_name, last_name, email, phone, cell_phone, office_name")
           .in("id", agentIds);
 
         const agentMap = new Map(
-          agents?.map(a => [a.id, `${a.first_name} ${a.last_name}`]) || []
+          agents?.map(a => [a.id, {
+            name: `${a.first_name || ''} ${a.last_name || ''}`.trim(),
+            email: a.email,
+            phone: a.cell_phone || a.phone,
+            office: a.office_name,
+          }]) || []
         );
 
-        const listingsWithAgents = data.map(l => ({
-          ...l,
-          agent_name: agentMap.get(l.agent_id) || null,
-        }));
+        const listingsWithAgents = data.map(l => {
+          const agentInfo = agentMap.get(l.agent_id);
+          return {
+            ...l,
+            agent_name: agentInfo?.name || null,
+            list_agent_email: agentInfo?.email || null,
+            list_agent_phone: agentInfo?.phone || null,
+            list_office: agentInfo?.office || null,
+          };
+        });
 
         setListings(listingsWithAgents);
       } else {
