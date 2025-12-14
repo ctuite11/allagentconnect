@@ -620,6 +620,27 @@ const ListingResultsTable = ({
                   <TableCell className="px-3 py-3 align-top min-w-[280px]">
                     {(() => {
                       const loc = getLocation(listing);
+                      
+                      // Build micro-facts line
+                      const microFacts: string[] = [];
+                      if (listing.annual_property_tax) {
+                        microFacts.push(`Tax $${(listing.annual_property_tax / 1000).toFixed(1)}k/yr`);
+                      }
+                      if (listing.hoa_monthly) {
+                        microFacts.push(`HOA $${listing.hoa_monthly}/mo`);
+                      }
+                      if (listing.year_built) {
+                        microFacts.push(`Built ${listing.year_built}`);
+                      }
+                      const parking = listing.garage_spaces || listing.total_parking_spaces;
+                      if (parking) {
+                        microFacts.push(`${parking} pkg`);
+                      }
+                      const style = getPropertyStyle(listing);
+                      if (style) {
+                        microFacts.push(style);
+                      }
+                      
                       return (
                         <>
                           {/* Street + Status Badge Row */}
@@ -635,7 +656,6 @@ const ListingResultsTable = ({
                             >
                               {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
                             </a>
-                            {getStatusBadge(listing.status)}
                           </div>
 
                           <div className="mt-1 text-xs text-muted-foreground">
@@ -643,18 +663,28 @@ const ListingResultsTable = ({
                           </div>
 
                           {loc.showNeighborhood && (
-                            <div className="mt-1 text-xs text-muted-foreground">
+                            <div className="mt-0.5 text-xs text-muted-foreground">
                               {loc.neighborhood}
                             </div>
                           )}
 
-                          {/* Listing Number link */}
-                          <button
-                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`); }}
-                            className="mt-1 text-[11px] font-mono text-primary hover:underline"
-                          >
-                            #{listing.listing_number}
-                          </button>
+                          {/* Listing Number + Status */}
+                          <div className="mt-1 flex items-center gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`); }}
+                              className="text-[11px] font-mono text-primary hover:underline"
+                            >
+                              #{listing.listing_number}
+                            </button>
+                            {getStatusBadge(listing.status)}
+                          </div>
+
+                          {/* Micro-facts line */}
+                          {microFacts.length > 0 && (
+                            <div className="mt-1 flex items-center overflow-hidden whitespace-nowrap text-[11px] text-muted-foreground">
+                              <span className="truncate">{microFacts.join(" • ")}</span>
+                            </div>
+                          )}
                         </>
                       );
                     })()}
