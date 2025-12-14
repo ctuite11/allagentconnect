@@ -159,26 +159,26 @@ interface ListingSearchFiltersProps {
   onSearch: () => void;
 }
 
-// Section Header Component
+// Section Header Component - ALL rails use primary blue, icons use semantic colors
 const SectionHeader = ({ 
   icon: Icon, 
   title, 
   isOpen, 
   onToggle,
-  accentColor = "border-l-primary"
+  iconColor = "text-muted-foreground"
 }: { 
   icon: React.ElementType; 
   title: string; 
   isOpen: boolean; 
   onToggle: () => void;
-  accentColor?: string;
+  iconColor?: string;
 }) => (
   <button
     onClick={onToggle}
-    className={`w-full flex items-center justify-between px-3 py-2 bg-card border-l-4 ${accentColor} hover:bg-muted/50 transition-colors`}
+    className="w-full flex items-center justify-between px-3 py-2 bg-card border-l-4 border-l-primary hover:bg-muted/50 transition-colors"
   >
     <div className="flex items-center gap-2">
-      <Icon className="h-4 w-4 text-muted-foreground" />
+      <Icon className={`h-4 w-4 ${iconColor}`} />
       <span className="text-xs font-semibold uppercase tracking-wide text-foreground">{title}</span>
     </div>
     {isOpen ? (
@@ -462,13 +462,13 @@ const ListingSearchFilters = ({
           </div>
 
           {/* STANDARD SEARCH CRITERIA Section (right) */}
-          <div className="w-[280px] shrink-0 bg-card border border-border rounded-md shadow-sm overflow-hidden">
+          <div className="w-[280px] shrink-0 bg-card border border-border border-l-4 border-l-primary rounded-md shadow-sm overflow-hidden">
             <SectionHeader 
               icon={Building} 
               title="Standard Search Criteria" 
               isOpen={sectionsOpen.standardCriteria}
               onToggle={() => toggleSection("standardCriteria")}
-              accentColor="border-l-purple-500"
+              iconColor="text-purple-500"
             />
             {sectionsOpen.standardCriteria && (
               <div className="p-3 space-y-2">
@@ -566,13 +566,13 @@ const ListingSearchFilters = ({
         </div>
 
         {/* ROW 2: ADDRESS Section (Full Width) */}
-        <div className="bg-card border border-border rounded-md shadow-sm overflow-hidden mb-4">
+        <div className="bg-card border border-border border-l-4 border-l-primary rounded-md shadow-sm overflow-hidden mb-4">
           <SectionHeader 
             icon={MapPin} 
             title="Address" 
             isOpen={sectionsOpen.address}
             onToggle={() => toggleSection("address")}
-            accentColor="border-l-teal-500"
+            iconColor="text-teal-500"
           />
           {sectionsOpen.address && (
             <div className="p-3">
@@ -652,13 +652,13 @@ const ListingSearchFilters = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           
           {/* TOWNS Section */}
-          <div className="bg-card border border-border rounded-md shadow-sm overflow-hidden">
+          <div className="bg-card border border-border border-l-4 border-l-primary rounded-md shadow-sm overflow-hidden">
             <SectionHeader 
               icon={MapPin} 
               title="Towns" 
               isOpen={sectionsOpen.towns}
               onToggle={() => toggleSection("towns")}
-              accentColor="border-l-teal-500"
+              iconColor="text-teal-500"
             />
             {sectionsOpen.towns && (
               <div className="p-3">
@@ -809,13 +809,13 @@ const ListingSearchFilters = ({
           {/* LISTING EVENTS + KEYWORDS Section */}
           <div className="space-y-4">
             {/* Listing Events */}
-            <div className="bg-card border border-border rounded-md shadow-sm overflow-hidden">
+            <div className="bg-card border border-border border-l-4 border-l-primary rounded-md shadow-sm overflow-hidden">
               <SectionHeader 
                 icon={Calendar} 
                 title="Listing Events" 
                 isOpen={sectionsOpen.listingEvents}
                 onToggle={() => toggleSection("listingEvents")}
-                accentColor="border-l-orange-500"
+                iconColor="text-amber-500"
               />
               {sectionsOpen.listingEvents && (
                 <div className="p-3 space-y-2">
@@ -857,13 +857,13 @@ const ListingSearchFilters = ({
             </div>
 
             {/* Keywords */}
-            <div className="bg-card border border-border rounded-md shadow-sm overflow-hidden">
+            <div className="bg-card border border-border border-l-4 border-l-primary rounded-md shadow-sm overflow-hidden">
               <SectionHeader 
                 icon={FileText} 
                 title="Keywords (Public Remarks only)" 
                 isOpen={sectionsOpen.keywords}
                 onToggle={() => toggleSection("keywords")}
-                accentColor="border-l-indigo-500"
+                iconColor="text-purple-500"
               />
               {sectionsOpen.keywords && (
                 <div className="p-3 space-y-2">
