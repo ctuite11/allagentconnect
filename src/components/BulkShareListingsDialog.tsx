@@ -4,7 +4,7 @@ import { Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { ShareListingsDialog } from "@/components/listings/ShareListingsDialog";
+import { ShareListingsDialog, Recipient } from "@/components/share/ShareListingsDialog";
 
 interface BulkShareListingsDialogProps {
   listingIds: string[];
@@ -28,10 +28,7 @@ interface ListingPreview {
   sqft?: number;
 }
 
-type Recipient = {
-  name: string;
-  email: string;
-};
+// Recipient type imported from ShareListingsDialog
 
 export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareListingsDialogProps) {
   const [open, setOpen] = useState(false);

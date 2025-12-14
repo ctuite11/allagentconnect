@@ -1,3 +1,8 @@
+/**
+ * Universal Share Listings Dialog
+ * Single source of truth for all share listing modals across the app.
+ * Used by: ListingSearchResults, HotSheetReview, PropertyDetail, MyListings, etc.
+ */
 import * as React from "react";
 import { Home, Mail, Phone, Search, Send, User, PencilLine, Layers, Plus, X, UserPlus } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -17,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 
-type ListingPreview = {
+export type ListingPreview = {
   address: string;
   cityStateZip?: string;
   price?: string;
@@ -26,16 +31,18 @@ type ListingPreview = {
   sqft?: number;
 };
 
-type Recipient = {
+export type Recipient = {
   name: string;
   email: string;
 };
 
-type Props = {
+export type ShareListingsDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 
+  /** Number of listings being shared */
   selectedCount: number;
+  /** Optional preview for single listing */
   listingPreview?: ListingPreview;
 
   // Contact search
@@ -117,7 +124,7 @@ export function ShareListingsDialog({
   recipients = [],
   onAddRecipient,
   onRemoveRecipient,
-}: Props) {
+}: ShareListingsDialogProps) {
   const [selectedChips, setSelectedChips] = React.useState<Set<string>>(new Set());
   const [showSavePrompt, setShowSavePrompt] = React.useState(false);
   const [lastSavedEmail, setLastSavedEmail] = React.useState<string>("");
@@ -149,7 +156,6 @@ export function ShareListingsDialog({
     setSelectedChips(newSelected);
   };
 
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -157,16 +163,16 @@ export function ShareListingsDialog({
         hideCloseButton={false}
         onKeyDown={handleKeyDown}
       >
-        {/* Header - neutral with accent underline */}
+        {/* Header - Clean: Title + Subtitle + optional To: line only */}
         <div className="shrink-0 border-b border-neutral-200 px-6 py-5">
           <DialogHeader className="space-y-1">
             <DialogTitle className="text-lg text-foreground">
-              Share {selectedCount} Listing{selectedCount === 1 ? "" : "s"}
+              Share Listing{selectedCount === 1 ? "" : "s"}
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Send the selected listing{selectedCount === 1 ? "" : "s"} to a contact via email.
+              Send {selectedCount === 1 ? "this listing" : `${selectedCount} listings`} to a contact via email.
             </DialogDescription>
-            {/* Show added recipients below title */}
+            {/* Show added recipients below subtitle */}
             {(recipients.length > 0 || recipientName.trim()) && (
               <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm">
                 <span className="text-muted-foreground">To:</span>
@@ -181,49 +187,47 @@ export function ShareListingsDialog({
               </div>
             )}
           </DialogHeader>
-          {/* Thin accent underline */}
-          <div className="mt-4 h-[2px] w-16 rounded-full bg-primary" />
+        </div>
 
-          {/* Listing Preview / Summary - softened info panel */}
+        {/* Body - scrollable */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 space-y-6">
+          {/* Listing Preview (single) or Summary (bulk) - subtle panel */}
           {selectedCount === 1 && listingPreview ? (
-            <div className="mt-4 flex items-start gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+            <div className="flex items-start gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
               <div className="mt-0.5 rounded-lg bg-neutral-100 p-2">
                 <Home className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium text-foreground">{listingPreview.address}</div>
-                {listingPreview.cityStateZip ? (
+                {listingPreview.cityStateZip && (
                   <div className="truncate text-xs text-muted-foreground">
                     {listingPreview.cityStateZip}
                   </div>
-                ) : null}
+                )}
                 <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  {listingPreview.price ? <span className="font-medium text-foreground">{listingPreview.price}</span> : null}
-                  {typeof listingPreview.beds === "number" ? <span>{listingPreview.beds} bd</span> : null}
-                  {typeof listingPreview.baths === "number" ? <span>{listingPreview.baths} ba</span> : null}
-                  {typeof listingPreview.sqft === "number" ? (
+                  {listingPreview.price && <span className="font-medium text-foreground">{listingPreview.price}</span>}
+                  {typeof listingPreview.beds === "number" && <span>{listingPreview.beds} bd</span>}
+                  {typeof listingPreview.baths === "number" && <span>{listingPreview.baths} ba</span>}
+                  {typeof listingPreview.sqft === "number" && (
                     <span>{listingPreview.sqft.toLocaleString()} sf</span>
-                  ) : null}
+                  )}
                 </div>
               </div>
             </div>
           ) : selectedCount > 1 ? (
-            <div className="mt-4 flex items-start gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+            <div className="flex items-start gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
               <div className="mt-0.5 rounded-lg bg-neutral-100 p-2">
                 <Layers className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-medium text-foreground">Sharing {selectedCount} Listings</div>
                 <div className="text-xs text-muted-foreground">
-                  Based on your current search criteria and filters
+                  Based on your current selection
                 </div>
               </div>
             </div>
           ) : null}
-        </div>
 
-        {/* Body - scrollable */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 space-y-6">
           {/* Added Recipients */}
           {recipients.length > 0 && (
             <section className="space-y-2">
@@ -284,7 +288,7 @@ export function ShareListingsDialog({
               Enter Manually
             </Button>
 
-            {manualMode ? (
+            {manualMode && (
               <div className="space-y-3 pt-1">
                 <div className="grid gap-3">
                   <div className="space-y-2">
@@ -314,7 +318,7 @@ export function ShareListingsDialog({
                   </div>
                 </div>
 
-                {/* Save to Contacts Prompt - shows when name and email are filled */}
+                {/* Save to Contacts Prompt */}
                 {recipientName.trim() && recipientEmail.trim() && onSaveContact && !showSavePrompt && (
                   <div className="rounded-xl border border-neutral-200 bg-white p-4 space-y-3">
                     <div className="flex items-start gap-3">
@@ -367,9 +371,7 @@ export function ShareListingsDialog({
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        if (onAddRecipient) {
-                          onAddRecipient({ name: recipientName.trim(), email: recipientEmail.trim() });
-                        }
+                        onAddRecipient({ name: recipientName.trim(), email: recipientEmail.trim() });
                         setRecipientName("");
                         setRecipientEmail("");
                         setShowSavePrompt(false);
@@ -387,7 +389,7 @@ export function ShareListingsDialog({
                   </div>
                 )}
               </div>
-            ) : null}
+            )}
           </section>
 
           {/* Sender Info Card */}
