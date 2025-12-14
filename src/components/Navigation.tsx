@@ -120,7 +120,7 @@ const Navigation = () => {
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
                     <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
+                      <DropdownMenuItem onClick={() => navigate("/allagentconnect")}>
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         Success Hub
                       </DropdownMenuItem>
@@ -205,7 +205,7 @@ const Navigation = () => {
                 <DropdownMenuContent className="w-56 bg-card border-border shadow-lg z-[100]">
                         <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
                         <DropdownMenuGroup>
-                          <DropdownMenuItem onClick={() => navigate("/agent-dashboard")}>
+                          <DropdownMenuItem onClick={() => navigate("/allagentconnect")}>
                             <LayoutDashboard className="mr-2 h-4 w-4" />
                             Success Hub
                           </DropdownMenuItem>
@@ -349,7 +349,7 @@ const Navigation = () => {
                       <p className="text-xs font-semibold text-muted-foreground mb-2 px-2">Agent Tools</p>
                       <button
                         onClick={() => {
-                          navigate("/agent-dashboard");
+                          navigate("/allagentconnect");
                           setIsMenuOpen(false);
                         }}
                         className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
