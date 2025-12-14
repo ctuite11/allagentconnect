@@ -150,7 +150,7 @@ const AllAgentConnectHome = () => {
                 onClick={() => navigate("/listing-search")}
                 className="gap-1.5 rounded text-sm px-3"
               >
-                Open Search
+                Open
                 <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </div>
