@@ -157,5 +157,27 @@ All colors MUST be HSL.
     -webkit-text-security: disc;
     text-security: disc;
   }
+
+  /* AAC Card System */
+  .aac-card {
+    @apply bg-background border border-neutral-200 transition-all duration-200 ease-out will-change-transform;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.12);
+  }
+
+  .aac-card:hover {
+    @apply border-neutral-300;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.10), 0 18px 40px rgba(0,0,0,0.16);
+  }
+
+  .aac-card:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.12);
+  }
+
+  /* Tier sizing */
+  .aac-card-1 { @apply p-6 rounded-2xl; }
+  .aac-card-2 { @apply p-4 rounded-xl; }
+  .aac-card-3 { @apply p-3 rounded-lg; }
 }
 
