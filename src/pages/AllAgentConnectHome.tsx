@@ -4,7 +4,18 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/ui/section-card";
-import { Search, FileStack, MessageSquare, Plus, ArrowRight } from "lucide-react";
+import { 
+  Search, 
+  FileStack, 
+  MessageSquare, 
+  Plus, 
+  ArrowRight, 
+  Home, 
+  Users, 
+  UserCircle, 
+  UsersRound, 
+  SearchCheck 
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface HotSheetSummary {
@@ -256,18 +267,102 @@ const AllAgentConnectHome = () => {
             </SectionCard>
           </div>
 
-          {/* Secondary Areas - Visual placeholder for future modules */}
-          <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="border border-dashed border-border rounded-2xl p-6 flex items-center justify-center min-h-[120px]">
-              <p className="text-sm text-muted-foreground">
-                Alerts & notifications coming soon
-              </p>
-            </div>
-            <div className="border border-dashed border-border rounded-2xl p-6 flex items-center justify-center min-h-[120px]">
-              <p className="text-sm text-muted-foreground">
-                Saved searches coming soon
-              </p>
-            </div>
+          {/* Tier 2 – Management (Medium Cards) */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* My Listings */}
+            <button
+              onClick={() => navigate("/agent/listings")}
+              className="group flex items-center gap-4 p-4 rounded-xl border border-border bg-background hover:bg-muted transition-colors text-left"
+            >
+              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                <Home className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-foreground">My Listings</h3>
+                <p className="text-xs text-muted-foreground truncate">
+                  Manage your active and off-market inventory
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+            </button>
+
+            {/* My Contacts */}
+            <button
+              onClick={() => navigate("/agent/clients")}
+              className="group flex items-center gap-4 p-4 rounded-xl border border-border bg-background hover:bg-muted transition-colors text-left"
+            >
+              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-foreground">My Contacts</h3>
+                <p className="text-xs text-muted-foreground truncate">
+                  Client list and relationship management
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+            </button>
+
+            {/* Profile & Branding */}
+            <button
+              onClick={() => navigate("/agent/profile-editor")}
+              className="group flex items-center gap-4 p-4 rounded-xl border border-border bg-background hover:bg-muted transition-colors text-left"
+            >
+              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                <UserCircle className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-foreground">Profile & Branding</h3>
+                <p className="text-xs text-muted-foreground truncate">
+                  Public profile and marketing assets
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+            </button>
+          </div>
+
+          {/* Tier 3 – Utilities (Compact Cards) */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Manage Team */}
+            <button
+              onClick={() => navigate("/agent/team")}
+              className="group flex items-center gap-3 p-3 rounded-lg border border-border bg-background hover:bg-muted transition-colors text-left"
+            >
+              <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+                <UsersRound className="h-4 w-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm font-medium text-foreground">Manage Team</h3>
+                <p className="text-xs text-muted-foreground truncate">
+                  Team members and permissions
+                </p>
+              </div>
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+            </button>
+
+            {/* Global Search */}
+            <button
+              onClick={() => navigate("/agent-search")}
+              className="group flex items-center gap-3 p-3 rounded-lg border border-border bg-background hover:bg-muted transition-colors text-left"
+            >
+              <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+                <SearchCheck className="h-4 w-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm font-medium text-foreground">Global Search</h3>
+                <p className="text-xs text-muted-foreground truncate">
+                  Find agents, listings, and contacts
+                </p>
+              </div>
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+            </button>
+          </div>
+
+          {/* Future Module Placeholders */}
+          <div className="mt-10 border border-dashed border-border rounded-2xl p-6 flex items-center justify-center min-h-[80px]">
+            <p className="text-sm text-muted-foreground">
+              Additional workspace modules coming soon
+            </p>
           </div>
         </div>
       </div>
