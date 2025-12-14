@@ -28,6 +28,11 @@ interface ListingPreview {
   sqft?: number;
 }
 
+type Recipient = {
+  name: string;
+  email: string;
+};
+
 export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareListingsDialogProps) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -42,6 +47,7 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
+  const [recipients, setRecipients] = useState<Recipient[]>([]);
   const clientSearchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,8 +64,43 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
       setShowClientDropdown(false);
       setShowManualEntry(false);
       setListingPreview(undefined);
+      setRecipients([]);
     }
   }, [open, listingIds]);
+
+  const handleSaveContact = async (name: string, email: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const nameParts = name.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      const { error } = await supabase
+        .from("clients")
+        .insert({
+          agent_id: user.id,
+          first_name: firstName,
+          last_name: lastName,
+          email: email.trim(),
+        });
+
+      if (error) throw error;
+      toast.success(`${name} saved to contacts`);
+    } catch (error) {
+      console.error("Error saving contact:", error);
+      toast.error("Failed to save contact");
+    }
+  };
+
+  const handleAddRecipient = (recipient: Recipient) => {
+    setRecipients(prev => [...prev, recipient]);
+  };
+
+  const handleRemoveRecipient = (index: number) => {
+    setRecipients(prev => prev.filter((_, i) => i !== index));
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -201,11 +242,11 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
     }
   };
 
-  // Validation: require sender name + email, recipient email, and at least one listing
+  // Validation: require sender name + email, recipient email (or at least one recipient), and at least one listing
   const canSubmit = Boolean(
     agentName.trim() && 
     agentEmail.trim() && 
-    recipientEmail.trim() && 
+    (recipientEmail.trim() || recipients.length > 0) && 
     listingIds.length > 0
   );
 
@@ -240,6 +281,10 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
         canSubmit={canSubmit}
         submitting={sending}
         onSubmit={handleShare}
+        onSaveContact={handleSaveContact}
+        recipients={recipients}
+        onAddRecipient={handleAddRecipient}
+        onRemoveRecipient={handleRemoveRecipient}
       />
     </>
   );
