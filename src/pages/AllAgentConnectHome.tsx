@@ -136,19 +136,19 @@ const AllAgentConnectHome = () => {
           {/* Tier 1 – Command Panels */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Listing Search */}
-            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-background hover:border-neutral-400 hover:shadow-sm transition-all">
+            <div className="p-6 rounded-2xl border border-neutral-300 bg-background shadow-sm hover:border-neutral-400 hover:shadow-md transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
-                    <Search className="h-5 w-5 text-neutral-600" />
+                  <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center">
+                    <Search className="h-5 w-5 text-stone-500" />
                   </div>
-                  <h2 className="text-base font-semibold text-neutral-800">Listing Search</h2>
+                  <h2 className="text-base font-medium text-neutral-800">Listing Search</h2>
                 </div>
               </div>
               <Button 
                 size="sm" 
                 onClick={() => navigate("/listing-search")}
-                className="gap-1.5 rounded-md text-sm"
+                className="gap-1.5 rounded text-sm px-3"
               >
                 Open Search
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -156,13 +156,13 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Hotsheets */}
-            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-background hover:border-neutral-400 hover:shadow-sm transition-all">
+            <div className="p-6 rounded-2xl border border-neutral-300 bg-background shadow-sm hover:border-neutral-400 hover:shadow-md transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
-                    <FileStack className="h-5 w-5 text-neutral-600" />
+                  <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center">
+                    <FileStack className="h-5 w-5 text-stone-500" />
                   </div>
-                  <h2 className="text-base font-semibold text-neutral-800">Hotsheets</h2>
+                  <h2 className="text-base font-medium text-neutral-800">Hotsheets</h2>
                 </div>
                 {hotsheets.length > 0 && (
                   <span className="text-xs text-neutral-500">
@@ -173,7 +173,7 @@ const AllAgentConnectHome = () => {
               <Button 
                 size="sm" 
                 onClick={() => navigate("/hot-sheets")}
-                className="gap-1.5 rounded-md text-sm"
+                className="gap-1.5 rounded text-sm px-3"
               >
                 Open
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -181,16 +181,16 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Comm Center */}
-            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-background hover:border-neutral-400 hover:shadow-sm transition-all">
+            <div className="p-6 rounded-2xl border border-neutral-300 bg-background shadow-sm hover:border-neutral-400 hover:shadow-md transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-neutral-600" />
+                  <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-stone-500" />
                   </div>
-                  <h2 className="text-base font-semibold text-neutral-800">Comm Center</h2>
+                  <h2 className="text-base font-medium text-neutral-800">Comm Center</h2>
                 </div>
                 {commSummary.unreadCount > 0 && (
-                  <span className="text-xs font-medium text-neutral-500">
+                  <span className="text-xs text-neutral-500">
                     {commSummary.unreadCount} pending
                   </span>
                 )}
@@ -198,7 +198,7 @@ const AllAgentConnectHome = () => {
               <Button 
                 size="sm" 
                 onClick={() => navigate("/communication-center")}
-                className="gap-1.5 rounded-md text-sm"
+                className="gap-1.5 rounded text-sm px-3"
               >
                 Open
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -210,34 +210,34 @@ const AllAgentConnectHome = () => {
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => navigate("/agent/listings")}
-              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background hover:bg-neutral-50 transition-colors text-left"
+              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background hover:border-neutral-300 hover:bg-neutral-50 hover:shadow-sm transition-all text-left"
             >
               <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0">
-                <Home className="h-5 w-5 text-neutral-500" />
+                <Home className="h-5 w-5 text-stone-400" />
               </div>
-              <h3 className="text-sm font-semibold text-neutral-800">My Listings</h3>
+              <h3 className="text-sm font-medium text-neutral-700">My Listings</h3>
               <ArrowRight className="h-4 w-4 text-neutral-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
 
             <button
               onClick={() => navigate("/agent/clients")}
-              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background hover:bg-neutral-50 transition-colors text-left"
+              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background hover:border-neutral-300 hover:bg-neutral-50 hover:shadow-sm transition-all text-left"
             >
               <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0">
-                <Users className="h-5 w-5 text-neutral-500" />
+                <Users className="h-5 w-5 text-stone-400" />
               </div>
-              <h3 className="text-sm font-semibold text-neutral-800">My Contacts</h3>
+              <h3 className="text-sm font-medium text-neutral-700">My Contacts</h3>
               <ArrowRight className="h-4 w-4 text-neutral-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
 
             <button
               onClick={() => navigate("/agent/profile-editor")}
-              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background hover:bg-neutral-50 transition-colors text-left"
+              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background hover:border-neutral-300 hover:bg-neutral-50 hover:shadow-sm transition-all text-left"
             >
               <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0">
-                <UserCircle className="h-5 w-5 text-neutral-500" />
+                <UserCircle className="h-5 w-5 text-stone-400" />
               </div>
-              <h3 className="text-sm font-semibold text-neutral-800">Profile & Branding</h3>
+              <h3 className="text-sm font-medium text-neutral-700">Profile & Branding</h3>
               <ArrowRight className="h-4 w-4 text-neutral-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           </div>
