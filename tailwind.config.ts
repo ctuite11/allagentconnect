@@ -72,6 +72,11 @@ export default {
         "danger-soft": "hsl(var(--danger-soft) / 0.10)",
         "neutral-soft": "hsl(var(--neutral-soft))",
         "neutral-text": "hsl(var(--neutral-text))",
+        heading: {
+          page: "hsl(var(--heading-page))",
+          section: "hsl(var(--heading-section))",
+        },
+        "text-body": "hsl(var(--text-body))",
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',

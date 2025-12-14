@@ -125,10 +125,10 @@ const AllAgentConnectHome = () => {
         <div className="max-w-[1280px] mx-auto px-6 py-12">
           {/* Page Header */}
           <div className="mb-10">
-            <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+            <h1 className="text-2xl font-semibold text-heading-page tracking-tight">
               Success Hub
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-text-body mt-1">
               Your active workspace
             </p>
           </div>
@@ -200,10 +200,10 @@ const AllAgentConnectHome = () => {
                       className="w-full text-left p-2 rounded-lg border border-border hover:bg-muted transition-colors"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-foreground truncate">
+                        <span className="text-sm font-medium text-heading-section truncate">
                           {hs.name}
                         </span>
-                        <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                        <span className="text-xs text-text-body shrink-0 ml-2">
                           {hs.matching_count} matches
                         </span>
                       </div>
@@ -250,7 +250,7 @@ const AllAgentConnectHome = () => {
                   )}
                   {commSummary.recentThread ? (
                     <div className="p-2 rounded-lg border border-border">
-                      <p className="text-sm text-foreground truncate">
+                      <p className="text-sm text-heading-section truncate">
                         {commSummary.recentThread.subject}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
@@ -278,8 +278,8 @@ const AllAgentConnectHome = () => {
                 <Home className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-foreground">My Listings</h3>
-                <p className="text-xs text-muted-foreground truncate">
+                <h3 className="text-sm font-semibold text-heading-section">My Listings</h3>
+                <p className="text-xs text-text-body truncate">
                   Manage your active and off-market inventory
                 </p>
               </div>
@@ -295,8 +295,8 @@ const AllAgentConnectHome = () => {
                 <Users className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-foreground">My Contacts</h3>
-                <p className="text-xs text-muted-foreground truncate">
+                <h3 className="text-sm font-semibold text-heading-section">My Contacts</h3>
+                <p className="text-xs text-text-body truncate">
                   Client list and relationship management
                 </p>
               </div>
@@ -312,8 +312,8 @@ const AllAgentConnectHome = () => {
                 <UserCircle className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-foreground">Profile & Branding</h3>
-                <p className="text-xs text-muted-foreground truncate">
+                <h3 className="text-sm font-semibold text-heading-section">Profile & Branding</h3>
+                <p className="text-xs text-text-body truncate">
                   Public profile and marketing assets
                 </p>
               </div>
@@ -332,8 +332,8 @@ const AllAgentConnectHome = () => {
                 <UsersRound className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm font-medium text-foreground">Manage Team</h3>
-                <p className="text-xs text-muted-foreground truncate">
+                <h3 className="text-sm font-medium text-heading-section">Manage Team</h3>
+                <p className="text-xs text-text-body truncate">
                   Team members and permissions
                 </p>
               </div>
@@ -349,8 +349,8 @@ const AllAgentConnectHome = () => {
                 <SearchCheck className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm font-medium text-foreground">Global Search</h3>
-                <p className="text-xs text-muted-foreground truncate">
+                <h3 className="text-sm font-medium text-heading-section">Global Search</h3>
+                <p className="text-xs text-text-body truncate">
                   Find agents, listings, and contacts
                 </p>
               </div>

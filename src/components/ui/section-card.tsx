@@ -40,14 +40,14 @@ export function SectionCard({
                     {icon}
                   </span>
                 ) : null}
-                <h3 className="text-sm font-semibold tracking-wide text-foreground">
+                <h3 className="text-sm font-semibold tracking-wide text-heading-section">
                   {title}
                 </h3>
               </div>
             ) : null}
 
             {description ? (
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-sm text-text-body">
                 {description}
               </p>
             ) : null}
