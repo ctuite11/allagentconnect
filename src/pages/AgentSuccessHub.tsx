@@ -377,7 +377,7 @@ export default function AgentSuccessHub() {
       metricValue: activeListingsCount,
       metricLabel: "Active",
       route: "/agent/listings",
-      accentColor: "border-l-blue-500",
+      accentColor: "border-l-primary",
     },
     {
       icon: <Users className="w-6 h-6" />,

@@ -919,14 +919,14 @@ const AgentListingDetail = () => {
 
             {/* Showing Instructions - Agent Only */}
             {isAgentView && (
-              <Card className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-800/50 rounded-xl shadow-sm">
+              <Card className="bg-muted/50 dark:bg-muted/20 border-border rounded-xl shadow-sm border-l-4 border-l-primary">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2 text-blue-900 dark:text-blue-100">
-                      <Info className="w-5 h-5" />
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                      <Info className="w-5 h-5 text-primary" />
                       Showing Instructions
                     </CardTitle>
-                    <Badge variant="outline" className="text-xs border-blue-300 text-blue-700 dark:text-blue-300">
+                    <Badge variant="outline" className="text-xs border-border text-muted-foreground">
                       Agent Only
                     </Badge>
                   </div>
@@ -946,7 +946,7 @@ const AgentListingDetail = () => {
                     <DetailRow label="Contact Phone" value={formatPhoneNumber(listing.showing_contact_phone)} />
                   )}
                   {listing.showing_instructions && (
-                    <div className="pt-2 mt-2 border-t border-blue-200/50">
+                    <div className="pt-2 mt-2 border-t border-border">
                       <p className="text-sm text-muted-foreground mb-1">Instructions:</p>
                       <p className="text-sm text-foreground whitespace-pre-wrap">{listing.showing_instructions}</p>
                     </div>

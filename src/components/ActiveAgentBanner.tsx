@@ -44,7 +44,7 @@ export function ActiveAgentBanner() {
   if (!agent) return null;
 
   return (
-    <div className="w-full bg-blue-50 border-b border-blue-100 px-4 py-2 text-sm flex items-center justify-center">
+    <div className="w-full bg-muted border-b border-border px-4 py-2 text-sm flex items-center justify-center">
       <span>
         You're currently working with{" "}
         <span className="font-medium">
