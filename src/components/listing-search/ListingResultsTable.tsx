@@ -538,23 +538,23 @@ const ListingResultsTable = ({
                     </button>
                   </TableCell>
 
-                  {/* Thumbnail */}
-                  <TableCell className="px-4 py-4 align-top">
-                    <div className="relative h-[64px] w-[104px] overflow-hidden rounded-lg border border-neutral-200/70 bg-neutral-50">
-                      {thumbnail ? (
-                        <img src={thumbnail} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                          No photo
-                        </div>
-                      )}
-                      {getPhotoCount(listing) > 0 && (
-                        <div className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
-                          {getPhotoCount(listing)}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
+{/* Photo */}
+<TableCell className="px-4 py-4 align-top whitespace-nowrap w-[200px]">
+  <div className="relative h-[96px] w-[160px] overflow-hidden rounded-xl border border-neutral-200/70 bg-neutral-50">
+    {thumbnail ? (
+      <img src={thumbnail} alt="" className="h-full w-full object-cover" />
+    ) : (
+      <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+        No photo
+      </div>
+    )}
+    {getPhotoCount(listing) > 0 && (
+      <div className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+        {getPhotoCount(listing)}
+      </div>
+    )}
+  </div>
+</TableCell>
 
                   {/* Address */}
                   <TableCell className="px-4 py-4 align-top">
@@ -587,48 +587,40 @@ const ListingResultsTable = ({
                       );
                     })()}
 
-                    {/* Property Details Row */}
-                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                      {getPropertyStyle(listing) && (
-                        <span className="rounded-md bg-neutral-100 px-2 py-0.5 border border-neutral-200/70">
-                          {getPropertyStyle(listing)}
-                        </span>
-                      )}
-                      {listing.year_built && (
-                        <span className="rounded-md bg-neutral-100 px-2 py-0.5 border border-neutral-200/70">
-                          Built {listing.year_built}
-                        </span>
-                      )}
-                      {formatLotSize(listing.lot_size) && (
-                        <span className="rounded-md bg-neutral-100 px-2 py-0.5 border border-neutral-200/70">
-                          {formatLotSize(listing.lot_size)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Bottom info bar */}
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-                      {openHouseInfo?.hasPublicOpen && (
-                        <span className="rounded-md bg-neutral-100 px-2 py-0.5 border border-neutral-200/70">
-                          Open
-                        </span>
-                      )}
-                      {openHouseInfo?.hasBrokerOpen && (
-                        <span className="rounded-md bg-neutral-100 px-2 py-0.5 border border-neutral-200/70">
-                          Broker
-                        </span>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          navigate(`/property/${listing.id}`);
-                        }}
-                        className="text-primary font-mono hover:underline"
-                      >
-                        #{listing.listing_number}
-                      </button>
-                    </div>
+{/* Chips Row - Property Style, Year, Lot, Open Houses, Listing # */}
+<div className="mt-2 flex flex-wrap items-center gap-2">
+  {getPropertyStyle(listing) && (
+    <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] text-muted-foreground border border-neutral-200/70">
+      {getPropertyStyle(listing)}
+    </span>
+  )}
+  {listing.year_built && (
+    <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] text-muted-foreground border border-neutral-200/70">
+      Built {listing.year_built}
+    </span>
+  )}
+  {formatLotSize(listing.lot_size) && (
+    <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] text-muted-foreground border border-neutral-200/70">
+      {formatLotSize(listing.lot_size)}
+    </span>
+  )}
+  {openHouseInfo?.hasPublicOpen && (
+    <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] border border-neutral-200/70 text-muted-foreground">
+      Open
+    </span>
+  )}
+  {openHouseInfo?.hasBrokerOpen && (
+    <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] border border-neutral-200/70 text-muted-foreground">
+      Broker
+    </span>
+  )}
+  <button
+    onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`); }}
+    className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] border border-neutral-200/70 font-mono text-primary hover:underline"
+  >
+    #{listing.listing_number}
+  </button>
+</div>
                   </TableCell>
 
                   {/* Price */}
