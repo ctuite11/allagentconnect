@@ -120,7 +120,14 @@ export function ShareListingsDialog({
 }: Props) {
   const [selectedChips, setSelectedChips] = React.useState<Set<string>>(new Set());
   const [showSavePrompt, setShowSavePrompt] = React.useState(false);
-  const [pendingRecipient, setPendingRecipient] = React.useState<Recipient | null>(null);
+  const [lastSavedEmail, setLastSavedEmail] = React.useState<string>("");
+
+  // Reset save prompt when recipient changes
+  React.useEffect(() => {
+    if (recipientEmail !== lastSavedEmail) {
+      setShowSavePrompt(false);
+    }
+  }, [recipientEmail, lastSavedEmail]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -142,37 +149,6 @@ export function ShareListingsDialog({
     setSelectedChips(newSelected);
   };
 
-  const handleAddRecipient = () => {
-    if (recipientName.trim() && recipientEmail.trim()) {
-      const newRecipient = { name: recipientName.trim(), email: recipientEmail.trim() };
-      
-      // Show save prompt
-      setPendingRecipient(newRecipient);
-      setShowSavePrompt(true);
-    }
-  };
-
-  const handleSaveToContacts = () => {
-    if (pendingRecipient && onSaveContact) {
-      onSaveContact(pendingRecipient.name, pendingRecipient.email);
-    }
-    finishAddingRecipient();
-  };
-
-  const handleSkipSave = () => {
-    finishAddingRecipient();
-  };
-
-  const finishAddingRecipient = () => {
-    if (pendingRecipient && onAddRecipient) {
-      onAddRecipient(pendingRecipient);
-    }
-    // Clear fields
-    setRecipientName("");
-    setRecipientEmail("");
-    setShowSavePrompt(false);
-    setPendingRecipient(null);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -296,8 +272,36 @@ export function ShareListingsDialog({
 
             {manualMode ? (
               <div className="space-y-3 pt-1">
-                {/* Save to Contacts Prompt */}
-                {showSavePrompt && pendingRecipient ? (
+                <div className="grid gap-3">
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-foreground">Recipient Name</div>
+                    <div className="relative">
+                      <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        value={recipientName}
+                        onChange={(e) => setRecipientName(e.target.value)}
+                        placeholder="Jane Buyer"
+                        className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-primary focus:ring-primary/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-foreground">Recipient Email</div>
+                    <div className="relative">
+                      <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        value={recipientEmail}
+                        onChange={(e) => setRecipientEmail(e.target.value)}
+                        placeholder="jane@email.com"
+                        className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-primary focus:ring-primary/20"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save to Contacts Prompt - shows when name and email are filled */}
+                {recipientName.trim() && recipientEmail.trim() && onSaveContact && !showSavePrompt && (
                   <div className="rounded-xl border border-neutral-200 bg-white p-4 space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="rounded-lg bg-neutral-100 p-2">
@@ -305,10 +309,10 @@ export function ShareListingsDialog({
                       </div>
                       <div>
                         <div className="text-sm font-medium text-foreground">
-                          Save "{pendingRecipient.name}" to My Contacts?
+                          Save "{recipientName.trim()}" to My Contacts?
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">
-                          {pendingRecipient.email}
+                          {recipientEmail.trim()}
                         </div>
                       </div>
                     </div>
@@ -316,7 +320,11 @@ export function ShareListingsDialog({
                       <Button
                         type="button"
                         size="sm"
-                        onClick={handleSaveToContacts}
+                        onClick={() => {
+                          onSaveContact(recipientName.trim(), recipientEmail.trim());
+                          setLastSavedEmail(recipientEmail.trim());
+                          setShowSavePrompt(true);
+                        }}
                         className="rounded-lg bg-primary hover:bg-primary/90 text-white"
                       >
                         Save to My Contacts
@@ -325,57 +333,44 @@ export function ShareListingsDialog({
                         type="button"
                         size="sm"
                         variant="ghost"
-                        onClick={handleSkipSave}
+                        onClick={() => {
+                          setLastSavedEmail(recipientEmail.trim());
+                          setShowSavePrompt(true);
+                        }}
                         className="rounded-lg text-muted-foreground hover:bg-neutral-100"
                       >
                         No thanks
                       </Button>
                     </div>
                   </div>
-                ) : (
-                  <>
-                    <div className="grid gap-3">
-                      <div className="space-y-2">
-                        <div className="text-sm font-medium text-foreground">Recipient Name</div>
-                        <div className="relative">
-                          <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            value={recipientName}
-                            onChange={(e) => setRecipientName(e.target.value)}
-                            placeholder="Jane Buyer"
-                            className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-primary focus:ring-primary/20"
-                          />
-                        </div>
-                      </div>
+                )}
 
-                      <div className="space-y-2">
-                        <div className="text-sm font-medium text-foreground">Recipient Email</div>
-                        <div className="relative">
-                          <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            value={recipientEmail}
-                            onChange={(e) => setRecipientEmail(e.target.value)}
-                            placeholder="jane@email.com"
-                            className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-primary focus:ring-primary/20"
-                          />
-                        </div>
+                {/* Add Another Contact Button with tooltip */}
+                {onAddRecipient && recipientName.trim() && recipientEmail.trim() && (
+                  <div className="relative group">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (onAddRecipient) {
+                          onAddRecipient({ name: recipientName.trim(), email: recipientEmail.trim() });
+                        }
+                        setRecipientName("");
+                        setRecipientEmail("");
+                        setShowSavePrompt(false);
+                      }}
+                      className="rounded-lg border-neutral-300 text-foreground hover:bg-neutral-50"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Another Contact
+                    </Button>
+                    <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-10">
+                      <div className="bg-foreground text-background text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-lg">
+                        You can add multiple contacts to this message
                       </div>
                     </div>
-
-                    {/* Add Another Contact Button */}
-                    {onAddRecipient && recipientName.trim() && recipientEmail.trim() && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddRecipient}
-                        className="rounded-lg border-neutral-300 text-foreground hover:bg-neutral-50"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Contact & Enter Another
-                      </Button>
-                    )}
-                  </>
+                  </div>
                 )}
               </div>
             ) : null}
