@@ -1,208 +1,275 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Search, FileStack, MessageSquare, Users, Shield, ArrowRight } from "lucide-react";
-import { WelcomeInterstitial } from "@/components/WelcomeInterstitial";
+import { SectionCard } from "@/components/ui/section-card";
+import { Search, FileStack, MessageSquare, Plus, ArrowRight } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+
+interface HotSheetSummary {
+  id: string;
+  name: string;
+  matching_count: number;
+  updated_at: string;
+}
+
+interface CommCenterSummary {
+  unreadCount: number;
+  recentThread: {
+    subject: string;
+    timestamp: string;
+  } | null;
+}
 
 const AllAgentConnectHome = () => {
   const navigate = useNavigate();
-  const [showInterstitial, setShowInterstitial] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [hotsheets, setHotsheets] = useState<HotSheetSummary[]>([]);
+  const [commSummary, setCommSummary] = useState<CommCenterSummary>({ unreadCount: 0, recentThread: null });
+
+  useEffect(() => {
+    loadWorkspaceData();
+  }, []);
+
+  const loadWorkspaceData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      // Load hotsheets
+      const { data: hotsheetsData } = await supabase
+        .from("hot_sheets")
+        .select("id, name, updated_at, criteria")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .order("updated_at", { ascending: false })
+        .limit(5);
+
+      if (hotsheetsData) {
+        const hotsheetsWithCounts = await Promise.all(
+          hotsheetsData.map(async (hs) => {
+            // Get approximate matching count
+            const { count } = await supabase
+              .from("listings")
+              .select("*", { count: "exact", head: true })
+              .eq("status", "active");
+            
+            return {
+              id: hs.id,
+              name: hs.name,
+              matching_count: count || 0,
+              updated_at: hs.updated_at,
+            };
+          })
+        );
+        setHotsheets(hotsheetsWithCounts);
+      }
+
+      // Load recent email campaign for comm center
+      const { data: recentCampaign } = await supabase
+        .from("email_campaigns")
+        .select("subject, sent_at")
+        .eq("agent_id", user.id)
+        .order("sent_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      // Count unsent/pending campaigns as "unread" equivalent
+      const { count: pendingCount } = await supabase
+        .from("email_campaigns")
+        .select("*", { count: "exact", head: true })
+        .eq("agent_id", user.id)
+        .is("sent_at", null);
+
+      setCommSummary({
+        unreadCount: pendingCount || 0,
+        recentThread: recentCampaign ? {
+          subject: recentCampaign.subject,
+          timestamp: recentCampaign.sent_at,
+        } : null,
+      });
+
+    } catch (error) {
+      console.error("Error loading workspace data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
       <Helmet>
-        <title>AllAgentConnect | Agent Collaboration Platform</title>
+        <title>Success Hub | AllAgentConnect</title>
         <meta 
           name="description" 
-          content="The agent-first collaboration platform. Search listings, manage hot sheets, and connect with verified agents." 
+          content="Your active workspace for managing listings, hotsheets, and communications." 
         />
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        {/* Hero - Simple, tool-first */}
-        <section className="border-b border-border">
-          <div className="max-w-[1280px] mx-auto px-6 py-20 md:py-28">
-            <div className="max-w-2xl">
-              <h1 className="text-3xl md:text-4xl font-semibold text-foreground tracking-tight mb-4">
-                The operating system for real estate agents.
-              </h1>
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                Search inventory, manage client hot sheets, and collaborate with verified agents—all in one workspace.
-              </p>
-              <div className="flex flex-wrap gap-3">
+        <div className="max-w-[1280px] mx-auto px-6 py-12">
+          {/* Page Header */}
+          <div className="mb-10">
+            <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+              Success Hub
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Your active workspace
+            </p>
+          </div>
+
+          {/* Primary Work Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Listing Search */}
+            <SectionCard
+              title="Listing Search"
+              icon={<Search />}
+              description="Search all inventory by status, price, and location"
+              rightSlot={
                 <Button 
+                  size="sm" 
                   onClick={() => navigate("/listing-search")}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="gap-1"
                 >
-                  Open Listing Search
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  Open Search
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
+              }
+            >
+              <div className="pt-2">
+                <p className="text-xs text-muted-foreground">
+                  MLS-style search across active, coming soon, and off-market inventory.
+                </p>
+              </div>
+            </SectionCard>
+
+            {/* Hotsheets */}
+            <SectionCard
+              title="Hotsheets"
+              icon={<FileStack />}
+              description="Automated listing alerts for clients"
+              rightSlot={
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => navigate("/hot-sheets")}
+                  >
+                    Open
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={() => navigate("/client/create-hotsheet")}
+                    className="gap-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Create
+                  </Button>
+                </div>
+              }
+            >
+              {loading ? (
+                <div className="py-4 flex justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+                </div>
+              ) : hotsheets.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-2">
+                  No active hotsheets yet
+                </p>
+              ) : (
+                <div className="space-y-2 pt-2">
+                  {hotsheets.slice(0, 3).map((hs) => (
+                    <button
+                      key={hs.id}
+                      onClick={() => navigate(`/hot-sheets/${hs.id}`)}
+                      className="w-full text-left p-2 rounded-lg border border-border hover:bg-muted transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground truncate">
+                          {hs.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                          {hs.matching_count} matches
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Updated {formatDistanceToNow(new Date(hs.updated_at), { addSuffix: true })}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </SectionCard>
+
+            {/* Comm Center */}
+            <SectionCard
+              title="Comm Center"
+              icon={<MessageSquare />}
+              description="Outbound email campaigns"
+              rightSlot={
                 <Button 
-                  variant="outline"
-                  onClick={() => navigate("/auth")}
+                  size="sm" 
+                  onClick={() => navigate("/communication-center")}
+                  className="gap-1"
                 >
-                  Create Account
+                  Open
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Feature Cards - 3 columns */}
-        <section className="border-b border-border">
-          <div className="max-w-[1280px] mx-auto px-6 py-16">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-8">
-              Core Tools
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Search */}
-              <div className="border border-border rounded-lg p-6 bg-card">
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-4">
-                  <Search className="h-5 w-5 text-primary" />
+              }
+            >
+              {loading ? (
+                <div className="py-4 flex justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Listing Search</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  MLS-style search across all inventory. Filter by status, price, location, and criteria.
-                </p>
-              </div>
-
-              {/* Hotsheets */}
-              <div className="border border-border rounded-lg p-6 bg-card">
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-4">
-                  <FileStack className="h-5 w-5 text-primary" />
+              ) : (
+                <div className="pt-2 space-y-2">
+                  {commSummary.unreadCount > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium">
+                        {commSummary.unreadCount}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        pending campaign{commSummary.unreadCount !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  )}
+                  {commSummary.recentThread ? (
+                    <div className="p-2 rounded-lg border border-border">
+                      <p className="text-sm text-foreground truncate">
+                        {commSummary.recentThread.subject}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Sent {formatDistanceToNow(new Date(commSummary.recentThread.timestamp), { addSuffix: true })}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      No campaigns sent yet
+                    </p>
+                  )}
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Hot Sheets</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Automated listing alerts for your clients. Save searches and deliver matches instantly.
-                </p>
-              </div>
+              )}
+            </SectionCard>
+          </div>
 
-              {/* Connect */}
-              <div className="border border-border rounded-lg p-6 bg-card">
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-4">
-                  <Users className="h-5 w-5 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Agent Network</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Find buyer agents with matching clients. Share off-market inventory securely.
-                </p>
-              </div>
+          {/* Secondary Areas - Visual placeholder for future modules */}
+          <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="border border-dashed border-border rounded-2xl p-6 flex items-center justify-center min-h-[120px]">
+              <p className="text-sm text-muted-foreground">
+                Alerts & notifications coming soon
+              </p>
+            </div>
+            <div className="border border-dashed border-border rounded-2xl p-6 flex items-center justify-center min-h-[120px]">
+              <p className="text-sm text-muted-foreground">
+                Saved searches coming soon
+              </p>
             </div>
           </div>
-        </section>
-
-        {/* Workspace Navigation */}
-        <section className="border-b border-border">
-          <div className="max-w-[1280px] mx-auto px-6 py-16">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-8">
-              Your Workspace
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <button 
-                onClick={() => navigate("/listing-search")}
-                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors"
-              >
-                <Search className="h-5 w-5 text-primary mb-3" />
-                <h3 className="font-medium text-foreground">Listing Search</h3>
-                <p className="text-xs text-muted-foreground mt-1">Search all inventory</p>
-              </button>
-
-              <button 
-                onClick={() => navigate("/hot-sheets")}
-                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors"
-              >
-                <FileStack className="h-5 w-5 text-primary mb-3" />
-                <h3 className="font-medium text-foreground">Hot Sheets</h3>
-                <p className="text-xs text-muted-foreground mt-1">Manage client alerts</p>
-              </button>
-
-              <button 
-                onClick={() => navigate("/communication-center")}
-                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors"
-              >
-                <MessageSquare className="h-5 w-5 text-primary mb-3" />
-                <h3 className="font-medium text-foreground">Communications</h3>
-                <p className="text-xs text-muted-foreground mt-1">Outbound campaigns</p>
-              </button>
-
-              <button 
-                onClick={() => navigate("/agent-search")}
-                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors"
-              >
-                <Users className="h-5 w-5 text-primary mb-3" />
-                <h3 className="font-medium text-foreground">Agent Directory</h3>
-                <p className="text-xs text-muted-foreground mt-1">Find verified agents</p>
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* Credibility Section */}
-        <section className="border-b border-border">
-          <div className="max-w-[1280px] mx-auto px-6 py-16">
-            <div className="max-w-xl">
-              <div className="flex items-center gap-2 mb-4">
-                <Shield className="h-5 w-5 text-primary" />
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Why AAC
-                </h2>
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-4">
-                Built by agents, for agents.
-              </h3>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                <li className="flex items-start gap-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                  <span>Your listing, your lead. No lead routing or buyer capture.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                  <span>Patent-protected collaboration model.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                  <span>Agent-first. No consumer marketing or IDX feeds.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* Minimal Footer */}
-        <footer className="bg-card border-t border-border">
-          <div className="max-w-[1280px] mx-auto px-6 py-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="text-sm text-muted-foreground">
-                © {new Date().getFullYear()} AllAgentConnect. All rights reserved.
-              </div>
-              <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                <button 
-                  onClick={() => setShowInterstitial(true)}
-                  className="hover:text-foreground transition-colors"
-                >
-                  Preview Interstitial
-                </button>
-                <button 
-                  onClick={() => navigate("/auth")}
-                  className="hover:text-foreground transition-colors"
-                >
-                  Sign In
-                </button>
-                <button 
-                  onClick={() => navigate("/auth")}
-                  className="hover:text-foreground transition-colors"
-                >
-                  Create Account
-                </button>
-              </div>
-            </div>
-          </div>
-        </footer>
-
-        {showInterstitial && (
-          <WelcomeInterstitial onComplete={() => setShowInterstitial(false)} />
-        )}
+        </div>
       </div>
     </>
   );
