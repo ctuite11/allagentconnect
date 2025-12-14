@@ -518,7 +518,6 @@ const ListingResultsTable = ({
             <SortableHeader column="bedrooms" className="text-center">Beds</SortableHeader>
             <SortableHeader column="bathrooms" className="text-center">Baths</SortableHeader>
             <SortableHeader column="square_feet" className="text-right">SqFt</SortableHeader>
-            <TableHead className="text-xs font-semibold text-muted-foreground">Status</TableHead>
             <SortableHeader column="list_date" className="text-center">DOM</SortableHeader>
             <TableHead className="text-xs font-semibold text-muted-foreground">Facts</TableHead>
             <TableHead className="text-xs font-semibold text-muted-foreground">Office</TableHead>
@@ -590,17 +589,21 @@ const ListingResultsTable = ({
                       const loc = getLocation(listing);
                       return (
                         <>
-                          <a
-                            href="#"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              navigate(`/property/${listing.id}`);
-                            }}
-                            className="text-sm font-semibold text-foreground hover:text-primary hover:underline block"
-                          >
-                            {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
-                          </a>
+                          {/* Street + Status Badge Row */}
+                          <div className="flex items-start justify-between gap-2">
+                            <a
+                              href="#"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                navigate(`/property/${listing.id}`);
+                              }}
+                              className="text-sm font-semibold text-foreground hover:text-primary hover:underline"
+                            >
+                              {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
+                            </a>
+                            {getStatusBadge(listing.status)}
+                          </div>
 
                           <div className="mt-1 text-xs text-muted-foreground">
                             {loc.city}{loc.city ? "," : ""} {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
@@ -660,8 +663,6 @@ const ListingResultsTable = ({
                     {listing.square_feet?.toLocaleString() || "-"}
                   </TableCell>
 
-                  {/* Status */}
-                  <TableCell className="px-3 py-3 align-top">{getStatusBadge(listing.status)}</TableCell>
 
                   {/* DOM */}
                   <TableCell className="px-3 py-3 align-top text-sm">
