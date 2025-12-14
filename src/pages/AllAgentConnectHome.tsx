@@ -119,7 +119,7 @@ const AllAgentConnectHome = () => {
 
       <div className="min-h-screen bg-background">
         {/* Page Title Block - Dedicated Section */}
-        <div className="pt-20 pb-12">
+        <div className="pt-28 pb-14">
           <div className="max-w-[1280px] mx-auto px-6">
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-neutral-800">
               Success Hub
