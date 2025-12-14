@@ -164,48 +164,74 @@ const getPhotoCount = (listing: Listing) => {
   return 0;
 };
 
-// Boston-aware address normalization helpers
+// Boston neighborhood whitelist
+const BOSTON_NEIGHBORHOODS = new Set(
+  [
+    "allston", "back bay", "bay village", "beacon hill", "brighton",
+    "charlestown", "chinatown", "dorchester", "downtown", "east boston",
+    "fenway", "fenway-kenmore", "hyde park", "jamaica plain", "mattapan",
+    "mission hill", "north end", "roslindale", "roxbury", "south boston",
+    "south boston waterfront", "south end", "west end", "west roxbury",
+    "seaport", "leather district", "financial district"
+  ].map(s => s.toLowerCase())
+);
+
+const norm = (s?: string) => (s || "").trim().toLowerCase();
+
 const titleCase = (s: string) =>
   s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
 const sanitizeStreet = (raw?: string) => {
   const s = (raw || "").trim();
   if (!s) return "";
-  // Remove repeated trailing ", City, ST 12345" patterns
-  // e.g. "16 N Mead St, Charlestown, Ma 02129, Boston, Ma 00000" -> "16 N Mead St"
+  // strip repeated ", City, ST ZIP" chunks at end
   return s.replace(/(?:,\s*[^,]+,\s*[A-Za-z]{2}\s*\d{5})+$/i, "").trim();
 };
 
-const normalizeNeighborhood = (n?: string, fallbackFromAddress?: string) => {
-  const v = (n || "").trim();
-  if (v) return v.replace(/^boston\s*[-,]\s*/i, "").trim();
-
-  // If neighborhood missing, try to extract from address chunk like ", Charlestown, MA 02129"
-  const a = (fallbackFromAddress || "").trim();
-  const m = a.match(/,\s*([^,]+),\s*[A-Za-z]{2}\s*\d{5}\s*$/i);
-  return m ? m[1].trim() : "";
+const extractZipFromAddress = (raw?: string) => {
+  const s = (raw || "");
+  const m = s.match(/\b(\d{5})(?:-\d{4})?\b/);
+  return m ? m[1] : "";
 };
 
-const getBostonAwareLocation = (listing: Listing) => {
+const getLocation = (listing: Listing) => {
   const street = sanitizeStreet(listing.address);
-  const neighborhood = normalizeNeighborhood(listing.neighborhood, listing.address);
 
-  // If we have a neighborhood and it's one of Boston's, force city Boston
-  const isBoston = (listing.city || "").trim().toLowerCase() === "boston" || !!neighborhood;
+  const cityRaw = (listing.city || "").trim();
+  const neighborhoodRaw = (listing.neighborhood || "").trim();
 
-  const city = isBoston ? "Boston" : titleCase((listing.city || "").trim());
+  const neighborhood = neighborhoodRaw
+    ? neighborhoodRaw.replace(/^boston\s*[-,]\s*/i, "").trim()
+    : "";
+
+  const neighborhoodKey = norm(neighborhood);
+
+  const isBoston =
+    norm(cityRaw) === "boston" ||
+    (neighborhoodKey && BOSTON_NEIGHBORHOODS.has(neighborhoodKey));
+
+  // ZIP: prefer listing.zip_code unless missing/00000, then extract from address
+  const zipRaw = (listing.zip_code || "").trim();
+  const zip =
+    zipRaw && zipRaw !== "00000" ? zipRaw : (extractZipFromAddress(listing.address) || "");
+
   const state = ((listing.state || "MA").trim().toUpperCase() || "MA");
-  const zip = (listing.zip_code || "").trim();
 
-  // If zip is bogus 00000, drop it
-  const safeZip = zip && zip !== "00000" ? zip : "";
+  // City: if Boston forced, city is Boston; otherwise city is the listing city
+  const city = isBoston ? "Boston" : titleCase(cityRaw || "");
+
+  // If not Boston and neighborhood equals the city (like "Northborough"), don't show it as a separate line
+  const showNeighborhood =
+    isBoston ? !!neighborhood : (!!neighborhood && norm(neighborhood) !== norm(city));
 
   return {
     street,
-    neighborhood: neighborhood ? titleCase(neighborhood) : "",
     city,
     state,
-    zip: safeZip,
+    zip,
+    neighborhood: neighborhood ? titleCase(neighborhood) : "",
+    isBoston,
+    showNeighborhood,
   };
 };
 
@@ -559,7 +585,7 @@ const ListingResultsTable = ({
                   {/* Address */}
                   <TableCell className="px-4 py-4 align-top min-w-[280px]">
                     {(() => {
-                      const loc = getBostonAwareLocation(listing);
+                      const loc = getLocation(listing);
                       return (
                         <>
                           <a
@@ -575,10 +601,10 @@ const ListingResultsTable = ({
                           </a>
 
                           <div className="mt-1 text-xs text-muted-foreground">
-                            {loc.city}, {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
+                            {loc.city}{loc.city ? "," : ""} {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
                           </div>
 
-                          {loc.city === "Boston" && loc.neighborhood && (
+                          {loc.showNeighborhood && (
                             <div className="mt-1 text-xs text-muted-foreground">
                               {loc.neighborhood}
                             </div>
@@ -709,15 +735,15 @@ const ListingResultsTable = ({
                         <div className="rounded-xl border border-neutral-200/70 bg-background p-3">
                           <div className="flex items-start justify-between gap-4">
                             {(() => {
-                              const loc = getBostonAwareLocation(listing);
+                              const loc = getLocation(listing);
                               return (
                                 <div>
                                   <div className="text-sm font-semibold">
                                     {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
                                   </div>
                                   <div className="mt-1 text-xs text-muted-foreground">
-                                    {loc.city}, {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
-                                    {loc.city === "Boston" && loc.neighborhood ? ` • ${loc.neighborhood}` : ""}
+                                    {loc.city}{loc.city ? "," : ""} {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
+                                    {loc.showNeighborhood ? ` • ${loc.neighborhood}` : ""}
                                   </div>
                                 </div>
                               );
