@@ -136,7 +136,7 @@ const AllAgentConnectHome = () => {
           {/* Tier 1 – Command Panels */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Listing Search */}
-            <div className="p-6 rounded-2xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_12px_28px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2">
+            <div className="p-6 rounded-2xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_10px_24px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-100/70 border border-neutral-200/70 flex items-center justify-center">
@@ -156,7 +156,7 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Hotsheets */}
-            <div className="p-6 rounded-2xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_12px_28px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2">
+            <div className="p-6 rounded-2xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_10px_24px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-100/70 border border-neutral-200/70 flex items-center justify-center">
@@ -181,7 +181,7 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Comm Center */}
-            <div className="p-6 rounded-2xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_12px_28px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2">
+            <div className="p-6 rounded-2xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_10px_24px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-100/70 border border-neutral-200/70 flex items-center justify-center">
