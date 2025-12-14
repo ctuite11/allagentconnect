@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -13,6 +13,7 @@ import { FilterState, initialFilters } from "@/components/listing-search/Listing
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SectionCard } from "@/components/ui/section-card";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
+import SaveSearchDialog from "@/components/SaveSearchDialog";
 
 
 const ListingSearchResults = () => {
@@ -50,6 +51,7 @@ const ListingSearchResults = () => {
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
+  const [saveSearchDialogOpen, setSaveSearchDialogOpen] = useState(false);
 
   // Build current search criteria for hot sheet
   const buildHotSheetCriteria = () => ({
@@ -63,6 +65,38 @@ const ListingSearchResults = () => {
     bathrooms: filters?.bathsMin ? parseFloat(filters.bathsMin) : null,
     statuses: filters?.statuses,
   });
+
+  // Generate search summary for default name
+  const searchSummary = useMemo(() => {
+    const parts: string[] = [];
+    
+    // Towns
+    if (filters.selectedTowns.length > 0) {
+      parts.push(filters.selectedTowns.slice(0, 2).join(", ") + (filters.selectedTowns.length > 2 ? ` +${filters.selectedTowns.length - 2}` : ""));
+    } else if (filters.state) {
+      parts.push(filters.state);
+    }
+    
+    // Beds
+    if (filters.bedsMin) {
+      parts.push(`${filters.bedsMin}+ Beds`);
+    }
+    
+    // Price
+    if (filters.priceMin || filters.priceMax) {
+      const min = filters.priceMin ? `$${Math.round(parseInt(filters.priceMin) / 1000)}k` : "";
+      const max = filters.priceMax ? `$${Math.round(parseInt(filters.priceMax) / 1000)}k` : "";
+      if (min && max) {
+        parts.push(`${min}–${max}`);
+      } else if (min) {
+        parts.push(`${min}+`);
+      } else if (max) {
+        parts.push(`Up to ${max}`);
+      }
+    }
+    
+    return parts.join(" • ") || `Search ${new Date().toLocaleDateString()}`;
+  }, [filters]);
 
   const handleSelectListing = (id: string) => {
     setSelectedListings(prev => {
@@ -88,13 +122,6 @@ const ListingSearchResults = () => {
     setShowSelectedOnly(!showSelectedOnly);
   };
 
-  const handleSaveSearch = () => {
-    const searchUrl = window.location.href;
-    const savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
-    savedSearches.push({ url: searchUrl, savedAt: new Date().toISOString() });
-    localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
-    toast.success('Search saved successfully');
-  };
 
 
   const displayedListings = showSelectedOnly 
@@ -454,7 +481,7 @@ const ListingSearchResults = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleSaveSearch}
+                    onClick={() => setSaveSearchDialogOpen(true)}
                     className="h-8 gap-1.5 text-sm"
                   >
                     <Bookmark className="h-4 w-4" />
@@ -486,6 +513,13 @@ const ListingSearchResults = () => {
                 onOpenChange={setHotSheetDialogOpen}
                 currentSearch={buildHotSheetCriteria()}
                 selectedListingIds={Array.from(selectedListings)}
+              />
+
+              {/* Save Search Dialog */}
+              <SaveSearchDialog
+                open={saveSearchDialogOpen}
+                onOpenChange={setSaveSearchDialogOpen}
+                searchSummary={searchSummary}
               />
 
               <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
