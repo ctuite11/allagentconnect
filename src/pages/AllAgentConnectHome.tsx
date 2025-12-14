@@ -120,14 +120,14 @@ const AllAgentConnectHome = () => {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <div className="max-w-[1280px] mx-auto px-6 py-12">
-          {/* Page Header */}
-          <div className="mb-10">
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-[hsl(220,10%,30%)]">
+        <div className="max-w-[1280px] mx-auto px-6 pt-16 pb-12">
+          {/* Page Title Block */}
+          <div className="mb-14">
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-neutral-800">
               Success Hub
             </h1>
-            <p className="mt-2 text-base font-normal tracking-wide text-[hsl(220,10%,50%)]">
-              Connect • Communicate • Collaborate
+            <p className="mt-3 text-base font-normal tracking-wide text-neutral-500">
+              Connect · Communicate · Collaborate
             </p>
           </div>
 
