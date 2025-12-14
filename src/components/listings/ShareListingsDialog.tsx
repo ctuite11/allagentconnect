@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Home, Mail, Phone, Search, Send, User, PencilLine, Layers } from "lucide-react";
+import { Home, Mail, Phone, Search, Send, User, PencilLine, Layers, Plus, X, UserPlus } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 import {
@@ -24,6 +24,11 @@ type ListingPreview = {
   beds?: number;
   baths?: number;
   sqft?: number;
+};
+
+type Recipient = {
+  name: string;
+  email: string;
 };
 
 type Props = {
@@ -61,6 +66,14 @@ type Props = {
   canSubmit: boolean;
   submitting?: boolean;
   onSubmit: () => void;
+
+  // Optional: Save contact callback
+  onSaveContact?: (name: string, email: string) => void;
+
+  // Optional: Multiple recipients
+  recipients?: Recipient[];
+  onAddRecipient?: (recipient: Recipient) => void;
+  onRemoveRecipient?: (index: number) => void;
 };
 
 const MESSAGE_CHIPS = [
@@ -99,8 +112,15 @@ export function ShareListingsDialog({
   canSubmit,
   submitting,
   onSubmit,
+
+  onSaveContact,
+  recipients = [],
+  onAddRecipient,
+  onRemoveRecipient,
 }: Props) {
   const [selectedChips, setSelectedChips] = React.useState<Set<string>>(new Set());
+  const [showSavePrompt, setShowSavePrompt] = React.useState(false);
+  const [pendingRecipient, setPendingRecipient] = React.useState<Recipient | null>(null);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -120,6 +140,38 @@ export function ShareListingsDialog({
       setMessage(message ? `${message}\n${chip}` : chip);
     }
     setSelectedChips(newSelected);
+  };
+
+  const handleAddRecipient = () => {
+    if (recipientName.trim() && recipientEmail.trim()) {
+      const newRecipient = { name: recipientName.trim(), email: recipientEmail.trim() };
+      
+      // Show save prompt
+      setPendingRecipient(newRecipient);
+      setShowSavePrompt(true);
+    }
+  };
+
+  const handleSaveToContacts = () => {
+    if (pendingRecipient && onSaveContact) {
+      onSaveContact(pendingRecipient.name, pendingRecipient.email);
+    }
+    finishAddingRecipient();
+  };
+
+  const handleSkipSave = () => {
+    finishAddingRecipient();
+  };
+
+  const finishAddingRecipient = () => {
+    if (pendingRecipient && onAddRecipient) {
+      onAddRecipient(pendingRecipient);
+    }
+    // Clear fields
+    setRecipientName("");
+    setRecipientEmail("");
+    setShowSavePrompt(false);
+    setPendingRecipient(null);
   };
 
   return (
@@ -182,9 +234,38 @@ export function ShareListingsDialog({
 
         {/* Body - scrollable */}
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 space-y-6">
+          {/* Added Recipients */}
+          {recipients.length > 0 && (
+            <section className="space-y-2">
+              <div className="text-sm font-medium text-foreground">Recipients ({recipients.length})</div>
+              <div className="flex flex-wrap gap-2">
+                {recipients.map((r, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm"
+                  >
+                    <span className="text-foreground">{r.name}</span>
+                    <span className="text-muted-foreground text-xs">({r.email})</span>
+                    {onRemoveRecipient && (
+                      <button
+                        type="button"
+                        onClick={() => onRemoveRecipient(idx)}
+                        className="ml-1 rounded-full p-0.5 hover:bg-neutral-200 transition-colors"
+                      >
+                        <X className="h-3 w-3 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Contact Search */}
           <section className="space-y-3">
-            <div className="text-sm font-medium text-foreground">Search Contact</div>
+            <div className="text-sm font-medium text-foreground">
+              {recipients.length > 0 ? "Add Another Contact" : "Search Contact"}
+            </div>
 
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -214,32 +295,88 @@ export function ShareListingsDialog({
             </Button>
 
             {manualMode ? (
-              <div className="grid gap-3 pt-1">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-foreground">Recipient Name</div>
-                  <div className="relative">
-                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      value={recipientName}
-                      onChange={(e) => setRecipientName(e.target.value)}
-                      placeholder="Jane Buyer"
-                      className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-primary focus:ring-primary/20"
-                    />
+              <div className="space-y-3 pt-1">
+                {/* Save to Contacts Prompt */}
+                {showSavePrompt && pendingRecipient ? (
+                  <div className="rounded-xl border border-neutral-200 bg-white p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-lg bg-neutral-100 p-2">
+                        <UserPlus className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-foreground">
+                          Save "{pendingRecipient.name}" to My Contacts?
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {pendingRecipient.email}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleSaveToContacts}
+                        className="rounded-lg bg-primary hover:bg-primary/90 text-white"
+                      >
+                        Save to My Contacts
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleSkipSave}
+                        className="rounded-lg text-muted-foreground hover:bg-neutral-100"
+                      >
+                        No thanks
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="grid gap-3">
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium text-foreground">Recipient Name</div>
+                        <div className="relative">
+                          <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            value={recipientName}
+                            onChange={(e) => setRecipientName(e.target.value)}
+                            placeholder="Jane Buyer"
+                            className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-primary focus:ring-primary/20"
+                          />
+                        </div>
+                      </div>
 
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-foreground">Recipient Email</div>
-                  <div className="relative">
-                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      value={recipientEmail}
-                      onChange={(e) => setRecipientEmail(e.target.value)}
-                      placeholder="jane@email.com"
-                      className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-primary focus:ring-primary/20"
-                    />
-                  </div>
-                </div>
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium text-foreground">Recipient Email</div>
+                        <div className="relative">
+                          <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            value={recipientEmail}
+                            onChange={(e) => setRecipientEmail(e.target.value)}
+                            placeholder="jane@email.com"
+                            className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-primary focus:ring-primary/20"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Add Another Contact Button */}
+                    {onAddRecipient && recipientName.trim() && recipientEmail.trim() && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAddRecipient}
+                        className="rounded-lg border-neutral-300 text-foreground hover:bg-neutral-50"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Contact & Enter Another
+                      </Button>
+                    )}
+                  </>
+                )}
               </div>
             ) : null}
           </section>
