@@ -10,6 +10,11 @@ All colors MUST be HSL.
   :root {
     --background: 0 0% 100%;
     --foreground: 216 28% 12%;
+    
+    /* Typography hierarchy - professional workspace colors */
+    --heading-page: 216 20% 25%;
+    --heading-section: 216 16% 35%;
+    --text-body: 216 12% 45%;
 
     --card: 0 0% 100%;
     --card-foreground: 216 28% 12%;
