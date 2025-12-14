@@ -120,9 +120,9 @@ const AllAgentConnectHome = () => {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <div className="max-w-[1280px] mx-auto px-6 pt-16 pb-12">
-          {/* Page Title Block */}
-          <div className="mb-14">
+        {/* Page Title Block - Dedicated Section */}
+        <div className="pt-12 pb-8">
+          <div className="max-w-[1280px] mx-auto px-6">
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-neutral-800">
               Success Hub
             </h1>
@@ -130,6 +130,10 @@ const AllAgentConnectHome = () => {
               Connect · Communicate · Collaborate
             </p>
           </div>
+        </div>
+
+        {/* Page Content */}
+        <div className="max-w-[1280px] mx-auto px-6 pb-12">
 
           {/* Tier 1 – Core Workflow (Largest Cards) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
