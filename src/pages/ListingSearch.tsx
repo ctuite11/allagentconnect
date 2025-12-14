@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ListingSearchFilters, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
-import { RotateCcw, Bookmark, Search } from "lucide-react";
+import { RotateCcw, Search, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ListingSearch = () => {
@@ -156,57 +156,87 @@ const ListingSearch = () => {
     navigate(`/listing-results?${params.toString()}`);
   };
 
+  const handleViewResultsNewTab = () => {
+    const params = new URLSearchParams();
+    
+    if (filters.propertyTypes.length > 0) params.set("propertyTypes", filters.propertyTypes.join(","));
+    if (filters.statuses.length > 0) params.set("statuses", filters.statuses.join(","));
+    if (filters.selectedTowns.length > 0) params.set("towns", filters.selectedTowns.join(","));
+    if (filters.priceMin) params.set("priceMin", filters.priceMin);
+    if (filters.priceMax) params.set("priceMax", filters.priceMax);
+    if (filters.bedsMin) params.set("bedsMin", filters.bedsMin);
+    if (filters.bathsMin) params.set("bathsMin", filters.bathsMin);
+    if (filters.state && filters.state !== "MA") params.set("state", filters.state);
+    if (filters.county) params.set("county", filters.county);
+    
+    window.open(`/listing-results?${params.toString()}`, '_blank');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
 
       <main className="flex-1 pt-20">
         <div className="max-w-[1280px] mx-auto px-6 py-6">
-          {/* Top Bar - Title left, Actions right */}
-          <div className="flex items-start justify-between mb-6">
-            {/* Left: Title + Subtitle */}
-            <div>
-              <h1 className="text-2xl font-semibold text-foreground">Listing Search</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Search MLS and off-market inventory
-              </p>
-            </div>
-            
-            {/* Right: Action cluster */}
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleReset}
-                className="h-8 gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Reset
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/saved-searches")}
-                className="h-8 gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-              >
-                <Bookmark className="h-3.5 w-3.5" />
-                Saved Searches
-              </Button>
-              
-              <span className="text-sm text-muted-foreground">
-                {countLoading ? "—" : resultCount ?? 0} results
-              </span>
-              
-              <Button
-                onClick={handleViewResults}
-                disabled={countLoading || resultCount === 0}
-                size="sm"
-                className="h-8 gap-1.5 text-sm"
-              >
-                <Search className="h-3.5 w-3.5" />
-                View Results
-              </Button>
+          {/* Page Header */}
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-foreground font-display">Listing Search</h1>
+            <p className="text-muted-foreground mt-1">
+              Search MLS and off-market inventory
+            </p>
+          </div>
+          
+          {/* Action Bar */}
+          <div className="bg-card border border-border rounded-lg shadow-sm mb-4">
+            <div className="px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReset}
+                    className="h-8 gap-1.5 text-sm"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Reset
+                  </Button>
+                </div>
+                <div className="flex items-center gap-3">
+                  {/* Results counter - clickable */}
+                  <button
+                    onClick={handleViewResults}
+                    disabled={countLoading || resultCount === 0}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-default cursor-pointer transition-colors group"
+                    title={resultCount !== null && resultCount > 0 ? "View results" : ""}
+                  >
+                    <span className="font-medium text-foreground bg-muted px-2.5 py-1 rounded-md group-hover:bg-muted/80 transition-colors">
+                      {countLoading ? "..." : resultCount ?? 0}
+                    </span>
+                    <span>results</span>
+                  </button>
+                  
+                  <Button
+                    onClick={handleViewResults}
+                    disabled={countLoading || resultCount === 0}
+                    size="sm"
+                    className="h-8 gap-1.5 text-sm bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white"
+                  >
+                    <Search className="h-3.5 w-3.5" />
+                    View Results
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleViewResultsNewTab}
+                    disabled={countLoading || resultCount === 0}
+                    className="h-8 gap-1.5 text-sm"
+                    title="Open results in new tab"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
