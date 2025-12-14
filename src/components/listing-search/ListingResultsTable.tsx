@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, Fragment } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -277,13 +277,15 @@ const ListingResultsTable = ({
 
   const toggleRowSelection = (id: string, e?: React.SyntheticEvent) => {
     e?.stopPropagation?.();
-    const newSelected = new Set(selectedRows);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedRows(newSelected);
+    setSelectedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   const SortableHeader = ({ 
@@ -464,7 +466,7 @@ const ListingResultsTable = ({
             const isExpanded = expandedId === listing.id;
 
             return (
-              <React.Fragment key={listing.id}>
+              <Fragment key={listing.id}>
                 <TableRow
                   ref={(el) => { if (el) rowRefs.set(listing.id, el); }}
                   tabIndex={0}
@@ -715,7 +717,7 @@ const ListingResultsTable = ({
                     </TableCell>
                   </TableRow>
                 )}
-              </React.Fragment>
+              </Fragment>
             );
           })}
         </TableBody>
