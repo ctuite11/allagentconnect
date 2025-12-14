@@ -179,6 +179,54 @@ const ListingResultsTable = ({
   const [sortBy, setSortBy] = useState("date_new");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [focusedIndex, setFocusedIndex] = useState(0);
+  const rowRefs = useState(() => new Map<string, HTMLTableRowElement>())[0];
+
+  const toggleExpand = (id: string) => setExpandedId(prev => (prev === id ? null : id));
+
+  const focusRowByIndex = (idx: number) => {
+    const clamped = Math.max(0, Math.min(idx, displayedListings.length - 1));
+    setFocusedIndex(clamped);
+    const target = displayedListings[clamped];
+    if (!target) return;
+    rowRefs.get(target.id)?.focus();
+    rowRefs.get(target.id)?.scrollIntoView({ block: "nearest" });
+  };
+
+  const onRowKeyDown = (
+    e: React.KeyboardEvent,
+    listing: Listing,
+    idx: number
+  ) => {
+    const tag = (e.target as HTMLElement).tagName.toLowerCase();
+    if (["button", "a", "input", "select", "textarea"].includes(tag)) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        focusRowByIndex(idx + 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        focusRowByIndex(idx - 1);
+        break;
+      case "Enter":
+        e.preventDefault();
+        toggleExpand(listing.id);
+        break;
+      case " ":
+        e.preventDefault();
+        toggleRowSelection(listing.id, e as any);
+        break;
+      case "Escape":
+        if (expandedId) {
+          e.preventDefault();
+          setExpandedId(null);
+        }
+        break;
+    }
+  };
 
   // Filter listings based on selected-only mode
   const displayedListings = showSelectedOnly 
@@ -284,7 +332,7 @@ const ListingResultsTable = ({
   return (
     <div className="space-y-3">
       {/* Sticky Action Bar */}
-      <SectionCard className="sticky top-16 z-20 p-3">
+      <div className="sticky top-4 z-10 rounded-xl bg-background border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_12px_28px_rgba(0,0,0,0.12)] p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
@@ -370,7 +418,7 @@ const ListingResultsTable = ({
             </Select>
           </div>
         </div>
-      </SectionCard>
+      </div>
 
       {/* Results Table */}
       <div className="overflow-auto bg-background rounded-lg border border-border">
@@ -384,8 +432,8 @@ const ListingResultsTable = ({
         />
 
         <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50 border-b border-border">
+        <TableHeader className="bg-neutral-50/70">
+          <TableRow className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-left [&>th]:text-xs [&>th]:font-semibold [&>th]:text-muted-foreground [&>th]:uppercase [&>th]:tracking-wider">
             <TableHead className="w-10 text-xs font-semibold text-muted-foreground">
               <div 
                 className="w-4 h-4 border border-border rounded cursor-pointer flex items-center justify-center hover:bg-muted"
@@ -409,105 +457,114 @@ const ListingResultsTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {displayedListings.map(listing => {
+          {displayedListings.map((listing, idx) => {
             const thumbnail = getThumbnail(listing);
-            const isOffMarket = listing.status === "off_market";
             const pricePerSqFt = getPricePerSqFt(listing.price, listing.square_feet);
             const openHouseInfo = getOpenHouseInfo(listing);
-            
+            const isExpanded = expandedId === listing.id;
+
             return (
-              <TableRow
-                key={listing.id}
-                className={`cursor-pointer transition-all group hover:bg-muted hover:shadow-sm ${
-                  isOffMarket ? "bg-destructive/5" : ""
-                } ${selectedRows.has(listing.id) ? "bg-muted" : ""}`}
-                onClick={() => onRowClick(listing)}
-              >
-                {/* Checkbox */}
-                <TableCell className="py-4 align-top px-2" onClick={(e) => toggleRowSelection(listing.id, e)}>
-                  <div 
-                    className={`w-4 h-4 border rounded cursor-pointer flex items-center justify-center mt-1 ${
-                      selectedRows.has(listing.id) 
-                        ? "bg-primary border-primary" 
-                        : "border-border hover:bg-muted"
-                    }`}
-                  >
-                    {selectedRows.has(listing.id) && (
-                      <Check className="w-3 h-3 text-primary-foreground" />
-                    )}
-                  </div>
-                </TableCell>
+              <>
+                <TableRow
+                  key={listing.id}
+                  ref={(el) => { if (el) rowRefs.set(listing.id, el); }}
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
+                  onKeyDown={(e) => onRowKeyDown(e, listing, idx)}
+                  onClick={() => {
+                    onRowClick(listing);
+                    toggleExpand(listing.id);
+                  }}
+                  className={[
+                    "border-t border-neutral-200/70 cursor-pointer outline-none",
+                    "hover:bg-neutral-50/60 transition-colors",
+                    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2",
+                    isExpanded ? "bg-neutral-50/40" : ""
+                  ].join(" ")}
+                >
+                  {/* Checkbox */}
+                  <TableCell className="px-4 py-4 align-top">
+                    <button
+                      onClick={(e) => toggleRowSelection(listing.id, e)}
+                      className="h-4 w-4 rounded border border-neutral-300 flex items-center justify-center"
+                      aria-label="Select listing"
+                    >
+                      {selectedRows.has(listing.id) && <Check className="h-3 w-3" />}
+                    </button>
+                  </TableCell>
 
-                {/* Thumbnail */}
-                <TableCell className="py-3 align-top">
-                  <div className="relative w-32 h-20 rounded-lg bg-muted overflow-hidden flex-shrink-0 shadow-sm">
-                    {thumbnail ? (
-                      <img 
-                        src={thumbnail} 
-                        alt="" 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <Home className="w-8 h-8 text-muted-foreground/50" />
-                      </div>
-                    )}
-                    {getPhotoCount(listing) > 0 && (
-                      <div className="absolute bottom-1 left-1 bg-black/70 text-white text-[10px] px-1 py-0.5 rounded font-medium">
-                        {getPhotoCount(listing)}
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
+                  {/* Thumbnail */}
+                  <TableCell className="px-4 py-4 align-top">
+                    <div className="relative h-[64px] w-[104px] overflow-hidden rounded-lg border border-neutral-200/70 bg-neutral-50">
+                      {thumbnail ? (
+                        <img src={thumbnail} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                          No photo
+                        </div>
+                      )}
+                      {getPhotoCount(listing) > 0 && (
+                        <div className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                          {getPhotoCount(listing)}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
 
-                {/* Address with city/state/zip below */}
-                <TableCell className="py-3">
-                  <div className="space-y-1">
-                    {/* Street Address */}
+                  {/* Address */}
+                  <TableCell className="px-4 py-4 align-top">
                     <a
-                      href={`https://www.google.com/maps/search/${encodeURIComponent(
-                        `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                      href="#"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        navigate(`/property/${listing.id}`);
+                      }}
                       className="text-sm font-semibold text-foreground hover:text-primary hover:underline block"
                     >
-                      {listing.address}{listing.unit_number ? ` #${listing.unit_number}` : ''}
+                      {listing.address}{listing.unit_number ? ` #${listing.unit_number}` : ""}
                     </a>
-                    {/* City, State ZIP */}
-                    <div className="text-xs text-muted-foreground">
+
+                    <div className="text-xs text-muted-foreground mt-1">
                       {listing.city}, {listing.state} {listing.zip_code}
                     </div>
+
                     {listing.neighborhood && (
-                      <div className="text-xs text-muted-foreground">{listing.neighborhood}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{listing.neighborhood}</div>
                     )}
-                    
+
                     {/* Property Details Row */}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
                       {getPropertyStyle(listing) && (
-                        <span className="font-medium">{getPropertyStyle(listing)}</span>
+                        <span className="rounded-md bg-neutral-100 px-2 py-0.5 border border-neutral-200/70">
+                          {getPropertyStyle(listing)}
+                        </span>
                       )}
-                      {listing.year_built && <span>Built {listing.year_built}</span>}
-                      {formatLotSize(listing.lot_size) && <span>{formatLotSize(listing.lot_size)}</span>}
+                      {listing.year_built && (
+                        <span className="rounded-md bg-neutral-100 px-2 py-0.5 border border-neutral-200/70">
+                          Built {listing.year_built}
+                        </span>
+                      )}
+                      {formatLotSize(listing.lot_size) && (
+                        <span className="rounded-md bg-neutral-100 px-2 py-0.5 border border-neutral-200/70">
+                          {formatLotSize(listing.lot_size)}
+                        </span>
+                      )}
                     </div>
-                    
+
                     {/* Bottom info bar */}
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
                       {openHouseInfo?.hasPublicOpen && (
-                        <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
-                          <CalendarDays className="w-3 h-3" />
+                        <span className="rounded-md bg-neutral-100 px-2 py-0.5 border border-neutral-200/70">
                           Open
                         </span>
                       )}
                       {openHouseInfo?.hasBrokerOpen && (
-                        <span className="inline-flex items-center gap-1 text-primary font-medium">
-                          <CalendarDays className="w-3 h-3" />
+                        <span className="rounded-md bg-neutral-100 px-2 py-0.5 border border-neutral-200/70">
                           Broker
                         </span>
                       )}
-                      <a
-                        href={`/property/${listing.id}`}
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
@@ -516,76 +573,150 @@ const ListingResultsTable = ({
                         className="text-primary font-mono hover:underline"
                       >
                         #{listing.listing_number}
-                      </a>
+                      </button>
                     </div>
-                  </div>
-                </TableCell>
+                  </TableCell>
 
-                {/* Price with $/SqFt below */}
-                <TableCell className="py-3 align-top pl-1">
-                  <div>
-                    <span className="text-sm font-bold text-foreground">
-                      {formatPrice(listing.price)}
-                    </span>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {pricePerSqFt ? `$${pricePerSqFt}/sqft` : ''}
+                  {/* Price */}
+                  <TableCell className="px-4 py-4 align-top whitespace-nowrap">
+                    <div className="text-sm font-semibold">{formatPrice(listing.price)}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {pricePerSqFt ? `$${pricePerSqFt}/sqft` : ""}
                     </div>
-                  </div>
-                </TableCell>
+                  </TableCell>
 
-                {/* Beds */}
-                <TableCell className="text-sm text-center text-foreground py-3 align-top">
-                  {listing.bedrooms || "-"}
-                </TableCell>
+                  {/* Beds */}
+                  <TableCell className="px-4 py-4 align-top text-sm">{listing.bedrooms || "-"}</TableCell>
 
-                {/* Baths */}
-                <TableCell className="text-sm text-center text-foreground py-3 align-top">
-                  {listing.bathrooms || "-"}
-                </TableCell>
+                  {/* Baths */}
+                  <TableCell className="px-4 py-4 align-top text-sm">{listing.bathrooms || "-"}</TableCell>
 
-                {/* SqFt */}
-                <TableCell className="text-sm text-right text-foreground py-3 align-top">
-                  {listing.square_feet?.toLocaleString() || "-"}
-                </TableCell>
+                  {/* SqFt */}
+                  <TableCell className="px-4 py-4 align-top text-sm">
+                    {listing.square_feet?.toLocaleString() || "-"}
+                  </TableCell>
 
-                {/* Status */}
-                <TableCell className="py-3 align-top">
-                  {getStatusBadge(listing.status)}
-                </TableCell>
+                  {/* Status */}
+                  <TableCell className="px-4 py-4 align-top">{getStatusBadge(listing.status)}</TableCell>
 
-                {/* DOM */}
-                <TableCell className="text-sm text-center text-foreground py-3 align-top">
-                  {getDaysOnMarket(listing.list_date)}
-                </TableCell>
+                  {/* DOM */}
+                  <TableCell className="px-4 py-4 align-top text-sm">
+                    {getDaysOnMarket(listing.list_date)}
+                  </TableCell>
 
-                {/* Agent */}
-                <TableCell className="py-3 align-top">
-                  <span className="text-xs text-muted-foreground truncate max-w-[80px] block">
+                  {/* Agent */}
+                  <TableCell className="px-4 py-4 align-top text-sm">
                     {listing.agent_name || "-"}
-                  </span>
-                </TableCell>
+                  </TableCell>
 
-                {/* Actions */}
-                <TableCell className="py-3 align-top" onClick={e => e.stopPropagation()}>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="brandOutline"
-                      size="sm"
-                      className="h-6 px-2 text-xs"
-                    >
-                      Contact
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0"
-                      onClick={() => navigate(`/property/${listing.id}`)}
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
+                  {/* Actions */}
+                  <TableCell className="px-4 py-4 align-top">
+                    <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                      <Button size="sm" variant="secondary" onClick={() => {/* existing contact logic */}}>
+                        <MessageSquare className="h-4 w-4" />
+                        <span className="ml-2 hidden lg:inline">Contact</span>
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/property/${listing.id}`)}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        <span className="ml-2 hidden lg:inline">View</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+
+                {/* Expanded Row */}
+                {isExpanded && (
+                  <TableRow className="border-t border-neutral-200/70 bg-neutral-50/40">
+                    <TableCell colSpan={999} className="px-4 py-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4">
+                        {/* Left: photo preview */}
+                        <div className="rounded-xl border border-neutral-200/70 bg-background p-3">
+                          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Preview
+                          </div>
+                          <div className="mt-3 h-[200px] rounded-lg overflow-hidden border border-neutral-200/70 bg-neutral-50">
+                            {thumbnail ? (
+                              <img src={thumbnail} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                                No photos available
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mt-3 flex gap-2">
+                            <Button size="sm" variant="secondary" onClick={() => {/* contact */}}>
+                              Contact
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => navigate(`/property/${listing.id}`)}>
+                              View Details
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Right: quick facts */}
+                        <div className="rounded-xl border border-neutral-200/70 bg-background p-3">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <div className="text-sm font-semibold">
+                                {listing.address}{listing.unit_number ? ` #${listing.unit_number}` : ""}
+                              </div>
+                              <div className="mt-1 text-xs text-muted-foreground">
+                                {listing.city}, {listing.state} {listing.zip_code}
+                                {listing.neighborhood ? ` • ${listing.neighborhood}` : ""}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold">{formatPrice(listing.price)}</div>
+                              <div className="mt-1 text-xs text-muted-foreground">
+                                DOM {getDaysOnMarket(listing.list_date)}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
+                              <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Beds</div>
+                              <div className="mt-1 text-sm font-semibold">{listing.bedrooms || "—"}</div>
+                            </div>
+                            <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
+                              <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Baths</div>
+                              <div className="mt-1 text-sm font-semibold">{listing.bathrooms || "—"}</div>
+                            </div>
+                            <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
+                              <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Sq Ft</div>
+                              <div className="mt-1 text-sm font-semibold">
+                                {listing.square_feet ? listing.square_feet.toLocaleString() : "—"}
+                              </div>
+                            </div>
+                            <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
+                              <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Status</div>
+                              <div className="mt-1">{getStatusBadge(listing.status)}</div>
+                            </div>
+                          </div>
+
+                          {/* Open houses */}
+                          {(openHouseInfo?.hasPublicOpen || openHouseInfo?.hasBrokerOpen) && (
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              {openHouseInfo?.hasPublicOpen && (
+                                <Badge variant="secondary">Public Open House</Badge>
+                              )}
+                              {openHouseInfo?.hasBrokerOpen && (
+                                <Badge variant="secondary">Broker Open House</Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </>
             );
           })}
         </TableBody>
