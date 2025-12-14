@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -217,7 +217,7 @@ const ListingResultsTable = ({
         break;
       case " ":
         e.preventDefault();
-        toggleRowSelection(listing.id, e as any);
+        toggleRowSelection(listing.id);
         break;
       case "Escape":
         if (expandedId) {
@@ -275,8 +275,8 @@ const ListingResultsTable = ({
     statuses: filters?.statuses,
   });
 
-  const toggleRowSelection = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const toggleRowSelection = (id: string, e?: React.SyntheticEvent) => {
+    e?.stopPropagation?.();
     const newSelected = new Set(selectedRows);
     if (newSelected.has(id)) {
       newSelected.delete(id);
@@ -464,9 +464,8 @@ const ListingResultsTable = ({
             const isExpanded = expandedId === listing.id;
 
             return (
-              <>
+              <React.Fragment key={listing.id}>
                 <TableRow
-                  key={listing.id}
                   ref={(el) => { if (el) rowRefs.set(listing.id, el); }}
                   tabIndex={0}
                   aria-expanded={isExpanded}
@@ -716,7 +715,7 @@ const ListingResultsTable = ({
                     </TableCell>
                   </TableRow>
                 )}
-              </>
+              </React.Fragment>
             );
           })}
         </TableBody>
