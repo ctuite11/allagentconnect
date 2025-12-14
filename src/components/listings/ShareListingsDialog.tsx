@@ -144,9 +144,9 @@ export function ShareListingsDialog({
 
           {/* Listing Preview / Summary - softened info panel */}
           {selectedCount === 1 && listingPreview ? (
-            <div className="mt-4 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
-              <div className="mt-0.5 rounded-lg bg-primary/10 p-2">
-                <Home className="h-4 w-4 text-primary" />
+            <div className="mt-4 flex items-start gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+              <div className="mt-0.5 rounded-lg bg-neutral-100 p-2">
+                <Home className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium text-foreground">{listingPreview.address}</div>
@@ -166,9 +166,9 @@ export function ShareListingsDialog({
               </div>
             </div>
           ) : selectedCount > 1 ? (
-            <div className="mt-4 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
-              <div className="mt-0.5 rounded-lg bg-primary/10 p-2">
-                <Layers className="h-4 w-4 text-primary" />
+            <div className="mt-4 flex items-start gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+              <div className="mt-0.5 rounded-lg bg-neutral-100 p-2">
+                <Layers className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-medium text-foreground">Sharing {selectedCount} Listings</div>
