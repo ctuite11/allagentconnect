@@ -511,17 +511,7 @@ const ListingResultsTable = ({
         <Table>
         <TableHeader className="bg-neutral-50/60 border-b border-neutral-200/70">
           <TableRow className="[&>th]:px-3 [&>th]:py-3 [&>th]:text-left [&>th]:text-xs [&>th]:font-medium [&>th]:text-muted-foreground">
-            <TableHead className="w-10 text-xs font-semibold text-muted-foreground">
-              <div 
-                className="w-4 h-4 border border-border rounded cursor-pointer flex items-center justify-center hover:bg-muted"
-                onClick={toggleSelectAll}
-              >
-                {selectedRows.size === displayedListings.length && displayedListings.length > 0 && (
-                  <Check className="w-3 h-3 text-foreground" />
-                )}
-              </div>
-            </TableHead>
-            <TableHead className="w-[200px] text-xs font-semibold text-muted-foreground">Photo</TableHead>
+            <TableHead className="w-[170px] px-3 py-3"></TableHead>
             <SortableHeader column="address" className="min-w-[180px]">Address</SortableHeader>
             <SortableHeader column="price">Price</SortableHeader>
             <SortableHeader column="bedrooms" className="text-center">Beds</SortableHeader>
@@ -561,32 +551,36 @@ const ListingResultsTable = ({
                     isExpanded ? "bg-neutral-50/40" : ""
                   ].join(" ")}
                 >
-                  {/* Checkbox */}
-                  <TableCell className="px-3 py-3 align-top">
-                    <button
-                      onClick={(e) => toggleRowSelection(listing.id, e)}
-                      className="h-4 w-4 rounded border border-neutral-300 flex items-center justify-center"
-                      aria-label="Select listing"
-                    >
-                      {selectedRows.has(listing.id) && <Check className="h-3 w-3" />}
-                    </button>
-                  </TableCell>
+                  {/* Photo with Checkbox Overlay */}
+                  <TableCell className="px-3 py-3 align-top w-[170px] max-w-[170px] whitespace-nowrap">
+                    <div className="relative">
+                      {/* Checkbox overlay */}
+                      <button
+                        onClick={(e) => toggleRowSelection(listing.id, e)}
+                        className="absolute left-2 top-2 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow flex items-center justify-center"
+                        aria-label="Select listing"
+                      >
+                        {selectedRows.has(listing.id) && <Check className="h-3 w-3" />}
+                      </button>
 
-                  {/* Photo */}
-                  <TableCell className="px-3 py-3 align-top w-[200px] whitespace-nowrap">
-                    <div className="relative h-[84px] w-[148px] overflow-hidden rounded-xl border border-neutral-200/70 bg-neutral-50">
-                      {thumbnail ? (
-                        <img src={thumbnail} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                          No photo
-                        </div>
-                      )}
-                      {getPhotoCount(listing) > 0 && (
-                        <div className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
-                          {getPhotoCount(listing)}
-                        </div>
-                      )}
+                      {/* Photo */}
+                      <div className={[
+                        "relative h-[84px] w-[148px] overflow-hidden rounded-xl bg-neutral-50",
+                        selectedRows.has(listing.id) ? "border-primary/40 ring-2 ring-primary/20 border" : "border border-neutral-200/70"
+                      ].join(" ")}>
+                        {thumbnail ? (
+                          <img src={thumbnail} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                            No photo
+                          </div>
+                        )}
+                        {getPhotoCount(listing) > 0 && (
+                          <div className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                            {getPhotoCount(listing)}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
 
