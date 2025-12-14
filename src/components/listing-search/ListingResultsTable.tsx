@@ -508,7 +508,8 @@ const ListingResultsTable = ({
           selectedListingIds={Array.from(selectedRows)}
         />
 
-        <Table>
+        <div className="w-full overflow-x-auto">
+        <Table className="min-w-[1350px]">
         <TableHeader className="bg-neutral-50/60 border-b border-neutral-200/70">
           <TableRow className="[&>th]:px-3 [&>th]:py-3 [&>th]:text-left [&>th]:text-xs [&>th]:font-medium [&>th]:text-muted-foreground">
             <TableHead className="w-[170px] px-3 py-3"></TableHead>
@@ -519,8 +520,7 @@ const ListingResultsTable = ({
             <SortableHeader column="square_feet" className="text-right">SqFt</SortableHeader>
             <TableHead className="text-xs font-semibold text-muted-foreground">Status</TableHead>
             <SortableHeader column="list_date" className="text-center">DOM</SortableHeader>
-            <TableHead className="text-xs font-semibold text-muted-foreground">Taxes</TableHead>
-            <TableHead className="text-xs font-semibold text-muted-foreground">HOA</TableHead>
+            <TableHead className="text-xs font-semibold text-muted-foreground">Facts</TableHead>
             <TableHead className="text-xs font-semibold text-muted-foreground">Office</TableHead>
             <TableHead className="text-xs font-semibold text-muted-foreground">Agent</TableHead>
             <TableHead className="w-36"></TableHead>
@@ -668,33 +668,30 @@ const ListingResultsTable = ({
                     {getDaysOnMarket(listing.list_date)}
                   </TableCell>
 
-                  {/* Taxes */}
-                  <TableCell className="px-3 py-3 align-top text-sm whitespace-nowrap">
-                    {listing.annual_property_tax ? `$${listing.annual_property_tax.toLocaleString()}` : "—"}
-                  </TableCell>
-
-                  {/* HOA */}
-                  <TableCell className="px-3 py-3 align-top text-sm whitespace-nowrap">
-                    {listing.hoa_monthly ? `$${listing.hoa_monthly.toLocaleString()}/mo` : "—"}
+                  {/* Facts (Taxes/HOA/Parking) */}
+                  <TableCell className="px-3 py-3 align-top text-xs whitespace-nowrap">
+                    <div className="text-muted-foreground">
+                      {[
+                        listing.annual_property_tax ? `Tax $${listing.annual_property_tax.toLocaleString()}` : "",
+                        listing.hoa_monthly ? `HOA $${listing.hoa_monthly}/mo` : "",
+                        listing.total_parking_spaces ? `Pk ${listing.total_parking_spaces}` : ""
+                      ].filter(Boolean).join(" • ") || ""}
+                    </div>
                   </TableCell>
 
                   {/* Office */}
                   <TableCell className="px-3 py-3 align-top text-sm">
-                    <div className="max-w-[180px] truncate">{listing.list_office || "—"}</div>
+                    <div className="max-w-[180px] truncate text-muted-foreground">{listing.list_office || ""}</div>
                   </TableCell>
 
                   {/* Agent */}
                   <TableCell className="px-3 py-3 align-top">
-                    <div className="text-sm font-medium">{listing.agent_name || "—"}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      {listing.list_agent_phone || listing.list_agent_email ? (
-                        <span className="truncate block max-w-[180px]">
-                          {listing.list_agent_phone || listing.list_agent_email}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </div>
+                    <div className="text-sm font-medium truncate max-w-[140px] whitespace-nowrap">{listing.agent_name || ""}</div>
+                    {(listing.list_agent_phone || listing.list_agent_email) && (
+                      <div className="mt-1 text-xs text-muted-foreground truncate max-w-[140px]">
+                        {listing.list_agent_phone || listing.list_agent_email}
+                      </div>
+                    )}
                   </TableCell>
 
                   {/* Actions */}
@@ -813,7 +810,8 @@ const ListingResultsTable = ({
             );
           })}
         </TableBody>
-      </Table>
+        </Table>
+        </div>
       </div>
     </div>
   );
