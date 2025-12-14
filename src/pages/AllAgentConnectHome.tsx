@@ -133,14 +133,14 @@ const AllAgentConnectHome = () => {
         {/* Page Content */}
         <div className="max-w-[1280px] mx-auto px-6 pb-12">
 
-          {/* Tier 1 – Core Workflow (Largest Cards) */}
+          {/* Tier 1 – Command Panels */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Listing Search */}
-            <div className="p-6 rounded-2xl border border-neutral-200 bg-background">
+            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-neutral-50 hover:border-neutral-400 hover:shadow-sm transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center">
-                    <Search className="h-5 w-5 text-neutral-500" />
+                  <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
+                    <Search className="h-5 w-5 text-neutral-600" />
                   </div>
                   <h2 className="text-base font-semibold text-neutral-800">Listing Search</h2>
                 </div>
@@ -148,7 +148,7 @@ const AllAgentConnectHome = () => {
               <Button 
                 size="sm" 
                 onClick={() => navigate("/listing-search")}
-                className="gap-1"
+                className="gap-1.5 rounded-md text-sm"
               >
                 Open Search
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -156,11 +156,11 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Hotsheets */}
-            <div className="p-6 rounded-2xl border border-neutral-200 bg-background">
+            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-neutral-50 hover:border-neutral-400 hover:shadow-sm transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center">
-                    <FileStack className="h-5 w-5 text-neutral-500" />
+                  <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
+                    <FileStack className="h-5 w-5 text-neutral-600" />
                   </div>
                   <h2 className="text-base font-semibold text-neutral-800">Hotsheets</h2>
                 </div>
@@ -173,7 +173,7 @@ const AllAgentConnectHome = () => {
               <Button 
                 size="sm" 
                 onClick={() => navigate("/hot-sheets")}
-                className="gap-1"
+                className="gap-1.5 rounded-md text-sm"
               >
                 Open
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -181,11 +181,11 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Comm Center */}
-            <div className="p-6 rounded-2xl border border-neutral-200 bg-background">
+            <div className="p-6 rounded-2xl border-2 border-neutral-300 bg-neutral-50 hover:border-neutral-400 hover:shadow-sm transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-neutral-500" />
+                  <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-neutral-600" />
                   </div>
                   <h2 className="text-base font-semibold text-neutral-800">Comm Center</h2>
                 </div>
@@ -198,7 +198,7 @@ const AllAgentConnectHome = () => {
               <Button 
                 size="sm" 
                 onClick={() => navigate("/communication-center")}
-                className="gap-1"
+                className="gap-1.5 rounded-md text-sm"
               >
                 Open
                 <ArrowRight className="h-3.5 w-3.5" />
