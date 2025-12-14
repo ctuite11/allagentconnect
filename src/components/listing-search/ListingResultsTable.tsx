@@ -10,7 +10,6 @@ import { toast } from "sonner";
 
 import { FilterState } from "@/components/listing-search/ListingSearchFilters";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
-import { buildDisplayAddress } from "@/lib/utils";
 import { SectionCard } from "@/components/ui/section-card";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 
@@ -163,6 +162,51 @@ const getPhotoCount = (listing: Listing) => {
     return listing.photos.length;
   }
   return 0;
+};
+
+// Boston-aware address normalization helpers
+const titleCase = (s: string) =>
+  s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
+const sanitizeStreet = (raw?: string) => {
+  const s = (raw || "").trim();
+  if (!s) return "";
+  // Remove repeated trailing ", City, ST 12345" patterns
+  // e.g. "16 N Mead St, Charlestown, Ma 02129, Boston, Ma 00000" -> "16 N Mead St"
+  return s.replace(/(?:,\s*[^,]+,\s*[A-Za-z]{2}\s*\d{5})+$/i, "").trim();
+};
+
+const normalizeNeighborhood = (n?: string, fallbackFromAddress?: string) => {
+  const v = (n || "").trim();
+  if (v) return v.replace(/^boston\s*[-,]\s*/i, "").trim();
+
+  // If neighborhood missing, try to extract from address chunk like ", Charlestown, MA 02129"
+  const a = (fallbackFromAddress || "").trim();
+  const m = a.match(/,\s*([^,]+),\s*[A-Za-z]{2}\s*\d{5}\s*$/i);
+  return m ? m[1].trim() : "";
+};
+
+const getBostonAwareLocation = (listing: Listing) => {
+  const street = sanitizeStreet(listing.address);
+  const neighborhood = normalizeNeighborhood(listing.neighborhood, listing.address);
+
+  // If we have a neighborhood and it's one of Boston's, force city Boston
+  const isBoston = (listing.city || "").trim().toLowerCase() === "boston" || !!neighborhood;
+
+  const city = isBoston ? "Boston" : titleCase((listing.city || "").trim());
+  const state = ((listing.state || "MA").trim().toUpperCase() || "MA");
+  const zip = (listing.zip_code || "").trim();
+
+  // If zip is bogus 00000, drop it
+  const safeZip = zip && zip !== "00000" ? zip : "";
+
+  return {
+    street,
+    neighborhood: neighborhood ? titleCase(neighborhood) : "",
+    city,
+    state,
+    zip: safeZip,
+  };
 };
 
 const ListingResultsTable = ({
@@ -434,8 +478,8 @@ const ListingResultsTable = ({
         />
 
         <Table>
-        <TableHeader className="bg-neutral-50/70">
-          <TableRow className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-left [&>th]:text-xs [&>th]:font-semibold [&>th]:text-muted-foreground [&>th]:uppercase [&>th]:tracking-wider">
+        <TableHeader className="bg-neutral-50/60 border-b border-neutral-200/70">
+          <TableRow className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-left [&>th]:text-xs [&>th]:font-medium [&>th]:text-muted-foreground">
             <TableHead className="w-10 text-xs font-semibold text-muted-foreground">
               <div 
                 className="w-4 h-4 border border-border rounded cursor-pointer flex items-center justify-center hover:bg-muted"
@@ -514,25 +558,34 @@ const ListingResultsTable = ({
 
                   {/* Address */}
                   <TableCell className="px-4 py-4 align-top">
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        navigate(`/property/${listing.id}`);
-                      }}
-                      className="text-sm font-semibold text-foreground hover:text-primary hover:underline block"
-                    >
-                      {listing.address}{listing.unit_number ? ` #${listing.unit_number}` : ""}
-                    </a>
+                    {(() => {
+                      const loc = getBostonAwareLocation(listing);
+                      return (
+                        <>
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              navigate(`/property/${listing.id}`);
+                            }}
+                            className="text-sm font-semibold text-foreground hover:text-primary hover:underline block"
+                          >
+                            {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
+                          </a>
 
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {listing.city}, {listing.state} {listing.zip_code}
-                    </div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            {loc.city}, {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
+                          </div>
 
-                    {listing.neighborhood && (
-                      <div className="text-xs text-muted-foreground mt-1">{listing.neighborhood}</div>
-                    )}
+                          {loc.city === "Boston" && loc.neighborhood && (
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              {loc.neighborhood}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
 
                     {/* Property Details Row */}
                     <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
@@ -663,15 +716,20 @@ const ListingResultsTable = ({
                         {/* Right: quick facts */}
                         <div className="rounded-xl border border-neutral-200/70 bg-background p-3">
                           <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <div className="text-sm font-semibold">
-                                {listing.address}{listing.unit_number ? ` #${listing.unit_number}` : ""}
-                              </div>
-                              <div className="mt-1 text-xs text-muted-foreground">
-                                {listing.city}, {listing.state} {listing.zip_code}
-                                {listing.neighborhood ? ` • ${listing.neighborhood}` : ""}
-                              </div>
-                            </div>
+                            {(() => {
+                              const loc = getBostonAwareLocation(listing);
+                              return (
+                                <div>
+                                  <div className="text-sm font-semibold">
+                                    {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
+                                  </div>
+                                  <div className="mt-1 text-xs text-muted-foreground">
+                                    {loc.city}, {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
+                                    {loc.city === "Boston" && loc.neighborhood ? ` • ${loc.neighborhood}` : ""}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                             <div className="text-right">
                               <div className="text-sm font-semibold">{formatPrice(listing.price)}</div>
                               <div className="mt-1 text-xs text-muted-foreground">
