@@ -98,37 +98,37 @@ const AllAgentConnectHome = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <button 
                 onClick={() => navigate("/listing-search")}
-                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors group"
+                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors"
               >
                 <Search className="h-5 w-5 text-primary mb-3" />
-                <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">Listing Search</h3>
+                <h3 className="font-medium text-foreground">Listing Search</h3>
                 <p className="text-xs text-muted-foreground mt-1">Search all inventory</p>
               </button>
 
               <button 
                 onClick={() => navigate("/hot-sheets")}
-                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors group"
+                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors"
               >
                 <FileStack className="h-5 w-5 text-primary mb-3" />
-                <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">Hot Sheets</h3>
+                <h3 className="font-medium text-foreground">Hot Sheets</h3>
                 <p className="text-xs text-muted-foreground mt-1">Manage client alerts</p>
               </button>
 
               <button 
                 onClick={() => navigate("/communication-center")}
-                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors group"
+                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors"
               >
                 <MessageSquare className="h-5 w-5 text-primary mb-3" />
-                <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">Communications</h3>
+                <h3 className="font-medium text-foreground">Communications</h3>
                 <p className="text-xs text-muted-foreground mt-1">Outbound campaigns</p>
               </button>
 
               <button 
                 onClick={() => navigate("/agent-search")}
-                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors group"
+                className="border border-border border-l-4 border-l-primary rounded-lg p-5 bg-card text-left hover:bg-muted/50 transition-colors"
               >
                 <Users className="h-5 w-5 text-primary mb-3" />
-                <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">Agent Directory</h3>
+                <h3 className="font-medium text-foreground">Agent Directory</h3>
                 <p className="text-xs text-muted-foreground mt-1">Find verified agents</p>
               </button>
             </div>
