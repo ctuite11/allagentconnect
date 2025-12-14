@@ -38,6 +38,11 @@ interface Listing {
   garage_spaces?: number;
   total_parking_spaces?: number;
   property_styles?: any;
+  annual_property_tax?: number;
+  hoa_monthly?: number;
+  list_office?: string;
+  list_agent_phone?: string;
+  list_agent_email?: string;
 }
 
 interface ListingResultsTableProps {
@@ -505,7 +510,7 @@ const ListingResultsTable = ({
 
         <Table>
         <TableHeader className="bg-neutral-50/60 border-b border-neutral-200/70">
-          <TableRow className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-left [&>th]:text-xs [&>th]:font-medium [&>th]:text-muted-foreground">
+          <TableRow className="[&>th]:px-3 [&>th]:py-3 [&>th]:text-left [&>th]:text-xs [&>th]:font-medium [&>th]:text-muted-foreground">
             <TableHead className="w-10 text-xs font-semibold text-muted-foreground">
               <div 
                 className="w-4 h-4 border border-border rounded cursor-pointer flex items-center justify-center hover:bg-muted"
@@ -516,15 +521,18 @@ const ListingResultsTable = ({
                 )}
               </div>
             </TableHead>
-            <TableHead className="w-32 text-xs font-semibold text-muted-foreground pl-2">Photo</TableHead>
+            <TableHead className="w-[200px] text-xs font-semibold text-muted-foreground">Photo</TableHead>
             <SortableHeader column="address" className="min-w-[180px]">Address</SortableHeader>
-            <SortableHeader column="price" className="pl-1">Price</SortableHeader>
-            <SortableHeader column="bedrooms" className="text-center px-1">Beds</SortableHeader>
-            <SortableHeader column="bathrooms" className="text-center px-1">Baths</SortableHeader>
-            <SortableHeader column="square_feet" className="text-right px-1">SqFt</SortableHeader>
-            <TableHead className="text-xs font-semibold text-muted-foreground px-1">Status</TableHead>
-            <SortableHeader column="list_date" className="text-center px-1">DOM</SortableHeader>
-            <TableHead className="text-xs font-semibold text-muted-foreground px-1">Agent</TableHead>
+            <SortableHeader column="price">Price</SortableHeader>
+            <SortableHeader column="bedrooms" className="text-center">Beds</SortableHeader>
+            <SortableHeader column="bathrooms" className="text-center">Baths</SortableHeader>
+            <SortableHeader column="square_feet" className="text-right">SqFt</SortableHeader>
+            <TableHead className="text-xs font-semibold text-muted-foreground">Status</TableHead>
+            <SortableHeader column="list_date" className="text-center">DOM</SortableHeader>
+            <TableHead className="text-xs font-semibold text-muted-foreground">Taxes</TableHead>
+            <TableHead className="text-xs font-semibold text-muted-foreground">HOA</TableHead>
+            <TableHead className="text-xs font-semibold text-muted-foreground">Office</TableHead>
+            <TableHead className="text-xs font-semibold text-muted-foreground">Agent</TableHead>
             <TableHead className="w-36"></TableHead>
           </TableRow>
         </TableHeader>
@@ -554,7 +562,7 @@ const ListingResultsTable = ({
                   ].join(" ")}
                 >
                   {/* Checkbox */}
-                  <TableCell className="px-4 py-4 align-top">
+                  <TableCell className="px-3 py-3 align-top">
                     <button
                       onClick={(e) => toggleRowSelection(listing.id, e)}
                       className="h-4 w-4 rounded border border-neutral-300 flex items-center justify-center"
@@ -565,8 +573,8 @@ const ListingResultsTable = ({
                   </TableCell>
 
                   {/* Photo */}
-                  <TableCell className="px-4 py-4 align-top whitespace-nowrap w-[220px]">
-                    <div className="relative h-[120px] w-[180px] overflow-hidden rounded-xl border border-neutral-200/70 bg-neutral-50">
+                  <TableCell className="px-3 py-3 align-top w-[200px] whitespace-nowrap">
+                    <div className="relative h-[84px] w-[148px] overflow-hidden rounded-xl border border-neutral-200/70 bg-neutral-50">
                       {thumbnail ? (
                         <img src={thumbnail} alt="" className="h-full w-full object-cover" />
                       ) : (
@@ -583,7 +591,7 @@ const ListingResultsTable = ({
                   </TableCell>
 
                   {/* Address */}
-                  <TableCell className="px-4 py-4 align-top min-w-[280px]">
+                  <TableCell className="px-3 py-3 align-top min-w-[280px]">
                     {(() => {
                       const loc = getLocation(listing);
                       return (
@@ -610,36 +618,26 @@ const ListingResultsTable = ({
                             </div>
                           )}
 
-                          {/* Chips Row - Property Style, Year, Lot, Open Houses, Listing # */}
-                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          {/* Chips Row - horizontal, no wrap */}
+                          <div className="mt-2 flex items-center gap-2 flex-nowrap overflow-hidden [mask-image:linear-gradient(to_right,black_85%,transparent)]">
                             {getPropertyStyle(listing) && (
-                              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-muted-foreground border border-neutral-200/70">
+                              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] text-muted-foreground border border-neutral-200/70 whitespace-nowrap">
                                 {getPropertyStyle(listing)}
                               </span>
                             )}
                             {listing.year_built && (
-                              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-muted-foreground border border-neutral-200/70">
+                              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] text-muted-foreground border border-neutral-200/70 whitespace-nowrap">
                                 Built {listing.year_built}
                               </span>
                             )}
                             {formatLotSize(listing.lot_size) && (
-                              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-muted-foreground border border-neutral-200/70">
+                              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] text-muted-foreground border border-neutral-200/70 whitespace-nowrap">
                                 {formatLotSize(listing.lot_size)}
-                              </span>
-                            )}
-                            {openHouseInfo?.hasPublicOpen && (
-                              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] border border-neutral-200/70 text-muted-foreground">
-                                Open
-                              </span>
-                            )}
-                            {openHouseInfo?.hasBrokerOpen && (
-                              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] border border-neutral-200/70 text-muted-foreground">
-                                Broker
                               </span>
                             )}
                             <button
                               onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`); }}
-                              className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] border border-neutral-200/70 font-mono text-primary hover:underline"
+                              className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] font-mono text-primary border border-neutral-200/70 whitespace-nowrap hover:underline"
                             >
                               #{listing.listing_number}
                             </button>
@@ -650,7 +648,7 @@ const ListingResultsTable = ({
                   </TableCell>
 
                   {/* Price */}
-                  <TableCell className="px-4 py-4 align-top whitespace-nowrap">
+                  <TableCell className="px-3 py-3 align-top whitespace-nowrap">
                     <div className="text-sm font-semibold">{formatPrice(listing.price)}</div>
                     <div className="text-xs text-muted-foreground mt-1">
                       {pricePerSqFt ? `$${pricePerSqFt}/sqft` : ""}
@@ -658,31 +656,55 @@ const ListingResultsTable = ({
                   </TableCell>
 
                   {/* Beds */}
-                  <TableCell className="px-4 py-4 align-top text-sm">{listing.bedrooms || "-"}</TableCell>
+                  <TableCell className="px-3 py-3 align-top text-sm">{listing.bedrooms || "-"}</TableCell>
 
                   {/* Baths */}
-                  <TableCell className="px-4 py-4 align-top text-sm">{listing.bathrooms || "-"}</TableCell>
+                  <TableCell className="px-3 py-3 align-top text-sm">{listing.bathrooms || "-"}</TableCell>
 
                   {/* SqFt */}
-                  <TableCell className="px-4 py-4 align-top text-sm">
+                  <TableCell className="px-3 py-3 align-top text-sm">
                     {listing.square_feet?.toLocaleString() || "-"}
                   </TableCell>
 
                   {/* Status */}
-                  <TableCell className="px-4 py-4 align-top">{getStatusBadge(listing.status)}</TableCell>
+                  <TableCell className="px-3 py-3 align-top">{getStatusBadge(listing.status)}</TableCell>
 
                   {/* DOM */}
-                  <TableCell className="px-4 py-4 align-top text-sm">
+                  <TableCell className="px-3 py-3 align-top text-sm">
                     {getDaysOnMarket(listing.list_date)}
                   </TableCell>
 
+                  {/* Taxes */}
+                  <TableCell className="px-3 py-3 align-top text-sm whitespace-nowrap">
+                    {listing.annual_property_tax ? `$${listing.annual_property_tax.toLocaleString()}` : "—"}
+                  </TableCell>
+
+                  {/* HOA */}
+                  <TableCell className="px-3 py-3 align-top text-sm whitespace-nowrap">
+                    {listing.hoa_monthly ? `$${listing.hoa_monthly.toLocaleString()}/mo` : "—"}
+                  </TableCell>
+
+                  {/* Office */}
+                  <TableCell className="px-3 py-3 align-top text-sm">
+                    <div className="max-w-[180px] truncate">{listing.list_office || "—"}</div>
+                  </TableCell>
+
                   {/* Agent */}
-                  <TableCell className="px-4 py-4 align-top text-sm">
-                    {listing.agent_name || "-"}
+                  <TableCell className="px-3 py-3 align-top">
+                    <div className="text-sm font-medium">{listing.agent_name || "—"}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {listing.list_agent_phone || listing.list_agent_email ? (
+                        <span className="truncate block max-w-[180px]">
+                          {listing.list_agent_phone || listing.list_agent_email}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </div>
                   </TableCell>
 
                   {/* Actions */}
-                  <TableCell className="px-4 py-4 align-top">
+                  <TableCell className="px-3 py-3 align-top">
                     <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                       <Button size="sm" variant="secondary" onClick={() => {/* existing contact logic */}}>
                         <MessageSquare className="h-4 w-4" />
@@ -704,7 +726,7 @@ const ListingResultsTable = ({
                 {/* Expanded Row */}
                 {isExpanded && (
                   <TableRow className="border-t border-neutral-200/70 bg-neutral-50/40">
-                    <TableCell colSpan={999} className="px-4 py-4">
+                    <TableCell colSpan={14} className="px-3 py-3">
                       <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4">
                         {/* Left: photo preview */}
                         <div className="rounded-xl border border-neutral-200/70 bg-background p-3">
