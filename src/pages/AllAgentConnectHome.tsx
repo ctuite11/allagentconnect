@@ -136,7 +136,7 @@ const AllAgentConnectHome = () => {
           {/* Tier 1 – Command Panels */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Listing Search */}
-            <div className="p-6 rounded-2xl border border-neutral-300 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-400 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all">
+            <div className="p-6 rounded-2xl border border-neutral-300 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:border-neutral-400 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center">
@@ -156,7 +156,7 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Hotsheets */}
-            <div className="p-6 rounded-2xl border border-neutral-300 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-400 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all">
+            <div className="p-6 rounded-2xl border border-neutral-300 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:border-neutral-400 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center">
@@ -181,7 +181,7 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Comm Center */}
-            <div className="p-6 rounded-2xl border border-neutral-300 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-400 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all">
+            <div className="p-6 rounded-2xl border border-neutral-300 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:border-neutral-400 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center">
@@ -210,7 +210,7 @@ const AllAgentConnectHome = () => {
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => navigate("/agent/listings")}
-              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all text-left"
+              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:border-neutral-300 hover:bg-neutral-50 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all text-left"
             >
               <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0">
                 <Home className="h-5 w-5 text-stone-400" />
@@ -221,7 +221,7 @@ const AllAgentConnectHome = () => {
 
             <button
               onClick={() => navigate("/agent/clients")}
-              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all text-left"
+              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:border-neutral-300 hover:bg-neutral-50 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all text-left"
             >
               <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0">
                 <Users className="h-5 w-5 text-stone-400" />
@@ -232,7 +232,7 @@ const AllAgentConnectHome = () => {
 
             <button
               onClick={() => navigate("/agent/profile-editor")}
-              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all text-left"
+              className="group flex items-center gap-4 p-4 rounded-xl border border-neutral-200 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:border-neutral-300 hover:bg-neutral-50 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all text-left"
             >
               <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0">
                 <UserCircle className="h-5 w-5 text-stone-400" />
@@ -246,7 +246,7 @@ const AllAgentConnectHome = () => {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
             <button
               onClick={() => navigate("/agent/team")}
-              className="group flex items-center gap-3 p-3 rounded-lg border border-neutral-200 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all text-left"
+              className="group flex items-center gap-3 p-3 rounded-lg border border-neutral-200 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:bg-neutral-50 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all text-left"
             >
               <div className="h-8 w-8 rounded-md bg-neutral-100 flex items-center justify-center shrink-0">
                 <UsersRound className="h-4 w-4 text-neutral-400" />
@@ -257,7 +257,7 @@ const AllAgentConnectHome = () => {
 
             <button
               onClick={() => navigate("/agent-search")}
-              className="group flex items-center gap-3 p-3 rounded-lg border border-neutral-200 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all text-left"
+              className="group flex items-center gap-3 p-3 rounded-lg border border-neutral-200 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:bg-neutral-50 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all text-left"
             >
               <div className="h-8 w-8 rounded-md bg-neutral-100 flex items-center justify-center shrink-0">
                 <SearchCheck className="h-4 w-4 text-neutral-400" />
