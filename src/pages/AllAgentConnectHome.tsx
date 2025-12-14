@@ -3,7 +3,6 @@ import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { SectionCard } from "@/components/ui/section-card";
 import { 
   Search, 
   FileStack, 
@@ -63,7 +62,6 @@ const AllAgentConnectHome = () => {
       if (hotsheetsData) {
         const hotsheetsWithCounts = await Promise.all(
           hotsheetsData.map(async (hs) => {
-            // Get approximate matching count
             const { count } = await supabase
               .from("listings")
               .select("*", { count: "exact", head: true })
@@ -128,71 +126,52 @@ const AllAgentConnectHome = () => {
             <h1 className="text-2xl font-semibold text-heading-page tracking-tight">
               Success Hub
             </h1>
-            <p className="text-sm text-text-body mt-1">
-              Your active workspace
-            </p>
           </div>
 
-          {/* Primary Work Sections */}
+          {/* Tier 1 – Core Workflow (Largest Cards) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Listing Search */}
-            <SectionCard
-              title="Listing Search"
-              icon={<Search />}
-              description="Search all inventory by status, price, and location"
-              rightSlot={
-                <Button 
-                  size="sm" 
-                  onClick={() => navigate("/listing-search")}
-                  className="gap-1"
-                >
-                  Open Search
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              }
-            >
-              <div className="pt-2">
-                <p className="text-xs text-muted-foreground">
-                  MLS-style search across active, coming soon, and off-market inventory.
-                </p>
+            <div className="p-5 rounded-2xl border border-border bg-background">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                    <Search className="h-5 w-5 text-primary" />
+                  </div>
+                  <h2 className="text-base font-semibold text-heading-section">Listing Search</h2>
+                </div>
               </div>
-            </SectionCard>
+              <Button 
+                size="sm" 
+                onClick={() => navigate("/listing-search")}
+                className="gap-1"
+              >
+                Open Search
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
 
             {/* Hotsheets */}
-            <SectionCard
-              title="Hotsheets"
-              icon={<FileStack />}
-              description="Automated listing alerts for clients"
-              rightSlot={
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => navigate("/hot-sheets")}
-                  >
-                    Open
-                  </Button>
-                  <Button 
-                    size="sm"
-                    onClick={() => navigate("/client/create-hotsheet")}
-                    className="gap-1"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Create
-                  </Button>
+            <div className="p-5 rounded-2xl border border-border bg-background">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                    <FileStack className="h-5 w-5 text-primary" />
+                  </div>
+                  <h2 className="text-base font-semibold text-heading-section">Hotsheets</h2>
                 </div>
-              }
-            >
+                {hotsheets.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {hotsheets.length} active
+                  </span>
+                )}
+              </div>
+              
               {loading ? (
-                <div className="py-4 flex justify-center">
+                <div className="py-3 flex justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
                 </div>
-              ) : hotsheets.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-2">
-                  No active hotsheets yet
-                </p>
-              ) : (
-                <div className="space-y-2 pt-2">
+              ) : hotsheets.length > 0 ? (
+                <div className="space-y-2 mb-4">
                   {hotsheets.slice(0, 3).map((hs) => (
                     <button
                       key={hs.id}
@@ -203,73 +182,81 @@ const AllAgentConnectHome = () => {
                         <span className="text-sm font-medium text-heading-section truncate">
                           {hs.name}
                         </span>
-                        <span className="text-xs text-text-body shrink-0 ml-2">
-                          {hs.matching_count} matches
+                        <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                          {hs.matching_count}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Updated {formatDistanceToNow(new Date(hs.updated_at), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(hs.updated_at), { addSuffix: true })}
                       </p>
                     </button>
                   ))}
                 </div>
-              )}
-            </SectionCard>
+              ) : null}
 
-            {/* Comm Center */}
-            <SectionCard
-              title="Comm Center"
-              icon={<MessageSquare />}
-              description="Outbound email campaigns"
-              rightSlot={
+              <div className="flex gap-2">
                 <Button 
                   size="sm" 
-                  onClick={() => navigate("/communication-center")}
-                  className="gap-1"
+                  variant="outline"
+                  onClick={() => navigate("/hot-sheets")}
                 >
                   Open
-                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
-              }
-            >
+                <Button 
+                  size="sm"
+                  onClick={() => navigate("/client/create-hotsheet")}
+                  className="gap-1"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Create
+                </Button>
+              </div>
+            </div>
+
+            {/* Comm Center */}
+            <div className="p-5 rounded-2xl border border-border bg-background">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                  </div>
+                  <h2 className="text-base font-semibold text-heading-section">Comm Center</h2>
+                </div>
+                {commSummary.unreadCount > 0 && (
+                  <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium">
+                    {commSummary.unreadCount}
+                  </span>
+                )}
+              </div>
+
               {loading ? (
-                <div className="py-4 flex justify-center">
+                <div className="py-3 flex justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
                 </div>
-              ) : (
-                <div className="pt-2 space-y-2">
-                  {commSummary.unreadCount > 0 && (
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium">
-                        {commSummary.unreadCount}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        pending campaign{commSummary.unreadCount !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                  )}
-                  {commSummary.recentThread ? (
-                    <div className="p-2 rounded-lg border border-border">
-                      <p className="text-sm text-heading-section truncate">
-                        {commSummary.recentThread.subject}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Sent {formatDistanceToNow(new Date(commSummary.recentThread.timestamp), { addSuffix: true })}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      No campaigns sent yet
-                    </p>
-                  )}
+              ) : commSummary.recentThread ? (
+                <div className="p-2 rounded-lg border border-border mb-4">
+                  <p className="text-sm text-heading-section truncate">
+                    {commSummary.recentThread.subject}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {formatDistanceToNow(new Date(commSummary.recentThread.timestamp), { addSuffix: true })}
+                  </p>
                 </div>
-              )}
-            </SectionCard>
+              ) : null}
+
+              <Button 
+                size="sm" 
+                onClick={() => navigate("/communication-center")}
+                className="gap-1"
+              >
+                Open
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
 
           {/* Tier 2 – Management (Medium Cards) */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* My Listings */}
             <button
               onClick={() => navigate("/agent/listings")}
               className="group flex items-center gap-4 p-4 rounded-xl border border-border bg-background hover:bg-muted transition-colors text-left"
@@ -277,16 +264,10 @@ const AllAgentConnectHome = () => {
               <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
                 <Home className="h-5 w-5 text-primary" />
               </div>
-              <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-heading-section">My Listings</h3>
-                <p className="text-xs text-text-body truncate">
-                  Manage your active and off-market inventory
-                </p>
-              </div>
+              <h3 className="text-sm font-semibold text-heading-section">My Listings</h3>
               <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
 
-            {/* My Contacts */}
             <button
               onClick={() => navigate("/agent/clients")}
               className="group flex items-center gap-4 p-4 rounded-xl border border-border bg-background hover:bg-muted transition-colors text-left"
@@ -294,16 +275,10 @@ const AllAgentConnectHome = () => {
               <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
                 <Users className="h-5 w-5 text-primary" />
               </div>
-              <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-heading-section">My Contacts</h3>
-                <p className="text-xs text-text-body truncate">
-                  Client list and relationship management
-                </p>
-              </div>
+              <h3 className="text-sm font-semibold text-heading-section">My Contacts</h3>
               <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
 
-            {/* Profile & Branding */}
             <button
               onClick={() => navigate("/agent/profile-editor")}
               className="group flex items-center gap-4 p-4 rounded-xl border border-border bg-background hover:bg-muted transition-colors text-left"
@@ -311,19 +286,13 @@ const AllAgentConnectHome = () => {
               <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
                 <UserCircle className="h-5 w-5 text-primary" />
               </div>
-              <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-heading-section">Profile & Branding</h3>
-                <p className="text-xs text-text-body truncate">
-                  Public profile and marketing assets
-                </p>
-              </div>
+              <h3 className="text-sm font-semibold text-heading-section">Profile & Branding</h3>
               <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           </div>
 
           {/* Tier 3 – Utilities (Compact Cards) */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Manage Team */}
             <button
               onClick={() => navigate("/agent/team")}
               className="group flex items-center gap-3 p-3 rounded-lg border border-border bg-background hover:bg-muted transition-colors text-left"
@@ -331,16 +300,10 @@ const AllAgentConnectHome = () => {
               <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
                 <UsersRound className="h-4 w-4 text-primary" />
               </div>
-              <div className="min-w-0">
-                <h3 className="text-sm font-medium text-heading-section">Manage Team</h3>
-                <p className="text-xs text-text-body truncate">
-                  Team members and permissions
-                </p>
-              </div>
+              <h3 className="text-sm font-medium text-heading-section">Manage Team</h3>
               <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
 
-            {/* Global Search */}
             <button
               onClick={() => navigate("/agent-search")}
               className="group flex items-center gap-3 p-3 rounded-lg border border-border bg-background hover:bg-muted transition-colors text-left"
@@ -348,21 +311,9 @@ const AllAgentConnectHome = () => {
               <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
                 <SearchCheck className="h-4 w-4 text-primary" />
               </div>
-              <div className="min-w-0">
-                <h3 className="text-sm font-medium text-heading-section">Global Search</h3>
-                <p className="text-xs text-text-body truncate">
-                  Find agents, listings, and contacts
-                </p>
-              </div>
+              <h3 className="text-sm font-medium text-heading-section">Global Search</h3>
               <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
-          </div>
-
-          {/* Future Module Placeholders */}
-          <div className="mt-10 border border-dashed border-border rounded-2xl p-6 flex items-center justify-center min-h-[80px]">
-            <p className="text-sm text-muted-foreground">
-              Additional workspace modules coming soon
-            </p>
           </div>
         </div>
       </div>
