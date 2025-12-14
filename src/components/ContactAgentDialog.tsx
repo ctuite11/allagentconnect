@@ -23,10 +23,29 @@ interface ContactAgentDialogProps {
   listingAddress: string;
   buttonSize?: "sm" | "default" | "lg";
   buttonVariant?: "default" | "outline" | "secondary";
+  /** Controlled mode: external open state */
+  open?: boolean;
+  /** Controlled mode: external open state setter */
+  onOpenChange?: (open: boolean) => void;
+  /** Hide the trigger button (for controlled mode) */
+  hideTrigger?: boolean;
 }
 
-const ContactAgentDialog = ({ listingId, agentId, listingAddress, buttonSize = "lg", buttonVariant = "outline" }: ContactAgentDialogProps) => {
-  const [open, setOpen] = useState(false);
+const ContactAgentDialog = ({ 
+  listingId, 
+  agentId, 
+  listingAddress, 
+  buttonSize = "lg", 
+  buttonVariant = "outline",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  hideTrigger = false,
+}: ContactAgentDialogProps) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use controlled or internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     sender_name: "",
@@ -111,17 +130,19 @@ const ContactAgentDialog = ({ listingId, agentId, listingAddress, buttonSize = "
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          variant={buttonVariant} 
-          size={buttonSize} 
-          className="gap-1.5 flex-shrink-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Mail className={buttonSize === "sm" ? "h-3.5 w-3.5" : "h-5 w-5"} />
-          {buttonSize === "sm" ? "Contact" : "Contact Agent"}
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button 
+            variant={buttonVariant} 
+            size={buttonSize} 
+            className="gap-1.5 flex-shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Mail className={buttonSize === "sm" ? "h-3.5 w-3.5" : "h-5 w-5"} />
+            {buttonSize === "sm" ? "Contact" : "Contact Agent"}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Contact the Listing Agent</DialogTitle>
