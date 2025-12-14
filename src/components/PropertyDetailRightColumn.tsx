@@ -135,12 +135,12 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
         )}
 
         {/* Showing Instructions - Agent Only */}
-        <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+        <Card className="border-border bg-muted/50 dark:bg-muted/20 border-l-4 border-l-primary">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base text-blue-900 dark:text-blue-100">
-              <KeyRound className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2 text-base text-foreground">
+              <KeyRound className="w-5 h-5 text-primary" />
               Showing Instructions
-              <Badge variant="outline" className="ml-auto text-xs">Agent Only</Badge>
+              <Badge variant="outline" className="ml-auto text-xs border-border text-muted-foreground">Agent Only</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
