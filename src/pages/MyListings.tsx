@@ -326,15 +326,16 @@ function MyListingsView({
       {/* Status Tabs + Grid Toggle on same row */}
       <div className="aac-card aac-card-2">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex flex-wrap gap-2">
+          {/* Segmented control style status filters */}
+          <div className="inline-flex items-center border border-border rounded-lg p-1 bg-muted/30">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => handleStatusChange(activeStatus === tab.value ? null : tab.value)}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                   activeStatus === tab.value
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {tab.label}
@@ -343,19 +344,19 @@ function MyListingsView({
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center gap-1 border border-border rounded-md p-1 bg-muted/50">
+          <div className="inline-flex items-center border border-border rounded-lg p-1 bg-muted/30">
             <button
               onClick={() => setView("grid")}
-              className={`p-1.5 rounded ${
-                view === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+              className={`p-1.5 rounded-md transition ${
+                view === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Grid size={16} />
             </button>
             <button
               onClick={() => setView("list")}
-              className={`p-1.5 rounded ${
-                view === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+              className={`p-1.5 rounded-md transition ${
+                view === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <ListIcon size={16} />
@@ -461,30 +462,30 @@ function MyListingsView({
                       {l.status.replace("_", " ")}
                     </span>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <button
-                        className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
                         onClick={() => onEdit(l.id)}
                         title="Edit"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
-                        className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
                         onClick={() => onPreview(l.id)}
                         title="Preview"
                       >
                         <Eye size={16} />
                       </button>
                       <button
-                        className="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
                         onClick={() => onShare(l.id)}
                         title="Share"
                       >
                         <Share2 size={16} />
                       </button>
                       <button
-                        className="p-2 rounded-md hover:bg-destructive/10 text-destructive transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition"
                         onClick={() => setListingToDelete(l)}
                         title="Delete"
                       >
@@ -533,40 +534,40 @@ function MyListingsView({
                 {/* Top tools bar */}
                 <div className="flex flex-wrap items-center gap-2 text-xs px-4 py-2 border-b border-border">
                   <button
-                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
                     onClick={() => onPhotos(l.id)}
                     title="Manage photos"
                   >
                     Photos
                   </button>
                   <button
-                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
                     onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                   >
                     {hasPublicOpenHouse ? "View Schedule" : "Open House"}
                   </button>
                   <button
-                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
                     onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                   >
                     {hasBrokerTour ? "View Schedule" : "Broker Tour"}
                   </button>
                   <button
-                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
                     onClick={() => onMatches(l)}
                     title="Contact matching buyers"
                   >
                     Matches ({matchCount})
                   </button>
                   <button
-                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
                     onClick={() => onSocialShare(l)}
                     title="Share on social media"
                   >
                     Share
                   </button>
                   <button
-                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition flex items-center gap-1"
                     onClick={() => onStats(l.id)}
                     title="View analytics"
                   >
@@ -704,32 +705,32 @@ function MyListingsView({
                     <div className="flex flex-col items-end gap-2">
                       <div className="flex items-center gap-1">
                         <button
-                          className="w-9 h-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition cursor-pointer"
+                          className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
                           onClick={() => onEdit(l.id)}
                           title="Full edit"
                         >
-                          <Pencil size={18} />
+                          <Pencil size={16} />
                         </button>
                         <button
-                          className="w-9 h-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition cursor-pointer"
+                          className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
                           onClick={() => onPreview(l.id)}
                           title="Preview"
                         >
-                          <Eye size={18} />
+                          <Eye size={16} />
                         </button>
                         <button
-                          className="w-9 h-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition cursor-pointer"
+                          className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
                           onClick={() => onShare(l.id)}
                           title="Share link"
                         >
-                          <Share2 size={18} />
+                          <Share2 size={16} />
                         </button>
                         <button
-                          className="w-9 h-9 flex items-center justify-center rounded-md text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
+                          className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
                           onClick={() => setListingToDelete(l)}
                           title="Delete"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </div>
