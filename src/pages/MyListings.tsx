@@ -108,11 +108,18 @@ function formatDate(value?: string | null) {
   return d.toLocaleDateString();
 }
 
+// Helper for Title Case
+function toTitleCase(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 // Format address with unit number for condos
 function formatAddressWithUnit(listing: Listing): string {
-  const baseAddress = listing.address;
+  const baseAddress = toTitleCase(listing.address || "");
   const unit = listing.unit_number;
-  const city = listing.city;
+  const city = toTitleCase(listing.city || "");
   
   if (unit && unit.trim()) {
     // Format: "16 N Mead St #401, Charlestown"
