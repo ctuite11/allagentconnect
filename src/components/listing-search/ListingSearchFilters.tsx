@@ -279,12 +279,12 @@ const ListingSearchFilters = ({
   const filteredCounties = counties.filter(c => c.state === filters.state);
 
   return (
-    <div className="bg-background border border-border rounded-xl p-4 shadow-sm">
+    <div className="bg-background border border-neutral-200 rounded-xl p-4" style={{ boxShadow: '0 2px 3px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.12)' }}>
         {/* ROW 1: 3-Column Grid - Property Type (narrow) | Status+Date+Price (wide) | Standard Criteria */}
         <div className="flex gap-4 mb-4">
           
           {/* PROPERTY TYPE Section (narrow) */}
-          <div className="w-[160px] shrink-0 bg-background border border-border rounded-lg overflow-hidden">
+          <div className="w-[160px] shrink-0 bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
             <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted/40 border-b border-border">
               <Home className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-xs font-medium text-foreground">Property Type</span>
@@ -315,7 +315,7 @@ const ListingSearchFilters = ({
           </div>
 
           {/* MIDDLE SECTION: Status + Date/Timeframe + Price Range (wide, combined card) */}
-          <div className="flex-1 bg-background border border-border rounded-lg overflow-hidden">
+          <div className="flex-1 bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
             {/* STATUS + DATE/TIMEFRAME Header */}
             <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted/40 border-b border-border">
               <Tag className="h-3.5 w-3.5 text-muted-foreground" />
@@ -462,7 +462,7 @@ const ListingSearchFilters = ({
           </div>
 
           {/* STANDARD SEARCH CRITERIA Section (right) */}
-          <div className="w-[280px] shrink-0 bg-background border border-border rounded-lg overflow-hidden">
+          <div className="w-[280px] shrink-0 bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
             <button
               onClick={() => toggleSection("standardCriteria")}
               className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border hover:bg-muted/60 transition-colors"
@@ -573,7 +573,7 @@ const ListingSearchFilters = ({
         </div>
 
         {/* ROW 2: ADDRESS Section (Full Width) */}
-        <div className="bg-background border border-border rounded-lg overflow-hidden mb-4">
+        <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden mb-4" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
           <button
             onClick={() => toggleSection("address")}
             className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border hover:bg-muted/60 transition-colors"
@@ -666,7 +666,7 @@ const ListingSearchFilters = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           
           {/* TOWNS Section */}
-          <div className="bg-background border border-border rounded-lg overflow-hidden">
+          <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
             <button
               onClick={() => toggleSection("towns")}
               className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border hover:bg-muted/60 transition-colors"
@@ -830,7 +830,7 @@ const ListingSearchFilters = ({
           {/* LISTING EVENTS + KEYWORDS Section */}
           <div className="space-y-4">
             {/* Listing Events */}
-            <div className="bg-background border border-border rounded-lg overflow-hidden">
+            <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
               <button
                 onClick={() => toggleSection("listingEvents")}
                 className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border hover:bg-muted/60 transition-colors"
@@ -885,7 +885,7 @@ const ListingSearchFilters = ({
             </div>
 
             {/* Keywords */}
-            <div className="bg-background border border-border rounded-lg overflow-hidden">
+            <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
               <button
                 onClick={() => toggleSection("keywords")}
                 className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border hover:bg-muted/60 transition-colors"
