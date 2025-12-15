@@ -173,15 +173,15 @@ const ListingSearch = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-50">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
 
       <main className="flex-1 pt-20">
         <div className="max-w-[1280px] mx-auto px-6 py-6">
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-neutral-800 font-display">Listing Search</h1>
-            <p className="text-neutral-500 mt-1">
+            <h1 className="text-4xl font-bold text-foreground font-display">Listing Search</h1>
+            <p className="text-muted-foreground mt-2">
               Search MLS and off-market inventory
             </p>
           </div>
