@@ -351,16 +351,16 @@ function MyListingsView({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Segmented control status filters */}
-          <div className="inline-flex items-center border border-border rounded-md p-0.5 bg-background">
+          {/* Status filter pills */}
+          <div className="flex items-center gap-2">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => handleStatusChange(activeStatus === tab.value ? null : tab.value)}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                className={`px-3 py-1 border rounded-full text-sm font-medium transition-colors ${
                   activeStatus === tab.value
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    ? "bg-neutral-100 text-foreground border-neutral-200"
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100"
                 }`}
               >
                 {tab.label}
@@ -632,7 +632,7 @@ function MyListingsView({
                       </div>
 
                       {/* Quick Edit Section with visual frame when active */}
-                      <div className={`mt-2 ${isEditing ? 'relative p-3 rounded-md border border-border bg-muted/50' : ''}`}>
+                      <div className={`mt-2 ${isEditing ? 'relative p-3 rounded-md border border-neutral-200 bg-neutral-100' : ''}`}>
                         {/* Editing label */}
                         {isEditing && (
                           <span className="absolute top-1 right-2 text-[10px] font-medium text-muted-foreground">
@@ -680,7 +680,7 @@ function MyListingsView({
                           {/* Quick Edit button - show when NOT editing */}
                           {!isEditing && (
                             <button
-                              className="text-xs px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                              className="text-xs px-2.5 py-1 border border-border rounded-full text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition"
                               onClick={() => startQuickEdit(l)}
                               title="Quick edit price and status"
                             >
