@@ -173,21 +173,21 @@ const ListingSearch = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-neutral-50">
       <Navigation />
 
       <main className="flex-1 pt-20">
         <div className="max-w-[1280px] mx-auto px-6 py-6">
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-foreground font-display">Listing Search</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-3xl font-bold text-neutral-800 font-display">Listing Search</h1>
+            <p className="text-neutral-500 mt-1">
               Search MLS and off-market inventory
             </p>
           </div>
           
           {/* Action Bar */}
-          <div className="bg-card border border-border rounded-lg shadow-sm mb-4">
+          <div className="bg-white border border-neutral-200 rounded-xl mb-4" style={{ boxShadow: '0 2px 3px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.12)' }}>
             <div className="px-4 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
