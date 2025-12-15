@@ -316,7 +316,7 @@ const HotSheets = () => {
           </div>
 
           {/* Create New Hot Sheet */}
-          <Card className="mb-8 border-l-4 border-l-primary">
+          <Card className="mb-8">
             <CardHeader>
               <CardTitle>Let's create or view your custom Hot Sheets.</CardTitle>
             </CardHeader>
@@ -330,7 +330,7 @@ const HotSheets = () => {
 
           {/* Hot Sheets Table */}
           {hotSheets.length === 0 ? (
-            <Card className="p-12 border-l-4 border-l-primary">
+            <Card className="p-12">
               <div className="text-center">
                 <Plus className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">No hot sheets yet</h3>

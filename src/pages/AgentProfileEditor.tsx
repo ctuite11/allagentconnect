@@ -610,7 +610,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-primary" />
+                  <User className="h-5 w-5 text-muted-foreground" />
                   Profile Images
                 </CardTitle>
                 <CardDescription>Upload your photo and company logo</CardDescription>
@@ -639,7 +639,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <Home className="h-5 w-5 text-primary" />
+                  <Home className="h-5 w-5 text-muted-foreground" />
                   Appearance
                 </CardTitle>
                 <CardDescription>Customize how your profile header looks</CardDescription>
@@ -658,7 +658,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-primary" />
+                  <User className="h-5 w-5 text-muted-foreground" />
                   Basic Information
                 </CardTitle>
                 <CardDescription>Your name and professional details</CardDescription>
@@ -719,7 +719,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-primary" />
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
                   Contact Information
                 </CardTitle>
                 <CardDescription>Phone numbers and office details</CardDescription>
@@ -810,7 +810,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
+                  <FileText className="h-5 w-5 text-muted-foreground" />
                   About You
                 </CardTitle>
                 <CardDescription>Tell clients about yourself and your expertise</CardDescription>
@@ -833,7 +833,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-primary" />
+                  <Star className="h-5 w-5 text-muted-foreground" />
                   Client Incentives
                 </CardTitle>
                 <CardDescription>Special offers for buyers and sellers</CardDescription>
@@ -852,7 +852,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Share2 className="h-5 w-5 text-primary" />
+                  <Share2 className="h-5 w-5 text-muted-foreground" />
                   Social Media
                 </CardTitle>
                 <CardDescription>Connect your social profiles</CardDescription>
@@ -867,9 +867,9 @@ setHeaderBackgroundType(profile.header_background_type || "color");
 
             {/* Buyer Leads Section */}
             <Card className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+              <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-primary" />
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
                   Buyer Leads
                 </CardTitle>
                 <CardDescription className="mt-1.5">
@@ -1202,7 +1202,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-primary" />
+                  <MessageSquare className="h-5 w-5 text-muted-foreground" />
                   Testimonials
                 </CardTitle>
                 <CardDescription>Add client testimonials to build trust</CardDescription>
