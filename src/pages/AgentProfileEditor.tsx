@@ -42,6 +42,7 @@ import SocialLinksSection from "@/components/profile-editor/SocialLinksSection";
 import IncentivesSection from "@/components/profile-editor/IncentivesSection";
 import TestimonialCard from "@/components/profile-editor/TestimonialCard";
 import HeaderBackgroundSelector from "@/components/profile-editor/HeaderBackgroundSelector";
+import { PageTitle } from "@/components/ui/page-title";
 
 
 interface SocialLinks {
@@ -555,7 +556,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Edit Profile</h1>
+              <PageTitle>Edit Profile</PageTitle>
               <p className="text-muted-foreground">Customize how you appear to clients</p>
             </div>
           </div>
