@@ -20,10 +20,10 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        // surface
-        "rounded-2xl bg-background",
-        // border + structure
-        "border border-border border-l-[6px] border-l-primary",
+        // Use global aac-card system for consistent elevation
+        "rounded-xl bg-background",
+        // neutral border only - no blue rails
+        "border border-border",
         // density
         "p-4",
         className
@@ -35,8 +35,8 @@ export function SectionCard({
           <div className="min-w-0">
             {title ? (
               <div className="flex items-center gap-2">
-                {icon ? (
-                  <span className="text-primary [&_svg]:h-4 [&_svg]:w-4">
+              {icon ? (
+                  <span className="text-muted-foreground [&_svg]:h-4 [&_svg]:w-4">
                     {icon}
                   </span>
                 ) : null}

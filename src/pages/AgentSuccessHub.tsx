@@ -378,7 +378,6 @@ export default function AgentSuccessHub() {
       metricValue: activeListingsCount,
       metricLabel: "Active",
       route: "/agent/listings",
-      accentColor: "border-l-primary",
     },
     {
       icon: <Users className="w-6 h-6" />,
@@ -387,7 +386,6 @@ export default function AgentSuccessHub() {
       metricValue: activeBuyersCount,
       metricLabel: "Clients",
       route: "/my-clients",
-      accentColor: "border-l-teal-500",
     },
     {
       icon: <Bell className="w-6 h-6" />,
@@ -396,21 +394,18 @@ export default function AgentSuccessHub() {
       metricValue: activeHotsheetsCount,
       metricLabel: "Active",
       route: "/hot-sheets",
-      accentColor: "border-l-purple-500",
     },
     {
       icon: <Megaphone className="w-6 h-6" />,
       title: "Communications Center",
       description: "Outbound email campaigns & logs",
       route: "/communication-center",
-      accentColor: "border-l-green-500",
     },
     {
       icon: <Palette className="w-6 h-6" />,
       title: "Profile & Branding",
       description: "Edit your profile and branding",
       route: "/agent-profile-editor",
-      accentColor: "border-l-pink-500",
     },
   ];
 
@@ -436,7 +431,6 @@ export default function AgentSuccessHub() {
                 metricValue={card.metricValue}
                 metricLabel={card.metricLabel}
                 onClick={() => navigate(card.route)}
-                accentColor={card.accentColor}
               />
             ))}
           </div>

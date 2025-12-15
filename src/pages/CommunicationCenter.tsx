@@ -199,7 +199,6 @@ const CommunicationCenter = () => {
           {/* Info Banner */}
           <SectionCard 
             icon={<Info className="h-5 w-5" />}
-            className="border-l-blue-500"
           >
             <div className="text-sm">
               <p className="font-medium text-foreground">This is an outbound email hub, not an inbox.</p>
@@ -213,7 +212,7 @@ const CommunicationCenter = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <SectionCard className="p-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-                <Mail className="h-4 w-4 text-primary" />
+                <Mail className="h-4 w-4" />
                 Total Sent
               </div>
               <div className="text-2xl font-bold">{totalSent}</div>
@@ -221,7 +220,7 @@ const CommunicationCenter = () => {
 
             <SectionCard className="p-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-                <Users className="h-4 w-4 text-primary" />
+                <Users className="h-4 w-4" />
                 Campaigns
               </div>
               <div className="text-2xl font-bold">{campaigns.length}</div>
@@ -229,7 +228,7 @@ const CommunicationCenter = () => {
 
             <SectionCard className="p-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-                <Eye className="h-4 w-4 text-primary" />
+                <Eye className="h-4 w-4" />
                 Avg Open Rate
               </div>
               <div className="text-2xl font-bold">{avgOpenRate}%</div>
@@ -237,7 +236,7 @@ const CommunicationCenter = () => {
 
             <SectionCard className="p-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-                <MousePointer className="h-4 w-4 text-primary" />
+                <MousePointer className="h-4 w-4" />
                 Avg Click Rate
               </div>
               <div className="text-2xl font-bold">{avgClickRate}%</div>

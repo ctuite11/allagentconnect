@@ -395,9 +395,9 @@ const ListingSearchResults = () => {
 
           {/* Sticky Bulk Action Bar */}
           {selectedListings.size > 0 && (
-            <SectionCard className="sticky top-16 z-30 mb-4 p-3 bg-primary border-l-primary-foreground">
+            <SectionCard className="sticky top-16 z-30 mb-4 p-3 bg-muted">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-primary-foreground">
+                <div className="flex items-center gap-2 text-foreground">
                   <CheckSquare className="h-5 w-5" />
                   <span className="font-semibold">{selectedListings.size} Selected</span>
                 </div>
