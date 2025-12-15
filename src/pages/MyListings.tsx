@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search, PartyPopper, Car } from "lucide-react";
+import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search, Car } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -569,14 +569,14 @@ function MyListingsView({
                     className="px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition text-sm font-medium flex items-center gap-1"
                     onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                   >
-                    <PartyPopper className="h-3 w-3" />
+                    <span className="text-xs">🎈</span>
                     {hasPublicOpenHouse ? "View Schedule" : "Open House"}
                   </button>
                   <button
                     className="px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition text-sm font-medium flex items-center gap-1"
                     onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                   >
-                    <Car className="h-3 w-3" />
+                    <Car className="h-3 w-3 text-primary" />
                     {hasBrokerTour ? "View Schedule" : "Broker Tour"}
                   </button>
                   <button
