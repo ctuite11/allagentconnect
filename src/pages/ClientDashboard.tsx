@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -170,7 +171,7 @@ export default function ClientDashboard() {
       <main className="container mx-auto px-4 pt-24 pb-12">
         <div className="max-w-6xl mx-auto space-y-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">My Dashboard</h1>
+            <PageTitle className="mb-2">My Dashboard</PageTitle>
             <p className="text-muted-foreground">
               Manage your saved searches, favorites, and agent relationship
             </p>

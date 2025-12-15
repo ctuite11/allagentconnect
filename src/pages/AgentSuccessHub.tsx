@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -419,7 +420,7 @@ export default function AgentSuccessHub() {
       <div className="container mx-auto px-4 py-8 pt-24 space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-semibold text-neutral-800 font-display">Success Hub</h1>
+          <PageTitle>Success Hub</PageTitle>
           <p className="text-muted-foreground mt-2">Your command center for client success</p>
         </div>
 

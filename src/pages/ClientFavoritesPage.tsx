@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -74,10 +75,9 @@ export default function ClientFavoritesPage() {
       <main className="container mx-auto px-4 pt-24 pb-12">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-              <Heart className="w-8 h-8 text-primary" />
+            <PageTitle icon={<Heart className="w-8 h-8 text-primary" />} className="mb-2">
               My Favorites
-            </h1>
+            </PageTitle>
             <p className="text-muted-foreground">
               {favorites.length === 0
                 ? "You haven't favorited any properties yet"

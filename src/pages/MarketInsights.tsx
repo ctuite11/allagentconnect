@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -204,7 +205,7 @@ const MarketInsights = () => {
             <div className="flex items-center gap-3 mb-4">
               <BarChart3 className="w-10 h-10 text-primary" />
               <div>
-                <h1 className="text-4xl font-bold">Market Insights</h1>
+                <PageTitle>Market Insights</PageTitle>
                 <p className="text-muted-foreground">
                   Real-time analytics and trends from recently sold properties
                 </p>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -98,7 +99,7 @@ const VendorDirectory = () => {
   return (
     <div className="container mx-auto px-4 py-8 pt-24">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">Vendor Directory</h1>
+        <PageTitle className="mb-4">Vendor Directory</PageTitle>
         <p className="text-xl text-muted-foreground">
           Find trusted service providers for your real estate needs
         </p>

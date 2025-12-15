@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -212,10 +213,9 @@ const Favorites = () => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-                <Heart className="h-8 w-8 fill-current text-red-500" />
+              <PageTitle icon={<Heart className="h-8 w-8 fill-current text-red-500" />} className="mb-2">
                 My Favorites
-              </h1>
+              </PageTitle>
               <p className="text-muted-foreground">
                 Manage your favorite properties so you don't lose track of them.
               </p>
