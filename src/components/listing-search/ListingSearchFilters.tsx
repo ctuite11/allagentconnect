@@ -314,87 +314,90 @@ const ListingSearchFilters = ({
             </div>
           </div>
 
-          {/* MIDDLE SECTION: Status + Date/Timeframe + Price Range (wide, combined card) */}
-          <div className="flex-1 bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
-            {/* STATUS + DATE/TIMEFRAME Header */}
-            <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted/40 border-b border-border">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs font-medium text-foreground">Status & Date</span>
-            </div>
-            
-            {/* Top row: Status (left) + Date/Timeframe (right, vertically centered) */}
-            <div className="p-3 flex gap-4">
-              {/* STATUS Section - 2 columns, no scroll */}
-              <div className="flex-1">
-                <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1.5 py-1 rounded transition-colors mb-1.5">
-                  <Checkbox
-                    checked={filters.statuses.length === STATUSES.length}
-                    onCheckedChange={toggleAllStatuses}
-                    className="h-3.5 w-3.5"
-                  />
-                  <span className="text-xs font-medium text-foreground">Select All</span>
-                </label>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                  {STATUSES.map(status => (
-                    <label
-                      key={status.value}
-                      className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1.5 py-1 rounded transition-colors"
-                    >
-                      <Checkbox
-                        checked={filters.statuses.includes(status.value)}
-                        onCheckedChange={() => toggleStatus(status.value)}
-                        className="h-3.5 w-3.5"
-                      />
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">{status.label}</span>
-                    </label>
-                  ))}
-                </div>
+          {/* MIDDLE SECTION: Two stacked cards */}
+          <div className="flex-1 flex flex-col gap-4">
+            {/* STATUS & DATE Card */}
+            <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
+              {/* STATUS + DATE/TIMEFRAME Header */}
+              <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted/40 border-b border-border">
+                <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs font-medium text-foreground">Status & Date</span>
               </div>
               
-              {/* DATE/TIMEFRAME Section (right side, vertically centered) */}
-              <div className="w-[180px] shrink-0 pl-4 border-l border-border flex flex-col justify-center">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium text-foreground">Date / Timeframe</span>
-                </div>
-                <div className="space-y-2.5">
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">List Date</Label>
-                    <Input
-                      type="date"
-                      value={filters.listDateFrom}
-                      onChange={e => updateFilter("listDateFrom", e.target.value)}
-                      className="h-8 text-xs"
+              {/* Top row: Status (left) + Date/Timeframe (right, vertically centered) */}
+              <div className="p-3 flex gap-4">
+                {/* STATUS Section - 2 columns, no scroll */}
+                <div className="flex-1">
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1.5 py-1 rounded transition-colors mb-1.5">
+                    <Checkbox
+                      checked={filters.statuses.length === STATUSES.length}
+                      onCheckedChange={toggleAllStatuses}
+                      className="h-3.5 w-3.5"
                     />
+                    <span className="text-xs font-medium text-foreground">Select All</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    {STATUSES.map(status => (
+                      <label
+                        key={status.value}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1.5 py-1 rounded transition-colors"
+                      >
+                        <Checkbox
+                          checked={filters.statuses.includes(status.value)}
+                          onCheckedChange={() => toggleStatus(status.value)}
+                          className="h-3.5 w-3.5"
+                        />
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{status.label}</span>
+                      </label>
+                    ))}
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Off-Market Timeframe</Label>
-                    <Select 
-                      value={filters.offMarketTimeframe} 
-                      onValueChange={v => updateFilter("offMarketTimeframe", v)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="3months">Today - 3 Months</SelectItem>
-                        <SelectItem value="6months">Today - 6 Months</SelectItem>
-                        <SelectItem value="12months">Today - 12 Months</SelectItem>
-                        <SelectItem value="24months">Today - 24 Months</SelectItem>
-                      </SelectContent>
-                    </Select>
+                </div>
+                
+                {/* DATE/TIMEFRAME Section (right side, vertically centered) */}
+                <div className="w-[180px] shrink-0 pl-4 border-l border-border flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs font-medium text-foreground">Date / Timeframe</span>
+                  </div>
+                  <div className="space-y-2.5">
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">List Date</Label>
+                      <Input
+                        type="date"
+                        value={filters.listDateFrom}
+                        onChange={e => updateFilter("listDateFrom", e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Off-Market Timeframe</Label>
+                      <Select 
+                        value={filters.offMarketTimeframe} 
+                        onValueChange={v => updateFilter("offMarketTimeframe", v)}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3months">Today - 3 Months</SelectItem>
+                          <SelectItem value="6months">Today - 6 Months</SelectItem>
+                          <SelectItem value="12months">Today - 12 Months</SelectItem>
+                          <SelectItem value="24months">Today - 24 Months</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            
-            {/* PRICE RANGE Section (below Status+Date, full width within this card) */}
-            <div className="px-3 py-2.5 border-t border-border">
-              <div className="flex items-center gap-2 mb-2">
+
+            {/* PRICE RANGE Card (separate card) */}
+            <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
+              <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted/40 border-b border-border">
                 <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-xs font-medium text-foreground">Price Range</span>
               </div>
-              <div className="flex items-end gap-4">
+              <div className="p-3 flex items-end gap-4">
                 {/* Min Price */}
                 <div className="flex-1">
                   <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
