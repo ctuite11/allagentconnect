@@ -661,7 +661,7 @@ function MyListingsView({
                         </span>
                         {l.listing_number && (
                           <button 
-                            className="text-xs text-muted-foreground hover:text-primary hover:underline cursor-pointer"
+                            className="text-xs text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
                             onClick={() => onPreview(l.id)}
                           >
                             #{l.listing_number}
@@ -669,18 +669,18 @@ function MyListingsView({
                         )}
                       </div>
 
-                      {/* Price row with inline quick edit */}
-                      <div className="flex items-center gap-3 mt-2">
+                      {/* Price - left aligned under status */}
+                      <div className="mt-2">
                         {isEditing ? (
-                          <>
+                          <div className="flex items-center gap-2">
                             <input
                               type="number"
-                              className="border border-neutral-200 rounded-lg px-2 py-1 text-sm w-28 bg-background"
+                              className="border border-neutral-200 rounded px-2 py-1 text-sm w-28 bg-background"
                               value={editPrice}
                               onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
                             />
                             <select
-                              className="border border-neutral-200 rounded-lg px-2 py-1 bg-background capitalize text-xs"
+                              className="border border-neutral-200 rounded px-2 py-1 bg-background capitalize text-xs"
                               value={editStatus}
                               onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
                             >
@@ -691,29 +691,29 @@ function MyListingsView({
                               ))}
                             </select>
                             <button
-                              className="px-2 py-1 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
+                              className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
                               onClick={saveQuickEdit}
                             >
                               Save
                             </button>
                             <button
-                              className="px-2 py-1 rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-muted text-xs"
+                              className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                               onClick={cancelQuickEdit}
                             >
                               Cancel
                             </button>
-                          </>
+                          </div>
                         ) : (
-                          <>
-                            <div className="text-sm font-medium text-foreground">${l.price.toLocaleString()}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-foreground">${l.price.toLocaleString()}</span>
                             <button
-                              className="text-xs px-2 py-1 border border-neutral-200 rounded-lg bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                              className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                               onClick={() => startQuickEdit(l)}
                               title="Quick edit price and status"
                             >
                               Quick Edit
                             </button>
-                          </>
+                          </div>
                         )}
                       </div>
 
