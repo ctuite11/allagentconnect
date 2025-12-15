@@ -180,7 +180,7 @@ const ListingSearch = () => {
         <div className="max-w-[1280px] mx-auto px-6 py-6">
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-4xl font-bold text-foreground font-display">Listing Search</h1>
+            <h1 className="text-4xl font-semibold text-neutral-800 font-display">Listing Search</h1>
           </div>
           
           {/* Action Bar */}
