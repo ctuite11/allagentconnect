@@ -65,28 +65,26 @@ const STATUS_TABS: { label: string; value: ListingStatus }[] = [
 ];
 
 function statusBadgeClass(status: string) {
-  // Neutral, calm status badges matching Success Hub standard
   switch (status) {
-    case "off_market":
-      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
-    case "new":
-      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
     case "active":
-      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
-    case "pending":
-      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
-    case "sold":
-      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
-    case "draft":
-      return "bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400";
+    case "new":
+      return "bg-green-100 text-green-700";
     case "coming_soon":
-      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
+      return "bg-amber-100 text-amber-700";
+    case "pending":
+      return "bg-blue-100 text-blue-700";
+    case "sold":
+      return "bg-purple-100 text-purple-700";
+    case "off_market":
+      return "bg-slate-100 text-slate-600";
+    case "draft":
+      return "bg-neutral-100 text-neutral-500";
     case "withdrawn":
     case "expired":
     case "cancelled":
-      return "bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400";
+      return "bg-red-100 text-red-600";
     default:
-      return "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300";
+      return "bg-neutral-100 text-neutral-500";
   }
 }
 
@@ -658,7 +656,12 @@ function MyListingsView({
                             )}
 
                             {l.listing_number && (
-                              <div className="text-xs text-muted-foreground">AAC #{l.listing_number}</div>
+<button 
+                              className="text-xs text-primary hover:underline font-medium cursor-pointer"
+                              onClick={() => onPreview(l.id)}
+                            >
+                              #{l.listing_number}
+                            </button>
                             )}
 
                             {/* Save/Cancel buttons - show when editing */}
