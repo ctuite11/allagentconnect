@@ -623,10 +623,10 @@ function MyListingsView({
 
                 {/* Main content section */}
                 <div className="p-4">
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-start gap-4">
                     {/* Checkbox for draft selection */}
                     {activeStatus === "draft" && l.status === "draft" && (
-                      <div className="shrink-0">
+                      <div className="shrink-0 pt-1">
                         <Checkbox
                           checked={selectedDraftIds.has(l.id)}
                           onCheckedChange={() => toggleDraftSelection(l.id)}
@@ -644,7 +644,7 @@ function MyListingsView({
                       />
                     </div>
 
-                    {/* Main content column */}
+                    {/* Main content column: Address → Location → Status + AAC# */}
                     <div className="flex-1 min-w-0">
                       {/* Address */}
                       <div className="font-semibold text-base text-foreground truncate">
@@ -654,7 +654,7 @@ function MyListingsView({
                       <div className="text-sm text-muted-foreground mt-0.5">
                         {l.state} {l.zip_code}
                       </div>
-                      {/* Status + Listing # as secondary metadata under address */}
+                      {/* Status + Listing # as secondary metadata under location */}
                       <div className="flex items-center gap-2 mt-1.5">
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
                           {l.status.replace("_", " ")}
@@ -669,73 +669,16 @@ function MyListingsView({
                         )}
                       </div>
 
-                      {/* Quick Edit Section with visual frame when active */}
-                      <div className={`mt-2 ${isEditing ? 'relative p-3 rounded-md border border-neutral-200 bg-neutral-100' : ''}`}>
-                        {/* Editing label */}
-                        {isEditing && (
-                          <span className="absolute top-1 right-2 text-[10px] font-medium text-muted-foreground">
-                            Editing…
-                          </span>
-                        )}
-
-                        {/* Price + AAC + Quick Edit OR Save/Cancel on same row */}
-                        <div className="flex flex-wrap items-center gap-3 justify-between">
-                          <div className="flex flex-wrap items-center gap-3">
-                            {isEditing ? (
-                              <input
-                                type="number"
-                                className="border border-border rounded px-2 py-1 text-sm w-32 bg-background"
-                                value={editPrice}
-                                onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                              />
-                            ) : (
-                              <div className="text-muted-foreground text-sm">${l.price.toLocaleString()}</div>
-                            )}
-
-                            {l.listing_number && (
-<button 
-                              className="text-xs text-primary hover:underline font-medium cursor-pointer"
-                              onClick={() => onPreview(l.id)}
-                            >
-                              #{l.listing_number}
-                            </button>
-                            )}
-
-                            {/* Save/Cancel buttons - show when editing */}
-                            {isEditing && (
-                              <div className="flex items-center gap-2">
-                                <button
-                                  className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
-                                  onClick={saveQuickEdit}
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  className="px-2.5 py-1 rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-muted text-xs"
-                                  onClick={cancelQuickEdit}
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Quick Edit button - show when NOT editing */}
-                          {!isEditing && (
-                            <button
-                              className="text-xs px-2.5 py-1.5 border border-neutral-200 rounded-lg bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition"
-                              onClick={() => startQuickEdit(l)}
-                              title="Quick edit price and status"
-                            >
-                              Quick Edit
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Date metadata row */}
-                        <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                          {/* Status pill or dropdown */}
-                          {isEditing ? (
+                      {/* Price row with inline quick edit */}
+                      <div className="flex items-center gap-3 mt-2">
+                        {isEditing ? (
+                          <>
+                            <input
+                              type="number"
+                              className="border border-neutral-200 rounded-lg px-2 py-1 text-sm w-28 bg-background"
+                              value={editPrice}
+                              onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                            />
                             <select
                               className="border border-neutral-200 rounded-lg px-2 py-1 bg-background capitalize text-xs"
                               value={editStatus}
@@ -747,22 +690,50 @@ function MyListingsView({
                                 </option>
                               ))}
                             </select>
-                          ) : null}
-
-                          {l.neighborhood && (
-                            <span className="text-xs text-muted-foreground">
-                              {l.neighborhood}
-                            </span>
-                          )}
-
-                          <span>List: {listDate}</span>
-                          {expDate && <span>Exp: {expDate}</span>}
-                        </div>
+                            <button
+                              className="px-2 py-1 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
+                              onClick={saveQuickEdit}
+                            >
+                              Save
+                            </button>
+                            <button
+                              className="px-2 py-1 rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-muted text-xs"
+                              onClick={cancelQuickEdit}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-sm font-medium text-foreground">${l.price.toLocaleString()}</div>
+                            <button
+                              className="text-xs px-2 py-1 border border-neutral-200 rounded-lg bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                              onClick={() => startQuickEdit(l)}
+                              title="Quick edit price and status"
+                            >
+                              Quick Edit
+                            </button>
+                          </>
+                        )}
                       </div>
+
+                      {/* Neighborhood if present */}
+                      {l.neighborhood && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {l.neighborhood}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Right-hand icon column - match Success Hub icon button styling */}
-                    <div className="flex flex-col items-end gap-2">
+                    {/* Right column: Dates at top, Actions below */}
+                    <div className="flex flex-col items-end gap-3 shrink-0">
+                      {/* Date metadata - top right, compact */}
+                      <div className="text-xs text-muted-foreground text-right">
+                        <div>List: {listDate}</div>
+                        {expDate && <div>Exp: {expDate}</div>}
+                      </div>
+
+                      {/* Action icons */}
                       <div className="flex items-center gap-1.5">
                         <TooltipProvider>
                           <Tooltip>
