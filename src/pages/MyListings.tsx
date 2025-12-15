@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home } from "lucide-react";
+import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { OpenHouseDialog } from "@/components/OpenHouseDialog";
@@ -162,6 +163,7 @@ function MyListingsView({
   
   const [activeStatus, setActiveStatus] = useState<ListingStatus | null>(statusFromUrl);
   const [view, setView] = useState<"grid" | "list">("list");
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Sync URL param with state
   const handleStatusChange = (status: ListingStatus | null) => {
@@ -245,10 +247,22 @@ function MyListingsView({
     let result = activeStatus === null 
       ? listings 
       : listings.filter((l) => l.status === activeStatus);
+    
+    // Apply search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((l) => 
+        l.address?.toLowerCase().includes(q) ||
+        l.city?.toLowerCase().includes(q) ||
+        l.listing_number?.toLowerCase().includes(q) ||
+        l.neighborhood?.toLowerCase().includes(q)
+      );
+    }
+    
     // Sort newest first
     result.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
     return result;
-  }, [listings, activeStatus]);
+  }, [listings, activeStatus, searchQuery]);
 
   const startQuickEdit = (listing: Listing) => {
     setEditingId(listing.id);
@@ -323,19 +337,30 @@ function MyListingsView({
         </DropdownMenu>
       </div>
 
-      {/* Status Tabs + Grid Toggle on same row */}
-      <div className="aac-card aac-card-2">
-        <div className="flex items-center justify-between gap-4">
-          {/* Segmented control style status filters */}
-          <div className="inline-flex items-center border border-border rounded-lg p-1 bg-muted/30">
+      {/* Quick Search + Status Filters + View Toggle */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        {/* Quick Search */}
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by address or MLS #"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Segmented control status filters */}
+          <div className="inline-flex items-center border border-border rounded-md p-0.5 bg-background">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => handleStatusChange(activeStatus === tab.value ? null : tab.value)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                   activeStatus === tab.value
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 {tab.label}
@@ -343,20 +368,20 @@ function MyListingsView({
             ))}
           </div>
 
-          {/* View toggle */}
-          <div className="inline-flex items-center border border-border rounded-lg p-1 bg-muted/30">
+          {/* View toggle - separate control */}
+          <div className="inline-flex items-center border border-border rounded-md p-0.5 bg-background">
             <button
               onClick={() => setView("grid")}
-              className={`p-1.5 rounded-md transition ${
-                view === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              className={`p-1.5 rounded transition-colors ${
+                view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
             >
               <Grid size={16} />
             </button>
             <button
               onClick={() => setView("list")}
-              className={`p-1.5 rounded-md transition ${
-                view === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              className={`p-1.5 rounded transition-colors ${
+                view === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
             >
               <ListIcon size={16} />
