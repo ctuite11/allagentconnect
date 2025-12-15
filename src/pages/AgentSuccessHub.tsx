@@ -419,7 +419,7 @@ export default function AgentSuccessHub() {
       <div className="container mx-auto px-4 py-8 pt-24 space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-foreground font-display">Success Hub</h1>
+          <h1 className="text-4xl font-semibold text-neutral-800 font-display">Success Hub</h1>
           <p className="text-muted-foreground mt-2">Your command center for client success</p>
         </div>
 
