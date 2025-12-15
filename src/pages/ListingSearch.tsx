@@ -181,7 +181,6 @@ const ListingSearch = () => {
           {/* Page Header */}
           <div className="mb-6">
             <h1 className="text-4xl font-bold text-foreground font-display">Listing Search</h1>
-            <p className="text-muted-foreground mt-2">Find your next opportunity</p>
           </div>
           
           {/* Action Bar */}
