@@ -63,27 +63,28 @@ const STATUS_TABS: { label: string; value: ListingStatus }[] = [
 ];
 
 function statusBadgeClass(status: string) {
+  // Neutral, calm status badges matching Success Hub standard
   switch (status) {
     case "off_market":
-      return "bg-amber-500 text-white";
+      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
     case "new":
-      return "bg-emerald-500 text-white";
+      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
     case "active":
-      return "bg-blue-500 text-white";
+      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
     case "pending":
-      return "bg-amber-600 text-white";
+      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
     case "sold":
-      return "bg-green-500 text-white";
+      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
     case "draft":
-      return "bg-gray-400 text-white";
+      return "bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400";
     case "coming_soon":
-      return "bg-purple-500 text-white";
+      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
     case "withdrawn":
     case "expired":
     case "cancelled":
-      return "bg-red-500 text-white";
+      return "bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400";
     default:
-      return "bg-gray-200 text-gray-800";
+      return "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300";
   }
 }
 
@@ -298,21 +299,21 @@ function MyListingsView({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             <DropdownMenuItem onClick={() => onNewListing("new")} className="cursor-pointer">
-              <Home className="h-4 w-4 mr-2 text-emerald-500" />
+              <Home className="h-4 w-4 mr-2 text-muted-foreground" />
               <div>
                 <div className="font-medium">New (Active)</div>
                 <div className="text-xs text-muted-foreground">Ready to go live on market</div>
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onNewListing("off_market")} className="cursor-pointer">
-              <Lock className="h-4 w-4 mr-2 text-amber-500" />
+              <Lock className="h-4 w-4 mr-2 text-muted-foreground" />
               <div>
                 <div className="font-medium">Off-Market (Private)</div>
                 <div className="text-xs text-muted-foreground">Private listing for agents only</div>
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onNewListing("coming_soon")} className="cursor-pointer">
-              <Sparkles className="h-4 w-4 mr-2 text-purple-500" />
+              <Sparkles className="h-4 w-4 mr-2 text-muted-foreground" />
               <div>
                 <div className="font-medium">Coming Soon</div>
                 <div className="text-xs text-muted-foreground">Pre-market announcement</div>
@@ -323,17 +324,17 @@ function MyListingsView({
       </div>
 
       {/* Status Tabs + Grid Toggle on same row */}
-      <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+      <div className="aac-card aac-card-2">
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-wrap gap-2">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => handleStatusChange(activeStatus === tab.value ? null : tab.value)}
-                className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                   activeStatus === tab.value
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-card text-foreground border-border hover:bg-accent"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 {tab.label}
@@ -342,11 +343,11 @@ function MyListingsView({
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center gap-1 border border-border rounded-lg p-1 bg-muted">
+          <div className="flex items-center gap-1 border border-border rounded-md p-1 bg-muted/50">
             <button
               onClick={() => setView("grid")}
               className={`p-1.5 rounded ${
-                view === "grid" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                view === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
               }`}
             >
               <Grid size={16} />
@@ -354,7 +355,7 @@ function MyListingsView({
             <button
               onClick={() => setView("list")}
               className={`p-1.5 rounded ${
-                view === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                view === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
               }`}
             >
               <ListIcon size={16} />
@@ -441,7 +442,7 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-                className="border border-border rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition"
+                className="aac-card aac-card-2 overflow-hidden"
               >
                 <div className="w-full h-48 bg-muted overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
                   <img src={thumbnail || "/placeholder.svg"} alt={l.address} className="w-full h-full object-cover" />
@@ -527,53 +528,45 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-                className="border border-border rounded-lg bg-card shadow-sm hover:shadow-md transition overflow-hidden"
+                className="aac-card aac-card-2 overflow-hidden"
               >
                 {/* Top tools bar */}
-                <div className="flex flex-wrap items-center gap-2 text-xs px-4 py-2 bg-muted/30 border-b border-border">
+                <div className="flex flex-wrap items-center gap-2 text-xs px-4 py-2 border-b border-border">
                   <button
-                    className="px-3 py-1 rounded-full bg-card border border-border text-foreground hover:bg-accent transition"
+                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
                     onClick={() => onPhotos(l.id)}
                     title="Manage photos"
                   >
                     Photos
                   </button>
                   <button
-                    className={`px-3 py-1 rounded-full transition flex items-center gap-1 ${
-                      hasPublicOpenHouse 
-                        ? "bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300"
-                        : "bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300"
-                    }`}
+                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
                     onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                   >
-                    🎈 {hasPublicOpenHouse ? "View Schedule" : "Public Open House"}
+                    {hasPublicOpenHouse ? "View Schedule" : "Open House"}
                   </button>
                   <button
-                    className={`px-3 py-1 rounded-full transition flex items-center gap-1 ${
-                      hasBrokerTour 
-                        ? "bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300"
-                        : "bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-300"
-                    }`}
+                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
                     onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                   >
-                    🚗 {hasBrokerTour ? "View Schedule" : "Broker Open House"}
+                    {hasBrokerTour ? "View Schedule" : "Broker Tour"}
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-card border border-border text-foreground hover:bg-accent transition"
+                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
                     onClick={() => onMatches(l)}
                     title="Contact matching buyers"
                   >
                     Matches ({matchCount})
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-card border border-border text-foreground hover:bg-accent transition"
+                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
                     onClick={() => onSocialShare(l)}
                     title="Share on social media"
                   >
-                    Social Share
+                    Share
                   </button>
                   <button
-                    className="px-3 py-1 rounded-full bg-card border border-border text-foreground hover:bg-accent transition flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition flex items-center gap-1"
                     onClick={() => onStats(l.id)}
                     title="View analytics"
                   >
@@ -613,10 +606,10 @@ function MyListingsView({
                       </div>
 
                       {/* Quick Edit Section with visual frame when active */}
-                      <div className={`mt-2 ${isEditing ? 'relative p-3 rounded-md border border-blue-400 bg-blue-50/50 dark:bg-blue-950/20' : ''}`}>
+                      <div className={`mt-2 ${isEditing ? 'relative p-3 rounded-md border border-border bg-muted/50' : ''}`}>
                         {/* Editing label */}
                         {isEditing && (
-                          <span className="absolute top-1 right-2 text-[10px] font-medium text-blue-600 dark:text-blue-400">
+                          <span className="absolute top-1 right-2 text-[10px] font-medium text-muted-foreground">
                             Editing…
                           </span>
                         )}
@@ -661,7 +654,7 @@ function MyListingsView({
                           {/* Quick Edit button - show when NOT editing */}
                           {!isEditing && (
                             <button
-                              className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100 transition dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/50"
+                              className="text-xs px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
                               onClick={() => startQuickEdit(l)}
                               title="Quick edit price and status"
                             >
@@ -696,7 +689,7 @@ function MyListingsView({
                           )}
 
                           {l.neighborhood && (
-                            <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                            <span className="text-xs text-muted-foreground">
                               {l.neighborhood}
                             </span>
                           )}
