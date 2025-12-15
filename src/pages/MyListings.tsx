@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search } from "lucide-react";
+import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search, PartyPopper, Car } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -559,40 +559,42 @@ function MyListingsView({
                 {/* Top tools bar */}
                 <div className="flex flex-wrap items-center gap-2 text-xs px-4 py-2 border-b border-border">
                   <button
-                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                    className="px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition text-sm font-medium"
                     onClick={() => onPhotos(l.id)}
                     title="Manage photos"
                   >
                     Photos
                   </button>
                   <button
-                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                    className="px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition text-sm font-medium flex items-center gap-1"
                     onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                   >
+                    <PartyPopper className="h-3 w-3" />
                     {hasPublicOpenHouse ? "View Schedule" : "Open House"}
                   </button>
                   <button
-                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                    className="px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition text-sm font-medium flex items-center gap-1"
                     onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                   >
+                    <Car className="h-3 w-3" />
                     {hasBrokerTour ? "View Schedule" : "Broker Tour"}
                   </button>
                   <button
-                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                    className="px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition text-sm font-medium"
                     onClick={() => onMatches(l)}
                     title="Contact matching buyers"
                   >
                     Matches ({matchCount})
                   </button>
                   <button
-                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                    className="px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition text-sm font-medium"
                     onClick={() => onSocialShare(l)}
                     title="Share on social media"
                   >
                     Share
                   </button>
                   <button
-                    className="px-2.5 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition text-sm font-medium flex items-center gap-1"
                     onClick={() => onStats(l.id)}
                     title="View analytics"
                   >
