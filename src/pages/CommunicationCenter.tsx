@@ -39,6 +39,7 @@ import { toast } from "sonner";
 import { EmailDetailDrawer } from "@/components/communication-center/EmailDetailDrawer";
 import { SendEmailDialog } from "@/components/communication-center/SendEmailDialog";
 import { SectionCard } from "@/components/ui/section-card";
+import { PageTitle } from "@/components/ui/page-title";
 
 interface Campaign {
   id: string;
@@ -180,7 +181,7 @@ const CommunicationCenter = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-3xl font-bold text-foreground font-display">Communication Center</h1>
+                <PageTitle>Communication Center</PageTitle>
                 <p className="text-muted-foreground mt-1">
                   Send targeted listing emails to users based on their saved preferences. Replies go to your email inbox.
                 </p>
