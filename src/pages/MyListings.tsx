@@ -5,6 +5,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -731,29 +732,55 @@ function MyListingsView({
                     {/* Right-hand icon column */}
                     <div className="flex flex-col items-end gap-2">
                       <div className="flex items-center gap-1">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                className="w-8 h-8 flex items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition cursor-pointer"
+                                onClick={() => onEdit(l.id)}
+                              >
+                                <Pencil size={16} />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-black text-white border-black">
+                              Full edit
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                className="w-8 h-8 flex items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition cursor-pointer"
+                                onClick={() => onPreview(l.id)}
+                              >
+                                <Eye size={16} />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-black text-white border-black">
+                              Preview
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <SocialShareMenu
+                                url={getListingShareUrl(l.id)}
+                                title={`${formatAddressWithUnit(l)}, ${l.city} - $${l.price?.toLocaleString()}`}
+                                listingId={l.id}
+                                trigger={
+                                  <button
+                                    className="w-8 h-8 flex items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition cursor-pointer"
+                                  >
+                                    <Share2 size={16} />
+                                  </button>
+                                }
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-black text-white border-black">
+                              Share
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         <button
-                          className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
-                          onClick={() => onEdit(l.id)}
-                          title="Full edit"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
-                          onClick={() => onPreview(l.id)}
-                          title="Preview"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <button
-                          className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
-                          onClick={() => onShare(l.id)}
-                          title="Share link"
-                        >
-                          <Share2 size={16} />
-                        </button>
-                        <button
-                          className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
+                          className="w-8 h-8 flex items-center justify-center rounded-full border border-border text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
                           onClick={() => setListingToDelete(l)}
                           title="Delete"
                         >
