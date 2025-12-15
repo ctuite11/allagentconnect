@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -376,7 +377,7 @@ const MyClients = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-4xl font-bold mb-2">My Contacts</h1>
+                <PageTitle className="mb-2">My Contacts</PageTitle>
                 <p className="text-muted-foreground">
                   Manage your contacts and create personalized hot sheets for them
                 </p>

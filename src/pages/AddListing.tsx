@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -2695,9 +2696,9 @@ const AddListing = () => {
             </div>
             <p className="text-sm text-muted-foreground mb-2">Hello. Bonjour. Hola. 你好. Ciao</p>
             <div className="flex items-center gap-4 mb-4">
-              <h1 className="text-4xl font-bold">
+              <PageTitle>
                 <span className="text-primary">Gotcha,</span> Let's Help You Add a Listing
-              </h1>
+              </PageTitle>
               <img src={listingIcon} alt="Listing creation" className="w-16 h-16" />
             </div>
             <p className="text-muted-foreground">

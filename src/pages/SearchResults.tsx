@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -234,7 +235,7 @@ const SearchResults = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="mb-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-4xl font-bold">Search Results</h1>
+              <PageTitle>Search Results</PageTitle>
               <Button onClick={() => navigate(`/browse${search}`)}>Modify Search</Button>
             </div>
             {filters.state && (

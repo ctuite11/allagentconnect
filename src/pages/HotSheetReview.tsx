@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate, useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -338,7 +339,7 @@ if (agentIds.length > 0) {
                 View in Search
               </Button>
             </div>
-            <h1 className="text-4xl font-bold mb-2">{hotSheet.name}</h1>
+            <PageTitle className="mb-2">{hotSheet.name}</PageTitle>
             {getClientDisplay() && (
               <p className="text-lg text-muted-foreground">
                 Client: {getClientDisplay()}

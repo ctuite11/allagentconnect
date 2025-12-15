@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -307,7 +308,7 @@ const HotSheets = () => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-4xl font-bold mb-2">Hot Sheets</h1>
+              <PageTitle className="mb-2">Hot Sheets</PageTitle>
               <p className="text-muted-foreground">
                 Welcome to your Hot Sheet Creator. Enter your search criteria and receive real-time listing updates.
               </p>

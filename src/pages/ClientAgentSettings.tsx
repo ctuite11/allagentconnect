@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -112,7 +113,7 @@ const ClientAgentSettings = () => {
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
-            <h1 className="text-4xl font-bold mb-2">My Agent</h1>
+            <PageTitle className="mb-2">My Agent</PageTitle>
             <p className="text-muted-foreground mb-8">
               View and manage your agent relationship
             </p>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -148,7 +149,7 @@ const BrowsePropertiesNew = () => {
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-4xl font-bold mb-2">Property Search</h1>
+            <PageTitle className="mb-2">Property Search</PageTitle>
             <p className="text-muted-foreground">
               Advanced search with comprehensive filters
             </p>

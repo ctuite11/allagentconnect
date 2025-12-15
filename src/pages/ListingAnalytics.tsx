@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -281,10 +282,9 @@ const ListingAnalytics = () => {
             Back to Dashboard
           </Button>
           <div className="flex-1">
-            <h1 className="text-4xl font-bold flex items-center gap-2">
-              <BarChart3 className="h-8 w-8" />
+            <PageTitle icon={<BarChart3 className="h-8 w-8" />}>
               Listing Analytics
-            </h1>
+            </PageTitle>
             <p className="text-muted-foreground mt-2">
               Track performance and engagement metrics for your listings
             </p>
