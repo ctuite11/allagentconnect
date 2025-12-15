@@ -175,7 +175,7 @@ const SectionHeader = ({
 }) => (
   <button
     onClick={onToggle}
-    className="w-full flex items-center justify-between px-3 py-1.5 bg-muted/30 hover:bg-muted/50 transition-colors"
+    className="w-full flex items-center justify-between px-3 py-1.5 bg-neutral-50 hover:bg-neutral-100 transition-colors"
   >
     <div className="flex items-center gap-2">
       <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
@@ -285,12 +285,12 @@ const ListingSearchFilters = ({
           
           {/* PROPERTY TYPE Section (narrow) */}
           <div className="w-[160px] shrink-0 bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
-            <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted/40 border-b border-border">
+            <div className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-50 border-b border-neutral-200">
               <Home className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-xs font-medium text-foreground">Property Type</span>
             </div>
             <div className="p-3 space-y-1.5">
-              <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1.5 py-1 rounded transition-colors">
+              <label className="flex items-center gap-2 cursor-pointer hover:bg-neutral-100 px-1.5 py-1 rounded transition-colors">
                 <Checkbox
                   checked={filters.propertyTypes.length === PROPERTY_TYPES.length}
                   onCheckedChange={toggleAllPropertyTypes}
@@ -301,7 +301,7 @@ const ListingSearchFilters = ({
               {PROPERTY_TYPES.map(type => (
                 <label
                   key={type.value}
-                  className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1.5 py-1 rounded transition-colors"
+                  className="flex items-center gap-2 cursor-pointer hover:bg-neutral-100 px-1.5 py-1 rounded transition-colors"
                 >
                   <Checkbox
                     checked={filters.propertyTypes.includes(type.value)}
@@ -319,7 +319,7 @@ const ListingSearchFilters = ({
             {/* STATUS & DATE Card */}
             <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
               {/* STATUS + DATE/TIMEFRAME Header */}
-              <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted/40 border-b border-border">
+              <div className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-50 border-b border-neutral-200">
                 <Tag className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-xs font-medium text-foreground">Status & Date</span>
               </div>
@@ -328,7 +328,7 @@ const ListingSearchFilters = ({
               <div className="p-3 flex gap-4">
                 {/* STATUS Section - 2 columns, no scroll */}
                 <div className="flex-1">
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1.5 py-1 rounded transition-colors mb-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-neutral-100 px-1.5 py-1 rounded transition-colors mb-1.5">
                     <Checkbox
                       checked={filters.statuses.length === STATUSES.length}
                       onCheckedChange={toggleAllStatuses}
@@ -340,7 +340,7 @@ const ListingSearchFilters = ({
                     {STATUSES.map(status => (
                       <label
                         key={status.value}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1.5 py-1 rounded transition-colors"
+                        className="flex items-center gap-2 cursor-pointer hover:bg-neutral-100 px-1.5 py-1 rounded transition-colors"
                       >
                         <Checkbox
                           checked={filters.statuses.includes(status.value)}
@@ -354,7 +354,7 @@ const ListingSearchFilters = ({
                 </div>
                 
                 {/* DATE/TIMEFRAME Section (right side, vertically centered) */}
-                <div className="w-[180px] shrink-0 pl-4 border-l border-border flex flex-col justify-center">
+                <div className="w-[180px] shrink-0 pl-4 border-l border-neutral-200 flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-xs font-medium text-foreground">Date / Timeframe</span>
@@ -393,7 +393,7 @@ const ListingSearchFilters = ({
 
             {/* PRICE RANGE Card (separate card) */}
             <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
-              <div className="w-full flex items-center gap-2 px-3 py-2 bg-muted/40 border-b border-border">
+              <div className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-50 border-b border-neutral-200">
                 <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-xs font-medium text-foreground">Price Range</span>
               </div>
@@ -468,7 +468,7 @@ const ListingSearchFilters = ({
           <div className="w-[280px] shrink-0 bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
             <button
               onClick={() => toggleSection("standardCriteria")}
-              className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border hover:bg-muted/60 transition-colors"
+              className="w-full flex items-center justify-between px-3 py-2 bg-neutral-50 border-b border-neutral-200 hover:bg-neutral-100 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <Building className="h-3.5 w-3.5 text-muted-foreground" />
@@ -579,7 +579,7 @@ const ListingSearchFilters = ({
         <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden mb-4" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
           <button
             onClick={() => toggleSection("address")}
-            className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border hover:bg-muted/60 transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 bg-neutral-50 border-b border-neutral-200 hover:bg-neutral-100 transition-colors"
           >
             <div className="flex items-center gap-2">
               <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
@@ -672,7 +672,7 @@ const ListingSearchFilters = ({
           <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
             <button
               onClick={() => toggleSection("towns")}
-              className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border hover:bg-muted/60 transition-colors"
+              className="w-full flex items-center justify-between px-3 py-2 bg-neutral-50 border-b border-neutral-200 hover:bg-neutral-100 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
@@ -770,10 +770,10 @@ const ListingSearchFilters = ({
                       )}
                     </div>
                     
-                    <div className="min-h-[260px] max-h-[300px] border border-border rounded-lg overflow-y-auto p-2">
+                    <div className="min-h-[260px] max-h-[300px] border border-neutral-200 rounded-lg overflow-y-auto p-2">
                       <button
                         onClick={addAllTowns}
-                        className="w-full text-left px-2 py-1 text-xs text-primary hover:bg-muted/50 rounded transition-colors font-medium mb-1"
+                        className="w-full text-left px-2 py-1 text-xs text-primary hover:bg-neutral-100 rounded transition-colors font-medium mb-1"
                       >
                         - Add All Towns ({townsList.length}) -
                       </button>
@@ -806,7 +806,7 @@ const ListingSearchFilters = ({
                         </Button>
                       )}
                     </div>
-                    <div className="min-h-[260px] max-h-[300px] border border-border rounded-lg overflow-y-auto p-2">
+                    <div className="min-h-[260px] max-h-[300px] border border-neutral-200 rounded-lg overflow-y-auto p-2">
                       {filters.selectedTowns.length === 0 ? (
                         <p className="text-xs text-muted-foreground italic px-2 py-1">No towns selected</p>
                       ) : (
@@ -836,7 +836,7 @@ const ListingSearchFilters = ({
             <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
               <button
                 onClick={() => toggleSection("listingEvents")}
-                className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border hover:bg-muted/60 transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2 bg-neutral-50 border-b border-neutral-200 hover:bg-neutral-100 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
@@ -850,7 +850,7 @@ const ListingSearchFilters = ({
               </button>
               {sectionsOpen.listingEvents && (
                 <div className="p-3 space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1.5 py-1 rounded transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-neutral-100 px-1.5 py-1 rounded transition-colors">
                     <Checkbox
                       checked={filters.openHouses}
                       onCheckedChange={checked => updateFilter("openHouses", checked as boolean)}
@@ -858,7 +858,7 @@ const ListingSearchFilters = ({
                     />
                     <span className="text-xs text-foreground">🎈 Open Houses</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-1.5 py-1 rounded transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-neutral-100 px-1.5 py-1 rounded transition-colors">
                     <Checkbox
                       checked={filters.brokerTours}
                       onCheckedChange={checked => updateFilter("brokerTours", checked as boolean)}
@@ -891,7 +891,7 @@ const ListingSearchFilters = ({
             <div className="bg-background border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08)' }}>
               <button
                 onClick={() => toggleSection("keywords")}
-                className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border hover:bg-muted/60 transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2 bg-neutral-50 border-b border-neutral-200 hover:bg-neutral-100 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <FileText className="h-3.5 w-3.5 text-muted-foreground" />
@@ -920,7 +920,7 @@ const ListingSearchFilters = ({
                         <Label htmlFor="all" className="text-xs text-foreground cursor-pointer">All</Label>
                       </div>
                     </RadioGroup>
-                    <div className="border-l border-border h-4" />
+                    <div className="border-l border-neutral-200 h-4" />
                     <RadioGroup 
                       value={filters.keywordType} 
                       onValueChange={(v) => updateFilter("keywordType", v as "include" | "exclude")}
@@ -953,7 +953,7 @@ const ListingSearchFilters = ({
         </div>
 
         {/* Action Bar */}
-        <div className="flex items-center justify-between pt-3 border-t border-border">
+        <div className="flex items-center justify-between pt-3 border-t border-neutral-200">
           <div className="flex items-center gap-2">
             {filters.selectedTowns.length > 0 && (
               <Badge variant="secondary" className="text-xs px-2 py-0.5">
