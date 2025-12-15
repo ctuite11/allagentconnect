@@ -343,7 +343,7 @@ function MyListingsView({
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by address or MLS #"
+            placeholder="Search by address or AAC #"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 h-9 text-sm"
@@ -489,28 +489,28 @@ function MyListingsView({
 
                     <div className="flex items-center gap-1">
                       <button
-                        className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition"
                         onClick={() => onEdit(l.id)}
                         title="Edit"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
-                        className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition"
                         onClick={() => onPreview(l.id)}
                         title="Preview"
                       >
                         <Eye size={16} />
                       </button>
                       <button
-                        className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-neutral-100 transition"
                         onClick={() => onShare(l.id)}
                         title="Share"
                       >
                         <Share2 size={16} />
                       </button>
                       <button
-                        className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-full border border-border text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition"
                         onClick={() => setListingToDelete(l)}
                         title="Delete"
                       >
