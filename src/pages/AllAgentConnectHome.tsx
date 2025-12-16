@@ -33,8 +33,8 @@ interface CommCenterSummary {
 // Unified card classes - locked standard
 const hubCard =
   "bg-white border border-neutral-200 rounded-2xl " +
-  "shadow-[0_2px_3px_rgba(0,0,0,0.08),0_12px_28px_rgba(0,0,0,0.12)] " +
-  "hover:shadow-[0_4px_8px_rgba(0,0,0,0.1),0_16px_36px_rgba(0,0,0,0.14)] hover:border-neutral-300 " +
+  "shadow-[0_2px_6px_rgba(0,0,0,0.12),0_8px_24px_rgba(0,0,0,0.16)] " +
+  "hover:shadow-[0_4px_12px_rgba(0,0,0,0.15),0_16px_40px_rgba(0,0,0,0.18)] hover:border-neutral-300 " +
   "hover:-translate-y-[1px] transition-all cursor-pointer";
 
 // Tier sizing
