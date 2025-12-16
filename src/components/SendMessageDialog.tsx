@@ -474,9 +474,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         ) : (
           <div className="space-y-5 p-6">
             {/* Recipient Count */}
-            <div className="bg-secondary/50 border border-border rounded-xl p-4">
+            <div className="border border-border rounded-xl p-4">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-muted border border-border flex items-center justify-center">
+                <div className="h-8 w-8 rounded-lg border border-border flex items-center justify-center">
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </div>
                 {loadingCount ? (
@@ -499,7 +499,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
               <div className="space-y-4">
                 {/* State and County - Always visible */}
                 <div className="rounded-xl border border-border bg-card overflow-hidden">
-                  <div className="px-4 py-3 bg-background border-b border-border">
+                  <div className="px-4 py-3 border-b border-border">
                     <div className="flex items-center gap-3">
                       <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -550,14 +550,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                   <div className="rounded-xl border border-border bg-card overflow-hidden">
                     <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                      <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
                         <div className="flex items-center gap-3">
                           <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
                           <span className="font-medium text-foreground">Towns & Neighborhoods</span>
                           {selectedCities.length > 0 && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-foreground font-medium">
+                            <span className="text-xs px-2 py-0.5 rounded-full border border-border text-foreground font-medium">
                               {selectedCities.length} selected
                             </span>
                           )}
@@ -678,14 +678,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   <Collapsible open={propertyTypesOpen} onOpenChange={setPropertyTypesOpen}>
                     <div className="rounded-xl border border-border bg-card overflow-hidden">
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                        <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
                           <div className="flex items-center gap-3">
                             <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
                             <span className="font-medium text-foreground">Property Types</span>
                             {propertyTypes.length > 0 && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-foreground font-medium">
+                              <span className="text-xs px-2 py-0.5 rounded-full border border-border text-foreground font-medium">
                                 {propertyTypes.length} selected
                               </span>
                             )}
@@ -739,14 +739,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   <Collapsible open={priceRangeOpen} onOpenChange={setPriceRangeOpen}>
                     <div className="rounded-xl border border-border bg-card overflow-hidden">
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                        <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
                           <div className="flex items-center gap-3">
                             <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span className="font-medium text-foreground">Price Range</span>
                             {(minPrice || maxPrice) && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-foreground font-medium">
+                              <span className="text-xs px-2 py-0.5 rounded-full border border-border text-foreground font-medium">
                                 ${minPriceDisplay || '0'} - ${maxPriceDisplay || '∞'}
                               </span>
                             )}
