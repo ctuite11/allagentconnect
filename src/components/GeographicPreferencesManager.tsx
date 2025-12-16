@@ -179,7 +179,7 @@ const GeographicPreferencesManager = ({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className={`border transition-all ${isOpen ? "border-primary bg-muted/30" : "border-border"}`}>
+      <Card className={`border transition-all ${isOpen ? "border-primary bg-neutral-50/50" : "border-neutral-200"}`}>
         <CollapsibleTrigger className="w-full">
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between">

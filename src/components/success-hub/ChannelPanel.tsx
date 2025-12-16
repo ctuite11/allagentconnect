@@ -15,7 +15,6 @@ interface ChannelPanelProps {
   isReceiving: boolean;
   onToggleReceive: () => void;
   onSend: () => void;
-  accentColor?: string;
 }
 
 export const ChannelPanel = ({
@@ -25,24 +24,13 @@ export const ChannelPanel = ({
   isReceiving,
   onToggleReceive,
   onSend,
-  accentColor = "primary",
 }: ChannelPanelProps) => {
-  const colorClasses: Record<string, { border: string; bg: string }> = {
-    primary: { border: "border-l-primary", bg: "bg-primary" },
-    accent: { border: "border-l-accent", bg: "bg-accent" },
-    purple: { border: "border-l-purple-500", bg: "bg-purple-500" },
-    red: { border: "border-l-red-500", bg: "bg-red-500" },
-  };
-
-  const colors = colorClasses[accentColor] || colorClasses.primary;
-
   return (
     <div
       className={cn(
-        "relative bg-card rounded-[10px] border-l-4 border border-border p-5",
-        "shadow-custom-sm hover:shadow-custom-md",
-        "transition-all duration-200",
-        colors.border
+        "relative bg-white rounded-2xl border border-neutral-200 p-5",
+        "aac-card",
+        "transition-all duration-200"
       )}
     >
       <div className="flex items-start gap-4">
