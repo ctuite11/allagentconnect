@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
+import { PageTitle } from "@/components/ui/page-title";
 
 interface EnrichedAgent {
   id: string;
@@ -311,9 +312,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
         {/* Compact Hero */}
         <section className="border-b border-border bg-card py-8">
           <div className="container mx-auto px-4">
-            <h1 className="text-2xl font-bold md:text-3xl">
-              {pageTitle}
-            </h1>
+            <PageTitle>{pageTitle}</PageTitle>
             <p className="mt-1 text-muted-foreground">
               {pageSubtitle}
             </p>

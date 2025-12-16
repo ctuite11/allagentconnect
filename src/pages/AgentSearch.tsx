@@ -8,6 +8,7 @@ import { Users } from "lucide-react";
 import { toast } from "sonner";
 import AgentSearchFilters from "@/components/agent-search/AgentSearchFilters";
 import AgentSearchTable from "@/components/agent-search/AgentSearchTable";
+import { PageTitle } from "@/components/ui/page-title";
 
 const AgentSearch = () => {
   const navigate = useNavigate();
@@ -169,7 +170,7 @@ const AgentSearch = () => {
                 <Users className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Agent Directory</h1>
+                <PageTitle>Agent Directory</PageTitle>
                 <p className="text-sm text-muted-foreground">
                   Find agents, view listings, and connect for deals
                 </p>

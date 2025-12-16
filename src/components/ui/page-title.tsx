@@ -18,7 +18,7 @@ interface PageTitleProps {
 export function PageTitle({ children, className, icon }: PageTitleProps) {
   return (
     <h1 className={cn(
-      "text-4xl font-semibold text-neutral-800 font-display",
+      "text-4xl font-semibold text-neutral-800 font-display tracking-tight",
       icon && "flex items-center gap-3",
       className
     )}>
