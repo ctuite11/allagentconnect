@@ -185,7 +185,7 @@ const ListingSearch = () => {
           </div>
           
           {/* Action Bar */}
-          <div className="bg-white border border-neutral-200 rounded-xl mb-4" style={{ boxShadow: '0 2px 3px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.12)' }}>
+          <div className="aac-card mb-4">
             <div className="px-4 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

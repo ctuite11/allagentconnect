@@ -20,7 +20,7 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        "rounded-xl bg-card border border-neutral-200 shadow-sm p-4",
+        "aac-card p-4",
         className
       )}
       {...props}
