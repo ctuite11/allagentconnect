@@ -146,19 +146,19 @@ const AllAgentConnectHome = () => {
             <div className={`${hubCard} ${tier1}`}>
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center">
-                    <Search className="h-5 w-5 text-neutral-500" />
+                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                    <Search className="h-5 w-5 text-slate-500" />
                   </div>
-                  <h2 className="text-base font-medium text-neutral-800">Listing Search</h2>
+                  <h2 className="text-base font-semibold text-slate-900">Listing Search</h2>
                 </div>
               </div>
               <Button 
                 size="sm" 
                 onClick={() => navigate("/listing-search")}
-                className="gap-1.5 rounded text-sm px-3"
+                className="h-9 rounded-xl px-4 text-sm font-medium gap-2"
               >
                 Open
-                <ArrowRight className="h-3.5 w-3.5" />
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
 
@@ -166,13 +166,13 @@ const AllAgentConnectHome = () => {
             <div className={`${hubCard} ${tier1}`}>
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center">
-                    <FileStack className="h-5 w-5 text-neutral-500" />
+                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                    <FileStack className="h-5 w-5 text-slate-500" />
                   </div>
-                  <h2 className="text-base font-medium text-neutral-800">Hotsheets</h2>
+                  <h2 className="text-base font-semibold text-slate-900">Hotsheets</h2>
                 </div>
                 {hotsheets.length > 0 && (
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-slate-500">
                     {hotsheets.length} active
                   </span>
                 )}
@@ -180,10 +180,10 @@ const AllAgentConnectHome = () => {
               <Button 
                 size="sm" 
                 onClick={() => navigate("/hot-sheets")}
-                className="gap-1.5 rounded text-sm px-3"
+                className="h-9 rounded-xl px-4 text-sm font-medium gap-2"
               >
                 Open
-                <ArrowRight className="h-3.5 w-3.5" />
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
 
@@ -191,13 +191,13 @@ const AllAgentConnectHome = () => {
             <div className={`${hubCard} ${tier1}`}>
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-neutral-500" />
+                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-slate-500" />
                   </div>
-                  <h2 className="text-base font-medium text-neutral-800">Comm Center</h2>
+                  <h2 className="text-base font-semibold text-slate-900">Comm Center</h2>
                 </div>
                 {commSummary.unreadCount > 0 && (
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-slate-500">
                     {commSummary.unreadCount} pending
                   </span>
                 )}
@@ -205,10 +205,10 @@ const AllAgentConnectHome = () => {
               <Button 
                 size="sm" 
                 onClick={() => navigate("/communication-center")}
-                className="gap-1.5 rounded text-sm px-3"
+                className="h-9 rounded-xl px-4 text-sm font-medium gap-2"
               >
                 Open
-                <ArrowRight className="h-3.5 w-3.5" />
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -219,33 +219,33 @@ const AllAgentConnectHome = () => {
               onClick={() => navigate("/agent/listings")}
               className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
-              <div className="h-10 w-10 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
-                <Home className="h-5 w-5 text-neutral-400" />
+              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                <Home className="h-5 w-5 text-slate-500" />
               </div>
-              <h3 className="text-sm font-medium text-neutral-700">My Listings</h3>
-              <ArrowRight className="h-4 w-4 text-neutral-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <h3 className="text-base font-semibold text-slate-900">My Listings</h3>
+              <ArrowRight className="h-4 w-4 text-slate-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
 
             <button
               onClick={() => navigate("/agent/clients")}
               className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
-              <div className="h-10 w-10 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
-                <Users className="h-5 w-5 text-neutral-400" />
+              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                <Users className="h-5 w-5 text-slate-500" />
               </div>
-              <h3 className="text-sm font-medium text-neutral-700">My Contacts</h3>
-              <ArrowRight className="h-4 w-4 text-neutral-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <h3 className="text-base font-semibold text-slate-900">My Contacts</h3>
+              <ArrowRight className="h-4 w-4 text-slate-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
 
             <button
               onClick={() => navigate("/agent/profile-editor")}
               className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
-              <div className="h-10 w-10 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
-                <UserCircle className="h-5 w-5 text-neutral-400" />
+              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                <UserCircle className="h-5 w-5 text-slate-500" />
               </div>
-              <h3 className="text-sm font-medium text-neutral-700">Profile & Branding</h3>
-              <ArrowRight className="h-4 w-4 text-neutral-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <h3 className="text-base font-semibold text-slate-900">Profile & Branding</h3>
+              <ArrowRight className="h-4 w-4 text-slate-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           </div>
 
@@ -255,22 +255,22 @@ const AllAgentConnectHome = () => {
               onClick={() => navigate("/agent/team")}
               className={`${hubCard} p-4 group flex items-center gap-3 text-left`}
             >
-              <div className="h-8 w-8 rounded-md bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
-                <UsersRound className="h-4 w-4 text-neutral-400" />
+              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                <UsersRound className="h-4 w-4 text-slate-500" />
               </div>
-              <h3 className="text-sm font-medium text-neutral-600">Manage Team</h3>
-              <ArrowRight className="h-3.5 w-3.5 text-neutral-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <h3 className="text-sm font-medium text-slate-700">Manage Team</h3>
+              <ArrowRight className="h-3.5 w-3.5 text-slate-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
 
             <button
               onClick={() => navigate("/agent-search")}
               className={`${hubCard} p-4 group flex items-center gap-3 text-left`}
             >
-              <div className="h-8 w-8 rounded-md bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
-                <SearchCheck className="h-4 w-4 text-neutral-400" />
+              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                <SearchCheck className="h-4 w-4 text-slate-500" />
               </div>
-              <h3 className="text-sm font-medium text-neutral-600">Global Search</h3>
-              <ArrowRight className="h-3.5 w-3.5 text-neutral-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <h3 className="text-sm font-medium text-slate-700">Global Search</h3>
+              <ArrowRight className="h-3.5 w-3.5 text-slate-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           </div>
         </div>
