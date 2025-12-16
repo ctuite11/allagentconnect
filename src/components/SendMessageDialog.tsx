@@ -501,17 +501,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <div className="rounded-xl border border-border bg-card overflow-hidden">
                   <div className="px-4 py-3 bg-background border-b border-border">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                        <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </div>
+                      <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
                       <span className="font-medium text-foreground">Location</span>
                       <span className="text-xs font-medium text-destructive">*Required</span>
                     </div>
                   </div>
-                  <div className="p-4 bg-secondary/20">
+                  <div className="p-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-foreground">State</Label>
@@ -554,11 +552,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                       <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                            <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                          </div>
+                          <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
                           <span className="font-medium text-foreground">Towns & Neighborhoods</span>
                           {selectedCities.length > 0 && (
                             <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-foreground font-medium">
@@ -566,13 +562,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                             </span>
                           )}
                         </div>
-                        <div className="h-6 w-6 rounded-md bg-secondary flex items-center justify-center">
-                          {townsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                        </div>
+                        {townsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className="p-4 pt-2 border-t border-border bg-secondary/20 space-y-4">
+                      <div className="p-4 pt-2 border-t border-border space-y-4">
                         {/* Show Areas Yes/No */}
                         <div className="flex items-center gap-4">
                           <Label className="text-sm font-medium text-foreground">Show Areas</Label>
@@ -611,7 +605,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                               onChange={(e) => setCitySearch(e.target.value)}
                               className="h-10 rounded-lg border-border bg-background text-sm"
                             />
-                            <div className="border border-border rounded-lg bg-secondary/30 max-h-60 overflow-y-auto p-2 relative z-10">
+                            <div className="border border-border rounded-lg bg-background max-h-60 overflow-y-auto p-2 relative z-10">
                               {selectedCountyId && townsList.length > 0 && (
                                 <button
                                   type="button"
@@ -640,7 +634,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                           <div className="space-y-2">
                             <Label className="text-sm font-medium text-foreground">Selected Towns</Label>
-                            <div className="border border-border rounded-lg p-3 bg-secondary/30 min-h-[200px] max-h-60 overflow-y-auto">
+                            <div className="border border-border rounded-lg p-3 bg-background min-h-[200px] max-h-60 overflow-y-auto">
                               {selectedCities.length === 0 ? (
                                 <p className="text-sm text-muted-foreground">No towns selected</p>
                               ) : (
@@ -686,11 +680,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                         <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
                           <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                              <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                              </svg>
-                            </div>
+                            <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
                             <span className="font-medium text-foreground">Property Types</span>
                             {propertyTypes.length > 0 && (
                               <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-foreground font-medium">
@@ -698,13 +690,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                               </span>
                             )}
                           </div>
-                          <div className="h-6 w-6 rounded-md bg-secondary flex items-center justify-center">
-                            {propertyTypesOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                          </div>
+                          {propertyTypesOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                         </div>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="p-4 pt-2 border-t border-border bg-secondary/20">
+                        <div className="p-4 pt-2 border-t border-border">
                           <div className="grid grid-cols-3 gap-x-6 gap-y-3">
                             <div className="flex items-center space-x-2.5">
                               <Checkbox
@@ -751,11 +741,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                         <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
                           <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                              <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </div>
+                            <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                             <span className="font-medium text-foreground">Price Range</span>
                             {(minPrice || maxPrice) && (
                               <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-foreground font-medium">
@@ -763,13 +751,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                               </span>
                             )}
                           </div>
-                          <div className="h-6 w-6 rounded-md bg-secondary flex items-center justify-center">
-                            {priceRangeOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                          </div>
+                          {priceRangeOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                         </div>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="p-4 pt-2 border-t border-border bg-secondary/20">
+                        <div className="p-4 pt-2 border-t border-border">
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor="minPrice" className="text-sm font-medium text-foreground">
