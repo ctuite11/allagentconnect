@@ -92,8 +92,8 @@ export function TownsPicker({
                 </button>
               </div>
               {showNeighborhoods && isExpanded && (
-                <div 
-                  className="ml-8 border-l-2 border-muted pl-2 mt-1 bg-muted/30 rounded-r py-1 space-y-1"
+              <div 
+                  className="ml-8 border-l-2 border-muted pl-2 mt-1 py-1 space-y-1"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {neighborhoods
@@ -106,9 +106,9 @@ export function TownsPicker({
                         e.stopPropagation();
                         onToggleTown(`${town}-${neighborhood}`);
                       }}
-                      className="w-full text-left px-2 py-1 text-xs hover:bg-muted rounded text-muted-foreground"
+                      className="w-full text-left px-2 py-1 text-sm hover:bg-muted rounded"
                     >
-                      {neighborhood}
+                      - {neighborhood}
                     </button>
                   ))}
                 </div>
@@ -199,7 +199,7 @@ export function TownsPicker({
             )}
             {showNeighborhoods && isExpanded && (
               <div 
-                className="ml-8 border-l-2 border-muted pl-2 space-y-1 rounded-r py-1 bg-muted/30"
+                className="ml-8 border-l-2 border-muted pl-2 space-y-1 py-1"
                 onClick={(e) => e.stopPropagation()}
               >
                 {neighborhoods
@@ -217,9 +217,9 @@ export function TownsPicker({
                     />
                     <label 
                       htmlFor={`neighborhood-${town}-${neighborhood}`} 
-                      className="text-xs cursor-pointer flex-1 text-muted-foreground"
+                      className="text-sm cursor-pointer flex-1"
                     >
-                      {neighborhood}
+                      - {neighborhood}
                     </label>
                   </div>
                 ))}
