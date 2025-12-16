@@ -136,11 +136,11 @@ const AllAgentConnectHome = () => {
           {/* Tier 1 – Command Panels */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Listing Search */}
-            <div className="p-6 rounded-2xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_10px_24px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2">
+            <div className="p-6 rounded-2xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-100/70 border border-neutral-200/70 flex items-center justify-center">
-                    <Search className="h-5 w-5 text-stone-500" />
+                  <div className="h-10 w-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                    <Search className="h-5 w-5 text-neutral-500" />
                   </div>
                   <h2 className="text-base font-medium text-neutral-800">Listing Search</h2>
                 </div>
@@ -156,11 +156,11 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Hotsheets */}
-            <div className="p-6 rounded-2xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_10px_24px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2">
+            <div className="p-6 rounded-2xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-100/70 border border-neutral-200/70 flex items-center justify-center">
-                    <FileStack className="h-5 w-5 text-stone-500" />
+                  <div className="h-10 w-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                    <FileStack className="h-5 w-5 text-neutral-500" />
                   </div>
                   <h2 className="text-base font-medium text-neutral-800">Hotsheets</h2>
                 </div>
@@ -181,11 +181,11 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Comm Center */}
-            <div className="p-6 rounded-2xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_10px_24px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2">
+            <div className="p-6 rounded-2xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-100/70 border border-neutral-200/70 flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-stone-500" />
+                  <div className="h-10 w-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-neutral-500" />
                   </div>
                   <h2 className="text-base font-medium text-neutral-800">Comm Center</h2>
                 </div>
@@ -210,10 +210,10 @@ const AllAgentConnectHome = () => {
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => navigate("/agent/listings")}
-              className="group flex items-center gap-4 p-4 rounded-xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_12px_28px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 text-left"
+              className="group flex items-center gap-4 p-4 rounded-xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 text-left"
             >
-              <div className="h-10 w-10 rounded-lg bg-neutral-100/70 border border-neutral-200/70 flex items-center justify-center shrink-0">
-                <Home className="h-5 w-5 text-stone-400" />
+              <div className="h-10 w-10 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
+                <Home className="h-5 w-5 text-neutral-400" />
               </div>
               <h3 className="text-sm font-medium text-neutral-700">My Listings</h3>
               <ArrowRight className="h-4 w-4 text-neutral-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -221,10 +221,10 @@ const AllAgentConnectHome = () => {
 
             <button
               onClick={() => navigate("/agent/clients")}
-              className="group flex items-center gap-4 p-4 rounded-xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_12px_28px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 text-left"
+              className="group flex items-center gap-4 p-4 rounded-xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 text-left"
             >
-              <div className="h-10 w-10 rounded-lg bg-neutral-100/70 border border-neutral-200/70 flex items-center justify-center shrink-0">
-                <Users className="h-5 w-5 text-stone-400" />
+              <div className="h-10 w-10 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
+                <Users className="h-5 w-5 text-neutral-400" />
               </div>
               <h3 className="text-sm font-medium text-neutral-700">My Contacts</h3>
               <ArrowRight className="h-4 w-4 text-neutral-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -232,10 +232,10 @@ const AllAgentConnectHome = () => {
 
             <button
               onClick={() => navigate("/agent/profile-editor")}
-              className="group flex items-center gap-4 p-4 rounded-xl bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_12px_28px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 text-left"
+              className="group flex items-center gap-4 p-4 rounded-xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 text-left"
             >
-              <div className="h-10 w-10 rounded-lg bg-neutral-100/70 border border-neutral-200/70 flex items-center justify-center shrink-0">
-                <UserCircle className="h-5 w-5 text-stone-400" />
+              <div className="h-10 w-10 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
+                <UserCircle className="h-5 w-5 text-neutral-400" />
               </div>
               <h3 className="text-sm font-medium text-neutral-700">Profile & Branding</h3>
               <ArrowRight className="h-4 w-4 text-neutral-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -246,9 +246,9 @@ const AllAgentConnectHome = () => {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
             <button
               onClick={() => navigate("/agent/team")}
-              className="group flex items-center gap-3 p-3 rounded-lg bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_12px_28px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 text-left"
+              className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 text-left"
             >
-              <div className="h-8 w-8 rounded-md bg-neutral-100/70 border border-neutral-200/70 flex items-center justify-center shrink-0">
+              <div className="h-8 w-8 rounded-md bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
                 <UsersRound className="h-4 w-4 text-neutral-400" />
               </div>
               <h3 className="text-sm font-medium text-neutral-600">Manage Team</h3>
@@ -257,9 +257,9 @@ const AllAgentConnectHome = () => {
 
             <button
               onClick={() => navigate("/agent-search")}
-              className="group flex items-center gap-3 p-3 rounded-lg bg-background bg-gradient-to-b from-white/95 to-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_12px_28px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:shadow-[0_6px_10px_rgba(0,0,0,0.10),0_20px_44px_rgba(0,0,0,0.16)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 text-left"
+              className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 text-left"
             >
-              <div className="h-8 w-8 rounded-md bg-neutral-100/70 border border-neutral-200/70 flex items-center justify-center shrink-0">
+              <div className="h-8 w-8 rounded-md bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
                 <SearchCheck className="h-4 w-4 text-neutral-400" />
               </div>
               <h3 className="text-sm font-medium text-neutral-600">Global Search</h3>

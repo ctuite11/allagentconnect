@@ -20,12 +20,7 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        // Use global aac-card system for consistent elevation
-        "rounded-xl bg-background",
-        // neutral border only - no blue rails
-        "border border-border",
-        // density
-        "p-4",
+        "rounded-xl bg-card border border-neutral-200 shadow-sm p-4",
         className
       )}
       {...props}
