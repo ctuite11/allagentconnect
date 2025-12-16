@@ -119,7 +119,7 @@ export const NotificationPreferenceCards = () => {
     {
       key: "buyer_need" as keyof NotificationPreferences,
       title: "Buyer Needs",
-      description: "Active buyer demand",
+      description: "Active buyer requests",
       active: preferences.buyer_need,
       icon: Users,
     },
@@ -133,7 +133,7 @@ export const NotificationPreferenceCards = () => {
     {
       key: "renter_need" as keyof NotificationPreferences,
       title: "Renter Needs",
-      description: "Active rental demand",
+      description: "Active rental requests",
       active: preferences.renter_need,
       icon: Home,
     },
