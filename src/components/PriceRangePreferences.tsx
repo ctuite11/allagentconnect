@@ -295,9 +295,9 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className={`border transition-all ${isOpen ? "border-neutral-300 shadow-sm bg-white" : "border-neutral-200 bg-white"}`}>
+      <Card className="aac-card bg-white border-neutral-200 rounded-2xl">
         <CollapsibleTrigger className="w-full">
-          <CardHeader className="cursor-pointer hover:bg-neutral-50 transition-colors">
+          <CardHeader className="cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-neutral-600" />
@@ -309,7 +309,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
               Set your preferred price range for client need notifications
             </CardDescription>
             {!isOpen && getSummaryText() && (
-              <div className="mt-2 bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 text-left">
+              <div className="mt-2 bg-white border border-neutral-200 rounded-xl px-4 py-3 text-left">
                 <p className="text-sm font-medium text-neutral-900">
                   {getSummaryText()}
                 </p>

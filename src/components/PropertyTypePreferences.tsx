@@ -111,10 +111,10 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
   }
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className={`border transition-all ${isOpen ? "border-neutral-300 shadow-sm bg-white" : "border-neutral-200 bg-white"}`}>
+  <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="aac-card bg-white border-neutral-200 rounded-2xl">
         <CollapsibleTrigger className="w-full">
-          <CardHeader className="cursor-pointer hover:bg-neutral-50 transition-colors">
+          <CardHeader className="cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Home className="h-5 w-5 text-neutral-600" />
@@ -126,7 +126,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
               Select which property types you want to receive notifications about
             </CardDescription>
             {!isOpen && selectedTypes.length > 0 && (
-              <div className="mt-2 bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 text-left">
+              <div className="mt-2 bg-white border border-neutral-200 rounded-xl px-4 py-3 text-left">
                 <p className="text-sm font-medium text-neutral-900">
                   {selectedTypes.length} property type{selectedTypes.length !== 1 ? 's' : ''} selected
                 </p>
