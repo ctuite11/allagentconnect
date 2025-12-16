@@ -167,14 +167,14 @@ export const NotificationPreferenceCards = () => {
   return (
     <>
       {/* Surface panel wrapper like Success Hub */}
-      <div className="rounded-2xl border border-border bg-muted/30 p-5">
+      <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cards.map((card) => {
             const IconComponent = card.icon;
             return (
               <Card
                 key={card.key}
-                className="bg-card border-border shadow-sm rounded-2xl hover:border-neutral-300 transition-colors"
+                className="aac-card bg-white border-neutral-200 rounded-2xl"
               >
                 <CardContent className="p-5">
                   {/* Top row: Icon + Title + Description */}
