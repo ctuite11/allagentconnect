@@ -187,10 +187,7 @@ const CommunicationCenter = () => {
                 </p>
               </div>
             </div>
-            <Button 
-              onClick={() => setSendDialogOpen(true)}
-              className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white"
-            >
+            <Button onClick={() => setSendDialogOpen(true)}>
               <Send className="h-4 w-4 mr-2" />
               Send Email
             </Button>
