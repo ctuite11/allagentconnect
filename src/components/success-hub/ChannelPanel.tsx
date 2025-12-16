@@ -39,7 +39,7 @@ export const ChannelPanel = ({
           "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
           "bg-muted border border-border"
         )}>
-          <div className="text-primary">{icon}</div>
+          <div className="text-muted-foreground">{icon}</div>
         </div>
 
         {/* Content */}
