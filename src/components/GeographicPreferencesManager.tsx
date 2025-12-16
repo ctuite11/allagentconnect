@@ -191,7 +191,7 @@ const GeographicPreferencesManager = ({
             <CardDescription className="text-left text-neutral-600">
               Select states, counties, and towns for notifications
             </CardDescription>
-            {selectedTowns.length > 0 && (
+            {!isOpen && selectedTowns.length > 0 && (
               <div className="mt-2 bg-white border border-neutral-200 rounded-xl px-4 py-3 text-left">
                 <p className="text-sm font-medium text-neutral-900">
                   {selectedTowns.length} area{selectedTowns.length !== 1 ? 's' : ''} selected
@@ -199,11 +199,9 @@ const GeographicPreferencesManager = ({
               </div>
             )}
             {!isOpen && selectedTowns.length === 0 && (
-              <div className="mt-2 bg-white border border-neutral-200 rounded-xl px-4 py-3 text-left">
-                <p className="text-sm font-medium text-neutral-900">
-                  No towns selected
-                </p>
-              </div>
+              <p className="text-sm text-neutral-500 mt-1 text-left">
+                No geographic areas selected
+              </p>
             )}
           </CardHeader>
         </CollapsibleTrigger>
