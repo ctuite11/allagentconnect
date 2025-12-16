@@ -166,38 +166,30 @@ export const NotificationPreferenceCards = () => {
 
   return (
     <>
-      <div className="space-y-4">
+      {/* Surface panel wrapper like Success Hub */}
+      <div className="rounded-2xl border border-border bg-muted/30 p-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cards.map((card) => {
             const IconComponent = card.icon;
             return (
               <Card
                 key={card.key}
-                className={`border transition-all ${
-                  card.active 
-                    ? "border-primary bg-muted/30" 
-                    : "border-border"
-                }`}
+                className="bg-card border-border shadow-sm rounded-2xl hover:border-neutral-300 transition-colors"
               >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    {/* Left: Icon + Title + Description */}
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        card.active ? "bg-primary/10" : "bg-muted"
-                      }`}>
-                        <IconComponent className={`h-5 w-5 ${card.active ? "text-primary" : "text-muted-foreground"}`} />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-semibold text-foreground">{card.title}</h4>
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{card.description}</p>
-                      </div>
+                <CardContent className="p-5">
+                  {/* Top row: Icon + Title + Description */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <IconComponent className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-semibold text-foreground">{card.title}</h4>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{card.description}</p>
                     </div>
                   </div>
                   
-                  {/* Bottom: Actions */}
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-                    {/* Send Button - Secondary */}
+                  {/* Bottom row: Send + Receiving toggle - NO divider */}
+                  <div className="flex items-center justify-between mt-4">
                     <Button
                       variant="outline"
                       size="sm"
@@ -211,7 +203,6 @@ export const NotificationPreferenceCards = () => {
                       Send
                     </Button>
 
-                    {/* Receiving Toggle */}
                     <div className="flex items-center gap-2">
                       <Label 
                         htmlFor={`receive-${card.key}`} 
@@ -232,9 +223,9 @@ export const NotificationPreferenceCards = () => {
           })}
         </div>
 
-        {/* Bulk action - subtle ghost button aligned right */}
+        {/* Bulk action aligned right inside surface */}
         {anyEnabled && (
-          <div className="flex justify-end">
+          <div className="flex justify-end mt-4">
             <Button
               variant="ghost"
               size="sm"

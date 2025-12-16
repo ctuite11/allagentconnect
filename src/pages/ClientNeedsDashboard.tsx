@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
-import { Loader2, ArrowLeft, Bell, Settings, Megaphone, Save } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Loader2, ArrowLeft, Megaphone, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
@@ -11,7 +10,6 @@ import GeographicPreferencesManager, { GeographicData } from "@/components/Geogr
 import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePreferences";
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
 import { toast } from "sonner";
-import { PageTitle } from "@/components/ui/page-title";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -300,8 +298,8 @@ const ClientNeedsDashboard = () => {
       <Navigation />
       <main className="container mx-auto px-4 py-8 pt-24 pb-32 max-w-6xl">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-2">
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-3">
             <Button variant="ghost" size="icon" onClick={() => navigate("/agent-dashboard")} className="h-9 w-9">
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -310,7 +308,7 @@ const ClientNeedsDashboard = () => {
                 <Megaphone className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <PageTitle className="text-2xl">Communications Center</PageTitle>
+                <h1 className="text-2xl font-semibold tracking-tight text-neutral-800">Communications Center</h1>
                 <p className="text-sm text-muted-foreground">Connect · Communicate · Collaborate</p>
               </div>
             </div>
@@ -321,24 +319,16 @@ const ClientNeedsDashboard = () => {
         </div>
 
         {/* Topics / Channels Section */}
-        <section className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Bell className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-base font-semibold text-neutral-800">Topics / Channels</h2>
-          </div>
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold tracking-tight text-neutral-800 mb-1">Topics / Channels</h2>
           <p className="text-sm text-muted-foreground mb-4">Select topics to send or receive notifications</p>
           <NotificationPreferenceCards />
         </section>
 
-        <Separator className="my-6" />
-
         {/* My Preferences Section */}
-        <section className="mb-6" data-preferences-section>
-          <div className="flex items-center gap-2 mb-2">
-            <Settings className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-base font-semibold text-neutral-800">My Preferences</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">(For receiving email notifications only)</p>
+        <section className="mb-8" data-preferences-section>
+          <h2 className="text-2xl font-semibold tracking-tight text-neutral-800 mb-1">My Preferences</h2>
+          <p className="text-sm text-muted-foreground mb-4">For receiving email notifications only</p>
           
           <div className="space-y-3">
             <PriceRangePreferences 
@@ -358,14 +348,10 @@ const ClientNeedsDashboard = () => {
           </div>
         </section>
 
-        <Separator className="my-6" />
-
         {/* Notification Settings Section */}
-        <section className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Bell className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-base font-semibold text-neutral-800">Notification Settings</h2>
-          </div>
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold tracking-tight text-neutral-800 mb-1">Notification Settings</h2>
+          <p className="text-sm text-muted-foreground mb-4">Configure how you receive alerts</p>
           <ClientNeedsNotificationSettings />
         </section>
 
@@ -446,9 +432,9 @@ const ClientNeedsDashboard = () => {
         </AlertDialog>
       </main>
 
-      {/* Sticky Save Bar */}
+      {/* Sticky Save Bar - Success Hub style */}
       {hasUnsavedChanges && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur border-t border-border z-50">
           <div className="container mx-auto px-4 py-3 max-w-6xl flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               You have unsaved changes
