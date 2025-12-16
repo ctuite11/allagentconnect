@@ -76,7 +76,7 @@ function statusBadgeClass(status: string) {
     case "sold":
       return "bg-purple-100 text-purple-700";
     case "off_market":
-      return "bg-slate-100 text-slate-600";
+      return "bg-muted text-muted-foreground";
     case "draft":
       return "bg-neutral-100 text-neutral-500";
     case "withdrawn":

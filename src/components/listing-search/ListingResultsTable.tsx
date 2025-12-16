@@ -87,13 +87,13 @@ const getStatusBadge = (status: string) => {
     price_changed: { bg: "bg-blue-50", text: "text-blue-700", label: "Price Change" },
     under_agreement: { bg: "bg-violet-50", text: "text-violet-700", label: "Under Agreement" },
     pending: { bg: "bg-violet-50", text: "text-violet-700", label: "Pending" },
-    sold: { bg: "bg-slate-100", text: "text-slate-600", label: "Sold" },
-    withdrawn: { bg: "bg-slate-100", text: "text-slate-500", label: "Withdrawn" },
-    expired: { bg: "bg-slate-100", text: "text-slate-500", label: "Expired" },
-    cancelled: { bg: "bg-slate-100", text: "text-slate-500", label: "Cancelled" },
+    sold: { bg: "bg-muted", text: "text-muted-foreground", label: "Sold" },
+    withdrawn: { bg: "bg-muted", text: "text-muted-foreground", label: "Withdrawn" },
+    expired: { bg: "bg-muted", text: "text-muted-foreground", label: "Expired" },
+    cancelled: { bg: "bg-muted", text: "text-muted-foreground", label: "Cancelled" },
   };
 
-  const config = statusConfig[status] || { bg: "bg-slate-100", text: "text-slate-600", label: status };
+  const config = statusConfig[status] || { bg: "bg-muted", text: "text-muted-foreground", label: status };
 
   return (
     <Badge 

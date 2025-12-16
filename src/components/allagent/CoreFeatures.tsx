@@ -25,17 +25,17 @@ const CoreFeatures = () => {
   ];
 
   return (
-    <section className="py-24 bg-slate-50">
+    <section className="py-24 bg-muted">
       <div className="container mx-auto px-6">
         {/* Section header */}
         <div className="max-w-2xl mx-auto text-center mb-16">
           <p className="text-sm font-medium tracking-wide uppercase text-muted-foreground mb-3">
             Features
           </p>
-          <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-4 tracking-tight">
             Everything You Need to Close More Deals
           </h2>
-          <p className="text-slate-500 text-lg">
+          <p className="text-muted-foreground text-lg">
             Tools designed by agents who understand real transaction workflows.
           </p>
         </div>
@@ -45,15 +45,15 @@ const CoreFeatures = () => {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="p-6 rounded-2xl bg-white border border-slate-200"
+              className="p-6 rounded-2xl bg-white border border-border"
             >
               <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mb-5">
                 <feature.icon className="w-5 h-5 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 {feature.title}
               </h3>
-              <p className="text-sm text-slate-500 leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 {feature.description}
               </p>
             </div>

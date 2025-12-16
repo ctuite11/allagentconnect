@@ -30,10 +30,10 @@ const NetworkEffect = () => {
           <p className="text-sm font-medium tracking-wide uppercase text-muted-foreground mb-3">
             Network Effect
           </p>
-          <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-4 tracking-tight">
             The More Agents, the More Powerful It Gets
           </h2>
-          <p className="text-slate-500 text-lg">
+          <p className="text-muted-foreground text-lg">
             Participation creates momentum. Momentum creates deal velocity.
           </p>
         </div>
@@ -43,18 +43,18 @@ const NetworkEffect = () => {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="text-center p-8 rounded-2xl bg-slate-50"
+              className="text-center p-8 rounded-2xl bg-muted"
             >
-              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center mx-auto mb-6 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center mx-auto mb-6 shadow-sm">
                 <stat.icon className="w-5 h-5 text-primary" />
               </div>
-              <div className="text-4xl font-semibold text-slate-900 mb-2 tracking-tight">
+              <div className="text-4xl font-semibold text-foreground mb-2 tracking-tight">
                 {stat.value}
               </div>
-              <div className="text-sm font-medium text-slate-700 mb-1">
+              <div className="text-sm font-medium text-foreground mb-1">
                 {stat.label}
               </div>
-              <div className="text-sm text-slate-400">
+              <div className="text-sm text-muted-foreground">
                 {stat.description}
               </div>
             </div>

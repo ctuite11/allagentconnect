@@ -76,26 +76,26 @@ interface FilterGroupProps {
   accentColor?: 'green' | 'blue' | 'purple' | 'amber' | 'indigo' | 'teal' | 'slate';
 }
 
-// Accent border classes for collapsed state (vibrant)
+// Accent border classes for collapsed state (vibrant) - neutral colors only
 const accentBorderClassesVibrant = {
   green: 'border-l-green-500',
-  blue: 'border-l-blue-500',
+  blue: 'border-l-primary',
   purple: 'border-l-purple-500',
   amber: 'border-l-amber-500',
-  indigo: 'border-l-indigo-500',
+  indigo: 'border-l-neutral-500',
   teal: 'border-l-teal-500',
-  slate: 'border-l-slate-500',
+  slate: 'border-l-neutral-500',
 };
 
-// Accent border classes for expanded state (muted)
+// Accent border classes for expanded state (muted) - neutral colors only
 const accentBorderClassesMuted = {
   green: 'border-l-green-200',
-  blue: 'border-l-blue-200',
+  blue: 'border-l-primary/30',
   purple: 'border-l-purple-200',
   amber: 'border-l-amber-200',
-  indigo: 'border-l-indigo-200',
+  indigo: 'border-l-neutral-300',
   teal: 'border-l-teal-200',
-  slate: 'border-l-slate-300',
+  slate: 'border-l-neutral-300',
 };
 
 const FilterGroup = ({ title, defaultOpen = true, children, accentColor }: FilterGroupProps) => {

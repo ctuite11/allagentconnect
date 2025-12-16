@@ -20,17 +20,17 @@ const AgentOS = () => {
   ];
 
   return (
-    <section className="py-24 bg-slate-50">
+    <section className="py-24 bg-muted">
       <div className="container mx-auto px-6">
         {/* Section header */}
         <div className="max-w-2xl mx-auto text-center mb-16">
-          <p className="text-sm font-medium tracking-wide uppercase text-blue-600 mb-3">
+          <p className="text-sm font-medium tracking-wide uppercase text-primary mb-3">
             Platform
           </p>
-          <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-4 tracking-tight">
             The Operating System for Modern Agents
           </h2>
-          <p className="text-slate-500 text-lg">
+          <p className="text-muted-foreground text-lg">
             Three pillars that power every successful transaction.
           </p>
         </div>
@@ -42,13 +42,13 @@ const AgentOS = () => {
               key={index}
               className="text-center p-8"
             >
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-6">
-                <feature.icon className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                <feature.icon className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">
+              <h3 className="text-xl font-semibold text-foreground mb-3">
                 {feature.title}
               </h3>
-              <p className="text-slate-500 leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 {feature.description}
               </p>
             </div>
