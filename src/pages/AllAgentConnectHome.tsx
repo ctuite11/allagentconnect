@@ -129,7 +129,7 @@ const AllAgentConnectHome = () => {
         />
       </Helmet>
 
-      <div className="min-h-screen bg-[#F7F7F8]">
+      <div className="min-h-screen bg-[#FAFAFA]">
         <div className="mx-auto max-w-7xl px-8 pt-28 pb-16">
           {/* Page Title */}
           <div className="mb-14">
