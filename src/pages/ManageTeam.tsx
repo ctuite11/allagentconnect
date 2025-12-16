@@ -39,6 +39,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { PageTitle } from "@/components/ui/page-title";
 
 const ManageTeam = () => {
   const navigate = useNavigate();
@@ -449,7 +450,7 @@ const ManageTeam = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-3xl font-bold">{team ? "Manage Team" : "Create Your Team"}</h1>
+                <PageTitle>{team ? "Manage Team" : "Create Your Team"}</PageTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   {team ? "Update your team profile and manage members" : "Create a team profile to collaborate with other agents"}
                 </p>
