@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, MapPin, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
@@ -179,24 +178,29 @@ const GeographicPreferencesManager = ({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className={`border transition-all ${isOpen ? "border-primary bg-neutral-50/50" : "border-neutral-200"}`}>
+      <Card className={`border transition-all ${isOpen ? "border-primary bg-white" : "border-neutral-200 bg-white"}`}>
         <CollapsibleTrigger className="w-full">
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="cursor-pointer hover:bg-neutral-50 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                <CardTitle>Geographic Area</CardTitle>
+                <MapPin className="h-5 w-5 text-neutral-600" />
+                <CardTitle className="text-neutral-900">Geographic Area</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-primary" />}
+              {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
             </div>
-            <CardDescription className="text-left">
+            <CardDescription className="text-left text-neutral-600">
               Select states, counties, and towns for notifications
             </CardDescription>
-            {!isOpen && (
-              <p className="text-sm text-muted-foreground mt-1 text-left">
-                {selectedTowns.length > 0 
-                  ? `${selectedTowns.length} area${selectedTowns.length !== 1 ? 's' : ''} selected`
-                  : "All areas"}
+            {!isOpen && selectedTowns.length > 0 && (
+              <div className="mt-2 bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 text-left">
+                <p className="text-sm font-medium text-neutral-900">
+                  {selectedTowns.length} area{selectedTowns.length !== 1 ? 's' : ''} selected
+                </p>
+              </div>
+            )}
+            {!isOpen && selectedTowns.length === 0 && (
+              <p className="text-sm text-neutral-500 mt-1 text-left">
+                All areas
               </p>
             )}
           </CardHeader>
@@ -207,15 +211,15 @@ const GeographicPreferencesManager = ({
             <div className="space-y-2">
               {/* Header row with both labels */}
               <div className="grid grid-cols-2 gap-4">
-                <Label>State</Label>
-                <Label>County</Label>
+                <Label className="text-neutral-800">State</Label>
+                <Label className="text-neutral-800">County</Label>
               </div>
 
               {/* Content row */}
               <div className="grid grid-cols-2 gap-4">
                 {/* LEFT: State Selector */}
                 <Select value={selectedState} onValueChange={handleStateChange}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white border-neutral-200">
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
                   <SelectContent>
@@ -233,7 +237,7 @@ const GeographicPreferencesManager = ({
                   onValueChange={handleCountyChange}
                   disabled={availableCounties.length === 0}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white border-neutral-200">
                     <SelectValue placeholder={availableCounties.length === 0 ? "Select state first" : "All counties"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -252,19 +256,17 @@ const GeographicPreferencesManager = ({
             <div className="space-y-2">
               {/* Header row with both labels */}
               <div className="grid grid-cols-2 gap-4">
-                <Label>Towns & Neighborhoods</Label>
+                <Label className="text-neutral-800">Towns & Neighborhoods</Label>
                 <div className="flex items-center justify-between">
-                  <Label>Selected Towns</Label>
+                  <Label className="text-neutral-800">Selected Towns</Label>
                   {selectedTowns.length > 0 && (
-                    <Button
+                    <button
                       type="button"
-                      variant="ghost"
-                      size="sm"
                       onClick={() => setSelectedTowns([])}
-                      className="h-6 px-2 text-xs"
+                      className="text-sm text-neutral-600 hover:text-neutral-900 hover:underline"
                     >
-                      Remove All
-                    </Button>
+                      Remove all
+                    </button>
                   )}
                 </div>
               </div>
@@ -277,15 +279,15 @@ const GeographicPreferencesManager = ({
                     placeholder="Type Full or Partial Name"
                     value={citySearch}
                     onChange={(e) => setCitySearch(e.target.value)}
-                    className="text-sm"
+                    className="text-sm bg-white border-neutral-200"
                   />
-                  <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2 relative z-10">
+                  <div className="border border-neutral-200 rounded-xl bg-neutral-50 max-h-60 overflow-y-auto p-2 relative z-10">
                     {/* Add All Towns button - EXACTLY like Submit Client Need */}
                     {townsList.length > 0 && (
                       <button
                         type="button"
                         onClick={handleSelectAll}
-                        className="w-full text-left px-2 py-1.5 text-sm font-semibold hover:bg-muted rounded mb-1 border-b pb-2"
+                        className="w-full text-left px-2 py-1.5 text-sm font-medium text-neutral-800 hover:bg-white rounded mb-1 border-b border-neutral-200 pb-2"
                       >
                         {selectedCounty === "all" 
                           ? `✓ Add All Towns from All Counties` 
@@ -307,16 +309,16 @@ const GeographicPreferencesManager = ({
                 </div>
 
                 {/* RIGHT: Selected Towns Panel - EXACT CLONE FROM SUBMIT CLIENT NEED */}
-                <div className="border rounded-md p-3 bg-background min-h-[200px] max-h-60 overflow-y-auto">
+                <div className="border border-neutral-200 rounded-xl p-3 bg-white min-h-[200px] max-h-60 overflow-y-auto">
                   {selectedTowns.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No towns selected</p>
+                    <p className="text-sm text-neutral-500">No towns selected</p>
                   ) : (
                     selectedTowns.map((town) => (
                       <button
                         key={town}
                         type="button"
                         onClick={() => handleToggleTown(town)}
-                        className="w-full text-left py-1 px-2 text-sm border-b last:border-b-0 hover:bg-muted rounded cursor-pointer"
+                        className="w-full text-left py-1 px-2 text-sm text-neutral-900 border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50 rounded cursor-pointer"
                       >
                         {town}
                       </button>
@@ -327,14 +329,14 @@ const GeographicPreferencesManager = ({
             </div>
 
             {selectedTowns.length > 100 && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                 <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                  <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm text-amber-900 dark:text-amber-100 font-medium">
+                    <p className="text-sm text-amber-900 font-medium">
                       You have selected {selectedTowns.length} areas
                     </p>
-                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                    <p className="text-xs text-amber-700 mt-1">
                       Consider narrowing your coverage for more focused alerts.
                     </p>
                   </div>
@@ -343,11 +345,11 @@ const GeographicPreferencesManager = ({
             )}
 
             {selectedTowns.length === 0 && (
-              <div className="p-3 bg-muted border border-border rounded-lg">
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">No geographic areas selected.</span>
+              <div className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3">
+                <p className="text-sm text-neutral-900">
+                  <span className="font-medium">No geographic areas selected</span>
                   <br />
-                  <span className="text-muted-foreground">
+                  <span className="text-neutral-600">
                     You will receive notifications for client needs in all areas.
                   </span>
                 </p>
