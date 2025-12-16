@@ -199,9 +199,11 @@ const GeographicPreferencesManager = ({
               </div>
             )}
             {!isOpen && selectedTowns.length === 0 && (
-              <p className="text-sm text-neutral-500 mt-1 text-left">
-                All areas
-              </p>
+              <div className="mt-2 bg-white border border-neutral-200 rounded-xl px-4 py-3 text-left">
+                <p className="text-sm font-medium text-neutral-900">
+                  No towns selected
+                </p>
+              </div>
             )}
           </CardHeader>
         </CollapsibleTrigger>
@@ -281,7 +283,7 @@ const GeographicPreferencesManager = ({
                     onChange={(e) => setCitySearch(e.target.value)}
                     className="text-sm bg-white border-neutral-200 text-neutral-900"
                   />
-                  <div className="border border-neutral-200 rounded-xl bg-white max-h-60 overflow-y-auto p-2 relative z-10">
+                  <div className="border border-neutral-200 rounded-xl bg-white max-h-80 overflow-y-auto p-2 relative z-10">
                     {/* Add All Towns button */}
                     {townsList.length > 0 && (
                       <button
@@ -309,7 +311,7 @@ const GeographicPreferencesManager = ({
                 </div>
 
                 {/* RIGHT: Selected Towns Panel */}
-                <div className="border border-neutral-200 rounded-xl p-3 bg-white min-h-[200px] max-h-60 overflow-y-auto">
+                <div className="border border-neutral-200 rounded-xl p-3 bg-white min-h-[200px] max-h-80 overflow-y-auto">
                   {selectedTowns.length === 0 ? (
                     <p className="text-sm text-neutral-500">No towns selected</p>
                   ) : (
