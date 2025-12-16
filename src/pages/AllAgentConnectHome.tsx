@@ -30,6 +30,17 @@ interface CommCenterSummary {
   } | null;
 }
 
+// Unified card classes for ALL tiles
+const hubCard =
+  "bg-white border border-slate-200 rounded-2xl " +
+  "shadow-[0_10px_30px_rgba(15,23,42,0.08)] " +
+  "hover:shadow-[0_14px_42px_rgba(15,23,42,0.12)] hover:border-slate-300 " +
+  "transition-shadow transition-colors cursor-pointer";
+
+// Tier sizing
+const tier1 = "p-6 min-h-[150px]";
+const tier2 = "p-5 min-h-[84px]";
+
 const AllAgentConnectHome = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -117,10 +128,10 @@ const AllAgentConnectHome = () => {
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background">
-        {/* Page Title Block - Dedicated Section */}
-        <div className="pt-28 pb-14">
-          <div className="max-w-[1280px] mx-auto px-6">
+      <div className="min-h-screen bg-[#F7F7F8]">
+        <div className="mx-auto max-w-7xl px-8 py-10">
+          {/* Page Title */}
+          <div className="mb-10">
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-neutral-800">
               Success Hub
             </h1>
@@ -128,15 +139,11 @@ const AllAgentConnectHome = () => {
               Connect · Communicate · Collaborate
             </p>
           </div>
-        </div>
-
-        {/* Page Content */}
-        <div className="max-w-[1280px] mx-auto px-6 pb-12">
 
           {/* Tier 1 – Command Panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Listing Search */}
-            <div className="p-6 rounded-2xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150">
+            <div className={`${hubCard} ${tier1}`}>
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center">
@@ -156,7 +163,7 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Hotsheets */}
-            <div className="p-6 rounded-2xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150">
+            <div className={`${hubCard} ${tier1}`}>
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center">
@@ -181,7 +188,7 @@ const AllAgentConnectHome = () => {
             </div>
 
             {/* Comm Center */}
-            <div className="p-6 rounded-2xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150">
+            <div className={`${hubCard} ${tier1}`}>
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center">
@@ -206,11 +213,11 @@ const AllAgentConnectHome = () => {
             </div>
           </div>
 
-          {/* Tier 2 – Assets (Clickable Cards, No Buttons) */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Tier 2 – Assets */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
             <button
               onClick={() => navigate("/agent/listings")}
-              className="group flex items-center gap-4 p-4 rounded-xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 text-left"
+              className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
               <div className="h-10 w-10 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
                 <Home className="h-5 w-5 text-neutral-400" />
@@ -221,7 +228,7 @@ const AllAgentConnectHome = () => {
 
             <button
               onClick={() => navigate("/agent/clients")}
-              className="group flex items-center gap-4 p-4 rounded-xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 text-left"
+              className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
               <div className="h-10 w-10 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
                 <Users className="h-5 w-5 text-neutral-400" />
@@ -232,7 +239,7 @@ const AllAgentConnectHome = () => {
 
             <button
               onClick={() => navigate("/agent/profile-editor")}
-              className="group flex items-center gap-4 p-4 rounded-xl bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 text-left"
+              className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
               <div className="h-10 w-10 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
                 <UserCircle className="h-5 w-5 text-neutral-400" />
@@ -242,11 +249,11 @@ const AllAgentConnectHome = () => {
             </button>
           </div>
 
-          {/* Tier 3 – System (Flat, Quiet) */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Tier 3 – System */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
             <button
               onClick={() => navigate("/agent/team")}
-              className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 text-left"
+              className={`${hubCard} p-4 group flex items-center gap-3 text-left`}
             >
               <div className="h-8 w-8 rounded-md bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
                 <UsersRound className="h-4 w-4 text-neutral-400" />
@@ -257,7 +264,7 @@ const AllAgentConnectHome = () => {
 
             <button
               onClick={() => navigate("/agent-search")}
-              className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-neutral-200 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-150 text-left"
+              className={`${hubCard} p-4 group flex items-center gap-3 text-left`}
             >
               <div className="h-8 w-8 rounded-md bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
                 <SearchCheck className="h-4 w-4 text-neutral-400" />
