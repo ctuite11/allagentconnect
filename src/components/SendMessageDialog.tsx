@@ -512,7 +512,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-foreground">State</Label>
                         <Select value={state} onValueChange={(val) => setState(val)}>
-                          <SelectTrigger className="h-10 rounded-lg border border-border bg-white">
+                          <SelectTrigger className="h-10 rounded-lg border-border bg-white focus:ring-0 focus:ring-offset-0">
                             <SelectValue placeholder="Select state" />
                           </SelectTrigger>
                           <SelectContent className="bg-white">
@@ -527,7 +527,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-foreground">County</Label>
                         <Select value={selectedCountyId} onValueChange={(val) => setSelectedCountyId(val)}>
-                          <SelectTrigger className="h-10 rounded-lg border border-border bg-white">
+                          <SelectTrigger className="h-10 rounded-lg border-border bg-white focus:ring-0 focus:ring-offset-0">
                             <SelectValue placeholder="All Counties" />
                           </SelectTrigger>
                           <SelectContent className="bg-white">
