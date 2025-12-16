@@ -378,7 +378,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 bg-white">
         <div className="p-6 pb-0">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
@@ -517,7 +517,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           <SelectTrigger className="h-10 rounded-lg border-border bg-white">
                             <SelectValue placeholder="Select state" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-white">
                             {US_STATES.map((s) => (
                               <SelectItem key={s.code} value={s.code}>
                                 {s.name}
@@ -532,7 +532,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           <SelectTrigger className="h-10 rounded-lg border-border bg-white">
                             <SelectValue placeholder="All Counties" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-white">
                             <SelectItem value="all">All Counties</SelectItem>
                             {counties.map((county) => (
                               <SelectItem key={county.id} value={county.name}>
