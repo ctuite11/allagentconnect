@@ -309,19 +309,16 @@ const ClientNeedsDashboard = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-semibold tracking-tight text-neutral-800">Communications Center</h1>
-                <p className="text-sm text-muted-foreground">Connect · Communicate · Collaborate</p>
+                <p className="text-sm text-muted-foreground">Agent-to-agent collaboration and deal flow</p>
               </div>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground ml-[52px] max-w-2xl">
-            Share your active client needs and receive targeted matches from other agents.
-          </p>
         </div>
 
-        {/* Topics / Channels Section */}
+        {/* Channels Section */}
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-neutral-800 mb-1">Topics / Channels</h2>
-          <p className="text-sm text-muted-foreground mb-4">Select topics to send or receive notifications</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-neutral-800 mb-1">Channels</h2>
+          <p className="text-sm text-muted-foreground mb-4">Choose what you send and receive</p>
           <NotificationPreferenceCards />
         </section>
 

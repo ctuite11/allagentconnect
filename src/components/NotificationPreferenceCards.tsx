@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, Users, TrendingUp, Home, MessageSquare } from "lucide-react";
 import { SendMessageDialog } from "./SendMessageDialog";
@@ -119,29 +118,29 @@ export const NotificationPreferenceCards = () => {
   const cards = [
     {
       key: "buyer_need" as keyof NotificationPreferences,
-      title: "Buyer Need",
-      description: "Get notified about buyer needs in your market",
+      title: "Buyer Needs",
+      description: "Active buyer demand",
       active: preferences.buyer_need,
       icon: Users,
     },
     {
       key: "sales_intel" as keyof NotificationPreferences,
       title: "Sales Intel",
-      description: "Receive updates on sales and market intelligence",
+      description: "Market activity & insights",
       active: preferences.sales_intel,
       icon: TrendingUp,
     },
     {
       key: "renter_need" as keyof NotificationPreferences,
-      title: "Renter Need",
-      description: "Stay informed about renter needs",
+      title: "Renter Needs",
+      description: "Active rental demand",
       active: preferences.renter_need,
       icon: Home,
     },
     {
       key: "general_discussion" as keyof NotificationPreferences,
-      title: "General Discussion",
-      description: "Connect for referrals, recommendations, and advice",
+      title: "Discussion",
+      description: "Referrals & agent conversation",
       active: preferences.general_discussion,
       icon: MessageSquare,
     },
@@ -203,12 +202,9 @@ export const NotificationPreferenceCards = () => {
                     </Button>
 
                     <div className="flex items-center gap-2">
-                      <Label 
-                        htmlFor={`receive-${card.key}`} 
-                        className={`text-xs cursor-pointer ${card.active ? "text-foreground" : "text-muted-foreground"}`}
-                      >
-                        Receiving
-                      </Label>
+                      {!card.active && (
+                        <span className="text-xs text-muted-foreground">Paused</span>
+                      )}
                       <Switch
                         id={`receive-${card.key}`}
                         checked={card.active}
@@ -231,7 +227,7 @@ export const NotificationPreferenceCards = () => {
               onClick={deselectAllPreferences}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
-              Deselect All Notifications
+              Mute All
             </Button>
           </div>
         )}
