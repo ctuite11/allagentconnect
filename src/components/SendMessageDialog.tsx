@@ -394,7 +394,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
         {showConfirmation ? (
           <div className="space-y-5 p-6">
-            <div className="space-y-4 p-4 bg-secondary/30 rounded-xl border border-border">
+            <div className="space-y-4 p-4 rounded-xl border border-border">
               <div>
                 <Label className="text-sm font-semibold text-foreground">Subject</Label>
                 <p className="mt-1 text-sm">{subject}</p>
@@ -429,9 +429,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             </div>
 
             {!loadingCount && recipientCount !== null && (
-              <div className="bg-secondary/50 border border-border rounded-xl p-4">
+              <div className="border border-border rounded-xl p-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-muted border border-border flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-lg border border-border flex items-center justify-center">
                     <Users className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <span className="text-sm">
@@ -610,7 +610,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                 <button
                                   type="button"
                                   onClick={selectAllTowns}
-                                  className="w-full text-left px-3 py-2 text-sm font-semibold hover:bg-muted rounded-lg mb-1 border-b border-border pb-2 flex items-center gap-2"
+                                  className="w-full text-left px-3 py-2 text-sm font-semibold hover:bg-muted/20 rounded-lg mb-1 border-b border-border pb-2 flex items-center gap-2"
                                 >
                                   <span className="text-primary">✓</span>
                                   {selectedCountyId === "all" 
