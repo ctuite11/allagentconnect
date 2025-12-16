@@ -15,13 +15,13 @@ const AudienceGrid = () => {
       <div className="container mx-auto px-6">
         {/* Section header */}
         <div className="max-w-2xl mx-auto text-center mb-16">
-          <p className="text-sm font-medium tracking-wide uppercase text-blue-600 mb-3">
+          <p className="text-sm font-medium tracking-wide uppercase text-primary mb-3">
             Who It's For
           </p>
-          <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-4 tracking-tight">
             Built for Every Type of Agent
           </h2>
-          <p className="text-slate-500 text-lg">
+          <p className="text-muted-foreground text-lg">
             Whether you're starting out or running a team, there's a place for you.
           </p>
         </div>
@@ -31,12 +31,12 @@ const AudienceGrid = () => {
           {audiences.map((audience, index) => (
             <div
               key={index}
-              className="text-center p-6 rounded-2xl bg-slate-50"
+              className="text-center p-6 rounded-2xl bg-muted"
             >
-              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center mx-auto mb-4 shadow-sm">
-                <audience.icon className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <audience.icon className="w-5 h-5 text-primary" />
               </div>
-              <div className="text-sm font-medium text-slate-700">
+              <div className="text-sm font-medium text-foreground">
                 {audience.title}
               </div>
             </div>

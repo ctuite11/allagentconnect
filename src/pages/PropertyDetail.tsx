@@ -400,7 +400,7 @@ const PropertyDetail = () => {
         {/* Subtle Agent View Indicator */}
         {isAgentView && (
           <div className="mx-auto max-w-6xl px-4 mb-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
               <Info className="w-3 h-3" />
               Internal view – not shown to clients
             </span>
@@ -414,7 +414,7 @@ const PropertyDetail = () => {
             {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
             <div className="lg:w-[68%]">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[380px] sm:h-[480px] lg:h-[560px]">
-                <div className="absolute inset-0 bg-slate-950">
+                <div className="absolute inset-0 bg-neutral-950">
                   {/* Media Content */}
                     {activeMediaTab === 'photos' && (
                       <img
@@ -806,7 +806,7 @@ const PropertyDetail = () => {
                         Overview
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 space-y-4">
+                    <CardContent className="text-sm leading-relaxed text-foreground space-y-4">
                       <p className="whitespace-pre-wrap">{visibleText}</p>
                       {isLong && (
                         <button

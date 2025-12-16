@@ -1001,7 +1001,7 @@ export function CreateHotSheetDialog({
 
           {/* Contact Information */}
           <Collapsible open={clientInfoOpen} onOpenChange={setClientInfoOpen}>
-            <Card className={`border-l-4 ${!clientInfoOpen ? 'border-l-indigo-500' : 'border-l-indigo-200'}`}>
+            <Card className={`border-l-4 ${!clientInfoOpen ? 'border-l-neutral-500' : 'border-l-neutral-300'}`}>
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between">

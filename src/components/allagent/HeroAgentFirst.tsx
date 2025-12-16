@@ -30,7 +30,7 @@ const HeroAgentFirst = () => {
             {badges.map((badge, index) => (
               <span
                 key={index}
-                className="px-4 py-2 text-xs font-medium tracking-wide uppercase text-slate-600 border border-slate-200 rounded-full bg-white shadow-sm"
+                className="px-4 py-2 text-xs font-medium tracking-wide uppercase text-muted-foreground border border-border rounded-full bg-white shadow-sm"
               >
                 {badge}
               </span>
@@ -38,7 +38,7 @@ const HeroAgentFirst = () => {
           </div>
 
           {/* Main headline */}
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-slate-900 mb-8 leading-[1.1]">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-foreground mb-8 leading-[1.1]">
             More Agents.
             <br />
             More Listings.
@@ -47,7 +47,7 @@ const HeroAgentFirst = () => {
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-14 leading-relaxed">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-14 leading-relaxed">
             The agent-first collaboration network where real connections create real deal flow.
           </p>
 
@@ -56,7 +56,7 @@ const HeroAgentFirst = () => {
             <Button
               size="lg"
               onClick={() => navigate("/auth")}
-              className="bg-slate-900 text-white hover:bg-slate-800 font-medium px-8 py-6 text-base rounded-full shadow-sm"
+              className="bg-neutral-900 text-white hover:bg-neutral-800 font-medium px-8 py-6 text-base rounded-full shadow-sm"
             >
               Join the Network
               <ArrowRight className="ml-2 w-4 h-4" />
@@ -65,7 +65,7 @@ const HeroAgentFirst = () => {
               variant="outline"
               size="lg"
               onClick={() => navigate("/submit-client-need")}
-              className="border-slate-300 text-slate-700 hover:bg-slate-50 font-medium px-8 py-6 text-base rounded-full"
+              className="border-border text-foreground hover:bg-muted font-medium px-8 py-6 text-base rounded-full"
             >
               Post a Buyer Need
               <ChevronRight className="ml-1 w-4 h-4" />

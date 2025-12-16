@@ -301,7 +301,7 @@ const TeamProfile = () => {
                 <div className="pt-2">
                   <div className="flex gap-3">
                     {team.social_links.website && (
-                      <a href={team.social_links.website} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+                      <a href={team.social_links.website} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground transition-colors">
                         <Globe className="h-5 w-5" />
                       </a>
                     )}
