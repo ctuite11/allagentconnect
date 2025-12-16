@@ -498,7 +498,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             {showLocationFields && (
               <div className="space-y-4">
                 {/* State and County - Always visible */}
-                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="rounded-xl border border-border bg-white overflow-hidden">
                   <div className="px-4 py-3 border-b border-border">
                     <div className="flex items-center gap-3">
                       <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -514,7 +514,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-foreground">State</Label>
                         <Select value={state} onValueChange={(val) => setState(val)}>
-                          <SelectTrigger className="h-10 rounded-lg border-border bg-background">
+                          <SelectTrigger className="h-10 rounded-lg border-border bg-white">
                             <SelectValue placeholder="Select state" />
                           </SelectTrigger>
                           <SelectContent>
@@ -529,7 +529,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-foreground">County</Label>
                         <Select value={selectedCountyId} onValueChange={(val) => setSelectedCountyId(val)}>
-                          <SelectTrigger className="h-10 rounded-lg border-border bg-background">
+                          <SelectTrigger className="h-10 rounded-lg border-border bg-white">
                             <SelectValue placeholder="All Counties" />
                           </SelectTrigger>
                           <SelectContent>
@@ -548,7 +548,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                 {/* Towns & Neighborhoods Section */}
                 <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
-                  <div className="rounded-xl border border-border bg-card overflow-hidden">
+                  <div className="rounded-xl border border-border bg-white overflow-hidden">
                     <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                       <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
                         <div className="flex items-center gap-3">
@@ -603,9 +603,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                               placeholder="Type Full or Partial Name"
                               value={citySearch}
                               onChange={(e) => setCitySearch(e.target.value)}
-                              className="h-10 rounded-lg border-border bg-background text-sm"
+                              className="h-10 rounded-lg border-border bg-white text-sm"
                             />
-                            <div className="border border-border rounded-lg bg-background max-h-60 overflow-y-auto p-2 relative z-10">
+                            <div className="border border-border rounded-lg bg-white max-h-60 overflow-y-auto p-2 relative z-10">
                               {selectedCountyId && townsList.length > 0 && (
                                 <button
                                   type="button"
@@ -634,7 +634,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                           <div className="space-y-2">
                             <Label className="text-sm font-medium text-foreground">Selected Towns</Label>
-                            <div className="border border-border rounded-lg p-3 bg-background min-h-[200px] max-h-60 overflow-y-auto">
+                            <div className="border border-border rounded-lg p-3 bg-white min-h-[200px] max-h-60 overflow-y-auto">
                               {selectedCities.length === 0 ? (
                                 <p className="text-sm text-muted-foreground">No towns selected</p>
                               ) : (
@@ -651,7 +651,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                   {selectedCities.map((city) => (
                                     <div 
                                       key={city}
-                                      className="flex items-center justify-between text-sm py-1.5 px-3 bg-background border border-border rounded-lg"
+                                      className="flex items-center justify-between text-sm py-1.5 px-3 bg-white border border-border rounded-lg"
                                     >
                                       <span>{city.includes('-') ? city.replace('-', ' - ') : city}</span>
                                       <button
@@ -676,7 +676,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {/* Property Types - HIDDEN for general_discussion */}
                 {category !== "general_discussion" && (
                   <Collapsible open={propertyTypesOpen} onOpenChange={setPropertyTypesOpen}>
-                    <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="rounded-xl border border-border bg-white overflow-hidden">
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                         <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
                           <div className="flex items-center gap-3">
@@ -737,7 +737,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {/* Price Range - HIDDEN for general_discussion */}
                 {category !== "general_discussion" && (
                   <Collapsible open={priceRangeOpen} onOpenChange={setPriceRangeOpen}>
-                    <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="rounded-xl border border-border bg-white overflow-hidden">
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                         <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
                           <div className="flex items-center gap-3">
