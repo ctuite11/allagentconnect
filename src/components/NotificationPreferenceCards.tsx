@@ -202,9 +202,9 @@ export const NotificationPreferenceCards = () => {
                     </Button>
 
                     <div className="flex items-center gap-2">
-                      {!card.active && (
-                        <span className="text-xs text-muted-foreground">Paused</span>
-                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {card.active ? "Receiving" : "Paused"}
+                      </span>
                       <Switch
                         id={`receive-${card.key}`}
                         checked={card.active}
