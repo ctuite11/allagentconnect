@@ -481,13 +481,14 @@ const Auth = () => {
             </Button>
 
             {isLogin && !isForgotPassword && !isResettingPassword && (
-              <button
+              <Button
                 type="button"
+                variant="link"
                 onClick={() => setIsForgotPassword(true)}
-                className="text-sm text-primary hover:underline w-full text-center"
+                className="w-full"
               >
                 Forgot password?
-              </button>
+              </Button>
             )}
           </form>
 

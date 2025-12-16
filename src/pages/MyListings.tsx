@@ -5,6 +5,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -311,11 +312,11 @@ function MyListingsView({
       <div className="mb-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition">
+            <Button className="gap-2">
               <Plus className="h-4 w-4" />
               New Listing
               <ChevronDown className="h-4 w-4 ml-1" />
-            </button>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             <DropdownMenuItem onClick={() => onNewListing("new")} className="cursor-pointer">
@@ -454,14 +455,15 @@ function MyListingsView({
             </label>
           </div>
           {selectedDraftIds.size > 0 && (
-            <button
+            <Button
+              variant="destructive"
               onClick={() => setShowBulkDeleteConfirm(true)}
               disabled={isDeleting}
-              className="flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition text-sm font-medium disabled:opacity-50"
+              className="gap-2"
             >
               <Trash2 className="h-4 w-4" />
               Delete Selected ({selectedDraftIds.size})
-            </button>
+            </Button>
           )}
         </div>
       )}
