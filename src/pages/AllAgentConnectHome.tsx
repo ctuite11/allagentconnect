@@ -30,12 +30,8 @@ interface CommCenterSummary {
   } | null;
 }
 
-// Unified card classes - locked standard
-const hubCard =
-  "bg-white border border-neutral-200 rounded-2xl " +
-  "shadow-[0_2px_6px_rgba(0,0,0,0.12),0_8px_24px_rgba(0,0,0,0.16)] " +
-  "hover:shadow-[0_4px_12px_rgba(0,0,0,0.15),0_16px_40px_rgba(0,0,0,0.18)] hover:border-neutral-300 " +
-  "hover:-translate-y-[1px] transition-all cursor-pointer";
+// Use global aac-card utility - locked standard
+const hubCard = "aac-card cursor-pointer";
 
 // Tier sizing
 const tier1 = "p-6 min-h-[140px]";
@@ -129,7 +125,7 @@ const AllAgentConnectHome = () => {
         />
       </Helmet>
 
-      <div className="min-h-screen bg-[#FAFAFA]">
+      <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-7xl px-8 pt-28 pb-16">
           {/* Page Title */}
           <div className="mb-14">

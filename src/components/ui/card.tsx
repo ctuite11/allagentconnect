@@ -6,10 +6,13 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   <div 
     ref={ref} 
     className={cn(
-      "rounded-xl border border-border bg-card text-card-foreground",
+      "rounded-2xl border border-neutral-200 bg-white text-card-foreground transition-all",
+      "hover:border-neutral-300",
       className
     )} 
-    style={{ boxShadow: '0 2px 3px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.12)' }}
+    style={{ 
+      boxShadow: '0 2px 6px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.16)',
+    }}
     {...props} 
   />
 ));
