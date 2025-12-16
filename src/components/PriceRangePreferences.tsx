@@ -295,22 +295,29 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className={`border transition-all ${isOpen ? "border-primary bg-neutral-50/50" : "border-neutral-200"}`}>
+      <Card className={`border transition-all ${isOpen ? "border-primary bg-white" : "border-neutral-200 bg-white"}`}>
         <CollapsibleTrigger className="w-full">
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="cursor-pointer hover:bg-neutral-50 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                <CardTitle>Price Range</CardTitle>
+                <DollarSign className="h-5 w-5 text-neutral-600" />
+                <CardTitle className="text-neutral-900">Price Range</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-primary" />}
+              {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
             </div>
-            <CardDescription className="text-left">
+            <CardDescription className="text-left text-neutral-600">
               Set your preferred price range for client need notifications
             </CardDescription>
-            {!isOpen && (
-              <p className="text-sm text-muted-foreground mt-1 text-left">
-                {getSummaryText()}
+            {!isOpen && getSummaryText() && (
+              <div className="mt-2 bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 text-left">
+                <p className="text-sm font-medium text-neutral-900">
+                  {getSummaryText()}
+                </p>
+              </div>
+            )}
+            {!isOpen && !getSummaryText() && (
+              <p className="text-sm text-neutral-500 mt-1 text-left">
+                No price range set
               </p>
             )}
           </CardHeader>
@@ -319,9 +326,9 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
           <CardContent className="space-y-4 pt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="min-price">Minimum Price</Label>
+                <Label htmlFor="min-price" className="text-neutral-800">Minimum Price</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
                   <Input
                     id="min-price"
                     type="text"
@@ -330,7 +337,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
                     onChange={(e) => handleMinPriceChange(e.target.value)}
                     onBlur={handleMinPriceBlur}
                     placeholder="100,000"
-                    className={`pl-7 ${errors.minPrice ? 'border-destructive' : ''}`}
+                    className={`pl-7 bg-white border-neutral-200 ${errors.minPrice ? 'border-destructive' : ''}`}
                     maxLength={15}
                     disabled={hasNoMin}
                   />
@@ -341,7 +348,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
                     checked={hasNoMin}
                     onCheckedChange={(checked) => handleNoMinChange(!!checked)}
                   />
-                  <label htmlFor="no-min" className="text-sm cursor-pointer">No Minimum</label>
+                  <label htmlFor="no-min" className={`text-sm cursor-pointer ${hasNoMin ? "font-medium text-neutral-900" : "text-neutral-600"}`}>No Minimum</label>
                 </div>
                 {errors.minPrice && (
                   <p className="text-sm text-destructive">{errors.minPrice}</p>
@@ -349,9 +356,9 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="max-price">Maximum Price</Label>
+                <Label htmlFor="max-price" className="text-neutral-800">Maximum Price</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
                   <Input
                     id="max-price"
                     type="text"
@@ -360,7 +367,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
                     onChange={(e) => handleMaxPriceChange(e.target.value)}
                     onBlur={handleMaxPriceBlur}
                     placeholder="500,000"
-                    className={`pl-7 ${errors.maxPrice ? 'border-destructive' : ''}`}
+                    className={`pl-7 bg-white border-neutral-200 ${errors.maxPrice ? 'border-destructive' : ''}`}
                     maxLength={15}
                     disabled={hasNoMax}
                   />
@@ -371,7 +378,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
                     checked={hasNoMax}
                     onCheckedChange={(checked) => handleNoMaxChange(!!checked)}
                   />
-                  <label htmlFor="no-max" className="text-sm cursor-pointer">No Maximum</label>
+                  <label htmlFor="no-max" className={`text-sm cursor-pointer ${hasNoMax ? "font-medium text-neutral-900" : "text-neutral-600"}`}>No Maximum</label>
                 </div>
                 {errors.maxPrice && (
                   <p className="text-sm text-destructive">{errors.maxPrice}</p>
@@ -381,34 +388,36 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
 
             {/* Summary display based on current state */}
             {(minPrice || maxPrice || hasNoMin || hasNoMax) && (
-              <div className="p-3 bg-muted rounded-lg">
+              <div className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3">
                 <p className="text-sm">
-                  <span className="font-medium">You will receive notifications for properties priced:</span>
+                  <span className="font-medium text-neutral-800">You will receive notifications for properties priced:</span>
                   <br />
+                  <span className="font-medium text-neutral-900">
                   {isAllPriceRanges && (
-                    <span>No Minimum - No Maximum</span>
+                    <>No Minimum - No Maximum</>
                   )}
                   {!hasNoMin && !hasNoMax && minPrice && maxPrice && (
-                    <span>Between {formatDisplayPrice(minPrice)} and {formatDisplayPrice(maxPrice)}</span>
+                    <>Between {formatDisplayPrice(minPrice)} and {formatDisplayPrice(maxPrice)}</>
                   )}
                   {!hasNoMin && hasNoMax && minPrice && (
-                    <span>{formatDisplayPrice(minPrice)} - No Maximum</span>
+                    <>{formatDisplayPrice(minPrice)} - No Maximum</>
                   )}
                   {hasNoMin && !hasNoMax && maxPrice && (
-                    <span>No Minimum - {formatDisplayPrice(maxPrice)}</span>
+                    <>No Minimum - {formatDisplayPrice(maxPrice)}</>
                   )}
                   {hasNoMin && !hasNoMax && !maxPrice && (
-                    <span>No Minimum</span>
+                    <>No Minimum</>
                   )}
                   {!hasNoMin && hasNoMax && !minPrice && (
-                    <span>No Maximum</span>
+                    <>No Maximum</>
                   )}
                   {!hasNoMin && !hasNoMax && minPrice && !maxPrice && (
-                    <span>{formatDisplayPrice(minPrice)} and above</span>
+                    <>{formatDisplayPrice(minPrice)} and above</>
                   )}
                   {!hasNoMin && !hasNoMax && !minPrice && maxPrice && (
-                    <span>Up to {formatDisplayPrice(maxPrice)}</span>
+                    <>Up to {formatDisplayPrice(maxPrice)}</>
                   )}
+                  </span>
                 </p>
               </div>
             )}

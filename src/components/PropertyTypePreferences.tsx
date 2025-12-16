@@ -112,24 +112,29 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className={`border transition-all ${isOpen ? "border-primary bg-neutral-50/50" : "border-neutral-200"}`}>
+      <Card className={`border transition-all ${isOpen ? "border-primary bg-white" : "border-neutral-200 bg-white"}`}>
         <CollapsibleTrigger className="w-full">
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="cursor-pointer hover:bg-neutral-50 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Home className="h-5 w-5" />
-                <CardTitle>Property Type</CardTitle>
+                <Home className="h-5 w-5 text-neutral-600" />
+                <CardTitle className="text-neutral-900">Property Type</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-primary" />}
+              {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
             </div>
-            <CardDescription className="text-left">
+            <CardDescription className="text-left text-neutral-600">
               Select which property types you want to receive notifications about
             </CardDescription>
-            {!isOpen && (
-              <p className="text-sm text-muted-foreground mt-1 text-left">
-                {selectedTypes.length > 0 
-                  ? `${selectedTypes.length} property type${selectedTypes.length !== 1 ? 's' : ''} selected`
-                  : "No property types selected"}
+            {!isOpen && selectedTypes.length > 0 && (
+              <div className="mt-2 bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 text-left">
+                <p className="text-sm font-medium text-neutral-900">
+                  {selectedTypes.length} property type{selectedTypes.length !== 1 ? 's' : ''} selected
+                </p>
+              </div>
+            )}
+            {!isOpen && selectedTypes.length === 0 && (
+              <p className="text-sm text-neutral-500 mt-1 text-left">
+                No property types selected
               </p>
             )}
           </CardHeader>
@@ -137,39 +142,47 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
         <CollapsibleContent>
           <CardContent className="space-y-4 pt-4">
         
-        {/* Prominent Select All Button */}
-        <Button 
-          onClick={selectAll}
-          variant={allSelected ? "outline" : "default"}
-          className="w-full h-12 text-base font-bold"
-        >
-          ✓ {allSelected ? "Deselect All Property Types" : "Select All Property Types"}
-        </Button>
+        {/* Header with Select all action */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-neutral-800">
+            {selectedTypes.length} of {PROPERTY_TYPES.length} types selected
+          </span>
+          <button 
+            type="button"
+            onClick={selectAll}
+            className="text-sm text-neutral-600 hover:text-neutral-900 hover:underline"
+          >
+            {allSelected ? "Deselect all" : "Select all"}
+          </button>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border rounded-lg p-4 max-h-80 overflow-y-auto bg-background">
-          {PROPERTY_TYPES.map((type) => (
-            <div key={type.value} className="flex items-center space-x-2">
-              <Checkbox
-                id={`type-${type.value}`}
-                checked={selectedTypes.includes(type.value)}
-                onCheckedChange={() => togglePropertyType(type.value)}
-              />
-              <Label
-                htmlFor={`type-${type.value}`}
-                className="cursor-pointer flex-1"
-              >
-                {type.label}
-              </Label>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border border-neutral-200 rounded-xl p-4 max-h-80 overflow-y-auto bg-white">
+          {PROPERTY_TYPES.map((type) => {
+            const isChecked = selectedTypes.includes(type.value);
+            return (
+              <div key={type.value} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`type-${type.value}`}
+                  checked={isChecked}
+                  onCheckedChange={() => togglePropertyType(type.value)}
+                />
+                <Label
+                  htmlFor={`type-${type.value}`}
+                  className={`cursor-pointer flex-1 ${isChecked ? "font-medium text-neutral-900" : "text-neutral-600"}`}
+                >
+                  {type.label}
+                </Label>
+              </div>
+            );
+          })}
         </div>
 
         {selectedTypes.length > 0 && (
-          <div className="p-3 bg-muted rounded-lg">
+          <div className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3">
             <p className="text-sm">
-              <span className="font-medium">You will receive notifications for:</span>
+              <span className="font-medium text-neutral-800">You will receive notifications for:</span>
               <br />
-              <span className="text-muted-foreground">
+              <span className="text-neutral-900 font-medium">
                 {selectedTypes.map(type => {
                   const typeObj = PROPERTY_TYPES.find(t => t.value === type);
                   return typeObj?.label;
@@ -180,22 +193,16 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
         )}
 
         {selectedTypes.length === 0 && (
-          <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-            <p className="text-sm text-amber-900 dark:text-amber-100">
-              <span className="font-medium">No property types selected.</span>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+            <p className="text-sm text-amber-900">
+              <span className="font-medium">No property types selected</span>
               <br />
-              <span className="text-amber-700 dark:text-amber-300">
+              <span className="text-amber-700">
                 You will not receive notifications until you select at least one property type.
               </span>
             </p>
           </div>
         )}
-
-        <div className="pt-4 border-t">
-          <p className="text-sm text-muted-foreground">
-            {selectedTypes.length} of {PROPERTY_TYPES.length} types selected
-          </p>
-        </div>
       </CardContent>
     </CollapsibleContent>
     </Card>
