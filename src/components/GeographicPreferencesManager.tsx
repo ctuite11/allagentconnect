@@ -344,6 +344,18 @@ const GeographicPreferencesManager = ({
               </div>
             )}
 
+            {selectedTowns.length > 0 && (
+              <div className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3">
+                <p className="text-sm">
+                  <span className="font-medium text-neutral-800">You will receive notifications for:</span>
+                  <br />
+                  <span className="text-neutral-900 font-medium">
+                    {selectedTowns.join(", ")}
+                  </span>
+                </p>
+              </div>
+            )}
+
             {selectedTowns.length === 0 && (
               <div className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3">
                 <p className="text-sm text-neutral-900">
