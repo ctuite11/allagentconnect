@@ -3,7 +3,7 @@ import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormattedInput } from "@/components/ui/formatted-input";
@@ -522,10 +522,10 @@ const MyClients = () => {
           </div>
 
           {clients.length === 0 ? (
-            <Card className="p-12 border-l-4 border-l-primary">
+            <div className="aac-card p-12">
               <div className="text-center">
                   <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-xl font-semibold mb-2">No contacts yet</h3>
+                  <h3 className="text-xl font-semibold text-neutral-800 mb-2">No contacts yet</h3>
                   <p className="text-muted-foreground mb-6">
                     Add your first contact to start managing their property search
                   </p>
@@ -534,11 +534,11 @@ const MyClients = () => {
                     Add First Contact
                   </Button>
               </div>
-            </Card>
+            </div>
           ) : (
             <>
-              <Card className="mb-4 border-l-4 border-l-primary">
-                <CardContent className="pt-6">
+              <div className="aac-card mb-4">
+                <div className="p-6">
                   <div className="flex gap-4">
                     <div className="relative flex-1">
                       <Input
@@ -607,14 +607,14 @@ const MyClients = () => {
                       </Select>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {filteredClients.length === 0 ? (
-                <Card className="p-12 border-l-4 border-l-primary">
+                <div className="aac-card p-12">
                   <div className="text-center">
                     <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-xl font-semibold mb-2">No contacts found</h3>
+                    <h3 className="text-xl font-semibold text-neutral-800 mb-2">No contacts found</h3>
                     <p className="text-muted-foreground mb-6">
                       Try adjusting your search criteria
                     </p>
@@ -622,9 +622,9 @@ const MyClients = () => {
                       Clear Search
                     </Button>
                   </div>
-                </Card>
+                </div>
               ) : (
-                <Card className="border-l-4 border-l-primary">
+                <div className="aac-card overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -788,7 +788,7 @@ const MyClients = () => {
                   </Pagination>
                 </div>
               )}
-            </Card>
+            </div>
               )}
             </>
           )}
