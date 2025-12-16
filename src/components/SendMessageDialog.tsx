@@ -432,7 +432,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
               <div className="bg-secondary/50 border border-border rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-lg bg-muted border border-border flex items-center justify-center">
-                    <Users className="h-4 w-4 text-primary" />
+                    <Users className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <span className="text-sm">
                     This will be sent to <strong className="text-foreground font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
@@ -455,7 +455,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
               <Button 
                 onClick={handleSend} 
                 disabled={sending}
-                className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white rounded-lg"
+                className="rounded-lg"
               >
                 {sending ? (
                   <>
@@ -477,7 +477,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             <div className="bg-secondary/50 border border-border rounded-xl p-4">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 rounded-lg bg-muted border border-border flex items-center justify-center">
-                  <Users className="h-4 w-4 text-primary" />
+                  <Users className="h-4 w-4 text-muted-foreground" />
                 </div>
                 {loadingCount ? (
                   <span className="text-sm text-muted-foreground">
@@ -501,8 +501,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <div className="rounded-xl border border-border bg-card overflow-hidden">
                   <div className="px-4 py-3 bg-background border-b border-border">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-teal-500/10 flex items-center justify-center">
-                        <svg className="h-4 w-4 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                        <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
@@ -554,14 +554,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                       <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-teal-500/10 flex items-center justify-center">
-                            <svg className="h-4 w-4 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                            <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                           </div>
                           <span className="font-medium text-foreground">Towns & Neighborhoods</span>
                           {selectedCities.length > 0 && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 font-medium">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-foreground font-medium">
                               {selectedCities.length} selected
                             </span>
                           )}
@@ -584,7 +584,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                 name="show-areas"
                                 checked={showAreas === true}
                                 onChange={() => setShowAreas(true)}
-                                className="w-4 h-4 accent-teal-600"
+                                className="w-4 h-4 accent-primary"
                               />
                               <Label htmlFor="show-yes" className="text-sm cursor-pointer">Yes</Label>
                             </div>
@@ -595,7 +595,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                 name="show-areas"
                                 checked={showAreas === false}
                                 onChange={() => setShowAreas(false)}
-                                className="w-4 h-4 accent-teal-600"
+                                className="w-4 h-4 accent-primary"
                               />
                               <Label htmlFor="show-no" className="text-sm cursor-pointer">No</Label>
                             </div>
@@ -618,7 +618,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                   onClick={selectAllTowns}
                                   className="w-full text-left px-3 py-2 text-sm font-semibold hover:bg-muted rounded-lg mb-1 border-b border-border pb-2 flex items-center gap-2"
                                 >
-                                  <span className="text-teal-600">✓</span>
+                                  <span className="text-primary">✓</span>
                                   {selectedCountyId === "all" 
                                     ? `Add All Towns from All Counties` 
                                     : `Add All Towns in County (${townsList.length})`}
@@ -687,7 +687,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                              <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                               </svg>
                             </div>
@@ -751,14 +751,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                         <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
                           <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
-                              <svg className="h-4 w-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                              <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
                             <span className="font-medium text-foreground">Price Range</span>
                             {(minPrice || maxPrice) && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-foreground font-medium">
                                 ${minPriceDisplay || '0'} - ${maxPriceDisplay || '∞'}
                               </span>
                             )}
@@ -886,7 +886,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
               </Button>
               <Button 
                 onClick={handleSend}
-                className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white rounded-lg"
+                className="rounded-lg"
               >
                 <Send className="h-4 w-4 mr-2" />
                 Preview & Send
