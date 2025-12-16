@@ -178,7 +178,7 @@ const GeographicPreferencesManager = ({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className={`border transition-all ${isOpen ? "border-primary bg-white" : "border-neutral-200 bg-white"}`}>
+      <Card className={`border transition-all ${isOpen ? "border-neutral-300 shadow-sm bg-white" : "border-neutral-200 bg-white"}`}>
         <CollapsibleTrigger className="w-full">
           <CardHeader className="cursor-pointer hover:bg-neutral-50 transition-colors">
             <div className="flex items-center justify-between">
@@ -186,7 +186,7 @@ const GeographicPreferencesManager = ({
                 <MapPin className="h-5 w-5 text-neutral-600" />
                 <CardTitle className="text-neutral-900">Geographic Area</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
+              {isOpen ? <ChevronUp className="h-5 w-5 text-neutral-500" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
             </div>
             <CardDescription className="text-left text-neutral-600">
               Select states, counties, and towns for notifications
@@ -211,15 +211,15 @@ const GeographicPreferencesManager = ({
             <div className="space-y-2">
               {/* Header row with both labels */}
               <div className="grid grid-cols-2 gap-4">
-                <Label className="text-neutral-800">State</Label>
-                <Label className="text-neutral-800">County</Label>
+                <Label className="text-neutral-800 font-medium">State</Label>
+                <Label className="text-neutral-800 font-medium">County</Label>
               </div>
 
               {/* Content row */}
               <div className="grid grid-cols-2 gap-4">
                 {/* LEFT: State Selector */}
                 <Select value={selectedState} onValueChange={handleStateChange}>
-                  <SelectTrigger className="bg-white border-neutral-200">
+                  <SelectTrigger className="bg-white border-neutral-200 text-neutral-900">
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
                   <SelectContent>
@@ -237,7 +237,7 @@ const GeographicPreferencesManager = ({
                   onValueChange={handleCountyChange}
                   disabled={availableCounties.length === 0}
                 >
-                  <SelectTrigger className="bg-white border-neutral-200">
+                  <SelectTrigger className="bg-white border-neutral-200 text-neutral-900">
                     <SelectValue placeholder={availableCounties.length === 0 ? "Select state first" : "All counties"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -252,13 +252,13 @@ const GeographicPreferencesManager = ({
               </div>
             </div>
 
-            {/* Towns Selector - Two column layout matching Hot Sheets/Submit Client Need EXACTLY */}
+            {/* Towns Selector - Two column layout */}
             <div className="space-y-2">
               {/* Header row with both labels */}
               <div className="grid grid-cols-2 gap-4">
-                <Label className="text-neutral-800">Towns & Neighborhoods</Label>
+                <Label className="text-neutral-800 font-medium">Towns & Neighborhoods</Label>
                 <div className="flex items-center justify-between">
-                  <Label className="text-neutral-800">Selected Towns</Label>
+                  <Label className="text-neutral-800 font-medium">Selected Towns</Label>
                   {selectedTowns.length > 0 && (
                     <button
                       type="button"
@@ -273,21 +273,21 @@ const GeographicPreferencesManager = ({
 
               {/* Content row */}
               <div className="grid grid-cols-2 gap-4">
-                {/* LEFT: Towns Selector - CLONED FROM SUBMIT CLIENT NEED EXACTLY */}
+                {/* LEFT: Towns Selector */}
                 <div className="space-y-2">
                   <Input
                     placeholder="Type Full or Partial Name"
                     value={citySearch}
                     onChange={(e) => setCitySearch(e.target.value)}
-                    className="text-sm bg-white border-neutral-200"
+                    className="text-sm bg-white border-neutral-200 text-neutral-900"
                   />
-                  <div className="border border-neutral-200 rounded-xl bg-neutral-50 max-h-60 overflow-y-auto p-2 relative z-10">
-                    {/* Add All Towns button - EXACTLY like Submit Client Need */}
+                  <div className="border border-neutral-200 rounded-xl bg-white max-h-60 overflow-y-auto p-2 relative z-10">
+                    {/* Add All Towns button */}
                     {townsList.length > 0 && (
                       <button
                         type="button"
                         onClick={handleSelectAll}
-                        className="w-full text-left px-2 py-1.5 text-sm font-medium text-neutral-800 hover:bg-white rounded mb-1 border-b border-neutral-200 pb-2"
+                        className="w-full text-left px-2 py-1.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50 rounded mb-1 border-b border-neutral-200 pb-2"
                       >
                         {selectedCounty === "all" 
                           ? `✓ Add All Towns from All Counties` 
@@ -308,7 +308,7 @@ const GeographicPreferencesManager = ({
                   </div>
                 </div>
 
-                {/* RIGHT: Selected Towns Panel - EXACT CLONE FROM SUBMIT CLIENT NEED */}
+                {/* RIGHT: Selected Towns Panel */}
                 <div className="border border-neutral-200 rounded-xl p-3 bg-white min-h-[200px] max-h-60 overflow-y-auto">
                   {selectedTowns.length === 0 ? (
                     <p className="text-sm text-neutral-500">No towns selected</p>
@@ -318,7 +318,7 @@ const GeographicPreferencesManager = ({
                         key={town}
                         type="button"
                         onClick={() => handleToggleTown(town)}
-                        className="w-full text-left py-1 px-2 text-sm text-neutral-900 border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50 rounded cursor-pointer"
+                        className="w-full text-left py-1 px-2 text-sm text-neutral-900 font-medium border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50 rounded cursor-pointer"
                       >
                         {town}
                       </button>
