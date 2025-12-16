@@ -112,7 +112,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className={`border transition-all ${isOpen ? "border-primary bg-white" : "border-neutral-200 bg-white"}`}>
+      <Card className={`border transition-all ${isOpen ? "border-neutral-300 shadow-sm bg-white" : "border-neutral-200 bg-white"}`}>
         <CollapsibleTrigger className="w-full">
           <CardHeader className="cursor-pointer hover:bg-neutral-50 transition-colors">
             <div className="flex items-center justify-between">
@@ -120,7 +120,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
                 <Home className="h-5 w-5 text-neutral-600" />
                 <CardTitle className="text-neutral-900">Property Type</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5 text-primary" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
+              {isOpen ? <ChevronUp className="h-5 w-5 text-neutral-500" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
             </div>
             <CardDescription className="text-left text-neutral-600">
               Select which property types you want to receive notifications about
@@ -142,21 +142,28 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
         <CollapsibleContent>
           <CardContent className="space-y-4 pt-4">
         
-        {/* Header with Select all action */}
+        {/* Selection count */}
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-neutral-800">
             {selectedTypes.length} of {PROPERTY_TYPES.length} types selected
           </span>
-          <button 
-            type="button"
-            onClick={selectAll}
-            className="text-sm text-neutral-600 hover:text-neutral-900 hover:underline"
-          >
-            {allSelected ? "Deselect all" : "Select all"}
-          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border border-neutral-200 rounded-xl p-4 max-h-80 overflow-y-auto bg-white">
+          {/* Select all as first checkbox item */}
+          <div className="flex items-center space-x-2 col-span-1 md:col-span-2 pb-2 mb-2 border-b border-neutral-200">
+            <Checkbox
+              id="type-select-all"
+              checked={allSelected}
+              onCheckedChange={selectAll}
+            />
+            <Label
+              htmlFor="type-select-all"
+              className={`cursor-pointer flex-1 ${allSelected ? "font-medium text-neutral-900" : "text-neutral-700"}`}
+            >
+              Select all
+            </Label>
+          </div>
           {PROPERTY_TYPES.map((type) => {
             const isChecked = selectedTypes.includes(type.value);
             return (
