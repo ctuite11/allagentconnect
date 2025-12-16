@@ -431,9 +431,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             {!loadingCount && recipientCount !== null && (
               <div className="border border-border rounded-xl p-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg border border-border flex items-center justify-center">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                  </div>
+                  <Users className="h-5 w-5 text-muted-foreground" />
                   <span className="text-sm">
                     This will be sent to <strong className="text-foreground font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
                   </span>
@@ -514,7 +512,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-foreground">State</Label>
                         <Select value={state} onValueChange={(val) => setState(val)}>
-                          <SelectTrigger className="h-10 rounded-lg border-border bg-white">
+                          <SelectTrigger className="h-10 rounded-lg border border-border bg-white">
                             <SelectValue placeholder="Select state" />
                           </SelectTrigger>
                           <SelectContent className="bg-white">
@@ -529,7 +527,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-foreground">County</Label>
                         <Select value={selectedCountyId} onValueChange={(val) => setSelectedCountyId(val)}>
-                          <SelectTrigger className="h-10 rounded-lg border-border bg-white">
+                          <SelectTrigger className="h-10 rounded-lg border border-border bg-white">
                             <SelectValue placeholder="All Counties" />
                           </SelectTrigger>
                           <SelectContent className="bg-white">
@@ -742,7 +740,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
                           <div className="flex items-center gap-3">
                             <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                             </svg>
                             <span className="font-medium text-foreground">Price Range</span>
                             {(minPrice || maxPrice) && (
