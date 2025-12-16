@@ -117,7 +117,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
           <CardHeader className="cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Home className="h-5 w-5 text-neutral-600" />
+                <Home className="h-5 w-5 text-muted-foreground" />
                 <CardTitle className="text-neutral-900">Property Type</CardTitle>
               </div>
               {isOpen ? <ChevronUp className="h-5 w-5 text-neutral-500" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
