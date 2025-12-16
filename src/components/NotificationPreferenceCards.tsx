@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Send, Bell, Check } from "lucide-react";
+import { Send, Users, TrendingUp, Home, MessageSquare } from "lucide-react";
 import { SendMessageDialog } from "./SendMessageDialog";
 
 interface NotificationPreferences {
@@ -87,19 +87,16 @@ export const NotificationPreferenceCards = () => {
     }
   };
 
-  const selectAllPreferences = async () => {
-    const allEnabled = Object.values(preferences).every(v => v);
-    const newValue = !allEnabled;
-    
+  const deselectAllPreferences = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const newPreferences = {
-        buyer_need: newValue,
-        sales_intel: newValue,
-        renter_need: newValue,
-        general_discussion: newValue,
+        buyer_need: false,
+        sales_intel: false,
+        renter_need: false,
+        general_discussion: false,
       };
 
       const { error } = await supabase
@@ -125,42 +122,39 @@ export const NotificationPreferenceCards = () => {
       title: "Buyer Need",
       description: "Get notified about buyer needs in your market",
       active: preferences.buyer_need,
-      borderColor: "border-l-purple-500",
+      icon: Users,
     },
     {
       key: "sales_intel" as keyof NotificationPreferences,
       title: "Sales Intel",
       description: "Receive updates on sales and market intelligence",
       active: preferences.sales_intel,
-      borderColor: "border-l-purple-500",
+      icon: TrendingUp,
     },
     {
       key: "renter_need" as keyof NotificationPreferences,
       title: "Renter Need",
       description: "Stay informed about renter needs",
       active: preferences.renter_need,
-      borderColor: "border-l-purple-500",
+      icon: Home,
     },
     {
       key: "general_discussion" as keyof NotificationPreferences,
       title: "General Discussion",
       description: "Connect for referrals, recommendations, and advice",
       active: preferences.general_discussion,
-      borderColor: "border-l-purple-500",
+      icon: MessageSquare,
     },
   ];
 
   if (loading) {
     return (
-      <div className="mb-8">
-        {/* Skeleton for Select All button */}
-        <div className="w-full h-12 mb-4 bg-muted/40 rounded-md animate-pulse" />
-        {/* Skeleton for 4 cards */}
+      <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-[140px] rounded-md bg-muted/40 animate-pulse"
+              className="h-[120px] rounded-xl bg-muted/40 animate-pulse"
             />
           ))}
         </div>
@@ -168,89 +162,89 @@ export const NotificationPreferenceCards = () => {
     );
   }
 
-  const allEnabled = Object.values(preferences).every(v => v);
+  const anyEnabled = Object.values(preferences).some(v => v);
 
   return (
-    <TooltipProvider>
-      <div className="mb-8">
-        <Button 
-          onClick={selectAllPreferences}
-          variant={allEnabled ? "outline" : "default"}
-          className="w-full h-12 text-base font-bold mb-4"
-        >
-          ✓ {allEnabled ? "Deselect All Notifications" : "Select All Notifications"}
-        </Button>
+    <>
+      <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cards.map((card) => {
-              return (
+            const IconComponent = card.icon;
+            return (
               <Card
                 key={card.key}
-                className={`border-l-4 ${card.borderColor} transition-all hover:shadow-lg`}
+                className={`border transition-all ${
+                  card.active 
+                    ? "border-primary bg-muted/30" 
+                    : "border-border"
+                }`}
               >
-                <CardContent className="p-4 flex flex-col h-full min-h-[140px]">
-                  <div className="mb-6">
-                    <h4 className="text-base font-semibold mb-1">{card.title}</h4>
-                    <p className="text-xs text-muted-foreground">{card.description}</p>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    {/* Left: Icon + Title + Description */}
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        card.active ? "bg-primary/10" : "bg-muted"
+                      }`}>
+                        <IconComponent className={`h-5 w-5 ${card.active ? "text-primary" : "text-muted-foreground"}`} />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-semibold text-foreground">{card.title}</h4>
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{card.description}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-auto flex justify-between">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-24 h-8 text-xs bg-background border-2 border-green-500/50 hover:bg-green-50 hover:border-green-500 dark:hover:bg-green-950 transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenDialog({ open: true, category: card.key, title: card.title });
-                          }}
-                        >
-                          <Send className="h-3 w-3 mr-1" />
-                          <span>Send</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Click here to send a message</p>
-                      </TooltipContent>
-                    </Tooltip>
+                  
+                  {/* Bottom: Actions */}
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
+                    {/* Send Button - Secondary */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDialog({ open: true, category: card.key, title: card.title });
+                      }}
+                    >
+                      <Send className="h-3.5 w-3.5 mr-1.5" />
+                      Send
+                    </Button>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className={`w-28 h-8 text-xs border-2 transition-all ${
-                            card.active 
-                              ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
-                              : "bg-background border-muted hover:bg-muted hover:border-primary"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            togglePreference(card.key);
-                          }}
-                        >
-                          {card.active ? (
-                            <>
-                              <Check className="h-4 w-4 mr-1 font-bold" />
-                              <span>Receiving</span>
-                            </>
-                          ) : (
-                            <>
-                              <Bell className="h-3 w-3 mr-1" />
-                              <span>Enable</span>
-                            </>
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{card.active ? "✓ Receiving Notifications" : "Click to enable receiving"}</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    {/* Receiving Toggle */}
+                    <div className="flex items-center gap-2">
+                      <Label 
+                        htmlFor={`receive-${card.key}`} 
+                        className={`text-xs cursor-pointer ${card.active ? "text-foreground" : "text-muted-foreground"}`}
+                      >
+                        Receiving
+                      </Label>
+                      <Switch
+                        id={`receive-${card.key}`}
+                        checked={card.active}
+                        onCheckedChange={() => togglePreference(card.key)}
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
+
+        {/* Bulk action - subtle ghost button aligned right */}
+        {anyEnabled && (
+          <div className="flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={deselectAllPreferences}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Deselect All Notifications
+            </Button>
+          </div>
+        )}
       </div>
 
       {openDialog.category && (
@@ -262,6 +256,6 @@ export const NotificationPreferenceCards = () => {
           defaultSubject={openDialog.title}
         />
       )}
-    </TooltipProvider>
+    </>
   );
 };

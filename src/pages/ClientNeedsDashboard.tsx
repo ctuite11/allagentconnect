@@ -2,16 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
-import { Loader2, ArrowLeft, Bell, DollarSign, Home, MapPin, Settings, Megaphone, Save } from "lucide-react";
+import { Loader2, ArrowLeft, Bell, Settings, Megaphone, Save } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
 import GeographicPreferencesManager, { GeographicData } from "@/components/GeographicPreferencesManager";
 import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePreferences";
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
-import { Pill } from "@/components/ui/pill";
 import { toast } from "sonner";
 import { PageTitle } from "@/components/ui/page-title";
 import {
@@ -300,50 +298,49 @@ const ClientNeedsDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto px-4 py-8 pt-24 pb-24 max-w-5xl min-h-[600px]">
-        {/* Hero Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Button variant="outline" size="icon" onClick={() => navigate("/agent-dashboard")}>
+      <main className="container mx-auto px-4 py-8 pt-24 pb-32 max-w-6xl">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-4 mb-2">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/agent-dashboard")} className="h-9 w-9">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
-                <Megaphone className="h-6 w-6 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                <Megaphone className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <PageTitle>Communications Center</PageTitle>
-                <p className="text-muted-foreground">Connect · Communicate · Collaborate</p>
+                <PageTitle className="text-2xl">Communications Center</PageTitle>
+                <p className="text-sm text-muted-foreground">Connect · Communicate · Collaborate</p>
               </div>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground max-w-3xl ml-16">
-            Share your active client needs and receive targeted matches from other agents. Customize your alerts by market and property type.
+          <p className="text-sm text-muted-foreground ml-[52px] max-w-2xl">
+            Share your active client needs and receive targeted matches from other agents.
           </p>
         </div>
 
-
         {/* Topics / Channels Section */}
-        <section className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Bell className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-xl font-semibold text-neutral-800 font-display">Topics / Channels</h2>
+        <section className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Bell className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-base font-semibold text-neutral-800">Topics / Channels</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">Select topics to send or receive notifications</p>
           <NotificationPreferenceCards />
         </section>
 
-        <Separator className="my-8" />
+        <Separator className="my-6" />
 
         {/* My Preferences Section */}
-        <section className="mb-8" data-preferences-section>
+        <section className="mb-6" data-preferences-section>
           <div className="flex items-center gap-2 mb-2">
-            <Settings className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-xl font-semibold text-neutral-800 font-display">My Preferences</h2>
+            <Settings className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-base font-semibold text-neutral-800">My Preferences</h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-6">(For receiving email notifications only)</p>
+          <p className="text-sm text-muted-foreground mb-4">(For receiving email notifications only)</p>
           
-          <div className="space-y-4">
+          <div className="space-y-3">
             <PriceRangePreferences 
               agentId={user?.id || ""} 
               onFiltersUpdated={handleFiltersUpdated}
@@ -361,36 +358,35 @@ const ClientNeedsDashboard = () => {
           </div>
         </section>
 
-        <Separator className="my-8" />
+        <Separator className="my-6" />
 
         {/* Notification Settings Section */}
-        <section className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Bell className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-xl font-semibold text-neutral-800 font-display">Notification Settings</h2>
+        <section className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Bell className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-base font-semibold text-neutral-800">Notification Settings</h2>
           </div>
           <ClientNeedsNotificationSettings />
         </section>
 
         {/* Warning Banner */}
         {showWarningBanner && (
-          <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-xl">
+          <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
             <div className="flex items-start gap-3">
-              <div className="text-yellow-600 dark:text-yellow-400 text-2xl">⚠️</div>
+              <div className="text-amber-600 dark:text-amber-400 text-xl">⚠️</div>
               <div className="flex-1">
-                <h3 className="font-bold text-yellow-900 dark:text-yellow-100 mb-1">
+                <h3 className="font-semibold text-amber-900 dark:text-amber-100 text-sm mb-1">
                   Important: You'll Receive All Notifications
                 </h3>
-                <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
+                <p className="text-xs text-amber-800 dark:text-amber-200 mb-3">
                   You have email notifications enabled but haven't set any filters. 
-                  This means you will receive notifications for <strong>ALL</strong> client needs. 
-                  Consider setting some preferences above to filter notifications.
+                  This means you will receive notifications for <strong>ALL</strong> client needs.
                 </p>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="bg-background"
+                    className="h-7 text-xs bg-background"
                     onClick={() => {
                       document.querySelector('[data-preferences-section]')?.scrollIntoView({ behavior: 'smooth' });
                     }}
@@ -400,7 +396,7 @@ const ClientNeedsDashboard = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="bg-background"
+                    className="h-7 text-xs bg-background"
                     onClick={() => setShowWarningDialog(true)}
                   >
                     Review Options
@@ -451,30 +447,32 @@ const ClientNeedsDashboard = () => {
       </main>
 
       {/* Sticky Save Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg z-50">
-        <div className="container mx-auto px-4 py-4 max-w-5xl flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {hasUnsavedChanges ? "You have unsaved changes" : ""}
-          </p>
-          <Button 
-            onClick={handleSavePreferences}
-            disabled={saving}
-            className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white font-semibold px-6"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                Save Preferences
-              </>
-            )}
-          </Button>
+      {hasUnsavedChanges && (
+        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border z-50">
+          <div className="container mx-auto px-4 py-3 max-w-6xl flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              You have unsaved changes
+            </p>
+            <Button 
+              onClick={handleSavePreferences}
+              disabled={saving}
+              size="sm"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Preferences
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

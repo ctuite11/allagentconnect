@@ -86,11 +86,11 @@ export const ClientNeedsNotificationSettings = () => {
   }
 
   return (
-    <Card className="border-l-4 border-l-border mb-8">
+    <Card className="border border-border">
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5" />
-          <CardTitle>Notification Settings</CardTitle>
+          <Bell className="h-5 w-5 text-muted-foreground" />
+          <CardTitle className="text-base">Email Frequency</CardTitle>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
