@@ -13,6 +13,7 @@ import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePr
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
 import { Pill } from "@/components/ui/pill";
 import { toast } from "sonner";
+import { PageTitle } from "@/components/ui/page-title";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -307,11 +308,11 @@ const ClientNeedsDashboard = () => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Megaphone className="h-6 w-6 text-primary" />
+              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                <Megaphone className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold font-display">Communications Center</h1>
+                <PageTitle>Communications Center</PageTitle>
                 <p className="text-muted-foreground">Connect · Communicate · Collaborate</p>
               </div>
             </div>
@@ -325,8 +326,8 @@ const ClientNeedsDashboard = () => {
         {/* Topics / Channels Section */}
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <Bell className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold font-display">Topics / Channels</h2>
+            <Bell className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-xl font-semibold text-neutral-800 font-display">Topics / Channels</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">Select topics to send or receive notifications</p>
           <NotificationPreferenceCards />
@@ -337,8 +338,8 @@ const ClientNeedsDashboard = () => {
         {/* My Preferences Section */}
         <section className="mb-8" data-preferences-section>
           <div className="flex items-center gap-2 mb-2">
-            <Settings className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold font-display">My Preferences</h2>
+            <Settings className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-xl font-semibold text-neutral-800 font-display">My Preferences</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-6">(For receiving email notifications only)</p>
           
@@ -365,8 +366,8 @@ const ClientNeedsDashboard = () => {
         {/* Notification Settings Section */}
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <Bell className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold font-display">Notification Settings</h2>
+            <Bell className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-xl font-semibold text-neutral-800 font-display">Notification Settings</h2>
           </div>
           <ClientNeedsNotificationSettings />
         </section>
