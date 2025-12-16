@@ -8,28 +8,28 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 216 28% 12%;
+    --background: 0 0% 98%;
+    --foreground: 0 0% 15%;
     
-    /* Typography hierarchy - professional workspace colors */
-    --heading-page: 216 20% 25%;
-    --heading-section: 216 16% 35%;
-    --text-body: 216 12% 45%;
+    /* Typography hierarchy - neutral grayscale */
+    --heading-page: 0 0% 20%;
+    --heading-section: 0 0% 30%;
+    --text-body: 0 0% 40%;
 
     --card: 0 0% 100%;
-    --card-foreground: 216 28% 12%;
+    --card-foreground: 0 0% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 216 28% 12%;
+    --popover-foreground: 0 0% 15%;
 
     --primary: 215 95% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 15% 97%;
-    --secondary-foreground: 216 28% 12%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 15%;
 
-    --muted: 210 15% 97%;
-    --muted-foreground: 216 16% 50%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
     --accent: 145 75% 50%;
     --accent-foreground: 0 0% 100%;
@@ -37,8 +37,8 @@ All colors MUST be HSL.
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 16% 82%;
-    --input: 210 16% 82%;
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
     --ring: 215 95% 55%;
 
     --radius: 1rem;
@@ -46,25 +46,25 @@ All colors MUST be HSL.
     --success: 145 75% 50%;
     --success-foreground: 0 0% 100%;
 
-    /* Tech-forward colors */
+    /* Tech-forward colors - blue only for primary actions */
     --electric-blue: 215 95% 55%;
     --neon-cyan: 185 100% 50%;
     --neon-green: 165 100% 44%;
     
-    /* Pill color tokens */
+    /* Pill color tokens - neutral soft is true neutral */
     --primary-soft: 217 91% 60%;
     --success-soft: 165 100% 44%;
     --warning: 38 92% 50%;
     --warning-soft: 38 92% 50%;
     --danger-soft: 0 84% 60%;
-    --neutral-soft: 220 14% 96%;
-    --neutral-text: 220 9% 46%;
+    --neutral-soft: 0 0% 96%;
+    --neutral-text: 0 0% 45%;
 
-    /* Shadows */
-    --shadow-sm: 0 2px 8px hsl(215 25% 60% / 0.08);
-    --shadow-md: 0 4px 16px hsl(215 25% 60% / 0.1);
-    --shadow-lg: 0 12px 48px hsl(215 95% 55% / 0.12);
-    --shadow-xl: 0 20px 64px hsl(215 95% 55% / 0.16);
+    /* Shadows - neutral gray, no blue tint */
+    --shadow-sm: 0 2px 8px hsl(0 0% 50% / 0.08);
+    --shadow-md: 0 4px 16px hsl(0 0% 50% / 0.1);
+    --shadow-lg: 0 12px 48px hsl(0 0% 40% / 0.12);
+    --shadow-xl: 0 20px 64px hsl(0 0% 40% / 0.16);
     --shadow-glow: 0 0 20px hsl(215 95% 55% / 0.4);
     --shadow-glow-hover: 0 0 30px hsl(215 95% 55% / 0.6);
 
@@ -74,23 +74,23 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 216 28% 7%;
+    --background: 0 0% 7%;
     --foreground: 0 0% 98%;
 
-    --card: 216 24% 10%;
+    --card: 0 0% 10%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 216 24% 10%;
+    --popover: 0 0% 10%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 215 100% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 216 20% 15%;
+    --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 216 20% 15%;
-    --muted-foreground: 216 12% 65%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
 
     --accent: 145 70% 45%;
     --accent-foreground: 0 0% 100%;
@@ -98,8 +98,8 @@ All colors MUST be HSL.
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 216 20% 18%;
-    --input: 216 20% 18%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
     --ring: 215 100% 55%;
 
     /* Tech-forward colors */
@@ -107,17 +107,17 @@ All colors MUST be HSL.
     --neon-cyan: 185 100% 50%;
     --neon-green: 165 100% 44%;
     
-    /* Pill color tokens (dark mode) */
+    /* Pill color tokens (dark mode) - neutral */
     --primary-soft: 217 91% 60%;
     --success-soft: 165 100% 44%;
     --warning: 38 92% 50%;
     --warning-soft: 38 92% 50%;
     --danger-soft: 0 84% 60%;
-    --neutral-soft: 220 14% 20%;
-    --neutral-text: 220 9% 65%;
+    --neutral-soft: 0 0% 20%;
+    --neutral-text: 0 0% 65%;
 
-    --shadow-lg: 0 10px 40px -10px hsl(215 100% 50% / 0.4);
-    --shadow-hover: 0 20px 50px -10px hsl(215 100% 50% / 0.5);
+    --shadow-lg: 0 10px 40px -10px hsl(0 0% 0% / 0.4);
+    --shadow-hover: 0 20px 50px -10px hsl(0 0% 0% / 0.5);
     --shadow-glow: 0 0 20px hsl(215 100% 55% / 0.5);
     --shadow-glow-hover: 0 0 30px hsl(215 100% 55% / 0.7);
 
