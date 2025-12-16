@@ -770,7 +770,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                   value={minPriceDisplay}
                                   onChange={(e) => handleMinPriceChange(e.target.value)}
                                   placeholder={category === "renter_need" ? "1,000" : "500,000"}
-                                  className="pl-7 h-10 rounded-lg border-border bg-background"
+                                  className="pl-7 h-10 rounded-lg border-border bg-white"
                                   disabled={noMinPrice}
                                 />
                               </div>
@@ -805,7 +805,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                   value={maxPriceDisplay}
                                   onChange={(e) => handleMaxPriceChange(e.target.value)}
                                   placeholder={category === "renter_need" ? "5,000" : "2,000,000"}
-                                  className="pl-7 h-10 rounded-lg border-border bg-background"
+                                  className="pl-7 h-10 rounded-lg border-border bg-white"
                                   disabled={noMaxPrice}
                                 />
                               </div>
@@ -845,7 +845,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Enter subject line"
-                  className="h-10 rounded-lg border-border bg-background"
+                  className="h-10 rounded-lg border-border bg-white"
                 />
               </div>
 
@@ -856,7 +856,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Enter your message..."
-                  className="min-h-[150px] rounded-lg border-border bg-background resize-none"
+                  className="min-h-[150px] rounded-lg border-border bg-white resize-none"
                 />
               </div>
             </div>
