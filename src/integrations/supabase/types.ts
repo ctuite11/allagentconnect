@@ -413,6 +413,75 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_settings: {
+        Row: {
+          county: string | null
+          created_at: string
+          email_frequency: string
+          muted_all: boolean
+          notifications_enabled: boolean
+          notifications_set: boolean
+          onboarding_completed: boolean
+          onboarding_started: boolean
+          preferences_set: boolean
+          price_max: number | null
+          price_min: number | null
+          price_no_max: boolean
+          price_no_min: boolean
+          property_types: string[]
+          state: string | null
+          tour_completed: boolean
+          towns: string[]
+          updated_at: string
+          user_id: string
+          welcome_modal_dismissed: boolean
+        }
+        Insert: {
+          county?: string | null
+          created_at?: string
+          email_frequency?: string
+          muted_all?: boolean
+          notifications_enabled?: boolean
+          notifications_set?: boolean
+          onboarding_completed?: boolean
+          onboarding_started?: boolean
+          preferences_set?: boolean
+          price_max?: number | null
+          price_min?: number | null
+          price_no_max?: boolean
+          price_no_min?: boolean
+          property_types?: string[]
+          state?: string | null
+          tour_completed?: boolean
+          towns?: string[]
+          updated_at?: string
+          user_id: string
+          welcome_modal_dismissed?: boolean
+        }
+        Update: {
+          county?: string | null
+          created_at?: string
+          email_frequency?: string
+          muted_all?: boolean
+          notifications_enabled?: boolean
+          notifications_set?: boolean
+          onboarding_completed?: boolean
+          onboarding_started?: boolean
+          preferences_set?: boolean
+          price_max?: number | null
+          price_min?: number | null
+          price_no_max?: boolean
+          price_no_min?: boolean
+          property_types?: string[]
+          state?: string | null
+          tour_completed?: boolean
+          towns?: string[]
+          updated_at?: string
+          user_id?: string
+          welcome_modal_dismissed?: boolean
+        }
+        Relationships: []
+      }
       agent_state_preferences: {
         Row: {
           agent_id: string
