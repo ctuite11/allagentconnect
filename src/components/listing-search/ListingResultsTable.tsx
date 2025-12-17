@@ -13,6 +13,7 @@ import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import SaveSearchDialog from "@/components/SaveSearchDialog";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
+import { ListingResultCard } from "@/components/listing-search/ListingResultCard";
 
 
 interface Listing {
@@ -518,43 +519,58 @@ const ListingResultsTable = ({
         searchSummary={searchSummary}
       />
 
-      {/* Results as Cards */}
-      <div className="space-y-3">
-        {/* Header Row */}
-        <div className="sticky top-[88px] z-[5] bg-white/95 backdrop-blur-sm rounded-xl border border-neutral-200 px-4 py-3 shadow-sm">
-          <div className="grid grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-center">
-            <div className="text-xs font-medium text-muted-foreground"></div>
-            <div className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1" onClick={() => onSort("address")}>
-              Address
-              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "address" ? "text-foreground" : "text-muted-foreground/50"}`} />
-            </div>
-            <div className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1" onClick={() => onSort("price")}>
-              Price
-              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "price" ? "text-foreground" : "text-muted-foreground/50"}`} />
-            </div>
-            <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("bedrooms")}>
-              Beds
-              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "bedrooms" ? "text-foreground" : "text-muted-foreground/50"}`} />
-            </div>
-            <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("bathrooms")}>
-              Baths
-              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "bathrooms" ? "text-foreground" : "text-muted-foreground/50"}`} />
-            </div>
-            <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("square_feet")}>
-              SqFt
-              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "square_feet" ? "text-foreground" : "text-muted-foreground/50"}`} />
-            </div>
-            <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("list_date")}>
-              DOM
-              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "list_date" ? "text-foreground" : "text-muted-foreground/50"}`} />
-            </div>
-            <div className="text-xs font-medium text-muted-foreground">Agent</div>
-            <div className="text-xs font-medium text-muted-foreground"></div>
-          </div>
-        </div>
+      {/* MOBILE: Card List (< md) */}
+      <div className="md:hidden space-y-3">
+        {displayedListings.map((listing) => (
+          <ListingResultCard
+            key={listing.id}
+            listing={listing}
+            isSelected={selectedRows.has(listing.id)}
+            onSelect={toggleRowSelection}
+            onRowClick={onRowClick}
+            fromPath={fromPath}
+          />
+        ))}
+      </div>
 
-        {/* Listing Cards */}
-        {displayedListings.map((listing, idx) => {
+      {/* DESKTOP: Table/Grid (md+) */}
+      <div className="hidden md:block overflow-x-auto">
+        <div className="min-w-[1100px] space-y-3">
+          {/* Header Row */}
+          <div className="sticky top-[88px] z-[5] bg-white/95 backdrop-blur-sm rounded-xl border border-neutral-200 px-4 py-3 shadow-sm">
+            <div className="grid grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-center">
+              <div className="text-xs font-medium text-muted-foreground"></div>
+              <div className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1" onClick={() => onSort("address")}>
+                Address
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "address" ? "text-foreground" : "text-muted-foreground/50"}`} />
+              </div>
+              <div className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1" onClick={() => onSort("price")}>
+                Price
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "price" ? "text-foreground" : "text-muted-foreground/50"}`} />
+              </div>
+              <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("bedrooms")}>
+                Beds
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "bedrooms" ? "text-foreground" : "text-muted-foreground/50"}`} />
+              </div>
+              <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("bathrooms")}>
+                Baths
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "bathrooms" ? "text-foreground" : "text-muted-foreground/50"}`} />
+              </div>
+              <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("square_feet")}>
+                SqFt
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "square_feet" ? "text-foreground" : "text-muted-foreground/50"}`} />
+              </div>
+              <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("list_date")}>
+                DOM
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "list_date" ? "text-foreground" : "text-muted-foreground/50"}`} />
+              </div>
+              <div className="text-xs font-medium text-muted-foreground">Agent</div>
+              <div className="text-xs font-medium text-muted-foreground"></div>
+            </div>
+          </div>
+
+          {/* Listing Cards */}
+          {displayedListings.map((listing, idx) => {
           const thumbnail = getThumbnail(listing);
           const pricePerSqFt = getPricePerSqFt(listing.price, listing.square_feet);
           const openHouseInfo = getOpenHouseInfo(listing);
@@ -869,6 +885,7 @@ const ListingResultsTable = ({
             </div>
           );
         })}
+        </div>
       </div>
 
       {/* Contact Agent Dialog (controlled) */}
