@@ -2568,6 +2568,7 @@ export type Database = {
         Args: { p_team_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_verified_agent: { Args: never; Returns: boolean }
     }
     Enums: {
       agent_status: "unverified" | "pending" | "verified" | "restricted"
