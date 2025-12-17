@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
-import { Loader2, ArrowLeft, Megaphone, Save } from "lucide-react";
+import { Loader2, Megaphone, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
@@ -299,18 +299,13 @@ const ClientNeedsDashboard = () => {
       <main className="container mx-auto px-4 py-8 pt-24 pb-32 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/agent-dashboard")} className="h-9 w-9">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                <Megaphone className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-neutral-800">Communications Center</h1>
-                <p className="text-sm text-muted-foreground">Agent-to-agent collaboration and deal flow</p>
-              </div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+              <Megaphone className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-neutral-800">Communications Center</h1>
+              <p className="text-sm text-muted-foreground">Agent-to-agent collaboration and deal flow</p>
             </div>
           </div>
         </div>

@@ -346,15 +346,13 @@ const ListingSearchResults = () => {
           <SectionCard className="mb-4 p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={handleBackToSearch}
-                  className="h-8 gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                  className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  aria-label="Go back"
                 >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Search
-                </Button>
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
                 <div className="h-5 w-px bg-border" />
                 <div>
                   <h1 className="text-lg font-semibold text-foreground">Search Results</h1>

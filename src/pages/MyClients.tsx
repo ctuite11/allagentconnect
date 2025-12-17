@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, ArrowLeft, Upload } from "lucide-react";
+import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -372,16 +372,11 @@ const MyClients = () => {
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8 flex justify-between items-start">
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" onClick={() => navigate("/agent-dashboard")}>
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <PageTitle className="mb-2">My Contacts</PageTitle>
-                <p className="text-muted-foreground">
-                  Manage your contacts and create personalized hot sheets for them
-                </p>
-              </div>
+            <div>
+              <PageTitle className="mb-2">My Contacts</PageTitle>
+              <p className="text-muted-foreground">
+                Manage your contacts and create personalized hot sheets for them
+              </p>
             </div>
           </div>
 

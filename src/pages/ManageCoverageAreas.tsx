@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import StatePreferencesManager from "@/components/StatePreferencesManager";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 
@@ -56,12 +55,15 @@ const ManageCoverageAreas = () => {
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
   <div className="max-w-4xl mx-auto">
-    <div className="flex items-center justify-between mb-6">
+    <div className="flex items-center gap-4 mb-6">
+      <button
+        onClick={() => navigate("/allagentconnect")}
+        className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+        aria-label="Go back"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </button>
       <h1 className="text-3xl font-bold">Manage Coverage Areas</h1>
-      <Button variant="outline" onClick={() => navigate("/agent-dashboard")}>
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Dashboard
-      </Button>
     </div>
 
     <div className="space-y-6">

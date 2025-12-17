@@ -277,10 +277,13 @@ const ListingAnalytics = () => {
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="outline" onClick={() => navigate("/agent-dashboard")} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
+          <button
+            onClick={() => navigate("/agent/listings")}
+            className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
           <div className="flex-1">
             <PageTitle icon={<BarChart3 className="h-8 w-8" />}>
               Listing Analytics

@@ -330,9 +330,7 @@ const AgentListingDetail = () => {
       <div className="border-b border-border bg-card sticky top-16 z-10">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-14">
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={() => {
                 const fromPage = location.state?.from;
                 if (fromPage) {
@@ -343,11 +341,11 @@ const AgentListingDetail = () => {
                   navigate("/agent/listings");
                 }
               }}
-              className="gap-2"
+              className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              aria-label="Go back"
             >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Button>
+              <ArrowLeft className="h-5 w-5" />
+            </button>
 
             <div className="flex items-center gap-2">
               {/* Agent-only action buttons */}

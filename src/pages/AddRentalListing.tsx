@@ -1556,10 +1556,14 @@ const AddRentalListing = () => {
                 
                 {/* Action Buttons - Bottom */}
                 <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t items-center">
-                  <Button variant="ghost" size="lg" onClick={() => navigate("/agent-dashboard")} type="button" className="gap-2">
-                    <ArrowLeft className="w-5 h-5" />
-                    Back
-                  </Button>
+                  <button
+                    onClick={() => navigate("/agent/listings")}
+                    type="button"
+                    className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                    aria-label="Go back"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
                   <div className="flex-1 flex items-center gap-2">
                     {autoSaving && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">

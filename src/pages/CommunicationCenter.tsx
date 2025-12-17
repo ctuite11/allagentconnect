@@ -28,7 +28,6 @@ import {
   Users, 
   Eye, 
   MousePointer, 
-  ArrowLeft,
   Info,
   Calendar,
   Filter,
@@ -171,21 +170,11 @@ const CommunicationCenter = () => {
         <div className="max-w-[1280px] mx-auto px-6 py-6 space-y-6">
           {/* Page Header */}
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={() => navigate("/agent-dashboard")}
-                className="shrink-0"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <PageTitle>Communication Center</PageTitle>
-                <p className="text-muted-foreground mt-1">
-                  Send targeted listing emails to users based on their saved preferences. Replies go to your email inbox.
-                </p>
-              </div>
+            <div>
+              <PageTitle>Communication Center</PageTitle>
+              <p className="text-muted-foreground mt-1">
+                Send targeted listing emails to users based on their saved preferences. Replies go to your email inbox.
+              </p>
             </div>
             <Button onClick={() => setSendDialogOpen(true)}>
               <Send className="h-4 w-4 mr-2" />

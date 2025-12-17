@@ -70,15 +70,14 @@ const AgentProfileHeader = ({ agent, onSaveContact }: AgentProfileHeaderProps) =
       <div className="min-h-[240px] md:min-h-[320px] lg:min-h-[340px] py-6 md:py-8">
         <div className="max-w-5xl mx-auto px-4 md:px-6">
           
-          {/* Back Button - White Pill */}
-          <Button
-            variant="secondary"
+          {/* Back Button */}
+          <button
             onClick={() => navigate(-1)}
-            className="mb-5 gap-2 bg-white/95 hover:bg-white text-foreground shadow-md rounded-full px-5"
+            className="mb-5 p-1.5 -ml-1.5 rounded-md hover:bg-white/20 transition-colors text-white/80 hover:text-white"
+            aria-label="Go back"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
+            <ArrowLeft className="h-5 w-5" />
+          </button>
 
           {/* Mobile Layout */}
           <div className="flex flex-col items-center gap-4 md:hidden">
