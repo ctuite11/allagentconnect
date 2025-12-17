@@ -4,151 +4,49 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormattedInput } from "@/components/ui/formatted-input";
-import { WelcomeInterstitial } from "@/components/WelcomeInterstitial";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
-import { User } from "@supabase/supabase-js";
 import { z } from "zod";
+import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 
-const INTERSTITIAL_SHOWN_KEY = "aac_interstitial_shown";
+const emailSchema = z.string().trim().email("Please enter a valid email address");
 
-const signUpSchema = z.object({
-  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
-  password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .max(100, "Password must be less than 100 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number"),
-  firstName: z.string().trim().min(1, "First name is required").max(100, "First name must be less than 100 characters"),
-  lastName: z.string().trim().min(1, "Last name is required").max(100, "Last name must be less than 100 characters"),
-  phone: z.string().trim().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format").optional().or(z.literal("")),
-  company: z.string().trim().max(200, "Company name must be less than 200 characters").optional(),
-});
-
-const loginSchema = z.object({
-  email: z.string().trim().email("Invalid email address").max(255),
-  password: z.string().min(1, "Password is required"),
-});
+type AuthStep = "email" | "otp";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
-  const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [step, setStep] = useState<AuthStep>("email");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showInterstitial, setShowInterstitial] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    firstName: "",
-    lastName: "",
-    phone: "",
-    company: "",
-  });
 
-  // Check if interstitial should show when switching to sign-up
-  useEffect(() => {
-    if (!isLogin && !isForgotPassword && !isResettingPassword) {
-      const hasSeenInterstitial = localStorage.getItem(INTERSTITIAL_SHOWN_KEY);
-      if (!hasSeenInterstitial) {
-        setShowInterstitial(true);
-      }
-    }
-  }, [isLogin, isForgotPassword, isResettingPassword]);
-
-  const handleInterstitialComplete = () => {
-    localStorage.setItem(INTERSTITIAL_SHOWN_KEY, "true");
-    setShowInterstitial(false);
-  };
-
+  // Check for existing session on mount
   useEffect(() => {
     let mounted = true;
-    
-    // Check URL hash immediately to prevent premature navigation
-    const checkRecoveryFlow = () => {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      return hashParams.get('type') === 'recovery';
-    };
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return;
-      
-      const isRecovery = checkRecoveryFlow();
-      
-      if (isRecovery && session?.user) {
-        // User clicked reset link - show password reset form, don't redirect
-        setIsResettingPassword(true);
-        setIsForgotPassword(false);
-        setIsLogin(false);
-        setUser(session.user);
-        return;
-      }
-      
-      setUser(session?.user ?? null);
-      
-      if (session?.user && !isRecovery) {
-        // Fetch role before redirecting
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        if (!mounted) return;
-        
-        const userRole = roleData?.role;
-        
-        if (userRole === 'buyer') {
-          navigate('/client/dashboard');
-        } else {
-          navigate('/agent-dashboard');
-        }
-      }
-    });
 
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!mounted) return;
       
-      const isRecovery = checkRecoveryFlow();
-      
-      if (isRecovery && session?.user) {
-        // User clicked reset link - show password reset form, don't redirect
-        setIsResettingPassword(true);
-        setIsForgotPassword(false);
-        setIsLogin(false);
-        setUser(session.user);
-        return;
-      }
-      
-      setUser(session?.user ?? null);
-      
-      if (session?.user && !isRecovery) {
-        // Fetch role before redirecting
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        if (!mounted) return;
-        
-        const userRole = roleData?.role;
-        
-        if (userRole === 'buyer') {
-          navigate('/client/dashboard');
-        } else {
-          navigate('/agent-dashboard');
-        }
+      if (session?.user) {
+        // Already logged in, redirect to verify-agent
+        navigate('/verify-agent');
       }
     };
-    
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return;
+        
+        if (session?.user) {
+          // Fire analytics event
+          console.log('[Analytics] auth_login_success', { user_id: session.user.id });
+          navigate('/verify-agent');
+        }
+      }
+    );
+
     checkSession();
 
     return () => {
@@ -157,386 +55,206 @@ const Auth = () => {
     };
   }, [navigate]);
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Validate input
-      const validatedData = signUpSchema.parse(formData);
+      const validatedEmail = emailSchema.parse(email);
 
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: validatedData.email,
-        password: validatedData.password,
+      // Fire analytics event
+      console.log('[Analytics] auth_otp_requested', { email: validatedEmail });
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email: validatedEmail,
         options: {
-          emailRedirectTo: `${window.location.origin}/agent-dashboard`,
+          shouldCreateUser: true,
         },
       });
 
-      if (signUpError) throw signUpError;
-
-      if (authData.user) {
-        const { error: profileError } = await supabase.from("agent_profiles").insert({
-          id: authData.user.id,
-          email: validatedData.email,
-          first_name: validatedData.firstName,
-          last_name: validatedData.lastName,
-          phone: validatedData.phone || null,
-          company: validatedData.company || null,
-        });
-
-        if (profileError) throw profileError;
-
-        // Assign agent role
-        const { error: roleError } = await supabase.from("user_roles").insert({
-          user_id: authData.user.id,
-          role: "agent",
-        });
-
-        if (roleError) throw roleError;
-
-        toast.success("Account created successfully!");
-      }
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
-      } else {
-        toast.error(error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      // Validate input
-      const validatedData = loginSchema.parse({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email: validatedData.email,
-        password: validatedData.password,
-      });
-
       if (error) throw error;
-      toast.success("Logged in successfully!");
+
+      toast.success("Check your email for the 6-digit code");
+      setStep("otp");
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        toast.error(error.message);
+        toast.error(error.message || "Failed to send code");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      const validatedData = z.object({ email: z.string().email() }).parse({ email: formData.email });
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(validatedData.email, {
-        redirectTo: `${window.location.origin}/auth`,
-      });
-
-      if (error) throw error;
-      
-      toast.success("Password reset email sent! Check your inbox.");
-      setIsForgotPassword(false);
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
-      } else {
-        toast.error(error.message);
-      }
-    } finally {
-      setLoading(false);
+    
+    if (otp.length !== 6) {
+      toast.error("Please enter the 6-digit code");
+      return;
     }
-  };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
     setLoading(true);
 
     try {
-      // Validate passwords match
-      if (formData.password !== formData.confirmPassword) {
-        toast.error("Passwords do not match");
-        return;
-      }
+      // Fire analytics event
+      console.log('[Analytics] auth_otp_verified', { email });
 
-      // Validate password strength
-      const passwordSchema = z.string()
-        .min(8, "Password must be at least 8 characters")
-        .max(100, "Password must be less than 100 characters")
-        .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-        .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-        .regex(/[0-9]/, "Password must contain at least one number");
-
-      passwordSchema.parse(formData.password);
-
-      const { error } = await supabase.auth.updateUser({
-        password: formData.password,
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: 'email',
       });
 
       if (error) throw error;
 
-      toast.success("Password updated successfully!");
-      setIsResettingPassword(false);
-      setIsLogin(true);
-      setFormData({ ...formData, password: "", confirmPassword: "" });
-      
-      // Clear the hash from URL
-      window.history.replaceState(null, "", window.location.pathname);
+      // Success - onAuthStateChange will handle redirect
+      toast.success("Verified successfully!");
     } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
+      if (error.message?.includes('expired')) {
+        toast.error("Code expired. Please request a new one.");
+      } else if (error.message?.includes('invalid')) {
+        toast.error("Invalid code. Please try again.");
       } else {
-        toast.error(error.message);
+        toast.error(error.message || "Verification failed");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  if (showInterstitial) {
-    return <WelcomeInterstitial onComplete={handleInterstitialComplete} />;
-  }
+  const handleBackToEmail = () => {
+    setStep("email");
+    setOtp("");
+  };
+
+  const handleResendCode = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+
+      if (error) throw error;
+      toast.success("New code sent to your email");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend code");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
-        <div className="bg-card rounded-lg shadow-xl p-8 border border-border">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              {isResettingPassword 
-                ? "Set New Password" 
-                : isForgotPassword 
-                ? "Reset Password" 
-                : isLogin 
-                ? "Agent Login" 
-                : "Agent Registration"}
-            </h1>
-            <p className="text-muted-foreground">
-              {isResettingPassword
-                ? "Enter your new password"
-                : isForgotPassword
-                ? "Enter your email to receive a reset link"
-                : isLogin
-                ? "Sign in to access your dashboard"
-                : "Create your agent account"}
-            </p>
-          </div>
-
-          <form 
-            onSubmit={
-              isResettingPassword 
-                ? handleResetPassword 
-                : isForgotPassword 
-                ? handleForgotPassword 
-                : isLogin 
-                ? handleLogin 
-                : handleSignUp
-            } 
-            className="space-y-4"
-          >
-            {!isLogin && !isForgotPassword && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      type="text"
-                      required
-                      value={formData.firstName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, firstName: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      type="text"
-                      required
-                      value={formData.lastName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, lastName: e.target.value })
-                      }
-                    />
-                  </div>
+        <div className="bg-card rounded-2xl shadow-lg p-8 border border-border">
+          {step === "email" ? (
+            <>
+              <div className="text-center mb-8">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Mail className="h-6 w-6 text-primary" />
                 </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <FormattedInput
-                    id="phone"
-                    format="phone"
-                    placeholder="1234567890"
-                    value={formData.phone}
-                    onChange={(value) =>
-                      setFormData({ ...formData, phone: value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="company">Company</Label>
-                  <Input
-                    id="company"
-                    type="text"
-                    value={formData.company}
-                    onChange={(e) =>
-                      setFormData({ ...formData, company: e.target.value })
-                    }
-                  />
-                </div>
-              </>
-            )}
-
-            {!isResettingPassword && (
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                />
+                <h1 className="text-2xl font-semibold text-foreground mb-2">
+                  Sign in to AllAgentConnect
+                </h1>
+                <p className="text-muted-foreground text-sm">
+                  Enter your email and we'll send you a code
+                </p>
               </div>
-            )}
 
-            {isResettingPassword ? (
-              <>
+              <form onSubmit={handleSendOtp} className="space-y-4">
                 <div>
-                  <Label htmlFor="password">New Password</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email address
+                  </Label>
                   <Input
-                    id="password"
-                    type="password"
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
                     required
-                    value={formData.password}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Must be 8+ characters with uppercase, lowercase, and number
-                  </p>
-                </div>
-                <div>
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    required
-                    value={formData.confirmPassword}
-                    onChange={(e) =>
-                      setFormData({ ...formData, confirmPassword: e.target.value })
-                    }
+                    autoFocus
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="mt-1.5"
                   />
                 </div>
-              </>
-            ) : !isForgotPassword && (
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                />
-                {!isLogin && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Must be 8+ characters with uppercase, lowercase, and number
-                  </p>
-                )}
-              </div>
-            )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading 
-                ? "Processing..." 
-                : isResettingPassword 
-                ? "Update Password" 
-                : isForgotPassword 
-                ? "Send Reset Link" 
-                : isLogin 
-                ? "Sign In" 
-                : "Sign Up"}
-            </Button>
-
-            {isLogin && !isForgotPassword && !isResettingPassword && (
-              <Button
-                type="button"
-                variant="link"
-                onClick={() => setIsForgotPassword(true)}
-                className="w-full"
-              >
-                Forgot password?
-              </Button>
-            )}
-          </form>
-
-          <div className="mt-6 text-center space-y-2">
-            {isResettingPassword ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsResettingPassword(false);
-                  setIsLogin(true);
-                  window.history.replaceState(null, "", window.location.pathname);
-                }}
-                className="text-primary hover:underline text-sm"
-              >
-                Back to login
-              </button>
-            ) : isForgotPassword ? (
-              <button
-                type="button"
-                onClick={() => setIsForgotPassword(false)}
-                className="text-primary hover:underline text-sm"
-              >
-                Back to login
-              </button>
-            ) : (
-              <>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Send code"
+                  )}
+                </Button>
+              </form>
+            </>
+          ) : (
+            <>
+              <div className="text-center mb-8">
                 <button
-                  type="button"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="text-primary hover:underline text-sm block w-full"
+                  onClick={handleBackToEmail}
+                  className="absolute left-8 top-8 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {isLogin
-                    ? "Don't have an account? Sign up"
-                    : "Already have an account? Sign in"}
+                  <ArrowLeft className="h-5 w-5" />
                 </button>
-                <div className="pt-4 border-t">
-                  <p className="text-sm text-muted-foreground mb-2">Not a real estate agent?</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate("/buyer-auth")}
+                <h1 className="text-2xl font-semibold text-foreground mb-2">
+                  Enter verification code
+                </h1>
+                <p className="text-muted-foreground text-sm">
+                  We sent a 6-digit code to{" "}
+                  <span className="font-medium text-foreground">{email}</span>
+                </p>
+              </div>
+
+              <form onSubmit={handleVerifyOtp} className="space-y-6">
+                <div className="flex justify-center">
+                  <InputOTP
+                    maxLength={6}
+                    value={otp}
+                    onChange={(value) => setOtp(value)}
                   >
-                    Buyer Sign In
-                  </Button>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
                 </div>
-              </>
-            )}
-          </div>
+
+                <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    "Verify"
+                  )}
+                </Button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={loading}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Didn't receive a code? <span className="font-medium">Resend</span>
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
         </div>
       </div>
     </div>
