@@ -222,14 +222,14 @@ const AgentProfile = () => {
                 </h2>
                 <div className="grid sm:grid-cols-2 gap-4">
                   {agent.buyer_incentives && (
-                    <Card className="border shadow-sm rounded-xl bg-accent/5">
+                    <Card className="border border-neutral-200 shadow-sm rounded-xl bg-white">
                       <CardContent className="p-5">
                         <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-accent/10 flex-shrink-0">
-                            <Gift className="h-5 w-5 text-accent" />
+                          <div className="p-2 rounded-lg border border-neutral-200 flex-shrink-0">
+                            <Gift className="h-5 w-5 text-muted-foreground" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-foreground mb-1.5">Buyer Incentives</h3>
+                            <h3 className="font-semibold text-neutral-800 mb-1.5">Buyer Incentives</h3>
                             <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                               {agent.buyer_incentives}
                             </p>
@@ -239,14 +239,14 @@ const AgentProfile = () => {
                     </Card>
                   )}
                   {agent.seller_incentives && (
-                    <Card className="border shadow-sm rounded-xl bg-card">
+                    <Card className="border border-neutral-200 shadow-sm rounded-xl bg-white">
                       <CardContent className="p-5">
                         <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-muted flex-shrink-0">
-                            <TrendingUp className="h-5 w-5 text-primary" />
+                          <div className="p-2 rounded-lg border border-neutral-200 flex-shrink-0">
+                            <TrendingUp className="h-5 w-5 text-muted-foreground" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-foreground mb-1.5">Seller Incentives</h3>
+                            <h3 className="font-semibold text-neutral-800 mb-1.5">Seller Incentives</h3>
                             <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                               {agent.seller_incentives}
                             </p>
@@ -267,7 +267,7 @@ const AgentProfile = () => {
                 </h2>
                 <div className="space-y-4">
                   {testimonials.slice(0, 3).map((testimonial) => (
-                    <Card key={testimonial.id} className="border shadow-md rounded-xl overflow-hidden">
+                    <Card key={testimonial.id} className="border border-neutral-200 shadow-sm rounded-xl overflow-hidden bg-white">
                       <CardContent className="p-6 relative">
                         <Quote className="absolute top-4 right-4 h-8 w-8 text-muted-foreground/20" />
                         {testimonial.rating && (
@@ -305,7 +305,7 @@ const AgentProfile = () => {
         </div>
 
         {/* Active Listings Section - Full Width */}
-        <div className="bg-muted/30 border-t border-border/40">
+        <div className="bg-white border-t border-neutral-200">
           <div className="max-w-5xl mx-auto px-4 md:px-6 py-12">
             <h2 className="text-2xl font-semibold text-foreground mb-6 text-center">
               {agent.first_name}'s Listings
@@ -313,7 +313,7 @@ const AgentProfile = () => {
             
             {listings.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                <div className="w-20 h-20 rounded-full border border-neutral-200 bg-white flex items-center justify-center mb-4">
                   <HomeIcon className="h-10 w-10 text-muted-foreground/50" />
                 </div>
                 <p className="text-lg text-muted-foreground mb-2">
@@ -339,7 +339,7 @@ const AgentProfile = () => {
                 {listings.map((listing) => (
                   <Card 
                     key={listing.id} 
-                    className="cursor-pointer hover:shadow-lg transition-all duration-300 border overflow-hidden group bg-card"
+                    className="cursor-pointer hover:shadow-lg transition-all duration-300 border border-neutral-200 overflow-hidden group bg-white"
                     onClick={() => navigate(`/property/${listing.id}`)}
                   >
                     <div className="relative h-48 overflow-hidden">
