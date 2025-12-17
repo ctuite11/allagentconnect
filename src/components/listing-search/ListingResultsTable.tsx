@@ -535,10 +535,12 @@ const ListingResultsTable = ({
 
       {/* DESKTOP: Table/Grid (md+) */}
       <div className="hidden md:block overflow-x-auto">
-        <div className="min-w-[1100px] space-y-3">
+        {/* Responsive min-widths: md=720px, lg=920px, xl=1100px */}
+        <div className="min-w-[720px] lg:min-w-[920px] xl:min-w-[1100px] space-y-3">
           {/* Header Row */}
           <div className="sticky top-[88px] z-[5] bg-white/95 backdrop-blur-sm rounded-xl border border-neutral-200 px-4 py-3 shadow-sm">
-            <div className="grid grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-center">
+            {/* Responsive grid: md=compact, lg=+SqFt/DOM, xl=+Agent */}
+            <div className="grid grid-cols-[170px_minmax(240px,1fr)_100px_60px_60px_100px] lg:grid-cols-[170px_minmax(260px,1fr)_100px_60px_60px_80px_60px_100px] xl:grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-center">
               <div className="text-xs font-medium text-muted-foreground"></div>
               <div className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1" onClick={() => onSort("address")}>
                 Address
@@ -556,15 +558,18 @@ const ListingResultsTable = ({
                 Baths
                 <ArrowUpDown className={`h-3 w-3 ${sortColumn === "bathrooms" ? "text-foreground" : "text-muted-foreground/50"}`} />
               </div>
-              <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("square_feet")}>
+              {/* SqFt: hidden at md, visible at lg+ */}
+              <div className="hidden lg:flex text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground items-center justify-center gap-1" onClick={() => onSort("square_feet")}>
                 SqFt
                 <ArrowUpDown className={`h-3 w-3 ${sortColumn === "square_feet" ? "text-foreground" : "text-muted-foreground/50"}`} />
               </div>
-              <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("list_date")}>
+              {/* DOM: hidden at md, visible at lg+ */}
+              <div className="hidden lg:flex text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground items-center justify-center gap-1" onClick={() => onSort("list_date")}>
                 DOM
                 <ArrowUpDown className={`h-3 w-3 ${sortColumn === "list_date" ? "text-foreground" : "text-muted-foreground/50"}`} />
               </div>
-              <div className="text-xs font-medium text-muted-foreground">Agent</div>
+              {/* Agent: hidden at md/lg, visible at xl+ */}
+              <div className="hidden xl:block text-xs font-medium text-muted-foreground">Agent</div>
               <div className="text-xs font-medium text-muted-foreground"></div>
             </div>
           </div>
@@ -593,8 +598,8 @@ const ListingResultsTable = ({
                 isExpanded ? "ring-2 ring-primary/10" : ""
               ].join(" ")}
             >
-              {/* Main Row Content */}
-              <div className="grid grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-start">
+              {/* Main Row Content - Responsive grid matching header */}
+              <div className="grid grid-cols-[170px_minmax(240px,1fr)_100px_60px_60px_100px] lg:grid-cols-[170px_minmax(260px,1fr)_100px_60px_60px_80px_60px_100px] xl:grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-start">
                 {/* Photo with Checkbox Overlay */}
                 <div className="relative">
                   {/* Checkbox overlay */}
@@ -714,18 +719,18 @@ const ListingResultsTable = ({
                 {/* Baths */}
                 <div className="text-sm text-center">{listing.bathrooms || "-"}</div>
 
-                {/* SqFt */}
-                <div className="text-sm text-center">
+                {/* SqFt: hidden at md, visible at lg+ */}
+                <div className="hidden lg:block text-sm text-center">
                   {listing.square_feet?.toLocaleString() || "-"}
                 </div>
 
-                {/* DOM */}
-                <div className="text-sm text-center">
+                {/* DOM: hidden at md, visible at lg+ */}
+                <div className="hidden lg:block text-sm text-center">
                   {getDaysOnMarket(listing.list_date)}
                 </div>
 
-                {/* Agent (stacked: name, office, phone, contact link) */}
-                <div>
+                {/* Agent: hidden at md/lg, visible at xl+ */}
+                <div className="hidden xl:block">
                   <div className="text-sm font-semibold truncate max-w-[180px]">{listing.agent_name || ""}</div>
                   {listing.list_office && (
                     <div className="mt-0.5 text-xs text-muted-foreground truncate max-w-[180px]">
