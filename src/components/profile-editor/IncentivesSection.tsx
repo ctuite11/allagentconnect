@@ -18,11 +18,11 @@ const IncentivesSection = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Buyer Incentives */}
-      <Card className="border-2 hover:border-accent/50 transition-colors">
+      <Card className="border border-neutral-200 hover:border-neutral-300 transition-colors bg-white">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-3 text-base">
-            <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center">
-              <Gift className="h-5 w-5 text-accent" />
+            <div className="h-10 w-10 rounded-full border border-neutral-200 flex items-center justify-center">
+              <Gift className="h-5 w-5 text-muted-foreground" />
             </div>
             Buyer Incentives
           </CardTitle>
@@ -39,11 +39,11 @@ const IncentivesSection = ({
       </Card>
 
       {/* Seller Incentives */}
-      <Card className="border-2 hover:border-primary/50 transition-colors">
+      <Card className="border border-neutral-200 hover:border-neutral-300 transition-colors bg-white">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-3 text-base">
-            <div className="h-10 w-10 rounded-full bg-muted border border-border flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-primary" />
+            <div className="h-10 w-10 rounded-full border border-neutral-200 flex items-center justify-center">
+              <TrendingUp className="h-5 w-5 text-muted-foreground" />
             </div>
             Seller Incentives
           </CardTitle>
