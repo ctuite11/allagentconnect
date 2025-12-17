@@ -281,10 +281,10 @@ const ListingSearchFilters = ({
   return (
     <div className="bg-white border border-neutral-200 rounded-xl p-4" style={{ boxShadow: '0 2px 3px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.12)' }}>
         {/* ROW 1: 3-Column Grid - Property Type (narrow) | Status+Date+Price (wide) | Standard Criteria */}
-        <div className="flex gap-4 mb-4">
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
           
           {/* PROPERTY TYPE Section (narrow) */}
-          <div className="w-[160px] shrink-0 bg-white border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06)' }}>
+          <div className="w-full md:w-[160px] md:shrink-0 bg-white border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06)' }}>
             <div className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-50/50 border-b border-neutral-100">
               <Home className="h-3.5 w-3.5 text-neutral-400" />
               <span className="text-xs font-medium text-neutral-700">Property Type</span>
@@ -325,7 +325,7 @@ const ListingSearchFilters = ({
               </div>
               
               {/* Top row: Status (left) + Date/Timeframe (right, vertically centered) */}
-              <div className="p-3 flex gap-4">
+              <div className="p-3 flex flex-col md:flex-row gap-4">
                 {/* STATUS Section - 2 columns, no scroll */}
                 <div className="flex-1">
                   <label className="flex items-center gap-2 cursor-pointer hover:bg-neutral-50 px-1.5 py-1 rounded transition-colors mb-1.5">
@@ -336,7 +336,7 @@ const ListingSearchFilters = ({
                     />
                     <span className="text-xs font-medium text-neutral-700">Select All</span>
                   </label>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
                     {STATUSES.map(status => (
                       <label
                         key={status.value}
@@ -354,7 +354,7 @@ const ListingSearchFilters = ({
                 </div>
                 
                 {/* DATE/TIMEFRAME Section (right side, vertically centered) */}
-                <div className="w-[180px] shrink-0 pl-4 border-l border-neutral-100 flex flex-col justify-center">
+                <div className="w-full md:w-[180px] md:shrink-0 md:pl-4 md:border-l border-t md:border-t-0 pt-4 md:pt-0 border-neutral-100 flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="h-3.5 w-3.5 text-neutral-400" />
                     <span className="text-xs font-medium text-neutral-700">Date / Timeframe</span>
@@ -465,7 +465,7 @@ const ListingSearchFilters = ({
           </div>
 
           {/* STANDARD SEARCH CRITERIA Section (right) */}
-          <div className="w-[280px] shrink-0 bg-white border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06)' }}>
+          <div className="w-full md:w-[280px] md:shrink-0 bg-white border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06)' }}>
             <button
               onClick={() => toggleSection("standardCriteria")}
               className="w-full flex items-center justify-between px-3 py-2 bg-neutral-50/50 border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
@@ -686,7 +686,7 @@ const ListingSearchFilters = ({
             </button>
             {sectionsOpen.towns && (
               <div className="p-3">
-                <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">State</Label>
                     <Select value={filters.state} onValueChange={v => updateFilter("state", v)}>
