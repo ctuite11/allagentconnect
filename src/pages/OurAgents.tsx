@@ -382,7 +382,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
               Join All Agent Connect and connect with buyers actively searching for properties in your area.
             </p>
             <button
-              className="inline-flex items-center justify-center rounded-md bg-background px-6 py-2.5 text-sm font-medium text-foreground hover:bg-background/90 transition-colors"
+              className="inline-flex items-center justify-center rounded-md bg-white border border-neutral-200 px-6 py-2.5 text-sm font-medium text-foreground hover:bg-neutral-soft transition-colors"
               onClick={() => navigate("/auth")}
             >
               Register as an Agent

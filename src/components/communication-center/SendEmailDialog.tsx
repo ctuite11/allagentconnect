@@ -306,7 +306,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-foreground">State</Label>
                       <Select value={state} onValueChange={setState}>
-                        <SelectTrigger className="h-10 rounded-lg border-border bg-background">
+                        <SelectTrigger className="h-10 rounded-lg border-neutral-200 bg-white">
                           <SelectValue placeholder="Select state" />
                         </SelectTrigger>
                         <SelectContent>
@@ -321,7 +321,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-foreground">County</Label>
                       <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
-                        <SelectTrigger className="h-10 rounded-lg border-border bg-background">
+                        <SelectTrigger className="h-10 rounded-lg border-neutral-200 bg-white">
                           <SelectValue placeholder="All counties" />
                         </SelectTrigger>
                         <SelectContent>
@@ -342,7 +342,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                       <Label className="text-sm font-medium text-foreground">Towns</Label>
                       <Popover open={townsOpen} onOpenChange={setTownsOpen}>
                         <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start font-normal h-10 rounded-lg border-border bg-background hover:bg-secondary/50">
+                          <Button variant="outline" className="w-full justify-start font-normal h-10 rounded-lg border-neutral-200 bg-white hover:bg-neutral-soft">
                             {selectedCities.length > 0 
                               ? `${selectedCities.length} selected` 
                               : "Select towns..."}
@@ -354,7 +354,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                               placeholder="Search towns..."
                               value={citySearch}
                               onChange={(e) => setCitySearch(e.target.value)}
-                              className="h-9 rounded-lg border-border bg-background"
+                              className="h-9 rounded-lg border-neutral-200 bg-white"
                             />
                           </div>
                           <ScrollArea className="h-[220px]">
@@ -463,7 +463,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                         placeholder="No minimum"
                         value={minPrice}
                         onChange={(e) => setMinPrice(e.target.value.replace(/[^0-9]/g, ''))}
-                        className="h-10 rounded-lg border-border bg-background"
+                        className="h-10 rounded-lg border-neutral-200 bg-white"
                       />
                     </div>
                     <div className="space-y-2">
@@ -472,7 +472,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                         placeholder="No maximum"
                         value={maxPrice}
                         onChange={(e) => setMaxPrice(e.target.value.replace(/[^0-9]/g, ''))}
-                        className="h-10 rounded-lg border-border bg-background"
+                        className="h-10 rounded-lg border-neutral-200 bg-white"
                       />
                     </div>
                   </div>
@@ -485,7 +485,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
           <div className="space-y-2.5">
             <Label className="text-sm font-medium text-foreground">Template</Label>
             <Select value={template} onValueChange={setTemplate}>
-              <SelectTrigger className="h-10 rounded-lg border-border bg-background">
+              <SelectTrigger className="h-10 rounded-lg border-neutral-200 bg-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -506,7 +506,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               maxLength={200}
-              className="h-10 rounded-lg border-border bg-background"
+              className="h-10 rounded-lg border-neutral-200 bg-white"
             />
           </div>
 
@@ -519,7 +519,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
               onChange={(e) => setMessage(e.target.value)}
               rows={6}
               maxLength={5000}
-              className="rounded-lg border-border bg-background resize-none"
+              className="rounded-lg border-neutral-200 bg-white resize-none"
             />
             <p className="text-xs text-muted-foreground text-right">{message.length}/5000</p>
           </div>

@@ -54,7 +54,7 @@ export function TimePicker12h({ value, onChange, placeholder = "Select time" }: 
         value={value ? hour : ""}
         onValueChange={(h) => handleChange(h, minute, period)}
       >
-        <SelectTrigger className="w-[70px] bg-background">
+        <SelectTrigger className="w-[70px] bg-white border-neutral-200">
           <SelectValue placeholder="Hr" />
         </SelectTrigger>
         <SelectContent className="bg-background z-50">
@@ -73,7 +73,7 @@ export function TimePicker12h({ value, onChange, placeholder = "Select time" }: 
         value={value ? minute : ""}
         onValueChange={(m) => handleChange(hour, m, period)}
       >
-        <SelectTrigger className="w-[70px] bg-background">
+        <SelectTrigger className="w-[70px] bg-white border-neutral-200">
           <SelectValue placeholder="Min" />
         </SelectTrigger>
         <SelectContent className="bg-background z-50">
@@ -90,7 +90,7 @@ export function TimePicker12h({ value, onChange, placeholder = "Select time" }: 
         value={value ? period : ""}
         onValueChange={(p) => handleChange(hour, minute, p as "AM" | "PM")}
       >
-        <SelectTrigger className="w-[70px] bg-background">
+        <SelectTrigger className="w-[70px] bg-white border-neutral-200">
           <SelectValue placeholder="AM" />
         </SelectTrigger>
         <SelectContent className="bg-background z-50">

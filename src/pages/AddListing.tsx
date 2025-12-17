@@ -3072,7 +3072,7 @@ const AddListing = () => {
                           setFormData(prev => ({ ...prev, state: value }));
                         }}
                       >
-                        <SelectTrigger className="bg-background">
+                        <SelectTrigger className="bg-white border-neutral-200">
                           <SelectValue placeholder="Select state" />
                         </SelectTrigger>
                         <SelectContent className="bg-popover z-50 max-h-[300px]">
@@ -3100,7 +3100,7 @@ const AddListing = () => {
                               setFormData(prev => ({ ...prev, county: value }));
                             }}
                           >
-                            <SelectTrigger className="bg-background">
+                            <SelectTrigger className="bg-white border-neutral-200">
                               <SelectValue placeholder={selectedState === "MA" ? "Select county..." : "All Counties"} />
                             </SelectTrigger>
                             <SelectContent className="bg-popover z-50 max-h-[300px]">
@@ -3240,7 +3240,7 @@ const AddListing = () => {
                           value={formData.neighborhood}
                           onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
                         >
-                          <SelectTrigger className="bg-background">
+                          <SelectTrigger className="bg-white border-neutral-200">
                             <SelectValue placeholder="Select neighborhood..." />
                           </SelectTrigger>
                           <SelectContent className="bg-popover z-50 max-h-[300px]">
@@ -4180,7 +4180,7 @@ const AddListing = () => {
                       value={formData.listing_agreement_type}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, listing_agreement_type: value }))}
                     >
-                      <SelectTrigger className="bg-background">
+                      <SelectTrigger className="bg-white border-neutral-200">
                         <SelectValue placeholder="Select agreement type..." />
                       </SelectTrigger>
                       <SelectContent className="bg-popover z-50">
@@ -4525,7 +4525,7 @@ const AddListing = () => {
                                     ));
                                   }}
                                 >
-                                  <SelectTrigger className="bg-background">
+                                  <SelectTrigger className="bg-white border-neutral-200">
                                     <SelectValue placeholder="Select document type..." />
                                   </SelectTrigger>
                                   <SelectContent className="bg-background z-50">

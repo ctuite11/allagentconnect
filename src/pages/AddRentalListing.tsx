@@ -780,7 +780,7 @@ const AddRentalListing = () => {
                           setFormData(prev => ({ ...prev, state: value }));
                         }}
                       >
-                        <SelectTrigger className="bg-background">
+                        <SelectTrigger className="bg-white border-neutral-200">
                           <SelectValue placeholder="Select state" />
                         </SelectTrigger>
                         <SelectContent className="bg-popover z-50 max-h-[300px]">
