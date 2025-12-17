@@ -129,7 +129,7 @@ export default function ComingSoon() {
               placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-background/10 backdrop-blur-sm border border-background/20 text-background placeholder:text-background/50 focus:outline-none focus:ring-2 focus:ring-background/30"
+              className="w-full px-4 py-3 rounded-lg bg-background/10 backdrop-blur-sm border border-background/20 text-background placeholder:text-background/50 focus:outline-none"
               required
             />
             <div className="flex flex-col sm:flex-row gap-3">
@@ -138,7 +138,7 @@ export default function ComingSoon() {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-lg bg-background/10 backdrop-blur-sm border border-background/20 text-background placeholder:text-background/50 focus:outline-none focus:ring-2 focus:ring-background/30"
+                className="flex-1 px-4 py-3 rounded-lg bg-background/10 backdrop-blur-sm border border-background/20 text-background placeholder:text-background/50 focus:outline-none"
                 required
               />
               <button

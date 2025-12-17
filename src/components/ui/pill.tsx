@@ -88,7 +88,7 @@ export const Pill = React.forwardRef<HTMLButtonElement, PillProps>(
       "inline-flex items-center justify-center gap-1.5 rounded-full font-medium leading-tight transition-colors duration-150";
 
     const focusStyles = isClickable
-      ? "focus:outline-none focus:ring-2 focus:ring-neutral-300/50 focus:ring-offset-1"
+      ? "focus:outline-none"
       : "";
 
     if (isClickable) {
