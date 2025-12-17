@@ -54,6 +54,7 @@ import ClientDashboard from "./pages/ClientDashboard";
 import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
 import ClientFavoritesPage from "./pages/ClientFavoritesPage";
 import PasswordReset from "./pages/PasswordReset";
+import VerifyAgent from "./pages/VerifyAgent";
 import NotFound from "./pages/NotFound";
 import MyListings from "./pages/MyListings";
 import ManageListingPhotos from "./pages/ManageListingPhotos";
@@ -95,6 +96,7 @@ const App = () => (
                 <Route path="/allagentconnect" element={<AllAgentConnectHome />} />
                 <Route path="/coming-soon" element={<ComingSoon />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/verify-agent" element={<VerifyAgent />} />
                 <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
                 <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
                 <Route path="/agent/listings/new" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />

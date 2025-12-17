@@ -415,9 +415,14 @@ export type Database = {
       }
       agent_settings: {
         Row: {
+          agent_status: Database["public"]["Enums"]["agent_status"]
           county: string | null
           created_at: string
           email_frequency: string
+          last_verification_attempt_at: string | null
+          license_last_name: string | null
+          license_number: string | null
+          license_state: string | null
           muted_all: boolean
           notifications_enabled: boolean
           notifications_set: boolean
@@ -434,12 +439,21 @@ export type Database = {
           towns: string[]
           updated_at: string
           user_id: string
+          verification_attempt_count: number
+          verification_method: string | null
+          verification_payload: Json
+          verified_at: string | null
           welcome_modal_dismissed: boolean
         }
         Insert: {
+          agent_status?: Database["public"]["Enums"]["agent_status"]
           county?: string | null
           created_at?: string
           email_frequency?: string
+          last_verification_attempt_at?: string | null
+          license_last_name?: string | null
+          license_number?: string | null
+          license_state?: string | null
           muted_all?: boolean
           notifications_enabled?: boolean
           notifications_set?: boolean
@@ -456,12 +470,21 @@ export type Database = {
           towns?: string[]
           updated_at?: string
           user_id: string
+          verification_attempt_count?: number
+          verification_method?: string | null
+          verification_payload?: Json
+          verified_at?: string | null
           welcome_modal_dismissed?: boolean
         }
         Update: {
+          agent_status?: Database["public"]["Enums"]["agent_status"]
           county?: string | null
           created_at?: string
           email_frequency?: string
+          last_verification_attempt_at?: string | null
+          license_last_name?: string | null
+          license_number?: string | null
+          license_state?: string | null
           muted_all?: boolean
           notifications_enabled?: boolean
           notifications_set?: boolean
@@ -478,6 +501,10 @@ export type Database = {
           towns?: string[]
           updated_at?: string
           user_id?: string
+          verification_attempt_count?: number
+          verification_method?: string | null
+          verification_payload?: Json
+          verified_at?: string | null
           welcome_modal_dismissed?: boolean
         }
         Relationships: []
@@ -2543,6 +2570,7 @@ export type Database = {
       }
     }
     Enums: {
+      agent_status: "unverified" | "pending" | "verified" | "restricted"
       app_role: "buyer" | "agent"
       property_type:
         | "single_family"
@@ -2680,6 +2708,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      agent_status: ["unverified", "pending", "verified", "restricted"],
       app_role: ["buyer", "agent"],
       property_type: [
         "single_family",
