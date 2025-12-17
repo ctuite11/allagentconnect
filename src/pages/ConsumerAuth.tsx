@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -296,16 +297,16 @@ const ConsumerAuth = () => {
           <CardContent>
             {isResettingPassword ? (
               <div className="space-y-4">
-                <Button
-                  variant="ghost"
+                <button
                   onClick={() => {
                     setIsResettingPassword(false);
                     window.history.replaceState(null, "", window.location.pathname);
                   }}
-                  className="mb-2"
+                  className="p-1.5 -ml-1.5 mb-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  aria-label="Go back"
                 >
-                  ← Back to Login
-                </Button>
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-password">New Password</Label>
@@ -341,13 +342,13 @@ const ConsumerAuth = () => {
               </div>
             ) : showForgotPassword ? (
               <div className="space-y-4">
-                <Button
-                  variant="ghost"
+                <button
                   onClick={() => setShowForgotPassword(false)}
-                  className="mb-2"
+                  className="p-1.5 -ml-1.5 mb-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  aria-label="Go back"
                 >
-                  ← Back to Login
-                </Button>
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold">Reset Password</h3>
                   <p className="text-sm text-muted-foreground">
