@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -305,7 +305,7 @@ const ConsumerAuth = () => {
                   className="p-1.5 -ml-1.5 mb-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                   aria-label="Go back"
                 >
-                  <ChevronLeft className="h-5 w-5" />
+                  <ArrowLeft className="h-5 w-5" />
                 </button>
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div className="space-y-2">
@@ -347,7 +347,7 @@ const ConsumerAuth = () => {
                   className="p-1.5 -ml-1.5 mb-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                   aria-label="Go back"
                 >
-                  <ChevronLeft className="h-5 w-5" />
+                  <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold">Reset Password</h3>
