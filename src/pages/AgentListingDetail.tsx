@@ -379,7 +379,7 @@ const AgentListingDetail = () => {
                   />
                   <Button 
                     size="sm"
-                    className="gap-2 bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600"
+                    className="gap-2"
                   >
                     <Send className="w-4 h-4" />
                     Send to Agents

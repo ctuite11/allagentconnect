@@ -63,8 +63,8 @@ const SeedTestData = () => {
 
             {results && (
               <div className="mt-6 space-y-3">
-                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <p className="font-medium text-green-900 dark:text-green-100">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="font-medium text-green-900">
                     {results.message}
                   </p>
                 </div>
@@ -77,22 +77,22 @@ const SeedTestData = () => {
                         key={index}
                         className={`p-3 rounded-md text-sm ${
                           result.success
-                            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-                            : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                            ? 'bg-green-50 border border-green-200'
+                            : 'bg-red-50 border border-red-200'
                         }`}
                       >
                         <div className="flex justify-between items-start">
                           <span className="font-medium">{result.email}</span>
                           {result.success ? (
-                            <span className="text-green-600 dark:text-green-400">
+                            <span className="text-green-600">
                               ✓ {result.listingCount} listings
                             </span>
                           ) : (
-                            <span className="text-red-600 dark:text-red-400">✗ Failed</span>
+                            <span className="text-red-600">✗ Failed</span>
                           )}
                         </div>
                         {result.error && (
-                          <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                          <p className="text-xs text-red-600 mt-1">
                             {result.error}
                           </p>
                         )}

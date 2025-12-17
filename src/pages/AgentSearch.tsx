@@ -209,7 +209,7 @@ const AgentSearch = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="py-12 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
+        <section className="py-12 bg-primary text-primary-foreground">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-2xl font-bold mb-3">Are You a Real Estate Agent?</h2>
             <p className="text-base mb-6 opacity-90 max-w-xl mx-auto">

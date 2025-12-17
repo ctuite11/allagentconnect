@@ -286,9 +286,9 @@ const BuyerAuth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
-        <div className="bg-card rounded-lg shadow-xl p-8 border border-border">
+        <div className="bg-card rounded-lg shadow-xl p-8 border border-neutral-200">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
               {isResettingPassword 

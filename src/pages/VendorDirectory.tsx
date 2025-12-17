@@ -133,7 +133,7 @@ const VendorDirectory = () => {
       {/* Vendor Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredVendors.map((vendor) => (
-          <Card key={vendor.id} className={isFeatured(vendor) ? 'border-primary' : ''}>
+          <Card key={vendor.id} className={isFeatured(vendor) ? 'border-2 border-neutral-400' : 'border border-neutral-200'}>
             <CardHeader>
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
