@@ -385,7 +385,7 @@ const PropertyDetail = () => {
               navigate("/listing-search");
             }
           }}
-          className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          className="p-2 -ml-2 rounded-md hover:bg-muted transition-colors text-neutral-700 hover:text-neutral-900"
           aria-label="Go back"
         >
           <ArrowLeft className="h-5 w-5" />
