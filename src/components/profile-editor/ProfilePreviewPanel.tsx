@@ -68,7 +68,7 @@ const ProfilePreviewPanel = ({
 
   return (
     <Card className="sticky top-24 border-0 shadow-lg overflow-hidden max-h-[calc(100vh-8rem)] overflow-y-auto">
-      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-3 border-b">
+      <div className="bg-white px-6 py-3 border-b">
         <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
           Live Preview
         </h3>
@@ -85,7 +85,7 @@ const ProfilePreviewPanel = ({
                 className="w-20 h-20 rounded-full object-cover border-4 border-border shadow-lg"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-4 border-border shadow-lg">
+              <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center border-4 border-neutral-200 shadow-lg">
                 <span className="text-xl font-bold text-foreground">
                   {firstName?.[0] || "Y"}{lastName?.[0] || "N"}
                 </span>
@@ -120,11 +120,11 @@ const ProfilePreviewPanel = ({
 
         {/* Badges - matches public profile style */}
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="gap-2 px-3 py-1 rounded-full border-border bg-muted text-foreground text-xs">
+          <Badge variant="outline" className="gap-2 px-3 py-1 rounded-full border-neutral-200 bg-white text-foreground text-xs">
             <Users className="h-3 w-3" />
             DirectConnect Friendly
           </Badge>
-          <Badge variant="outline" className="gap-2 px-3 py-1 rounded-full border-border bg-muted text-foreground text-xs">
+          <Badge variant="outline" className="gap-2 px-3 py-1 rounded-full border-neutral-200 bg-white text-foreground text-xs">
             <ShieldCheck className="h-3 w-3" />
             Verified Agent
           </Badge>
@@ -196,8 +196,8 @@ const ProfilePreviewPanel = ({
                   <Card className="shadow-md border-0 overflow-hidden">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-xl bg-accent/10 flex-shrink-0">
-                          <Gift className="h-5 w-5 text-accent" />
+                        <div className="p-2 rounded-xl bg-white border border-neutral-200 flex-shrink-0">
+                          <Gift className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div>
                           <h6 className="font-bold text-sm text-foreground mb-1">Buyer Incentives</h6>
@@ -211,8 +211,8 @@ const ProfilePreviewPanel = ({
                   <Card className="shadow-md border-0 overflow-hidden">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-xl bg-muted border border-border flex-shrink-0">
-                          <TrendingUp className="h-5 w-5 text-primary" />
+                        <div className="p-2 rounded-xl bg-white border border-neutral-200 flex-shrink-0">
+                          <TrendingUp className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div>
                           <h6 className="font-bold text-sm text-foreground mb-1">Seller Incentives</h6>

@@ -1075,7 +1075,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                               coverageAreas.map((area) => (
                               <div 
                                   key={area.id}
-                                  className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-muted border border-border rounded-full group"
+                          className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-white border border-neutral-200 rounded-full group"
                                 >
                                   <MapPin className="h-4 w-4 text-primary" />
                                   <span className="font-medium text-sm">{area.zip_code}</span>
@@ -1101,7 +1101,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                         )}
                   </div>
                 ) : (
-                  <div className="text-center py-4 border-2 border-dashed rounded-xl bg-muted/30">
+                  <div className="text-center py-4 border-2 border-dashed rounded-xl">
                     <p className="text-muted-foreground text-sm">Maximum 3 coverage areas reached</p>
                   </div>
                 )}
@@ -1129,7 +1129,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                       {coverageAreas.map((area) => (
                       <div 
                           key={area.id}
-                          className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-muted border border-border rounded-full group"
+                          className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-white border border-neutral-200 rounded-full group"
                         >
                           <MapPin className="h-4 w-4 text-primary" />
                           <span className="font-medium text-sm">{area.zip_code}</span>
@@ -1177,7 +1177,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                         return (
                           <div 
                             key={typeValue}
-                            className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-muted border border-border rounded-full group"
+                            className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-white border border-neutral-200 rounded-full group"
                           >
                             <Home className="h-4 w-4 text-primary" />
                             <span className="font-medium text-sm">{typeLabel}</span>
