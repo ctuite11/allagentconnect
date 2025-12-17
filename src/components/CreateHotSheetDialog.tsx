@@ -1687,7 +1687,7 @@ export function CreateHotSheetDialog({
 
           {/* Notification Settings */}
           <Collapsible open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-            <Card className={`border ${notificationsOpen ? 'border-primary' : 'border-border'}`}>
+            <Card className={`border ${notificationsOpen ? 'border-neutral-300' : 'border-border'}`}>
               <CollapsibleTrigger className="w-full">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30">
                   <CardTitle className="text-base">Notification Settings</CardTitle>
