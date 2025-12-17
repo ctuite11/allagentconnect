@@ -1687,9 +1687,9 @@ export function CreateHotSheetDialog({
 
           {/* Notification Settings */}
           <Collapsible open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-            <Card className={`border-l-4 ${!notificationsOpen ? 'border-l-amber-500' : 'border-l-amber-200'}`}>
+            <Card className={`border ${notificationsOpen ? 'border-primary' : 'border-border'}`}>
               <CollapsibleTrigger className="w-full">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30">
                   <CardTitle className="text-base">Notification Settings</CardTitle>
                   {notificationsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </CardHeader>
@@ -1766,7 +1766,7 @@ export function CreateHotSheetDialog({
             <Button 
               onClick={handleValidateAndShowConfirmation} 
               disabled={saving}
-              className="relative min-w-[180px] bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white"
+              className="min-w-[180px]"
             >
               {saving ? (
                 <>
