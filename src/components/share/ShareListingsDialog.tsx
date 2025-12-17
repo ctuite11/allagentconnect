@@ -267,7 +267,7 @@ export function ShareListingsDialog({
                 value={contactQuery}
                 onChange={(e) => setContactQuery(e.target.value)}
                 placeholder="Search by name or email…"
-                className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-neutral-400 focus:ring-neutral-300/20"
+                className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground"
                 autoFocus
               />
             </div>
@@ -299,7 +299,7 @@ export function ShareListingsDialog({
                         value={recipientName}
                         onChange={(e) => setRecipientName(e.target.value)}
                         placeholder="Jane Buyer"
-                        className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-neutral-400 focus:ring-neutral-300/20"
+                        className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground"
                       />
                     </div>
                   </div>
@@ -312,7 +312,7 @@ export function ShareListingsDialog({
                         value={recipientEmail}
                         onChange={(e) => setRecipientEmail(e.target.value)}
                         placeholder="jane@email.com"
-                        className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-neutral-400 focus:ring-neutral-300/20"
+                        className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground"
                       />
                     </div>
                   </div>
@@ -403,7 +403,7 @@ export function ShareListingsDialog({
                 <Input
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
-                  className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-neutral-400 focus:ring-neutral-300/20"
+                  className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground"
                 />
               </div>
             </div>
@@ -415,7 +415,7 @@ export function ShareListingsDialog({
                 <Input
                   value={senderEmail}
                   onChange={(e) => setSenderEmail(e.target.value)}
-                  className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-neutral-400 focus:ring-neutral-300/20"
+                  className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground"
                 />
               </div>
             </div>
@@ -436,7 +436,7 @@ export function ShareListingsDialog({
                     }
                   }}
                   placeholder="(617) 555-0123"
-                  className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground focus:border-neutral-400 focus:ring-neutral-300/20"
+                  className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground"
                 />
               </div>
             </div>
