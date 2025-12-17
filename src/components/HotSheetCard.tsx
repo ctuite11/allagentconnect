@@ -1,16 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { Share2, Trash2, MessageSquare, Send, Pencil, Play } from "lucide-react";
+import { Share2, Trash2, MessageSquare, Pencil, Play } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { formatDistanceToNow } from "date-fns";
 
 interface HotSheetCardProps {
   id: string;
   name: string;
   criteria: any;
   clients: any[];
+  lastSentAt?: string | null;
   onShowResults: (id: string) => void;
   onEdit: (id: string) => void;
   onShare: (id: string) => void;
-  onSendUpdate: (id: string) => void;
   onComments: (id: string) => void;
   onDelete: (id: string) => void;
 }
@@ -20,10 +21,10 @@ export const HotSheetCard = ({
   name,
   criteria,
   clients,
+  lastSentAt,
   onShowResults,
   onEdit,
   onShare,
-  onSendUpdate,
   onComments,
   onDelete,
 }: HotSheetCardProps) => {
@@ -47,12 +48,12 @@ export const HotSheetCard = ({
   return (
     <div
       onClick={handleCardClick}
-      className="bg-white border border-neutral-200 rounded-2xl p-5 md:p-5 shadow-sm hover:shadow-md hover:border-neutral-300 transition-all cursor-pointer"
+      className="bg-white border border-neutral-200 rounded-2xl px-5 py-4 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] transition-all cursor-pointer"
     >
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         {/* Left: Details */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-semibold text-neutral-800 truncate mb-1">
+          <h3 className="text-base font-semibold text-neutral-800 truncate">
             {name}
           </h3>
           <p className="text-sm text-neutral-600 truncate">
@@ -65,15 +66,20 @@ export const HotSheetCard = ({
                 .join(" · ")}
             </p>
           )}
+          {lastSentAt && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Last run: {formatDistanceToNow(new Date(lastSentAt), { addSuffix: true })}
+            </p>
+          )}
         </div>
 
         {/* Right: Actions */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3" onClick={stopPropagation}>
-          {/* Primary Buttons */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2" onClick={stopPropagation}>
+          {/* Primary & Secondary Buttons */}
           <div className="flex items-center gap-2">
             <Button
               size="sm"
-              onClick={() => onShowResults(id)}
+              onClick={(e) => { e.stopPropagation(); onShowResults(id); }}
             >
               <Play className="h-4 w-4 mr-1.5" />
               Show Results
@@ -81,7 +87,7 @@ export const HotSheetCard = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onEdit(id)}
+              onClick={(e) => { e.stopPropagation(); onEdit(id); }}
             >
               <Pencil className="h-4 w-4 mr-1.5" />
               Edit
@@ -89,12 +95,12 @@ export const HotSheetCard = ({
           </div>
 
           {/* Icon Actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center">
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => onShare(id)}
+              onClick={(e) => { e.stopPropagation(); onShare(id); }}
               title="Share"
             >
               <Share2 className="h-4 w-4 text-muted-foreground" />
@@ -103,25 +109,17 @@ export const HotSheetCard = ({
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => onSendUpdate(id)}
-              title="Send Update"
-            >
-              <Send className="h-4 w-4 text-muted-foreground" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => onComments(id)}
+              onClick={(e) => { e.stopPropagation(); onComments(id); }}
               title="Comments"
             >
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
             </Button>
+            <div className="w-px h-5 bg-neutral-200 mx-1" />
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => onDelete(id)}
+              onClick={(e) => { e.stopPropagation(); onDelete(id); }}
               title="Delete"
             >
               <Trash2 className="h-4 w-4 text-destructive" />

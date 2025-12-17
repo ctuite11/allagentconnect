@@ -68,6 +68,7 @@ const HotSheets = () => {
           criteria,
           is_active,
           created_at,
+          last_sent_at,
           hot_sheet_shares (
             id,
             shared_with_email,
@@ -113,21 +114,6 @@ const HotSheets = () => {
   const handleEdit = (sheetId: string) => {
     setEditingHotSheetId(sheetId);
     setEditDialogOpen(true);
-  };
-
-  const handleSendUpdate = async (hotSheetId: string) => {
-    try {
-      await supabase.functions.invoke("process-hot-sheet", {
-        body: {
-          hotSheetId,
-          sendInitialBatch: true,
-        },
-      });
-      toast.success("Update sent to client");
-    } catch (error: any) {
-      console.error("Error sending update:", error);
-      toast.error("Failed to send update");
-    }
   };
 
   const handleShareHotSheet = async (hotSheetId: string) => {
@@ -281,7 +267,7 @@ const HotSheets = () => {
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {hotSheets.map((sheet) => (
                 <HotSheetCard
                   key={sheet.id}
@@ -289,10 +275,10 @@ const HotSheets = () => {
                   name={sheet.name}
                   criteria={sheet.criteria}
                   clients={getClientsForSheet(sheet)}
+                  lastSentAt={(sheet as any).last_sent_at}
                   onShowResults={handleShowResults}
                   onEdit={handleEdit}
                   onShare={(id) => setShareDialogOpen(id)}
-                  onSendUpdate={handleSendUpdate}
                   onComments={(id) => setCommentsDialogOpen(id)}
                   onDelete={handleDeleteHotSheet}
                 />
