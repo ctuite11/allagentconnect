@@ -296,7 +296,7 @@ const ClientNeedsDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto px-4 py-8 pt-24 pb-32 max-w-6xl">
+      <main className="container mx-auto px-4 py-8 pt-20 pb-32 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">

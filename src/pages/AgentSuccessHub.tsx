@@ -412,7 +412,7 @@ export default function AgentSuccessHub() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24 space-y-8">
+      <div className="container mx-auto px-4 py-8 pt-20 space-y-8">
         {/* Header */}
         <div>
           <PageTitle>Success Hub</PageTitle>
