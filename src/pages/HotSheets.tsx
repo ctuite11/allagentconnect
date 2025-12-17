@@ -316,7 +316,7 @@ const HotSheets = () => {
           </div>
 
           {/* Create New Hot Sheet */}
-          <Card className="mb-8">
+          <Card className="aac-card border border-neutral-200 mb-8">
             <CardHeader>
               <CardTitle>Let's create or view your custom Hot Sheets.</CardTitle>
             </CardHeader>
@@ -330,7 +330,7 @@ const HotSheets = () => {
 
           {/* Hot Sheets Table */}
           {hotSheets.length === 0 ? (
-            <Card className="p-12">
+            <Card className="aac-card border border-neutral-200 p-12">
               <div className="text-center">
                 <Plus className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">No hot sheets yet</h3>
@@ -340,7 +340,7 @@ const HotSheets = () => {
               </div>
             </Card>
           ) : (
-            <Card>
+            <Card className="aac-card border border-neutral-200">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -437,7 +437,7 @@ const HotSheets = () => {
                                       <Label>Currently Shared With:</Label>
                                       <div className="mt-2 space-y-2">
                                         {sheet.shares.map((share) => (
-                                          <div key={share.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                                          <div key={share.id} className="flex items-center justify-between p-2 bg-white border border-neutral-200 rounded">
                                             <span className="text-sm">{share.shared_with_email}</span>
                                             <Button
                                               variant="ghost"

@@ -80,7 +80,7 @@ export const ClientNeedsNotificationSettings = () => {
   if (loading) {
     return (
       <div className="mb-8">
-        <div className="h-32 rounded-md bg-muted/40 animate-pulse" />
+        <div className="h-32 rounded-2xl border border-neutral-200 bg-white animate-pulse" />
       </div>
     );
   }

@@ -81,7 +81,7 @@ const NotificationSettings = () => {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="aac-card border border-neutral-200">
         <CardContent className="py-12 text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
         </CardContent>
@@ -90,10 +90,10 @@ const NotificationSettings = () => {
   }
 
   return (
-    <Card>
+    <Card className="aac-card border border-neutral-200">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Bell className="w-5 h-5" />
+          <Bell className="w-5 h-5 text-muted-foreground" />
           Email Notifications
         </CardTitle>
         <CardDescription>
