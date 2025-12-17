@@ -2675,24 +2675,15 @@ const AddListing = () => {
         <div className="max-w-5xl mx-auto">
           {/* Header Section */}
           <div className="mb-4">
-            {/* Navigation buttons */}
-            <div className="flex items-center justify-between mb-4">
-              <Button 
-                variant="outline" 
+            {/* Back button - inline chevron style */}
+            <div className="flex items-center gap-2 mb-4">
+              <button
                 onClick={() => navigate("/agent/listings")}
-                className="gap-2"
+                className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                aria-label="Go back"
               >
-                <ArrowLeft className="h-4 w-4" />
-                Back to My Listings
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate("/agent-dashboard")}
-                className="gap-2"
-              >
-                <Home className="h-4 w-4" />
-                Success Hub
-              </Button>
+                <ArrowLeft className="h-5 w-5" />
+              </button>
             </div>
             <p className="text-sm text-muted-foreground mb-2">Hello. Bonjour. Hola. 你好. Ciao</p>
             <div className="flex items-center gap-4 mb-4">

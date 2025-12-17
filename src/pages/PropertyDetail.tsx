@@ -374,26 +374,22 @@ const PropertyDetail = () => {
       
       <Navigation />
 
-      {/* Back Button Row - Own row with proper top spacing */}
+      {/* Back Button Row - Inline chevron style */}
       <div className="mx-auto max-w-6xl px-4 pt-20 pb-2">
-        <Button
-          variant="ghost"
-          size="sm"
+        <button
           onClick={() => {
             const fromPage = location.state?.from;
             if (fromPage) {
               navigate(fromPage);
-            } else if (window.history.length > 1) {
-              navigate(-1);
             } else {
               navigate("/listing-search");
             }
           }}
-          className="gap-2"
+          className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          aria-label="Go back"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </Button>
+          <ChevronLeft className="h-5 w-5" />
+        </button>
       </div>
 
       <main className="flex-1">

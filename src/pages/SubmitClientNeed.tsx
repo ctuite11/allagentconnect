@@ -13,6 +13,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import Navigation from "@/components/Navigation";
+import { PageHeader } from "@/components/ui/page-header";
 import { z } from "zod";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
@@ -290,14 +291,17 @@ const SubmitClientNeed = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>Submit Client Need</CardTitle>
-            <CardDescription>
-              Fill out the details for your client's real estate needs
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className="max-w-2xl mx-auto space-y-6">
+          <PageHeader
+            title="Submit Client Need"
+            subtitle="Fill out the details for your client's real estate needs"
+            backTo="/client-needs"
+          />
+          <Card>
+            <CardHeader className="sr-only">
+              <CardTitle>Client Need Form</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <Label htmlFor="propertyTypes">Property Type</Label>
@@ -599,6 +603,7 @@ const SubmitClientNeed = () => {
             </form>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ import {
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
 import { 
-  Trash2, Plus, Star, X, MapPin, ArrowLeft, User, FileText, 
+  Trash2, Plus, Star, X, MapPin, User, FileText, 
   Share2, MessageSquare, Eye, ExternalLink, Users, Pencil, Home
 } from "lucide-react";
 import {
@@ -42,7 +42,7 @@ import SocialLinksSection from "@/components/profile-editor/SocialLinksSection";
 import IncentivesSection from "@/components/profile-editor/IncentivesSection";
 import TestimonialCard from "@/components/profile-editor/TestimonialCard";
 import HeaderBackgroundSelector from "@/components/profile-editor/HeaderBackgroundSelector";
-import { PageTitle } from "@/components/ui/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 
 
 interface SocialLinks {
@@ -549,17 +549,13 @@ setHeaderBackgroundType(profile.header_background_type || "color");
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24 pb-32">
-        {/* Header */}
+        {/* Header with inline back button */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" onClick={() => navigate("/agent-dashboard")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <PageTitle>Edit Profile</PageTitle>
-              <p className="text-muted-foreground">Customize how you appear to clients</p>
-            </div>
-          </div>
+          <PageHeader
+            title="Edit Profile"
+            subtitle="Customize how you appear to clients"
+            backTo="/allagentconnect"
+          />
           {/* Mobile Preview Button */}
           <Button 
             variant="outline" 

@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { ArrowLeft, Trash2, Upload } from 'lucide-react';
+import { ChevronLeft, Trash2, Upload } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
 
 type Photo = {
   url: string;
@@ -258,38 +259,27 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
 
   return (
     <div className="container mx-auto p-6 pt-24 max-w-7xl space-y-6">
-      {/* Header */}
+      {/* Header with inline back button */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{config.title}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {config.description}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/agent/listings')}
-            disabled={saving || isUploading}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to My Listings
-          </Button>
-          <Button
-            variant="default"
-            onClick={handleSaveAndReturn}
-            disabled={saving || isUploading}
-          >
-            {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save & Return to Listing'
-            )}
-          </Button>
-        </div>
+        <PageHeader
+          title={config.title}
+          subtitle={config.description}
+          backTo={`/agent/listings`}
+        />
+        <Button
+          variant="default"
+          onClick={handleSaveAndReturn}
+          disabled={saving || isUploading}
+        >
+          {saving ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save & Return'
+          )}
+        </Button>
       </div>
 
       {/* Actions Bar */}

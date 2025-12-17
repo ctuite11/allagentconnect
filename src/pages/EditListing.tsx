@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useNavigate, useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -336,13 +337,15 @@ const EditListing: React.FC = () => {
       <Navigation />
       
       <div className="flex-1 container mx-auto px-4 py-8 pt-24">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <PageHeader 
+            title="Edit Listing" 
+            subtitle="Update the listing details below"
+            backTo="/agent/listings"
+          />
           <Card>
             <CardHeader>
-              <CardTitle>Edit Listing</CardTitle>
-              <CardDescription>
-                Update the listing details below.
-              </CardDescription>
+              <CardTitle className="sr-only">Edit Listing</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
