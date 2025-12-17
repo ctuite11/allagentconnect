@@ -39,7 +39,7 @@ All colors MUST be HSL.
 
     --border: 0 0% 85%;
     --input: 0 0% 85%;
-    --ring: 215 95% 55%;
+    --ring: 0 0% 55%;
 
     --radius: 1rem;
 
@@ -100,7 +100,7 @@ All colors MUST be HSL.
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 215 100% 55%;
+    --ring: 0 0% 55%;
 
     /* Tech-forward colors */
     --electric-blue: 215 100% 55%;

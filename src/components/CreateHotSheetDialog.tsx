@@ -1001,7 +1001,7 @@ export function CreateHotSheetDialog({
 
           {/* Contact Information */}
           <Collapsible open={clientInfoOpen} onOpenChange={setClientInfoOpen}>
-            <Card className={`border ${clientInfoOpen ? 'border-primary' : 'border-border'}`}>
+            <Card className={`border ${clientInfoOpen ? 'border-neutral-300' : 'border-border'}`}>
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
                   <div className="flex items-center justify-between">
@@ -1208,7 +1208,7 @@ export function CreateHotSheetDialog({
 
           {/* Search Criteria */}
           <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
-            <Card className={`border ${criteriaOpen ? 'border-primary' : 'border-border'}`}>
+            <Card className={`border ${criteriaOpen ? 'border-neutral-300' : 'border-border'}`}>
               <CollapsibleTrigger className="w-full">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30">
                   <CardTitle className="text-base">Search Criteria</CardTitle>
@@ -1258,7 +1258,7 @@ export function CreateHotSheetDialog({
                   {/* Towns & Neighborhoods Section - Collapsed by default */}
                   <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${townsOpen ? 'border-primary' : 'border-border'}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${townsOpen ? 'border-neutral-300' : 'border-border'}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Towns & Neighborhoods
                           {selectedCities.length > 0 && (
@@ -1400,7 +1400,7 @@ export function CreateHotSheetDialog({
                   {/* Property Type - Collapsed by default */}
                   <Collapsible open={propertyTypeOpen} onOpenChange={setPropertyTypeOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${propertyTypeOpen ? 'border-primary' : 'border-border'}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${propertyTypeOpen ? 'border-neutral-300' : 'border-border'}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Property Type
                           {propertyTypes.length > 0 && (
@@ -1449,7 +1449,7 @@ export function CreateHotSheetDialog({
                   {/* Status - Collapsed by default */}
                   <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${statusOpen ? 'border-primary' : 'border-border'}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${statusOpen ? 'border-neutral-300' : 'border-border'}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Status
                           {statuses.length > 0 && (
