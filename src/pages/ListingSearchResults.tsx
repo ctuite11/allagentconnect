@@ -450,6 +450,7 @@ const ListingSearchResults = () => {
                 onSort={handleSort}
                 onRowClick={handleRowClick}
                 filters={filters}
+                fromPath={`/listing-results${window.location.search}`}
               />
             </section>
           ) : (

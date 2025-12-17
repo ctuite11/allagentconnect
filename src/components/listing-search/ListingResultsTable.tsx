@@ -57,6 +57,7 @@ interface ListingResultsTableProps {
   onSort: (column: string) => void;
   onRowClick: (listing: Listing) => void;
   filters?: FilterState;
+  fromPath?: string;
 }
 
 const formatPrice = (price: number) => {
@@ -252,6 +253,7 @@ const ListingResultsTable = ({
   onSort,
   onRowClick,
   filters,
+  fromPath,
 }: ListingResultsTableProps) => {
   const navigate = useNavigate();
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -650,7 +652,7 @@ const ListingResultsTable = ({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                navigate(`/property/${listing.id}`);
+                                navigate(`/property/${listing.id}`, { state: { from: fromPath } });
                               }}
                               className="text-sm font-semibold text-foreground hover:text-primary hover:underline"
                             >
@@ -671,7 +673,7 @@ const ListingResultsTable = ({
                           {/* Listing Number + Status */}
                           <div className="mt-1 flex items-center gap-2">
                             <button
-                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`); }}
+                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
                               className="text-[11px] font-mono text-primary hover:underline"
                             >
                               #{listing.listing_number}
@@ -745,7 +747,7 @@ const ListingResultsTable = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => navigate(`/property/${listing.id}`)}
+                        onClick={() => navigate(`/property/${listing.id}`, { state: { from: fromPath } })}
                       >
                         <ExternalLink className="h-4 w-4" />
                         <span className="ml-2 hidden lg:inline">View</span>
@@ -778,7 +780,7 @@ const ListingResultsTable = ({
                             <Button size="sm" variant="secondary" onClick={() => {/* contact */}}>
                               Contact
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => navigate(`/property/${listing.id}`)}>
+                            <Button size="sm" variant="outline" onClick={() => navigate(`/property/${listing.id}`, { state: { from: fromPath } })}>
                               View Details
                             </Button>
                           </div>
