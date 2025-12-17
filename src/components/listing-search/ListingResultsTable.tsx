@@ -1,17 +1,15 @@
-import { useState, Fragment, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowUpDown, ExternalLink, Users, Check, FileSpreadsheet, Eye, EyeOff, Bookmark, CalendarDays, Home } from "lucide-react";
+import { ArrowUpDown, ExternalLink, Check, FileSpreadsheet, Eye, EyeOff, Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { FilterState } from "@/components/listing-search/ListingSearchFilters";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
-import { SectionCard } from "@/components/ui/section-card";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import SaveSearchDialog from "@/components/SaveSearchDialog";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
@@ -392,27 +390,6 @@ const ListingResultsTable = ({
     });
   };
 
-  const SortableHeader = ({ 
-    column, 
-    children, 
-    className = "" 
-  }: { 
-    column: string; 
-    children: React.ReactNode; 
-    className?: string;
-  }) => (
-    <TableHead
-      className={`cursor-pointer hover:bg-muted transition-colors text-xs font-semibold text-muted-foreground whitespace-nowrap ${className}`}
-      onClick={() => onSort(column)}
-    >
-      <div className="flex items-center gap-1">
-        {children}
-        <ArrowUpDown 
-          className={`h-3 w-3 ${sortColumn === column ? "text-foreground" : "text-muted-foreground/50"}`} 
-        />
-      </div>
-    </TableHead>
-  );
 
   if (loading) {
     return (
@@ -526,365 +503,372 @@ const ListingResultsTable = ({
         </div>
       </div>
 
-      {/* Results Table */}
-      <div className="overflow-auto bg-background rounded-lg border border-border">
+      {/* Hot Sheet Dialog */}
+      <SaveToHotSheetDialog
+        open={hotSheetDialogOpen}
+        onOpenChange={setHotSheetDialogOpen}
+        currentSearch={buildHotSheetCriteria()}
+        selectedListingIds={Array.from(selectedRows)}
+      />
 
-        {/* Hot Sheet Dialog */}
-        <SaveToHotSheetDialog
-          open={hotSheetDialogOpen}
-          onOpenChange={setHotSheetDialogOpen}
-          currentSearch={buildHotSheetCriteria()}
-          selectedListingIds={Array.from(selectedRows)}
-        />
+      {/* Save Search Dialog */}
+      <SaveSearchDialog
+        open={saveSearchDialogOpen}
+        onOpenChange={setSaveSearchDialogOpen}
+        searchSummary={searchSummary}
+      />
 
-        {/* Save Search Dialog */}
-        <SaveSearchDialog
-          open={saveSearchDialogOpen}
-          onOpenChange={setSaveSearchDialogOpen}
-          searchSummary={searchSummary}
-        />
+      {/* Results as Cards */}
+      <div className="space-y-3">
+        {/* Header Row */}
+        <div className="sticky top-[88px] z-[5] bg-neutral-50/95 backdrop-blur-sm rounded-xl border border-neutral-200 px-4 py-3 shadow-sm">
+          <div className="grid grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-center">
+            <div className="text-xs font-medium text-muted-foreground"></div>
+            <div className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1" onClick={() => onSort("address")}>
+              Address
+              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "address" ? "text-foreground" : "text-muted-foreground/50"}`} />
+            </div>
+            <div className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1" onClick={() => onSort("price")}>
+              Price
+              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "price" ? "text-foreground" : "text-muted-foreground/50"}`} />
+            </div>
+            <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("bedrooms")}>
+              Beds
+              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "bedrooms" ? "text-foreground" : "text-muted-foreground/50"}`} />
+            </div>
+            <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("bathrooms")}>
+              Baths
+              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "bathrooms" ? "text-foreground" : "text-muted-foreground/50"}`} />
+            </div>
+            <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("square_feet")}>
+              SqFt
+              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "square_feet" ? "text-foreground" : "text-muted-foreground/50"}`} />
+            </div>
+            <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("list_date")}>
+              DOM
+              <ArrowUpDown className={`h-3 w-3 ${sortColumn === "list_date" ? "text-foreground" : "text-muted-foreground/50"}`} />
+            </div>
+            <div className="text-xs font-medium text-muted-foreground">Agent</div>
+            <div className="text-xs font-medium text-muted-foreground"></div>
+          </div>
+        </div>
 
+        {/* Listing Cards */}
+        {displayedListings.map((listing, idx) => {
+          const thumbnail = getThumbnail(listing);
+          const pricePerSqFt = getPricePerSqFt(listing.price, listing.square_feet);
+          const openHouseInfo = getOpenHouseInfo(listing);
+          const isExpanded = expandedId === listing.id;
 
-        <div className="w-full overflow-x-auto">
-        <Table className="min-w-[1350px]">
-        <TableHeader className="bg-neutral-50/60 border-b border-neutral-200/70">
-          <TableRow className="[&>th]:px-3 [&>th]:py-3 [&>th]:text-left [&>th]:text-xs [&>th]:font-medium [&>th]:text-muted-foreground">
-            <TableHead className="w-[170px] px-3 py-3"></TableHead>
-            <SortableHeader column="address" className="min-w-[180px]">Address</SortableHeader>
-            <SortableHeader column="price">Price</SortableHeader>
-            <SortableHeader column="bedrooms" className="text-center">Beds</SortableHeader>
-            <SortableHeader column="bathrooms" className="text-center">Baths</SortableHeader>
-            <SortableHeader column="square_feet" className="text-center">SqFt</SortableHeader>
-            <SortableHeader column="list_date" className="text-center">DOM</SortableHeader>
-            <TableHead className="text-xs font-semibold text-muted-foreground min-w-[180px]">Agent</TableHead>
-            <TableHead className="w-24"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {displayedListings.map((listing, idx) => {
-            const thumbnail = getThumbnail(listing);
-            const pricePerSqFt = getPricePerSqFt(listing.price, listing.square_feet);
-            const openHouseInfo = getOpenHouseInfo(listing);
-            const isExpanded = expandedId === listing.id;
+          return (
+            <div
+              key={listing.id}
+              ref={(el) => { if (el) rowRefs.set(listing.id, el as any); }}
+              tabIndex={0}
+              aria-expanded={isExpanded}
+              onKeyDown={(e) => onRowKeyDown(e, listing, idx)}
+              onClick={() => {
+                onRowClick(listing);
+                toggleExpand(listing.id);
+              }}
+              className={[
+                "aac-card aac-card-3 cursor-pointer outline-none",
+                "focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2",
+                isExpanded ? "ring-2 ring-primary/10" : ""
+              ].join(" ")}
+            >
+              {/* Main Row Content */}
+              <div className="grid grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-start">
+                {/* Photo with Checkbox Overlay */}
+                <div className="relative">
+                  {/* Checkbox overlay */}
+                  <button
+                    onClick={(e) => toggleRowSelection(listing.id, e)}
+                    className="absolute left-2 top-2 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow flex items-center justify-center"
+                    aria-label="Select listing"
+                  >
+                    {selectedRows.has(listing.id) && <Check className="h-3 w-3" />}
+                  </button>
 
-            return (
-              <Fragment key={listing.id}>
-                <TableRow
-                  ref={(el) => { if (el) rowRefs.set(listing.id, el); }}
-                  tabIndex={0}
-                  aria-expanded={isExpanded}
-                  onKeyDown={(e) => onRowKeyDown(e, listing, idx)}
-                  onClick={() => {
-                    onRowClick(listing);
-                    toggleExpand(listing.id);
-                  }}
-                  className={[
-                    "border-t border-neutral-200/70 cursor-pointer outline-none",
-                    "hover:bg-neutral-50/60 transition-colors",
-                    "focus-visible:ring-2 focus-visible:ring-neutral-300/30 focus-visible:ring-offset-2",
-                    isExpanded ? "bg-neutral-50/40" : ""
-                  ].join(" ")}
-                >
-                  {/* Photo with Checkbox Overlay */}
-                  <TableCell className="px-3 py-3 align-top w-[170px] max-w-[170px] whitespace-nowrap">
-                    <div className="relative">
-                      {/* Checkbox overlay */}
-                      <button
-                        onClick={(e) => toggleRowSelection(listing.id, e)}
-                        className="absolute left-2 top-2 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow flex items-center justify-center"
-                        aria-label="Select listing"
-                      >
-                        {selectedRows.has(listing.id) && <Check className="h-3 w-3" />}
-                      </button>
+                  {/* Photo */}
+                  <div className={[
+                    "relative h-[84px] w-[148px] overflow-hidden rounded-xl bg-neutral-50",
+                    selectedRows.has(listing.id) ? "border-neutral-400 ring-2 ring-neutral-300/20 border" : "border border-neutral-200/70"
+                  ].join(" ")}>
+                    {thumbnail ? (
+                      <img src={thumbnail} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                        No photo
+                      </div>
+                    )}
+                    {getPhotoCount(listing) > 0 && (
+                      <div className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                        {getPhotoCount(listing)}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                      {/* Photo */}
-                      <div className={[
-                        "relative h-[84px] w-[148px] overflow-hidden rounded-xl bg-neutral-50",
-                        selectedRows.has(listing.id) ? "border-neutral-400 ring-2 ring-neutral-300/20 border" : "border border-neutral-200/70"
-                      ].join(" ")}>
+                {/* Address */}
+                <div>
+                  {(() => {
+                    const loc = getLocation(listing);
+                    
+                    // Build micro-facts line
+                    const microFacts: string[] = [];
+                    if (listing.annual_property_tax) {
+                      microFacts.push(`Tax $${(listing.annual_property_tax / 1000).toFixed(1)}k/yr`);
+                    }
+                    if (listing.hoa_monthly) {
+                      microFacts.push(`HOA $${listing.hoa_monthly}/mo`);
+                    }
+                    if (listing.year_built) {
+                      microFacts.push(`Built ${listing.year_built}`);
+                    }
+                    const parking = listing.garage_spaces || listing.total_parking_spaces;
+                    if (parking) {
+                      microFacts.push(`${parking} pkg`);
+                    }
+                    const style = getPropertyStyle(listing);
+                    if (style) {
+                      microFacts.push(style);
+                    }
+                    
+                    return (
+                      <>
+                        {/* Street + Status Badge Row */}
+                        <div className="flex items-start justify-between gap-2">
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              navigate(`/property/${listing.id}`, { state: { from: fromPath } });
+                            }}
+                            className="text-sm font-semibold text-foreground hover:text-primary hover:underline"
+                          >
+                            {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
+                          </a>
+                        </div>
+
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {loc.city}{loc.city ? "," : ""} {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
+                        </div>
+
+                        {loc.showNeighborhood && (
+                          <div className="mt-0.5 text-xs text-muted-foreground">
+                            {loc.neighborhood}
+                          </div>
+                        )}
+
+                        {/* Listing Number + Status */}
+                        <div className="mt-1 flex items-center gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
+                            className="text-[11px] font-mono text-primary hover:underline"
+                          >
+                            #{listing.listing_number}
+                          </button>
+                          {getStatusBadge(listing.status)}
+                        </div>
+
+                        {/* Micro-facts line */}
+                        {microFacts.length > 0 && (
+                          <div className="mt-1 flex items-center overflow-hidden whitespace-nowrap text-[11px] text-muted-foreground">
+                            <span className="truncate">{microFacts.join(" • ")}</span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Price */}
+                <div>
+                  <div className="text-sm font-semibold">{formatPrice(listing.price)}</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {pricePerSqFt ? `$${pricePerSqFt}/sqft` : ""}
+                  </div>
+                </div>
+
+                {/* Beds */}
+                <div className="text-sm text-center">{listing.bedrooms || "-"}</div>
+
+                {/* Baths */}
+                <div className="text-sm text-center">{listing.bathrooms || "-"}</div>
+
+                {/* SqFt */}
+                <div className="text-sm text-center">
+                  {listing.square_feet?.toLocaleString() || "-"}
+                </div>
+
+                {/* DOM */}
+                <div className="text-sm text-center">
+                  {getDaysOnMarket(listing.list_date)}
+                </div>
+
+                {/* Agent (stacked: name, office, phone, contact link) */}
+                <div>
+                  <div className="text-sm font-semibold truncate max-w-[180px]">{listing.agent_name || ""}</div>
+                  {listing.list_office && (
+                    <div className="mt-0.5 text-xs text-muted-foreground truncate max-w-[180px]">
+                      {listing.list_office}
+                    </div>
+                  )}
+                  {listing.list_agent_phone && formatPhoneNumber(listing.list_agent_phone) !== "—" && (
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      {formatPhoneNumber(listing.list_agent_phone)}
+                    </div>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setContactListing(listing);
+                    }}
+                    className="mt-1 text-xs text-primary hover:underline"
+                  >
+                    Contact
+                  </button>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate(`/property/${listing.id}`, { state: { from: fromPath } })}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span className="ml-2 hidden lg:inline">View</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Expanded Content */}
+              {isExpanded && (
+                <div className="mt-4 pt-4 border-t border-neutral-200/70">
+                  <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4">
+                    {/* Left: photo preview */}
+                    <div className="rounded-xl border border-neutral-200/70 bg-neutral-50/40 p-3">
+                      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Preview
+                      </div>
+                      <div className="mt-3 h-[200px] rounded-lg overflow-hidden border border-neutral-200/70 bg-neutral-50">
                         {thumbnail ? (
                           <img src={thumbnail} alt="" className="h-full w-full object-cover" />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                            No photo
-                          </div>
-                        )}
-                        {getPhotoCount(listing) > 0 && (
-                          <div className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
-                            {getPhotoCount(listing)}
+                          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                            No photos available
                           </div>
                         )}
                       </div>
-                    </div>
-                  </TableCell>
 
-                  {/* Address */}
-                  <TableCell className="px-3 py-3 align-top min-w-[280px]">
-                    {(() => {
-                      const loc = getLocation(listing);
-                      
-                      // Build micro-facts line
-                      const microFacts: string[] = [];
-                      if (listing.annual_property_tax) {
-                        microFacts.push(`Tax $${(listing.annual_property_tax / 1000).toFixed(1)}k/yr`);
-                      }
-                      if (listing.hoa_monthly) {
-                        microFacts.push(`HOA $${listing.hoa_monthly}/mo`);
-                      }
-                      if (listing.year_built) {
-                        microFacts.push(`Built ${listing.year_built}`);
-                      }
-                      const parking = listing.garage_spaces || listing.total_parking_spaces;
-                      if (parking) {
-                        microFacts.push(`${parking} pkg`);
-                      }
-                      const style = getPropertyStyle(listing);
-                      if (style) {
-                        microFacts.push(style);
-                      }
-                      
-                      return (
-                        <>
-                          {/* Street + Status Badge Row */}
-                          <div className="flex items-start justify-between gap-2">
-                            <a
-                              href="#"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                navigate(`/property/${listing.id}`, { state: { from: fromPath } });
-                              }}
-                              className="text-sm font-semibold text-foreground hover:text-primary hover:underline"
-                            >
-                              {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
-                            </a>
-                          </div>
-
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            {loc.city}{loc.city ? "," : ""} {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
-                          </div>
-
-                          {loc.showNeighborhood && (
-                            <div className="mt-0.5 text-xs text-muted-foreground">
-                              {loc.neighborhood}
-                            </div>
-                          )}
-
-                          {/* Listing Number + Status */}
-                          <div className="mt-1 flex items-center gap-2">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
-                              className="text-[11px] font-mono text-primary hover:underline"
-                            >
-                              #{listing.listing_number}
-                            </button>
-                            {getStatusBadge(listing.status)}
-                          </div>
-
-                          {/* Micro-facts line */}
-                          {microFacts.length > 0 && (
-                            <div className="mt-1 flex items-center overflow-hidden whitespace-nowrap text-[11px] text-muted-foreground">
-                              <span className="truncate">{microFacts.join(" • ")}</span>
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </TableCell>
-
-                  {/* Price */}
-                  <TableCell className="px-3 py-3 align-top whitespace-nowrap">
-                    <div className="text-sm font-semibold">{formatPrice(listing.price)}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {pricePerSqFt ? `$${pricePerSqFt}/sqft` : ""}
-                    </div>
-                  </TableCell>
-
-                  {/* Beds */}
-                  <TableCell className="px-3 py-3 align-top text-sm text-center">{listing.bedrooms || "-"}</TableCell>
-
-                  {/* Baths */}
-                  <TableCell className="px-3 py-3 align-top text-sm text-center">{listing.bathrooms || "-"}</TableCell>
-
-                  {/* SqFt */}
-                  <TableCell className="px-3 py-3 align-top text-sm text-center">
-                    {listing.square_feet?.toLocaleString() || "-"}
-                  </TableCell>
-
-
-                  {/* DOM */}
-                  <TableCell className="px-3 py-3 align-top text-sm text-center">
-                    {getDaysOnMarket(listing.list_date)}
-                  </TableCell>
-
-                  {/* Agent (stacked: name, office, phone, contact link) */}
-                  <TableCell className="px-3 py-3 align-top">
-                    <div className="text-sm font-semibold truncate max-w-[180px]">{listing.agent_name || ""}</div>
-                    {listing.list_office && (
-                      <div className="mt-0.5 text-xs text-muted-foreground truncate max-w-[180px]">
-                        {listing.list_office}
+                      <div className="mt-3 flex gap-2">
+                        <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); setContactListing(listing); }}>
+                          Contact
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}>
+                          View Details
+                        </Button>
                       </div>
-                    )}
-                    {listing.list_agent_phone && formatPhoneNumber(listing.list_agent_phone) !== "—" && (
-                      <div className="mt-0.5 text-xs text-muted-foreground">
-                        {formatPhoneNumber(listing.list_agent_phone)}
-                      </div>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setContactListing(listing);
-                      }}
-                      className="mt-1 text-xs text-primary hover:underline"
-                    >
-                      Contact
-                    </button>
-                  </TableCell>
-
-                  {/* Actions */}
-                  <TableCell className="px-3 py-3 align-top">
-                    <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/property/${listing.id}`, { state: { from: fromPath } })}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span className="ml-2 hidden lg:inline">View</span>
-                      </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
 
-                {/* Expanded Row */}
-                {isExpanded && (
-                  <TableRow className="border-t border-neutral-200/70 bg-neutral-50/40">
-                    <TableCell colSpan={14} className="px-3 py-3">
-                      <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4">
-                        {/* Left: photo preview */}
-                        <div className="rounded-xl border border-neutral-200/70 bg-background p-3">
-                          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Preview
-                          </div>
-                          <div className="mt-3 h-[200px] rounded-lg overflow-hidden border border-neutral-200/70 bg-neutral-50">
-                            {thumbnail ? (
-                              <img src={thumbnail} alt="" className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                                No photos available
+                    {/* Right: quick facts */}
+                    <div className="rounded-xl border border-neutral-200/70 bg-neutral-50/40 p-3">
+                      <div className="flex items-start justify-between gap-4">
+                        {(() => {
+                          const loc = getLocation(listing);
+                          return (
+                            <div>
+                              <div className="text-sm font-semibold">
+                                {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
                               </div>
-                            )}
-                          </div>
-
-                          <div className="mt-3 flex gap-2">
-                            <Button size="sm" variant="secondary" onClick={() => {/* contact */}}>
-                              Contact
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => navigate(`/property/${listing.id}`, { state: { from: fromPath } })}>
-                              View Details
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Right: quick facts */}
-                        <div className="rounded-xl border border-neutral-200/70 bg-background p-3">
-                          <div className="flex items-start justify-between gap-4">
-                            {(() => {
-                              const loc = getLocation(listing);
-                              return (
-                                <div>
-                                  <div className="text-sm font-semibold">
-                                    {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
-                                  </div>
-                                  <div className="mt-1 text-xs text-muted-foreground">
-                                    {loc.city}{loc.city ? "," : ""} {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
-                                    {loc.showNeighborhood ? ` • ${loc.neighborhood}` : ""}
-                                  </div>
-                                </div>
-                              );
-                            })()}
-                            <div className="text-right">
-                              <div className="text-sm font-semibold">{formatPrice(listing.price)}</div>
                               <div className="mt-1 text-xs text-muted-foreground">
-                                DOM {getDaysOnMarket(listing.list_date)}
+                                {loc.city}{loc.city ? "," : ""} {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
+                                {loc.showNeighborhood ? ` • ${loc.neighborhood}` : ""}
                               </div>
                             </div>
+                          );
+                        })()}
+                        <div className="text-right">
+                          <div className="text-sm font-semibold">{formatPrice(listing.price)}</div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            DOM {getDaysOnMarket(listing.list_date)}
                           </div>
-
-                          {/* Property Details (moved from main table) */}
-                          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                            <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
-                              <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Beds</div>
-                              <div className="mt-1 text-sm font-semibold">{listing.bedrooms || "—"}</div>
-                            </div>
-                            <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
-                              <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Baths</div>
-                              <div className="mt-1 text-sm font-semibold">{listing.bathrooms || "—"}</div>
-                            </div>
-                            <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
-                              <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Sq Ft</div>
-                              <div className="mt-1 text-sm font-semibold">
-                                {listing.square_feet ? listing.square_feet.toLocaleString() : "—"}
-                              </div>
-                            </div>
-                            <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
-                              <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Status</div>
-                              <div className="mt-1">{getStatusBadge(listing.status)}</div>
-                            </div>
-                            {getPropertyStyle(listing) && (
-                              <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
-                                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Type</div>
-                                <div className="mt-1 text-sm font-semibold">{getPropertyStyle(listing)}</div>
-                              </div>
-                            )}
-                            {listing.year_built && (
-                              <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
-                                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Year Built</div>
-                                <div className="mt-1 text-sm font-semibold">{listing.year_built}</div>
-                              </div>
-                            )}
-                            {listing.lot_size && (
-                              <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
-                                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Lot Size</div>
-                                <div className="mt-1 text-sm font-semibold">{formatLotSize(listing.lot_size)}</div>
-                              </div>
-                            )}
-                            {listing.total_parking_spaces && (
-                              <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
-                                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Parking</div>
-                                <div className="mt-1 text-sm font-semibold">{listing.total_parking_spaces}</div>
-                              </div>
-                            )}
-                            {listing.annual_property_tax && (
-                              <div className="rounded-lg border border-neutral-200/70 bg-neutral-50/60 p-3">
-                                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Annual Tax</div>
-                                <div className="mt-1 text-sm font-semibold">${listing.annual_property_tax.toLocaleString()}</div>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Open houses */}
-                          {(openHouseInfo?.hasPublicOpen || openHouseInfo?.hasBrokerOpen) && (
-                            <div className="mt-4 flex flex-wrap gap-2">
-                              {openHouseInfo?.hasPublicOpen && (
-                                <Badge variant="secondary">Public Open House</Badge>
-                              )}
-                              {openHouseInfo?.hasBrokerOpen && (
-                                <Badge variant="secondary">Broker Open House</Badge>
-                              )}
-                            </div>
-                          )}
                         </div>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </Fragment>
-            );
-          })}
-        </TableBody>
-        </Table>
-        </div>
+
+                      {/* Property Details */}
+                      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
+                          <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Beds</div>
+                          <div className="mt-1 text-sm font-semibold">{listing.bedrooms || "—"}</div>
+                        </div>
+                        <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
+                          <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Baths</div>
+                          <div className="mt-1 text-sm font-semibold">{listing.bathrooms || "—"}</div>
+                        </div>
+                        <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
+                          <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Sq Ft</div>
+                          <div className="mt-1 text-sm font-semibold">
+                            {listing.square_feet ? listing.square_feet.toLocaleString() : "—"}
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
+                          <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Status</div>
+                          <div className="mt-1">{getStatusBadge(listing.status)}</div>
+                        </div>
+                        {getPropertyStyle(listing) && (
+                          <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
+                            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Type</div>
+                            <div className="mt-1 text-sm font-semibold">{getPropertyStyle(listing)}</div>
+                          </div>
+                        )}
+                        {listing.year_built && (
+                          <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
+                            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Year Built</div>
+                            <div className="mt-1 text-sm font-semibold">{listing.year_built}</div>
+                          </div>
+                        )}
+                        {listing.lot_size && (
+                          <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
+                            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Lot Size</div>
+                            <div className="mt-1 text-sm font-semibold">{formatLotSize(listing.lot_size)}</div>
+                          </div>
+                        )}
+                        {listing.total_parking_spaces && (
+                          <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
+                            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Parking</div>
+                            <div className="mt-1 text-sm font-semibold">{listing.total_parking_spaces}</div>
+                          </div>
+                        )}
+                        {listing.annual_property_tax && (
+                          <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
+                            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Annual Tax</div>
+                            <div className="mt-1 text-sm font-semibold">${listing.annual_property_tax.toLocaleString()}</div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Open houses */}
+                      {(openHouseInfo?.hasPublicOpen || openHouseInfo?.hasBrokerOpen) && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {openHouseInfo?.hasPublicOpen && (
+                            <Badge variant="secondary">Public Open House</Badge>
+                          )}
+                          {openHouseInfo?.hasBrokerOpen && (
+                            <Badge variant="secondary">Broker Open House</Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Contact Agent Dialog (controlled) */}
