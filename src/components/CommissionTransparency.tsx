@@ -35,7 +35,7 @@ const CommissionTransparency = () => {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow border-primary">
+            <Card className="hover:shadow-lg transition-shadow border-neutral-400">
               <CardHeader>
                 <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center mb-4">
                   <TrendingDown className="h-6 w-6 text-green-600 dark:text-green-400" />

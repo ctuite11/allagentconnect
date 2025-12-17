@@ -42,8 +42,8 @@ const variantStyles: Record<PillVariant, { default: string; active: string; disa
     disabled: "bg-neutral-soft text-neutral-text cursor-not-allowed opacity-70",
   },
   outline: {
-    default: "bg-transparent border border-primary text-primary hover:bg-primary-soft",
-    active: "bg-primary text-primary-foreground border border-primary",
+    default: "bg-transparent border border-neutral-400 text-foreground hover:bg-muted",
+    active: "bg-neutral-100 text-foreground border border-neutral-400",
     disabled: "bg-transparent border border-neutral-soft text-neutral-text cursor-not-allowed opacity-70",
   },
 };
@@ -88,7 +88,7 @@ export const Pill = React.forwardRef<HTMLButtonElement, PillProps>(
       "inline-flex items-center justify-center gap-1.5 rounded-full font-medium leading-tight transition-colors duration-150";
 
     const focusStyles = isClickable
-      ? "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1"
+      ? "focus:outline-none focus:ring-2 focus:ring-neutral-300/50 focus:ring-offset-1"
       : "";
 
     if (isClickable) {

@@ -241,7 +241,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                 </AlertDescription>
               </Alert>
 
-              <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-8 hover:border-primary transition-colors">
+              <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-8 hover:border-neutral-400 transition-colors">
                 <Upload className="h-12 w-12 text-muted-foreground mb-4" />
                 <Label htmlFor="file-upload" className="cursor-pointer">
                   <span className="text-sm font-medium text-primary hover:underline">

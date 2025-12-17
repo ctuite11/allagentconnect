@@ -385,7 +385,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
               className={`relative group cursor-move border-2 rounded-lg overflow-hidden transition-all ${
                 dragIndex === index ? 'opacity-50 scale-95' : ''
               } ${
-                selectedIndexes.has(index) ? 'border-primary ring-2 ring-primary' : 'border-border'
+                selectedIndexes.has(index) ? 'border-neutral-400 ring-2 ring-neutral-400' : 'border-border'
               }`}
             >
               {/* Select Checkbox */}

@@ -807,7 +807,7 @@ const ManageTeam = () => {
 
           {/* Create Team First Notice */}
           {!team && (
-            <Card className="mb-6 border-primary/50 bg-primary/5">
+            <Card className="mb-6 border-neutral-300 bg-neutral-50">
               <CardContent className="py-6">
                 <p className="text-center text-muted-foreground">
                   💡 Create your team profile first, then you'll be able to add team members!
@@ -817,7 +817,7 @@ const ManageTeam = () => {
           )}
 
           {/* Publish Team Profile */}
-          <Card className="border-primary/50 bg-primary/5">
+          <Card className="border-neutral-300 bg-neutral-50">
             <CardHeader>
               <CardTitle className="text-2xl">Ready to Publish?</CardTitle>
               <CardDescription>

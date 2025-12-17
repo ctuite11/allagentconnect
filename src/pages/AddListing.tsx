@@ -3191,7 +3191,7 @@ const AddListing = () => {
                         </div>
                         {formData.zip_code && (
                           <div className="space-y-2">
-                            <div className="flex items-center justify-between gap-2 p-2 bg-primary/10 border border-primary/20 rounded text-sm text-primary">
+                            <div className="flex items-center justify-between gap-2 p-2 bg-neutral-100 border border-neutral-300 rounded text-sm text-foreground">
                               <span>Selected: {formData.zip_code}</span>
                               <Button
                                 type="button"
