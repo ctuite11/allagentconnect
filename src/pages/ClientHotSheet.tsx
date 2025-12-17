@@ -700,17 +700,17 @@ const ClientHotSheet = () => {
         <div className="container mx-auto px-4 py-8">
           {/* Agent Banner */}
           {agentProfile && (
-            <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+            <Card className="mb-6 border-neutral-200 bg-gradient-to-r from-neutral-50 to-neutral-100">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
                   {agentProfile.headshot_url ? (
                     <img 
                       src={agentProfile.headshot_url} 
                       alt={`${agentProfile.first_name} ${agentProfile.last_name}`}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                      className="w-16 h-16 rounded-full object-cover border-2 border-neutral-200"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
+                    <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center border-2 border-neutral-200">
                       <UserCircle2 className="w-10 h-10 text-primary" />
                     </div>
                   )}

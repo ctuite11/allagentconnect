@@ -113,7 +113,7 @@ const VendorPackages = () => {
           const isPopular = pkg.ad_type === 'featured';
 
           return (
-            <Card key={pkg.id} className={isPopular ? 'border-primary shadow-lg' : ''}>
+            <Card key={pkg.id} className={isPopular ? 'border-neutral-400 shadow-lg' : ''}>
               <CardHeader>
                 {isPopular && (
                   <Badge className="w-fit mb-2">Most Popular</Badge>

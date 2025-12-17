@@ -579,7 +579,7 @@ const ListingResultsTable = ({
                   className={[
                     "border-t border-neutral-200/70 cursor-pointer outline-none",
                     "hover:bg-neutral-50/60 transition-colors",
-                    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2",
+                    "focus-visible:ring-2 focus-visible:ring-neutral-300/30 focus-visible:ring-offset-2",
                     isExpanded ? "bg-neutral-50/40" : ""
                   ].join(" ")}
                 >
@@ -598,7 +598,7 @@ const ListingResultsTable = ({
                       {/* Photo */}
                       <div className={[
                         "relative h-[84px] w-[148px] overflow-hidden rounded-xl bg-neutral-50",
-                        selectedRows.has(listing.id) ? "border-primary/40 ring-2 ring-primary/20 border" : "border border-neutral-200/70"
+                        selectedRows.has(listing.id) ? "border-neutral-400 ring-2 ring-neutral-300/20 border" : "border border-neutral-200/70"
                       ].join(" ")}>
                         {thumbnail ? (
                           <img src={thumbnail} alt="" className="h-full w-full object-cover" />

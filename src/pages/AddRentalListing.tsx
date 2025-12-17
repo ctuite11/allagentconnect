@@ -828,10 +828,10 @@ const AddRentalListing = () => {
                     
                     {/* Selected City Display */}
                     {selectedCity && (
-                      <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
-                        <Home className="h-4 w-4 text-primary" />
+                      <div className="flex items-center gap-2 p-3 bg-neutral-100 border border-neutral-300 rounded-lg">
+                        <Home className="h-4 w-4 text-muted-foreground" />
                         <div className="flex-1">
-                          <div className="font-medium text-primary">
+                          <div className="font-medium text-foreground">
                             {selectedCity}
                             {formData.neighborhood && ` - ${formData.neighborhood}`}
                           </div>

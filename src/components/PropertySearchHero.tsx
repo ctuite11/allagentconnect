@@ -81,14 +81,14 @@ const PropertySearchHero = () => {
                       placeholder="Min Price"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
-                      className="h-16 text-lg rounded-2xl border-2 border-border hover:border-primary focus:border-primary transition-colors bg-card"
+                      className="h-16 text-lg rounded-2xl border-2 border-border hover:border-neutral-400 focus:border-neutral-400 transition-colors bg-card"
                     />
                     <Input
                       type="number"
                       placeholder="Max Price"
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
-                      className="h-16 text-lg rounded-2xl border-2 border-border hover:border-primary focus:border-primary transition-colors bg-card"
+                      className="h-16 text-lg rounded-2xl border-2 border-border hover:border-neutral-400 focus:border-neutral-400 transition-colors bg-card"
                     />
                   </div>
                   

@@ -714,7 +714,7 @@ const ListingAnalytics = () => {
                     </Card>
 
                     {/* Cumulative Active Days */}
-                    <Card className="border-primary/50">
+                    <Card className="border-neutral-300">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <TrendingUp className="h-5 w-5" />

@@ -149,7 +149,7 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage, agentIndex = 999 }:
   };
 
   return (
-    <Card className="group overflow-hidden border bg-card transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1.5 hover:border-primary/20">
+    <Card className="group overflow-hidden border bg-card transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1.5 hover:border-neutral-300">
       <div className="p-5">
         {/* Large Profile Photo with Halo Ring - NO badges on photo */}
         <div className="flex justify-center mb-4 relative">

@@ -284,8 +284,8 @@ const MyFavorites = () => {
                         onClick={() => toggleListing(listing.id)}
                         className={`w-6 h-6 rounded border-2 cursor-pointer transition-all flex items-center justify-center ${
                           selectedListings.has(listing.id) 
-                            ? 'bg-primary border-primary' 
-                            : 'bg-background border-border hover:border-primary'
+                            ? 'bg-primary border-neutral-400' 
+                            : 'bg-background border-border hover:border-neutral-400'
                         }`}
                       >
                         {selectedListings.has(listing.id) && (

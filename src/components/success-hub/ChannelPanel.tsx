@@ -81,7 +81,7 @@ export const ChannelPanel = ({
                 "flex-1 h-9 text-xs font-medium border-2 transition-all duration-200",
                 isReceiving
                   ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90 hover:border-primary"
-                  : "border-muted text-muted-foreground hover:border-primary hover:text-foreground"
+                  : "border-muted text-muted-foreground hover:border-neutral-400 hover:text-foreground"
               )}
             >
               {isReceiving ? (
