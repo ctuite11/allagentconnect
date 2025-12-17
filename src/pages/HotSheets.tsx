@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Share2, Plus, Trash2, Users, MessageSquare, Send, ArrowLeft } from "lucide-react";
+import { Share2, Plus, Trash2, Users, MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
@@ -303,16 +303,11 @@ const HotSheets = () => {
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
-          <div className="mb-8 flex items-center gap-4">
-            <Button variant="outline" size="icon" onClick={() => navigate("/agent-dashboard")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <PageTitle className="mb-2">Hot Sheets</PageTitle>
-              <p className="text-muted-foreground">
-                Welcome to your Hot Sheet Creator. Enter your search criteria and receive real-time listing updates.
-              </p>
-            </div>
+          <div className="mb-8">
+            <PageTitle className="mb-2">Hot Sheets</PageTitle>
+            <p className="text-muted-foreground">
+              Welcome to your Hot Sheet Creator. Enter your search criteria and receive real-time listing updates.
+            </p>
           </div>
 
           {/* Create New Hot Sheet */}

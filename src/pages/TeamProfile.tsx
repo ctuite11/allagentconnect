@@ -190,14 +190,13 @@ const TeamProfile = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
-        <Button
-          variant="outline"
+        <button
           onClick={() => navigate("/manage-team")}
-          className="mb-6 gap-2"
+          className="mb-6 p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          aria-label="Go back"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Edit Team
-        </Button>
+          <ArrowLeft className="h-5 w-5" />
+        </button>
 
         {/* Hero Section with Team Contact Information */}
         <div className="bg-background rounded-xl p-8 mb-8 border">

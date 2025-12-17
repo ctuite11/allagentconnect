@@ -306,15 +306,13 @@ const ConsumerPropertyDetail = () => {
               
               {/* Overlay buttons */}
               <div className="absolute top-4 left-4 flex gap-2 z-10">
-                <Button 
-                  variant="secondary" 
-                  size="lg"
-                  onClick={() => navigate(-1)}
-                  className="gap-2"
+                <button
+                  onClick={() => navigate("/browse")}
+                  className="p-2 rounded-md bg-white/90 hover:bg-white transition-colors text-muted-foreground hover:text-foreground shadow-md"
+                  aria-label="Go back"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  Search
-                </Button>
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
               </div>
 
               {/* Status and Property Type Badges */}

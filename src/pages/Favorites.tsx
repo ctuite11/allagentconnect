@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Bed, Bath, Square, X, MessageSquare, Heart, ArrowLeft } from "lucide-react";
+import { MapPin, Bed, Bath, Square, X, MessageSquare, Heart } from "lucide-react";
 import { toast } from "sonner";
 
 interface Listing {
@@ -208,18 +208,13 @@ const Favorites = () => {
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
-          <div className="mb-8 flex items-center gap-4">
-            <Button variant="outline" size="icon" onClick={() => navigate("/agent-dashboard")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <PageTitle icon={<Heart className="h-8 w-8 fill-current text-red-500" />} className="mb-2">
-                My Favorites
-              </PageTitle>
-              <p className="text-muted-foreground">
-                Manage your favorite properties so you don't lose track of them.
-              </p>
-            </div>
+          <div className="mb-8">
+            <PageTitle icon={<Heart className="h-8 w-8 fill-current text-red-500" />} className="mb-2">
+              My Favorites
+            </PageTitle>
+            <p className="text-muted-foreground">
+              Manage your favorite properties so you don't lose track of them.
+            </p>
           </div>
 
           {/* Favorites Count */}
