@@ -960,7 +960,7 @@ export function CreateHotSheetDialog({
           <DialogDescription>
             Set up search criteria and notification preferences for automatic listing alerts
           </DialogDescription>
-          <div className="mt-2 p-3 bg-secondary rounded-md">
+          <div className="mt-2 p-3 bg-white border border-neutral-200 rounded-md">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">Matching Listings:</span>
               {loadingCount ? (
@@ -1001,9 +1001,9 @@ export function CreateHotSheetDialog({
 
           {/* Contact Information */}
           <Collapsible open={clientInfoOpen} onOpenChange={setClientInfoOpen}>
-            <Card className={`border-l-4 ${!clientInfoOpen ? 'border-l-neutral-500' : 'border-l-neutral-300'}`}>
+            <Card className={`border ${clientInfoOpen ? 'border-primary' : 'border-border'}`}>
               <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">
                       Contact Information *
@@ -1023,9 +1023,9 @@ export function CreateHotSheetDialog({
               {selectedClients.length > 0 && (
                 <div className="space-y-2">
                   <Label>Selected Contacts ({selectedClients.length})</Label>
-                  <div className="space-y-2 p-3 bg-muted/30 rounded-md border">
+                  <div className="space-y-2 p-3 bg-white rounded-md border border-neutral-200">
                     {selectedClients.map((client) => (
-                      <div key={client.id} className="flex items-center justify-between p-2 bg-background rounded border">
+                      <div key={client.id} className="flex items-center justify-between p-2 bg-white rounded border border-neutral-200">
                         <div className="flex-1">
                           <div className="font-medium text-sm">
                             {client.first_name} {client.last_name}
@@ -1208,9 +1208,9 @@ export function CreateHotSheetDialog({
 
           {/* Search Criteria */}
           <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
-            <Card className={`border-l-4 ${!criteriaOpen ? 'border-l-teal-500' : 'border-l-teal-200'}`}>
+            <Card className={`border ${criteriaOpen ? 'border-primary' : 'border-border'}`}>
               <CollapsibleTrigger className="w-full">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30">
                   <CardTitle className="text-base">Search Criteria</CardTitle>
                   {criteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </CardHeader>
@@ -1222,7 +1222,7 @@ export function CreateHotSheetDialog({
                     <div className="space-y-2">
                       <Label htmlFor="state" className="text-sm font-semibold">State</Label>
                       <Select value={state} onValueChange={setState}>
-                        <SelectTrigger id="state" className="bg-background">
+                        <SelectTrigger id="state" className="bg-white">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-popover z-50 max-h-[300px]">
@@ -1238,7 +1238,7 @@ export function CreateHotSheetDialog({
                     <div className="space-y-2">
                       <Label htmlFor="county" className="text-sm font-semibold">County</Label>
                       <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
-                        <SelectTrigger id="county" className="bg-background">
+                        <SelectTrigger id="county" className="bg-white">
                           <SelectValue placeholder="All Counties" />
                         </SelectTrigger>
                         <SelectContent className="bg-popover z-50 max-h-[300px]">
@@ -1258,7 +1258,7 @@ export function CreateHotSheetDialog({
                   {/* Towns & Neighborhoods Section - Collapsed by default */}
                   <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border border-l-4 ${!townsOpen ? 'border-l-green-500' : 'border-l-green-200'}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${townsOpen ? 'border-primary' : 'border-border'}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Towns & Neighborhoods
                           {selectedCities.length > 0 && (
@@ -1308,7 +1308,7 @@ export function CreateHotSheetDialog({
                               onChange={(e) => setCitySearch(e.target.value)}
                               className="text-sm"
                             />
-                            <div className="border rounded-md bg-background max-h-60 overflow-y-auto p-2 relative z-10">
+                            <div className="border border-neutral-200 rounded-md bg-white max-h-60 overflow-y-auto p-2 relative z-10">
                               {selectedCountyId && townsList.length > 0 && (
                                 <button
                                   type="button"
@@ -1349,7 +1349,7 @@ export function CreateHotSheetDialog({
                                 </Button>
                               )}
                             </div>
-                            <div className="border rounded-md p-3 bg-background min-h-[200px] max-h-60 overflow-y-auto">
+                            <div className="border border-neutral-200 rounded-md p-3 bg-white min-h-[200px] max-h-60 overflow-y-auto">
                               {selectedCities.length === 0 ? (
                                 <p className="text-sm text-muted-foreground">No towns selected</p>
                               ) : (
@@ -1400,7 +1400,7 @@ export function CreateHotSheetDialog({
                   {/* Property Type - Collapsed by default */}
                   <Collapsible open={propertyTypeOpen} onOpenChange={setPropertyTypeOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border border-l-4 ${!propertyTypeOpen ? 'border-l-purple-500' : 'border-l-purple-200'}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${propertyTypeOpen ? 'border-primary' : 'border-border'}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Property Type
                           {propertyTypes.length > 0 && (
@@ -1449,7 +1449,7 @@ export function CreateHotSheetDialog({
                   {/* Status - Collapsed by default */}
                   <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/50 p-3 rounded-md border border-l-4 ${!statusOpen ? 'border-l-blue-500' : 'border-l-blue-200'}`}>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${statusOpen ? 'border-primary' : 'border-border'}`}>
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Status
                           {statuses.length > 0 && (
