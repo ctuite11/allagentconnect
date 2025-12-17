@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Share2, Trash2, MessageSquare, Pencil, Play } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -9,7 +10,6 @@ interface HotSheetCardProps {
   criteria: any;
   clients: any[];
   lastSentAt?: string | null;
-  onShowResults: (id: string) => void;
   onEdit: (id: string) => void;
   onShare: (id: string) => void;
   onComments: (id: string) => void;
@@ -22,12 +22,12 @@ export const HotSheetCard = ({
   criteria,
   clients,
   lastSentAt,
-  onShowResults,
   onEdit,
   onShare,
   onComments,
   onDelete,
 }: HotSheetCardProps) => {
+  const navigate = useNavigate();
   const primaryClient = clients[0];
 
   const clientName = primaryClient
@@ -38,19 +38,15 @@ export const HotSheetCard = ({
   const clientPhone = primaryClient?.phone || criteria?.clientPhone || null;
 
   const handleCardClick = () => {
-    onShowResults(id);
-  };
-
-  const stopPropagation = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    navigate(`/hot-sheets/${id}/review`);
   };
 
   return (
     <div
       onClick={handleCardClick}
-      className="bg-white border border-neutral-200 rounded-2xl px-5 py-4 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] transition-all cursor-pointer"
+      className="bg-white border border-neutral-200 rounded-2xl px-5 py-3 shadow-sm hover:shadow-md hover:border-neutral-300 hover:-translate-y-[1px] transition-all cursor-pointer"
     >
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         {/* Left: Details */}
         <div className="flex-1 min-w-0">
           <h3 className="text-base font-semibold text-neutral-800 truncate">
@@ -67,19 +63,19 @@ export const HotSheetCard = ({
             </p>
           )}
           {lastSentAt && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Last run: {formatDistanceToNow(new Date(lastSentAt), { addSuffix: true })}
             </p>
           )}
         </div>
 
         {/* Right: Actions */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2" onClick={stopPropagation}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2" onClick={(e) => e.stopPropagation()}>
           {/* Primary & Secondary Buttons */}
           <div className="flex items-center gap-2">
             <Button
               size="sm"
-              onClick={(e) => { e.stopPropagation(); onShowResults(id); }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/hot-sheets/${id}/review`); }}
             >
               <Play className="h-4 w-4 mr-1.5" />
               Show Results
@@ -94,7 +90,7 @@ export const HotSheetCard = ({
             </Button>
           </div>
 
-          {/* Icon Actions */}
+          {/* Icon Actions: Share, Message | Delete (separated) */}
           <div className="flex items-center">
             <Button
               variant="ghost"

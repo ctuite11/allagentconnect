@@ -276,7 +276,6 @@ const HotSheets = () => {
                   criteria={sheet.criteria}
                   clients={getClientsForSheet(sheet)}
                   lastSentAt={(sheet as any).last_sent_at}
-                  onShowResults={handleShowResults}
                   onEdit={handleEdit}
                   onShare={(id) => setShareDialogOpen(id)}
                   onComments={(id) => setCommentsDialogOpen(id)}
