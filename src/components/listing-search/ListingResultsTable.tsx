@@ -521,7 +521,7 @@ const ListingResultsTable = ({
       {/* Results as Cards */}
       <div className="space-y-3">
         {/* Header Row */}
-        <div className="sticky top-[88px] z-[5] bg-neutral-50/95 backdrop-blur-sm rounded-xl border border-neutral-200 px-4 py-3 shadow-sm">
+        <div className="sticky top-[88px] z-[5] bg-white/95 backdrop-blur-sm rounded-xl border border-neutral-200 px-4 py-3 shadow-sm">
           <div className="grid grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-center">
             <div className="text-xs font-medium text-muted-foreground"></div>
             <div className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1" onClick={() => onSort("address")}>
