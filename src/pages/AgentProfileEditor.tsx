@@ -536,7 +536,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto px-4 py-8 pt-24">
+        <div className="container mx-auto px-4 py-8 pt-20">
           <div className="flex items-center justify-center h-64">
             <div className="animate-pulse text-muted-foreground">Loading profile...</div>
           </div>
@@ -548,7 +548,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24 pb-32">
+      <div className="container mx-auto px-4 py-8 pt-20 pb-32">
         {/* Header with inline back button */}
         <div className="flex items-center justify-between mb-8">
           <PageHeader

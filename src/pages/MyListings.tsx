@@ -1020,7 +1020,7 @@ const MyListings = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navigation />
-        <div className="flex-1 flex items-center justify-center p-6 pt-24">
+        <div className="flex-1 flex items-center justify-center p-6 pt-20">
           <p className="text-muted-foreground">You must be signed in as an agent to view your listings.</p>
         </div>
       </div>
@@ -1035,7 +1035,7 @@ const MyListings = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navigation />
-        <div className="flex-1 max-w-[1280px] mx-auto px-6 py-6 pt-24">
+        <div className="flex-1 max-w-[1280px] mx-auto px-6 py-6 pt-20">
           <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
             <h1 className="text-3xl font-bold text-foreground font-display mb-2">My Listings</h1>
             <p className="text-muted-foreground mb-6">You haven't created any listings yet.</p>
