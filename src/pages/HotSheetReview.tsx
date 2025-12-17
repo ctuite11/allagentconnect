@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { PageTitle } from "@/components/ui/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate, useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -9,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search } from "lucide-react";
+import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
@@ -321,30 +322,24 @@ if (agentIds.length > 0) {
       
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
-          {/* Header */}
+          {/* Header with inline back button */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/hot-sheets")}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Hot Sheets
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate(buildSearchUrl())}
-              >
-                <Search className="h-4 w-4 mr-2" />
-                View in Search
-              </Button>
+              <PageHeader
+                title={hotSheet.name}
+                subtitle={getClientDisplay() ? `Client: ${getClientDisplay()}` : undefined}
+                backTo="/hot-sheets"
+                actions={
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(buildSearchUrl())}
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    View in Search
+                  </Button>
+                }
+              />
             </div>
-            <PageTitle className="mb-2">{hotSheet.name}</PageTitle>
-            {getClientDisplay() && (
-              <p className="text-lg text-muted-foreground">
-                Client: {getClientDisplay()}
-              </p>
-            )}
           </div>
 
           {/* Search Criteria */}
