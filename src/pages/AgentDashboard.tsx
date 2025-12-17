@@ -489,91 +489,91 @@ const AgentDashboard = () => {
 
         {/* Dashboard Overview Cards */}
         <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 mb-10 sm:mb-16 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-primary bg-card overflow-hidden relative touch-manipulation h-40" onClick={scrollToListings}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={scrollToListings}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Listings</CardTitle>
               <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Home className="h-4 w-4 text-primary" />
+                <Home className="h-4 w-4 text-muted-foreground" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold text-primary">{listings.length}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">{listings.length}</div>
               <p className="text-xs text-muted-foreground mt-0.5">View and manage listings</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-orange-500 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/hot-sheets")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/hot-sheets")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Hot Sheets</CardTitle>
-              <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Flame className="h-4 w-4 text-orange-500" />
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <Flame className="h-4 w-4 text-muted-foreground" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">{hotSheetsCount}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">{hotSheetsCount}</div>
               <p className="text-xs text-muted-foreground mt-0.5">Active property searches</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-purple-500 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/favorites")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/favorites")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Favorites</CardTitle>
-              <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Heart className="h-4 w-4 text-purple-500" />
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <Heart className="h-4 w-4 text-muted-foreground" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-500 to-purple-400 bg-clip-text text-transparent">{favoritesCount}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">{favoritesCount}</div>
               <p className="text-xs text-muted-foreground mt-0.5">Saved favorite properties</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-red-500 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/my-clients")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/my-clients")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Contacts</CardTitle>
-              <div className="h-8 w-8 rounded-full bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Users className="h-4 w-4 text-red-500" />
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <Users className="h-4 w-4 text-muted-foreground" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">{clientsCount}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">{clientsCount}</div>
               <p className="text-xs text-muted-foreground mt-0.5">Manage client relationships</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-emerald-500 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/client-needs")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/client-needs")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Communications</CardTitle>
-              <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Mail className="h-4 w-4 text-emerald-500" />
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <Mail className="h-4 w-4 text-muted-foreground" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">{messagesCount}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">{messagesCount}</div>
               <p className="text-xs text-muted-foreground mt-0.5">Client needs and requests</p>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-amber-500 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/agent-profile-editor")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/agent-profile-editor")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Profile</CardTitle>
-              <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 overflow-hidden flex-shrink-0">
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 overflow-hidden flex-shrink-0">
                 {profilePicture ? (
                   <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <UserCircle className="h-4 w-4 text-amber-500" />
+                  <UserCircle className="h-4 w-4 text-muted-foreground" />
                 )}
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
               {(firstName || profilePicture) && (
-                <div className="text-2xl font-bold text-emerald-500 mb-1">
+                <div className="text-2xl font-bold text-muted-foreground mb-1">
                   <CheckCircle className="h-8 w-8" />
                 </div>
               )}
@@ -581,39 +581,39 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-cyan-600 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/manage-team")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/manage-team")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Team</CardTitle>
               <div className="flex -space-x-2 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                 {[...teamMembers, ...Array(Math.max(0, 3 - teamMembers.length))].slice(0, 3).map((member, index) => (
-                  <div key={member?.id || `empty-${index}`} className="h-7 w-7 rounded-full bg-cyan-600/10 border-2 border-card flex items-center justify-center overflow-hidden">
+                  <div key={member?.id || `empty-${index}`} className="h-7 w-7 rounded-full bg-muted border-2 border-card flex items-center justify-center overflow-hidden">
                     {member?.headshot_url ? (
                       <img src={member.headshot_url} alt={member.first_name} className="w-full h-full object-cover" />
                     ) : (
-                      <Users className="h-3 w-3 text-cyan-600 opacity-30" />
+                      <Users className="h-3 w-3 text-muted-foreground opacity-30" />
                     )}
                   </div>
                 ))}
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 bg-clip-text text-transparent">{teamMembers.length}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">{teamMembers.length}</div>
               <p className="text-xs text-muted-foreground mt-0.5">Collaborate with team</p>
             </CardContent>
           </Card>
 
           {/* Communication Center Card */}
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border-l-4 border-l-blue-500 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/client-needs")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/client-needs")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">Communication Center</CardTitle>
               <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Bell className="h-4 w-4 text-primary" />
+                <Bell className="h-4 w-4 text-muted-foreground" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-500 to-blue-400 bg-clip-text text-transparent">
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">
                 {messagesCount + clientsCount}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">Messages and notifications</p>
@@ -621,7 +621,7 @@ const AgentDashboard = () => {
           </Card>
 
           {/* Recent Activity Feed - Full Width */}
-          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-primary bg-card md:col-span-2 lg:col-span-3 overflow-hidden relative touch-manipulation">
+          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border border-neutral-200 bg-card md:col-span-2 lg:col-span-3 overflow-hidden relative touch-manipulation">
               
               <CardHeader className="flex flex-row items-center justify-between space-y-0 relative z-10 p-3 sm:p-4 pb-2">
                 <div>
@@ -629,7 +629,7 @@ const AgentDashboard = () => {
                   <CardDescription className="text-xs">Latest updates and interactions</CardDescription>
                 </div>
                 <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                  <Activity className="h-4 w-4 text-primary" />
+                  <Activity className="h-4 w-4 text-muted-foreground" />
                 </div>
               </CardHeader>
               <CardContent className="relative z-10 p-3 sm:p-4 pt-2">

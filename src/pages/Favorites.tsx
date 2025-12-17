@@ -231,7 +231,7 @@ const Favorites = () => {
 
           {/* Favorites Grid */}
           {favorites.length === 0 ? (
-            <Card className="p-12 border-l-4 border-l-primary">
+            <Card className="p-12 border border-neutral-200">
               <div className="text-center">
                 <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">No favorites yet</h3>

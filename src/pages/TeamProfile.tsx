@@ -433,7 +433,7 @@ const TeamProfile = () => {
               <CardContent>
                 <div className="space-y-4">
                   {testimonials.map((testimonial) => (
-                    <Card key={testimonial.id} className="border-l-4 border-l-primary/50">
+                    <Card key={testimonial.id} className="border border-neutral-200">
                       <CardContent className="pt-6">
                         {testimonial.rating && (
                           <div className="flex gap-1 mb-2">
