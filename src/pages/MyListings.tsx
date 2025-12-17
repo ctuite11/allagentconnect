@@ -367,7 +367,7 @@ function MyListingsView({
                 className={`px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors ${
                   activeStatus === tab.value
                     ? "bg-neutral-soft text-foreground border-neutral-200"
-                    : "bg-background border-neutral-200 text-muted-foreground hover:text-foreground hover:bg-neutral-soft"
+                    : "bg-white border-neutral-200 text-muted-foreground hover:text-foreground hover:bg-neutral-soft"
                 }`}
               >
                 {tab.label}
@@ -376,7 +376,7 @@ function MyListingsView({
           </div>
 
           {/* View toggle - match Success Hub styling */}
-          <div className="inline-flex items-center border border-neutral-200 rounded-lg p-0.5 bg-background">
+          <div className="inline-flex items-center border border-neutral-200 rounded-lg p-0.5 bg-white">
             <button
               onClick={() => setView("grid")}
               className={`p-1.5 rounded-md transition-colors ${
@@ -509,28 +509,28 @@ function MyListingsView({
 
                     <div className="flex items-center gap-1.5">
                       <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
                         onClick={() => onEdit(l.id)}
                         title="Edit"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
                         onClick={() => onPreview(l.id)}
                         title="Preview"
                       >
                         <Eye size={16} />
                       </button>
                       <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
                         onClick={() => onShare(l.id)}
                         title="Share"
                       >
                         <Share2 size={16} />
                       </button>
                       <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-background text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition"
                         onClick={() => setListingToDelete(l)}
                         title="Delete"
                       >
@@ -577,44 +577,44 @@ function MyListingsView({
                 className="aac-card aac-card-2 overflow-hidden"
               >
                 {/* Top tools bar - match Success Hub button styling */}
-                <div className="flex flex-wrap items-center gap-2 text-xs px-4 py-2.5 border-b border-neutral-200 bg-background">
+                <div className="flex flex-wrap items-center gap-2 text-xs px-4 py-2.5 border-b border-neutral-200 bg-white">
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
+                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
                     onClick={() => onPhotos(l.id)}
                     title="Manage photos"
                   >
                     Photos
                   </button>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
                     onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                   >
                     <span className="text-xs">🎈</span>
                     {hasPublicOpenHouse ? "View Schedule" : "Open House"}
                   </button>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
                     onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                   >
                     <span className="text-xs">🚙</span>
                     {hasBrokerTour ? "View Schedule" : "Broker Tour"}
                   </button>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
+                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
                     onClick={() => onMatches(l)}
                     title="Contact matching buyers"
                   >
                     Matches ({matchCount})
                   </button>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
+                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
                     onClick={() => onSocialShare(l)}
                     title="Share on social media"
                   >
                     Share
                   </button>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
                     onClick={() => onStats(l.id)}
                     title="View analytics"
                   >
@@ -677,12 +677,12 @@ function MyListingsView({
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
-                              className="border border-neutral-200 rounded px-2 py-1 text-sm w-28 bg-background"
+                              className="border border-neutral-200 rounded px-2 py-1 text-sm w-28 bg-white"
                               value={editPrice}
                               onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
                             />
                             <select
-                              className="border border-neutral-200 rounded px-2 py-1 bg-background capitalize text-xs"
+                              className="border border-neutral-200 rounded px-2 py-1 bg-white capitalize text-xs"
                               value={editStatus}
                               onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
                             >
