@@ -521,7 +521,7 @@ const EditListing: React.FC = () => {
                         value={neighborhood}
                         onValueChange={(value) => setNeighborhood(value)}
                       >
-                        <SelectTrigger className="bg-background">
+                        <SelectTrigger className="bg-white border-neutral-200">
                           <SelectValue placeholder="Select neighborhood..." />
                         </SelectTrigger>
                         <SelectContent className="max-h-[300px]">

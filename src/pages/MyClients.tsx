@@ -550,7 +550,7 @@ const MyClients = () => {
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
                     <Select value={clientTypeFilter} onValueChange={setClientTypeFilter}>
-                      <SelectTrigger className="w-[180px] bg-background">
+                      <SelectTrigger className="w-[180px] bg-white border-neutral-200">
                         <SelectValue placeholder="Filter by type" />
                       </SelectTrigger>
                       <SelectContent className="bg-background z-50">
@@ -567,7 +567,7 @@ const MyClients = () => {
                       </SelectContent>
                     </Select>
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                      <SelectTrigger className="w-[200px] bg-background">
+                      <SelectTrigger className="w-[200px] bg-white border-neutral-200">
                         <ArrowUpDown className="h-4 w-4 mr-2" />
                         <SelectValue />
                       </SelectTrigger>
@@ -595,7 +595,7 @@ const MyClients = () => {
                         setItemsPerPage(Number(value));
                         setCurrentPage(1);
                       }}>
-                        <SelectTrigger className="w-[100px] bg-background">
+                        <SelectTrigger className="w-[100px] bg-white border-neutral-200">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-background z-50">

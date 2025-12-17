@@ -741,7 +741,7 @@ function MyListingsView({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition cursor-pointer"
+                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition cursor-pointer"
                                 onClick={() => onEdit(l.id)}
                               >
                                 <Pencil size={16} />
@@ -754,7 +754,7 @@ function MyListingsView({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition cursor-pointer"
+                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition cursor-pointer"
                                 onClick={() => onPreview(l.id)}
                               >
                                 <Eye size={16} />
@@ -772,7 +772,7 @@ function MyListingsView({
                                 listingId={l.id}
                                 trigger={
                                   <button
-                                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-background text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition cursor-pointer"
+                                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition cursor-pointer"
                                   >
                                     <Share2 size={16} />
                                   </button>
@@ -785,7 +785,7 @@ function MyListingsView({
                           </Tooltip>
                         </TooltipProvider>
                         <button
-                          className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-background text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
                           onClick={() => setListingToDelete(l)}
                           title="Delete"
                         >

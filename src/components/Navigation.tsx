@@ -196,7 +196,7 @@ const Navigation = () => {
                   <>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
+                        <button className="flex items-center gap-2 px-4 py-2 rounded-md border border-neutral-200 bg-white text-foreground hover:bg-neutral-soft transition-colors">
                           <LayoutDashboard className="w-4 h-4" />
                           Success Hub
                           <ChevronDown className="w-3 h-3" />
