@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Users } from "lucide-react";
 import { toast } from "sonner";
 import AgentSearchFilters from "@/components/agent-search/AgentSearchFilters";
 import AgentSearchTable from "@/components/agent-search/AgentSearchTable";
-import { PageTitle } from "@/components/ui/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 
 const AgentSearch = () => {
   const navigate = useNavigate();
@@ -165,17 +164,11 @@ const AgentSearch = () => {
         {/* Compact Header */}
         <section className="bg-card border-b border-border py-6">
           <div className="container mx-auto px-4">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-lg bg-muted border border-border flex items-center justify-center">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <PageTitle>Agent Directory</PageTitle>
-                <p className="text-sm text-muted-foreground">
-                  Find agents, view listings, and connect for deals
-                </p>
-              </div>
-            </div>
+            <PageHeader
+              title="Agent Directory"
+              subtitle="Find agents, view listings, and connect for deals"
+              icon={<Users className="h-6 w-6 text-primary" />}
+            />
           </div>
         </section>
 
@@ -226,8 +219,6 @@ const AgentSearch = () => {
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 };

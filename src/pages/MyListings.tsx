@@ -17,7 +17,7 @@ import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { PageTitle } from "@/components/ui/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 type ListingStatus = "new" | "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon" | "off_market";
 
 interface Listing {
@@ -301,12 +301,11 @@ function MyListingsView({
   return (
     <div className="max-w-[1280px] mx-auto px-6 py-6 space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <PageTitle>My Listings</PageTitle>
-        <p className="text-muted-foreground mt-2">
-          Manage your active, pending, and past listings from one place.
-        </p>
-      </div>
+      <PageHeader
+        title="My Listings"
+        subtitle="Manage your active, pending, and past listings from one place."
+        className="mb-6"
+      />
 
       {/* New Listing Button Row */}
       <div className="mb-2">
