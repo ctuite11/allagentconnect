@@ -68,6 +68,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOtp({
         email: validatedEmail,
         options: {
+          emailRedirectTo: "https://allagentconnect.com/auth/callback",
           shouldCreateUser: true,
         },
       });
@@ -135,6 +136,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
+          emailRedirectTo: "https://allagentconnect.com/auth/callback",
           shouldCreateUser: true,
         },
       });

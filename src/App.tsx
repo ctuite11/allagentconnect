@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import { RouteGuard } from "./components/RouteGuard";
 import AgentSuccessHub from "./pages/AgentSuccessHub";
 import BuyerAuth from "./pages/BuyerAuth";
@@ -96,6 +97,7 @@ const App = () => (
                 <Route path="/allagentconnect" element={<AllAgentConnectHome />} />
                 <Route path="/coming-soon" element={<ComingSoon />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/verify-agent" element={<VerifyAgent />} />
                 <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
                 <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
