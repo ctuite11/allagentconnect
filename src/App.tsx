@@ -56,6 +56,7 @@ import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
 import ClientFavoritesPage from "./pages/ClientFavoritesPage";
 import PasswordReset from "./pages/PasswordReset";
 import VerifyAgent from "./pages/VerifyAgent";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import MyListings from "./pages/MyListings";
 import ManageListingPhotos from "./pages/ManageListingPhotos";
@@ -98,6 +99,7 @@ const App = () => (
                 <Route path="/coming-soon" element={<ComingSoon />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/verify-agent" element={<VerifyAgent />} />
                 <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
                 <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
