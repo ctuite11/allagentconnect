@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ const Auth = () => {
   const [step, setStep] = useState<AuthStep>("email");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -55,6 +56,8 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
+    const redirectTo = `${window.location.origin}/auth/callback`;
+
     try {
       const validatedEmail = emailSchema.parse(email);
 
@@ -63,7 +66,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOtp({
         email: validatedEmail,
         options: {
-          emailRedirectTo: "https://allagentconnect.com/auth/callback",
+          emailRedirectTo: redirectTo,
           shouldCreateUser: true,
         },
       });
@@ -84,11 +87,12 @@ const Auth = () => {
 
   const handleResendLink = async () => {
     setLoading(true);
+    const redirectTo = `${window.location.origin}/auth/callback`;
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: "https://allagentconnect.com/auth/callback",
+          emailRedirectTo: redirectTo,
           shouldCreateUser: true,
         },
       });
@@ -103,7 +107,9 @@ const Auth = () => {
   };
 
   const handleChangeEmail = () => {
+    setEmail("");
     setStep("email");
+    setTimeout(() => emailInputRef.current?.focus(), 0);
   };
 
   const getEmailDomain = (email: string) => {
@@ -156,6 +162,7 @@ const Auth = () => {
                     placeholder="you@example.com"
                     required
                     autoFocus
+                    ref={emailInputRef}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="mt-1.5"
@@ -196,7 +203,7 @@ const Auth = () => {
                   <span className="font-medium text-foreground">{email}</span>
                 </p>
                 <p className="text-muted-foreground text-sm mt-2">
-                  Click "Log In" in the email to continue.
+                  Click <span className="font-semibold text-foreground">Log In</span> in the email to continue.
                 </p>
               </div>
 
