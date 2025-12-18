@@ -68,7 +68,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
 import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
 import Navigation from "./components/Navigation";
-import { AppOnboardingWrapper } from "./components/AppOnboardingWrapper";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,7 +88,7 @@ const App = () => (
             <Sonner />
             <ScrollToTop />
             <ScrollRestoration />
-            <AppOnboardingWrapper>
+            <>
               <ActiveAgentBanner />
               <Navigation />
               <Routes>
@@ -166,7 +166,7 @@ const App = () => (
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </AppOnboardingWrapper>
+            </>
           </TooltipProvider>
         </ThemeProvider>
       </HelmetProvider>
