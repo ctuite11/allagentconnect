@@ -147,7 +147,9 @@ const Auth = () => {
                   Sign in to AllAgentConnect
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  Enter your email and we'll send you a secure login link
+                  Enter your email and we'll send you a secure login link.
+                  <br />
+                  <span className="text-xs">New here? We'll create your account automatically.</span>
                 </p>
               </div>
 
