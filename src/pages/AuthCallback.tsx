@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -6,11 +6,15 @@ import { Loader2 } from "lucide-react";
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const didNavigate = useRef(false);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
+      // Guard against double navigation
+      if (didNavigate.current) return;
+
       try {
-        // Get session from URL hash (Supabase puts tokens there after magic link click)
+        // Single source of truth: getSession after URL hash is processed
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
@@ -20,37 +24,39 @@ const AuthCallback = () => {
         }
 
         if (session) {
-          console.log("[AuthCallback] Session found, auth listener will handle redirect");
-          // Let onAuthStateChange handle the redirect to avoid double navigation
+          console.log("[AuthCallback] Session hydrated, navigating to /verify-agent");
+          didNavigate.current = true;
+          navigate("/verify-agent", { replace: true });
           return;
         }
 
-        // No session yet - might be processing the hash
-        // Supabase client auto-processes the hash, wait for auth state change
+        // No session yet - Supabase client auto-processes hash tokens
+        // Wait briefly for hash processing, then retry
+        setTimeout(async () => {
+          if (didNavigate.current) return;
+          
+          const { data: { session: retrySession }, error: retryError } = await supabase.auth.getSession();
+          
+          if (retryError) {
+            setError(retryError.message);
+            return;
+          }
+          
+          if (retrySession) {
+            console.log("[AuthCallback] Session hydrated on retry, navigating to /verify-agent");
+            didNavigate.current = true;
+            navigate("/verify-agent", { replace: true });
+          } else {
+            setError("Unable to complete sign in. Please try again.");
+          }
+        }, 500);
       } catch (err: any) {
         console.error("[AuthCallback] Error:", err);
         setError(err.message || "Authentication failed");
       }
     };
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("[AuthCallback] Auth state change:", event);
-        
-        if (event === "SIGNED_IN" && session) {
-          navigate("/verify-agent", { replace: true });
-        } else if (event === "TOKEN_REFRESHED" && session) {
-          navigate("/verify-agent", { replace: true });
-        }
-      }
-    );
-
     handleAuthCallback();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [navigate]);
 
   if (error) {
