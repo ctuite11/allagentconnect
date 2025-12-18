@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PageTitle } from "@/components/ui/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -414,10 +414,10 @@ export default function AgentSuccessHub() {
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-20 space-y-8">
         {/* Header */}
-        <div>
-          <PageTitle>Success Hub</PageTitle>
-          <p className="text-muted-foreground mt-2">Your command center for client success</p>
-        </div>
+        <PageHeader
+          title="Success Hub"
+          subtitle="Your command center for client success"
+        />
 
         {/* Unified Hub Cards Grid - Merged KPIs with navigation */}
         <div>

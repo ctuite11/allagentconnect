@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { PageTitle } from "@/components/ui/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+
 import ListingSearchFilters, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import { RotateCcw, Search, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -180,9 +180,10 @@ const ListingSearch = () => {
       <main className="flex-1 pt-20">
         <div className="max-w-[1280px] mx-auto px-6 py-6">
           {/* Page Header */}
-          <div className="mb-6">
-            <PageTitle>Listing Search</PageTitle>
-          </div>
+          <PageHeader
+            title="Listing Search"
+            className="mb-6"
+          />
           
           {/* Action Bar */}
           <div className="aac-card mb-4">
@@ -247,8 +248,6 @@ const ListingSearch = () => {
           />
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

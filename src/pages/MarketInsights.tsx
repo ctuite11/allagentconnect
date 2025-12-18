@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { PageTitle } from "@/components/ui/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -201,16 +200,12 @@ const MarketInsights = () => {
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <BarChart3 className="w-10 h-10 text-primary" />
-              <div>
-                <PageTitle>Market Insights</PageTitle>
-                <p className="text-muted-foreground">
-                  Real-time analytics and trends from recently sold properties
-                </p>
-              </div>
-            </div>
+          <PageHeader
+            title="Market Insights"
+            subtitle="Real-time analytics and trends from recently sold properties"
+            icon={<BarChart3 className="w-10 h-10 text-primary" />}
+            className="mb-8"
+          />
 
             {/* Filters */}
             <div className="flex flex-wrap gap-3 mt-6">
@@ -250,7 +245,6 @@ const MarketInsights = () => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
           {loading ? (
             <div className="text-center py-12">
@@ -546,8 +540,6 @@ const MarketInsights = () => {
           )}
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };

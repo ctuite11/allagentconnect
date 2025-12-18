@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { PageTitle } from "@/components/ui/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -240,18 +240,17 @@ const HotSheets = () => {
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8 max-w-5xl">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-            <div>
-              <PageTitle className="mb-1">Hot Sheets</PageTitle>
-              <p className="text-muted-foreground text-sm">
-                Create and manage your custom listing alerts
-              </p>
-            </div>
-            <Button onClick={() => setCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create New Hot Sheet
-            </Button>
-          </div>
+          <PageHeader
+            title="Hot Sheets"
+            subtitle="Create and manage your custom listing alerts"
+            className="mb-8"
+            actions={
+              <Button onClick={() => setCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Hot Sheet
+              </Button>
+            }
+          />
 
           {/* Hot Sheets List */}
           {hotSheets.length === 0 ? (
@@ -384,8 +383,6 @@ const HotSheets = () => {
           hotSheetName={hotSheets.find(s => s.id === commentsDialogOpen)?.name || ""}
         />
       )}
-
-      <Footer />
     </div>
   );
 };

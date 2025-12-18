@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { PageTitle } from "@/components/ui/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -371,14 +371,11 @@ const MyClients = () => {
       
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
-          <div className="mb-8 flex justify-between items-start">
-            <div>
-              <PageTitle className="mb-2">My Contacts</PageTitle>
-              <p className="text-muted-foreground">
-                Manage your contacts and create personalized hot sheets for them
-              </p>
-            </div>
-          </div>
+          <PageHeader
+            title="My Contacts"
+            subtitle="Manage your contacts and create personalized hot sheets for them"
+            className="mb-8"
+          />
 
           {/* Action Buttons */}
           <div className="mb-4 flex gap-2 justify-end flex-wrap">
@@ -832,8 +829,6 @@ const MyClients = () => {
           if (user) fetchClients(user.id);
         }}
       />
-
-      <Footer />
     </div>
     </TooltipProvider>
   );

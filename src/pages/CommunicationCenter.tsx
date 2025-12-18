@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +38,7 @@ import { toast } from "sonner";
 import { EmailDetailDrawer } from "@/components/communication-center/EmailDetailDrawer";
 import { SendEmailDialog } from "@/components/communication-center/SendEmailDialog";
 import { SectionCard } from "@/components/ui/section-card";
-import { PageTitle } from "@/components/ui/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 
 interface Campaign {
   id: string;
@@ -169,18 +169,17 @@ const CommunicationCenter = () => {
       <main className="flex-1 pt-20">
         <div className="max-w-[1280px] mx-auto px-6 py-6 space-y-6">
           {/* Page Header */}
-          <div className="flex items-start justify-between">
-            <div>
-              <PageTitle>Communication Center</PageTitle>
-              <p className="text-muted-foreground mt-1">
-                Send targeted listing emails to users based on their saved preferences. Replies go to your email inbox.
-              </p>
-            </div>
-            <Button onClick={() => setSendDialogOpen(true)}>
-              <Send className="h-4 w-4 mr-2" />
-              Send Email
-            </Button>
-          </div>
+          <PageHeader
+            title="Communication Center"
+            subtitle="Send targeted listing emails to users based on their saved preferences. Replies go to your email inbox."
+            className="mb-6"
+            actions={
+              <Button onClick={() => setSendDialogOpen(true)}>
+                <Send className="h-4 w-4 mr-2" />
+                Send Email
+              </Button>
+            }
+          />
 
           {/* Info Banner */}
           <SectionCard 
@@ -340,8 +339,6 @@ const CommunicationCenter = () => {
           </SectionCard>
         </div>
       </main>
-
-      <Footer />
 
       {/* Email Detail Drawer */}
       <EmailDetailDrawer

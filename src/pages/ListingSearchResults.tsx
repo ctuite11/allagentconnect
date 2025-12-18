@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import ListingCard from "@/components/ListingCard";
 import { toast } from "sonner";
@@ -548,8 +548,6 @@ const ListingSearchResults = () => {
           )}
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
