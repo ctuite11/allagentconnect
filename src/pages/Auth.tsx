@@ -18,10 +18,18 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const emailInputRef = useRef<HTMLInputElement>(null);
+  const didNavigate = useRef(false);
 
   // Check for existing session on mount
   useEffect(() => {
     let mounted = true;
+
+    const navigateOnce = () => {
+      if (!didNavigate.current && mounted) {
+        didNavigate.current = true;
+        navigate('/verify-agent', { replace: true });
+      }
+    };
 
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -29,7 +37,7 @@ const Auth = () => {
       if (!mounted) return;
       
       if (session?.user) {
-        navigate('/verify-agent');
+        navigateOnce();
       }
     };
 
@@ -39,7 +47,7 @@ const Auth = () => {
         
         if (session?.user) {
           console.log('[Analytics] auth_login_success', { user_id: session.user.id });
-          navigate('/verify-agent');
+          navigateOnce();
         }
       }
     );
@@ -107,6 +115,7 @@ const Auth = () => {
   };
 
   const handleChangeEmail = () => {
+    didNavigate.current = false;
     setEmail("");
     setStep("email");
     setTimeout(() => emailInputRef.current?.focus(), 0);
