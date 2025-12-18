@@ -21,7 +21,6 @@ import CommunicationCenter from "./pages/CommunicationCenter";
 import ListingIntel from "./pages/ListingIntel";
 import AddListing from "./pages/AddListing";
 import AddRentalListing from "./pages/AddRentalListing";
-// EditListing removed - now handled by AddListing with :id param
 import PropertyDetail from "./pages/PropertyDetail";
 import AgentDetailRedirect from "./pages/AgentDetailRedirect";
 import ConsumerPropertyDetail from "./pages/ConsumerPropertyDetail";
@@ -55,13 +54,12 @@ import ClientDashboard from "./pages/ClientDashboard";
 import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
 import ClientFavoritesPage from "./pages/ClientFavoritesPage";
 import PasswordReset from "./pages/PasswordReset";
-import VerifyAgent from "./pages/VerifyAgent";
-import Onboarding from "./pages/Onboarding";
+import OnboardingCreateAccount from "./pages/OnboardingCreateAccount";
+import OnboardingVerifyLicense from "./pages/OnboardingVerifyLicense";
 import NotFound from "./pages/NotFound";
 import MyListings from "./pages/MyListings";
 import ManageListingPhotos from "./pages/ManageListingPhotos";
 
-// EditListing no longer used - edit route now uses AddListing
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
 import AllAgentConnectHome from "./pages/AllAgentConnectHome";
@@ -99,21 +97,29 @@ const App = () => (
                 <Route path="/coming-soon" element={<ComingSoon />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/verify-agent" element={<VerifyAgent />} />
+                
+                {/* Onboarding sub-routes */}
+                <Route path="/onboarding/create-account" element={<OnboardingCreateAccount />} />
+                <Route path="/onboarding/verify-license" element={<OnboardingVerifyLicense />} />
+                
+                {/* Legacy redirects */}
+                <Route path="/onboarding" element={<Navigate to="/auth/callback" replace />} />
+                <Route path="/verify-agent" element={<Navigate to="/auth/callback" replace />} />
+                
+                {/* Agent routes - verified required for sensitive actions */}
                 <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
-                <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
-                <Route path="/agent/listings/new" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
-                <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent"><ManageListingPhotos /></RouteGuard>} />
-                <Route path="/agent/listings/:id/floor-plans" element={<RouteGuard requireRole="agent"><ManageListingPhotos mode="floorPlans" /></RouteGuard>} />
-                <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
+                <Route path="/agent/listings" element={<RouteGuard requireRole="agent" requireVerified><MyListings /></RouteGuard>} />
+                <Route path="/agent/listings/new" element={<RouteGuard requireRole="agent" requireVerified><AddListing /></RouteGuard>} />
+                <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent" requireVerified><ManageListingPhotos /></RouteGuard>} />
+                <Route path="/agent/listings/:id/floor-plans" element={<RouteGuard requireRole="agent" requireVerified><ManageListingPhotos mode="floorPlans" /></RouteGuard>} />
+                <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent" requireVerified><AddListing /></RouteGuard>} />
                 <Route path="/agent/listings/:id" element={<RouteGuard requireRole="agent"><AgentDetailRedirect /></RouteGuard>} />
                 <Route path="/buyer/auth" element={<BuyerAuth />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
-                <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
-                <Route path="/communication-center" element={<RouteGuard requireRole="agent"><CommunicationCenter /></RouteGuard>} />
-                <Route path="/listing-intel" element={<RouteGuard requireRole="agent"><ListingIntel /></RouteGuard>} />
-                <Route path="/add-rental-listing" element={<RouteGuard requireRole="agent"><AddRentalListing /></RouteGuard>} />
+                <Route path="/client-needs" element={<RouteGuard requireRole="agent" requireVerified><ClientNeedsDashboard /></RouteGuard>} />
+                <Route path="/communication-center" element={<RouteGuard requireRole="agent" requireVerified><CommunicationCenter /></RouteGuard>} />
+                <Route path="/listing-intel" element={<RouteGuard requireRole="agent" requireVerified><ListingIntel /></RouteGuard>} />
+                <Route path="/add-rental-listing" element={<RouteGuard requireRole="agent" requireVerified><AddRentalListing /></RouteGuard>} />
                 <Route path="/property/:id" element={<PropertyDetail />} />
                 <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
                 <Route path="/agent/:id" element={<AgentProfile />} />

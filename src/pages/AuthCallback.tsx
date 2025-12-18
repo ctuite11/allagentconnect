@@ -1,88 +1,98 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
   const didNavigate = useRef(false);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      // Guard against double navigation
       if (didNavigate.current) return;
 
       try {
-        // Single source of truth: getSession after URL hash is processed
+        // Wait for session to hydrate
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
           console.error("[AuthCallback] Session error:", sessionError);
-          setError(sessionError.message);
+          navigate("/auth", { replace: true });
           return;
         }
 
-        if (session) {
-          console.log("[AuthCallback] Session hydrated, navigating to /onboarding");
-          didNavigate.current = true;
-          navigate("/onboarding", { replace: true });
-          return;
-        }
-
-        // No session yet - Supabase client auto-processes hash tokens
-        // Wait briefly for hash processing, then retry
-        setTimeout(async () => {
-          if (didNavigate.current) return;
+        if (!session) {
+          // No session yet - retry after brief wait for hash processing
+          await new Promise(resolve => setTimeout(resolve, 500));
           
-          const { data: { session: retrySession }, error: retryError } = await supabase.auth.getSession();
+          const { data: { session: retrySession } } = await supabase.auth.getSession();
           
-          if (retryError) {
-            setError(retryError.message);
+          if (!retrySession) {
+            navigate("/auth", { replace: true });
             return;
           }
           
-          if (retrySession) {
-            console.log("[AuthCallback] Session hydrated on retry, navigating to /onboarding");
-            didNavigate.current = true;
-            navigate("/onboarding", { replace: true });
-          } else {
-            setError("Unable to complete sign in. Please try again.");
-          }
-        }, 500);
-      } catch (err: any) {
+          await routeUser(retrySession.user.id);
+          return;
+        }
+
+        await routeUser(session.user.id);
+      } catch (err) {
         console.error("[AuthCallback] Error:", err);
-        setError(err.message || "Authentication failed");
+        navigate("/auth", { replace: true });
+      }
+    };
+
+    const routeUser = async (userId: string) => {
+      if (didNavigate.current) return;
+
+      try {
+        // 1. Check if agent_profiles exists
+        const { data: agentProfile } = await supabase
+          .from('agent_profiles')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (!agentProfile) {
+          // No profile - send to create account
+          didNavigate.current = true;
+          navigate('/onboarding/create-account', { replace: true });
+          return;
+        }
+
+        // 2. Check agent_settings for verification status
+        const { data: settings } = await supabase
+          .from('agent_settings')
+          .select('agent_status')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        const status = settings?.agent_status || 'unverified';
+
+        if (status === 'verified') {
+          didNavigate.current = true;
+          navigate('/agent-dashboard', { replace: true });
+        } else {
+          // unverified or pending - go to license verification
+          didNavigate.current = true;
+          navigate('/onboarding/verify-license', { replace: true });
+        }
+      } catch (err) {
+        console.error("[AuthCallback] Route error:", err);
+        didNavigate.current = true;
+        navigate('/onboarding/create-account', { replace: true });
       }
     };
 
     handleAuthCallback();
   }, [navigate]);
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold text-foreground mb-2">
-            Authentication Error
-          </h1>
-          <p className="text-muted-foreground mb-4">{error}</p>
-          <button
-            onClick={() => navigate("/auth")}
-            className="text-primary hover:underline"
-          >
-            Return to sign in
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-        <p className="text-muted-foreground">Completing sign in...</p>
+        <p className="text-muted-foreground">Setting up your account...</p>
       </div>
     </div>
   );
