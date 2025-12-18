@@ -103,17 +103,34 @@ const VerifyAgent = () => {
       setUser(session.user);
 
       // Fetch agent status and existing verification data from agent_settings
-      const { data: settings } = await supabase
+      const { data: settings, error } = await supabase
         .from('agent_settings')
         .select('agent_status, license_number, license_state, license_last_name')
         .eq('user_id', session.user.id)
-        .single();
+        .maybeSingle();
 
-      if (mounted && settings) {
-        setAgentStatus(settings.agent_status || 'unverified');
-        setLicenseNumber(settings.license_number || '');
-        setLicenseState(settings.license_state || '');
-        setLicenseLastName(settings.license_last_name || '');
+      if (mounted) {
+        if (error) {
+          console.error('Error fetching agent settings:', error);
+        }
+        
+        if (settings) {
+          setAgentStatus(settings.agent_status || 'unverified');
+          setLicenseNumber(settings.license_number || '');
+          setLicenseState(settings.license_state || '');
+          setLicenseLastName(settings.license_last_name || '');
+        } else {
+          // No settings row exists - create one
+          const { data: newSettings } = await supabase
+            .from('agent_settings')
+            .insert({ user_id: session.user.id })
+            .select('agent_status, license_number, license_state, license_last_name')
+            .single();
+          
+          if (newSettings) {
+            setAgentStatus(newSettings.agent_status || 'unverified');
+          }
+        }
       }
 
       setLoading(false);
