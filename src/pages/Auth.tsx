@@ -27,7 +27,7 @@ const Auth = () => {
     const navigateOnce = () => {
       if (!didNavigate.current && mounted) {
         didNavigate.current = true;
-        navigate('/verify-agent', { replace: true });
+        navigate('/onboarding', { replace: true });
       }
     };
 

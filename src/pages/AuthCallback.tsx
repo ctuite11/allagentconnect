@@ -24,9 +24,9 @@ const AuthCallback = () => {
         }
 
         if (session) {
-          console.log("[AuthCallback] Session hydrated, navigating to /verify-agent");
+          console.log("[AuthCallback] Session hydrated, navigating to /onboarding");
           didNavigate.current = true;
-          navigate("/verify-agent", { replace: true });
+          navigate("/onboarding", { replace: true });
           return;
         }
 
@@ -43,9 +43,9 @@ const AuthCallback = () => {
           }
           
           if (retrySession) {
-            console.log("[AuthCallback] Session hydrated on retry, navigating to /verify-agent");
+            console.log("[AuthCallback] Session hydrated on retry, navigating to /onboarding");
             didNavigate.current = true;
-            navigate("/verify-agent", { replace: true });
+            navigate("/onboarding", { replace: true });
           } else {
             setError("Unable to complete sign in. Please try again.");
           }
