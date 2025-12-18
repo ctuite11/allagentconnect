@@ -4,20 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Mail, ArrowLeft, Loader2 } from "lucide-react";
+import { Mail, ArrowLeft, Loader2, CheckCircle2, ExternalLink } from "lucide-react";
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
 
-type AuthStep = "email" | "otp";
+type AuthStep = "email" | "link-sent";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<AuthStep>("email");
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Check for existing session on mount
@@ -30,7 +28,6 @@ const Auth = () => {
       if (!mounted) return;
       
       if (session?.user) {
-        // Already logged in, redirect to verify-agent
         navigate('/verify-agent');
       }
     };
@@ -40,7 +37,6 @@ const Auth = () => {
         if (!mounted) return;
         
         if (session?.user) {
-          // Fire analytics event
           console.log('[Analytics] auth_login_success', { user_id: session.user.id });
           navigate('/verify-agent');
         }
@@ -55,15 +51,14 @@ const Auth = () => {
     };
   }, [navigate]);
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const handleSendLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       const validatedEmail = emailSchema.parse(email);
 
-      // Fire analytics event
-      console.log('[Analytics] auth_otp_requested', { email: validatedEmail });
+      console.log('[Analytics] auth_magic_link_requested', { email: validatedEmail });
 
       const { error } = await supabase.auth.signInWithOtp({
         email: validatedEmail,
@@ -75,62 +70,19 @@ const Auth = () => {
 
       if (error) throw error;
 
-      toast.success("Check your email for the 6-digit code");
-      setStep("otp");
+      setStep("link-sent");
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        toast.error(error.message || "Failed to send code");
+        toast.error(error.message || "Failed to send link");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (otp.length !== 6) {
-      toast.error("Please enter the 6-digit code");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Fire analytics event
-      console.log('[Analytics] auth_otp_verified', { email });
-
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'email',
-      });
-
-      if (error) throw error;
-
-      // Success - onAuthStateChange will handle redirect
-      toast.success("Verified successfully!");
-    } catch (error: any) {
-      if (error.message?.includes('expired')) {
-        toast.error("Code expired. Please request a new one.");
-      } else if (error.message?.includes('invalid')) {
-        toast.error("Invalid code. Please try again.");
-      } else {
-        toast.error(error.message || "Verification failed");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBackToEmail = () => {
-    setStep("email");
-    setOtp("");
-  };
-
-  const handleResendCode = async () => {
+  const handleResendLink = async () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -142,18 +94,43 @@ const Auth = () => {
       });
 
       if (error) throw error;
-      toast.success("New code sent to your email");
+      toast.success("New login link sent to your email");
     } catch (error: any) {
-      toast.error(error.message || "Failed to resend code");
+      toast.error(error.message || "Failed to resend link");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleChangeEmail = () => {
+    setStep("email");
+  };
+
+  const getEmailDomain = (email: string) => {
+    const domain = email.split("@")[1]?.toLowerCase();
+    if (domain?.includes("gmail")) return "gmail";
+    if (domain?.includes("outlook") || domain?.includes("hotmail") || domain?.includes("live")) return "outlook";
+    if (domain?.includes("yahoo")) return "yahoo";
+    return null;
+  };
+
+  const openEmailClient = (provider: string) => {
+    const urls: Record<string, string> = {
+      gmail: "https://mail.google.com",
+      outlook: "https://outlook.live.com",
+      yahoo: "https://mail.yahoo.com",
+    };
+    if (urls[provider]) {
+      window.open(urls[provider], "_blank");
+    }
+  };
+
+  const emailProvider = getEmailDomain(email);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
-        <div className="bg-card rounded-2xl shadow-lg p-8 border border-border">
+        <div className="bg-card rounded-2xl shadow-lg p-8 border border-border relative">
           {step === "email" ? (
             <>
               <div className="text-center mb-8">
@@ -164,11 +141,11 @@ const Auth = () => {
                   Sign in to AllAgentConnect
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  Enter your email and we'll send you a code
+                  Enter your email and we'll send you a secure login link
                 </p>
               </div>
 
-              <form onSubmit={handleSendOtp} className="space-y-4">
+              <form onSubmit={handleSendLink} className="space-y-4">
                 <div>
                   <Label htmlFor="email" className="text-sm font-medium">
                     Email address
@@ -192,69 +169,78 @@ const Auth = () => {
                       Sending...
                     </>
                   ) : (
-                    "Send code"
+                    "Send login link"
                   )}
                 </Button>
               </form>
             </>
           ) : (
             <>
-              <div className="text-center mb-8">
-                <button
-                  onClick={handleBackToEmail}
-                  className="absolute left-8 top-8 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
+              <button
+                onClick={handleChangeEmail}
+                className="absolute left-6 top-6 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Use a different email"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="h-6 w-6 text-green-600" />
+                </div>
                 <h1 className="text-2xl font-semibold text-foreground mb-2">
-                  Enter verification code
+                  Check your email
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  We sent a 6-digit code to{" "}
+                  We sent a secure login link to{" "}
                   <span className="font-medium text-foreground">{email}</span>
+                </p>
+                <p className="text-muted-foreground text-sm mt-2">
+                  Click "Log In" in the email to continue.
                 </p>
               </div>
 
-              <form onSubmit={handleVerifyOtp} className="space-y-6">
-                <div className="flex justify-center">
-                  <InputOTP
-                    maxLength={6}
-                    value={otp}
-                    onChange={(value) => setOtp(value)}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-
-                <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Verifying...
-                    </>
-                  ) : (
-                    "Verify"
-                  )}
-                </Button>
-
-                <div className="text-center">
-                  <button
+              <div className="space-y-3">
+                {emailProvider && (
+                  <Button
                     type="button"
-                    onClick={handleResendCode}
-                    disabled={loading}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => openEmailClient(emailProvider)}
                   >
-                    Didn't receive a code? <span className="font-medium">Resend</span>
-                  </button>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open {emailProvider.charAt(0).toUpperCase() + emailProvider.slice(1)}
+                  </Button>
+                )}
+
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={handleResendLink}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Resend link"
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1"
+                    onClick={handleChangeEmail}
+                  >
+                    Different email
+                  </Button>
                 </div>
-              </form>
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center mt-6">
+                The link expires in 1 hour. Check your spam folder if you don't see it.
+              </p>
             </>
           )}
         </div>
