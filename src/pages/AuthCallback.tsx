@@ -20,8 +20,8 @@ const AuthCallback = () => {
         }
 
         if (session) {
-          console.log("[AuthCallback] Session found, redirecting to /verify-agent");
-          navigate("/verify-agent", { replace: true });
+          console.log("[AuthCallback] Session found, auth listener will handle redirect");
+          // Let onAuthStateChange handle the redirect to avoid double navigation
           return;
         }
 
