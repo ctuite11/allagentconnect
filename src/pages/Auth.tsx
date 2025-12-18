@@ -6,28 +6,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Mail, ArrowLeft, Loader2, CheckCircle2, ExternalLink } from "lucide-react";
+import { Mail, ArrowLeft, Loader2, CheckCircle2, ExternalLink, UserPlus, LogIn } from "lucide-react";
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
 
-type AuthStep = "email" | "link-sent";
+type AuthStep = "choose" | "email" | "link-sent";
+type AuthIntent = "signin" | "register";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<AuthStep>("email");
+  const [step, setStep] = useState<AuthStep>("choose");
+  const [intent, setIntent] = useState<AuthIntent | null>(null);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const emailInputRef = useRef<HTMLInputElement>(null);
   const didNavigate = useRef(false);
 
-  // Check for existing session on mount
+  // Check for existing session on mount - redirect to callback for routing
   useEffect(() => {
     let mounted = true;
 
     const navigateOnce = () => {
       if (!didNavigate.current && mounted) {
         didNavigate.current = true;
-        navigate('/onboarding', { replace: true });
+        navigate('/auth/callback', { replace: true });
       }
     };
 
@@ -60,6 +62,13 @@ const Auth = () => {
     };
   }, [navigate]);
 
+  const handleChooseIntent = (selectedIntent: AuthIntent) => {
+    setIntent(selectedIntent);
+    localStorage.setItem('auth_intent', selectedIntent);
+    setStep("email");
+    setTimeout(() => emailInputRef.current?.focus(), 100);
+  };
+
   const handleSendLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -69,7 +78,7 @@ const Auth = () => {
     try {
       const validatedEmail = emailSchema.parse(email);
 
-      console.log('[Analytics] auth_magic_link_requested', { email: validatedEmail });
+      console.log('[Analytics] auth_magic_link_requested', { email: validatedEmail, intent });
 
       const { error } = await supabase.auth.signInWithOtp({
         email: validatedEmail,
@@ -114,11 +123,14 @@ const Auth = () => {
     }
   };
 
-  const handleChangeEmail = () => {
-    didNavigate.current = false;
-    setEmail("");
-    setStep("email");
-    setTimeout(() => emailInputRef.current?.focus(), 0);
+  const handleBack = () => {
+    if (step === "email") {
+      setStep("choose");
+      setIntent(null);
+      setEmail("");
+    } else if (step === "link-sent") {
+      setStep("email");
+    }
   };
 
   const getEmailDomain = (email: string) => {
@@ -146,19 +158,59 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         <div className="bg-card rounded-2xl shadow-lg p-8 border border-border relative">
-          {step === "email" ? (
+          {step === "choose" ? (
             <>
               <div className="text-center mb-8">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Mail className="h-6 w-6 text-primary" />
                 </div>
                 <h1 className="text-2xl font-semibold text-foreground mb-2">
-                  Sign in to AllAgentConnect
+                  Welcome to AllAgentConnect
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  Enter your email and we'll send you a secure login link.
-                  <br />
-                  <span className="text-xs">New here? We'll create your account automatically.</span>
+                  The agent-to-agent network for real estate professionals
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <Button
+                  onClick={() => handleChooseIntent("signin")}
+                  className="w-full h-12"
+                  variant="default"
+                >
+                  <LogIn className="mr-2 h-5 w-5" />
+                  Sign In
+                </Button>
+                
+                <Button
+                  onClick={() => handleChooseIntent("register")}
+                  className="w-full h-12"
+                  variant="outline"
+                >
+                  <UserPlus className="mr-2 h-5 w-5" />
+                  Create Account
+                </Button>
+              </div>
+            </>
+          ) : step === "email" ? (
+            <>
+              <button
+                onClick={handleBack}
+                className="absolute left-6 top-6 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+
+              <div className="text-center mb-8">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Mail className="h-6 w-6 text-primary" />
+                </div>
+                <h1 className="text-2xl font-semibold text-foreground mb-2">
+                  {intent === "register" ? "Create Your Account" : "Welcome Back"}
+                </h1>
+                <p className="text-muted-foreground text-sm">
+                  Enter your email and we'll send you a secure link.
                 </p>
               </div>
 
@@ -187,7 +239,7 @@ const Auth = () => {
                       Sending...
                     </>
                   ) : (
-                    "Send login link"
+                    intent === "register" ? "Create Account" : "Send Login Link"
                   )}
                 </Button>
               </form>
@@ -195,26 +247,26 @@ const Auth = () => {
           ) : (
             <>
               <button
-                onClick={handleChangeEmail}
+                onClick={handleBack}
                 className="absolute left-6 top-6 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Use a different email"
+                aria-label="Go back"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
 
               <div className="text-center mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="h-6 w-6 text-green-600" />
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <h1 className="text-2xl font-semibold text-foreground mb-2">
                   Check your email
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  We sent a secure login link to{" "}
+                  We sent a secure link to{" "}
                   <span className="font-medium text-foreground">{email}</span>
                 </p>
                 <p className="text-muted-foreground text-sm mt-2">
-                  Click <span className="font-semibold text-foreground">Log In</span> in the email to continue.
+                  Click the link in the email to continue.
                 </p>
               </div>
 
@@ -249,7 +301,7 @@ const Auth = () => {
                     type="button"
                     variant="ghost"
                     className="flex-1"
-                    onClick={handleChangeEmail}
+                    onClick={handleBack}
                   >
                     Different email
                   </Button>
