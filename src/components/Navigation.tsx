@@ -62,16 +62,15 @@ const Navigation = () => {
     try {
       await supabase.auth.signOut();
       setIsMenuOpen(false);
-      navigate("/");
+      navigate("/auth");
     } catch (error) {
       console.error("Error logging out:", error);
     }
   };
 
-  // Hide navigation for pending/unverified agents - they have their own locked screen
-  if (user && role === "agent" && (agentStatus === "pending" || agentStatus === "unverified")) {
-    return null;
-  }
+  // Hide navigation only for pending agents - they have their own locked screen
+  const isPending = user && role === "agent" && agentStatus === "pending";
+  if (isPending) return null;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 border-b border-border">
