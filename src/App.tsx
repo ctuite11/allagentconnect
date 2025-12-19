@@ -60,6 +60,7 @@ import PendingVerification from "./pages/PendingVerification";
 import NotFound from "./pages/NotFound";
 import MyListings from "./pages/MyListings";
 import ManageListingPhotos from "./pages/ManageListingPhotos";
+import AdminApprovals from "./pages/AdminApprovals";
 
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
@@ -166,6 +167,7 @@ const App = () => (
                 <Route path="/password-reset" element={<PasswordReset />} />
                 <Route path="/seed-test-data" element={<SeedTestData />} />
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
+                <Route path="/admin/approvals" element={<AdminApprovals />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </>

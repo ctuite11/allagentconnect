@@ -2574,8 +2574,13 @@ export type Database = {
       is_verified_agent: { Args: never; Returns: boolean }
     }
     Enums: {
-      agent_status: "unverified" | "pending" | "verified" | "restricted"
-      app_role: "buyer" | "agent"
+      agent_status:
+        | "unverified"
+        | "pending"
+        | "verified"
+        | "restricted"
+        | "rejected"
+      app_role: "buyer" | "agent" | "admin"
       property_type:
         | "single_family"
         | "condo"
@@ -2712,8 +2717,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      agent_status: ["unverified", "pending", "verified", "restricted"],
-      app_role: ["buyer", "agent"],
+      agent_status: [
+        "unverified",
+        "pending",
+        "verified",
+        "restricted",
+        "rejected",
+      ],
+      app_role: ["buyer", "agent", "admin"],
       property_type: [
         "single_family",
         "condo",

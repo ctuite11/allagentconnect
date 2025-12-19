@@ -11,16 +11,18 @@ const corsHeaders = {
 
 interface ApprovalEmailRequest {
   userId: string;
+  email?: string;
+  firstName?: string;
+  approved: boolean;
 }
 
 serve(async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { userId }: ApprovalEmailRequest = await req.json();
+    const { userId, email, firstName, approved }: ApprovalEmailRequest = await req.json();
 
     if (!userId) {
       console.error("No userId provided");
@@ -30,7 +32,7 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`Processing approval email for user: ${userId}`);
+    console.log(`Processing ${approved ? 'approval' : 'rejection'} email for user: ${userId}`);
 
     // Create Supabase admin client
     const supabaseAdmin = createClient(
@@ -39,60 +41,33 @@ serve(async (req: Request): Promise<Response> => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Check if approval email was already sent (duplicate protection)
-    const { data: settings, error: settingsError } = await supabaseAdmin
-      .from("agent_settings")
-      .select("approval_email_sent, agent_status")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // Get agent profile if email/firstName not provided
+    let recipientEmail = email;
+    let recipientName = firstName;
 
-    if (settingsError) {
-      console.error("Error fetching agent settings:", settingsError);
-      return new Response(
-        JSON.stringify({ error: "Failed to fetch agent settings" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    if (!recipientEmail || !recipientName) {
+      const { data: profile, error: profileError } = await supabaseAdmin
+        .from("agent_profiles")
+        .select("email, first_name")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (profileError || !profile?.email) {
+        console.error("Error fetching agent profile:", profileError);
+        return new Response(
+          JSON.stringify({ error: "Failed to fetch agent profile" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      recipientEmail = email || profile.email;
+      recipientName = firstName || profile.first_name || "Agent";
     }
 
-    // Guard: Only send if not already sent AND status is verified
-    if (settings?.approval_email_sent) {
-      console.log(`Approval email already sent for user ${userId}, skipping`);
-      return new Response(
-        JSON.stringify({ success: true, skipped: true, reason: "already_sent" }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
+    console.log(`Sending ${approved ? 'approval' : 'rejection'} email to ${recipientEmail} (${recipientName})`);
 
-    if (settings?.agent_status !== "verified") {
-      console.log(`Agent ${userId} is not verified (status: ${settings?.agent_status}), skipping email`);
-      return new Response(
-        JSON.stringify({ success: false, reason: "not_verified" }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // Get agent profile for personalization
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("agent_profiles")
-      .select("email, first_name")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (profileError || !profile?.email) {
-      console.error("Error fetching agent profile:", profileError);
-      return new Response(
-        JSON.stringify({ error: "Failed to fetch agent profile" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const firstName = profile.first_name || "Agent";
-    const recipientEmail = profile.email;
-
-    console.log(`Sending approval email to ${recipientEmail} (${firstName})`);
-
-    // Build email HTML
-    const emailHtml = `
+    // Build approved email HTML
+    const approvedHtml = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -132,7 +107,7 @@ serve(async (req: Request): Promise<Response> => {
               </table>
               
               <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0;">
-                Hi ${firstName},
+                Hi ${recipientName},
               </p>
               
               <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0; font-weight: 600;">
@@ -182,6 +157,82 @@ serve(async (req: Request): Promise<Response> => {
 </html>
     `;
 
+    // Build rejected email HTML
+    const rejectedHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verification Update</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06); border: 1px solid #e2e8f0;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 40px 24px 40px; border-bottom: 1px solid #f1f5f9;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td>
+                    <span style="font-size: 20px; font-weight: 600; color: #0f172a;">AllAgent</span><span style="font-size: 20px; font-weight: 600; color: #94a3b8;">Connect</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px;">
+              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0;">
+                Hi ${recipientName},
+              </p>
+              
+              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0;">
+                Thank you for your interest in AllAgentConnect.
+              </p>
+              
+              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0;">
+                Unfortunately, we were unable to verify your real estate license with the information provided. This could be due to:
+              </p>
+              
+              <ul style="margin: 0 0 24px 20px; padding: 0; color: #64748b; font-size: 16px; line-height: 1.8;">
+                <li>License number not found in state database</li>
+                <li>Name mismatch with license records</li>
+                <li>License may be expired or inactive</li>
+              </ul>
+              
+              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 32px 0;">
+                If you believe this was an error, please reply to this email with your correct license information and we'll be happy to take another look.
+              </p>
+              
+              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0;">
+                <span style="color: #64748b;">— AllAgentConnect Team</span>
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; border-top: 1px solid #f1f5f9; background-color: #fafafa; border-radius: 0 0 16px 16px;">
+              <p style="font-size: 12px; color: #94a3b8; margin: 0; text-align: center;">
+                © ${new Date().getFullYear()} AllAgentConnect. All rights reserved.
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
     // Send email via Resend API
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -193,8 +244,10 @@ serve(async (req: Request): Promise<Response> => {
         from: "AllAgentConnect <hello@mail.allagentconnect.com>",
         reply_to: "hello@allagentconnect.com",
         to: [recipientEmail],
-        subject: "You're approved — welcome to AllAgentConnect",
-        html: emailHtml,
+        subject: approved 
+          ? "You're approved — welcome to AllAgentConnect"
+          : "AllAgentConnect - Verification Update",
+        html: approved ? approvedHtml : rejectedHtml,
       }),
     });
 
@@ -202,20 +255,21 @@ serve(async (req: Request): Promise<Response> => {
 
     if (!emailRes.ok) {
       console.error("Resend API error:", emailData);
-      throw new Error(emailData.message || "Failed to send approval email");
+      throw new Error(emailData.message || "Failed to send email");
     }
 
-    console.log("Approval email sent successfully:", emailData);
+    console.log("Email sent successfully:", emailData);
 
-    // Mark email as sent (duplicate protection)
-    const { error: updateError } = await supabaseAdmin
-      .from("agent_settings")
-      .update({ approval_email_sent: true })
-      .eq("user_id", userId);
+    // Mark approval email as sent if approved
+    if (approved) {
+      const { error: updateError } = await supabaseAdmin
+        .from("agent_settings")
+        .update({ approval_email_sent: true })
+        .eq("user_id", userId);
 
-    if (updateError) {
-      console.error("Warning: Failed to update approval_email_sent flag:", updateError);
-      // Don't fail the request, email was sent successfully
+      if (updateError) {
+        console.error("Warning: Failed to update approval_email_sent flag:", updateError);
+      }
     }
 
     return new Response(
