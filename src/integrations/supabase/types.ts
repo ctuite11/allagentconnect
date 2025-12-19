@@ -416,6 +416,7 @@ export type Database = {
       agent_settings: {
         Row: {
           agent_status: Database["public"]["Enums"]["agent_status"]
+          approval_email_sent: boolean
           county: string | null
           created_at: string
           email_frequency: string
@@ -447,6 +448,7 @@ export type Database = {
         }
         Insert: {
           agent_status?: Database["public"]["Enums"]["agent_status"]
+          approval_email_sent?: boolean
           county?: string | null
           created_at?: string
           email_frequency?: string
@@ -478,6 +480,7 @@ export type Database = {
         }
         Update: {
           agent_status?: Database["public"]["Enums"]["agent_status"]
+          approval_email_sent?: boolean
           county?: string | null
           created_at?: string
           email_frequency?: string

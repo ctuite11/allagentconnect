@@ -4,11 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
+const POLL_INTERVAL_MS = 5000; // Poll every 5 seconds
+
 const PendingVerification = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [firstName, setFirstName] = useState<string | null>(null);
+  const [isApproved, setIsApproved] = useState(false);
   const didNavigate = useRef(false);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -32,10 +36,23 @@ const PendingVerification = () => {
       const status = settings?.agent_status || 'unverified';
 
       if (status === 'verified') {
-        if (!didNavigate.current) {
-          didNavigate.current = true;
-          navigate("/agent-dashboard", { replace: true });
+        // Show approval message briefly, then redirect
+        setIsApproved(true);
+        setLoading(false);
+        
+        // Clear polling
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
         }
+        
+        // Redirect after brief delay to show the approval message
+        setTimeout(() => {
+          if (!didNavigate.current) {
+            didNavigate.current = true;
+            navigate("/agent-dashboard", { replace: true });
+          }
+        }, 2000);
         return;
       }
 
@@ -61,7 +78,19 @@ const PendingVerification = () => {
       setLoading(false);
     };
 
+    // Initial check
     checkStatus();
+
+    // Set up polling for status changes
+    pollIntervalRef.current = setInterval(checkStatus, POLL_INTERVAL_MS);
+
+    // Cleanup on unmount
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
   }, [navigate]);
 
   const handleLogout = async () => {
@@ -73,6 +102,41 @@ const PendingVerification = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  // Show approval message before redirect
+  if (isApproved) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        {/* Minimal header with logo only */}
+        <header className="py-6 px-6 border-b border-slate-200/70 bg-white">
+          <div className="max-w-xl mx-auto">
+            <div className="text-xl font-semibold">
+              <span className="text-slate-900">AllAgent</span>
+              <span className="text-slate-400">Connect</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Approval message */}
+        <main className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="w-full max-w-xl">
+            <div className="bg-white rounded-2xl border border-slate-200/70 shadow-[0_8px_24px_rgba(15,23,42,0.06)] p-8 md:p-10 text-center">
+              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="h-9 w-9 text-emerald-600" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3">
+                You're approved.
+              </h1>
+              <p className="text-slate-600 text-base mb-6">
+                Taking you in…
+              </p>
+              <Loader2 className="h-5 w-5 animate-spin text-slate-400 mx-auto" />
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
