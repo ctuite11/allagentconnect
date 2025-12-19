@@ -174,6 +174,7 @@ serve(async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "AllAgentConnect <hello@allagentconnect.com>",
+        reply_to: "hello@allagentconnect.com",
         to: [email],
         subject: "Thanks for requesting access to AllAgentConnect",
         html: userEmailHtml,

@@ -54,8 +54,12 @@ export const RouteGuard: React.FC<Props> = ({
     }
 
     // Check verification if required (always for agents unless explicitly disabled)
-    if (shouldVerify && user && requireRole === "agent") {
+    // Skip if already on pending-verification page to prevent loops
+    if (shouldVerify && user && requireRole === "agent" && location.pathname !== "/pending-verification") {
       checkVerification(user.id);
+    } else if (shouldVerify && location.pathname === "/pending-verification") {
+      // Already on pending page, mark as checked
+      setVerificationChecked(true);
     }
   }, [loading, user, role, requireAuth, requireRole, shouldVerify, location.pathname, navigate]);
 
@@ -73,6 +77,7 @@ export const RouteGuard: React.FC<Props> = ({
         setIsVerified(true);
       } else if (status === 'pending') {
         // Pending agents go to the pending verification page
+        setVerificationChecked(true);
         navigate('/pending-verification', { replace: true });
         return;
       } else {
