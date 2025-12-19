@@ -71,6 +71,10 @@ export const RouteGuard: React.FC<Props> = ({
 
       if (status === 'verified') {
         setIsVerified(true);
+      } else if (status === 'pending') {
+        // Pending agents go to the pending verification page
+        navigate('/pending-verification', { replace: true });
+        return;
       } else {
         // Not verified - redirect to license verification
         navigate('/onboarding/verify-license', { replace: true });

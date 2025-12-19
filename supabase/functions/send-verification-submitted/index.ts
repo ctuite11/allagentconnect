@@ -57,7 +57,7 @@ serve(async (req: Request): Promise<Response> => {
     const stateName = stateNames[licenseState] || licenseState;
     const licenseVerifyUrl = stateLicenseLookupUrls[licenseState] || "";
 
-    // Email to user
+    // Email to user - new premium copy
     const userEmailHtml = `
       <!DOCTYPE html>
       <html>
@@ -65,37 +65,36 @@ serve(async (req: Request): Promise<Response> => {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">AllAgentConnect</h1>
-        </div>
-        
-        <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-          <h2 style="color: #1e3a5f; margin-top: 0;">Hi ${firstName},</h2>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.7; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
+        <div style="background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);">
           
-          <p>Thanks for submitting your real estate license for verification. We're excited to have you join AllAgentConnect — the agent-only network built for real collaboration.</p>
-          
-          <div style="background: #f8fafc; border-left: 4px solid #1e3a5f; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-            <p style="margin: 0; font-weight: 600; color: #1e3a5f;">What happens next:</p>
-            <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #64748b;">
-              <li>Our team will review your ${stateName} license information</li>
-              <li>We verify your credentials with the state licensing board</li>
-              <li>${licenseState === 'MA' ? 'Massachusetts verifications are typically completed within 24 hours' : 'Verifications are typically completed within 24 hours'}</li>
-            </ul>
+          <div style="padding: 32px 32px 24px 32px; border-bottom: 1px solid #f1f5f9;">
+            <div style="font-size: 20px; font-weight: 600;">
+              <span style="color: #0f172a;">AllAgent</span><span style="color: #94a3b8;">Connect</span>
+            </div>
           </div>
           
-          <p><strong>We'll send you another email once your license is verified</strong> and you have full access to the platform.</p>
+          <div style="padding: 32px;">
+            <p style="margin: 0 0 20px 0; font-size: 16px;">Hi ${firstName},</p>
+            
+            <p style="margin: 0 0 20px 0;">Thanks for your interest in AllAgentConnect — the agent-only network built for direct communication and off-market collaboration.</p>
+            
+            <p style="margin: 0 0 20px 0;">We've received your license and profile details and are reviewing them now to keep the platform trusted and verified.</p>
+            
+            <p style="margin: 0 0 24px 0;"><strong style="color: #0f172a;">You'll get an email the moment you're approved.</strong></p>
+            
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 28px 0;">
+            
+            <p style="margin: 0; color: #64748b; font-size: 14px;">
+              — AllAgentConnect Team
+            </p>
+          </div>
           
-          <p style="color: #64748b; font-size: 14px; margin-top: 30px;">
-            If you have any questions in the meantime, just reply to this email.
-          </p>
-          
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-          
-          <p style="color: #94a3b8; font-size: 12px; margin: 0;">
-            © ${new Date().getFullYear()} AllAgentConnect. All rights reserved.<br>
-            This email was sent to ${email} because you signed up for AllAgentConnect.
-          </p>
+          <div style="padding: 20px 32px; background: #f8fafc; border-top: 1px solid #f1f5f9;">
+            <p style="color: #94a3b8; font-size: 12px; margin: 0; text-align: center;">
+              © ${new Date().getFullYear()} AllAgentConnect. All rights reserved.
+            </p>
+          </div>
         </div>
       </body>
       </html>
@@ -110,41 +109,41 @@ serve(async (req: Request): Promise<Response> => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
           <h1 style="color: white; margin: 0; font-size: 24px;">🔔 New Verification Request</h1>
         </div>
         
-        <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-          <h2 style="color: #1e3a5f; margin-top: 0;">New Agent License Verification</h2>
+        <div style="background: #ffffff; padding: 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px;">
+          <h2 style="color: #0f172a; margin-top: 0;">New Agent License Verification</h2>
           
           <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Agent Name:</td>
-                <td style="padding: 8px 0; color: #1e3a5f; font-weight: 600;">${firstName} ${lastName}</td>
+                <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${firstName} ${lastName}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Email:</td>
-                <td style="padding: 8px 0; color: #1e3a5f;"><a href="mailto:${email}" style="color: #2563eb;">${email}</a></td>
+                <td style="padding: 8px 0; color: #0f172a;"><a href="mailto:${email}" style="color: #2563eb;">${email}</a></td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #64748b; font-weight: 500;">License #:</td>
-                <td style="padding: 8px 0; color: #1e3a5f; font-weight: 600;">${licenseNumber}</td>
+                <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${licenseNumber}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #64748b; font-weight: 500;">State:</td>
-                <td style="padding: 8px 0; color: #1e3a5f;">${stateName}</td>
+                <td style="padding: 8px 0; color: #0f172a;">${stateName}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Submitted:</td>
-                <td style="padding: 8px 0; color: #1e3a5f;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'short' })} EST</td>
+                <td style="padding: 8px 0; color: #0f172a;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'short' })} EST</td>
               </tr>
             </table>
           </div>
           
           ${licenseVerifyUrl ? `
           <div style="text-align: center; margin: 25px 0;">
-            <a href="${licenseVerifyUrl}" target="_blank" style="display: inline-block; background: #1e3a5f; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+            <a href="${licenseVerifyUrl}" target="_blank" style="display: inline-block; background: #0f172a; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
               🔗 Verify ${stateName} License
             </a>
           </div>
@@ -156,7 +155,7 @@ serve(async (req: Request): Promise<Response> => {
             </p>
           </div>
           
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
           
           <p style="color: #94a3b8; font-size: 12px; margin: 0; text-align: center;">
             AllAgentConnect Admin Notification
@@ -174,9 +173,9 @@ serve(async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "AllAgentConnect <noreply@allagentconnect.com>",
+        from: "AllAgentConnect <hello@allagentconnect.com>",
         to: [email],
-        subject: "We received your license verification — welcome to AllAgentConnect",
+        subject: "Thanks for requesting access to AllAgentConnect",
         html: userEmailHtml,
       }),
     });
@@ -198,7 +197,7 @@ serve(async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "AllAgentConnect <noreply@allagentconnect.com>",
+        from: "AllAgentConnect <hello@allagentconnect.com>",
         to: [ADMIN_EMAIL],
         subject: `🔔 New License Verification — ${firstName} ${lastName}`,
         html: adminEmailHtml,
