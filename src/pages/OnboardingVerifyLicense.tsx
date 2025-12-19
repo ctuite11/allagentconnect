@@ -149,6 +149,7 @@ const OnboardingVerifyLicense = () => {
           firstName: userFirstName || 'Agent',
           lastName: licenseLastName,
           licenseState: licenseState,
+          licenseNumber: licenseNumber,
         }
       });
     } catch (error) {
