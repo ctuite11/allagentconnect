@@ -106,20 +106,20 @@ const App = () => (
                 <Route path="/onboarding" element={<Navigate to="/auth/callback" replace />} />
                 <Route path="/verify-agent" element={<Navigate to="/auth/callback" replace />} />
                 
-                {/* Agent routes - verified required for sensitive actions */}
+                {/* Agent routes - ALL require verification by default via RouteGuard */}
                 <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
-                <Route path="/agent/listings" element={<RouteGuard requireRole="agent" requireVerified><MyListings /></RouteGuard>} />
-                <Route path="/agent/listings/new" element={<RouteGuard requireRole="agent" requireVerified><AddListing /></RouteGuard>} />
-                <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent" requireVerified><ManageListingPhotos /></RouteGuard>} />
-                <Route path="/agent/listings/:id/floor-plans" element={<RouteGuard requireRole="agent" requireVerified><ManageListingPhotos mode="floorPlans" /></RouteGuard>} />
-                <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent" requireVerified><AddListing /></RouteGuard>} />
+                <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
+                <Route path="/agent/listings/new" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
+                <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent"><ManageListingPhotos /></RouteGuard>} />
+                <Route path="/agent/listings/:id/floor-plans" element={<RouteGuard requireRole="agent"><ManageListingPhotos mode="floorPlans" /></RouteGuard>} />
+                <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
                 <Route path="/agent/listings/:id" element={<RouteGuard requireRole="agent"><AgentDetailRedirect /></RouteGuard>} />
                 <Route path="/buyer/auth" element={<BuyerAuth />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
-                <Route path="/client-needs" element={<RouteGuard requireRole="agent" requireVerified><ClientNeedsDashboard /></RouteGuard>} />
-                <Route path="/communication-center" element={<RouteGuard requireRole="agent" requireVerified><CommunicationCenter /></RouteGuard>} />
-                <Route path="/listing-intel" element={<RouteGuard requireRole="agent" requireVerified><ListingIntel /></RouteGuard>} />
-                <Route path="/add-rental-listing" element={<RouteGuard requireRole="agent" requireVerified><AddRentalListing /></RouteGuard>} />
+                <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
+                <Route path="/communication-center" element={<RouteGuard requireRole="agent"><CommunicationCenter /></RouteGuard>} />
+                <Route path="/listing-intel" element={<RouteGuard requireRole="agent"><ListingIntel /></RouteGuard>} />
+                <Route path="/add-rental-listing" element={<RouteGuard requireRole="agent"><AddRentalListing /></RouteGuard>} />
                 <Route path="/property/:id" element={<PropertyDetail />} />
                 <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
                 <Route path="/agent/:id" element={<AgentProfile />} />
