@@ -56,6 +56,7 @@ import ClientFavoritesPage from "./pages/ClientFavoritesPage";
 import PasswordReset from "./pages/PasswordReset";
 import OnboardingCreateAccount from "./pages/OnboardingCreateAccount";
 import OnboardingVerifyLicense from "./pages/OnboardingVerifyLicense";
+import PendingVerification from "./pages/PendingVerification";
 import NotFound from "./pages/NotFound";
 import MyListings from "./pages/MyListings";
 import ManageListingPhotos from "./pages/ManageListingPhotos";
@@ -101,6 +102,7 @@ const App = () => (
                 {/* Onboarding sub-routes */}
                 <Route path="/onboarding/create-account" element={<OnboardingCreateAccount />} />
                 <Route path="/onboarding/verify-license" element={<OnboardingVerifyLicense />} />
+                <Route path="/pending-verification" element={<PendingVerification />} />
                 
                 {/* Legacy redirects */}
                 <Route path="/onboarding" element={<Navigate to="/auth/callback" replace />} />

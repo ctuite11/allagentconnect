@@ -18,6 +18,7 @@ import {
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const navigate = useNavigate();
   const { role, loading: roleLoading } = useUserRole(user);
 
@@ -35,6 +36,28 @@ const Navigation = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Check agent status for pending users
+  useEffect(() => {
+    const checkAgentStatus = async () => {
+      if (!user || role !== "agent") {
+        setAgentStatus(null);
+        return;
+      }
+
+      const { data: settings } = await supabase
+        .from('agent_settings')
+        .select('agent_status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      setAgentStatus(settings?.agent_status || 'unverified');
+    };
+
+    if (!roleLoading) {
+      checkAgentStatus();
+    }
+  }, [user, role, roleLoading]);
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -44,6 +67,11 @@ const Navigation = () => {
       console.error("Error logging out:", error);
     }
   };
+
+  // Hide navigation for pending/unverified agents - they have their own locked screen
+  if (user && role === "agent" && (agentStatus === "pending" || agentStatus === "unverified")) {
+    return null;
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 border-b border-border">

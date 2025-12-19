@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck, CheckCircle2, Edit } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
 
 const US_STATES = [
   { value: "AL", label: "Alabama" }, { value: "AK", label: "Alaska" },
@@ -37,7 +37,7 @@ const US_STATES = [
   { value: "DC", label: "Washington D.C." }
 ];
 
-type PageState = "loading" | "form" | "pending" | "verified";
+type PageState = "loading" | "form";
 
 const OnboardingVerifyLicense = () => {
   const navigate = useNavigate();
@@ -111,17 +111,11 @@ const OnboardingVerifyLicense = () => {
       }
 
       if (status === 'pending') {
-        // Pre-fill from existing data for "Update License Info"
-        if (settings?.license_number) {
-          setLicenseNumber(settings.license_number);
+        // Redirect to the pending verification lock screen
+        if (!didNavigate.current) {
+          didNavigate.current = true;
+          navigate("/pending-verification", { replace: true });
         }
-        if (settings?.license_state) {
-          setLicenseState(settings.license_state);
-        }
-        if (settings?.license_last_name) {
-          setLicenseLastName(settings.license_last_name);
-        }
-        setPageState("pending");
         return;
       }
 
@@ -192,7 +186,9 @@ const OnboardingVerifyLicense = () => {
       await sendVerificationEmail();
 
       toast.success("Verification submitted! We'll email you when your license is approved.");
-      setPageState("pending");
+      
+      // Redirect to the pending verification lock screen
+      navigate("/pending-verification", { replace: true });
     } catch (error: any) {
       console.error("Verification error:", error);
       toast.error(error.message || "Failed to submit verification");
@@ -201,94 +197,16 @@ const OnboardingVerifyLicense = () => {
     }
   };
 
-  const handleUpdateLicenseInfo = () => {
-    setPageState("form");
-  };
-
   const handleDone = async () => {
     await supabase.auth.signOut();
     navigate("/auth", { replace: true });
   };
 
-  // Get state label for display
-  const getStateLabel = (stateCode: string) => {
-    return US_STATES.find(s => s.value === stateCode)?.label || stateCode;
-  };
 
   if (pageState === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (pageState === "pending") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="w-full max-w-md">
-          <div className="bg-card rounded-2xl shadow-lg p-8 border border-border">
-            {/* Header */}
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-8 w-8 text-primary" />
-              </div>
-              <h1 className="text-2xl font-semibold text-foreground mb-2">
-                Thanks — you're all set
-              </h1>
-              <p className="text-muted-foreground">
-                {licenseState === 'MA' 
-                  ? "Massachusetts verifications are typically completed within 24 hours."
-                  : "Verifications are typically completed within 24 hours."
-                }
-              </p>
-            </div>
-
-            {/* What happens next */}
-            <div className="bg-muted/50 rounded-lg p-5 mb-6">
-              <h2 className="font-medium text-foreground mb-3">What happens next:</h2>
-              <ul className="space-y-2.5">
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-muted-foreground">Our team reviews your license information</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-muted-foreground">
-                    We verify with the {licenseState ? getStateLabel(licenseState) : 'state'} licensing board
-                  </span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-muted-foreground">You'll receive an email when you're approved</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Action buttons */}
-            <div className="space-y-3">
-              <Button 
-                onClick={handleDone} 
-                className="w-full"
-              >
-                You're good — we'll be in touch
-              </Button>
-              <Button 
-                onClick={handleUpdateLicenseInfo} 
-                variant="ghost" 
-                className="w-full text-muted-foreground"
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Update license info
-              </Button>
-            </div>
-
-            {/* Footer */}
-            <p className="text-center text-sm text-muted-foreground mt-6">
-              You can close this window. We'll email you when approved.
-            </p>
-          </div>
-        </div>
       </div>
     );
   }
