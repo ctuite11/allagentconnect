@@ -19,7 +19,7 @@ interface VerificationEmailRequest {
 
 // State license lookup URLs
 const stateLicenseLookupUrls: Record<string, string> = {
-  MA: "https://www.mass.gov/how-to/look-up-a-real-estate-license",
+  MA: "https://www.mass.gov/orgs/board-of-registration-of-real-estate-brokers-and-salespersons",
   CT: "https://www.elicense.ct.gov/",
   RI: "https://dbr.ri.gov/divisions/commercial-licensing",
   NH: "https://www.oplc.nh.gov/real-estate-commission",
