@@ -140,23 +140,27 @@ const PendingVerification = () => {
               </ul>
             </div>
 
-            {/* Email mention */}
-            <p className="text-center text-slate-500 text-sm mb-8">
-              We just emailed you — check your inbox.
+            {/* Confirmation message */}
+            <p className="text-center text-slate-600 text-sm mb-8">
+              You're all set. We'll email you as soon as your license is approved.
             </p>
 
-            {/* Log out button - only action */}
+            {/* Primary action */}
             <Button 
               onClick={handleLogout} 
               className="w-full bg-slate-900 text-white hover:bg-slate-800 h-11"
             >
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
+              Done for now
             </Button>
 
-            {/* Microcopy */}
-            <p className="text-center text-slate-500 text-xs mt-6">
-              Questions? Reply to the email we just sent — we're here.
+            {/* Secondary logout text */}
+            <p className="text-center text-slate-400 text-xs mt-4">
+              This will log you out until verification is complete.
+            </p>
+
+            {/* Support microcopy */}
+            <p className="text-center text-slate-500 text-xs mt-4">
+              Questions? Email us at hello@allagentconnect.com
             </p>
           </div>
         </div>
