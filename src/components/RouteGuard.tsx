@@ -20,7 +20,11 @@ export const RouteGuard: React.FC<Props> = ({
   const { user, role, loading } = useAuthRole();
   const location = useLocation();
   const navigate = useNavigate();
-  const [verificationChecked, setVerificationChecked] = useState(!requireVerified);
+  
+  // For agents, ALWAYS require verification unless explicitly set to false
+  const shouldVerify = requireRole === "agent" ? (requireVerified !== false) : requireVerified;
+  
+  const [verificationChecked, setVerificationChecked] = useState(!shouldVerify);
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
@@ -28,8 +32,10 @@ export const RouteGuard: React.FC<Props> = ({
 
     // If route requires auth and no user, send to login
     if (requireAuth && !user) {
+      // Use /auth for agent routes, /consumer/auth for others
+      const loginPath = requireRole === "agent" ? "/auth" : "/consumer/auth";
       if (location.pathname !== "/consumer/auth" && location.pathname !== "/auth") {
-        navigate("/consumer/auth", {
+        navigate(loginPath, {
           replace: true,
           state: { from: location.pathname },
         });
@@ -47,11 +53,11 @@ export const RouteGuard: React.FC<Props> = ({
       return;
     }
 
-    // Check verification if required
-    if (requireVerified && user && requireRole === "agent") {
+    // Check verification if required (always for agents unless explicitly disabled)
+    if (shouldVerify && user && requireRole === "agent") {
       checkVerification(user.id);
     }
-  }, [loading, user, role, requireAuth, requireRole, requireVerified, location.pathname, navigate]);
+  }, [loading, user, role, requireAuth, requireRole, shouldVerify, location.pathname, navigate]);
 
   const checkVerification = async (userId: string) => {
     try {
@@ -93,12 +99,12 @@ export const RouteGuard: React.FC<Props> = ({
   }
 
   // If verification required but not yet checked
-  if (requireVerified && !verificationChecked) {
+  if (shouldVerify && !verificationChecked) {
     return <LoadingScreen message="Verifying access..." />;
   }
 
   // If verification required but not verified
-  if (requireVerified && !isVerified && verificationChecked) {
+  if (shouldVerify && !isVerified && verificationChecked) {
     return null; // Already navigating
   }
 

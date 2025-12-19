@@ -161,10 +161,6 @@ const OnboardingVerifyLicense = () => {
     }
   };
 
-  const handleContinue = () => {
-    navigate("/agent-dashboard", { replace: true });
-  };
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/auth", { replace: true });
@@ -189,22 +185,25 @@ const OnboardingVerifyLicense = () => {
             <h1 className="text-2xl font-semibold text-foreground mb-2">
               Verification Pending
             </h1>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-4">
               We're reviewing your license information. This usually takes less than 24 hours.
             </p>
             <p className="text-sm text-muted-foreground mb-6">
-              In the meantime, you can explore the platform. Some features will be available once your license is verified.
+              We'll notify you by email once your license is verified and you have full access to the platform.
             </p>
             
-            <div className="space-y-3">
-              <Button onClick={handleContinue} className="w-full">
-                Continue to Dashboard
-              </Button>
-              <Button onClick={handleLogout} variant="ghost" className="w-full">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
+            <div className="bg-muted/50 rounded-lg p-4 mb-6">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">What happens next?</strong><br />
+                Our team will manually verify your license with the state licensing board. 
+                You'll receive an email confirmation once approved.
+              </p>
             </div>
+            
+            <Button onClick={handleLogout} variant="outline" className="w-full">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
           </div>
         </div>
       </div>
