@@ -133,11 +133,11 @@ const OnboardingVerifyLicense = () => {
     checkState();
   }, [navigate]);
 
-  const sendVerificationEmail = async () => {
-    if (!userEmail) return;
+  const sendVerificationEmail = async (): Promise<boolean> => {
+    if (!userEmail) return false;
     
     try {
-      await supabase.functions.invoke('send-verification-submitted', {
+      const { error } = await supabase.functions.invoke('send-verification-submitted', {
         body: {
           email: userEmail,
           firstName: userFirstName || 'Agent',
@@ -146,9 +146,15 @@ const OnboardingVerifyLicense = () => {
           licenseNumber: licenseNumber,
         }
       });
+      
+      if (error) {
+        console.error("Failed to send verification email:", error);
+        return false;
+      }
+      return true;
     } catch (error) {
       console.error("Failed to send verification email:", error);
-      // Don't block the flow if email fails
+      return false;
     }
   };
 
@@ -183,9 +189,13 @@ const OnboardingVerifyLicense = () => {
       if (error) throw error;
 
       // Send confirmation email
-      await sendVerificationEmail();
-
-      toast.success("Verification submitted! We'll email you when your license is approved.");
+      const emailSent = await sendVerificationEmail();
+      
+      if (emailSent) {
+        toast.success("Verification submitted! Check your email for confirmation.");
+      } else {
+        toast.warning("Verification submitted, but we couldn't send a confirmation email. You can resend it from the next page.");
+      }
       
       // Redirect to the pending verification lock screen
       navigate("/pending-verification", { replace: true });

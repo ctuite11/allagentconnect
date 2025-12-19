@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 const POLL_INTERVAL_MS = 5000; // Poll every 5 seconds
 
@@ -11,6 +12,7 @@ const PendingVerification = () => {
   const [loading, setLoading] = useState(true);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [isApproved, setIsApproved] = useState(false);
+  const [resending, setResending] = useState(false);
   const didNavigate = useRef(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -96,6 +98,59 @@ const PendingVerification = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/auth", { replace: true });
+  };
+
+  const handleResendEmail = async () => {
+    setResending(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast.error("Session expired. Please sign in again.");
+        navigate("/auth", { replace: true });
+        return;
+      }
+
+      // Get agent profile and settings
+      const [profileRes, settingsRes] = await Promise.all([
+        supabase
+          .from('agent_profiles')
+          .select('first_name, last_name, email')
+          .eq('id', session.user.id)
+          .maybeSingle(),
+        supabase
+          .from('agent_settings')
+          .select('license_state, license_number, license_last_name')
+          .eq('user_id', session.user.id)
+          .maybeSingle()
+      ]);
+
+      const profile = profileRes.data;
+      const settings = settingsRes.data;
+
+      if (!profile || !settings?.license_number) {
+        toast.error("Could not find your verification details.");
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('send-verification-submitted', {
+        body: {
+          email: profile.email,
+          firstName: profile.first_name || 'Agent',
+          lastName: settings.license_last_name || profile.last_name,
+          licenseState: settings.license_state,
+          licenseNumber: settings.license_number,
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success("Verification email resent! Check your inbox.");
+    } catch (error: any) {
+      console.error("Failed to resend verification email:", error);
+      toast.error("Failed to resend email. Please try again.");
+    } finally {
+      setResending(false);
+    }
   };
 
   if (loading) {
@@ -221,6 +276,32 @@ const PendingVerification = () => {
             <p className="text-center text-slate-400 text-xs mt-4">
               This will log you out until verification is complete.
             </p>
+
+            {/* Resend email option */}
+            <div className="text-center mt-6 pt-4 border-t border-slate-100">
+              <p className="text-slate-500 text-xs mb-2">
+                Didn't receive a confirmation email?
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleResendEmail}
+                disabled={resending}
+                className="text-slate-600 hover:text-slate-900"
+              >
+                {resending ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-3 w-3 mr-1.5" />
+                    Resend email
+                  </>
+                )}
+              </Button>
+            </div>
 
             {/* Support microcopy */}
             <p className="text-center text-slate-500 text-xs mt-4">
