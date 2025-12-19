@@ -173,7 +173,7 @@ serve(async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "AllAgentConnect <hello@allagentconnect.com>",
+        from: "AllAgentConnect <hello@mail.allagentconnect.com>",
         reply_to: "hello@allagentconnect.com",
         to: [email],
         subject: "Thanks for requesting access to AllAgentConnect",
@@ -198,7 +198,8 @@ serve(async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "AllAgentConnect <hello@allagentconnect.com>",
+        from: "AllAgentConnect <hello@mail.allagentconnect.com>",
+        reply_to: "hello@allagentconnect.com",
         to: [ADMIN_EMAIL],
         subject: `🔔 New License Verification — ${firstName} ${lastName}`,
         html: adminEmailHtml,
