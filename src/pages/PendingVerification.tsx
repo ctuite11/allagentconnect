@@ -163,7 +163,7 @@ const PendingVerification = () => {
                 <CheckCircle2 className="h-7 w-7 text-emerald-600" />
               </div>
               <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3">
-                Thanks — you're in.
+                Almost there.
               </h1>
               <p className="text-slate-600 text-base leading-relaxed">
                 We're reviewing your license and profile to keep AllAgentConnect trusted and agent-only.
