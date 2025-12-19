@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.send-agent-approval-email]
 verify_jwt = false
+
+[functions.send-auth-email]
+verify_jwt = false
