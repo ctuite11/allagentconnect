@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck, Clock, CheckCircle2, LogOut, Edit } from "lucide-react";
+import { Loader2, ShieldCheck, CheckCircle2, Edit } from "lucide-react";
 
 const US_STATES = [
   { value: "AL", label: "Alabama" }, { value: "AK", label: "Alaska" },
@@ -204,7 +204,7 @@ const OnboardingVerifyLicense = () => {
     setPageState("form");
   };
 
-  const handleLogout = async () => {
+  const handleDone = async () => {
     await supabase.auth.signOut();
     navigate("/auth", { replace: true });
   };
@@ -229,11 +229,11 @@ const OnboardingVerifyLicense = () => {
           <div className="bg-card rounded-2xl shadow-lg p-8 border border-border">
             {/* Header */}
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="h-8 w-8 text-primary" />
               </div>
               <h1 className="text-2xl font-semibold text-foreground mb-2">
-                Thanks — Your License is in Review
+                Thanks — you're all set
               </h1>
               <p className="text-muted-foreground">
                 {licenseState === 'MA' 
@@ -267,22 +267,25 @@ const OnboardingVerifyLicense = () => {
             {/* Action buttons */}
             <div className="space-y-3">
               <Button 
-                onClick={handleUpdateLicenseInfo} 
-                variant="outline" 
+                onClick={handleDone} 
                 className="w-full"
               >
-                <Edit className="mr-2 h-4 w-4" />
-                Update License Info
+                You're good — we'll be in touch
               </Button>
               <Button 
-                onClick={handleLogout} 
+                onClick={handleUpdateLicenseInfo} 
                 variant="ghost" 
                 className="w-full text-muted-foreground"
               >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
+                <Edit className="mr-2 h-4 w-4" />
+                Update license info
               </Button>
             </div>
+
+            {/* Footer */}
+            <p className="text-center text-sm text-muted-foreground mt-6">
+              You can close this window. We'll email you when approved.
+            </p>
           </div>
         </div>
       </div>
@@ -363,9 +366,8 @@ const OnboardingVerifyLicense = () => {
           </form>
 
           <div className="mt-6 pt-4 border-t border-border">
-            <Button onClick={handleLogout} variant="ghost" className="w-full text-muted-foreground">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
+            <Button onClick={handleDone} variant="ghost" className="w-full text-muted-foreground">
+              Back to sign in
             </Button>
           </div>
         </div>
