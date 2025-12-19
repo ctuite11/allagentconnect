@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck, Clock, CheckCircle2, LogOut } from "lucide-react";
+import { Loader2, ShieldCheck, Clock, CheckCircle2, LogOut, Edit } from "lucide-react";
 
 const US_STATES = [
   { value: "AL", label: "Alabama" }, { value: "AK", label: "Alaska" },
@@ -47,6 +47,8 @@ const OnboardingVerifyLicense = () => {
   const [licenseState, setLicenseState] = useState("");
   const [licenseLastName, setLicenseLastName] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userFirstName, setUserFirstName] = useState<string | null>(null);
   const didNavigate = useRef(false);
 
   useEffect(() => {
@@ -62,11 +64,12 @@ const OnboardingVerifyLicense = () => {
       }
 
       setUserId(session.user.id);
+      setUserEmail(session.user.email || null);
 
       // Check if agent profile exists
       const { data: agentProfile } = await supabase
         .from('agent_profiles')
-        .select('id, last_name')
+        .select('id, first_name, last_name')
         .eq('id', session.user.id)
         .maybeSingle();
 
@@ -79,6 +82,11 @@ const OnboardingVerifyLicense = () => {
         return;
       }
 
+      // Store first name for email
+      if (agentProfile.first_name) {
+        setUserFirstName(agentProfile.first_name);
+      }
+
       // Pre-fill last name from profile
       if (agentProfile.last_name) {
         setLicenseLastName(agentProfile.last_name);
@@ -87,7 +95,7 @@ const OnboardingVerifyLicense = () => {
       // Check current status
       const { data: settings } = await supabase
         .from('agent_settings')
-        .select('agent_status, license_number, license_state')
+        .select('agent_status, license_number, license_state, license_last_name')
         .eq('user_id', session.user.id)
         .maybeSingle();
 
@@ -103,6 +111,16 @@ const OnboardingVerifyLicense = () => {
       }
 
       if (status === 'pending') {
+        // Pre-fill from existing data for "Update License Info"
+        if (settings?.license_number) {
+          setLicenseNumber(settings.license_number);
+        }
+        if (settings?.license_state) {
+          setLicenseState(settings.license_state);
+        }
+        if (settings?.license_last_name) {
+          setLicenseLastName(settings.license_last_name);
+        }
         setPageState("pending");
         return;
       }
@@ -120,6 +138,24 @@ const OnboardingVerifyLicense = () => {
 
     checkState();
   }, [navigate]);
+
+  const sendVerificationEmail = async () => {
+    if (!userEmail) return;
+    
+    try {
+      await supabase.functions.invoke('send-verification-submitted', {
+        body: {
+          email: userEmail,
+          firstName: userFirstName || 'Agent',
+          lastName: licenseLastName,
+          licenseState: licenseState,
+        }
+      });
+    } catch (error) {
+      console.error("Failed to send verification email:", error);
+      // Don't block the flow if email fails
+    }
+  };
 
   const handleSubmitVerification = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,7 +187,10 @@ const OnboardingVerifyLicense = () => {
 
       if (error) throw error;
 
-      toast.success("Verification submitted! You can continue to explore while we verify your license.");
+      // Send confirmation email
+      await sendVerificationEmail();
+
+      toast.success("Verification submitted! We'll email you when your license is approved.");
       setPageState("pending");
     } catch (error: any) {
       console.error("Verification error:", error);
@@ -161,9 +200,18 @@ const OnboardingVerifyLicense = () => {
     }
   };
 
+  const handleUpdateLicenseInfo = () => {
+    setPageState("form");
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/auth", { replace: true });
+  };
+
+  // Get state label for display
+  const getStateLabel = (stateCode: string) => {
+    return US_STATES.find(s => s.value === stateCode)?.label || stateCode;
   };
 
   if (pageState === "loading") {
@@ -178,32 +226,63 @@ const OnboardingVerifyLicense = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-md">
-          <div className="bg-card rounded-2xl shadow-lg p-8 border border-border text-center">
-            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Clock className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-            </div>
-            <h1 className="text-2xl font-semibold text-foreground mb-2">
-              Verification Pending
-            </h1>
-            <p className="text-muted-foreground mb-4">
-              We're reviewing your license information. This usually takes less than 24 hours.
-            </p>
-            <p className="text-sm text-muted-foreground mb-6">
-              We'll notify you by email once your license is verified and you have full access to the platform.
-            </p>
-            
-            <div className="bg-muted/50 rounded-lg p-4 mb-6">
-              <p className="text-sm text-muted-foreground">
-                <strong className="text-foreground">What happens next?</strong><br />
-                Our team will manually verify your license with the state licensing board. 
-                You'll receive an email confirmation once approved.
+          <div className="bg-card rounded-2xl shadow-lg p-8 border border-border">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h1 className="text-2xl font-semibold text-foreground mb-2">
+                Thanks — Your License is in Review
+              </h1>
+              <p className="text-muted-foreground">
+                {licenseState === 'MA' 
+                  ? "Massachusetts verifications are typically completed within 24 hours."
+                  : "Verifications are typically completed within 24 hours."
+                }
               </p>
             </div>
-            
-            <Button onClick={handleLogout} variant="outline" className="w-full">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
+
+            {/* What happens next */}
+            <div className="bg-muted/50 rounded-lg p-5 mb-6">
+              <h2 className="font-medium text-foreground mb-3">What happens next:</h2>
+              <ul className="space-y-2.5">
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-muted-foreground">Our team reviews your license information</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-muted-foreground">
+                    We verify with the {licenseState ? getStateLabel(licenseState) : 'state'} licensing board
+                  </span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-muted-foreground">You'll receive an email when you're approved</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Action buttons */}
+            <div className="space-y-3">
+              <Button 
+                onClick={handleUpdateLicenseInfo} 
+                variant="outline" 
+                className="w-full"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Update License Info
+              </Button>
+              <Button 
+                onClick={handleLogout} 
+                variant="ghost" 
+                className="w-full text-muted-foreground"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </div>
