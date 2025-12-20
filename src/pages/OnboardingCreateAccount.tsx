@@ -56,13 +56,12 @@ const OnboardingCreateAccount = () => {
         return;
       }
 
-      // CRITICAL: Block recovery sessions from touching onboarding
+      // CRITICAL: Block recovery sessions from touching onboarding - redirect to password reset
       const isRecoverySession = session.user.recovery_sent_at;
       if (isRecoverySession) {
-        console.log("[OnboardingCreateAccount] Recovery session detected - signing out");
+        console.log("[OnboardingCreateAccount] Recovery session detected - redirecting to password-reset");
         didNavigate.current = true;
-        await supabase.auth.signOut();
-        navigate("/auth", { replace: true });
+        navigate("/password-reset", { replace: true });
         return;
       }
 

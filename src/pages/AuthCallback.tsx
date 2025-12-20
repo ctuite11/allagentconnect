@@ -167,10 +167,9 @@ const AuthCallback = () => {
         urlParams.get("type") === "recovery";
       
       if (isRecoverySession) {
-        console.log("[AuthCallback] Recovery session detected - signing out and redirecting to auth");
+        console.log("[AuthCallback] Recovery session detected - redirecting to password-reset");
         didNavigate.current = true;
-        await supabase.auth.signOut();
-        navigate('/auth?role=agent', { replace: true });
+        navigate('/password-reset', { replace: true });
         return;
       }
 
