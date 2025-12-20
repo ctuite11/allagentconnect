@@ -56,6 +56,16 @@ const OnboardingCreateAccount = () => {
         return;
       }
 
+      // CRITICAL: Block recovery sessions from touching onboarding
+      const isRecoverySession = session.user.recovery_sent_at;
+      if (isRecoverySession) {
+        console.log("[OnboardingCreateAccount] Recovery session detected - signing out");
+        didNavigate.current = true;
+        await supabase.auth.signOut();
+        navigate("/auth", { replace: true });
+        return;
+      }
+
       setUserId(session.user.id);
       setUserEmail(session.user.email || null);
 

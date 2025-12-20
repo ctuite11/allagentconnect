@@ -72,11 +72,11 @@ const PasswordReset = () => {
         return;
       }
 
-      // Sign out to prevent session state issues with role/profile loading
+      // CRITICAL: Sign out immediately to prevent recovery session from touching onboarding
       await supabase.auth.signOut();
       
-      toast.success("Password updated successfully! Please sign in with your new password.");
-      navigate("/auth", { replace: true });
+      // Redirect to auth with success flag - NO auto-login, NO onboarding
+      navigate("/auth?reset=success", { replace: true });
     } catch (error) {
       console.error("[PasswordReset] Error:", error);
       toast.error("An error occurred while resetting your password");

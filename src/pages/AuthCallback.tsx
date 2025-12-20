@@ -161,6 +161,20 @@ const AuthCallback = () => {
     if (didNavigate.current) return;
 
     try {
+      // CRITICAL: Check if this is a recovery session - NEVER route to onboarding
+      const { data: { session } } = await supabase.auth.getSession();
+      const isRecoverySession = 
+        session?.user?.recovery_sent_at || 
+        window.location.pathname === '/password-reset';
+      
+      if (isRecoverySession) {
+        console.log("[AuthCallback] Recovery session detected - signing out and redirecting to auth");
+        didNavigate.current = true;
+        await supabase.auth.signOut();
+        navigate('/auth', { replace: true });
+        return;
+      }
+
       // 1. Check if agent_profiles exists
       const { data: agentProfile } = await supabase
         .from('agent_profiles')

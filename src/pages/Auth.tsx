@@ -28,11 +28,18 @@ const Auth = () => {
   const emailInputRef = useRef<HTMLInputElement>(null);
   const didNavigate = useRef(false);
 
-  // Check for logout param or existing session
+  // Check for logout param, reset success, or existing session
   useEffect(() => {
     let mounted = true;
 
     const handleSession = async () => {
+      // Check for ?reset=success to show password reset success message
+      if (searchParams.get("reset") === "success") {
+        toast.success("Password updated successfully! Please sign in with your new password.");
+        // Clear the URL param without triggering navigation
+        window.history.replaceState(null, "", "/auth");
+      }
+
       // Check for ?logout=1 param to force sign out
       if (searchParams.get("logout") === "1") {
         await supabase.auth.signOut();
