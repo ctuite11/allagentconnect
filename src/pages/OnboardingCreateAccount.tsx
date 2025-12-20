@@ -30,10 +30,11 @@ const OnboardingCreateAccount = () => {
       hashParams.has('refresh_token') ||
       searchParams.has('code');
     
+    // FIX: Use OR - detect recovery from type OR from tokens
     const isRecoveryContext =
       typeFromHash === 'recovery' ||
       typeFromQuery === 'recovery' ||
-      (hasRecoveryTokens && (typeFromHash === 'recovery' || typeFromQuery === 'recovery'));
+      hasRecoveryTokens;
     
     if (isRecoveryContext) {
       console.log("[OnboardingCreateAccount] Recovery context detected - redirecting to password-reset");
