@@ -61,6 +61,7 @@ import NotFound from "./pages/NotFound";
 import MyListings from "./pages/MyListings";
 import ManageListingPhotos from "./pages/ManageListingPhotos";
 import AdminApprovals from "./pages/AdminApprovals";
+import ChooseRole from "./pages/ChooseRole";
 
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
@@ -97,6 +98,8 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/allagentconnect" element={<AllAgentConnectHome />} />
                 <Route path="/coming-soon" element={<ComingSoon />} />
+                <Route path="/choose" element={<ChooseRole />} />
+                <Route path="/get-started" element={<ChooseRole />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 

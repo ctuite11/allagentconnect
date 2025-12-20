@@ -170,11 +170,74 @@ const AuthCallback = () => {
         console.log("[AuthCallback] Recovery session detected - signing out and redirecting to auth");
         didNavigate.current = true;
         await supabase.auth.signOut();
-        navigate('/auth', { replace: true });
+        navigate('/auth?role=agent', { replace: true });
         return;
       }
 
-      // 1. Check if agent_profiles exists
+      // 1. Check existing role in user_roles table
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      // If user already has a role, route based on that
+      if (userRole?.role) {
+        didNavigate.current = true;
+        if (userRole.role === 'buyer') {
+          navigate('/client/dashboard', { replace: true });
+        } else if (userRole.role === 'agent') {
+          // Check agent verification status
+          const { data: settings } = await supabase
+            .from('agent_settings')
+            .select('agent_status')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          const status = settings?.agent_status || 'unverified';
+          if (status === 'verified') {
+            navigate('/agent-dashboard', { replace: true });
+          } else {
+            // Check if they have a profile
+            const { data: agentProfile } = await supabase
+              .from('agent_profiles')
+              .select('id')
+              .eq('id', userId)
+              .maybeSingle();
+
+            if (!agentProfile) {
+              navigate('/onboarding/create-account', { replace: true });
+            } else {
+              navigate('/onboarding/verify-license', { replace: true });
+            }
+          }
+        } else if (userRole.role === 'admin') {
+          navigate('/admin/approvals', { replace: true });
+        }
+        return;
+      }
+
+      // 2. No role yet - check intended_role from user metadata
+      const intendedRole = session?.user?.user_metadata?.intended_role;
+      console.log("[AuthCallback] No role found, intended_role:", intendedRole);
+
+      if (intendedRole === 'buyer') {
+        // Assign buyer role
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .upsert({ user_id: userId, role: 'buyer' }, { onConflict: 'user_id' });
+
+        if (roleError) {
+          console.error("[AuthCallback] Failed to assign buyer role:", roleError);
+        }
+
+        didNavigate.current = true;
+        navigate('/client/dashboard', { replace: true });
+        return;
+      }
+
+      // Default: treat as agent - go to onboarding
+      // Check if agent_profiles exists
       const { data: agentProfile } = await supabase
         .from('agent_profiles')
         .select('id')

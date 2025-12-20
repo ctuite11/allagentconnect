@@ -213,7 +213,7 @@ const ConsumerAuth = () => {
         phone,
       });
 
-      const redirectUrl = `${window.location.origin}/consumer/dashboard`;
+      const redirectUrl = `${window.location.origin}/auth/callback`;
 
       const { data, error } = await supabase.auth.signUp({
         email: validated.email,
@@ -224,6 +224,7 @@ const ConsumerAuth = () => {
             first_name: validated.firstName,
             last_name: validated.lastName,
             phone: validated.phone || null,
+            intended_role: 'buyer', // Store intended role for callback routing
           },
         },
       });
@@ -237,8 +238,14 @@ const ConsumerAuth = () => {
         return;
       }
 
+      // Check for "fake success" - user exists but identities is empty
+      if (data.user && data.user.identities?.length === 0) {
+        toast.error("This email is already registered. Please login or check your email for a confirmation link.");
+        return;
+      }
+
       if (data.user) {
-        toast.success("Account created successfully! You can now log in.");
+        toast.success("Check your email to confirm your account!");
         
         // Send welcome email
         try {
@@ -251,7 +258,6 @@ const ConsumerAuth = () => {
           });
         } catch (emailError) {
           console.error('Failed to send welcome email:', emailError);
-          // Don't block signup if email fails
         }
         
         setActiveTab("login");
