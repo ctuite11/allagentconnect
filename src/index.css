@@ -31,8 +31,11 @@ All colors MUST be HSL.
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 145 75% 50%;
+    /* AAC Green Accent System - #6FB83F = hsl(93 50% 48%) */
+    --accent: 93 50% 48%;
     --accent-foreground: 0 0% 100%;
+    --accent-soft: 93 50% 48%;
+    --accent-muted: 93 45% 60%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -43,7 +46,8 @@ All colors MUST be HSL.
 
     --radius: 1rem;
 
-    --success: 145 75% 50%;
+    /* Success uses AAC Green for verified/approved/active states */
+    --success: 93 50% 48%;
     --success-foreground: 0 0% 100%;
 
     /* Tech-forward colors - blue only for primary actions */
@@ -53,7 +57,7 @@ All colors MUST be HSL.
     
     /* Pill color tokens - neutral soft is true neutral */
     --primary-soft: 217 91% 60%;
-    --success-soft: 165 100% 44%;
+    --success-soft: 93 50% 48%;
     --warning: 38 92% 50%;
     --warning-soft: 38 92% 50%;
     --danger-soft: 0 84% 60%;
@@ -92,8 +96,11 @@ All colors MUST be HSL.
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 145 70% 45%;
+    /* AAC Green Accent System (dark mode) */
+    --accent: 93 50% 48%;
     --accent-foreground: 0 0% 100%;
+    --accent-soft: 93 50% 48%;
+    --accent-muted: 93 45% 55%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
@@ -109,7 +116,7 @@ All colors MUST be HSL.
     
     /* Pill color tokens (dark mode) - neutral */
     --primary-soft: 217 91% 60%;
-    --success-soft: 165 100% 44%;
+    --success-soft: 93 50% 48%;
     --warning: 38 92% 50%;
     --warning-soft: 38 92% 50%;
     --danger-soft: 0 84% 60%;
