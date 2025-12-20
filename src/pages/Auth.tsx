@@ -219,8 +219,8 @@ const Auth = () => {
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-md">
           <div className="bg-card rounded-2xl shadow-lg p-8 border border-border text-center">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <LogIn className="h-6 w-6 text-primary" />
+            <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <LogIn className="h-6 w-6 text-emerald-600" />
             </div>
             <h1 className="text-2xl font-semibold text-foreground mb-2">
               You're already signed in
@@ -231,14 +231,21 @@ const Auth = () => {
             <div className="space-y-3">
               <Button
                 onClick={() => navigate('/auth/callback', { replace: true })}
-                className="w-full"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 Continue to App
               </Button>
               <Button
-                onClick={handleLogout}
+                onClick={() => navigate('/auth?logout=1', { replace: true })}
                 variant="outline"
-                className="w-full"
+                className="w-full border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+              >
+                Use a Different Account
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                className="w-full text-muted-foreground hover:text-foreground"
                 disabled={loading}
               >
                 {loading ? (
@@ -270,8 +277,8 @@ const Auth = () => {
           )}
 
           <div className="text-center mb-8">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="h-6 w-6 text-primary" />
+            <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="h-6 w-6 text-emerald-600" />
             </div>
             <h1 className="text-2xl font-semibold text-foreground mb-2">
               {mode === "signin" && "Welcome Back"}
@@ -375,14 +382,14 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("forgot-password")}
-                    className="text-sm text-primary hover:underline"
+                    className="text-sm text-emerald-600 hover:underline"
                   >
                     Forgot password?
                   </button>
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -419,7 +426,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("register")}
-                    className="text-primary hover:underline font-medium"
+                    className="text-emerald-600 hover:underline font-medium"
                   >
                     Create one
                   </button>
@@ -430,7 +437,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("signin")}
-                    className="text-primary hover:underline font-medium"
+                    className="text-emerald-600 hover:underline font-medium"
                   >
                     Sign in
                   </button>
