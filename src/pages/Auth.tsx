@@ -231,21 +231,14 @@ const Auth = () => {
             <div className="space-y-3">
               <Button
                 onClick={() => navigate('/auth/callback', { replace: true })}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white"
               >
                 Continue to App
               </Button>
               <Button
-                onClick={() => navigate('/auth?logout=1', { replace: true })}
+                onClick={handleLogout}
                 variant="outline"
                 className="w-full border-emerald-600 text-emerald-600 hover:bg-emerald-50"
-              >
-                Use a Different Account
-              </Button>
-              <Button
-                onClick={handleLogout}
-                variant="ghost"
-                className="w-full text-muted-foreground hover:text-foreground"
                 disabled={loading}
               >
                 {loading ? (
@@ -253,7 +246,7 @@ const Auth = () => {
                 ) : (
                   <LogOut className="mr-2 h-4 w-4" />
                 )}
-                Sign Out
+                Sign out and switch account
               </Button>
             </div>
           </div>
