@@ -17,10 +17,34 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const emailsToDelete = [
-      'chris@directconnectmls.com',
-      'chris.tuite@compass.com',
-      'chris@allagentconnect.com'
+      'chris@directconectmls.com',  // one 'n'
+      'chris@directconnectmls.com', // two 'n's
     ];
+
+    console.log("Starting deletion of accounts:", emailsToDelete);
+
+    // First, try to delete directly from auth.users by email (handles orphaned auth entries)
+    for (const email of emailsToDelete) {
+      // List users to find by email
+      const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+      
+      if (listError) {
+        console.log(`Error listing users: ${listError.message}`);
+        continue;
+      }
+      
+      const authUser = users?.find(u => u.email === email);
+      if (authUser) {
+        const { error: deleteError } = await supabase.auth.admin.deleteUser(authUser.id);
+        if (deleteError) {
+          console.log(`Error deleting auth user ${email}: ${deleteError.message}`);
+        } else {
+          console.log(`Deleted auth user: ${email} (${authUser.id})`);
+        }
+      } else {
+        console.log(`No auth user found for email: ${email}`);
+      }
+    }
 
     console.log("Starting deletion of accounts:", emailsToDelete);
 
