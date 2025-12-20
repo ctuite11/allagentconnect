@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,10 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Mail, ArrowLeft, Loader2, LogIn, UserPlus, LogOut, Eye, EyeOff } from "lucide-react";
+import { Mail, ArrowLeft, Loader2, LogIn, UserPlus, LogOut, Eye, EyeOff, CheckCircle2, Circle, RefreshCw } from "lucide-react";
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
-const passwordSchema = z.string().min(8, "Password must be at least 8 characters");
+
+// Password rules - same as PasswordReset
+const passwordRules = [
+  { id: 'length', label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
+  { id: 'uppercase', label: 'One uppercase letter', test: (p: string) => /[A-Z]/.test(p) },
+  { id: 'lowercase', label: 'One lowercase letter', test: (p: string) => /[a-z]/.test(p) },
+  { id: 'number', label: 'One number', test: (p: string) => /[0-9]/.test(p) },
+  { id: 'symbol', label: 'One symbol (!@#$%^&*)', test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
+];
 
 type AuthMode = "signin" | "register" | "forgot-password";
 
@@ -25,8 +33,21 @@ const Auth = () => {
   const [existingSession, setExistingSession] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [signupEmailSent, setSignupEmailSent] = useState(false);
+  const [signupEmail, setSignupEmail] = useState("");
   const emailInputRef = useRef<HTMLInputElement>(null);
   const didNavigate = useRef(false);
+
+  // Password validation for register mode
+  const passwordValidation = useMemo(() => {
+    return passwordRules.map(rule => ({
+      ...rule,
+      valid: rule.test(password)
+    }));
+  }, [password]);
+
+  const allPasswordRulesPass = passwordValidation.every(r => r.valid);
+  const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
 
   // Check for logout param, reset success, or existing session
   useEffect(() => {
@@ -95,7 +116,6 @@ const Auth = () => {
 
     try {
       const validatedEmail = emailSchema.parse(email);
-      passwordSchema.parse(password);
 
       const { error } = await supabase.auth.signInWithPassword({
         email: validatedEmail,
@@ -129,7 +149,12 @@ const Auth = () => {
 
     try {
       const validatedEmail = emailSchema.parse(email);
-      passwordSchema.parse(password);
+
+      if (!allPasswordRulesPass) {
+        toast.error("Password does not meet all requirements");
+        setLoading(false);
+        return;
+      }
 
       if (password !== confirmPassword) {
         toast.error("Passwords do not match");
@@ -154,10 +179,9 @@ const Auth = () => {
           toast.error(error.message);
         }
       } else {
-        toast.success("Account created! Check your email to confirm, then sign in.");
-        setMode("signin");
-        setPassword("");
-        setConfirmPassword("");
+        // Show the "Check your email" confirmation screen
+        setSignupEmail(validatedEmail);
+        setSignupEmailSent(true);
       }
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -165,6 +189,29 @@ const Auth = () => {
       } else {
         toast.error(error.message || "Failed to create account");
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: signupEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Confirmation email resent!");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend email");
     } finally {
       setLoading(false);
     }
@@ -209,6 +256,8 @@ const Auth = () => {
     setPassword("");
     setConfirmPassword("");
     setResetEmailSent(false);
+    setSignupEmailSent(false);
+    setSignupEmail("");
   };
 
   // Loading state while checking session
@@ -262,11 +311,60 @@ const Auth = () => {
     );
   }
 
+  // Email confirmation sent screen (after successful signup)
+  if (signupEmailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md">
+          <div className="bg-card rounded-2xl shadow-lg p-8 border border-border text-center">
+            <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="h-6 w-6 text-emerald-600" />
+            </div>
+            <h1 className="text-2xl font-semibold text-foreground mb-2">
+              Check Your Email
+            </h1>
+            <p className="text-muted-foreground text-sm mb-2">
+              We sent a confirmation link to
+            </p>
+            <p className="font-medium text-foreground mb-4">
+              {signupEmail}
+            </p>
+            <p className="text-muted-foreground text-xs mb-6">
+              Confirming your email keeps the network agent-only and trusted.
+            </p>
+            <div className="space-y-3">
+              <Button
+                onClick={handleResendConfirmation}
+                variant="outline"
+                className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                Resend Email
+              </Button>
+              <Button
+                onClick={() => switchMode("signin")}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Sign In
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         <div className="bg-card rounded-2xl shadow-lg p-8 border border-border relative">
-          {mode === "forgot-password" && (
+          {(mode === "forgot-password" || mode === "register") && (
             <button
               onClick={() => switchMode("signin")}
               className="absolute left-6 top-6 text-muted-foreground hover:text-foreground transition-colors"
@@ -301,7 +399,7 @@ const Auth = () => {
               </p>
               <Button
                 onClick={() => switchMode("signin")}
-                className="w-full"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white"
               >
                 Back to Sign In
               </Button>
@@ -343,7 +441,6 @@ const Auth = () => {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       required
-                      minLength={8}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pr-10"
@@ -359,6 +456,24 @@ const Auth = () => {
                 </div>
               )}
 
+              {/* Password rules checklist - only for register mode */}
+              {mode === "register" && password.length > 0 && (
+                <div className="bg-muted/50 rounded-lg p-3 space-y-1.5">
+                  {passwordValidation.map((rule) => (
+                    <div key={rule.id} className="flex items-center gap-2 text-sm">
+                      {rule.valid ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <Circle className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className={rule.valid ? "text-emerald-700" : "text-muted-foreground"}>
+                        {rule.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {mode === "register" && (
                 <div>
                   <Label htmlFor="confirmPassword" className="text-sm font-medium">
@@ -369,14 +484,29 @@ const Auth = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     required
-                    minLength={8}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="mt-1.5"
                   />
+                  {confirmPassword.length > 0 && (
+                    <div className="flex items-center gap-2 text-sm mt-2">
+                      {passwordsMatch ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          <span className="text-emerald-700">Passwords match</span>
+                        </>
+                      ) : (
+                        <>
+                          <Circle className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">Passwords do not match</span>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
+              {/* Forgot password link - ONLY on signin mode */}
               {mode === "signin" && (
                 <div className="flex justify-end">
                   <button
@@ -389,7 +519,11 @@ const Auth = () => {
                 </div>
               )}
 
-              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" disabled={loading}>
+              <Button 
+                type="submit" 
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white" 
+                disabled={loading || (mode === "register" && (!allPasswordRulesPass || !passwordsMatch))}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -418,7 +552,7 @@ const Auth = () => {
             </form>
           )}
 
-          {mode !== "forgot-password" && (
+          {mode !== "forgot-password" && !resetEmailSent && (
             <div className="mt-6 text-center text-sm text-muted-foreground">
               {mode === "signin" ? (
                 <>
