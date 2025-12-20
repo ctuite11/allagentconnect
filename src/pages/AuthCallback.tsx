@@ -17,17 +17,10 @@ const AuthCallback = () => {
     const typeFromQuery = searchParams.get("type");
     const code = searchParams.get("code");
 
-    // Expanded recovery detection: type=recovery OR recovery tokens present
-    const hasRecoveryTokens =
-      hashParams.has("access_token") ||
-      hashParams.has("refresh_token") ||
-      !!code;
-
-    // Detect recovery from type OR from tokens
+    // STRICT recovery detection: ONLY type=recovery (NOT tokens - breaks email confirm)
     const isRecoveryContext =
       typeFromHash === "recovery" ||
-      typeFromQuery === "recovery" ||
-      hasRecoveryTokens;
+      typeFromQuery === "recovery";
 
     // Check for error in URL hash
     const errorParam = hashParams.get("error");
