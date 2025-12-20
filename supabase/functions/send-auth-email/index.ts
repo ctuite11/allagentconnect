@@ -1,269 +1,262 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+// supabase edge function: send-auth-email
+// Purpose: Handle Supabase Auth "Send Email Hook" and send emails via Resend
+// Requirements:
+// - SEND_EMAIL_HOOK_SECRET (from Supabase hook UI)
+// - RESEND_API_KEY
+// - RESEND_FROM_EMAIL (hello@mail.allagentconnect.com)
+// - RESEND_REPLY_TO (hello@allagentconnect.com)
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+import { Resend } from "npm:resend@4.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, webhook-id, webhook-timestamp, webhook-signature",
 };
 
-interface AuthEmailPayload {
-  user: {
-    email: string;
-    user_metadata?: {
-      first_name?: string;
-    };
-  };
-  email_data: {
-    token?: string;
-    token_hash?: string;
-    redirect_to?: string;
-    email_action_type: string;
-    site_url?: string;
-  };
+function mustGetEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing ${name}`);
+  return v;
 }
 
-const getEmailTemplate = (type: string, data: { token?: string; redirectUrl: string; firstName?: string }) => {
-  const { token, redirectUrl, firstName } = data;
-  const greeting = firstName ? `Hi ${firstName},` : "Hi,";
-  
-  const baseStyles = `
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 0; }
-    .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-    .card { background-color: #ffffff; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .logo { text-align: center; margin-bottom: 30px; }
-    .logo-text { font-size: 24px; font-weight: 700; color: #1a365d; }
-    .logo-accent { color: #2563eb; }
-    h1 { color: #1a365d; font-size: 24px; margin: 0 0 20px 0; }
-    p { color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0; }
-    .button { display: inline-block; background-color: #2563eb; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; }
-    .button:hover { background-color: #1d4ed8; }
-    .code { background-color: #f3f4f6; padding: 16px 24px; border-radius: 8px; font-family: monospace; font-size: 24px; letter-spacing: 4px; text-align: center; color: #1a365d; margin: 20px 0; }
-    .footer { text-align: center; margin-top: 30px; color: #9ca3af; font-size: 14px; }
-    .footer a { color: #2563eb; text-decoration: none; }
-  `;
+function escapeHtml(s: string) {
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
 
-  if (type === "magiclink" || type === "signup") {
-    return {
-      subject: "Log in to AllAgentConnect",
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head><style>${baseStyles}</style></head>
-        <body>
-          <div class="container">
-            <div class="card">
-              <div class="logo">
-                <span class="logo-text">All<span class="logo-accent">Agent</span>Connect</span>
-              </div>
-              <h1>Log in to your account</h1>
-              <p>${greeting}</p>
-              <p>Click the button below to securely log in to your AllAgentConnect account:</p>
-              <p style="text-align: center; margin: 30px 0;">
-                <a href="${redirectUrl}" class="button">Log In to AllAgentConnect</a>
-              </p>
-              ${token ? `
-              <p>Or enter this code manually:</p>
-              <div class="code">${token}</div>
-              ` : ''}
-              <p style="color: #9ca3af; font-size: 14px;">This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.</p>
-            </div>
-            <div class="footer">
-              <p>© ${new Date().getFullYear()} AllAgentConnect. All rights reserved.</p>
-              <p><a href="https://allagentconnect.com">allagentconnect.com</a></p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
-    };
-  }
+function baseEmailHtml(opts: { title: string; bodyHtml: string; ctaLabel?: string; ctaUrl?: string }) {
+  const { title, bodyHtml, ctaLabel, ctaUrl } = opts;
 
-  if (type === "recovery") {
-    return {
-      subject: "Reset your AllAgentConnect password",
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head><style>${baseStyles}</style></head>
-        <body>
-          <div class="container">
-            <div class="card">
-              <div class="logo">
-                <span class="logo-text">All<span class="logo-accent">Agent</span>Connect</span>
-              </div>
-              <h1>Reset your password</h1>
-              <p>${greeting}</p>
-              <p>We received a request to reset the password for your AllAgentConnect account. Click the button below to set a new password:</p>
-              <p style="text-align: center; margin: 30px 0;">
-                <a href="${redirectUrl}" class="button">Reset Password</a>
-              </p>
-              ${token ? `
-              <p>Or enter this code manually:</p>
-              <div class="code">${token}</div>
-              ` : ''}
-              <p style="color: #9ca3af; font-size: 14px;">This link will expire in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p>
-            </div>
-            <div class="footer">
-              <p>© ${new Date().getFullYear()} AllAgentConnect. All rights reserved.</p>
-              <p><a href="https://allagentconnect.com">allagentconnect.com</a></p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
-    };
-  }
+  const buttonHtml =
+    ctaLabel && ctaUrl
+      ? `
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${escapeHtml(ctaUrl)}" style="display:inline-block;padding:14px 32px;background:#6FB83F;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:16px;">
+          ${escapeHtml(ctaLabel)}
+        </a>
+      </div>
+    `
+      : "";
 
-  if (type === "email_change" || type === "email_change_new") {
-    return {
-      subject: "Confirm your new email address",
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head><style>${baseStyles}</style></head>
-        <body>
-          <div class="container">
-            <div class="card">
-              <div class="logo">
-                <span class="logo-text">All<span class="logo-accent">Agent</span>Connect</span>
-              </div>
-              <h1>Confirm your new email</h1>
-              <p>${greeting}</p>
-              <p>Please confirm your new email address by clicking the button below:</p>
-              <p style="text-align: center; margin: 30px 0;">
-                <a href="${redirectUrl}" class="button">Confirm Email Address</a>
-              </p>
-              <p style="color: #9ca3af; font-size: 14px;">If you didn't request this change, please contact support immediately.</p>
-            </div>
-            <div class="footer">
-              <p>© ${new Date().getFullYear()} AllAgentConnect. All rights reserved.</p>
-              <p><a href="https://allagentconnect.com">allagentconnect.com</a></p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
-    };
-  }
-
-  // Default confirmation email
-  return {
-    subject: "Confirm your AllAgentConnect account",
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head><style>${baseStyles}</style></head>
-      <body>
-        <div class="container">
-          <div class="card">
-            <div class="logo">
-              <span class="logo-text">All<span class="logo-accent">Agent</span>Connect</span>
-            </div>
-            <h1>Confirm your email</h1>
-            <p>${greeting}</p>
-            <p>Thank you for signing up! Please confirm your email address by clicking the button below:</p>
-            <p style="text-align: center; margin: 30px 0;">
-              <a href="${redirectUrl}" class="button">Confirm Email</a>
-            </p>
-            ${token ? `
-            <p>Or enter this code manually:</p>
-            <div class="code">${token}</div>
-            ` : ''}
-            <p style="color: #9ca3af; font-size: 14px;">If you didn't create an account, you can safely ignore this email.</p>
-          </div>
-          <div class="footer">
-            <p>© ${new Date().getFullYear()} AllAgentConnect. All rights reserved.</p>
-            <p><a href="https://allagentconnect.com">allagentconnect.com</a></p>
-          </div>
+  return `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+      <div style="max-width:480px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+        <div style="background:#1a1a1a;padding:24px;text-align:center;">
+          <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.02em;">AllAgentConnect</span>
         </div>
-      </body>
-      </html>
-    `,
-  };
-};
+        <div style="padding:32px 24px;">
+          <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1a1a1a;">
+            ${escapeHtml(title)}
+          </h1>
+          <div style="font-size:15px;line-height:1.6;color:#3f3f46;">
+            ${bodyHtml}
+          </div>
+          ${buttonHtml}
+          <p style="font-size:13px;color:#71717a;margin-top:24px;">
+            Questions? Reply to this email.
+          </p>
+        </div>
+        <div style="background:#f4f4f5;padding:16px;text-align:center;font-size:12px;color:#71717a;">
+          © ${new Date().getFullYear()} AllAgentConnect
+        </div>
+      </div>
+    </body>
+  </html>`;
+}
 
-const handler = async (req: Request): Promise<Response> => {
-  console.log("[send-auth-email] Received request");
-  
+function buildEmailForType(params: {
+  type: string;
+  email: string;
+  actionUrl?: string;
+  otp?: string;
+}): { subject: string; html: string; text: string } {
+  const { type, actionUrl, otp } = params;
+
+  const t = (type || "").toLowerCase();
+
+  if (t.includes("recovery") || t.includes("reset")) {
+    const subject = "Reset your AllAgentConnect password";
+    const title = "Reset your password";
+    const bodyHtml = `
+      <p>We received a request to reset your password for AllAgentConnect.</p>
+      <p>If you made this request, use the button below to set a new password.</p>
+      <p>If you didn't request this, you can ignore this email.</p>
+    `;
+    const html = baseEmailHtml({
+      title,
+      bodyHtml,
+      ctaLabel: "Reset password",
+      ctaUrl: actionUrl,
+    });
+    const text = `Reset your password: ${actionUrl ?? ""}\n\nIf you didn't request this, ignore this email.`;
+    return { subject, html, text };
+  }
+
+  if (t.includes("signup") || t.includes("confirm")) {
+    const subject = "Confirm your email for AllAgentConnect";
+    const title = "Confirm your email";
+    const bodyHtml = `
+      <p>To finish signing up for AllAgentConnect, please confirm your email address.</p>
+      <p>This helps us keep the platform trusted and agent-only.</p>
+    `;
+    const html = baseEmailHtml({
+      title,
+      bodyHtml,
+      ctaLabel: "Confirm email",
+      ctaUrl: actionUrl,
+    });
+    const text = `Confirm your email: ${actionUrl ?? ""}`;
+    return { subject, html, text };
+  }
+
+  if (t.includes("magic")) {
+    const subject = "Your AllAgentConnect sign-in link";
+    const title = "Sign in to AllAgentConnect";
+    const bodyHtml = `
+      <p>Use the button below to sign in. This link may expire for security.</p>
+    `;
+    const html = baseEmailHtml({
+      title,
+      bodyHtml,
+      ctaLabel: "Sign in",
+      ctaUrl: actionUrl,
+    });
+    const text = `Sign in: ${actionUrl ?? ""}`;
+    return { subject, html, text };
+  }
+
+  if (t.includes("email_change")) {
+    const subject = "Confirm your new email for AllAgentConnect";
+    const title = "Confirm your new email";
+    const bodyHtml = `
+      <p>Use the button below to confirm your new email address.</p>
+    `;
+    const html = baseEmailHtml({
+      title,
+      bodyHtml,
+      ctaLabel: "Confirm new email",
+      ctaUrl: actionUrl,
+    });
+    const text = `Confirm new email: ${actionUrl ?? ""}`;
+    return { subject, html, text };
+  }
+
+  // Fallback
+  const subject = "AllAgentConnect email";
+  const title = "Action required";
+  const bodyHtml = `
+    <p>Please use the link below to continue.</p>
+    ${otp ? `<p style="font-size:18px;font-weight:600;">One-time code: ${escapeHtml(otp)}</p>` : ""}
+  `;
+  const html = baseEmailHtml({
+    title,
+    bodyHtml,
+    ctaLabel: actionUrl ? "Continue" : undefined,
+    ctaUrl: actionUrl,
+  });
+  const text = `Continue: ${actionUrl ?? ""}${otp ? `\nOne-time code: ${otp}` : ""}`;
+  return { subject, html, text };
+}
+
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const payload: AuthEmailPayload = await req.json();
-    console.log("[send-auth-email] Payload received:", JSON.stringify({
-      email: payload.user?.email,
-      email_action_type: payload.email_data?.email_action_type,
-    }));
+    const hookSecret = mustGetEnv("SEND_EMAIL_HOOK_SECRET");
+    const resendApiKey = mustGetEnv("RESEND_API_KEY");
+    const resendFromEmail = mustGetEnv("RESEND_FROM_EMAIL");
+    const resendReplyTo = mustGetEnv("RESEND_REPLY_TO");
 
-    const { user, email_data } = payload;
-    
-    if (!user?.email) {
-      console.error("[send-auth-email] No email address provided");
-      return new Response(
-        JSON.stringify({ error: "No email address provided" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const rawBody = await req.text();
+    const headersObj = Object.fromEntries(req.headers.entries());
+
+    // Verify signature from Supabase Auth Hook using Standard Webhooks
+    const wh = new Webhook(hookSecret);
+    const verified = wh.verify(rawBody, headersObj) as any;
+
+    // Payload format can differ slightly depending on Supabase version/config.
+    // We defensively extract what we need.
+    const email = verified?.user?.email || verified?.email || verified?.recipient;
+    const type =
+      verified?.email_data?.template?.type ||
+      verified?.email_data?.type ||
+      verified?.type ||
+      verified?.template ||
+      "unknown";
+
+    const actionUrl =
+      verified?.email_data?.action_link ||
+      verified?.email_data?.action_url ||
+      verified?.email_data?.redirect_to ||
+      verified?.action_link ||
+      verified?.action_url ||
+      verified?.url;
+
+    const otp =
+      verified?.email_data?.otp ||
+      verified?.email_data?.token ||
+      verified?.otp ||
+      verified?.token;
+
+    if (!email) {
+      console.error("send-auth-email: Missing recipient email in verified payload", verified);
+      return new Response(JSON.stringify({ error: "Missing recipient email" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const { token, token_hash, redirect_to, email_action_type } = email_data;
-    
-    // Build the redirect URL
-    let redirectUrl = redirect_to || `${supabaseUrl}/auth/v1/verify`;
-    if (token_hash) {
-      redirectUrl = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to || ""}`;
-    }
-
-    console.log("[send-auth-email] Building email for type:", email_action_type);
-    console.log("[send-auth-email] Redirect URL:", redirectUrl);
-
-    const emailTemplate = getEmailTemplate(email_action_type, {
-      token,
-      redirectUrl,
-      firstName: user.user_metadata?.first_name,
+    console.log("send-auth-email hook invoked:", {
+      type,
+      email,
+      hasActionUrl: !!actionUrl,
     });
 
-    console.log("[send-auth-email] Sending email to:", user.email);
-    
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "AllAgentConnect <hello@mail.allagentconnect.com>",
-        to: [user.email],
-        subject: emailTemplate.subject,
-        html: emailTemplate.html,
-      }),
+    const resend = new Resend(resendApiKey);
+
+    const { subject, html, text } = buildEmailForType({
+      type,
+      email,
+      actionUrl,
+      otp,
     });
 
-    const emailResponse = await res.json();
-    
-    if (!res.ok) {
-      console.error("[send-auth-email] Resend error:", emailResponse);
-      return new Response(
-        JSON.stringify({ error: emailResponse }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const from = `AllAgentConnect <${resendFromEmail}>`;
 
-    console.log("[send-auth-email] Email sent successfully:", emailResponse);
+    const sendRes = await resend.emails.send({
+      from,
+      to: email,
+      reply_to: resendReplyTo,
+      subject,
+      html,
+      text,
+    });
 
-    return new Response(
-      JSON.stringify({ success: true, id: emailResponse.id }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  } catch (error: any) {
-    console.error("[send-auth-email] Error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.log("send-auth-email: Resend response", sendRes);
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  } catch (err: any) {
+    console.error("send-auth-email error:", err?.message || err, err?.stack);
+    return new Response(JSON.stringify({ error: err?.message || "Unknown error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
-};
-
-serve(handler);
+});
