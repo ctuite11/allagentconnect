@@ -15,7 +15,36 @@ const AuthCallback = () => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const typeFromHash = hashParams.get('type');
     const typeFromQuery = searchParams.get('type');
-    const isRecoveryContext = typeFromHash === 'recovery' || typeFromQuery === 'recovery';
+    const code = searchParams.get('code');
+    
+    // Expanded recovery detection: type=recovery OR recovery tokens present
+    const hasRecoveryTokens =
+      hashParams.has('access_token') ||
+      hashParams.has('refresh_token') ||
+      !!code;
+    
+    const isRecoveryContext =
+      typeFromHash === 'recovery' ||
+      typeFromQuery === 'recovery' ||
+      (hasRecoveryTokens && (typeFromHash === 'recovery' || typeFromQuery === 'recovery'));
+    
+    // Handle PKCE code exchange for recovery flows
+    const handlePKCERecovery = async () => {
+      if (code && (typeFromQuery === 'recovery' || typeFromHash === 'recovery')) {
+        console.log("[AuthCallback] PKCE recovery code detected - exchanging for session");
+        try {
+          await supabase.auth.exchangeCodeForSession(code);
+          if (!didNavigate.current) {
+            didNavigate.current = true;
+            navigate('/password-reset', { replace: true });
+          }
+          return true;
+        } catch (err) {
+          console.error("[AuthCallback] PKCE exchange error:", err);
+        }
+      }
+      return false;
+    };
     
     // Check for error in URL hash
     const errorParam = hashParams.get('error');
@@ -28,6 +57,9 @@ const AuthCallback = () => {
     }
 
     const hasAuthHash = window.location.hash.includes('access_token');
+    
+    // Try PKCE recovery first
+    handlePKCERecovery();
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

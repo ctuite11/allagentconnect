@@ -23,7 +23,17 @@ const OnboardingCreateAccount = () => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const typeFromHash = hashParams.get('type');
     const typeFromQuery = searchParams.get('type');
-    const isRecoveryContext = typeFromHash === 'recovery' || typeFromQuery === 'recovery';
+    
+    // Expanded recovery detection: type=recovery OR recovery tokens present
+    const hasRecoveryTokens =
+      hashParams.has('access_token') ||
+      hashParams.has('refresh_token') ||
+      searchParams.has('code');
+    
+    const isRecoveryContext =
+      typeFromHash === 'recovery' ||
+      typeFromQuery === 'recovery' ||
+      (hasRecoveryTokens && (typeFromHash === 'recovery' || typeFromQuery === 'recovery'));
     
     if (isRecoveryContext) {
       console.log("[OnboardingCreateAccount] Recovery context detected - redirecting to password-reset");
