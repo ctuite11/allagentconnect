@@ -25,15 +25,27 @@ const AuthCallback = () => {
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log("[AuthCallback] Auth event:", event, !!session);
+        
+        // Handle password recovery - redirect to password reset page
+        if (event === 'PASSWORD_RECOVERY' && session?.user) {
+          if (!didNavigate.current) {
+            didNavigate.current = true;
+            window.history.replaceState(null, '', window.location.pathname);
+            navigate('/password-reset', { replace: true });
+          }
+          return;
+        }
         
         if (event === 'SIGNED_IN' && session?.user) {
           // Clear the hash to prevent re-processing on refresh
           window.history.replaceState(null, '', window.location.pathname);
           
           if (!didNavigate.current) {
-            await routeUser(session.user.id);
+            setTimeout(() => {
+              routeUser(session.user.id);
+            }, 0);
           }
         }
       }
