@@ -49,6 +49,23 @@ const Auth = () => {
   const allPasswordRulesPass = passwordValidation.every(r => r.valid);
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
 
+  // REQUIRE role=agent query param - redirect to /choose if missing
+  useEffect(() => {
+    const role = searchParams.get("role");
+    const reset = searchParams.get("reset");
+    const logout = searchParams.get("logout");
+    
+    // Allow reset=success and logout=1 params without role check
+    if (reset === "success" || logout === "1") {
+      return;
+    }
+    
+    // If no role param, redirect to role selection
+    if (role !== "agent") {
+      navigate("/choose", { replace: true });
+    }
+  }, [searchParams, navigate]);
+
   // Check for logout param, reset success, or existing session
   useEffect(() => {
     let mounted = true;
@@ -58,7 +75,7 @@ const Auth = () => {
       if (searchParams.get("reset") === "success") {
         toast.success("Password updated successfully! Please sign in with your new password.");
         // Clear the URL param without triggering navigation
-        window.history.replaceState(null, "", "/auth");
+        window.history.replaceState(null, "", "/auth?role=agent");
       }
 
       // Check for ?logout=1 param to force sign out
@@ -164,13 +181,23 @@ const Auth = () => {
 
       const redirectUrl = `${window.location.origin}/auth/callback`;
 
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: validatedEmail,
         password,
         options: {
           emailRedirectTo: redirectUrl,
+          data: {
+            intended_role: 'agent', // Store intended role for callback routing
+          },
         },
       });
+
+      // Check for "fake success" - user exists but identities is empty
+      if (data?.user && data.user.identities?.length === 0) {
+        toast.error("This email is already registered. Please sign in or check your email for a confirmation link.");
+        setLoading(false);
+        return;
+      }
 
       if (error) {
         if (error.message.includes("already registered")) {
