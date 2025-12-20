@@ -1,17 +1,23 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const didNavigate = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for error in URL hash first
+    // PRIORITY 1: Detect recovery context FIRST - before any other logic
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const typeFromHash = hashParams.get('type');
+    const typeFromQuery = searchParams.get('type');
+    const isRecoveryContext = typeFromHash === 'recovery' || typeFromQuery === 'recovery';
+    
+    // Check for error in URL hash
     const errorParam = hashParams.get('error');
     const errorDescription = hashParams.get('error_description');
     
@@ -26,12 +32,14 @@ const AuthCallback = () => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("[AuthCallback] Auth event:", event, !!session);
+        console.log("[AuthCallback] Auth event:", event, "isRecovery:", isRecoveryContext, !!session);
         
-        // Handle password recovery - redirect to password reset page
-        if (event === 'PASSWORD_RECOVERY' && session?.user) {
+        // Handle password recovery - MUST redirect to password reset page
+        // Check both the event AND the URL context (type=recovery)
+        if ((event === 'PASSWORD_RECOVERY' || isRecoveryContext) && session?.user) {
           if (!didNavigate.current) {
             didNavigate.current = true;
+            console.log("[AuthCallback] Recovery detected - navigating to password-reset");
             window.history.replaceState(null, '', window.location.pathname);
             navigate('/password-reset', { replace: true });
           }
@@ -39,6 +47,17 @@ const AuthCallback = () => {
         }
         
         if (event === 'SIGNED_IN' && session?.user) {
+          // Double-check: if this is a recovery context, go to password reset
+          if (isRecoveryContext) {
+            if (!didNavigate.current) {
+              didNavigate.current = true;
+              console.log("[AuthCallback] SIGNED_IN but recovery context - navigating to password-reset");
+              window.history.replaceState(null, '', window.location.pathname);
+              navigate('/password-reset', { replace: true });
+            }
+            return;
+          }
+          
           // Clear the hash to prevent re-processing on refresh
           window.history.replaceState(null, '', window.location.pathname);
           

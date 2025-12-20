@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Loader2, UserCircle } from "lucide-react";
 
 const OnboardingCreateAccount = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [firstName, setFirstName] = useState("");
@@ -18,6 +19,21 @@ const OnboardingCreateAccount = () => {
   const didNavigate = useRef(false);
 
   useEffect(() => {
+    // PRIORITY: Check for recovery context FIRST - bypass all onboarding
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const typeFromHash = hashParams.get('type');
+    const typeFromQuery = searchParams.get('type');
+    const isRecoveryContext = typeFromHash === 'recovery' || typeFromQuery === 'recovery';
+    
+    if (isRecoveryContext) {
+      console.log("[OnboardingCreateAccount] Recovery context detected - redirecting to password-reset");
+      if (!didNavigate.current) {
+        didNavigate.current = true;
+        navigate("/password-reset", { replace: true });
+      }
+      return;
+    }
+
     const checkState = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -52,7 +68,7 @@ const OnboardingCreateAccount = () => {
     };
 
     checkState();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const handleCreateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
