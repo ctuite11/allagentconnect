@@ -7,7 +7,7 @@
 // - RESEND_REPLY_TO (hello@allagentconnect.com)
 
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
-import { Resend } from "npm:resend@4.0.0";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
