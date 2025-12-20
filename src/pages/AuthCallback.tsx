@@ -161,11 +161,17 @@ const AuthCallback = () => {
     if (didNavigate.current) return;
 
     try {
-      // CRITICAL: Check if this is a recovery session - NEVER route to onboarding
+      // Get session first
       const { data: { session } } = await supabase.auth.getSession();
-      const isRecoverySession = 
-        session?.user?.recovery_sent_at || 
-        window.location.pathname === '/password-reset';
+      
+      // CRITICAL: Check if this is a recovery session - NEVER route to onboarding
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const urlParams = new URLSearchParams(window.location.search);
+      
+      const isRecoverySession =
+        !!session?.user?.recovery_sent_at ||
+        hashParams.get("type") === "recovery" ||
+        urlParams.get("type") === "recovery";
       
       if (isRecoverySession) {
         console.log("[AuthCallback] Recovery session detected - signing out and redirecting to auth");

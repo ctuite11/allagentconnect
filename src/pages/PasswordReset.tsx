@@ -72,6 +72,9 @@ const PasswordReset = () => {
         return;
       }
 
+      // Clear recovery URL state before redirecting
+      window.history.replaceState(null, "", "/password-reset");
+      
       // CRITICAL: Sign out immediately to prevent recovery session from touching onboarding
       await supabase.auth.signOut();
       
@@ -162,7 +165,7 @@ const PasswordReset = () => {
               
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white" 
                 disabled={!canSubmit}
               >
                 {loading ? "Updating password..." : "Update Password"}
