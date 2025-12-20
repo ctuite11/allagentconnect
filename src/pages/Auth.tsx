@@ -238,7 +238,7 @@ const Auth = () => {
               <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="w-full border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+                className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50"
                 disabled={loading}
               >
                 {loading ? (
