@@ -20,18 +20,18 @@ const AuthCallback = () => {
     // Expanded recovery detection: type=recovery OR recovery tokens present
     const hasRecoveryTokens =
       hashParams.has('access_token') ||
-      hashParams.has('refresh_token') ||
-      !!code;
+      hashParams.has('refresh_token');
     
+    // FIX: Use OR - detect recovery from type OR from tokens
     const isRecoveryContext =
       typeFromHash === 'recovery' ||
       typeFromQuery === 'recovery' ||
-      (hasRecoveryTokens && (typeFromHash === 'recovery' || typeFromQuery === 'recovery'));
+      hasRecoveryTokens;
     
-    // Handle PKCE code exchange for recovery flows
+    // Handle PKCE code exchange for recovery flows - must await
     const handlePKCERecovery = async () => {
-      if (code && (typeFromQuery === 'recovery' || typeFromHash === 'recovery')) {
-        console.log("[AuthCallback] PKCE recovery code detected - exchanging for session");
+      if (code) {
+        console.log("[AuthCallback] PKCE code detected - exchanging for session");
         try {
           await supabase.auth.exchangeCodeForSession(code);
           if (!didNavigate.current) {
@@ -58,8 +58,11 @@ const AuthCallback = () => {
 
     const hasAuthHash = window.location.hash.includes('access_token');
     
-    // Try PKCE recovery first
-    handlePKCERecovery();
+    // Try PKCE recovery first (awaited via IIFE)
+    (async () => {
+      const handled = await handlePKCERecovery();
+      if (handled) return;
+    })();
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
