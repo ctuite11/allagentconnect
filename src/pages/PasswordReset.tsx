@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,17 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { z } from "zod";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { Check, X } from "lucide-react";
 
-const passwordSchema = z.object({
-  password: z.string().min(6, "Password must be at least 6 characters").max(100, "Password too long"),
-  confirmPassword: z.string().min(1, "Please confirm your password"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+// Password validation rules
+const passwordRules = [
+  { id: 'length', label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
+  { id: 'uppercase', label: 'One uppercase letter', test: (p: string) => /[A-Z]/.test(p) },
+  { id: 'lowercase', label: 'One lowercase letter', test: (p: string) => /[a-z]/.test(p) },
+  { id: 'number', label: 'One number', test: (p: string) => /[0-9]/.test(p) },
+  { id: 'symbol', label: 'One symbol (!@#$%^&*)', test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
+];
 
 const PasswordReset = () => {
   const navigate = useNavigate();
@@ -33,25 +34,37 @@ const PasswordReset = () => {
         setIsValidSession(true);
       } else {
         toast.error("Invalid or expired reset link");
-        navigate("/consumer/auth");
+        navigate("/auth");
       }
     };
     checkSession();
   }, [navigate]);
 
+  // Live validation state
+  const validationResults = useMemo(() => {
+    return passwordRules.map(rule => ({
+      ...rule,
+      valid: rule.test(password)
+    }));
+  }, [password]);
+
+  const allRulesPass = validationResults.every(r => r.valid);
+  const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
+  const canSubmit = allRulesPass && passwordsMatch && !loading;
+
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!canSubmit) {
+      toast.error("Please ensure all password requirements are met");
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      // Validate input
-      const validated = passwordSchema.parse({
-        password,
-        confirmPassword,
-      });
-
       const { error } = await supabase.auth.updateUser({
-        password: validated.password,
+        password: password,
       });
 
       if (error) {
@@ -59,14 +72,14 @@ const PasswordReset = () => {
         return;
       }
 
-      toast.success("Password updated successfully!");
-      navigate("/consumer/auth");
+      // Sign out to prevent session state issues with role/profile loading
+      await supabase.auth.signOut();
+      
+      toast.success("Password updated successfully! Please sign in with your new password.");
+      navigate("/auth", { replace: true });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
-      } else {
-        toast.error("An error occurred while resetting your password");
-      }
+      console.error("[PasswordReset] Error:", error);
+      toast.error("An error occurred while resetting your password");
     } finally {
       setLoading(false);
     }
@@ -85,7 +98,7 @@ const PasswordReset = () => {
           <CardHeader>
             <CardTitle>Reset Your Password</CardTitle>
             <CardDescription>
-              Enter your new password below
+              Create a strong new password for your account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -101,10 +114,27 @@ const PasswordReset = () => {
                   required
                   disabled={loading}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Password must be at least 6 characters
-                </p>
+                
+                {/* Password rules checklist */}
+                <div className="mt-3 space-y-1.5">
+                  {validationResults.map((rule) => (
+                    <div 
+                      key={rule.id} 
+                      className={`flex items-center gap-2 text-xs ${
+                        rule.valid ? 'text-green-600' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {rule.valid ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <X className="h-3.5 w-3.5" />
+                      )}
+                      <span>{rule.label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
                 <Input
@@ -116,8 +146,25 @@ const PasswordReset = () => {
                   required
                   disabled={loading}
                 />
+                {confirmPassword.length > 0 && (
+                  <div className={`flex items-center gap-2 text-xs ${
+                    passwordsMatch ? 'text-green-600' : 'text-destructive'
+                  }`}>
+                    {passwordsMatch ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <X className="h-3.5 w-3.5" />
+                    )}
+                    <span>{passwordsMatch ? 'Passwords match' : 'Passwords do not match'}</span>
+                  </div>
+                )}
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={!canSubmit}
+              >
                 {loading ? "Updating password..." : "Update Password"}
               </Button>
             </form>
