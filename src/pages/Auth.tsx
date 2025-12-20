@@ -1,60 +1,80 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Mail, ArrowLeft, Loader2, CheckCircle2, ExternalLink, UserPlus, LogIn } from "lucide-react";
+import { Mail, ArrowLeft, Loader2, LogIn, UserPlus, LogOut, Eye, EyeOff } from "lucide-react";
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
+const passwordSchema = z.string().min(8, "Password must be at least 8 characters");
 
-type AuthStep = "choose" | "email" | "link-sent";
-type AuthIntent = "signin" | "register";
+type AuthMode = "signin" | "register" | "forgot-password";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<AuthStep>("choose");
-  const [intent, setIntent] = useState<AuthIntent | null>(null);
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [existingSession, setExistingSession] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const emailInputRef = useRef<HTMLInputElement>(null);
   const didNavigate = useRef(false);
 
-  // Check for existing session on mount - redirect to callback for routing
+  // Check for logout param or existing session
   useEffect(() => {
     let mounted = true;
 
-    const navigateOnce = () => {
-      if (!didNavigate.current && mounted) {
-        didNavigate.current = true;
-        navigate('/auth/callback', { replace: true });
+    const handleSession = async () => {
+      // Check for ?logout=1 param to force sign out
+      if (searchParams.get("logout") === "1") {
+        await supabase.auth.signOut();
+        if (mounted) {
+          setCheckingSession(false);
+          setExistingSession(false);
+        }
+        return;
       }
-    };
 
-    const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!mounted) return;
       
       if (session?.user) {
-        navigateOnce();
+        setExistingSession(true);
       }
+      setCheckingSession(false);
     };
 
+    handleSession();
+
+    return () => {
+      mounted = false;
+    };
+  }, [searchParams]);
+
+  // Listen for auth state changes (for sign in success)
+  useEffect(() => {
+    let mounted = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         if (!mounted) return;
         
-        if (session?.user) {
+        if (event === 'SIGNED_IN' && session?.user && !didNavigate.current) {
           console.log('[Analytics] auth_login_success', { user_id: session.user.id });
-          navigateOnce();
+          didNavigate.current = true;
+          navigate('/auth/callback', { replace: true });
         }
       }
     );
-
-    checkSession();
 
     return () => {
       mounted = false;
@@ -62,256 +82,361 @@ const Auth = () => {
     };
   }, [navigate]);
 
-  const handleChooseIntent = (selectedIntent: AuthIntent) => {
-    setIntent(selectedIntent);
-    localStorage.setItem('auth_intent', selectedIntent);
-    setStep("email");
-    setTimeout(() => emailInputRef.current?.focus(), 100);
-  };
-
-  const handleSendLink = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const redirectTo = `${window.location.origin}/auth/callback`;
-
     try {
       const validatedEmail = emailSchema.parse(email);
+      passwordSchema.parse(password);
 
-      console.log('[Analytics] auth_magic_link_requested', { email: validatedEmail, intent });
-
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithPassword({
         email: validatedEmail,
-        options: {
-          emailRedirectTo: redirectTo,
-          shouldCreateUser: true,
-        },
+        password,
       });
 
-      if (error) throw error;
-
-      setStep("link-sent");
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Invalid email or password. Please try again.");
+        } else if (error.message.includes("Email not confirmed")) {
+          toast.error("Please check your email and confirm your account first.");
+        } else {
+          toast.error(error.message);
+        }
+      }
+      // Success is handled by onAuthStateChange
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        toast.error(error.message || "Failed to send link");
+        toast.error(error.message || "Failed to sign in");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResendLink = async () => {
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
-    const redirectTo = `${window.location.origin}/auth/callback`;
+
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
+      const validatedEmail = emailSchema.parse(email);
+      passwordSchema.parse(password);
+
+      if (password !== confirmPassword) {
+        toast.error("Passwords do not match");
+        setLoading(false);
+        return;
+      }
+
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+
+      const { error } = await supabase.auth.signUp({
+        email: validatedEmail,
+        password,
         options: {
-          emailRedirectTo: redirectTo,
-          shouldCreateUser: true,
+          emailRedirectTo: redirectUrl,
         },
       });
 
-      if (error) throw error;
-      toast.success("New login link sent to your email");
+      if (error) {
+        if (error.message.includes("already registered")) {
+          toast.error("This email is already registered. Please sign in instead.");
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        toast.success("Account created! Check your email to confirm, then sign in.");
+        setMode("signin");
+        setPassword("");
+        setConfirmPassword("");
+      }
     } catch (error: any) {
-      toast.error(error.message || "Failed to resend link");
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message || "Failed to create account");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBack = () => {
-    if (step === "email") {
-      setStep("choose");
-      setIntent(null);
-      setEmail("");
-    } else if (step === "link-sent") {
-      setStep("email");
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const validatedEmail = emailSchema.parse(email);
+
+      const { error } = await supabase.auth.resetPasswordForEmail(validatedEmail, {
+        redirectTo: `${window.location.origin}/password-reset`,
+      });
+
+      if (error) throw error;
+
+      setResetEmailSent(true);
+      toast.success("Password reset link sent to your email");
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message || "Failed to send reset link");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getEmailDomain = (email: string) => {
-    const domain = email.split("@")[1]?.toLowerCase();
-    if (domain?.includes("gmail")) return "gmail";
-    if (domain?.includes("outlook") || domain?.includes("hotmail") || domain?.includes("live")) return "outlook";
-    if (domain?.includes("yahoo")) return "yahoo";
-    return null;
+  const handleLogout = async () => {
+    setLoading(true);
+    await supabase.auth.signOut();
+    setExistingSession(false);
+    setLoading(false);
+    toast.success("Signed out successfully");
   };
 
-  const openEmailClient = (provider: string) => {
-    const urls: Record<string, string> = {
-      gmail: "https://mail.google.com",
-      outlook: "https://outlook.live.com",
-      yahoo: "https://mail.yahoo.com",
-    };
-    if (urls[provider]) {
-      window.open(urls[provider], "_blank");
-    }
+  const switchMode = (newMode: AuthMode) => {
+    setMode(newMode);
+    setPassword("");
+    setConfirmPassword("");
+    setResetEmailSent(false);
   };
 
-  const emailProvider = getEmailDomain(email);
+  // Loading state while checking session
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Already signed in state
+  if (existingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md">
+          <div className="bg-card rounded-2xl shadow-lg p-8 border border-border text-center">
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <LogIn className="h-6 w-6 text-primary" />
+            </div>
+            <h1 className="text-2xl font-semibold text-foreground mb-2">
+              You're already signed in
+            </h1>
+            <p className="text-muted-foreground text-sm mb-6">
+              You have an active session. Sign out to use a different account.
+            </p>
+            <div className="space-y-3">
+              <Button
+                onClick={() => navigate('/auth/callback', { replace: true })}
+                className="w-full"
+              >
+                Continue to App
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <LogOut className="mr-2 h-4 w-4" />
+                )}
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         <div className="bg-card rounded-2xl shadow-lg p-8 border border-border relative">
-          {step === "choose" ? (
-            <>
-              <div className="text-center mb-8">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail className="h-6 w-6 text-primary" />
-                </div>
-                <h1 className="text-2xl font-semibold text-foreground mb-2">
-                  Welcome to AllAgentConnect
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  The agent-to-agent network for real estate professionals
-                </p>
-              </div>
+          {mode === "forgot-password" && (
+            <button
+              onClick={() => switchMode("signin")}
+              className="absolute left-6 top-6 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
 
-              <div className="space-y-3">
-                <Button
-                  onClick={() => handleChooseIntent("signin")}
-                  className="w-full h-12"
-                  variant="default"
-                >
-                  <LogIn className="mr-2 h-5 w-5" />
-                  Sign In
-                </Button>
-                
-                <Button
-                  onClick={() => handleChooseIntent("register")}
-                  className="w-full h-12"
-                  variant="outline"
-                >
-                  <UserPlus className="mr-2 h-5 w-5" />
-                  Create Account
-                </Button>
-              </div>
-            </>
-          ) : step === "email" ? (
-            <>
-              <button
-                onClick={handleBack}
-                className="absolute left-6 top-6 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Go back"
+          <div className="text-center mb-8">
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="h-6 w-6 text-primary" />
+            </div>
+            <h1 className="text-2xl font-semibold text-foreground mb-2">
+              {mode === "signin" && "Welcome Back"}
+              {mode === "register" && "Create Your Account"}
+              {mode === "forgot-password" && "Reset Password"}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {mode === "signin" && "Sign in to your AllAgentConnect account"}
+              {mode === "register" && "Join the agent-to-agent network"}
+              {mode === "forgot-password" && (resetEmailSent 
+                ? "Check your email for the reset link" 
+                : "Enter your email to receive a reset link")}
+            </p>
+          </div>
+
+          {mode === "forgot-password" && resetEmailSent ? (
+            <div className="space-y-4">
+              <p className="text-center text-sm text-muted-foreground">
+                We sent a password reset link to <span className="font-medium text-foreground">{email}</span>
+              </p>
+              <Button
+                onClick={() => switchMode("signin")}
+                className="w-full"
               >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-
-              <div className="text-center mb-8">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail className="h-6 w-6 text-primary" />
-                </div>
-                <h1 className="text-2xl font-semibold text-foreground mb-2">
-                  {intent === "register" ? "Create Your Account" : "Welcome Back"}
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  Enter your email and we'll send you a secure link.
-                </p>
+                Back to Sign In
+              </Button>
+            </div>
+          ) : (
+            <form 
+              onSubmit={
+                mode === "signin" ? handleSignIn : 
+                mode === "register" ? handleRegister : 
+                handleForgotPassword
+              } 
+              className="space-y-4"
+            >
+              <div>
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  required
+                  autoFocus
+                  ref={emailInputRef}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1.5"
+                />
               </div>
 
-              <form onSubmit={handleSendLink} className="space-y-4">
+              {mode !== "forgot-password" && (
                 <div>
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    Email address
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </Label>
+                  <div className="relative mt-1.5">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      required
+                      minLength={8}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {mode === "register" && (
+                <div>
+                  <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                    Confirm Password
                   </Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
+                    id="confirmPassword"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
                     required
-                    autoFocus
-                    ref={emailInputRef}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    minLength={8}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className="mt-1.5"
                   />
                 </div>
+              )}
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    intent === "register" ? "Create Account" : "Send Login Link"
-                  )}
-                </Button>
-              </form>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={handleBack}
-                className="absolute left-6 top-6 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Go back"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-
-              <div className="text-center mb-6">
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+              {mode === "signin" && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => switchMode("forgot-password")}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
                 </div>
-                <h1 className="text-2xl font-semibold text-foreground mb-2">
-                  Check your email
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  We sent a secure link to{" "}
-                  <span className="font-medium text-foreground">{email}</span>
-                </p>
-                <p className="text-muted-foreground text-sm mt-2">
-                  Click the link in the email to continue.
-                </p>
-              </div>
+              )}
 
-              <div className="space-y-3">
-                {emailProvider && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => openEmailClient(emailProvider)}
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Open {emailProvider.charAt(0).toUpperCase() + emailProvider.slice(1)}
-                  </Button>
-                )}
-
-                <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={handleResendLink}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      "Resend link"
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {mode === "signin" && "Signing in..."}
+                    {mode === "register" && "Creating account..."}
+                    {mode === "forgot-password" && "Sending..."}
+                  </>
+                ) : (
+                  <>
+                    {mode === "signin" && (
+                      <>
+                        <LogIn className="mr-2 h-4 w-4" />
+                        Sign In
+                      </>
                     )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="flex-1"
-                    onClick={handleBack}
-                  >
-                    Different email
-                  </Button>
-                </div>
-              </div>
+                    {mode === "register" && (
+                      <>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Create Account
+                      </>
+                    )}
+                    {mode === "forgot-password" && "Send Reset Link"}
+                  </>
+                )}
+              </Button>
+            </form>
+          )}
 
-              <p className="text-xs text-muted-foreground text-center mt-6">
-                The link expires in 1 hour. Check your spam folder if you don't see it.
-              </p>
-            </>
+          {mode !== "forgot-password" && (
+            <div className="mt-6 text-center text-sm text-muted-foreground">
+              {mode === "signin" ? (
+                <>
+                  Don't have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => switchMode("register")}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Create one
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => switchMode("signin")}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Sign in
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>
