@@ -10,6 +10,7 @@ import {
   Lock,
 } from "lucide-react";
 import { Logo } from "@/components/brand";
+import heroAbstractBg from "@/assets/hero-abstract-bg.jpg";
 
 const cx = (...c: Array<string | false | undefined | null>) => c.filter(Boolean).join(" ");
 
@@ -112,6 +113,18 @@ export default function Home() {
 
           {/* Hero Visual */}
           <div className="relative">
+            {/* Subtle abstract background image */}
+            <div 
+              className="absolute -inset-4 -z-10 rounded-[2rem] overflow-hidden"
+              style={{
+                backgroundImage: `url(${heroAbstractBg})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.10,
+                filter: 'blur(1px)',
+              }}
+            />
+            
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(0,0,0,0.10)]">
               {/* Faux dashboard header */}
               <div className="flex items-center justify-between">
@@ -146,7 +159,7 @@ export default function Home() {
             </div>
 
             {/* Soft glow */}
-            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-b from-emerald-200/25 via-transparent to-transparent blur-2xl" />
+            <div className="pointer-events-none absolute -inset-6 -z-20 rounded-[2.5rem] bg-gradient-to-b from-emerald-200/25 via-transparent to-transparent blur-2xl" />
           </div>
         </div>
       </section>
