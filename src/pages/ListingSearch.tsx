@@ -174,27 +174,26 @@ const ListingSearch = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[#FAFAF8] text-slate-900">
       <Navigation />
 
-      <main className="flex-1 pt-20">
+      <main className="flex-1 pt-28">
         <div className="max-w-[1280px] mx-auto px-6 py-6">
           {/* Page Header */}
-          <PageHeader
-            title="Listing Search"
-            className="mb-6"
-          />
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900 font-display mb-8">
+            Listing Search
+          </h1>
           
           {/* Action Bar */}
-          <div className="aac-card mb-4">
-            <div className="px-4 py-3">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] mb-4">
+            <div className="px-5 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleReset}
-                    className="h-8 gap-1.5 text-sm"
+                    className="h-9 gap-1.5 text-sm rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                     Reset
@@ -205,10 +204,10 @@ const ListingSearch = () => {
                   <button
                     onClick={handleViewResults}
                     disabled={countLoading || resultCount === 0}
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-default cursor-pointer transition-colors group"
+                    className="flex items-center gap-2 text-sm text-slate-500 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-default cursor-pointer transition-colors group"
                     title={resultCount !== null && resultCount > 0 ? "View results" : ""}
                   >
-                    <span className="font-medium text-foreground bg-muted px-2.5 py-1 rounded-md group-hover:bg-muted/80 transition-colors">
+                    <span className="font-medium text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg group-hover:bg-slate-50 transition-colors">
                       {countLoading ? "..." : resultCount ?? 0}
                     </span>
                     <span>results</span>
@@ -218,7 +217,7 @@ const ListingSearch = () => {
                     onClick={handleViewResults}
                     disabled={countLoading || resultCount === 0}
                     size="sm"
-                    className="h-8 gap-1.5 text-sm"
+                    className="h-9 gap-1.5 text-sm bg-slate-900 hover:bg-slate-800 text-white rounded-2xl px-4"
                   >
                     <Search className="h-3.5 w-3.5" />
                     View Results
@@ -229,7 +228,7 @@ const ListingSearch = () => {
                     size="sm"
                     onClick={handleViewResultsNewTab}
                     disabled={countLoading || resultCount === 0}
-                    className="h-8 gap-1.5 text-sm"
+                    className="h-9 gap-1.5 text-sm rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
                     title="Open results in new tab"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />

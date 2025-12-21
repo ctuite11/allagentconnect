@@ -405,25 +405,25 @@ const ListingResultsTable = ({
   if (listings.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center py-20">
-        <div className="text-center">
-          <p className="text-base font-medium text-foreground">No listings found</p>
-          <p className="text-sm text-muted-foreground mt-1">Try adjusting your search filters</p>
+        <div className="rounded-2xl border border-slate-200 bg-[#F7F6F3] px-8 py-10 text-center">
+          <p className="text-base font-medium text-slate-900">No listings found</p>
+          <p className="text-sm text-slate-500 mt-1">Try adjusting your search filters</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Sticky Action Bar */}
-      <div className="sticky top-4 z-10 rounded-xl bg-white border border-neutral-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.08),0_12px_28px_rgba(0,0,0,0.12)] p-4">
+      <div className="sticky top-4 z-10 rounded-3xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={toggleSelectAll}
-              className="h-9 px-4 text-sm font-medium"
+              className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
             >
               {selectedRows.size === displayedListings.length && displayedListings.length > 0 ? "Deselect All" : "Select All"}
             </Button>
@@ -432,7 +432,7 @@ const ListingResultsTable = ({
               size="sm"
               disabled={selectedRows.size === 0 && !showSelectedOnly}
               onClick={handleKeepSelected}
-              className="h-9 px-4 text-sm font-medium disabled:opacity-50"
+              className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors disabled:opacity-50"
             >
               {showSelectedOnly ? (
                 <>
@@ -450,7 +450,7 @@ const ListingResultsTable = ({
               variant="outline"
               size="sm"
               onClick={() => setSaveSearchDialogOpen(true)}
-              className="h-9 px-4 text-sm font-medium"
+              className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
             >
               <Bookmark className="h-4 w-4 mr-1.5" />
               Save Search
@@ -462,7 +462,7 @@ const ListingResultsTable = ({
               />
             )}
             <Button
-              variant="brandOutline"
+              variant="outline"
               size="sm"
               onClick={() => {
                 if (selectedRows.size === 0) {
@@ -473,25 +473,25 @@ const ListingResultsTable = ({
                 }
                 setHotSheetDialogOpen(true);
               }}
-              className="h-9 px-4 text-sm font-medium"
+              className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
             >
               <FileSpreadsheet className="h-4 w-4 mr-1.5" />
               Save as Hot Sheet
             </Button>
             {selectedRows.size > 0 && (
-              <span className="text-sm text-muted-foreground ml-2 font-medium">
+              <span className="text-sm text-slate-500 ml-2 font-medium">
                 {selectedRows.size} selected
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Sort by:</span>
+            <span className="text-sm text-slate-500">Sort by:</span>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[150px] h-9 text-sm">
+              <SelectTrigger className="w-[150px] h-9 text-sm rounded-xl border-slate-200 bg-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl border-slate-200 bg-white">
                 <SelectItem value="date_new">Date (New)</SelectItem>
                 <SelectItem value="date_old">Date (Old)</SelectItem>
                 <SelectItem value="price_high">Price (High)</SelectItem>
