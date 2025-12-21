@@ -52,14 +52,28 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
+    // Security best practice: Don't reveal if email exists or not
+    // Always return success to prevent user enumeration attacks
     if (linkError) {
-      console.error("Error generating recovery link:", linkError);
-      throw new Error(linkError.message);
+      console.log("User not found or error generating link - returning success anyway for security");
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
     }
 
     if (!linkData?.properties?.action_link) {
-      console.error("No action link generated");
-      throw new Error("Failed to generate password reset link");
+      console.log("No action link generated - returning success anyway for security");
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
     }
 
     const resetLink = linkData.properties.action_link;
