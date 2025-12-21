@@ -90,20 +90,22 @@ export default function Home() {
         </div>
 
         {/* RIGHT: image full-bleed to viewport edge */}
-        <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-[58vw] max-w-none hidden lg:block">
+        <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-[60vw] max-w-none hidden lg:block">
           <div className="relative">
             <img
               src={heroEditorial}
               alt=""
-              className="w-full h-auto [mask-image:linear-gradient(to_left,rgba(0,0,0,1)_85%,rgba(0,0,0,0)_100%)] [-webkit-mask-image:linear-gradient(to_left,rgba(0,0,0,1)_85%,rgba(0,0,0,0)_100%)]"
+              className="w-full h-auto"
             />
-            {/* top/bottom feather to kill the "box" edges */}
+            {/* Feather overlay (matches page bg #FAFAF8) */}
             <div
               className="pointer-events-none absolute inset-0"
               style={{
-                background:
-                  "linear-gradient(to bottom, #FAFAF8 0%, rgba(250,250,248,0) 14%), " +
-                  "linear-gradient(to top, #FAFAF8 0%, rgba(250,250,248,0) 14%)",
+                background: `
+                  linear-gradient(to left, rgba(250,250,248,0) 65%, #FAFAF8 100%),
+                  linear-gradient(to top, rgba(250,250,248,0) 75%, #FAFAF8 100%),
+                  linear-gradient(to bottom, rgba(250,250,248,0) 75%, #FAFAF8 100%)
+                `,
               }}
             />
           </div>
