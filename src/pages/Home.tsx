@@ -13,7 +13,7 @@ import { Logo } from "@/components/brand";
 
 const cx = (...c: Array<string | false | undefined | null>) => c.filter(Boolean).join(" ");
 
-const ACCENT = "text-emerald-600";
+const ACCENT = "text-emerald-500";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -137,13 +137,17 @@ export default function Home() {
                   title="Buyer need posted"
                   meta="Match within network • direct contact"
                 />
-                <MiniRow
-                  icon={<MessageSquare className={cx("h-4 w-4", ACCENT)} />}
-                  title="Agent-to-agent message"
-                  meta="No noise • no spam • just business"
-                />
-              </div>
+              <MiniRow
+                icon={<MessageSquare className={cx("h-4 w-4", ACCENT)} />}
+                title="Agent-to-agent message"
+                meta="No noise • no spam • just business"
+              />
             </div>
+
+            <div className="mt-5 text-sm font-semibold tracking-tight text-slate-800">
+              Real inventory. Real conversations. Real results.
+            </div>
+          </div>
 
             {/* Soft glow */}
             <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-b from-emerald-200/25 via-transparent to-transparent blur-2xl" />
