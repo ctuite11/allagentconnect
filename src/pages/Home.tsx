@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#F7F6F3] text-slate-900">
       {/* Top Nav */}
-      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-[#F7F6F3]/80 backdrop-blur">
+      <header className="sticky top-0 z-40 bg-gradient-to-b from-white via-white/90 to-transparent backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-5 py-4 flex items-center justify-between">
           <Logo size="md" />
 
