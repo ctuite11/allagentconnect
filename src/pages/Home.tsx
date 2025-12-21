@@ -59,12 +59,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           {/* Copy */}
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
-              <Lock className={cx("h-4 w-4", ACCENT)} />
-              Private collaboration network for agents
-            </div>
-
-            <h1 className="mt-5 text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900">
+            <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900">
               Where Real Deals Get Done.
             </h1>
 
@@ -72,12 +67,7 @@ export default function Home() {
               By Agents. For Agents. All Agents.
             </div>
 
-            <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
-              A professional network where agents share real inventory, buyer needs, and close transactions — quietly
-              and efficiently.
-            </p>
-
-            <div className="mt-7 flex flex-col sm:flex-row gap-3">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => navigate("/auth?mode=register")}
                 className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
