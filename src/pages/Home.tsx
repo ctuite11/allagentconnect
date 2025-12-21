@@ -55,59 +55,50 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="relative min-h-[600px] bg-[#FAFAF8]">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-16 lg:py-24">
-            {/* LEFT: content stays constrained */}
-            <div className="max-w-xl">
-              <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900">
-                Where Real Deals Get Done.
-              </h1>
-              <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-slate-800">
-                By Agents. For Agents. All Agents.
-              </div>
+      <section className="mx-auto max-w-6xl px-5 pt-14 pb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          {/* Copy */}
+          <div>
+            <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900">
+              Where Real Deals Get Done.
+            </h1>
 
-              <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => navigate("/auth?mode=register")}
-                  className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
-                >
-                  Request Access <ArrowRight className="ml-2 h-4 w-4" />
-                </button>
-
-                <a
-                  href="#how"
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
-                >
-                  See How It Works
-                </a>
-              </div>
+            <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-slate-800">
+              By Agents. For Agents. All Agents.
             </div>
 
-            {/* RIGHT column placeholder only (keeps grid height) */}
-            <div className="hidden lg:block" />
-          </div>
-        </div>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => navigate("/auth?mode=register")}
+                className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
+              >
+                Request Access <ArrowRight className="ml-2 h-4 w-4" />
+              </button>
 
-        {/* Hero image - positioned absolute to the right */}
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-[55vw] hidden lg:block">
-          <div className="relative h-full flex items-center">
-            <img
-              src={heroEditorial}
-              alt=""
-              className="w-full h-auto max-h-full object-contain"
-            />
-            {/* Feather overlay - page color fades FROM edges INTO image */}
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background: `
-                  linear-gradient(to right, #FAFAF8 0%, transparent 35%),
-                  linear-gradient(to bottom, #FAFAF8 0%, transparent 18%),
-                  linear-gradient(to top, #FAFAF8 0%, transparent 18%)
-                `,
-              }}
-            />
+              <a
+                href="#how"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+              >
+                See How It Works
+              </a>
+            </div>
+          </div>
+
+          {/* Editorial Image Panel */}
+          <div className="relative">
+            <div className="rounded-3xl overflow-hidden shadow-[0_18px_50px_rgba(0,0,0,0.10)]">
+              <div className="relative">
+                <img 
+                  src={heroEditorial} 
+                  alt="" 
+                  className="w-full h-auto object-cover"
+                />
+                {/* Light white overlay */}
+                <div className="absolute inset-0 bg-white/10" />
+              </div>
+            </div>
+            {/* Soft glow */}
+            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-b from-emerald-200/25 via-transparent to-transparent blur-2xl" />
           </div>
         </div>
       </section>
