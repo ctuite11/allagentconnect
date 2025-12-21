@@ -43,7 +43,7 @@ export const Logo: React.FC<LogoProps> = ({
           cx="24"
           cy="24"
           r="22"
-          stroke={accentColor}
+          stroke={SLATE_900}
           strokeWidth="2"
           fill="none"
         />
@@ -79,7 +79,7 @@ export const Logo: React.FC<LogoProps> = ({
           cx="24"
           cy="24"
           r="22"
-          stroke={accentColor}
+          stroke={SLATE_900}
           strokeWidth="2"
           fill="none"
         />
