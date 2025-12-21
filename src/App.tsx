@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import { RouteGuard } from "./components/RouteGuard";
 import AgentSuccessHub from "./pages/AgentSuccessHub";
-import BuyerAuth from "./pages/BuyerAuth";
+
 import MLSPINSearch from "./pages/MLSPINSearch";
 import ListingSearch from "./pages/ListingSearch";
 import ListingSearchResults from "./pages/ListingSearchResults";
@@ -46,20 +46,13 @@ import VendorDashboard from "./pages/VendorDashboard";
 import VendorSetup from "./pages/VendorSetup";
 import VendorPackages from "./pages/VendorPackages";
 import VendorDirectory from "./pages/VendorDirectory";
-import ConsumerHome from "./pages/ConsumerHome";
-import ConsumerDashboard from "./pages/ConsumerDashboard";
-import ConsumerAuth from "./pages/ConsumerAuth";
-import ClientAgentSettings from "./pages/ClientAgentSettings";
-import ClientDashboard from "./pages/ClientDashboard";
-import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
-import ClientFavoritesPage from "./pages/ClientFavoritesPage";
 import PasswordReset from "./pages/PasswordReset";
 import PendingVerification from "./pages/PendingVerification";
 import NotFound from "./pages/NotFound";
 import MyListings from "./pages/MyListings";
 import ManageListingPhotos from "./pages/ManageListingPhotos";
 import AdminApprovals from "./pages/AdminApprovals";
-import ChooseRole from "./pages/ChooseRole";
+
 
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
@@ -95,20 +88,20 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/allagentconnect" element={<AllAgentConnectHome />} />
-                <Route path="/coming-soon" element={<ComingSoon />} />
-                <Route path="/choose" element={<ChooseRole />} />
-                <Route path="/get-started" element={<ChooseRole />} />
+                
+                {/* Auth routes */}
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
-                
-                {/* Pending verification */}
                 <Route path="/pending-verification" element={<PendingVerification />} />
+                <Route path="/password-reset" element={<PasswordReset />} />
                 
-                {/* Legacy redirects */}
-                <Route path="/onboarding" element={<Navigate to="/auth?role=agent" replace />} />
-                <Route path="/onboarding/create-account" element={<Navigate to="/auth?role=agent" replace />} />
-                <Route path="/onboarding/verify-license" element={<Navigate to="/auth?role=agent" replace />} />
-                <Route path="/verify-agent" element={<Navigate to="/auth?role=agent" replace />} />
+                {/* Legacy redirects - all go to /auth */}
+                <Route path="/choose" element={<Navigate to="/auth" replace />} />
+                <Route path="/get-started" element={<Navigate to="/auth" replace />} />
+                <Route path="/onboarding" element={<Navigate to="/auth" replace />} />
+                <Route path="/onboarding/create-account" element={<Navigate to="/auth" replace />} />
+                <Route path="/onboarding/verify-license" element={<Navigate to="/auth" replace />} />
+                <Route path="/verify-agent" element={<Navigate to="/auth" replace />} />
                 
                 {/* Agent routes - ALL require verification by default via RouteGuard */}
                 <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
@@ -118,7 +111,7 @@ const App = () => (
                 <Route path="/agent/listings/:id/floor-plans" element={<RouteGuard requireRole="agent"><ManageListingPhotos mode="floorPlans" /></RouteGuard>} />
                 <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
                 <Route path="/agent/listings/:id" element={<RouteGuard requireRole="agent"><AgentDetailRedirect /></RouteGuard>} />
-                <Route path="/buyer/auth" element={<BuyerAuth />} />
+                <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
                 <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
                 <Route path="/communication-center" element={<RouteGuard requireRole="agent"><CommunicationCenter /></RouteGuard>} />
@@ -158,14 +151,14 @@ const App = () => (
                 <Route path="/vendor/setup" element={<VendorSetup />} />
                 <Route path="/vendor/packages" element={<VendorPackages />} />
                 <Route path="/vendor/directory" element={<VendorDirectory />} />
-                <Route path="/consumer/home" element={<ConsumerHome />} />
-                <Route path="/consumer/dashboard" element={<ConsumerDashboard />} />
-                <Route path="/consumer/auth" element={<ConsumerAuth />} />
-                <Route path="/client-agent-settings" element={<RouteGuard requireRole="buyer"><ClientAgentSettings /></RouteGuard>} />
-                <Route path="/client/dashboard" element={<RouteGuard requireRole="buyer"><ClientDashboard /></RouteGuard>} />
-                <Route path="/client/hotsheets/new" element={<RouteGuard requireRole="buyer"><ClientCreateHotsheetNew /></RouteGuard>} />
-                <Route path="/client/favorites" element={<RouteGuard requireRole="buyer"><ClientFavoritesPage /></RouteGuard>} />
-                <Route path="/password-reset" element={<PasswordReset />} />
+                {/* Legacy consumer routes - redirect to auth */}
+                <Route path="/consumer/home" element={<Navigate to="/auth" replace />} />
+                <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />
+                <Route path="/consumer/auth" element={<Navigate to="/auth" replace />} />
+                <Route path="/client-agent-settings" element={<Navigate to="/auth" replace />} />
+                <Route path="/client/dashboard" element={<Navigate to="/auth" replace />} />
+                <Route path="/client/hotsheets/new" element={<Navigate to="/auth" replace />} />
+                <Route path="/client/favorites" element={<Navigate to="/auth" replace />} />
                 <Route path="/seed-test-data" element={<SeedTestData />} />
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
                 <Route path="/admin/approvals" element={<AdminApprovals />} />

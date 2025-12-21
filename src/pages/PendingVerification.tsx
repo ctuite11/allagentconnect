@@ -20,7 +20,7 @@ const PendingVerification = () => {
       if (!session?.user) {
         if (!didNavigate.current) {
           didNavigate.current = true;
-          navigate("/auth?role=agent", { replace: true });
+          navigate("/auth", { replace: true });
         }
         return;
       }
@@ -78,7 +78,7 @@ const PendingVerification = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/auth?role=agent", { replace: true });
+    navigate("/auth", { replace: true });
   };
 
   if (loading) {
