@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 type Props = {
   children: React.ReactElement;
   requireAuth?: boolean;
-  requireRole?: "agent" | "buyer";
+  requireRole?: "agent" | "admin";
   requireVerified?: boolean;
 };
 
@@ -32,10 +32,9 @@ export const RouteGuard: React.FC<Props> = ({
 
     // If route requires auth and no user, send to login
     if (requireAuth && !user) {
-      // Use /auth for agent routes, /consumer/auth for others
-      const loginPath = requireRole === "agent" ? "/auth" : "/consumer/auth";
-      if (location.pathname !== "/consumer/auth" && location.pathname !== "/auth") {
-        navigate(loginPath, {
+      // Agent-only platform: always redirect to /auth
+      if (location.pathname !== "/auth") {
+        navigate("/auth", {
           replace: true,
           state: { from: location.pathname },
         });
@@ -47,8 +46,11 @@ export const RouteGuard: React.FC<Props> = ({
     if (user && requireRole && role && role !== requireRole) {
       if (role === "agent") {
         navigate("/agent-dashboard", { replace: true });
-      } else if (role === "buyer") {
-        navigate("/client/dashboard", { replace: true });
+      } else if (role === "admin") {
+        navigate("/admin/approvals", { replace: true });
+      } else {
+        // Legacy buyer role - redirect to auth
+        navigate("/auth", { replace: true });
       }
       return;
     }

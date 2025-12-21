@@ -103,7 +103,7 @@ const AuthCallback = () => {
         } else if (!session && !hasAuthHash) {
           if (!didNavigate.current) {
             didNavigate.current = true;
-            navigate("/auth?role=agent", { replace: true });
+            navigate("/auth", { replace: true });
           }
         }
       };
@@ -159,61 +159,38 @@ const AuthCallback = () => {
       if (userRole?.role) {
         didNavigate.current = true;
         
-        if (userRole.role === 'buyer') {
-          navigate('/client/dashboard', { replace: true });
-          return;
-        }
-        
-        if (userRole.role === 'agent') {
-          // Check agent verification status
-          const { data: settings } = await supabase
-            .from('agent_settings')
-            .select('agent_status')
-            .eq('user_id', userId)
-            .maybeSingle();
-
-          const status = settings?.agent_status || 'unverified';
-          
-          if (status === 'verified') {
-            navigate('/agent-dashboard', { replace: true });
-          } else {
-            // pending or unverified -> pending verification
-            navigate('/pending-verification', { replace: true });
-          }
-          return;
-        }
-        
+        // Admin routing
         if (userRole.role === 'admin') {
           navigate('/admin/approvals', { replace: true });
           return;
         }
-      }
+        
+        // Agent-only platform: check verification status
+        const { data: settings } = await supabase
+          .from('agent_settings')
+          .select('agent_status')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      // No role yet - check intended_role from user metadata
-      const intendedRole = session?.user?.user_metadata?.intended_role;
-
-      if (intendedRole === 'buyer') {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .upsert({ user_id: userId, role: 'buyer' }, { onConflict: 'user_id' });
-
-        if (roleError) {
-          console.error("[AuthCallback] Failed to assign buyer role:", roleError);
+        const status = settings?.agent_status || 'pending';
+        
+        if (status === 'verified') {
+          navigate('/agent-dashboard', { replace: true });
+        } else {
+          // pending or unverified -> pending verification
+          navigate('/pending-verification', { replace: true });
         }
-
-        didNavigate.current = true;
-        navigate('/client/dashboard', { replace: true });
         return;
       }
 
-      // Default: treat as agent - go to pending verification
+      // No role yet - default to pending verification (agent)
       didNavigate.current = true;
       navigate('/pending-verification', { replace: true });
 
     } catch (err) {
       console.error("[AuthCallback] Route error:", err);
       didNavigate.current = true;
-      navigate('/auth?role=agent', { replace: true });
+      navigate('/auth', { replace: true });
     }
   };
 
@@ -224,7 +201,7 @@ const AuthCallback = () => {
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <h1 className="text-xl font-semibold mb-2">Authentication Failed</h1>
           <p className="text-muted-foreground mb-6">{error}</p>
-          <Button onClick={() => navigate("/auth?role=agent", { replace: true })}>
+          <Button onClick={() => navigate("/auth", { replace: true })}>
             Back to Sign In
           </Button>
         </div>

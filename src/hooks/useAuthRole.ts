@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-type Role = "agent" | "buyer" | null;
+type Role = "agent" | "admin" | "buyer" | null;
 
 interface AuthRoleState {
   user: User | null;

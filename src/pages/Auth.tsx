@@ -79,22 +79,7 @@ const Auth = () => {
   const allPasswordRulesPass = passwordValidation.every(r => r.valid);
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
 
-  // REQUIRE role=agent query param - redirect to /choose if missing
-  useEffect(() => {
-    const role = searchParams.get("role");
-    const reset = searchParams.get("reset");
-    const logout = searchParams.get("logout");
-    
-    // Allow reset=success and logout=1 params without role check
-    if (reset === "success" || logout === "1") {
-      return;
-    }
-    
-    // If no role param, redirect to role selection
-    if (role !== "agent") {
-      navigate("/choose", { replace: true });
-    }
-  }, [searchParams, navigate]);
+  // Agent-only platform - no role param checking needed
 
   // Check for logout param, reset success, or existing session
   useEffect(() => {
@@ -104,7 +89,7 @@ const Auth = () => {
       // Check for ?reset=success to show password reset success message
       if (searchParams.get("reset") === "success") {
         toast.success("Password updated successfully! Please sign in with your new password.");
-        window.history.replaceState(null, "", "/auth?role=agent");
+        window.history.replaceState(null, "", "/auth");
       }
 
       // Check for ?logout=1 param to force sign out
