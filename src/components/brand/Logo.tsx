@@ -17,6 +17,7 @@ const sizeClasses = {
 const SLATE_900 = "#0F172A";
 const EMERALD_600 = "#059669";
 const WHITE = "#FFFFFF";
+const SLATE_400 = "#94A3B8"; // Matches "Connect" text color
 
 export const Logo: React.FC<LogoProps> = ({ 
   variant = "primary", 
@@ -43,7 +44,7 @@ export const Logo: React.FC<LogoProps> = ({
           cx="24"
           cy="24"
           r="22"
-          stroke={SLATE_900}
+          stroke={SLATE_400}
           strokeWidth="2"
           fill="none"
         />
@@ -79,7 +80,7 @@ export const Logo: React.FC<LogoProps> = ({
           cx="24"
           cy="24"
           r="22"
-          stroke={SLATE_900}
+          stroke={SLATE_400}
           strokeWidth="2"
           fill="none"
         />
