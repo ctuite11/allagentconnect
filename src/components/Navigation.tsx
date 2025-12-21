@@ -23,9 +23,6 @@ const Navigation = () => {
   const location = useLocation();
   const { role, loading: roleLoading } = useUserRole(user);
 
-  // Hide global navigation on home page - it has its own header
-  if (location.pathname === "/") return null;
-
   useEffect(() => {
     const {
       data: { subscription },
@@ -71,6 +68,9 @@ const Navigation = () => {
       console.error("Error logging out:", error);
     }
   };
+
+  // Hide global navigation on home page - it has its own header
+  if (location.pathname === "/") return null;
 
   // Hide navigation only for pending agents - they have their own locked screen
   const isPending = user && role === "agent" && agentStatus === "pending";
