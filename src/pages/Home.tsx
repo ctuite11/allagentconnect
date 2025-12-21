@@ -32,8 +32,8 @@ export default function Home() {
             {/* Wordmark */}
             <div className="leading-tight">
               <div className="text-sm font-semibold tracking-tight text-slate-900">
-                All <span className="text-slate-900">Agent</span>{" "}
-                <span className="text-slate-400 font-semibold">Connect</span>
+                All Agent <span className="text-slate-400 font-semibold">Connect</span>
+                <span className="ml-1.5 text-xs text-slate-400 font-medium">AAC</span>
               </div>
               <div className="text-xs text-slate-500">Where real deals get done</div>
             </div>
@@ -82,7 +82,7 @@ export default function Home() {
               Where Real Deals Get Done.
             </h1>
 
-            <div className="mt-4 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm sm:text-base font-semibold tracking-tight text-slate-900">
+            <div className="mt-6 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm sm:text-base font-semibold tracking-tight text-slate-900">
               By Agents. For Agents. All Agents.
             </div>
 
@@ -158,7 +158,7 @@ export default function Home() {
                 />
             </div>
 
-            <div className="mt-5 text-sm sm:text-base font-semibold tracking-tight text-slate-900">
+            <div className="mt-5 text-sm sm:text-base font-medium tracking-tight text-slate-500">
               Real inventory. Real conversations. Real results.
             </div>
           </div>
@@ -383,7 +383,7 @@ function MiniRow({
   return (
     <div className="rounded-2xl border border-slate-200 bg-[#F7F6F3] px-4 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-2xl border border-emerald-200 bg-white flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
+        <div className="h-11 w-11 rounded-2xl border border-emerald-200 bg-white flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
           {icon}
         </div>
         <div>
