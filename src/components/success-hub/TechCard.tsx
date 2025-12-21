@@ -1,7 +1,5 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Pill } from "@/components/ui/pill";
 import { ArrowRight } from "lucide-react";
 
 interface TechCardProps {
@@ -26,44 +24,36 @@ export const TechCard = ({
   return (
     <div
       className={cn(
-        "aac-card aac-card-1 group relative cursor-pointer",
+        "rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition cursor-pointer group",
         className
       )}
       onClick={onClick}
     >
-      {/* Icon with muted background */}
-      <div className="relative w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4 transition-all duration-200 group-hover:bg-muted/80">
-        <div className="text-muted-foreground">{icon}</div>
+      {/* Icon with Home-style container */}
+      <div className="h-10 w-10 rounded-2xl border border-slate-200 bg-[#F7F6F3] flex items-center justify-center mb-4">
+        <div className="text-emerald-600">{icon}</div>
       </div>
 
       {/* Title */}
-      <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+      <h3 className="text-base font-semibold tracking-tight text-slate-900 mb-2">{title}</h3>
 
       {/* Description */}
-      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-        {description}
-      </p>
+      <p className="text-sm text-slate-600 mb-4 line-clamp-2">{description}</p>
 
-      {/* Metric Pill */}
+      {/* Metric Pill - emerald accent */}
       {metricValue !== undefined && metricValue !== 0 && (
         <div className="mb-4">
-          <Pill 
-            label={metricLabel ? `${metricValue} ${metricLabel}` : String(metricValue)}
-            variant="primary"
-            size="sm"
-          />
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+            {metricValue} {metricLabel}
+          </span>
         </div>
       )}
 
-      {/* CTA Button with arrow animation */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="group/btn text-primary hover:text-primary hover:bg-muted p-0 h-auto font-medium"
-      >
+      {/* CTA - Home style */}
+      <span className="text-sm font-semibold text-slate-800 inline-flex items-center group-hover:text-slate-900 transition-colors">
         Open
-        <ArrowRight className="w-4 h-4 ml-1 transition-transform duration-300 group-hover/btn:translate-x-2" />
-      </Button>
+        <ArrowRight className="w-4 h-4 ml-1 transition-transform duration-300 group-hover:translate-x-1" />
+      </span>
     </div>
   );
 };
