@@ -82,10 +82,11 @@ const Navigation = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div 
-              className="text-2xl font-bold cursor-pointer" 
+              className="text-2xl cursor-pointer font-display font-semibold" 
               onClick={() => navigate("/")}
             >
-              <span className="text-primary">All Agent</span> <span className="text-foreground">Connect</span>
+              <span className="text-emerald-600">All Agent</span>{" "}
+              <span className="text-slate-400 font-medium">Connect</span>
             </div>
           </div>
           
