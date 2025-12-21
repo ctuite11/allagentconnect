@@ -5,12 +5,11 @@ import {
   Handshake,
   MessageSquare,
   MapPinned,
-  Sparkles,
   ArrowRight,
   Lock,
 } from "lucide-react";
 import { Logo } from "@/components/brand";
-import heroAbstractBg from "@/assets/hero-abstract-bg.jpg";
+import heroEditorial from "@/assets/hero-editorial.png";
 
 const cx = (...c: Array<string | false | undefined | null>) => c.filter(Boolean).join(" ");
 
@@ -93,73 +92,42 @@ export default function Home() {
                 See How It Works
               </a>
             </div>
-
-            {/* Trust line */}
-            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500">
-              <span className="inline-flex items-center gap-2">
-                <ShieldCheck className={cx("h-[18px] w-[18px]", ACCENT)} />
-                Verified agents
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <MessageSquare className={cx("h-[18px] w-[18px]", ACCENT)} />
-                Direct agent messaging
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <Handshake className={cx("h-[18px] w-[18px]", ACCENT)} />
-                Built for real closings
-              </span>
-            </div>
           </div>
 
-          {/* Hero Visual */}
+          {/* Editorial Image Panel */}
           <div className="relative">
-            {/* Subtle abstract background image */}
-            <div 
-              className="absolute -inset-12 -z-10 rounded-[3rem] overflow-hidden"
-              style={{
-                backgroundImage: `url(${heroAbstractBg})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                opacity: 0.15,
-              }}
-            />
-            
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(0,0,0,0.10)]">
-              {/* Faux dashboard header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-semibold text-slate-900">Today's Activity</div>
-                  <div className="text-xs text-slate-500">Quiet intel. Real inventory. Fast matches.</div>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600">
-                  <Sparkles className={cx("h-4 w-4", ACCENT)} />
-                  Subtle signal
-                </div>
-              </div>
-
-              {/* Faux cards */}
-              <div className="mt-4 grid grid-cols-1 gap-3">
-                <MiniRow
-                  icon={<MapPinned className={cx("h-4 w-4", ACCENT)} />}
-                  title="Off-market / coming soon"
-                  meta="Shared with context • serious only"
+            <div className="rounded-3xl overflow-hidden shadow-[0_18px_50px_rgba(0,0,0,0.10)]">
+              <div className="relative">
+                <img 
+                  src={heroEditorial} 
+                  alt="" 
+                  className="w-full h-auto object-cover"
                 />
-                <MiniRow
-                  icon={<Users className={cx("h-4 w-4", ACCENT)} />}
-                  title="Buyer need posted"
-                  meta="Match within network • direct contact"
-                />
-                <MiniRow
-                  icon={<MessageSquare className={cx("h-4 w-4", ACCENT)} />}
-                  title="Agent-to-agent message"
-                  meta="No noise • no spam • just business"
-                />
+                {/* Light white overlay */}
+                <div className="absolute inset-0 bg-white/10" />
               </div>
             </div>
-
             {/* Soft glow */}
-            <div className="pointer-events-none absolute -inset-6 -z-20 rounded-[2.5rem] bg-gradient-to-b from-emerald-200/25 via-transparent to-transparent blur-2xl" />
+            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-b from-emerald-200/25 via-transparent to-transparent blur-2xl" />
           </div>
+        </div>
+      </section>
+
+      {/* Icon Benefits Strip */}
+      <section className="mx-auto max-w-6xl px-5 py-8">
+        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-sm text-slate-600">
+          <span className="inline-flex items-center gap-2">
+            <ShieldCheck className={cx("h-[18px] w-[18px]", ACCENT)} />
+            Verified agents
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <MessageSquare className={cx("h-[18px] w-[18px]", ACCENT)} />
+            Direct agent messaging
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <Handshake className={cx("h-[18px] w-[18px]", ACCENT)} />
+            Built for real closings
+          </span>
         </div>
       </section>
 
@@ -339,7 +307,7 @@ function ActivityTicker() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 h-10 border-t border-slate-200/70 bg-white/85 backdrop-blur overflow-hidden">
       <div 
-        className="h-full flex items-center animate-marquee hover:[animation-play-state:paused] motion-reduce:animate-none motion-reduce:justify-center"
+        className="h-full flex items-center hover:[animation-play-state:paused] motion-reduce:animate-none motion-reduce:justify-center"
         style={{
           animation: 'marquee 40s linear infinite',
         }}
@@ -405,31 +373,6 @@ function HowCard({
         <div className="text-base font-semibold tracking-tight">{title}</div>
       </div>
       <p className="mt-3 text-sm text-slate-600 leading-relaxed">{body}</p>
-    </div>
-  );
-}
-
-function MiniRow({
-  icon,
-  title,
-  meta,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  meta: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-[#F7F6F3] px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
-          {icon}
-        </div>
-        <div>
-          <div className="text-sm font-semibold text-slate-900">{title}</div>
-          <div className="text-xs text-slate-500">{meta}</div>
-        </div>
-      </div>
-      <ArrowRight className="h-4 w-4 text-slate-400" />
     </div>
   );
 }
