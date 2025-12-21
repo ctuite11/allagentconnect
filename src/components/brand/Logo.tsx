@@ -104,9 +104,9 @@ export const Logo: React.FC<LogoProps> = ({
         fontWeight="600"
         letterSpacing="-0.01em"
       >
-        <tspan fill={primaryColor}>All </tspan>
-        <tspan fill={primaryColor}>Agent </tspan>
-        <tspan fill={primaryColor}>Connect</tspan>
+        <tspan fill={accentColor}>All </tspan>
+        <tspan fill={accentColor}>Agent </tspan>
+        <tspan fill="#94A3B8">Connect</tspan>
       </text>
     </svg>
   );
@@ -157,9 +157,9 @@ export const LogoEmailSafe: React.FC<{ reversed?: boolean }> = ({ reversed = fal
             fontWeight: 700,
             letterSpacing: '-0.01em'
           }}>
-            <span style={{ color: primaryColor }}>All </span>
-            <span style={{ color: primaryColor }}>Agent </span>
-            <span style={{ color: primaryColor }}>Connect</span>
+            <span style={{ color: accentColor }}>All </span>
+            <span style={{ color: accentColor }}>Agent </span>
+            <span style={{ color: '#94A3B8' }}>Connect</span>
           </td>
         </tr>
       </tbody>
