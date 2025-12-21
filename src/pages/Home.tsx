@@ -20,7 +20,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-slate-900">
+    <div className="min-h-screen bg-[#FAFAF8] text-slate-900 pb-12">
       {/* Top Nav */}
       <header className="sticky top-0 z-40 bg-gradient-to-b from-white via-white/90 to-transparent backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-5 py-4 flex items-center justify-between">
@@ -315,6 +315,50 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Bloomberg-style Activity Ticker */}
+      <ActivityTicker />
+    </div>
+  );
+}
+
+/* -------------------- Activity Ticker -------------------- */
+
+const TICKER_ITEMS = [
+  "Off-market posted • Back Bay • 2m ago",
+  "Buyer need • Charlestown • 5m ago",
+  "Showing scheduled • Tue 5pm",
+  "Offer activity • NDA in place",
+  "New listing shared • South End • 8m ago",
+  "Agent message sent • 10m ago",
+  "Off-market viewed • Brookline • 12m ago",
+  "Buyer need matched • Cambridge • 15m ago",
+];
+
+function ActivityTicker() {
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-50 h-10 border-t border-slate-200/70 bg-white/85 backdrop-blur overflow-hidden">
+      <div 
+        className="h-full flex items-center animate-marquee hover:[animation-play-state:paused] motion-reduce:animate-none motion-reduce:justify-center"
+        style={{
+          animation: 'marquee 40s linear infinite',
+        }}
+      >
+        {/* Duplicate content for seamless loop */}
+        {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, idx) => (
+          <span key={idx} className="flex items-center whitespace-nowrap">
+            <span className="text-xs text-slate-700 px-4">{item}</span>
+            <span className="text-emerald-500">•</span>
+          </span>
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </div>
   );
 }
