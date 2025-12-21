@@ -130,9 +130,6 @@ export default function Home() {
               This isn't a "new idea." It's a working network with real behavior, real outcomes, and a track record.
             </p>
           </div>
-          <div className="text-sm text-slate-500">
-            <span className="font-semibold text-slate-900">Not some agents.</span> All agents.
-          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -144,7 +141,7 @@ export default function Home() {
           <ProofCard
             icon={<Users className={cx("h-5 w-5", ACCENT)} />}
             title="Built for the full market"
-            body="No top-10% gatekeeping. If you do real business, you belong."
+            body="Open to all licensed professionals. If you do real business, you belong."
           />
           <ProofCard
             icon={<Handshake className={cx("h-5 w-5", ACCENT)} />}
@@ -207,7 +204,7 @@ export default function Home() {
               </li>
               <li className="flex gap-3">
                 <span className={cx("mt-0.5", ACCENT)}>●</span>
-                No production thresholds, no gatekeeping
+                No production thresholds — open to all licensed agents
               </li>
             </ul>
 
@@ -229,9 +226,9 @@ export default function Home() {
 
           <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
             <div className="text-xs text-slate-500">Positioning</div>
-            <div className="mt-2 text-2xl font-semibold tracking-tight">Not some agents. All agents.</div>
+            <div className="mt-2 text-2xl font-semibold tracking-tight">Built for all agents.</div>
             <p className="mt-3 text-slate-600">
-              The value isn't exclusivity — it's participation. The bigger the serious network, the better the matches.
+              The value is participation. The bigger the professional network, the better the matches.
             </p>
 
             <div className="mt-6 rounded-2xl border border-slate-200 bg-[#F7F6F3] p-5">
