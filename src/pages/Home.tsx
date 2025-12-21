@@ -92,6 +92,7 @@ export default function Home() {
                   src={heroEditorial} 
                   alt="" 
                   className="w-full h-auto object-cover"
+                  style={{ filter: 'hue-rotate(140deg) saturate(1.1)' }}
                 />
                 {/* Light white overlay */}
                 <div className="absolute inset-0 bg-white/10" />
