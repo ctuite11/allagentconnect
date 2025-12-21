@@ -283,7 +283,7 @@ export default function Home() {
       <footer className="border-t border-slate-200/70 bg-[#F7F6F3]">
         <div className="mx-auto max-w-6xl px-5 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="text-sm text-slate-600">
-            <span className="font-semibold text-slate-900">AllAgentConnect</span> — where real deals get done.
+            <span className="font-semibold text-slate-900">All Agent Connect</span> — where real deals get done.
             <div className="mt-1 text-xs text-slate-500">© {new Date().getFullYear()} • Verified agents only</div>
           </div>
 
