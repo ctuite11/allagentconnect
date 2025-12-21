@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,11 @@ const Navigation = () => {
   const [user, setUser] = useState<User | null>(null);
   const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { role, loading: roleLoading } = useUserRole(user);
+
+  // Hide global navigation on home page - it has its own header
+  if (location.pathname === "/") return null;
 
   useEffect(() => {
     const {
