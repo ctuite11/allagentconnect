@@ -159,23 +159,23 @@ interface ListingSearchFiltersProps {
   onSearch: () => void;
 }
 
-// Section Header Component - ALL rails use primary blue, icons use semantic colors
-const SectionHeader = ({ 
-  icon: Icon, 
-  title, 
-  isOpen, 
+// Section Header Component - warm neutral rails, emerald accents
+const SectionHeader = ({
+  icon: Icon,
+  title,
+  isOpen,
   onToggle,
-  iconColor = "text-muted-foreground"
-}: { 
-  icon: React.ElementType; 
-  title: string; 
-  isOpen: boolean; 
+  iconColor = "text-muted-foreground",
+}: {
+  icon: React.ElementType;
+  title: string;
+  isOpen: boolean;
   onToggle: () => void;
   iconColor?: string;
 }) => (
   <button
     onClick={onToggle}
-    className="w-full flex items-center justify-between px-3 py-1.5 bg-neutral-50 hover:bg-neutral-100 transition-colors"
+    className="w-full flex items-center justify-between px-3 py-1.5 bg-[#F7F6F3] hover:bg-slate-100 transition-colors"
   >
     <div className="flex items-center gap-2">
       <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
@@ -290,7 +290,7 @@ const ListingSearchFilters = ({
               <span className="text-xs font-medium text-slate-700">Property Type</span>
             </div>
             <div className="p-3 space-y-1.5">
-              <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 px-1.5 py-1 rounded-lg transition-colors">
+              <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1.5 py-1 rounded-lg transition-colors">
                 <Checkbox
                   checked={filters.propertyTypes.length === PROPERTY_TYPES.length}
                   onCheckedChange={toggleAllPropertyTypes}
@@ -298,10 +298,10 @@ const ListingSearchFilters = ({
                 />
                 <span className="text-xs font-medium text-slate-700">Select All</span>
               </label>
-              {PROPERTY_TYPES.map(type => (
+              {PROPERTY_TYPES.map((type) => (
                 <label
                   key={type.value}
-                  className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 px-1.5 py-1 rounded-lg transition-colors"
+                  className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1.5 py-1 rounded-lg transition-colors"
                 >
                   <Checkbox
                     checked={filters.propertyTypes.includes(type.value)}
@@ -323,12 +323,12 @@ const ListingSearchFilters = ({
                 <Tag className="h-3.5 w-3.5 text-slate-400" />
                 <span className="text-xs font-medium text-slate-700">Status & Date</span>
               </div>
-              
+
               {/* Top row: Status (left) + Date/Timeframe (right, vertically centered) */}
               <div className="p-3 flex flex-col md:flex-row gap-4">
                 {/* STATUS Section - 2 columns, no scroll */}
                 <div className="flex-1">
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 px-1.5 py-1 rounded-lg transition-colors mb-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1.5 py-1 rounded-lg transition-colors mb-1.5">
                     <Checkbox
                       checked={filters.statuses.length === STATUSES.length}
                       onCheckedChange={toggleAllStatuses}
@@ -337,10 +337,10 @@ const ListingSearchFilters = ({
                     <span className="text-xs font-medium text-slate-700">Select All</span>
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
-                    {STATUSES.map(status => (
+                    {STATUSES.map((status) => (
                       <label
                         key={status.value}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 px-1.5 py-1 rounded-lg transition-colors"
+                        className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1.5 py-1 rounded-lg transition-colors"
                       >
                         <Checkbox
                           checked={filters.statuses.includes(status.value)}
@@ -456,7 +456,7 @@ const ListingSearchFilters = ({
                         }}
                         className="h-3.5 w-3.5"
                       />
-                      <span className="text-xs text-neutral-500">No Max</span>
+                      <span className="text-xs text-slate-500">No Max</span>
                     </label>
                   </div>
                 </div>
@@ -489,8 +489,8 @@ const ListingSearchFilters = ({
                       type="text"
                       placeholder="Min"
                       value={filters.bedsMin}
-                      onChange={e => updateFilter("bedsMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-8 text-xs"
+                      onChange={(e) => updateFilter("bedsMin", e.target.value.replace(/\D/g, ""))}
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                   <div>
@@ -499,8 +499,8 @@ const ListingSearchFilters = ({
                       type="text"
                       placeholder="Min"
                       value={filters.bathsMin}
-                      onChange={e => updateFilter("bathsMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-8 text-xs"
+                      onChange={(e) => updateFilter("bathsMin", e.target.value.replace(/\D/g, ""))}
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
@@ -511,8 +511,8 @@ const ListingSearchFilters = ({
                       type="text"
                       placeholder="Min"
                       value={filters.rooms}
-                      onChange={e => updateFilter("rooms", e.target.value.replace(/\D/g, ""))}
-                      className="h-8 text-xs"
+                      onChange={(e) => updateFilter("rooms", e.target.value.replace(/\D/g, ""))}
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                   <div>
@@ -521,8 +521,8 @@ const ListingSearchFilters = ({
                       type="text"
                       placeholder="Min"
                       value={filters.acres}
-                      onChange={e => updateFilter("acres", e.target.value)}
-                      className="h-8 text-xs"
+                      onChange={(e) => updateFilter("acres", e.target.value)}
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
@@ -533,8 +533,8 @@ const ListingSearchFilters = ({
                       type="text"
                       placeholder="Min SqFt"
                       value={filters.sqftMin}
-                      onChange={e => updateFilter("sqftMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-8 text-xs"
+                      onChange={(e) => updateFilter("sqftMin", e.target.value.replace(/\D/g, ""))}
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                   <div>
@@ -543,8 +543,8 @@ const ListingSearchFilters = ({
                       type="text"
                       placeholder="Max"
                       value={filters.pricePerSqFt}
-                      onChange={e => updateFilter("pricePerSqFt", e.target.value.replace(/\D/g, ""))}
-                      className="h-8 text-xs"
+                      onChange={(e) => updateFilter("pricePerSqFt", e.target.value.replace(/\D/g, ""))}
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
@@ -555,8 +555,8 @@ const ListingSearchFilters = ({
                       type="text"
                       placeholder="From"
                       value={filters.yearBuiltMin}
-                      onChange={e => updateFilter("yearBuiltMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-8 text-xs"
+                      onChange={(e) => updateFilter("yearBuiltMin", e.target.value.replace(/\D/g, ""))}
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                   <div>
@@ -565,8 +565,8 @@ const ListingSearchFilters = ({
                       type="text"
                       placeholder="Min"
                       value={filters.parkingSpaces}
-                      onChange={e => updateFilter("parkingSpaces", e.target.value.replace(/\D/g, ""))}
-                      className="h-8 text-xs"
+                      onChange={(e) => updateFilter("parkingSpaces", e.target.value.replace(/\D/g, ""))}
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
@@ -815,10 +815,10 @@ const ListingSearchFilters = ({
                             <button
                               key={town}
                               onClick={() => toggleTown(town)}
-                              className="w-full text-left px-2 py-1 text-xs rounded transition-colors text-slate-700 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-between group"
+                              className="w-full text-left px-2 py-1 text-xs rounded transition-colors text-slate-700 hover:bg-slate-100 flex items-center justify-between group"
                             >
                               <span>{town}</span>
-                              <X className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <X className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400" />
                             </button>
                           ))}
                         </div>
