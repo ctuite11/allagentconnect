@@ -77,7 +77,7 @@ const Navigation = () => {
   if (isPending) return null;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-white via-white/90 to-transparent backdrop-blur-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white">
       <div className="mx-auto max-w-6xl px-5 py-5 flex items-center justify-between">
         <div onClick={() => navigate("/")} className="cursor-pointer">
           <Logo size="lg" />
@@ -87,7 +87,7 @@ const Navigation = () => {
         <nav className="hidden md:flex items-center gap-7 text-sm text-slate-600">
           <button
             onClick={() => navigate("/")}
-            className="hover:text-slate-900 transition"
+            className="hover:text-emerald-600 transition-colors"
           >
             Home
           </button>
@@ -95,7 +95,7 @@ const Navigation = () => {
           {/* All Pages Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1.5 hover:text-slate-900 transition">
+              <button className="flex items-center gap-1.5 hover:text-emerald-600 transition-colors">
                 All Pages
                 <ChevronDown className="w-3 h-3" />
               </button>
@@ -213,7 +213,7 @@ const Navigation = () => {
           {user && role === "agent" && (
             <button
               onClick={() => navigate("/allagentconnect")}
-              className="hover:text-slate-900 transition"
+              className="hover:text-emerald-600 transition-colors"
             >
               Success Hub
             </button>
