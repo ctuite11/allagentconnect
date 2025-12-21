@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,7 +13,6 @@ const corsHeaders = {
 
 interface PasswordResetRequest {
   email: string;
-  resetToken: string;
   redirectUrl: string;
 }
 
@@ -20,12 +22,50 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, resetToken, redirectUrl }: PasswordResetRequest = await req.json();
+    const { email, redirectUrl }: PasswordResetRequest = await req.json();
 
-    console.log("Sending password reset email to:", email);
+    console.log("Processing password reset request for:", email);
+    console.log("Redirect URL:", redirectUrl);
 
-    const resetLink = `${redirectUrl}?token=${resetToken}`;
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Missing Supabase configuration");
+    }
 
+    if (!RESEND_API_KEY) {
+      throw new Error("Missing RESEND_API_KEY");
+    }
+
+    // Create admin client to generate recovery link
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+
+    // Generate recovery link using admin API
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'recovery',
+      email: email,
+      options: {
+        redirectTo: redirectUrl,
+      },
+    });
+
+    if (linkError) {
+      console.error("Error generating recovery link:", linkError);
+      throw new Error(linkError.message);
+    }
+
+    if (!linkData?.properties?.action_link) {
+      console.error("No action link generated");
+      throw new Error("Failed to generate password reset link");
+    }
+
+    const resetLink = linkData.properties.action_link;
+    console.log("Recovery link generated successfully");
+
+    // Send email via Resend
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -162,7 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
                   Revolutionizing Real Estate Through Complete Transparency
                 </p>
                 <p>
-                  Need help? <a href="mailto:support@agentconnect.com">Contact Support</a>
+                  Need help? <a href="mailto:support@allagentconnect.com">Contact Support</a>
                 </p>
               </div>
             </div>
@@ -172,9 +212,16 @@ const handler = async (req: Request): Promise<Response> => {
       }),
     });
 
-    console.log("Password reset email sent successfully:", emailResponse);
+    if (!emailResponse.ok) {
+      const errorData = await emailResponse.json();
+      console.error("Resend API error:", errorData);
+      throw new Error(errorData.message || "Failed to send email");
+    }
 
-    return new Response(JSON.stringify({ success: true, emailResponse }), {
+    const emailResult = await emailResponse.json();
+    console.log("Password reset email sent successfully:", emailResult);
+
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",

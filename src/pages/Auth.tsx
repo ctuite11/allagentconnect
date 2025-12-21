@@ -305,11 +305,15 @@ const Auth = () => {
     try {
       const validatedEmail = emailSchema.parse(email);
 
-      const { error } = await supabase.auth.resetPasswordForEmail(validatedEmail, {
-        redirectTo: `${window.location.origin}/password-reset`,
+      // Call edge function to send password reset email via Resend
+      const { error: fnError } = await supabase.functions.invoke('send-password-reset', {
+        body: { 
+          email: validatedEmail,
+          redirectUrl: `${window.location.origin}/password-reset`
+        }
       });
 
-      if (error) throw error;
+      if (fnError) throw fnError;
 
       setResetEmailSent(true);
       toast.success("Password reset link sent to your email");
@@ -317,6 +321,7 @@ const Auth = () => {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
+        console.error("Password reset error:", error);
         toast.error(error.message || "Failed to send reset link");
       }
     } finally {

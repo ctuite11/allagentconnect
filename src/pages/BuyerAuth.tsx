@@ -221,11 +221,15 @@ const BuyerAuth = () => {
     try {
       const validatedData = z.object({ email: z.string().email() }).parse({ email: formData.email });
       
-      const { error } = await supabase.auth.resetPasswordForEmail(validatedData.email, {
-        redirectTo: `${window.location.origin}/?auth=buyer-reset`,
+      // Call edge function to send password reset email via Resend
+      const { error: fnError } = await supabase.functions.invoke('send-password-reset', {
+        body: { 
+          email: validatedData.email,
+          redirectUrl: `${window.location.origin}/?auth=buyer-reset`
+        }
       });
 
-      if (error) throw error;
+      if (fnError) throw fnError;
       
       toast.success("Password reset email sent! Check your inbox.");
       setIsForgotPassword(false);
@@ -233,7 +237,8 @@ const BuyerAuth = () => {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        toast.error(error.message);
+        console.error("Password reset error:", error);
+        toast.error(error.message || "Failed to send reset email");
       }
     } finally {
       setLoading(false);
