@@ -285,7 +285,7 @@ const ListingSearchFilters = ({
           
           {/* PROPERTY TYPE Section (narrow) */}
           <div className="w-full md:w-[160px] md:shrink-0 rounded-2xl border border-slate-200 bg-white overflow-hidden">
-            <div className="w-full flex items-center gap-2 px-3 py-2.5 bg-slate-50/50 border-b border-slate-100">
+            <div className="w-full flex items-center gap-2 px-3 py-2.5 bg-[#F7F6F3] border-b border-slate-100">
               <Home className="h-3.5 w-3.5 text-slate-400" />
               <span className="text-xs font-medium text-slate-700">Property Type</span>
             </div>
@@ -319,7 +319,7 @@ const ListingSearchFilters = ({
             {/* STATUS & DATE Card */}
             <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
               {/* STATUS + DATE/TIMEFRAME Header */}
-              <div className="w-full flex items-center gap-2 px-3 py-2.5 bg-slate-50/50 border-b border-slate-100">
+              <div className="w-full flex items-center gap-2 px-3 py-2.5 bg-[#F7F6F3] border-b border-slate-100">
                 <Tag className="h-3.5 w-3.5 text-slate-400" />
                 <span className="text-xs font-medium text-slate-700">Status & Date</span>
               </div>
@@ -393,7 +393,7 @@ const ListingSearchFilters = ({
 
             {/* PRICE RANGE Card (separate card) */}
             <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-              <div className="w-full flex items-center gap-2 px-3 py-2.5 bg-slate-50/50 border-b border-slate-100">
+              <div className="w-full flex items-center gap-2 px-3 py-2.5 bg-[#F7F6F3] border-b border-slate-100">
                 <DollarSign className="h-3.5 w-3.5 text-slate-400" />
                 <span className="text-xs font-medium text-slate-700">Price Range</span>
               </div>
@@ -465,26 +465,26 @@ const ListingSearchFilters = ({
           </div>
 
           {/* STANDARD SEARCH CRITERIA Section (right) */}
-          <div className="w-full md:w-[280px] md:shrink-0 bg-white border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06)' }}>
+          <div className="w-full md:w-[280px] md:shrink-0 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
             <button
               onClick={() => toggleSection("standardCriteria")}
-              className="w-full flex items-center justify-between px-3 py-2 bg-neutral-50/50 border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
+              className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-slate-100 hover:bg-slate-100 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <Building className="h-3.5 w-3.5 text-neutral-400" />
-                <span className="text-xs font-medium text-neutral-700">Standard Criteria</span>
+                <Building className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-xs font-medium text-slate-700">Standard Criteria</span>
               </div>
               {sectionsOpen.standardCriteria ? (
-                <ChevronUp className="h-3.5 w-3.5 text-neutral-400" />
+                <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
               ) : (
-                <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
+                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
               )}
             </button>
             {sectionsOpen.standardCriteria && (
               <div className="p-3 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs text-neutral-500 mb-1 block">Bedrooms</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">Bedrooms</Label>
                     <Input
                       type="text"
                       placeholder="Min"
@@ -494,7 +494,7 @@ const ListingSearchFilters = ({
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-neutral-500 mb-1 block">Total Baths</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">Total Baths</Label>
                     <Input
                       type="text"
                       placeholder="Min"
@@ -506,7 +506,7 @@ const ListingSearchFilters = ({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs text-neutral-500 mb-1 block">Rooms</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">Rooms</Label>
                     <Input
                       type="text"
                       placeholder="Min"
@@ -516,7 +516,7 @@ const ListingSearchFilters = ({
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-neutral-500 mb-1 block">Acres</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">Acres</Label>
                     <Input
                       type="text"
                       placeholder="Min"
@@ -528,7 +528,7 @@ const ListingSearchFilters = ({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs text-neutral-500 mb-1 block">Living Area</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">Living Area</Label>
                     <Input
                       type="text"
                       placeholder="Min SqFt"
@@ -538,7 +538,7 @@ const ListingSearchFilters = ({
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-neutral-500 mb-1 block">Price/SqFt</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">Price/SqFt</Label>
                     <Input
                       type="text"
                       placeholder="Max"
@@ -550,7 +550,7 @@ const ListingSearchFilters = ({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs text-neutral-500 mb-1 block">Year Built</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">Year Built</Label>
                     <Input
                       type="text"
                       placeholder="From"
@@ -560,7 +560,7 @@ const ListingSearchFilters = ({
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-neutral-500 mb-1 block">Parking</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">Parking</Label>
                     <Input
                       type="text"
                       placeholder="Min"
@@ -576,19 +576,19 @@ const ListingSearchFilters = ({
         </div>
 
         {/* ROW 2: ADDRESS Section (Full Width) */}
-        <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden mb-4" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06)' }}>
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
           <button
             onClick={() => toggleSection("address")}
-            className="w-full flex items-center justify-between px-3 py-2 bg-neutral-50/50 border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-slate-100 hover:bg-slate-100 transition-colors"
           >
             <div className="flex items-center gap-2">
-              <MapPin className="h-3.5 w-3.5 text-neutral-400" />
-              <span className="text-xs font-medium text-neutral-700">Address</span>
+              <MapPin className="h-3.5 w-3.5 text-slate-400" />
+              <span className="text-xs font-medium text-slate-700">Address</span>
             </div>
             {sectionsOpen.address ? (
-              <ChevronUp className="h-3.5 w-3.5 text-neutral-400" />
+              <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
             ) : (
-              <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
             )}
           </button>
           {sectionsOpen.address && (
@@ -600,16 +600,16 @@ const ListingSearchFilters = ({
               >
                 <div className="flex items-center gap-1.5">
                   <RadioGroupItem value="street" id="street" className="h-3.5 w-3.5" />
-                  <Label htmlFor="street" className="text-xs text-neutral-700 cursor-pointer">Street Address</Label>
+                  <Label htmlFor="street" className="text-xs text-slate-700 cursor-pointer">Street Address</Label>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <RadioGroupItem value="location" id="location" className="h-3.5 w-3.5" />
-                  <Label htmlFor="location" className="text-xs text-neutral-700 cursor-pointer">My Location</Label>
+                  <Label htmlFor="location" className="text-xs text-slate-700 cursor-pointer">My Location</Label>
                 </div>
               </RadioGroup>
               <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                 <div>
-                  <Label className="text-xs text-neutral-500 mb-1 block">Street #</Label>
+                  <Label className="text-xs text-slate-500 mb-1 block">Street #</Label>
                   <Input
                     type="text"
                     placeholder=""
@@ -619,7 +619,7 @@ const ListingSearchFilters = ({
                   />
                 </div>
                 <div className="col-span-2">
-                  <Label className="text-xs text-neutral-500 mb-1 block">Street Name</Label>
+                  <Label className="text-xs text-slate-500 mb-1 block">Street Name</Label>
                   <Input
                     type="text"
                     placeholder=""
@@ -629,7 +629,7 @@ const ListingSearchFilters = ({
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-neutral-500 mb-1 block">Zip Code</Label>
+                  <Label className="text-xs text-slate-500 mb-1 block">Zip Code</Label>
                   <Input
                     type="text"
                     placeholder=""
@@ -639,7 +639,7 @@ const ListingSearchFilters = ({
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-neutral-500 mb-1 block">Radius</Label>
+                  <Label className="text-xs text-slate-500 mb-1 block">Radius</Label>
                   <Input
                     type="text"
                     placeholder=""
@@ -649,7 +649,7 @@ const ListingSearchFilters = ({
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-neutral-500 mb-1 block">Miles</Label>
+                  <Label className="text-xs text-slate-500 mb-1 block">Miles</Label>
                   <Select defaultValue="miles">
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue />
@@ -669,19 +669,19 @@ const ListingSearchFilters = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           
           {/* TOWNS Section */}
-          <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06)' }}>
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
             <button
               onClick={() => toggleSection("towns")}
-              className="w-full flex items-center justify-between px-3 py-2 bg-neutral-50/50 border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
+              className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-slate-100 hover:bg-slate-100 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-neutral-400" />
-                <span className="text-xs font-medium text-neutral-700">Towns</span>
+                <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-xs font-medium text-slate-700">Towns</span>
               </div>
               {sectionsOpen.towns ? (
-                <ChevronUp className="h-3.5 w-3.5 text-neutral-400" />
+                <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
               ) : (
-                <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
+                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
               )}
             </button>
             {sectionsOpen.towns && (
@@ -752,7 +752,7 @@ const ListingSearchFilters = ({
                   {/* Left Column: Town Picker */}
                   <div>
                     <div className="relative mb-2">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                       <Input
                         type="text"
                         placeholder="Search towns..."
@@ -765,15 +765,15 @@ const ListingSearchFilters = ({
                           onClick={() => setTownSearch("")}
                           className="absolute right-2.5 top-1/2 -translate-y-1/2"
                         >
-                          <X className="h-3.5 w-3.5 text-neutral-400 hover:text-neutral-600" />
+                          <X className="h-3.5 w-3.5 text-slate-400 hover:text-slate-600" />
                         </button>
                       )}
                     </div>
                     
-                    <div className="min-h-[260px] max-h-[300px] border border-neutral-200 rounded-lg overflow-y-auto p-2 bg-white">
+                    <div className="min-h-[260px] max-h-[300px] border border-slate-200 rounded-lg overflow-y-auto p-2 bg-white">
                       <button
                         onClick={addAllTowns}
-                        className="w-full text-left px-2 py-1 text-xs text-primary hover:bg-neutral-50 rounded transition-colors font-medium mb-1"
+                        className="w-full text-left px-2 py-1 text-xs text-slate-700 hover:text-emerald-600 hover:bg-slate-100 rounded transition-colors font-medium mb-1"
                       >
                         - Add All Towns ({townsList.length}) -
                       </button>
@@ -794,7 +794,7 @@ const ListingSearchFilters = ({
                   {/* Right Column: Selected Towns */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <Label className="text-xs text-neutral-500">Selected Towns</Label>
+                      <Label className="text-xs text-slate-500">Selected Towns</Label>
                       {filters.selectedTowns.length > 0 && (
                         <Button
                           variant="ghost"
@@ -806,16 +806,16 @@ const ListingSearchFilters = ({
                         </Button>
                       )}
                     </div>
-                    <div className="min-h-[260px] max-h-[300px] border border-neutral-200 rounded-lg overflow-y-auto p-2 bg-white">
+                    <div className="min-h-[260px] max-h-[300px] border border-slate-200 rounded-lg overflow-y-auto p-2 bg-white">
                       {filters.selectedTowns.length === 0 ? (
-                        <p className="text-xs text-neutral-400 italic px-2 py-1">No towns selected</p>
+                        <p className="text-xs text-slate-400 italic px-2 py-1">No towns selected</p>
                       ) : (
                         <div className="space-y-0.5">
                           {filters.selectedTowns.map(town => (
                             <button
                               key={town}
                               onClick={() => toggleTown(town)}
-                              className="w-full text-left px-2 py-1 text-xs rounded transition-colors text-neutral-700 hover:bg-destructive/10 hover:text-destructive flex items-center justify-between group"
+                              className="w-full text-left px-2 py-1 text-xs rounded transition-colors text-slate-700 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-between group"
                             >
                               <span>{town}</span>
                               <X className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -833,41 +833,41 @@ const ListingSearchFilters = ({
           {/* LISTING EVENTS + KEYWORDS Section */}
           <div className="space-y-4">
             {/* Listing Events */}
-            <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06)' }}>
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
               <button
                 onClick={() => toggleSection("listingEvents")}
-                className="w-full flex items-center justify-between px-3 py-2 bg-neutral-50/50 border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-slate-100 hover:bg-slate-100 transition-colors"
               >
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-3.5 w-3.5 text-neutral-400" />
-                  <span className="text-xs font-medium text-neutral-700">Listing Events</span>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-xs font-medium text-slate-700">Listing Events</span>
                 </div>
-                {sectionsOpen.listingEvents ? (
-                  <ChevronUp className="h-3.5 w-3.5 text-neutral-400" />
-                ) : (
-                  <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
+              {sectionsOpen.listingEvents ? (
+                <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                 )}
               </button>
               {sectionsOpen.listingEvents && (
                 <div className="p-3 space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-neutral-50 px-1.5 py-1 rounded transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1.5 py-1 rounded transition-colors">
                     <Checkbox
                       checked={filters.openHouses}
                       onCheckedChange={checked => updateFilter("openHouses", checked as boolean)}
                       className="h-3.5 w-3.5"
                     />
-                    <span className="text-xs text-neutral-700">🎈 Open Houses</span>
+                    <span className="text-xs text-slate-700">🎈 Open Houses</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-neutral-50 px-1.5 py-1 rounded transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1.5 py-1 rounded transition-colors">
                     <Checkbox
                       checked={filters.brokerTours}
                       onCheckedChange={checked => updateFilter("brokerTours", checked as boolean)}
                       className="h-3.5 w-3.5"
                     />
-                    <span className="text-xs text-neutral-700">🚗 Broker Tours</span>
+                    <span className="text-xs text-slate-700">🚗 Broker Tours</span>
                   </label>
                   <div className="pt-1">
-                    <Label className="text-xs text-neutral-500 mb-1 block">For:</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">For:</Label>
                     <Select 
                       value={filters.listingEventsTimeframe} 
                       onValueChange={v => updateFilter("listingEventsTimeframe", v)}
@@ -888,19 +888,19 @@ const ListingSearchFilters = ({
             </div>
 
             {/* Keywords */}
-            <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06)' }}>
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
               <button
                 onClick={() => toggleSection("keywords")}
-                className="w-full flex items-center justify-between px-3 py-2 bg-neutral-50/50 border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-slate-100 hover:bg-slate-100 transition-colors"
               >
-                <div className="flex items-center gap-2">
-                  <FileText className="h-3.5 w-3.5 text-neutral-400" />
-                  <span className="text-xs font-medium text-neutral-700">Keywords</span>
+              <div className="flex items-center gap-2">
+                <FileText className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-xs font-medium text-slate-700">Keywords</span>
                 </div>
-                {sectionsOpen.keywords ? (
-                  <ChevronUp className="h-3.5 w-3.5 text-neutral-400" />
-                ) : (
-                  <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
+              {sectionsOpen.keywords ? (
+                <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                 )}
               </button>
               {sectionsOpen.keywords && (
@@ -913,14 +913,14 @@ const ListingSearchFilters = ({
                     >
                       <div className="flex items-center gap-1.5">
                         <RadioGroupItem value="any" id="any" className="h-3.5 w-3.5" />
-                        <Label htmlFor="any" className="text-xs text-neutral-700 cursor-pointer">Any</Label>
+                        <Label htmlFor="any" className="text-xs text-slate-700 cursor-pointer">Any</Label>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <RadioGroupItem value="all" id="all" className="h-3.5 w-3.5" />
-                        <Label htmlFor="all" className="text-xs text-neutral-700 cursor-pointer">All</Label>
+                        <Label htmlFor="all" className="text-xs text-slate-700 cursor-pointer">All</Label>
                       </div>
                     </RadioGroup>
-                    <div className="border-l border-neutral-100 h-4" />
+                    <div className="border-l border-slate-100 h-4" />
                     <RadioGroup 
                       value={filters.keywordType} 
                       onValueChange={(v) => updateFilter("keywordType", v as "include" | "exclude")}
@@ -928,11 +928,11 @@ const ListingSearchFilters = ({
                     >
                       <div className="flex items-center gap-1.5">
                         <RadioGroupItem value="include" id="include" className="h-3.5 w-3.5" />
-                        <Label htmlFor="include" className="text-xs text-neutral-700 cursor-pointer">Include</Label>
+                        <Label htmlFor="include" className="text-xs text-slate-700 cursor-pointer">Include</Label>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <RadioGroupItem value="exclude" id="exclude" className="h-3.5 w-3.5" />
-                        <Label htmlFor="exclude" className="text-xs text-neutral-700 cursor-pointer">Exclude</Label>
+                        <Label htmlFor="exclude" className="text-xs text-slate-700 cursor-pointer">Exclude</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -953,7 +953,7 @@ const ListingSearchFilters = ({
         </div>
 
         {/* Action Bar */}
-        <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
           <div className="flex items-center gap-2">
             {filters.selectedTowns.length > 0 && (
               <Badge variant="secondary" className="text-xs px-2 py-0.5">
