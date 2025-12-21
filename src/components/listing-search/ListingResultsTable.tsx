@@ -420,91 +420,91 @@ const ListingResultsTable = ({
   return (
     <div className="space-y-4">
       {/* Sticky Action Bar */}
-      <div className="sticky top-4 z-10 rounded-3xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleSelectAll}
-              className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
-            >
-              {selectedRows.size === displayedListings.length && displayedListings.length > 0 ? "Deselect All" : "Select All"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={selectedRows.size === 0 && !showSelectedOnly}
-              onClick={handleKeepSelected}
-              className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors disabled:opacity-50"
-            >
-              {showSelectedOnly ? (
-                <>
-                  <Eye className="h-4 w-4 mr-1.5" />
-                  Show All
-                </>
-              ) : (
-                <>
-                  <EyeOff className="h-4 w-4 mr-1.5" />
-                  Keep Selected
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSaveSearchDialogOpen(true)}
-              className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
-            >
-              <Bookmark className="h-4 w-4 mr-1.5" />
-              Save Search
-            </Button>
-            {selectedRows.size > 0 && (
-              <BulkShareListingsDialog
-                listingIds={Array.from(selectedRows)}
-                listingCount={selectedRows.size}
-              />
+      <div className="sticky top-4 z-10 bg-white p-4">
+        {/* Select All / Actions Row */}
+        <div className="flex items-center gap-2 flex-wrap mb-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleSelectAll}
+            className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
+          >
+            {selectedRows.size === displayedListings.length && displayedListings.length > 0 ? "Deselect All" : "Select All"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={selectedRows.size === 0 && !showSelectedOnly}
+            onClick={handleKeepSelected}
+            className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors disabled:opacity-50"
+          >
+            {showSelectedOnly ? (
+              <>
+                <Eye className="h-4 w-4 mr-1.5" />
+                Show All
+              </>
+            ) : (
+              <>
+                <EyeOff className="h-4 w-4 mr-1.5" />
+                Keep Selected
+              </>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (selectedRows.size === 0) {
-                  toast.error("You haven't selected any properties", {
-                    description: "Select one or more properties from the results to save a hotsheet.",
-                  });
-                  return;
-                }
-                setHotSheetDialogOpen(true);
-              }}
-              className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
-            >
-              <FileSpreadsheet className="h-4 w-4 mr-1.5" />
-              Save as Hot Sheet
-            </Button>
-            {selectedRows.size > 0 && (
-              <span className="text-sm text-slate-500 ml-2 font-medium">
-                {selectedRows.size} selected
-              </span>
-            )}
-          </div>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSaveSearchDialogOpen(true)}
+            className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
+          >
+            <Bookmark className="h-4 w-4 mr-1.5" />
+            Save Search
+          </Button>
+          {selectedRows.size > 0 && (
+            <BulkShareListingsDialog
+              listingIds={Array.from(selectedRows)}
+              listingCount={selectedRows.size}
+            />
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (selectedRows.size === 0) {
+                toast.error("You haven't selected any properties", {
+                  description: "Select one or more properties from the results to save a hotsheet.",
+                });
+                return;
+              }
+              setHotSheetDialogOpen(true);
+            }}
+            className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+            Save as Hot Sheet
+          </Button>
+          {selectedRows.size > 0 && (
+            <span className="text-sm text-slate-500 ml-2 font-medium">
+              {selectedRows.size} selected
+            </span>
+          )}
+        </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500">Sort by:</span>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[150px] h-9 text-sm rounded-xl border-slate-200 bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-slate-200 bg-white">
-                <SelectItem value="date_new">Date (New)</SelectItem>
-                <SelectItem value="date_old">Date (Old)</SelectItem>
-                <SelectItem value="price_high">Price (High)</SelectItem>
-                <SelectItem value="price_low">Price (Low)</SelectItem>
-                <SelectItem value="sqft">Square Feet</SelectItem>
-                <SelectItem value="beds">Bedrooms</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Sort Row */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-500">Sort by:</span>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[150px] h-9 text-sm rounded-xl border-slate-200 bg-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-slate-200 bg-white">
+              <SelectItem value="date_new">Date (New)</SelectItem>
+              <SelectItem value="date_old">Date (Old)</SelectItem>
+              <SelectItem value="price_high">Price (High)</SelectItem>
+              <SelectItem value="price_low">Price (Low)</SelectItem>
+              <SelectItem value="sqft">Square Feet</SelectItem>
+              <SelectItem value="beds">Bedrooms</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
