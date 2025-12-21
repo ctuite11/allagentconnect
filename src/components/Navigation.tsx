@@ -78,9 +78,9 @@ const Navigation = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-white via-white/90 to-transparent backdrop-blur-sm">
-      <div className="mx-auto max-w-6xl px-5 py-4 flex items-center justify-between">
+      <div className="mx-auto max-w-6xl px-5 py-5 flex items-center justify-between">
         <div onClick={() => navigate("/")} className="cursor-pointer">
-          <Logo size="md" />
+          <Logo size="lg" />
         </div>
 
         {/* Desktop Navigation */}
