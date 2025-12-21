@@ -96,15 +96,15 @@ export default function Home() {
             {/* Trust line */}
             <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500">
               <span className="inline-flex items-center gap-2">
-                <ShieldCheck className={cx("h-4 w-4", ACCENT)} />
+                <ShieldCheck className={cx("h-[18px] w-[18px]", ACCENT)} />
                 Verified agents
               </span>
               <span className="inline-flex items-center gap-2">
-                <MessageSquare className={cx("h-4 w-4", ACCENT)} />
+                <MessageSquare className={cx("h-[18px] w-[18px]", ACCENT)} />
                 Direct agent messaging
               </span>
               <span className="inline-flex items-center gap-2">
-                <Handshake className={cx("h-4 w-4", ACCENT)} />
+                <Handshake className={cx("h-[18px] w-[18px]", ACCENT)} />
                 Built for real closings
               </span>
             </div>
