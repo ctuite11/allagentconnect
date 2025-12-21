@@ -91,22 +91,23 @@ export default function Home() {
 
         {/* RIGHT: image full-bleed to viewport edge */}
         <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-[58vw] max-w-none hidden lg:block">
-          <div className="relative">
-            <img
-              src={heroEditorial}
-              alt=""
-              className="w-full h-auto [mask-image:linear-gradient(to_left,rgba(0,0,0,1)_85%,rgba(0,0,0,0)_100%)] [-webkit-mask-image:linear-gradient(to_left,rgba(0,0,0,1)_85%,rgba(0,0,0,0)_100%)]"
-            />
-            {/* top/bottom feather to kill the "box" edges */}
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to bottom, #FAFAF8 0%, rgba(250,250,248,0) 14%), " +
-                  "linear-gradient(to top, #FAFAF8 0%, rgba(250,250,248,0) 14%)",
-              }}
-            />
-          </div>
+          <img
+            src={heroEditorial}
+            alt=""
+            className="w-full h-auto"
+            style={{
+              maskImage: `
+                linear-gradient(to left, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%),
+                linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 18%, rgba(0,0,0,1) 82%, rgba(0,0,0,0) 100%)
+              `,
+              maskComposite: 'intersect',
+              WebkitMaskImage: `
+                linear-gradient(to left, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%),
+                linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 18%, rgba(0,0,0,1) 82%, rgba(0,0,0,0) 100%)
+              `,
+              WebkitMaskComposite: 'source-in',
+            }}
+          />
         </div>
       </section>
 
