@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   Users, Mail, Heart, Bell, 
@@ -360,19 +359,19 @@ export default function AgentSuccessHub() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen bg-[#FAFAF8]">
         <Navigation />
-        <div className="flex-1 flex items-center justify-center pt-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="flex-1 flex items-center justify-center pt-20 min-h-[80vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
         </div>
       </div>
     );
   }
 
-  // Unified hub cards - functional navigation cards only (Off-Market now goes to My Listings with filter)
+  // Unified hub cards - functional navigation cards only
   const hubCards = [
     {
-      icon: <Home className="w-6 h-6" />,
+      icon: <Home className="w-5 h-5" />,
       title: "My Listings",
       description: "Manage all your listings in one place",
       metricValue: activeListingsCount,
@@ -380,7 +379,7 @@ export default function AgentSuccessHub() {
       route: "/agent/listings",
     },
     {
-      icon: <Users className="w-6 h-6" />,
+      icon: <Users className="w-5 h-5" />,
       title: "My Contacts",
       description: "CRM for leads & clients",
       metricValue: activeBuyersCount,
@@ -388,7 +387,7 @@ export default function AgentSuccessHub() {
       route: "/my-clients",
     },
     {
-      icon: <Bell className="w-6 h-6" />,
+      icon: <Bell className="w-5 h-5" />,
       title: "Hot Sheets",
       description: "Automated buyer and market tracking",
       metricValue: activeHotsheetsCount,
@@ -396,13 +395,13 @@ export default function AgentSuccessHub() {
       route: "/hot-sheets",
     },
     {
-      icon: <Megaphone className="w-6 h-6" />,
+      icon: <Megaphone className="w-5 h-5" />,
       title: "Communications Center",
       description: "Outbound email campaigns & logs",
       route: "/communication-center",
     },
     {
-      icon: <Palette className="w-6 h-6" />,
+      icon: <Palette className="w-5 h-5" />,
       title: "Profile & Branding",
       description: "Edit your profile and branding",
       route: "/agent-profile-editor",
@@ -410,133 +409,137 @@ export default function AgentSuccessHub() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen bg-[#FAFAF8] text-slate-900">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-20 space-y-8">
+      <div className="mx-auto max-w-6xl px-5 py-8 pt-20 space-y-10">
         {/* Header */}
         <PageHeader
           title="Success Hub"
           subtitle="Your command center for client success"
         />
 
-        {/* Unified Hub Cards Grid - Merged KPIs with navigation */}
-        <div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {hubCards.map((card) => (
-              <TechCard
-                key={card.title}
-                icon={card.icon}
-                title={card.title}
-                description={card.description}
-                metricValue={card.metricValue}
-                metricLabel={card.metricLabel}
-                onClick={() => navigate(card.route)}
-              />
-            ))}
-          </div>
+        {/* Unified Hub Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {hubCards.map((card) => (
+            <TechCard
+              key={card.title}
+              icon={card.icon}
+              title={card.title}
+              description={card.description}
+              metricValue={card.metricValue}
+              metricLabel={card.metricLabel}
+              onClick={() => navigate(card.route)}
+            />
+          ))}
         </div>
 
         {/* Two Columns - Buyers & Hotsheets */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Buyers</CardTitle>
-              <CardDescription>{buyers.length} active buyer{buyers.length !== 1 ? 's' : ''}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Your Buyers Card */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold tracking-tight text-slate-900">Your Buyers</h3>
+              <p className="text-sm text-slate-600 mt-1">{buyers.length} active buyer{buyers.length !== 1 ? 's' : ''}</p>
+            </div>
+            <div className="space-y-4">
               {buyers.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No active buyers yet</p>
+                <p className="text-slate-500 text-sm">No active buyers yet</p>
               ) : (
                 buyers.slice(0, 5).map(buyer => (
-                  <div key={buyer.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                  <div key={buyer.id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 bg-white">
                     <div className="flex-1">
-                      <p className="font-medium text-foreground">
+                      <p className="font-medium text-slate-900">
                         {buyer.first_name && buyer.last_name 
                           ? `${buyer.first_name} ${buyer.last_name}`
                           : buyer.email}
                       </p>
-                      <p className="text-sm text-muted-foreground">{buyer.email}</p>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <p className="text-sm text-slate-600">{buyer.email}</p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
                         <span>{buyer.hotsheet_count} hotsheet{buyer.hotsheet_count !== 1 ? 's' : ''}</span>
                         {buyer.last_activity && (
                           <span>Active {formatDistanceToNow(new Date(buyer.last_activity), { addSuffix: true })}</span>
                         )}
                       </div>
                     </div>
-                    <Button size="sm" variant="outline" onClick={() => navigate(`/my-clients`)}>
+                    <button 
+                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                      onClick={() => navigate(`/my-clients`)}
+                    >
                       View
-                    </Button>
+                    </button>
                   </div>
                 ))
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Hotsheets</CardTitle>
-              <CardDescription>{hotsheets.length} hotsheet{hotsheets.length !== 1 ? 's' : ''}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Your Hotsheets Card */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold tracking-tight text-slate-900">Your Hotsheets</h3>
+              <p className="text-sm text-slate-600 mt-1">{hotsheets.length} hotsheet{hotsheets.length !== 1 ? 's' : ''}</p>
+            </div>
+            <div className="space-y-4">
               {hotsheets.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No hotsheets created yet</p>
+                <p className="text-slate-500 text-sm">No hotsheets created yet</p>
               ) : (
                 hotsheets.slice(0, 5).map(hs => (
-                  <div key={hs.id} className="p-4 border border-border rounded-lg space-y-3">
+                  <div key={hs.id} className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
                     <div>
-                      <p className="font-medium text-foreground">{hs.name}</p>
+                      <p className="font-medium text-slate-900">{hs.name}</p>
                       {(hs.client_name || hs.client_email) && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-slate-600">
                           Client: {hs.client_name || hs.client_email}
                         </p>
                       )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
                         <span>Updated {formatDistanceToNow(new Date(hs.updated_at), { addSuffix: true })}</span>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}>
+                      <button 
+                        className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                        onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
+                      >
                         View
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 ))
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Last 30 days of client engagement</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {activities.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No recent activity</p>
-            ) : (
-              <div className="space-y-4">
-                {activities.slice(0, 10).map((activity, index) => {
-                  const Icon = activity.icon;
-                  return (
-                    <div key={index} className="flex items-start gap-4">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-foreground">{activity.description}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
-                        </p>
-                      </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold tracking-tight text-slate-900">Recent Activity</h3>
+            <p className="text-sm text-slate-600 mt-1">Last 30 days of client engagement</p>
+          </div>
+          {activities.length === 0 ? (
+            <p className="text-slate-500 text-sm">No recent activity</p>
+          ) : (
+            <div className="space-y-4">
+              {activities.slice(0, 10).map((activity, index) => {
+                const Icon = activity.icon;
+                return (
+                  <div key={index} className="flex items-start gap-4">
+                    <div className="h-10 w-10 rounded-2xl border border-slate-200 bg-[#F7F6F3] flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 text-emerald-600" />
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-900">{activity.description}</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
