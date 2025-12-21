@@ -688,31 +688,31 @@ const ListingSearchFilters = ({
               <div className="p-3">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">State</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">State</Label>
                     <Select value={filters.state} onValueChange={v => updateFilter("state", v)}>
-                      <SelectTrigger className="h-8 text-xs">
+                      <SelectTrigger className="h-9 rounded-xl border-slate-200 bg-white text-xs">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover">
-                        <SelectItem value="MA">MA</SelectItem>
-                        <SelectItem value="NH">NH</SelectItem>
-                        <SelectItem value="RI">RI</SelectItem>
-                        <SelectItem value="CT">CT</SelectItem>
-                        <SelectItem value="ME">ME</SelectItem>
-                        <SelectItem value="VT">VT</SelectItem>
+                      <SelectContent className="bg-white border-slate-200 rounded-xl">
+                        <SelectItem value="MA">Massachusetts</SelectItem>
+                        <SelectItem value="NH">New Hampshire</SelectItem>
+                        <SelectItem value="RI">Rhode Island</SelectItem>
+                        <SelectItem value="CT">Connecticut</SelectItem>
+                        <SelectItem value="ME">Maine</SelectItem>
+                        <SelectItem value="VT">Vermont</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">County</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">County</Label>
                     <Select 
                       value={filters.county || "all"} 
                       onValueChange={v => updateFilter("county", v === "all" ? "" : v)}
                     >
-                      <SelectTrigger className="h-8 text-xs">
+                      <SelectTrigger className="h-9 rounded-xl border-slate-200 bg-white text-xs">
                         <SelectValue placeholder="All" />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover">
+                      <SelectContent className="bg-white border-slate-200 rounded-xl">
                         <SelectItem value="all">All Counties</SelectItem>
                         {filteredCounties.map(county => (
                           <SelectItem key={county.id} value={county.id}>{county.name}</SelectItem>
@@ -721,7 +721,7 @@ const ListingSearchFilters = ({
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Areas</Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">Areas</Label>
                     <div className="flex items-center gap-3 h-8">
                       <label className="flex items-center gap-1.5 text-xs cursor-pointer">
                         <input 
