@@ -165,7 +165,7 @@ const SectionHeader = ({
   title,
   isOpen,
   onToggle,
-  iconColor = "text-muted-foreground",
+  iconColor = "text-slate-400",
 }: {
   icon: React.ElementType;
   title: string;
@@ -175,16 +175,16 @@ const SectionHeader = ({
 }) => (
   <button
     onClick={onToggle}
-    className="w-full flex items-center justify-between px-3 py-1.5 bg-[#F7F6F3] hover:bg-slate-100 transition-colors"
+    className="w-full flex items-center justify-between px-3 py-1.5 bg-[#F7F6F3] hover:bg-[#F1F0EC] transition-colors"
   >
     <div className="flex items-center gap-2">
       <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground">{title}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-900">{title}</span>
     </div>
     {isOpen ? (
-      <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+      <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
     ) : (
-      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+      <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
     )}
   </button>
 );
@@ -290,7 +290,7 @@ const ListingSearchFilters = ({
               <span className="text-xs font-medium text-slate-700">Property Type</span>
             </div>
             <div className="p-3 space-y-1.5">
-              <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1.5 py-1 rounded-lg transition-colors">
+              <label className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-1 rounded-lg transition-colors">
                 <Checkbox
                   checked={filters.propertyTypes.length === PROPERTY_TYPES.length}
                   onCheckedChange={toggleAllPropertyTypes}
@@ -301,14 +301,14 @@ const ListingSearchFilters = ({
               {PROPERTY_TYPES.map((type) => (
                 <label
                   key={type.value}
-                  className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1.5 py-1 rounded-lg transition-colors"
+                  className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-1 rounded-lg transition-colors"
                 >
                   <Checkbox
                     checked={filters.propertyTypes.includes(type.value)}
                     onCheckedChange={() => togglePropertyType(type.value)}
                     className="h-3.5 w-3.5"
                   />
-                  <span className="text-xs text-slate-500">{type.label}</span>
+                  <span className="text-xs text-slate-700">{type.label}</span>
                 </label>
               ))}
             </div>
@@ -328,7 +328,7 @@ const ListingSearchFilters = ({
               <div className="p-3 flex flex-col md:flex-row gap-4">
                 {/* STATUS Section - 2 columns, no scroll */}
                 <div className="flex-1">
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1.5 py-1 rounded-lg transition-colors mb-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-1 rounded-lg transition-colors mb-1.5">
                     <Checkbox
                       checked={filters.statuses.length === STATUSES.length}
                       onCheckedChange={toggleAllStatuses}
@@ -340,14 +340,14 @@ const ListingSearchFilters = ({
                     {STATUSES.map((status) => (
                       <label
                         key={status.value}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1.5 py-1 rounded-lg transition-colors"
+                        className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-1 rounded-lg transition-colors"
                       >
                         <Checkbox
                           checked={filters.statuses.includes(status.value)}
                           onCheckedChange={() => toggleStatus(status.value)}
                           className="h-3.5 w-3.5"
                         />
-                        <span className="text-xs text-slate-500 whitespace-nowrap">{status.label}</span>
+                        <span className="text-xs text-slate-700 whitespace-nowrap">{status.label}</span>
                       </label>
                     ))}
                   </div>
