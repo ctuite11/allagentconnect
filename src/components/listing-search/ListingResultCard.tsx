@@ -44,13 +44,13 @@ const getStatusBadge = (status: string) => {
     coming_soon: { bg: "bg-amber-50", text: "text-amber-700", label: "Coming Soon" },
     off_market: { bg: "bg-rose-50", text: "text-rose-700", label: "Off-Market" },
     back_on_market: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Back on Market" },
-    price_changed: { bg: "bg-blue-50", text: "text-blue-700", label: "Price Change" },
+    price_changed: { bg: "bg-slate-100", text: "text-slate-700", label: "Price Change" },
     under_agreement: { bg: "bg-violet-50", text: "text-violet-700", label: "Under Agreement" },
     pending: { bg: "bg-violet-50", text: "text-violet-700", label: "Pending" },
-    sold: { bg: "bg-muted", text: "text-muted-foreground", label: "Sold" },
-    withdrawn: { bg: "bg-muted", text: "text-muted-foreground", label: "Withdrawn" },
-    expired: { bg: "bg-muted", text: "text-muted-foreground", label: "Expired" },
-    cancelled: { bg: "bg-muted", text: "text-muted-foreground", label: "Cancelled" },
+    sold: { bg: "bg-slate-100", text: "text-slate-500", label: "Sold" },
+    withdrawn: { bg: "bg-slate-100", text: "text-slate-500", label: "Withdrawn" },
+    expired: { bg: "bg-slate-100", text: "text-slate-500", label: "Expired" },
+    cancelled: { bg: "bg-slate-100", text: "text-slate-500", label: "Cancelled" },
   };
 
   const config = statusConfig[status] || { bg: "bg-muted", text: "text-muted-foreground", label: status };
