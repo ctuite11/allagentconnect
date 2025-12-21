@@ -7,10 +7,10 @@ interface LogoProps {
 }
 
 const sizeClasses = {
-  sm: "h-6",
-  md: "h-8",
-  lg: "h-10",
-  xl: "h-12",
+  sm: "h-8",
+  md: "h-10",
+  lg: "h-12",
+  xl: "h-14",
 };
 
 // Primary colors
@@ -95,7 +95,7 @@ export const Logo: React.FC<LogoProps> = ({
         <circle cx="24" cy="26" r="2" fill={accentColor} />
       </g>
       
-      {/* Wordmark - "AllAgentConnect" */}
+      {/* Wordmark - "All Agent Connect" */}
       <text
         x="56"
         y="32"
@@ -103,9 +103,10 @@ export const Logo: React.FC<LogoProps> = ({
         fontSize="22"
         fontWeight="600"
         letterSpacing="-0.01em"
-        fill={primaryColor}
       >
-        AllAgentConnect
+        <tspan fill={primaryColor}>All</tspan>
+        <tspan fill={accentColor}>Agent</tspan>
+        <tspan fill={primaryColor}>Connect</tspan>
       </text>
     </svg>
   );
@@ -154,10 +155,11 @@ export const LogoEmailSafe: React.FC<{ reversed?: boolean }> = ({ reversed = fal
             fontFamily: 'Arial, Helvetica, sans-serif',
             fontSize: '20px',
             fontWeight: 700,
-            color: primaryColor,
             letterSpacing: '-0.01em'
           }}>
-            AllAgentConnect
+            <span style={{ color: primaryColor }}>All</span>
+            <span style={{ color: accentColor }}>Agent</span>
+            <span style={{ color: primaryColor }}>Connect</span>
           </td>
         </tr>
       </tbody>
