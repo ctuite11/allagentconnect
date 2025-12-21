@@ -1,177 +1,375 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import {
+  ShieldCheck,
+  Users,
+  Handshake,
+  MessageSquare,
+  MapPinned,
+  Sparkles,
+  ArrowRight,
+  Lock,
+} from "lucide-react";
 import { Logo } from "@/components/brand";
+
+const cx = (...c: Array<string | false | undefined | null>) => c.filter(Boolean).join(" ");
+
+const ACCENT = "text-emerald-600";
 
 export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col">
-      {/* Top bar */}
-      <header className="w-full flex items-center justify-between px-6 py-4 border-b border-slate-100">
-        <Logo size="md" />
+    <div className="min-h-screen bg-[#F7F6F3] text-slate-900">
+      {/* Top Nav */}
+      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-[#F7F6F3]/80 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-5 py-4 flex items-center justify-between">
+          <Logo size="md" />
 
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/auth")}
-          className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-        >
-          Sign in
-        </Button>
+          <nav className="hidden md:flex items-center gap-7 text-sm text-slate-600">
+            <a className="hover:text-slate-900 transition" href="#proof">
+              Proof
+            </a>
+            <a className="hover:text-slate-900 transition" href="#how">
+              How it works
+            </a>
+            <a className="hover:text-slate-900 transition" href="#access">
+              Access
+            </a>
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate("/auth")}
+              className="hidden sm:inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 transition"
+            >
+              Log in
+            </button>
+            <button
+              onClick={() => navigate("/auth?mode=register")}
+              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition"
+            >
+              Request access <ArrowRight className="ml-2 h-4 w-4" />
+            </button>
+          </div>
+        </div>
       </header>
 
       {/* Hero */}
-      <main className="flex-1">
-        <section className="max-w-3xl mx-auto px-6 pt-20 pb-16 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
-            Where real deals get done.
-          </h1>
-
-          <p className="mt-6 text-lg text-slate-600 max-w-xl mx-auto">
-            A private, agent-only network where real estate professionals collaborate, share off-market
-            opportunities, and close real transactions — not leads.
-          </p>
-
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button
-              onClick={() => navigate("/auth?mode=register")}
-              className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-11 px-6"
-            >
-              Request Access
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => navigate("/auth")}
-              className="rounded-xl h-11 px-6 border-slate-200 text-slate-900 hover:bg-slate-50"
-            >
-              Sign in
-            </Button>
-          </div>
-
-          <p className="mt-4 text-sm text-slate-500">
-            License verification required. Most approvals are fast.
-          </p>
-        </section>
-
-        {/* Proof / trust */}
-        <section className="bg-slate-50/60 border-y border-slate-100 py-16">
-          <div className="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-2xl font-semibold text-slate-900">Built by agents. Proven by results.</h2>
-              <p className="mt-3 text-slate-600">
-                AllAgentConnect has helped agents collaborate and close transactions since{" "}
-                <span className="font-medium text-slate-900">2016</span>.
-                No hype — just a network that works.
-              </p>
+      <section className="mx-auto max-w-6xl px-5 pt-14 pb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          {/* Copy */}
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
+              <Lock className={cx("h-4 w-4", ACCENT)} />
+              Private collaboration network for agents
             </div>
 
-            <ul className="grid gap-3">
-              {[
-                "Founded in 2016",
-                "Agent-to-agent collaboration",
-                "Off-market opportunities & referrals",
-                "Grown through agent relationships",
-              ].map((txt) => (
-                <li key={txt}>
-                  <div className="flex items-center gap-3 bg-white rounded-lg px-4 py-3 shadow-sm border border-slate-100">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="text-slate-700">{txt}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+            <h1 className="mt-5 text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900">
+              Where Real Deals Get Done.
+            </h1>
 
-        {/* Differentiation */}
-        <section className="max-w-5xl mx-auto px-6 py-20">
-          <h2 className="text-2xl font-semibold text-slate-900 text-center mb-12">
-            This isn't another real estate platform.
-          </h2>
+            <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
+              A professional network where agents share real inventory, buyer needs, and close transactions — quietly,
+              efficiently, and with receipts.
+            </p>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <Feature
-              title="No lead buying"
-              body="We don't sell leads. Agents connect with each other directly to share real opportunities."
-            />
-            <Feature
-              title="Agent-only network"
-              body="Every member is a licensed real estate professional. No consumers, no noise."
-            />
-            <Feature
-              title="Off-market focus"
-              body="Access exclusive listings and opportunities you won't find on the MLS."
-            />
-          </div>
-        </section>
+            <div className="mt-7 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => navigate("/auth?mode=register")}
+                className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
+              >
+                Request Access <ArrowRight className="ml-2 h-4 w-4" />
+              </button>
 
-        {/* How it works */}
-        <section className="bg-slate-900 text-white py-20">
-          <div className="max-w-5xl mx-auto px-6">
-            <h2 className="text-2xl font-semibold text-center mb-12">How it works</h2>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              <Step n="1" title="Request access & verify your license" />
-              <Step n="2" title="Join the network of verified agents" />
-              <Step n="3" title="Collaborate, share deals, and close" />
+              <a
+                href="#how"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+              >
+                See How It Works
+              </a>
             </div>
 
-            <p className="mt-12 text-center text-slate-400 text-sm">
-              No funnels. No spam. No noise.
+            {/* Trust line */}
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500">
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className={cx("h-4 w-4", ACCENT)} />
+                Verified agents
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <MessageSquare className={cx("h-4 w-4", ACCENT)} />
+                Direct agent messaging
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Handshake className={cx("h-4 w-4", ACCENT)} />
+                Built for real closings
+              </span>
+            </div>
+          </div>
+
+          {/* Hero Visual */}
+          <div className="relative">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(0,0,0,0.10)]">
+              {/* Faux dashboard header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">Today's Activity</div>
+                  <div className="text-xs text-slate-500">Quiet intel. Real inventory. Fast matches.</div>
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600">
+                  <Sparkles className={cx("h-4 w-4", ACCENT)} />
+                  Subtle signal
+                </div>
+              </div>
+
+              {/* Faux cards */}
+              <div className="mt-4 grid grid-cols-1 gap-3">
+                <MiniRow
+                  icon={<MapPinned className={cx("h-4 w-4", ACCENT)} />}
+                  title="Off-market / coming soon"
+                  meta="Shared with context • serious only"
+                />
+                <MiniRow
+                  icon={<Users className={cx("h-4 w-4", ACCENT)} />}
+                  title="Buyer need posted"
+                  meta="Match within network • direct contact"
+                />
+                <MiniRow
+                  icon={<MessageSquare className={cx("h-4 w-4", ACCENT)} />}
+                  title="Agent-to-agent message"
+                  meta="No noise • no spam • just business"
+                />
+              </div>
+            </div>
+
+            {/* Soft glow */}
+            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-b from-emerald-200/25 via-transparent to-transparent blur-2xl" />
+          </div>
+        </div>
+      </section>
+
+      {/* Proof */}
+      <section id="proof" className="mx-auto max-w-6xl px-5 py-10">
+        <div className="flex items-end justify-between gap-6 flex-wrap">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Built on proven closings — not theory.</h2>
+            <p className="mt-2 text-slate-600 max-w-2xl">
+              This isn't a "new idea." It's a working network with real behavior, real outcomes, and a track record.
             </p>
           </div>
-        </section>
+          <div className="text-sm text-slate-500">
+            <span className="font-semibold text-slate-900">Not some agents.</span> All agents.
+          </div>
+        </div>
 
-        {/* Final CTA */}
-        <section className="py-20">
-          <div className="max-w-2xl mx-auto px-6 text-center">
-            <h2 className="text-2xl md:text-3xl font-semibold text-slate-900">
-              Don't miss deals you'll never see on the MLS.
-            </h2>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-5">
+          <ProofCard
+            icon={<ShieldCheck className={cx("h-5 w-5", ACCENT)} />}
+            title="Active since 2016"
+            body="Long-running agent collaboration with documented deal flow — not a beta."
+          />
+          <ProofCard
+            icon={<Users className={cx("h-5 w-5", ACCENT)} />}
+            title="Built for the full market"
+            body="No top-10% gatekeeping. If you do real business, you belong."
+          />
+          <ProofCard
+            icon={<Handshake className={cx("h-5 w-5", ACCENT)} />}
+            title="Real transactions"
+            body="Signed. Closed. Verified. The network exists to move deals forward."
+          />
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section id="how" className="mx-auto max-w-6xl px-5 py-10">
+        <div className="rounded-3xl border border-slate-200 bg-white p-7 sm:p-9 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">What actually happens here</h2>
+          <p className="mt-2 text-slate-600 max-w-2xl">
+            Simple workflow. Serious intent. The fastest path from "need" to "signed."
+          </p>
+
+          <div className="mt-7 grid grid-cols-1 md:grid-cols-2 gap-5">
+            <HowCard
+              icon={<MapPinned className={cx("h-5 w-5", ACCENT)} />}
+              title="Share off-market & coming soon"
+              body="Post quietly with enough context for agents to act. Control visibility and timing."
+            />
+            <HowCard
+              icon={<Users className={cx("h-5 w-5", ACCENT)} />}
+              title="Match buyer needs in real time"
+              body="Buyer needs get surfaced to the right agents — quickly, without public exposure."
+            />
+            <HowCard
+              icon={<MessageSquare className={cx("h-5 w-5", ACCENT)} />}
+              title="Direct agent-to-agent messaging"
+              body="Fewer steps. Cleaner comms. Get to a showing, an offer, or a solution fast."
+            />
+            <HowCard
+              icon={<Handshake className={cx("h-5 w-5", ACCENT)} />}
+              title="Close deals with less friction"
+              body="The platform exists for one thing: moving real transactions forward."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Access */}
+      <section id="access" className="mx-auto max-w-6xl px-5 py-10 pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
+          <div className="lg:col-span-3 rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+            <h3 className="text-xl font-semibold tracking-tight">Request access</h3>
+            <p className="mt-2 text-slate-600">
+              We keep it professional. Verified agents only. No noise. No spam. Just a network that works.
+            </p>
+
+            <ul className="mt-5 space-y-3 text-sm text-slate-600">
+              <li className="flex gap-3">
+                <span className={cx("mt-0.5", ACCENT)}>●</span>
+                Identity + license verification (fast)
+              </li>
+              <li className="flex gap-3">
+                <span className={cx("mt-0.5", ACCENT)}>●</span>
+                Access to collaboration + messaging
+              </li>
+              <li className="flex gap-3">
+                <span className={cx("mt-0.5", ACCENT)}>●</span>
+                No production thresholds, no gatekeeping
+              </li>
+            </ul>
+
+            <div className="mt-7 flex flex-col sm:flex-row gap-3">
+              <button
                 onClick={() => navigate("/auth?mode=register")}
-                className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-11 px-6"
+                className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
               >
-                Request Access
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/auth")}
-                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                Start verification <ArrowRight className="ml-2 h-4 w-4" />
+              </button>
+              <button
+                onClick={() => navigate("/allagentconnect")}
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
               >
-                Already invited? Sign in
-              </Button>
+                Learn more
+              </button>
             </div>
           </div>
-        </section>
-      </main>
 
-      <footer className="border-t border-slate-100 py-8">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-          <span>© {new Date().getFullYear()} AllAgentConnect</span>
-          <span>Trusted collaboration for licensed agents</span>
+          <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+            <div className="text-xs text-slate-500">Positioning</div>
+            <div className="mt-2 text-2xl font-semibold tracking-tight">Not some agents. All agents.</div>
+            <p className="mt-3 text-slate-600">
+              The value isn't exclusivity — it's participation. The bigger the serious network, the better the matches.
+            </p>
+
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-[#F7F6F3] p-5">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className={cx("h-5 w-5 mt-0.5", ACCENT)} />
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">Professional-first</div>
+                  <div className="text-sm text-slate-600">
+                    Verified identities, clean comms, and a culture built around closing.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200/70 bg-[#F7F6F3]">
+        <div className="mx-auto max-w-6xl px-5 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div className="text-sm text-slate-600">
+            <span className="font-semibold text-slate-900">AllAgentConnect</span> — where real deals get done.
+            <div className="mt-1 text-xs text-slate-500">© {new Date().getFullYear()} • Verified agents only</div>
+          </div>
+
+          <div className="flex items-center gap-4 text-sm">
+            <a className="text-slate-600 hover:text-slate-900 transition" href="/privacy">
+              Privacy
+            </a>
+            <a className="text-slate-600 hover:text-slate-900 transition" href="/terms">
+              Terms
+            </a>
+            <button
+              onClick={() => navigate("/auth?mode=register")}
+              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition"
+            >
+              Request access
+            </button>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
 
-function Feature({ title, body }: { title: string; body: string }) {
+/* -------------------- Components -------------------- */
+
+function ProofCard({
+  icon,
+  title,
+  body,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+}) {
   return (
-    <div className="bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
-      <h3 className="font-semibold text-slate-900 mb-2">{title}</h3>
-      <p className="text-slate-600 text-sm">{body}</p>
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-2xl border border-slate-200 bg-[#F7F6F3] flex items-center justify-center">
+          {icon}
+        </div>
+        <div className="text-base font-semibold tracking-tight">{title}</div>
+      </div>
+      <p className="mt-3 text-sm text-slate-600 leading-relaxed">{body}</p>
     </div>
   );
 }
 
-function Step({ n, title }: { n: string; title: string }) {
+function HowCard({
+  icon,
+  title,
+  body,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+}) {
   return (
-    <div className="text-center">
-      <div className="text-emerald-400 text-sm font-medium mb-2">STEP {n}</div>
-      <p className="text-white font-medium">{title}</p>
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-2xl border border-slate-200 bg-[#F7F6F3] flex items-center justify-center">
+          {icon}
+        </div>
+        <div className="text-base font-semibold tracking-tight">{title}</div>
+      </div>
+      <p className="mt-3 text-sm text-slate-600 leading-relaxed">{body}</p>
+    </div>
+  );
+}
+
+function MiniRow({
+  icon,
+  title,
+  meta,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  meta: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-[#F7F6F3] px-4 py-3 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
+          {icon}
+        </div>
+        <div>
+          <div className="text-sm font-semibold text-slate-900">{title}</div>
+          <div className="text-xs text-slate-500">{meta}</div>
+        </div>
+      </div>
+      <ArrowRight className="h-4 w-4 text-slate-400" />
     </div>
   );
 }
