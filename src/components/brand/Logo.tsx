@@ -15,8 +15,7 @@ const sizeClasses = {
 
 // Primary colors
 const SLATE_900 = "#0F172A";
-const SLATE_400 = "#94A3B8";
-const EMERALD_500 = "#10B981";
+const EMERALD_700 = "#047857";
 const WHITE = "#FFFFFF";
 
 export const Logo: React.FC<LogoProps> = ({ 
@@ -27,8 +26,7 @@ export const Logo: React.FC<LogoProps> = ({
   const isReversed = variant === "reversed";
   const isIcon = variant === "icon";
   const primaryColor = isReversed ? WHITE : SLATE_900;
-  const secondaryColor = isReversed ? WHITE : SLATE_400;
-  const accentColor = EMERALD_500;
+  const accentColor = EMERALD_700;
 
   if (isIcon) {
     // Icon-only mark - stylized "AAC" monogram
@@ -97,7 +95,7 @@ export const Logo: React.FC<LogoProps> = ({
         <circle cx="24" cy="26" r="2" fill={accentColor} />
       </g>
       
-      {/* Wordmark - "AllAgent" + "Connect" in silvery */}
+      {/* Wordmark - "AllAgentConnect" */}
       <text
         x="56"
         y="32"
@@ -107,18 +105,7 @@ export const Logo: React.FC<LogoProps> = ({
         letterSpacing="-0.01em"
         fill={primaryColor}
       >
-        AllAgent
-      </text>
-      <text
-        x="145"
-        y="32"
-        fontFamily="Inter, system-ui, sans-serif"
-        fontSize="22"
-        fontWeight="600"
-        letterSpacing="-0.01em"
-        fill={secondaryColor}
-      >
-        Connect
+        AllAgentConnect
       </text>
     </svg>
   );
@@ -127,7 +114,7 @@ export const Logo: React.FC<LogoProps> = ({
 // Email-safe version using inline styles (no external fonts required)
 export const LogoEmailSafe: React.FC<{ reversed?: boolean }> = ({ reversed = false }) => {
   const primaryColor = reversed ? WHITE : SLATE_900;
-  const accentColor = EMERALD_500;
+  const accentColor = EMERALD_700;
   
   return (
     <table cellPadding="0" cellSpacing="0" border={0} style={{ borderCollapse: 'collapse' }}>

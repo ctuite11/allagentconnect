@@ -9,11 +9,11 @@ import {
   ArrowRight,
   Lock,
 } from "lucide-react";
-
+import { Logo } from "@/components/brand";
 
 const cx = (...c: Array<string | false | undefined | null>) => c.filter(Boolean).join(" ");
 
-const ACCENT = "text-emerald-500";
+const ACCENT = "text-emerald-600";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -23,21 +23,7 @@ export default function Home() {
       {/* Top Nav */}
       <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-[#F7F6F3]/80 backdrop-blur">
         <div className="mx-auto max-w-6xl px-5 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* Monogram */}
-            <div className="h-11 w-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-[0_10px_26px_rgba(0,0,0,0.14)]">
-              <span className="text-lg font-extrabold tracking-tight">A</span>
-            </div>
-
-            {/* Wordmark */}
-            <div className="leading-tight">
-              <div className="text-sm font-semibold tracking-tight text-slate-900">
-                All Agent <span className="text-slate-400 font-semibold">Connect</span>
-                <span className="ml-1.5 text-xs text-slate-400 font-medium">AAC</span>
-              </div>
-              <div className="text-xs text-slate-500">Where real deals get done</div>
-            </div>
-          </div>
+          <Logo size="md" />
 
           <nav className="hidden md:flex items-center gap-7 text-sm text-slate-600">
             <a className="hover:text-slate-900 transition" href="#proof">
@@ -82,7 +68,7 @@ export default function Home() {
               Where Real Deals Get Done.
             </h1>
 
-            <div className="mt-6 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm sm:text-base font-semibold tracking-tight text-slate-900">
+            <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-slate-800">
               By Agents. For Agents. All Agents.
             </div>
 
@@ -142,26 +128,22 @@ export default function Home() {
               {/* Faux cards */}
               <div className="mt-4 grid grid-cols-1 gap-3">
                 <MiniRow
-                  icon={<MapPinned className={cx("h-5 w-5", ACCENT)} />}
+                  icon={<MapPinned className={cx("h-4 w-4", ACCENT)} />}
                   title="Off-market / coming soon"
                   meta="Shared with context • serious only"
                 />
                 <MiniRow
-                  icon={<Users className={cx("h-5 w-5", ACCENT)} />}
+                  icon={<Users className={cx("h-4 w-4", ACCENT)} />}
                   title="Buyer need posted"
                   meta="Match within network • direct contact"
                 />
                 <MiniRow
-                  icon={<MessageSquare className={cx("h-5 w-5", ACCENT)} />}
+                  icon={<MessageSquare className={cx("h-4 w-4", ACCENT)} />}
                   title="Agent-to-agent message"
                   meta="No noise • no spam • just business"
                 />
+              </div>
             </div>
-
-            <div className="mt-5 text-sm sm:text-base font-medium tracking-tight text-slate-500">
-              Real inventory. Real conversations. Real results.
-            </div>
-          </div>
 
             {/* Soft glow */}
             <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-b from-emerald-200/25 via-transparent to-transparent blur-2xl" />
@@ -185,17 +167,17 @@ export default function Home() {
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-5">
           <ProofCard
-            icon={<ShieldCheck className={cx("h-6 w-6", ACCENT)} />}
+            icon={<ShieldCheck className={cx("h-5 w-5", ACCENT)} />}
             title="Active since 2016"
             body="Long-running agent collaboration with documented deal flow — not a beta."
           />
           <ProofCard
-            icon={<Users className={cx("h-6 w-6", ACCENT)} />}
-            title="By agents. For agents. All agents."
-            body="Built from real collaboration — not production thresholds, popularity contests, or artificial exclusivity."
+            icon={<Users className={cx("h-5 w-5", ACCENT)} />}
+            title="Built for the full market"
+            body="No top-10% gatekeeping. If you do real business, you belong."
           />
           <ProofCard
-            icon={<Handshake className={cx("h-6 w-6", ACCENT)} />}
+            icon={<Handshake className={cx("h-5 w-5", ACCENT)} />}
             title="Real transactions"
             body="Signed. Closed. Verified. The network exists to move deals forward."
           />
@@ -212,22 +194,22 @@ export default function Home() {
 
           <div className="mt-7 grid grid-cols-1 md:grid-cols-2 gap-5">
             <HowCard
-              icon={<MapPinned className={cx("h-6 w-6", ACCENT)} />}
+              icon={<MapPinned className={cx("h-5 w-5", ACCENT)} />}
               title="Share off-market & coming soon"
               body="Post quietly with enough context for agents to act. Control visibility and timing."
             />
             <HowCard
-              icon={<Users className={cx("h-6 w-6", ACCENT)} />}
+              icon={<Users className={cx("h-5 w-5", ACCENT)} />}
               title="Match buyer needs in real time"
               body="Buyer needs get surfaced to the right agents — quickly, without public exposure."
             />
             <HowCard
-              icon={<MessageSquare className={cx("h-6 w-6", ACCENT)} />}
+              icon={<MessageSquare className={cx("h-5 w-5", ACCENT)} />}
               title="Direct agent-to-agent messaging"
               body="Fewer steps. Cleaner comms. Get to a showing, an offer, or a solution fast."
             />
             <HowCard
-              icon={<Handshake className={cx("h-6 w-6", ACCENT)} />}
+              icon={<Handshake className={cx("h-5 w-5", ACCENT)} />}
               title="Close deals with less friction"
               body="The platform exists for one thing: moving real transactions forward."
             />
@@ -339,7 +321,7 @@ function ProofCard({
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition">
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-2xl border border-emerald-200 bg-emerald-50 flex items-center justify-center">
+        <div className="h-10 w-10 rounded-2xl border border-slate-200 bg-[#F7F6F3] flex items-center justify-center">
           {icon}
         </div>
         <div className="text-base font-semibold tracking-tight">{title}</div>
@@ -361,7 +343,7 @@ function HowCard({
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition">
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-2xl border border-emerald-200 bg-emerald-50 flex items-center justify-center">
+        <div className="h-10 w-10 rounded-2xl border border-slate-200 bg-[#F7F6F3] flex items-center justify-center">
           {icon}
         </div>
         <div className="text-base font-semibold tracking-tight">{title}</div>
@@ -383,7 +365,7 @@ function MiniRow({
   return (
     <div className="rounded-2xl border border-slate-200 bg-[#F7F6F3] px-4 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="h-11 w-11 rounded-2xl border border-emerald-200 bg-white flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
+        <div className="h-9 w-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
           {icon}
         </div>
         <div>
