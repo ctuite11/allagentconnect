@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Mail, ArrowLeft, Loader2, LogIn, UserPlus, LogOut, Eye, EyeOff, CheckCircle2, Circle, RefreshCw } from "lucide-react";
+import { Mail, ArrowLeft, Loader2, LogIn, UserPlus, LogOut, Eye, EyeOff, CheckCircle2, Circle } from "lucide-react";
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
 
-// Password rules - same as PasswordReset
+// Password rules
 const passwordRules = [
   { id: 'length', label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
   { id: 'uppercase', label: 'One uppercase letter', test: (p: string) => /[A-Z]/.test(p) },
@@ -19,23 +20,52 @@ const passwordRules = [
   { id: 'symbol', label: 'One symbol (!@#$%^&*)', test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
 ];
 
+// US States for license dropdown
+const US_STATES = [
+  { value: 'AL', label: 'Alabama' }, { value: 'AK', label: 'Alaska' }, { value: 'AZ', label: 'Arizona' },
+  { value: 'AR', label: 'Arkansas' }, { value: 'CA', label: 'California' }, { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' }, { value: 'DE', label: 'Delaware' }, { value: 'FL', label: 'Florida' },
+  { value: 'GA', label: 'Georgia' }, { value: 'HI', label: 'Hawaii' }, { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' }, { value: 'IN', label: 'Indiana' }, { value: 'IA', label: 'Iowa' },
+  { value: 'KS', label: 'Kansas' }, { value: 'KY', label: 'Kentucky' }, { value: 'LA', label: 'Louisiana' },
+  { value: 'ME', label: 'Maine' }, { value: 'MD', label: 'Maryland' }, { value: 'MA', label: 'Massachusetts' },
+  { value: 'MI', label: 'Michigan' }, { value: 'MN', label: 'Minnesota' }, { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' }, { value: 'MT', label: 'Montana' }, { value: 'NE', label: 'Nebraska' },
+  { value: 'NV', label: 'Nevada' }, { value: 'NH', label: 'New Hampshire' }, { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' }, { value: 'NY', label: 'New York' }, { value: 'NC', label: 'North Carolina' },
+  { value: 'ND', label: 'North Dakota' }, { value: 'OH', label: 'Ohio' }, { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' }, { value: 'PA', label: 'Pennsylvania' }, { value: 'RI', label: 'Rhode Island' },
+  { value: 'SC', label: 'South Carolina' }, { value: 'SD', label: 'South Dakota' }, { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' }, { value: 'UT', label: 'Utah' }, { value: 'VT', label: 'Vermont' },
+  { value: 'VA', label: 'Virginia' }, { value: 'WA', label: 'Washington' }, { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' }, { value: 'WY', label: 'Wyoming' }, { value: 'DC', label: 'District of Columbia' },
+];
+
 type AuthMode = "signin" | "register" | "forgot-password";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState<AuthMode>("signin");
+  
+  // Common fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Registration fields
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [licenseState, setLicenseState] = useState("");
+  const [licenseNumber, setLicenseNumber] = useState("");
+  
+  // UI state
   const [loading, setLoading] = useState(false);
   const [existingSession, setExistingSession] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [resetEmailSent, setResetEmailSent] = useState(false);
-  const [signupEmailSent, setSignupEmailSent] = useState(false);
-  const [signupEmail, setSignupEmail] = useState("");
-  const emailInputRef = useRef<HTMLInputElement>(null);
   const didNavigate = useRef(false);
 
   // Password validation for register mode
@@ -74,7 +104,6 @@ const Auth = () => {
       // Check for ?reset=success to show password reset success message
       if (searchParams.get("reset") === "success") {
         toast.success("Password updated successfully! Please sign in with your new password.");
-        // Clear the URL param without triggering navigation
         window.history.replaceState(null, "", "/auth?role=agent");
       }
 
@@ -114,7 +143,7 @@ const Auth = () => {
         if (!mounted) return;
         
         if (event === 'SIGNED_IN' && session?.user && !didNavigate.current) {
-          console.log('[Analytics] auth_login_success', { user_id: session.user.id });
+          console.log('[Auth] SIGNED_IN event - navigating to callback');
           didNavigate.current = true;
           navigate('/auth/callback', { replace: true });
         }
@@ -165,7 +194,20 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Validate all fields
       const validatedEmail = emailSchema.parse(email);
+
+      if (!firstName.trim() || !lastName.trim()) {
+        toast.error("Please enter your first and last name");
+        setLoading(false);
+        return;
+      }
+
+      if (!licenseState || !licenseNumber.trim()) {
+        toast.error("Please enter your license information");
+        setLoading(false);
+        return;
+      }
 
       if (!allPasswordRulesPass) {
         toast.error("Password does not meet all requirements");
@@ -179,66 +221,98 @@ const Auth = () => {
         return;
       }
 
-      const redirectUrl = `${window.location.origin}/auth/callback`;
-
-      const { data, error } = await supabase.auth.signUp({
+      // 1. Create auth user (email confirmation is DISABLED in Supabase settings)
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: validatedEmail,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
-            intended_role: 'agent', // Store intended role for callback routing
+            intended_role: 'agent',
           },
         },
       });
 
       // Check for "fake success" - user exists but identities is empty
-      if (data?.user && data.user.identities?.length === 0) {
-        toast.error("This email is already registered. Please sign in or check your email for a confirmation link.");
+      if (authData?.user && authData.user.identities?.length === 0) {
+        toast.error("This email is already registered. Please sign in instead.");
         setLoading(false);
         return;
       }
 
-      if (error) {
-        if (error.message.includes("already registered")) {
+      if (authError) {
+        if (authError.message.includes("already registered")) {
           toast.error("This email is already registered. Please sign in instead.");
         } else {
-          toast.error(error.message);
+          toast.error(authError.message);
         }
-      } else {
-        // Show the "Check your email" confirmation screen
-        setSignupEmail(validatedEmail);
-        setSignupEmailSent(true);
+        setLoading(false);
+        return;
       }
+
+      const userId = authData.user?.id;
+      if (!userId) {
+        toast.error("Failed to create account. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Insert agent_profiles
+      const { error: profileError } = await supabase
+        .from('agent_profiles')
+        .insert({
+          id: userId,
+          email: validatedEmail,
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          phone: phone.trim() || null,
+        });
+
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+        // Don't block registration, but log the error
+      }
+
+      // 3. Insert agent_settings with license info and pending status
+      const { error: settingsError } = await supabase
+        .from('agent_settings')
+        .insert({
+          user_id: userId,
+          license_state: licenseState,
+          license_number: licenseNumber.trim(),
+          license_last_name: lastName.trim(),
+          agent_status: 'pending',
+        });
+
+      if (settingsError) {
+        console.error("Settings creation error:", settingsError);
+        // Don't block registration, but log the error
+      }
+
+      // 4. Insert user_roles with role='agent'
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: userId,
+          role: 'agent'
+        }, {
+          onConflict: 'user_id,role'
+        });
+
+      if (roleError) {
+        console.error("Role assignment error:", roleError);
+      }
+
+      // 5. Redirect to pending-verification
+      // Since email confirmation is disabled, user is already signed in
+      didNavigate.current = true;
+      navigate('/pending-verification', { replace: true });
+
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
         toast.error(error.message || "Failed to create account");
       }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendConfirmation = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: signupEmail,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success("Confirmation email resent!");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to resend email");
     } finally {
       setLoading(false);
     }
@@ -283,8 +357,14 @@ const Auth = () => {
     setPassword("");
     setConfirmPassword("");
     setResetEmailSent(false);
-    setSignupEmailSent(false);
-    setSignupEmail("");
+    // Reset registration fields when switching modes
+    if (newMode !== "register") {
+      setFirstName("");
+      setLastName("");
+      setPhone("");
+      setLicenseState("");
+      setLicenseNumber("");
+    }
   };
 
   // Loading state while checking session
@@ -338,57 +418,8 @@ const Auth = () => {
     );
   }
 
-  // Email confirmation sent screen (after successful signup)
-  if (signupEmailSent) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="w-full max-w-md">
-          <div className="bg-card rounded-2xl shadow-lg p-8 border border-border text-center">
-            <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="h-6 w-6 text-emerald-600" />
-            </div>
-            <h1 className="text-2xl font-semibold text-foreground mb-2">
-              Check Your Email
-            </h1>
-            <p className="text-muted-foreground text-sm mb-2">
-              We sent a confirmation link to
-            </p>
-            <p className="font-medium text-foreground mb-4">
-              {signupEmail}
-            </p>
-            <p className="text-muted-foreground text-xs mb-6">
-              Confirming your email keeps the network agent-only and trusted.
-            </p>
-            <div className="space-y-3">
-              <Button
-                onClick={handleResendConfirmation}
-                variant="outline"
-                className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50"
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                )}
-                Resend Email
-              </Button>
-              <Button
-                onClick={() => switchMode("signin")}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Sign In
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md">
         <div className="bg-card rounded-2xl shadow-lg p-8 border border-border relative">
           {(mode === "forgot-password" || mode === "register") && (
@@ -401,18 +432,18 @@ const Auth = () => {
             </button>
           )}
 
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <Mail className="h-6 w-6 text-emerald-600" />
             </div>
             <h1 className="text-2xl font-semibold text-foreground mb-2">
               {mode === "signin" && "Welcome Back"}
-              {mode === "register" && "Create Your Account"}
+              {mode === "register" && "Join AllAgentConnect"}
               {mode === "forgot-password" && "Reset Password"}
             </h1>
             <p className="text-muted-foreground text-sm">
-              {mode === "signin" && "Sign in to your AllAgentConnect account"}
-              {mode === "register" && "Join the agent-to-agent network"}
+              {mode === "signin" && "Sign in to your agent account"}
+              {mode === "register" && "Create your agent account"}
               {mode === "forgot-password" && (resetEmailSent 
                 ? "Check your email for the reset link" 
                 : "Enter your email to receive a reset link")}
@@ -440,6 +471,41 @@ const Auth = () => {
               } 
               className="space-y-4"
             >
+              {/* Registration: Name fields */}
+              {mode === "register" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="firstName" className="text-sm font-medium">
+                      First Name
+                    </Label>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      placeholder="John"
+                      required
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="mt-1.5"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName" className="text-sm font-medium">
+                      Last Name
+                    </Label>
+                    <Input
+                      id="lastName"
+                      type="text"
+                      placeholder="Smith"
+                      required
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="mt-1.5"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Email field */}
               <div>
                 <Label htmlFor="email" className="text-sm font-medium">
                   Email address
@@ -449,14 +515,68 @@ const Auth = () => {
                   type="email"
                   placeholder="you@example.com"
                   required
-                  autoFocus
-                  ref={emailInputRef}
+                  autoFocus={mode !== "register"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="mt-1.5"
                 />
               </div>
 
+              {/* Registration: Phone field */}
+              {mode === "register" && (
+                <div>
+                  <Label htmlFor="phone" className="text-sm font-medium">
+                    Phone <span className="text-muted-foreground font-normal">(optional)</span>
+                  </Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="(555) 123-4567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
+              )}
+
+              {/* Registration: License fields */}
+              {mode === "register" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="licenseState" className="text-sm font-medium">
+                      License State
+                    </Label>
+                    <Select value={licenseState} onValueChange={setLicenseState}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {US_STATES.map((state) => (
+                          <SelectItem key={state.value} value={state.value}>
+                            {state.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="licenseNumber" className="text-sm font-medium">
+                      License Number
+                    </Label>
+                    <Input
+                      id="licenseNumber"
+                      type="text"
+                      placeholder="12345678"
+                      required
+                      value={licenseNumber}
+                      onChange={(e) => setLicenseNumber(e.target.value)}
+                      className="mt-1.5"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Password field (not for forgot-password) */}
               {mode !== "forgot-password" && (
                 <div>
                   <Label htmlFor="password" className="text-sm font-medium">
@@ -501,6 +621,7 @@ const Auth = () => {
                 </div>
               )}
 
+              {/* Confirm password - only for register mode */}
               {mode === "register" && (
                 <div>
                   <Label htmlFor="confirmPassword" className="text-sm font-medium">
@@ -549,7 +670,7 @@ const Auth = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-slate-900 hover:bg-slate-800 text-white" 
-                disabled={loading || (mode === "register" && (!allPasswordRulesPass || !passwordsMatch))}
+                disabled={loading || (mode === "register" && (!allPasswordRulesPass || !passwordsMatch || !licenseState || !licenseNumber.trim()))}
               >
                 {loading ? (
                   <>
