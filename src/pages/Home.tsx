@@ -87,19 +87,21 @@ export default function Home() {
           {/* Editorial Image Panel */}
           <div className="relative">
             <div className="rounded-3xl overflow-hidden shadow-[0_18px_50px_rgba(0,0,0,0.10)]">
+              {/* Neutral glow - INSIDE overflow-hidden so it clips */}
+              <div className="pointer-events-none absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-b from-slate-200/25 via-transparent to-transparent blur-xl" />
               <div className="relative">
                 <img 
                   src={heroEditorial} 
                   alt="" 
                   className="w-full h-auto object-cover"
-                  style={{ filter: 'hue-rotate(140deg) saturate(1.1)' }}
+                  style={{ filter: 'hue-rotate(140deg) saturate(1.05) contrast(1.05)' }}
                 />
-                {/* Light white overlay */}
-                <div className="absolute inset-0 bg-white/10" />
+                {/* Cool shadow overlay */}
+                <div className="absolute inset-0 bg-slate-800/[0.03] mix-blend-multiply" />
+                {/* Left fade pulled back - transparent on left, subtle on right */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white/15" />
               </div>
             </div>
-            {/* Soft glow */}
-            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-b from-emerald-200/25 via-transparent to-transparent blur-2xl" />
           </div>
         </div>
       </section>
