@@ -56,7 +56,7 @@ export default function Home() {
 
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-5 pt-14 pb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Copy */}
           <div>
             <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900">
