@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { z } from "zod";
 import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut } from "lucide-react";
+import { Logo } from "@/components/brand";
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
 
@@ -362,9 +363,9 @@ const Auth = () => {
           <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] text-center">
             {/* Brand Block */}
             <div className="mb-6">
-              <h1 className="text-[28px] font-semibold text-slate-900 tracking-[-0.01em] mb-1">
-                AllAgentConnect
-              </h1>
+              <div className="flex justify-center mb-3">
+                <Logo variant="primary" size="lg" />
+              </div>
               <p className="text-[15px] font-medium text-slate-700">
                 By agents, for agents.
               </p>
@@ -405,9 +406,9 @@ const Auth = () => {
       <div className="w-full max-w-[420px]">
         {/* Brand Block - Above Form */}
         <div className="text-center mb-8">
-          <h1 className="text-[28px] font-semibold text-slate-900 tracking-[-0.01em] mb-2">
-            AllAgentConnect
-          </h1>
+          <div className="flex justify-center mb-4">
+            <Logo variant="primary" size="lg" />
+          </div>
           <p className="text-[15px] font-medium text-slate-700 mb-1">
             By agents, for agents.
           </p>
