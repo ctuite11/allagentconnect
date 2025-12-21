@@ -68,9 +68,13 @@ export default function Home() {
               Where Real Deals Get Done.
             </h1>
 
+            <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-slate-800">
+              By Agents. For Agents. All Agents.
+            </div>
+
             <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
-              A professional network where agents share real inventory, buyer needs, and close transactions — quietly,
-              efficiently, and with receipts.
+              A professional network where agents share real inventory, buyer needs, and close transactions — quietly
+              and efficiently.
             </p>
 
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
