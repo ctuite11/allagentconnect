@@ -81,8 +81,8 @@ export const RouteGuard: React.FC<Props> = ({
         navigate('/pending-verification', { replace: true });
         return;
       } else {
-        // Not verified - redirect to license verification
-        navigate('/onboarding/verify-license', { replace: true });
+        // Not verified or pending - redirect to pending verification
+        navigate('/pending-verification', { replace: true });
         return;
       }
     } catch (err) {
