@@ -54,8 +54,6 @@ import ClientDashboard from "./pages/ClientDashboard";
 import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
 import ClientFavoritesPage from "./pages/ClientFavoritesPage";
 import PasswordReset from "./pages/PasswordReset";
-import OnboardingCreateAccount from "./pages/OnboardingCreateAccount";
-import OnboardingVerifyLicense from "./pages/OnboardingVerifyLicense";
 import PendingVerification from "./pages/PendingVerification";
 import NotFound from "./pages/NotFound";
 import MyListings from "./pages/MyListings";
@@ -103,14 +101,14 @@ const App = () => (
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 
-                {/* Onboarding sub-routes */}
-                <Route path="/onboarding/create-account" element={<OnboardingCreateAccount />} />
-                <Route path="/onboarding/verify-license" element={<OnboardingVerifyLicense />} />
+                {/* Pending verification */}
                 <Route path="/pending-verification" element={<PendingVerification />} />
                 
                 {/* Legacy redirects */}
-                <Route path="/onboarding" element={<Navigate to="/auth/callback" replace />} />
-                <Route path="/verify-agent" element={<Navigate to="/auth/callback" replace />} />
+                <Route path="/onboarding" element={<Navigate to="/auth?role=agent" replace />} />
+                <Route path="/onboarding/create-account" element={<Navigate to="/auth?role=agent" replace />} />
+                <Route path="/onboarding/verify-license" element={<Navigate to="/auth?role=agent" replace />} />
+                <Route path="/verify-agent" element={<Navigate to="/auth?role=agent" replace />} />
                 
                 {/* Agent routes - ALL require verification by default via RouteGuard */}
                 <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />

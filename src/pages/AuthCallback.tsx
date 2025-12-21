@@ -11,13 +11,12 @@ const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // PRIORITY 1: Detect recovery context FIRST - before any other logic
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const typeFromHash = hashParams.get("type");
     const typeFromQuery = searchParams.get("type");
     const code = searchParams.get("code");
 
-    // STRICT recovery detection: ONLY type=recovery (NOT tokens - breaks email confirm)
+    // Recovery detection
     const isRecoveryContext =
       typeFromHash === "recovery" ||
       typeFromQuery === "recovery";
@@ -39,13 +38,11 @@ const AuthCallback = () => {
     let cancelled = false;
 
     const init = async () => {
-      // If this is a PKCE recovery link (?code=...), establish session FIRST.
+      // Handle PKCE recovery link
       if (code) {
         console.log("[AuthCallback] PKCE code detected - exchanging for session");
-
         try {
           await supabase.auth.exchangeCodeForSession(code);
-
           if (!cancelled && !didNavigate.current) {
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
@@ -63,21 +60,12 @@ const AuthCallback = () => {
 
       // Set up auth state listener
       const { data } = supabase.auth.onAuthStateChange((event, session) => {
-        console.log(
-          "[AuthCallback] Auth event:",
-          event,
-          "isRecovery:",
-          isRecoveryContext,
-          !!session
-        );
+        console.log("[AuthCallback] Auth event:", event, "isRecovery:", isRecoveryContext, !!session);
 
-        // Handle password recovery - MUST redirect to password reset page
+        // Handle password recovery
         if ((event === "PASSWORD_RECOVERY" || isRecoveryContext) && session?.user) {
           if (!didNavigate.current) {
             didNavigate.current = true;
-            console.log(
-              "[AuthCallback] Recovery detected - navigating to password-reset"
-            );
             window.history.replaceState(null, "", window.location.pathname);
             navigate("/password-reset", { replace: true });
           }
@@ -85,20 +73,15 @@ const AuthCallback = () => {
         }
 
         if (event === "SIGNED_IN" && session?.user) {
-          // Double-check: if this is a recovery context, go to password reset
           if (isRecoveryContext) {
             if (!didNavigate.current) {
               didNavigate.current = true;
-              console.log(
-                "[AuthCallback] SIGNED_IN but recovery context - navigating to password-reset"
-              );
               window.history.replaceState(null, "", window.location.pathname);
               navigate("/password-reset", { replace: true });
             }
             return;
           }
 
-          // Clear the hash to prevent re-processing on refresh
           window.history.replaceState(null, "", window.location.pathname);
 
           if (!didNavigate.current) {
@@ -111,26 +94,21 @@ const AuthCallback = () => {
 
       subscription = data.subscription;
 
-      // Check for existing session (for cases where user is already logged in)
+      // Check for existing session
       const checkExistingSession = async () => {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
 
         if (session?.user && !didNavigate.current) {
           await routeUser(session.user.id);
         } else if (!session && !hasAuthHash) {
-          // No session and no hash to process - go to auth
           if (!didNavigate.current) {
             didNavigate.current = true;
-            navigate("/auth", { replace: true });
+            navigate("/auth?role=agent", { replace: true });
           }
         }
-        // If there's a hash with access_token, wait for onAuthStateChange to process it
       };
 
       if (hasAuthHash) {
-        // Hash present - SDK should auto-process, timeout after 5 seconds
         timeout = setTimeout(() => {
           if (!didNavigate.current) {
             setError("Authentication timed out. Please try signing in again.");
@@ -154,10 +132,9 @@ const AuthCallback = () => {
     if (didNavigate.current) return;
 
     try {
-      // Get session first
       const { data: { session } } = await supabase.auth.getSession();
       
-      // CRITICAL: Check if this is a recovery session - NEVER route to onboarding
+      // Check if this is a recovery session
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const urlParams = new URLSearchParams(window.location.search);
       
@@ -167,25 +144,27 @@ const AuthCallback = () => {
         urlParams.get("type") === "recovery";
       
       if (isRecoverySession) {
-        console.log("[AuthCallback] Recovery session detected - redirecting to password-reset");
         didNavigate.current = true;
         navigate('/password-reset', { replace: true });
         return;
       }
 
-      // 1. Check existing role in user_roles table
+      // Check existing role in user_roles table
       const { data: userRole } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .maybeSingle();
 
-      // If user already has a role, route based on that
       if (userRole?.role) {
         didNavigate.current = true;
+        
         if (userRole.role === 'buyer') {
           navigate('/client/dashboard', { replace: true });
-        } else if (userRole.role === 'agent') {
+          return;
+        }
+        
+        if (userRole.role === 'agent') {
           // Check agent verification status
           const { data: settings } = await supabase
             .from('agent_settings')
@@ -194,34 +173,26 @@ const AuthCallback = () => {
             .maybeSingle();
 
           const status = settings?.agent_status || 'unverified';
+          
           if (status === 'verified') {
             navigate('/agent-dashboard', { replace: true });
           } else {
-            // Check if they have a profile
-            const { data: agentProfile } = await supabase
-              .from('agent_profiles')
-              .select('id')
-              .eq('id', userId)
-              .maybeSingle();
-
-            if (!agentProfile) {
-              navigate('/onboarding/create-account', { replace: true });
-            } else {
-              navigate('/onboarding/verify-license', { replace: true });
-            }
+            // pending or unverified -> pending verification
+            navigate('/pending-verification', { replace: true });
           }
-        } else if (userRole.role === 'admin') {
-          navigate('/admin/approvals', { replace: true });
+          return;
         }
-        return;
+        
+        if (userRole.role === 'admin') {
+          navigate('/admin/approvals', { replace: true });
+          return;
+        }
       }
 
-      // 2. No role yet - check intended_role from user metadata
+      // No role yet - check intended_role from user metadata
       const intendedRole = session?.user?.user_metadata?.intended_role;
-      console.log("[AuthCallback] No role found, intended_role:", intendedRole);
 
       if (intendedRole === 'buyer') {
-        // Assign buyer role
         const { error: roleError } = await supabase
           .from('user_roles')
           .upsert({ user_id: userId, role: 'buyer' }, { onConflict: 'user_id' });
@@ -235,46 +206,17 @@ const AuthCallback = () => {
         return;
       }
 
-      // Default: treat as agent - go to onboarding
-      // Check if agent_profiles exists
-      const { data: agentProfile } = await supabase
-        .from('agent_profiles')
-        .select('id')
-        .eq('id', userId)
-        .maybeSingle();
+      // Default: treat as agent - go to pending verification
+      didNavigate.current = true;
+      navigate('/pending-verification', { replace: true });
 
-      if (!agentProfile) {
-        // No profile - send to create account
-        didNavigate.current = true;
-        navigate('/onboarding/create-account', { replace: true });
-        return;
-      }
-
-      // 2. Check agent_settings for verification status
-      const { data: settings } = await supabase
-        .from('agent_settings')
-        .select('agent_status')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      const status = settings?.agent_status || 'unverified';
-
-      if (status === 'verified') {
-        didNavigate.current = true;
-        navigate('/agent-dashboard', { replace: true });
-      } else {
-        // unverified or pending - go to license verification
-        didNavigate.current = true;
-        navigate('/onboarding/verify-license', { replace: true });
-      }
     } catch (err) {
       console.error("[AuthCallback] Route error:", err);
       didNavigate.current = true;
-      navigate('/onboarding/create-account', { replace: true });
+      navigate('/auth?role=agent', { replace: true });
     }
   };
 
-  // Error state UI
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -282,7 +224,7 @@ const AuthCallback = () => {
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <h1 className="text-xl font-semibold mb-2">Authentication Failed</h1>
           <p className="text-muted-foreground mb-6">{error}</p>
-          <Button onClick={() => navigate("/auth", { replace: true })}>
+          <Button onClick={() => navigate("/auth?role=agent", { replace: true })}>
             Back to Sign In
           </Button>
         </div>
@@ -290,7 +232,6 @@ const AuthCallback = () => {
     );
   }
 
-  // Loading state
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">
