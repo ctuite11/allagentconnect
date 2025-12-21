@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Mail, ArrowLeft, Loader2, LogIn, UserPlus, LogOut, Eye, EyeOff, CheckCircle2, Circle } from "lucide-react";
+import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut } from "lucide-react";
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
 
@@ -79,8 +79,6 @@ const Auth = () => {
   const allPasswordRulesPass = passwordValidation.every(r => r.valid);
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
 
-  // Agent-only platform - no role param checking needed
-
   // Check for logout param, reset success, or existing session
   useEffect(() => {
     let mounted = true;
@@ -128,7 +126,6 @@ const Auth = () => {
         if (!mounted) return;
         
         if (event === 'SIGNED_IN' && session?.user && !didNavigate.current) {
-          console.log('[Auth] SIGNED_IN event - navigating to callback');
           didNavigate.current = true;
           navigate('/auth/callback', { replace: true });
         }
@@ -254,7 +251,6 @@ const Auth = () => {
 
       if (profileError) {
         console.error("Profile creation error:", profileError);
-        // Don't block registration, but log the error
       }
 
       // 3. Insert agent_settings with license info and pending status
@@ -270,7 +266,6 @@ const Auth = () => {
 
       if (settingsError) {
         console.error("Settings creation error:", settingsError);
-        // Don't block registration, but log the error
       }
 
       // 4. Insert user_roles with role='agent'
@@ -288,7 +283,6 @@ const Auth = () => {
       }
 
       // 5. Redirect to pending-verification
-      // Since email confirmation is disabled, user is already signed in
       didNavigate.current = true;
       navigate('/pending-verification', { replace: true });
 
@@ -342,7 +336,6 @@ const Auth = () => {
     setPassword("");
     setConfirmPassword("");
     setResetEmailSent(false);
-    // Reset registration fields when switching modes
     if (newMode !== "register") {
       setFirstName("");
       setLastName("");
@@ -355,8 +348,8 @@ const Auth = () => {
   // Loading state while checking session
   if (checkingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-900" />
       </div>
     );
   }
@@ -364,29 +357,33 @@ const Auth = () => {
   // Already signed in state
   if (existingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="w-full max-w-md">
-          <div className="bg-card rounded-2xl shadow-lg p-8 border border-border text-center">
-            <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <LogIn className="h-6 w-6 text-emerald-600" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="w-full max-w-[420px]">
+          <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] text-center">
+            {/* Brand Block */}
+            <div className="mb-6">
+              <h1 className="text-[28px] font-semibold text-slate-900 tracking-[-0.01em] mb-1">
+                AllAgentConnect
+              </h1>
+              <p className="text-[15px] font-medium text-slate-700">
+                By agents, for agents.
+              </p>
             </div>
-            <h1 className="text-2xl font-semibold text-foreground mb-2">
-              You're already signed in
-            </h1>
-            <p className="text-muted-foreground text-sm mb-6">
+
+            <p className="text-slate-600 text-sm mb-6">
               You have an active session. Sign out to use a different account.
             </p>
             <div className="space-y-3">
               <Button
                 onClick={() => navigate('/auth/callback', { replace: true })}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white"
+                className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl"
               >
                 Continue to App
               </Button>
               <Button
                 onClick={handleLogout}
-                variant="outline"
-                className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+                variant="ghost"
+                className="w-full h-11 text-emerald-700 hover:text-emerald-800 hover:bg-transparent font-medium"
                 disabled={loading}
               >
                 {loading ? (
@@ -404,45 +401,60 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-2xl shadow-lg p-8 border border-border relative">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
+      <div className="w-full max-w-[420px]">
+        {/* Brand Block - Above Form */}
+        <div className="text-center mb-8">
+          <h1 className="text-[28px] font-semibold text-slate-900 tracking-[-0.01em] mb-2">
+            AllAgentConnect
+          </h1>
+          <p className="text-[15px] font-medium text-slate-700 mb-1">
+            By agents, for agents.
+          </p>
+          <p className="text-[14px] text-slate-600 mb-2">
+            Built for all agents.
+          </p>
+          <p className="text-xs text-slate-400">
+            Active since 2016
+          </p>
+        </div>
+
+        {/* Form Container */}
+        <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] relative">
           {(mode === "forgot-password" || mode === "register") && (
             <button
               onClick={() => switchMode("signin")}
-              className="absolute left-6 top-6 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute left-6 top-6 text-slate-400 hover:text-slate-900 transition-colors"
               aria-label="Go back"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
 
+          {/* Form Header */}
           <div className="text-center mb-6">
-            <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="h-6 w-6 text-emerald-600" />
-            </div>
-            <h1 className="text-2xl font-semibold text-foreground mb-2">
-              {mode === "signin" && "Welcome Back"}
-              {mode === "register" && "Join AllAgentConnect"}
-              {mode === "forgot-password" && "Reset Password"}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {mode === "signin" && "Sign in to your agent account"}
-              {mode === "register" && "Create your agent account"}
-              {mode === "forgot-password" && (resetEmailSent 
-                ? "Check your email for the reset link" 
-                : "Enter your email to receive a reset link")}
-            </p>
+            {mode === "forgot-password" && (
+              <h2 className="text-xl font-semibold text-slate-900 mb-1">
+                Reset Password
+              </h2>
+            )}
+            {mode === "forgot-password" && (
+              <p className="text-sm text-slate-600">
+                {resetEmailSent 
+                  ? "Check your email for the reset link" 
+                  : "Enter your email to receive a reset link"}
+              </p>
+            )}
           </div>
 
           {mode === "forgot-password" && resetEmailSent ? (
             <div className="space-y-4">
-              <p className="text-center text-sm text-muted-foreground">
-                We sent a password reset link to <span className="font-medium text-foreground">{email}</span>
+              <p className="text-center text-sm text-slate-600">
+                We sent a password reset link to <span className="font-medium text-slate-900">{email}</span>
               </p>
               <Button
                 onClick={() => switchMode("signin")}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white"
+                className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl"
               >
                 Back to Sign In
               </Button>
@@ -460,7 +472,7 @@ const Auth = () => {
               {mode === "register" && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="firstName" className="text-sm font-medium">
+                    <Label htmlFor="firstName" className="text-[13px] font-medium text-slate-700">
                       First Name
                     </Label>
                     <Input
@@ -470,11 +482,11 @@ const Auth = () => {
                       required
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      className="mt-1.5"
+                      className="mt-1.5 h-11 border-slate-300 rounded-[10px] bg-white placeholder:text-slate-400 focus:ring-slate-900 focus:border-slate-900 focus-visible:ring-slate-900"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="lastName" className="text-sm font-medium">
+                    <Label htmlFor="lastName" className="text-[13px] font-medium text-slate-700">
                       Last Name
                     </Label>
                     <Input
@@ -484,7 +496,7 @@ const Auth = () => {
                       required
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      className="mt-1.5"
+                      className="mt-1.5 h-11 border-slate-300 rounded-[10px] bg-white placeholder:text-slate-400 focus:ring-slate-900 focus:border-slate-900 focus-visible:ring-slate-900"
                     />
                   </div>
                 </div>
@@ -492,7 +504,7 @@ const Auth = () => {
 
               {/* Email field */}
               <div>
-                <Label htmlFor="email" className="text-sm font-medium">
+                <Label htmlFor="email" className="text-[13px] font-medium text-slate-700">
                   Email address
                 </Label>
                 <Input
@@ -503,15 +515,15 @@ const Auth = () => {
                   autoFocus={mode !== "register"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1.5"
+                  className="mt-1.5 h-11 border-slate-300 rounded-[10px] bg-white placeholder:text-slate-400 focus:ring-slate-900 focus:border-slate-900 focus-visible:ring-slate-900"
                 />
               </div>
 
               {/* Registration: Phone field */}
               {mode === "register" && (
                 <div>
-                  <Label htmlFor="phone" className="text-sm font-medium">
-                    Phone <span className="text-muted-foreground font-normal">(optional)</span>
+                  <Label htmlFor="phone" className="text-[13px] font-medium text-slate-700">
+                    Phone <span className="text-slate-400 font-normal">(optional)</span>
                   </Label>
                   <Input
                     id="phone"
@@ -519,7 +531,7 @@ const Auth = () => {
                     placeholder="(555) 123-4567"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="mt-1.5"
+                    className="mt-1.5 h-11 border-slate-300 rounded-[10px] bg-white placeholder:text-slate-400 focus:ring-slate-900 focus:border-slate-900 focus-visible:ring-slate-900"
                   />
                 </div>
               )}
@@ -528,11 +540,11 @@ const Auth = () => {
               {mode === "register" && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="licenseState" className="text-sm font-medium">
+                    <Label htmlFor="licenseState" className="text-[13px] font-medium text-slate-700">
                       License State
                     </Label>
                     <Select value={licenseState} onValueChange={setLicenseState}>
-                      <SelectTrigger className="mt-1.5">
+                      <SelectTrigger className="mt-1.5 h-11 border-slate-300 rounded-[10px] bg-white focus:ring-slate-900 focus:border-slate-900">
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
@@ -545,7 +557,7 @@ const Auth = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="licenseNumber" className="text-sm font-medium">
+                    <Label htmlFor="licenseNumber" className="text-[13px] font-medium text-slate-700">
                       License Number
                     </Label>
                     <Input
@@ -555,7 +567,7 @@ const Auth = () => {
                       required
                       value={licenseNumber}
                       onChange={(e) => setLicenseNumber(e.target.value)}
-                      className="mt-1.5"
+                      className="mt-1.5 h-11 border-slate-300 rounded-[10px] bg-white placeholder:text-slate-400 focus:ring-slate-900 focus:border-slate-900 focus-visible:ring-slate-900"
                     />
                   </div>
                 </div>
@@ -564,7 +576,7 @@ const Auth = () => {
               {/* Password field (not for forgot-password) */}
               {mode !== "forgot-password" && (
                 <div>
-                  <Label htmlFor="password" className="text-sm font-medium">
+                  <Label htmlFor="password" className="text-[13px] font-medium text-slate-700">
                     Password
                   </Label>
                   <div className="relative mt-1.5">
@@ -575,12 +587,12 @@ const Auth = () => {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pr-10"
+                      className="h-11 border-slate-300 rounded-[10px] bg-white placeholder:text-slate-400 pr-10 focus:ring-slate-900 focus:border-slate-900 focus-visible:ring-slate-900"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -590,15 +602,15 @@ const Auth = () => {
 
               {/* Password rules checklist - only for register mode */}
               {mode === "register" && password.length > 0 && (
-                <div className="bg-muted/50 rounded-lg p-3 space-y-1.5">
+                <div className="bg-slate-50 rounded-lg p-3 space-y-1.5">
                   {passwordValidation.map((rule) => (
                     <div key={rule.id} className="flex items-center gap-2 text-sm">
                       {rule.valid ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                       ) : (
-                        <Circle className="h-4 w-4 text-muted-foreground" />
+                        <Circle className="h-4 w-4 text-slate-400" />
                       )}
-                      <span className={rule.valid ? "text-emerald-700" : "text-muted-foreground"}>
+                      <span className={rule.valid ? "text-emerald-700" : "text-slate-500"}>
                         {rule.label}
                       </span>
                     </div>
@@ -609,7 +621,7 @@ const Auth = () => {
               {/* Confirm password - only for register mode */}
               {mode === "register" && (
                 <div>
-                  <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                  <Label htmlFor="confirmPassword" className="text-[13px] font-medium text-slate-700">
                     Confirm Password
                   </Label>
                   <Input
@@ -619,7 +631,7 @@ const Auth = () => {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="mt-1.5"
+                    className="mt-1.5 h-11 border-slate-300 rounded-[10px] bg-white placeholder:text-slate-400 focus:ring-slate-900 focus:border-slate-900 focus-visible:ring-slate-900"
                   />
                   {confirmPassword.length > 0 && (
                     <div className="flex items-center gap-2 text-sm mt-2">
@@ -630,8 +642,8 @@ const Auth = () => {
                         </>
                       ) : (
                         <>
-                          <Circle className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">Passwords do not match</span>
+                          <Circle className="h-4 w-4 text-slate-400" />
+                          <span className="text-slate-500">Passwords do not match</span>
                         </>
                       )}
                     </div>
@@ -645,7 +657,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("forgot-password")}
-                    className="text-sm text-emerald-600 hover:underline"
+                    className="text-[13px] text-emerald-700 hover:underline"
                   >
                     Forgot password?
                   </button>
@@ -654,7 +666,7 @@ const Auth = () => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white" 
+                className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl" 
                 disabled={loading || (mode === "register" && (!allPasswordRulesPass || !passwordsMatch || !licenseState || !licenseNumber.trim()))}
               >
                 {loading ? (
@@ -666,18 +678,8 @@ const Auth = () => {
                   </>
                 ) : (
                   <>
-                    {mode === "signin" && (
-                      <>
-                        <LogIn className="mr-2 h-4 w-4" />
-                        Sign In
-                      </>
-                    )}
-                    {mode === "register" && (
-                      <>
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Create Account
-                      </>
-                    )}
+                    {mode === "signin" && "Sign In"}
+                    {mode === "register" && "Create Account"}
                     {mode === "forgot-password" && "Send Reset Link"}
                   </>
                 )}
@@ -686,14 +688,14 @@ const Auth = () => {
           )}
 
           {mode !== "forgot-password" && !resetEmailSent && (
-            <div className="mt-6 text-center text-sm text-muted-foreground">
+            <div className="mt-6 text-center text-sm text-slate-600">
               {mode === "signin" ? (
                 <>
                   Don't have an account?{" "}
                   <button
                     type="button"
                     onClick={() => switchMode("register")}
-                    className="text-emerald-600 hover:underline font-medium"
+                    className="text-emerald-700 hover:underline font-medium"
                   >
                     Create one
                   </button>
@@ -704,7 +706,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("signin")}
-                    className="text-emerald-600 hover:underline font-medium"
+                    className="text-emerald-700 hover:underline font-medium"
                   >
                     Sign in
                   </button>
