@@ -115,13 +115,12 @@ export default function Home() {
           <div className="relative">
             {/* Subtle abstract background image */}
             <div 
-              className="absolute -inset-4 -z-10 rounded-[2rem] overflow-hidden"
+              className="absolute -inset-12 -z-10 rounded-[3rem] overflow-hidden"
               style={{
                 backgroundImage: `url(${heroAbstractBg})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                opacity: 0.10,
-                filter: 'blur(1px)',
+                opacity: 0.15,
               }}
             />
             
