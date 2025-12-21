@@ -36,25 +36,25 @@ export const Logo: React.FC<LogoProps> = ({
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={`${sizeClasses[size]} ${className}`}
-        aria-label="AllAgentConnect"
+        aria-label="All Agent Connect"
       >
         {/* Outer ring */}
         <circle
           cx="24"
           cy="24"
           r="22"
-          stroke={primaryColor}
+          stroke={accentColor}
           strokeWidth="2"
           fill="none"
         />
         {/* Inner connection nodes */}
-        <circle cx="24" cy="12" r="3" fill={primaryColor} />
-        <circle cx="12" cy="32" r="3" fill={primaryColor} />
-        <circle cx="36" cy="32" r="3" fill={primaryColor} />
+        <circle cx="24" cy="12" r="3" fill={accentColor} />
+        <circle cx="12" cy="32" r="3" fill={accentColor} />
+        <circle cx="36" cy="32" r="3" fill={accentColor} />
         {/* Connection lines */}
         <path
           d="M24 15 L14 30 M24 15 L34 30 M14 32 L34 32"
-          stroke={primaryColor}
+          stroke={accentColor}
           strokeWidth="2"
           strokeLinecap="round"
         />
@@ -71,24 +71,24 @@ export const Logo: React.FC<LogoProps> = ({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`${sizeClasses[size]} w-auto ${className}`}
-      aria-label="AllAgentConnect"
+      aria-label="All Agent Connect"
     >
-      {/* Icon mark */}
+      {/* Icon mark - green to match accent */}
       <g>
         <circle
           cx="24"
           cy="24"
           r="22"
-          stroke={primaryColor}
+          stroke={accentColor}
           strokeWidth="2"
           fill="none"
         />
-        <circle cx="24" cy="12" r="3" fill={primaryColor} />
-        <circle cx="12" cy="32" r="3" fill={primaryColor} />
-        <circle cx="36" cy="32" r="3" fill={primaryColor} />
+        <circle cx="24" cy="12" r="3" fill={accentColor} />
+        <circle cx="12" cy="32" r="3" fill={accentColor} />
+        <circle cx="36" cy="32" r="3" fill={accentColor} />
         <path
           d="M24 15 L14 30 M24 15 L34 30 M14 32 L34 32"
-          stroke={primaryColor}
+          stroke={accentColor}
           strokeWidth="2"
           strokeLinecap="round"
         />
@@ -122,7 +122,7 @@ export const LogoEmailSafe: React.FC<{ reversed?: boolean }> = ({ reversed = fal
       <tbody>
         <tr>
           <td style={{ verticalAlign: 'middle', paddingRight: '12px' }}>
-            {/* Simple icon for email - using basic shapes */}
+            {/* Simple icon for email - using basic shapes - green */}
             <svg
               width="32"
               height="32"
@@ -134,16 +134,16 @@ export const LogoEmailSafe: React.FC<{ reversed?: boolean }> = ({ reversed = fal
                 cx="24"
                 cy="24"
                 r="22"
-                stroke={primaryColor}
+                stroke={accentColor}
                 strokeWidth="2"
                 fill="none"
               />
-              <circle cx="24" cy="12" r="3" fill={primaryColor} />
-              <circle cx="12" cy="32" r="3" fill={primaryColor} />
-              <circle cx="36" cy="32" r="3" fill={primaryColor} />
+              <circle cx="24" cy="12" r="3" fill={accentColor} />
+              <circle cx="12" cy="32" r="3" fill={accentColor} />
+              <circle cx="36" cy="32" r="3" fill={accentColor} />
               <path
                 d="M24 15 L14 30 M24 15 L34 30 M14 32 L34 32"
-                stroke={primaryColor}
+                stroke={accentColor}
                 strokeWidth="2"
                 strokeLinecap="round"
               />
