@@ -79,21 +79,25 @@ const getDaysOnMarket = (listDate?: string) => {
 const getStatusBadge = (status: string) => {
   // Green = Active, Orange = Coming Soon, Red = Off-Market, Gray = Sold
   const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-    active: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Active" },
-    new: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Active" },
-    coming_soon: { bg: "bg-amber-50", text: "text-amber-700", label: "Coming Soon" },
-    off_market: { bg: "bg-rose-50", text: "text-rose-700", label: "Off-Market" },
-    back_on_market: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Back on Market" },
-    price_changed: { bg: "bg-blue-50", text: "text-blue-700", label: "Price Change" },
-    under_agreement: { bg: "bg-violet-50", text: "text-violet-700", label: "Under Agreement" },
-    pending: { bg: "bg-violet-50", text: "text-violet-700", label: "Pending" },
-    sold: { bg: "bg-muted", text: "text-muted-foreground", label: "Sold" },
-    withdrawn: { bg: "bg-muted", text: "text-muted-foreground", label: "Withdrawn" },
-    expired: { bg: "bg-muted", text: "text-muted-foreground", label: "Expired" },
-    cancelled: { bg: "bg-muted", text: "text-muted-foreground", label: "Cancelled" },
+    active: { bg: "bg-slate-100", text: "text-emerald-700", label: "Active" },
+    new: { bg: "bg-slate-100", text: "text-emerald-700", label: "Active" },
+    coming_soon: { bg: "bg-slate-100", text: "text-slate-700", label: "Coming Soon" },
+    off_market: { bg: "bg-slate-100", text: "text-slate-700", label: "Off-Market" },
+    back_on_market: { bg: "bg-slate-100", text: "text-emerald-700", label: "Back on Market" },
+    price_changed: { bg: "bg-slate-100", text: "text-slate-700", label: "Price Change" },
+    under_agreement: { bg: "bg-slate-100", text: "text-slate-700", label: "Under Agreement" },
+    pending: { bg: "bg-slate-100", text: "text-slate-700", label: "Pending" },
+    sold: { bg: "bg-slate-100", text: "text-slate-600", label: "Sold" },
+    withdrawn: { bg: "bg-slate-100", text: "text-slate-600", label: "Withdrawn" },
+    expired: { bg: "bg-slate-100", text: "text-slate-600", label: "Expired" },
+    cancelled: { bg: "bg-slate-100", text: "text-slate-600", label: "Cancelled" },
   };
 
-  const config = statusConfig[status] || { bg: "bg-muted", text: "text-muted-foreground", label: status };
+  const config = statusConfig[status] || {
+    bg: "bg-slate-100",
+    text: "text-slate-600",
+    label: status,
+  };
 
   return (
     <Badge 
