@@ -138,12 +138,17 @@ const ConsumerAuth = () => {
 
       const redirectUrl = `${window.location.origin}/consumer/auth`;
 
-      const { error } = await supabase.auth.resetPasswordForEmail(validated, {
-        redirectTo: redirectUrl,
+      // Call edge function to send password reset email via Resend
+      const { error: fnError } = await supabase.functions.invoke('send-password-reset', {
+        body: { 
+          email: validated,
+          redirectUrl: redirectUrl
+        }
       });
 
-      if (error) {
-        toast.error(error.message);
+      if (fnError) {
+        console.error("Password reset error:", fnError);
+        toast.error(fnError.message || "Failed to send reset email");
         return;
       }
 
@@ -154,6 +159,7 @@ const ConsumerAuth = () => {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
+        console.error("Password reset error:", error);
         toast.error("An error occurred sending reset email");
       }
     } finally {
