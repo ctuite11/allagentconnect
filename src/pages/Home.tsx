@@ -55,43 +55,47 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-6xl px-5 pt-14 pb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          {/* Copy */}
-          <div>
-            <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900">
-              Where Real Deals Get Done.
-            </h1>
+      <section className="relative overflow-hidden bg-[#FAFAF8]">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-16 lg:py-24">
+            {/* LEFT: content stays constrained */}
+            <div className="max-w-xl">
+              <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900">
+                Where Real Deals Get Done.
+              </h1>
+              <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-slate-800">
+                By Agents. For Agents. All Agents.
+              </div>
 
-            <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-slate-800">
-              By Agents. For Agents. All Agents.
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => navigate("/auth?mode=register")}
+                  className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
+                >
+                  Request Access <ArrowRight className="ml-2 h-4 w-4" />
+                </button>
+
+                <a
+                  href="#how"
+                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                >
+                  See How It Works
+                </a>
+              </div>
             </div>
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => navigate("/auth?mode=register")}
-                className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
-              >
-                Request Access <ArrowRight className="ml-2 h-4 w-4" />
-              </button>
-
-              <a
-                href="#how"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
-              >
-                See How It Works
-              </a>
-            </div>
+            {/* RIGHT column placeholder only (keeps grid height) */}
+            <div className="hidden lg:block" />
           </div>
+        </div>
 
-          {/* Editorial Image Panel */}
-          <div className="relative">
-            <img 
-              src={heroEditorial} 
-              alt="" 
-              className="w-full h-auto object-cover [mask-image:linear-gradient(to_left,rgba(0,0,0,1)_85%,rgba(0,0,0,0)_100%)] [-webkit-mask-image:linear-gradient(to_left,rgba(0,0,0,1)_85%,rgba(0,0,0,0)_100%)]"
-            />
-          </div>
+        {/* RIGHT: image full-bleed to viewport edge */}
+        <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-[58vw] max-w-none hidden lg:block">
+          <img
+            src={heroEditorial}
+            alt=""
+            className="w-full h-auto [mask-image:linear-gradient(to_left,rgba(0,0,0,1)_82%,rgba(0,0,0,0)_100%)] [-webkit-mask-image:linear-gradient(to_left,rgba(0,0,0,1)_82%,rgba(0,0,0,0)_100%)]"
+          />
         </div>
       </section>
 
