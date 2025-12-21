@@ -90,21 +90,21 @@ export default function Home() {
         </div>
 
         {/* RIGHT: image full-bleed to viewport edge */}
-        <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-[60vw] max-w-none hidden lg:block">
+        <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-[50vw] max-w-none hidden lg:block">
           <div className="relative">
             <img
               src={heroEditorial}
               alt=""
               className="w-full h-auto"
             />
-            {/* Feather overlay (matches page bg #FAFAF8) */}
+            {/* Feather overlay - fades left, top, bottom edges into page */}
             <div
               className="pointer-events-none absolute inset-0"
               style={{
                 background: `
-                  linear-gradient(to left, rgba(250,250,248,0) 65%, #FAFAF8 100%),
-                  linear-gradient(to top, rgba(250,250,248,0) 75%, #FAFAF8 100%),
-                  linear-gradient(to bottom, rgba(250,250,248,0) 75%, #FAFAF8 100%)
+                  linear-gradient(to right, #FAFAF8 0%, rgba(250,250,248,0) 40%),
+                  linear-gradient(to bottom, #FAFAF8 0%, rgba(250,250,248,0) 20%),
+                  linear-gradient(to top, #FAFAF8 0%, rgba(250,250,248,0) 20%)
                 `,
               }}
             />
