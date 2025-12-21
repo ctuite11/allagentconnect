@@ -19,7 +19,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#F7F6F3] text-slate-900">
+    <div className="min-h-screen bg-[#FAFAF8] text-slate-900">
       {/* Top Nav */}
       <header className="sticky top-0 z-40 bg-gradient-to-b from-white via-white/90 to-transparent backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-5 py-4 flex items-center justify-between">
@@ -280,7 +280,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200/70 bg-[#F7F6F3]">
+      <footer className="border-t border-slate-200/70 bg-[#FAFAF8]">
         <div className="mx-auto max-w-6xl px-5 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="text-sm text-slate-600">
             <span className="font-semibold text-slate-900">All Agent Connect</span> — where real deals get done.
