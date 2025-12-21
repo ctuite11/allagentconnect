@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut } from "lucide-react";
+import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useUserRole } from "@/hooks/useUserRole";
+import { Logo } from "@/components/brand";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,434 +77,464 @@ const Navigation = () => {
   if (isPending) return null;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 border-b border-border">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div 
-              className="text-2xl cursor-pointer font-display font-semibold" 
-              onClick={() => navigate("/")}
-            >
-              <span className="text-emerald-600">All Agent</span>{" "}
-              <span className="text-slate-400 font-medium">Connect</span>
-            </div>
-          </div>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-white via-white/90 to-transparent backdrop-blur-sm">
+      <div className="mx-auto max-w-6xl px-5 py-4 flex items-center justify-between">
+        <div onClick={() => navigate("/")} className="cursor-pointer">
+          <Logo size="md" />
+        </div>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-7 text-sm text-slate-600">
+          <button
+            onClick={() => navigate("/")}
+            className="hover:text-slate-900 transition"
+          >
+            Home
+          </button>
           
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
-            >
-              <Home className="w-4 h-4" />
-              Home
-            </button>
-            
-            {/* All Pages Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
-                  <Menu className="w-4 h-4" />
-                  All Pages
-                  <ChevronDown className="w-3 h-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-card border-border shadow-lg z-[100]">
-                <DropdownMenuLabel>Properties</DropdownMenuLabel>
-                <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => navigate("/browse")}>
-                    <Search className="mr-2 h-4 w-4" />
-                    Search
+          {/* All Pages Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1.5 hover:text-slate-900 transition">
+                All Pages
+                <ChevronDown className="w-3 h-3" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56 bg-white border-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.08)] rounded-xl z-[100]">
+              <DropdownMenuLabel className="text-slate-500 text-xs">Properties</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => navigate("/browse")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                  <Search className="mr-2 h-4 w-4" />
+                  Search
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/market-insights")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Market Insights
+                </DropdownMenuItem>
+                {user && (
+                  <DropdownMenuItem onClick={() => navigate("/favorites")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                    <Heart className="mr-2 h-4 w-4" />
+                    Favorites
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/market-insights")}>
-                    <BarChart3 className="mr-2 h-4 w-4" />
-                    Market Insights
-                  </DropdownMenuItem>
-                  {user && (
-                    <DropdownMenuItem onClick={() => navigate("/favorites")}>
-                      <Heart className="mr-2 h-4 w-4" />
-                      Favorites
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuGroup>
-                
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Agents</DropdownMenuLabel>
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate("/find-agent")}>
+                )}
+              </DropdownMenuGroup>
+              
+              <DropdownMenuSeparator className="bg-slate-200" />
+              <DropdownMenuLabel className="text-slate-500 text-xs">Agents</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => navigate("/find-agent")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                  <Users className="mr-2 h-4 w-4" />
+                  Find an Agent
+                </DropdownMenuItem>
+                {user && role === "agent" && (
+                  <DropdownMenuItem onClick={() => navigate("/our-members")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                     <Users className="mr-2 h-4 w-4" />
-                    Find an Agent
+                    Our Members
                   </DropdownMenuItem>
-                  {user && role === "agent" && (
-                    <DropdownMenuItem onClick={() => navigate("/our-members")}>
-                      <Users className="mr-2 h-4 w-4" />
-                      Our Members
+                )}
+                <DropdownMenuItem onClick={() => navigate("/agent-search")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                  <Search className="mr-2 h-4 w-4" />
+                  Agent Search
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              
+              {user && (
+                <>
+                  <DropdownMenuSeparator className="bg-slate-200" />
+                  <DropdownMenuLabel className="text-slate-500 text-xs">Agent Tools</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate("/allagentconnect")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Success Hub
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={() => navigate("/agent-search") }>
-                    <Search className="mr-2 h-4 w-4" />
-                    Agent Search
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                
+                    <DropdownMenuItem onClick={() => navigate("/agent/listings")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <List className="mr-2 h-4 w-4" />
+                      My Listings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/my-clients")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      My Contacts
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/hot-sheets")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Bell className="mr-2 h-4 w-4" />
+                      Hot Sheets
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/client-needs")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Communications Center
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <UserCog className="mr-2 h-4 w-4" />
+                      Profile & Branding
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/listing-search")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Search className="mr-2 h-4 w-4" />
+                      Listing Search
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator className="bg-slate-200" />
+                  <DropdownMenuLabel className="text-slate-500 text-xs">Add Listings</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate("/agent/listings/new")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add For Sale Listing
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/add-rental-listing")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Building2 className="mr-2 h-4 w-4" />
+                      Add Rental Listing
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </>
+              )}
+
+              <DropdownMenuSeparator className="bg-slate-200" />
+              <DropdownMenuLabel className="text-slate-500 text-xs">Vendors</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => navigate("/vendor/directory")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Vendor Directory
+                </DropdownMenuItem>
                 {user && (
                   <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => navigate("/vendor/packages")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <List className="mr-2 h-4 w-4" />
+                      Ad Packages
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/vendor/dashboard")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Vendor Dashboard
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {user && role === "agent" && (
+            <button
+              onClick={() => navigate("/allagentconnect")}
+              className="hover:text-slate-900 transition"
+            >
+              Success Hub
+            </button>
+          )}
+        </nav>
+
+        {/* Desktop Auth Buttons */}
+        <div className="hidden md:flex items-center gap-2">
+          {user ? (
+            <>
+              {role === "agent" && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition">
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      Tools
+                      <ChevronDown className="w-3 h-3 ml-1.5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-white border-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.08)] rounded-xl z-[100]">
+                    <DropdownMenuLabel className="text-slate-500 text-xs">Agent Tools</DropdownMenuLabel>
                     <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => navigate("/allagentconnect")}>
+                      <DropdownMenuItem onClick={() => navigate("/allagentconnect")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         Success Hub
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/agent/listings")}>
+                      <DropdownMenuItem onClick={() => navigate("/agent/listings")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <List className="mr-2 h-4 w-4" />
                         My Listings
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/my-clients")}>
+                      <DropdownMenuItem onClick={() => navigate("/my-clients")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <UserCircle className="mr-2 h-4 w-4" />
                         My Contacts
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/hot-sheets")}>
+                      <DropdownMenuItem onClick={() => navigate("/hot-sheets")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <Bell className="mr-2 h-4 w-4" />
                         Hot Sheets
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/client-needs")}>
+                      <DropdownMenuItem onClick={() => navigate("/client-needs")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <FileText className="mr-2 h-4 w-4" />
                         Communications Center
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")}>
+                      <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <UserCog className="mr-2 h-4 w-4" />
                         Profile & Branding
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/listing-search")}>
+                      <DropdownMenuItem onClick={() => navigate("/listing-search")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <Search className="mr-2 h-4 w-4" />
                         Listing Search
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Add Listings</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-slate-200" />
+                    <DropdownMenuLabel className="text-slate-500 text-xs">More</DropdownMenuLabel>
                     <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => navigate("/agent/listings/new")}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add For Sale Listing
+                      <DropdownMenuItem onClick={() => navigate("/browse")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                        <Search className="mr-2 h-4 w-4" />
+                        Search
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/add-rental-listing")}>
-                        <Building2 className="mr-2 h-4 w-4" />
-                        Add Rental Listing
+                      <DropdownMenuItem onClick={() => navigate("/manage-team")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                        <Users className="mr-2 h-4 w-4" />
+                        Manage Team
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
-                  </>
-                )}
-
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Vendors</DropdownMenuLabel>
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate("/vendor/directory")}>
-                    <Building2 className="mr-2 h-4 w-4" />
-                    Vendor Directory
-                  </DropdownMenuItem>
-                  {user && (
-                    <>
-                      <DropdownMenuItem onClick={() => navigate("/vendor/packages")}>
-                        <List className="mr-2 h-4 w-4" />
-                        Ad Packages
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/vendor/dashboard")}>
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        Vendor Dashboard
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center gap-4">
-          {user ? (
-              <>
-                {role === "agent" ? (
-                  <>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex items-center gap-2 px-4 py-2 rounded-md border border-neutral-200 bg-white text-foreground hover:bg-neutral-soft transition-colors">
-                          <LayoutDashboard className="w-4 h-4" />
-                          Success Hub
-                          <ChevronDown className="w-3 h-3" />
-                        </button>
-                      </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-card border-border shadow-lg z-[100]">
-                        <DropdownMenuLabel>Agent Tools</DropdownMenuLabel>
-                        <DropdownMenuGroup>
-                          <DropdownMenuItem onClick={() => navigate("/allagentconnect")}>
-                            <LayoutDashboard className="mr-2 h-4 w-4" />
-                            Success Hub
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate("/agent/listings")}>
-                            <List className="mr-2 h-4 w-4" />
-                            My Listings
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate("/my-clients")}>
-                            <UserCircle className="mr-2 h-4 w-4" />
-                            My Contacts
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate("/hot-sheets")}>
-                            <Bell className="mr-2 h-4 w-4" />
-                            Hot Sheets
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate("/client-needs")}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Communications Center
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")}>
-                            <UserCog className="mr-2 h-4 w-4" />
-                            Profile & Branding
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate("/listing-search")}>
-                            <Search className="mr-2 h-4 w-4" />
-                            Listing Search
-                          </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuLabel>More</DropdownMenuLabel>
-                        <DropdownMenuGroup>
-                          <DropdownMenuItem onClick={() => navigate("/browse")}>
-                            <Search className="mr-2 h-4 w-4" />
-                            Search
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate("/manage-team")}>
-                            <Users className="mr-2 h-4 w-4" />
-                            Manage Team
-                          </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                ) : role === "buyer" ? (
-                  <>
-                    <Button variant="outline" onClick={() => navigate("/client/dashboard")}>
-                      <LayoutDashboard className="w-4 h-4 mr-2" />
-                      My Dashboard
-                    </Button>
-                    <Button variant="outline" onClick={() => navigate("/client/favorites")}>
-                      <Heart className="w-4 h-4 mr-2" />
-                      My Favorites
-                    </Button>
-                  </>
-                ) : null}
-                <Button variant="outline" onClick={() => navigate(role === "agent" ? "/listing-search" : "/browse")}>
-                  <Search className="w-4 h-4 mr-2" />
-                  {role === "agent" ? "Listing Search" : "Search Homes"}
-                </Button>
-                <Button variant="outline" onClick={handleLogout}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <Button variant="outline" onClick={() => navigate("/auth")}>
-                Login
-              </Button>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-foreground"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              {role === "buyer" && (
+                <>
+                  <button 
+                    onClick={() => navigate("/client/dashboard")}
+                    className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                  >
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </button>
+                  <button 
+                    onClick={() => navigate("/client/favorites")}
+                    className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                  >
+                    <Heart className="w-4 h-4 mr-2" />
+                    Favorites
+                  </button>
+                </>
+              )}
+              <button 
+                onClick={() => navigate(role === "agent" ? "/listing-search" : "/browse")}
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 transition"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                {role === "agent" ? "Search" : "Search Homes"}
+              </button>
+              <button 
+                onClick={handleLogout}
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 transition"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate("/auth")}
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 transition"
+              >
+                Log in
+              </button>
+              <button
+                onClick={() => navigate("/auth?mode=register")}
+                className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition"
+              >
+                Request access <ArrowRight className="ml-2 h-4 w-4" />
+              </button>
+            </>
+          )}
         </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 space-y-2">
+        {/* Mobile Menu Button */}
+        <button
+          className="md:hidden text-slate-700 hover:text-slate-900 transition"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-white border-t border-slate-200 px-5 py-4 space-y-2 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <button
+            onClick={() => {
+              navigate("/");
+              setIsMenuOpen(false);
+            }}
+            className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+          >
+            <Home className="w-4 h-4" />
+            Home
+          </button>
+          <button
+            onClick={() => {
+              navigate(role === "agent" ? "/listing-search" : "/browse");
+              setIsMenuOpen(false);
+            }}
+            className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+          >
+            <Search className="w-4 h-4" />
+            {role === "agent" ? "Listing Search" : "Search Homes"}
+          </button>
+          <button
+            onClick={() => {
+              navigate("/agent-search");
+              setIsMenuOpen(false);
+            }}
+            className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+          >
+            <Search className="w-4 h-4" />
+            Agent Search
+          </button>
+          <button
+            onClick={() => {
+              navigate("/find-agent");
+              setIsMenuOpen(false);
+            }}
+            className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+          >
+            <Users className="w-4 h-4" />
+            Find an Agent
+          </button>
+          {user && role === "agent" && (
             <button
               onClick={() => {
-                navigate("/");
+                navigate("/our-members");
                 setIsMenuOpen(false);
               }}
-              className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-            >
-              <Home className="w-4 h-4" />
-              Home
-            </button>
-            <button
-              onClick={() => {
-                navigate(role === "agent" ? "/listing-search" : "/browse");
-                setIsMenuOpen(false);
-              }}
-              className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-            >
-              <Search className="w-4 h-4" />
-              {role === "agent" ? "Listing Search" : "Search Homes"}
-            </button>
-            <button
-              onClick={() => {
-                navigate("/agent-search");
-                setIsMenuOpen(false);
-              }}
-              className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-            >
-              <Search className="w-4 h-4" />
-              Agent Search
-            </button>
-            <button
-              onClick={() => {
-                navigate("/find-agent");
-                setIsMenuOpen(false);
-              }}
-              className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
+              className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
             >
               <Users className="w-4 h-4" />
-              Find an Agent
+              Our Members
             </button>
-            {user && role === "agent" && (
-              <button
-                onClick={() => {
-                  navigate("/our-members");
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
+          )}
+          {user && (
+            <>
+              <div className="pt-2 border-t border-slate-200 mt-2">
+                {role === "agent" ? (
+                  <>
+                    <p className="text-xs font-semibold text-slate-500 mb-2 px-2">Agent Tools</p>
+                    <button
+                      onClick={() => {
+                        navigate("/allagentconnect");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      Success Hub
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/agent/listings");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <List className="w-4 h-4" />
+                      My Listings
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/my-clients");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <UserCircle className="w-4 h-4" />
+                      My Contacts
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/hot-sheets");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <Bell className="w-4 h-4" />
+                      Hot Sheets
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/client-needs");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Communications Center
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/agent-profile-editor");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <UserCog className="w-4 h-4" />
+                      Profile & Branding
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-semibold text-slate-500 mb-2 px-2">Client Portal</p>
+                    <button
+                      onClick={() => {
+                        navigate("/client/dashboard");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      My Dashboard
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/client/favorites");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <Heart className="w-4 h-4" />
+                      My Favorites
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/browse");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <Search className="w-4 h-4" />
+                      Search Homes
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+          <div className="pt-4 border-t border-slate-200 mt-4 space-y-2">
+            {user ? (
+              <button 
+                className="w-full inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                onClick={handleLogout}
               >
-                <Users className="w-4 h-4" />
-                Our Members
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
               </button>
-            )}
-            {user && (
+            ) : (
               <>
-                <div className="pt-2 border-t border-border mt-2">
-                  {role === "agent" ? (
-                    <>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2 px-2">Agent Tools</p>
-                      <button
-                        onClick={() => {
-                          navigate("/allagentconnect");
-                          setIsMenuOpen(false);
-                        }}
-                        className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-                      >
-                        <LayoutDashboard className="w-4 h-4" />
-                        Success Hub
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/agent/listings");
-                          setIsMenuOpen(false);
-                        }}
-                        className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-                      >
-                        <List className="w-4 h-4" />
-                        My Listings
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/my-clients");
-                          setIsMenuOpen(false);
-                        }}
-                        className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-                      >
-                        <UserCircle className="w-4 h-4" />
-                        My Contacts
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/hot-sheets");
-                          setIsMenuOpen(false);
-                        }}
-                        className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-                      >
-                        <Bell className="w-4 h-4" />
-                        Hot Sheets
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/client-needs");
-                          setIsMenuOpen(false);
-                        }}
-                        className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-                      >
-                        <FileText className="w-4 h-4" />
-                        Communications Center
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/agent-profile-editor");
-                          setIsMenuOpen(false);
-                        }}
-                        className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-                      >
-                        <UserCog className="w-4 h-4" />
-                        Profile & Branding
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2 px-2">Client Portal</p>
-                      <button
-                        onClick={() => {
-                          navigate("/client/dashboard");
-                          setIsMenuOpen(false);
-                        }}
-                        className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-                      >
-                        <LayoutDashboard className="w-4 h-4" />
-                        My Dashboard
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/client/favorites");
-                          setIsMenuOpen(false);
-                        }}
-                        className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-                      >
-                        <Heart className="w-4 h-4" />
-                        My Favorites
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/browse");
-                          setIsMenuOpen(false);
-                        }}
-                        className="flex items-center gap-2 w-full py-2 text-foreground hover:text-primary transition-colors"
-                      >
-                        <Search className="w-4 h-4" />
-                        Search Homes
-                      </button>
-                    </>
-                  )}
-                </div>
-              </>
-            )}
-            <div className="pt-4 border-t border-border mt-4 space-y-2">
-              {user ? (
-                <Button 
-                  className="w-full"
-                  variant="outline"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </Button>
-              ) : (
-                <Button 
-                  className="w-full"
-                  variant="outline"
+                <button 
+                  className="w-full inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
                   onClick={() => {
                     navigate("/auth");
                     setIsMenuOpen(false);
                   }}
                 >
-                  Login
-                </Button>
-              )}
-            </div>
+                  Log in
+                </button>
+                <button 
+                  className="w-full inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition"
+                  onClick={() => {
+                    navigate("/auth?mode=register");
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Request access <ArrowRight className="ml-2 h-4 w-4" />
+                </button>
+              </>
+            )}
           </div>
-        )}
-      </div>
-    </nav>
+        </div>
+      )}
+    </header>
   );
 };
 
