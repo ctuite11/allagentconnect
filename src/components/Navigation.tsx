@@ -227,7 +227,7 @@ const Navigation = () => {
               {role === "agent" && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition">
+                    <button className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors">
                       <LayoutDashboard className="w-4 h-4 mr-2" />
                       Tools
                       <ChevronDown className="w-3 h-3 ml-1.5" />
@@ -284,14 +284,14 @@ const Navigation = () => {
                 <>
                   <button 
                     onClick={() => navigate("/client/dashboard")}
-                    className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                    className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
                   >
                     <LayoutDashboard className="w-4 h-4 mr-2" />
                     Dashboard
                   </button>
                   <button 
                     onClick={() => navigate("/client/favorites")}
-                    className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                    className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
                   >
                     <Heart className="w-4 h-4 mr-2" />
                     Favorites
@@ -300,14 +300,14 @@ const Navigation = () => {
               )}
               <button 
                 onClick={() => navigate(role === "agent" ? "/listing-search" : "/browse")}
-                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 transition"
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
               >
                 <Search className="w-4 h-4 mr-2" />
                 {role === "agent" ? "Search" : "Search Homes"}
               </button>
               <button 
                 onClick={handleLogout}
-                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 transition"
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
@@ -317,13 +317,13 @@ const Navigation = () => {
             <>
               <button
                 onClick={() => navigate("/auth")}
-                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 transition"
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
               >
                 Log in
               </button>
               <button
                 onClick={() => navigate("/auth?mode=register")}
-                className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition"
+                className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
               >
                 Request access <ArrowRight className="ml-2 h-4 w-4" />
               </button>
