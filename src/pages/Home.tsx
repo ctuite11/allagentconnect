@@ -55,7 +55,7 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-[#FAFAF8]">
+      <section className="relative min-h-[600px] bg-[#FAFAF8]">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-16 lg:py-24">
             {/* LEFT: content stays constrained */}
@@ -89,22 +89,22 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT: image full-bleed to viewport edge */}
-        <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 w-[50vw] max-w-none hidden lg:block">
-          <div className="relative">
+        {/* Hero image - positioned absolute to the right */}
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-[55vw] hidden lg:block">
+          <div className="relative h-full flex items-center">
             <img
               src={heroEditorial}
               alt=""
-              className="w-full h-auto"
+              className="w-full h-auto max-h-full object-contain"
             />
-            {/* Feather overlay - fades left, top, bottom edges into page */}
+            {/* Feather overlay - page color fades FROM edges INTO image */}
             <div
               className="pointer-events-none absolute inset-0"
               style={{
                 background: `
-                  linear-gradient(to right, #FAFAF8 0%, rgba(250,250,248,0) 40%),
-                  linear-gradient(to bottom, #FAFAF8 0%, rgba(250,250,248,0) 20%),
-                  linear-gradient(to top, #FAFAF8 0%, rgba(250,250,248,0) 20%)
+                  linear-gradient(to right, #FAFAF8 0%, transparent 35%),
+                  linear-gradient(to bottom, #FAFAF8 0%, transparent 18%),
+                  linear-gradient(to top, #FAFAF8 0%, transparent 18%)
                 `,
               }}
             />
