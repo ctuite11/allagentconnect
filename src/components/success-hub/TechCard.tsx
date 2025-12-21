@@ -24,7 +24,10 @@ export const TechCard = ({
   return (
     <div
       className={cn(
-        "rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition cursor-pointer group",
+        "rounded-3xl border border-slate-200 bg-white p-6 cursor-pointer group",
+        "shadow-[0_6px_18px_rgba(0,0,0,0.06)]",
+        "hover:shadow-[0_14px_34px_rgba(0,0,0,0.10)] hover:-translate-y-1",
+        "transition-all duration-200 ease-out",
         className
       )}
       onClick={onClick}
@@ -49,10 +52,10 @@ export const TechCard = ({
         </div>
       )}
 
-      {/* CTA - Home style */}
-      <span className="text-sm font-semibold text-slate-800 inline-flex items-center group-hover:text-slate-900 transition-colors">
+      {/* CTA link - slate to emerald on hover */}
+      <span className="text-sm font-medium text-slate-700 inline-flex items-center group-hover:text-emerald-600 transition-colors duration-200">
         Open
-        <ArrowRight className="w-4 h-4 ml-1 transition-transform duration-300 group-hover:translate-x-1" />
+        <ArrowRight className="w-4 h-4 ml-1 transition-transform duration-200 group-hover:translate-x-1" />
       </span>
     </div>
   );
