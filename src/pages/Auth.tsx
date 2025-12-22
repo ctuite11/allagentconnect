@@ -81,6 +81,17 @@ const Auth = () => {
   const allPasswordRulesPass = passwordValidation.every(r => r.valid);
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
 
+  // Sync mode state from URL parameter
+  useEffect(() => {
+    const modeParam = searchParams.get("mode");
+    if (modeParam === "register") {
+      setMode("register");
+    } else if (modeParam === "forgot-password") {
+      setMode("forgot-password");
+    }
+    // Don't reset to signin on empty param - let manual switching work
+  }, [searchParams]);
+
   // Check for logout param, reset success, or existing session
   useEffect(() => {
     let mounted = true;
