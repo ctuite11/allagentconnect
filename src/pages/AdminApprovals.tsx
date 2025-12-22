@@ -4,17 +4,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Check, X, ExternalLink, User, Mail, Shield } from "lucide-react";
+import { Check, X, ExternalLink, Shield } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface PendingAgent {
+interface Agent {
   user_id: string;
+  agent_status: string;
   license_number: string | null;
   license_state: string | null;
   license_last_name: string | null;
   created_at: string;
+  verified_at: string | null;
   profile: {
     first_name: string;
     last_name: string;
@@ -46,13 +62,21 @@ const stateNames: Record<string, string> = {
   PA: "Pennsylvania",
 };
 
+const statusColors: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800",
+  verified: "bg-green-100 text-green-800",
+  rejected: "bg-red-100 text-red-800",
+  unverified: "bg-gray-100 text-gray-800",
+};
+
 export default function AdminApprovals() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuthRole();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [pendingAgents, setPendingAgents] = useState<PendingAgent[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Check if user is admin
   useEffect(() => {
@@ -83,32 +107,32 @@ export default function AdminApprovals() {
     }
   }, [user, authLoading]);
 
-  // Fetch pending agents
+  // Fetch all agents
   useEffect(() => {
-    async function fetchPendingAgents() {
+    async function fetchAgents() {
       if (!isAdmin) return;
 
       setLoading(true);
       
       const { data: settings, error: settingsError } = await supabase
         .from("agent_settings")
-        .select("user_id, license_number, license_state, license_last_name, created_at")
-        .eq("agent_status", "pending");
+        .select("user_id, agent_status, license_number, license_state, license_last_name, created_at, verified_at")
+        .order("created_at", { ascending: false });
 
       if (settingsError) {
-        console.error("Error fetching pending agents:", settingsError);
-        toast.error("Failed to load pending agents");
+        console.error("Error fetching agents:", settingsError);
+        toast.error("Failed to load agents");
         setLoading(false);
         return;
       }
 
       if (!settings || settings.length === 0) {
-        setPendingAgents([]);
+        setAgents([]);
         setLoading(false);
         return;
       }
 
-      // Fetch profiles for all pending agents
+      // Fetch profiles for all agents
       const userIds = settings.map((s) => s.user_id);
       const { data: profiles, error: profilesError } = await supabase
         .from("agent_profiles")
@@ -121,17 +145,17 @@ export default function AdminApprovals() {
 
       const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
 
-      const agentsWithProfiles: PendingAgent[] = settings.map((s) => ({
+      const agentsWithProfiles: Agent[] = settings.map((s) => ({
         ...s,
         profile: profileMap.get(s.user_id) || null,
       }));
 
-      setPendingAgents(agentsWithProfiles);
+      setAgents(agentsWithProfiles);
       setLoading(false);
     }
 
     if (isAdmin) {
-      fetchPendingAgents();
+      fetchAgents();
     }
   }, [isAdmin]);
 
@@ -139,7 +163,6 @@ export default function AdminApprovals() {
     setProcessingIds((prev) => new Set(prev).add(userId));
 
     try {
-      // Update agent_status to 'verified'
       const { error: updateError } = await supabase
         .from("agent_settings")
         .update({ 
@@ -152,7 +175,6 @@ export default function AdminApprovals() {
         throw updateError;
       }
 
-      // Send approval email
       const { error: emailError } = await supabase.functions.invoke(
         "send-agent-approval-email",
         { body: { userId, email, firstName, approved: true } }
@@ -160,11 +182,14 @@ export default function AdminApprovals() {
 
       if (emailError) {
         console.error("Error sending approval email:", emailError);
-        // Don't fail the approval if email fails
       }
 
       toast.success(`${firstName} has been approved!`);
-      setPendingAgents((prev) => prev.filter((a) => a.user_id !== userId));
+      setAgents((prev) => prev.map((a) => 
+        a.user_id === userId 
+          ? { ...a, agent_status: "verified", verified_at: new Date().toISOString() }
+          : a
+      ));
     } catch (error: any) {
       console.error("Error approving agent:", error);
       toast.error("Failed to approve agent");
@@ -181,7 +206,6 @@ export default function AdminApprovals() {
     setProcessingIds((prev) => new Set(prev).add(userId));
 
     try {
-      // Update agent_status to 'rejected'
       const { error: updateError } = await supabase
         .from("agent_settings")
         .update({ agent_status: "rejected" })
@@ -191,7 +215,6 @@ export default function AdminApprovals() {
         throw updateError;
       }
 
-      // Send rejection email
       const { error: emailError } = await supabase.functions.invoke(
         "send-agent-approval-email",
         { body: { userId, email, firstName, approved: false } }
@@ -202,7 +225,11 @@ export default function AdminApprovals() {
       }
 
       toast.success(`${firstName} has been rejected`);
-      setPendingAgents((prev) => prev.filter((a) => a.user_id !== userId));
+      setAgents((prev) => prev.map((a) => 
+        a.user_id === userId 
+          ? { ...a, agent_status: "rejected" }
+          : a
+      ));
     } catch (error: any) {
       console.error("Error rejecting agent:", error);
       toast.error("Failed to reject agent");
@@ -214,6 +241,11 @@ export default function AdminApprovals() {
       });
     }
   };
+
+  const filteredAgents = agents.filter((agent) => {
+    if (statusFilter === "all") return true;
+    return agent.agent_status === statusFilter;
+  });
 
   if (authLoading || isAdmin === null) {
     return <LoadingScreen />;
@@ -235,123 +267,138 @@ export default function AdminApprovals() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Agent Approvals</h1>
+            <h1 className="text-3xl font-bold text-foreground">Agent Management</h1>
           </div>
           <p className="text-muted-foreground">
-            Review and approve pending agent verification requests
+            View and manage all agent verification requests
           </p>
+        </div>
+
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Filter by status:</span>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="verified">Verified</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="unverified">Unverified</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Showing {filteredAgents.length} of {agents.length} agents
+          </div>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : pendingAgents.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Check className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">All caught up!</h3>
-              <p className="text-muted-foreground">No pending verification requests</p>
-            </CardContent>
-          </Card>
+        ) : agents.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No agents found</p>
+          </div>
         ) : (
-          <div className="grid gap-4">
-            {pendingAgents.map((agent) => {
-              const isProcessing = processingIds.has(agent.user_id);
-              const licenseUrl = agent.license_state 
-                ? stateLicenseLookupUrls[agent.license_state] 
-                : null;
-              const stateName = agent.license_state 
-                ? stateNames[agent.license_state] || agent.license_state 
-                : "Unknown";
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>License #</TableHead>
+                  <TableHead>State</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Registered</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAgents.map((agent) => {
+                  const isProcessing = processingIds.has(agent.user_id);
+                  const licenseUrl = agent.license_state 
+                    ? stateLicenseLookupUrls[agent.license_state] 
+                    : null;
+                  const stateName = agent.license_state 
+                    ? stateNames[agent.license_state] || agent.license_state 
+                    : "—";
 
-              return (
-                <Card key={agent.user_id} className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg">
-                            {agent.profile?.first_name} {agent.profile?.last_name || agent.license_last_name}
-                          </CardTitle>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Mail className="h-3.5 w-3.5" />
-                            {agent.profile?.email || "No email"}
+                  return (
+                    <TableRow key={agent.user_id}>
+                      <TableCell className="font-medium">
+                        {agent.profile?.first_name} {agent.profile?.last_name || agent.license_last_name}
+                      </TableCell>
+                      <TableCell>{agent.profile?.email || "—"}</TableCell>
+                      <TableCell>
+                        {agent.license_number ? (
+                          <div className="flex items-center gap-1">
+                            {agent.license_number}
+                            {licenseUrl && (
+                              <a 
+                                href={licenseUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-primary hover:text-primary/80"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
+                            )}
                           </div>
-                        </div>
-                      </div>
-                      <Badge variant="secondary">Pending</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-4">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">License Number</p>
-                        <p className="font-medium">{agent.license_number || "Not provided"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">State</p>
-                        <p className="font-medium">{stateName}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Last Name on License</p>
-                        <p className="font-medium">{agent.license_last_name || "Not provided"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Submitted</p>
-                        <p className="font-medium">
-                          {new Date(agent.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3 pt-4 border-t">
-                      {licenseUrl && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell>{stateName}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="secondary" 
+                          className={statusColors[agent.agent_status] || statusColors.unverified}
                         >
-                          <a href={licenseUrl} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            Verify {stateName} License
-                          </a>
-                        </Button>
-                      )}
-                      <div className="flex-1" />
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleReject(
-                          agent.user_id,
-                          agent.profile?.email || "",
-                          agent.profile?.first_name || "Agent"
+                          {agent.agent_status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(agent.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {agent.agent_status === "pending" && (
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleReject(
+                                agent.user_id,
+                                agent.profile?.email || "",
+                                agent.profile?.first_name || "Agent"
+                              )}
+                              disabled={isProcessing}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleApprove(
+                                agent.user_id,
+                                agent.profile?.email || "",
+                                agent.profile?.first_name || "Agent"
+                              )}
+                              disabled={isProcessing}
+                              className="text-green-600 hover:text-green-700"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          </div>
                         )}
-                        disabled={isProcessing}
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        Reject
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleApprove(
-                          agent.user_id,
-                          agent.profile?.email || "",
-                          agent.profile?.first_name || "Agent"
-                        )}
-                        disabled={isProcessing}
-                      >
-                        <Check className="h-4 w-4 mr-2" />
-                        Approve
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
