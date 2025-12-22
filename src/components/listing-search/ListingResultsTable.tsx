@@ -420,7 +420,7 @@ const ListingResultsTable = ({
   return (
     <div className="space-y-0">
       {/* Sticky Action Bar */}
-      <div className="sticky top-4 z-10 bg-[#FAFAF8] px-5 py-4">
+      <div className="sticky top-0 z-20 bg-[#FAFAF8] px-5 py-4">
         {/* Select All / Actions Row */}
         <div className="flex items-center gap-2 flex-wrap">
           <Button
@@ -543,7 +543,7 @@ const ListingResultsTable = ({
         {/* Responsive min-widths: md=720px, lg=920px, xl=1100px */}
         <div className="min-w-[720px] lg:min-w-[920px] xl:min-w-[1100px] space-y-3">
           {/* Header Row */}
-          <div className="sticky top-[88px] z-[5] rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <div className="sticky top-[72px] z-[15] rounded-xl border border-slate-200 bg-white px-4 py-3">
             {/* Responsive grid: md=compact, lg=+SqFt/DOM, xl=+Agent */}
             <div className="grid grid-cols-[170px_minmax(240px,1fr)_100px_60px_60px_100px] lg:grid-cols-[170px_minmax(260px,1fr)_100px_60px_60px_80px_60px_100px] xl:grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-center">
               <div className="text-xs font-medium text-slate-500"></div>
