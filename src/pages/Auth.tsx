@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut } from "lucide-react";
+import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock } from "lucide-react";
 import { Logo } from "@/components/brand";
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
@@ -67,6 +67,7 @@ const Auth = () => {
   const [existingSession, setExistingSession] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const didNavigate = useRef(false);
 
   // Password validation for register mode
@@ -121,6 +122,17 @@ const Auth = () => {
       
       if (session?.user) {
         setExistingSession(true);
+        
+        // Fetch agent status to determine UI
+        const { data: settings } = await supabase
+          .from('agent_settings')
+          .select('agent_status')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        
+        if (mounted && settings) {
+          setAgentStatus(settings.agent_status);
+        }
       }
       setCheckingSession(false);
     };
@@ -393,44 +405,101 @@ const Auth = () => {
 
   // Already signed in state - only block signin, not registration
   if (existingSession && mode !== "register") {
+    // Check if user is verified or pending
+    const isPending = agentStatus === 'pending_verification' || agentStatus === 'pending_approval';
+    const isVerified = agentStatus === 'verified';
+    
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-[420px]">
           <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] text-center">
-            {/* Brand Block */}
-            <div className="mb-6">
-              <div className="flex justify-center mb-3">
-                <Logo variant="primary" size="lg" />
-              </div>
-              <p className="text-[15px] font-medium text-slate-700">
-                By agents, for agents.
-              </p>
+            <div className="flex justify-center mb-6">
+              <Logo variant="primary" size="lg" />
             </div>
 
-            <p className="text-slate-600 text-sm mb-6">
-              You have an active session. Sign out to use a different account.
-            </p>
-            <div className="space-y-3">
-              <Button
-                onClick={() => navigate('/auth/callback', { replace: true })}
-                className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl"
-              >
-                Continue to App
-              </Button>
-              <Button
-                onClick={handleLogout}
-                variant="ghost"
-                className="w-full h-11 text-emerald-700 hover:text-emerald-800 hover:bg-transparent font-medium"
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <LogOut className="mr-2 h-4 w-4" />
-                )}
-                Sign out and switch account
-              </Button>
-            </div>
+            {isPending ? (
+              <>
+                <div className="mb-4">
+                  <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Clock className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-900 mb-2">
+                    Access Request Pending
+                  </h2>
+                  <p className="text-slate-600 text-sm">
+                    Your license is being verified. You'll receive an email once approved.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => navigate('/pending-verification', { replace: true })}
+                    className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl"
+                  >
+                    View Status
+                  </Button>
+                  <Button
+                    onClick={handleLogout}
+                    variant="ghost"
+                    className="w-full h-11 text-slate-500 hover:text-slate-700 hover:bg-transparent font-medium"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <LogOut className="mr-2 h-4 w-4" />
+                    )}
+                    Sign out
+                  </Button>
+                </div>
+              </>
+            ) : isVerified ? (
+              <>
+                <p className="text-slate-600 text-sm mb-6">
+                  You're already signed in. Continue to the app or switch accounts.
+                </p>
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => navigate('/auth/callback', { replace: true })}
+                    className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl"
+                  >
+                    Continue to App
+                  </Button>
+                  <Button
+                    onClick={handleLogout}
+                    variant="ghost"
+                    className="w-full h-11 text-slate-500 hover:text-slate-700 hover:bg-transparent font-medium"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <LogOut className="mr-2 h-4 w-4" />
+                    )}
+                    Switch account
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-slate-600 text-sm mb-6">
+                  A session is active. Sign out to register a different account.
+                </p>
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleLogout}
+                    className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <LogOut className="mr-2 h-4 w-4" />
+                    )}
+                    Sign out
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
