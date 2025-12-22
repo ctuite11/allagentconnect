@@ -422,7 +422,7 @@ const ListingResultsTable = ({
       {/* Sticky Action Bar */}
       <div className="sticky top-4 z-10 bg-white px-5 py-4">
         {/* Select All / Actions Row */}
-        <div className="flex items-center gap-2 flex-wrap mb-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -482,29 +482,30 @@ const ListingResultsTable = ({
             <FileSpreadsheet className="h-4 w-4 mr-1.5" />
             Save as Hot Sheet
           </Button>
+          
+          {/* Sort Dropdown - inline */}
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-sm text-slate-500">Sort by:</span>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[150px] h-9 text-sm rounded-xl border-slate-200 bg-white focus:ring-0 focus:ring-offset-0 focus:border-slate-300">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-slate-200 bg-white">
+                <SelectItem value="date_new">Date (New)</SelectItem>
+                <SelectItem value="date_old">Date (Old)</SelectItem>
+                <SelectItem value="price_high">Price (High)</SelectItem>
+                <SelectItem value="price_low">Price (Low)</SelectItem>
+                <SelectItem value="sqft">Square Feet</SelectItem>
+                <SelectItem value="beds">Bedrooms</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           {selectedRows.size > 0 && (
             <span className="text-sm text-slate-500 ml-2 font-medium">
               {selectedRows.size} selected
             </span>
           )}
-        </div>
-
-        {/* Sort Row */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-500">Sort by:</span>
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[150px] h-9 text-sm rounded-xl border-slate-200 bg-white focus:ring-0 focus:ring-offset-0 focus:border-slate-300">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-slate-200 bg-white">
-              <SelectItem value="date_new">Date (New)</SelectItem>
-              <SelectItem value="date_old">Date (Old)</SelectItem>
-              <SelectItem value="price_high">Price (High)</SelectItem>
-              <SelectItem value="price_low">Price (Low)</SelectItem>
-              <SelectItem value="sqft">Square Feet</SelectItem>
-              <SelectItem value="beds">Bedrooms</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
