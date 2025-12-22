@@ -101,6 +101,20 @@ const Auth = () => {
         return;
       }
 
+      // If user wants to register, sign out any existing session first
+      const modeParam = searchParams.get("mode");
+      if (modeParam === "register") {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await supabase.auth.signOut();
+        }
+        if (mounted) {
+          setCheckingSession(false);
+          setExistingSession(false);
+        }
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!mounted) return;
@@ -377,8 +391,8 @@ const Auth = () => {
     );
   }
 
-  // Already signed in state
-  if (existingSession) {
+  // Already signed in state - only block signin, not registration
+  if (existingSession && mode !== "register") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-[420px]">
