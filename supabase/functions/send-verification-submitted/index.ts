@@ -52,55 +52,12 @@ serve(async (req: Request): Promise<Response> => {
   try {
     const { email, firstName, lastName, licenseState, licenseNumber }: VerificationEmailRequest = await req.json();
 
-    console.log(`Sending verification submitted email to: ${email}`);
+    console.log(`Processing verification request for: ${email}`);
 
     const stateName = stateNames[licenseState] || licenseState;
     const licenseVerifyUrl = stateLicenseLookupUrls[licenseState] || "";
 
-    // Email to user - new premium copy
-    const userEmailHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.7; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
-        <div style="background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);">
-          
-          <div style="padding: 32px 32px 24px 32px; border-bottom: 1px solid #f1f5f9;">
-            <div style="font-size: 20px; font-weight: 600;">
-              <span style="color: #0f172a;">AllAgent</span><span style="color: #94a3b8;">Connect</span>
-            </div>
-          </div>
-          
-          <div style="padding: 32px;">
-            <p style="margin: 0 0 20px 0; font-size: 16px;">Hi ${firstName},</p>
-            
-            <p style="margin: 0 0 20px 0;">Thanks for your interest in AllAgentConnect — the agent-only network built for direct communication and off-market collaboration.</p>
-            
-            <p style="margin: 0 0 20px 0;">We've received your license and profile details and are reviewing them now to keep the platform trusted and verified.</p>
-            
-            <p style="margin: 0 0 24px 0;"><strong style="color: #0f172a;">You'll get an email the moment you're approved.</strong></p>
-            
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 28px 0;">
-            
-            <p style="margin: 0; color: #64748b; font-size: 14px;">
-              — AllAgentConnect Team
-            </p>
-          </div>
-          
-          <div style="padding: 20px 32px; background: #f8fafc; border-top: 1px solid #f1f5f9;">
-            <p style="color: #94a3b8; font-size: 12px; margin: 0; text-align: center;">
-              © ${new Date().getFullYear()} AllAgentConnect. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    // Email to admin for verification
+    // Email to admin for verification (NO email to user - page says thank you)
     const adminEmailHtml = `
       <!DOCTYPE html>
       <html>
@@ -165,32 +122,7 @@ serve(async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send email to user
-    const userEmailRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "AllAgentConnect <hello@mail.allagentconnect.com>",
-        reply_to: "hello@allagentconnect.com",
-        to: [email],
-        subject: "Thanks for requesting access to AllAgentConnect",
-        html: userEmailHtml,
-      }),
-    });
-
-    const userData = await userEmailRes.json();
-    
-    if (!userEmailRes.ok) {
-      console.error("Resend API error (user email):", userData);
-      throw new Error(userData.message || "Failed to send user email");
-    }
-
-    console.log("User verification email sent successfully:", userData);
-
-    // Send email to admin
+    // Send email to admin only
     const adminEmailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -210,12 +142,12 @@ serve(async (req: Request): Promise<Response> => {
     
     if (!adminEmailRes.ok) {
       console.error("Resend API error (admin email):", adminData);
-      // Don't throw here - user email already sent successfully
-    } else {
-      console.log("Admin notification email sent successfully:", adminData);
+      throw new Error(adminData.message || "Failed to send admin notification");
     }
 
-    return new Response(JSON.stringify({ success: true, userData, adminData }), {
+    console.log("Admin notification email sent successfully:", adminData);
+
+    return new Response(JSON.stringify({ success: true, adminData }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
