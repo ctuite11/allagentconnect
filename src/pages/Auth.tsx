@@ -509,20 +509,9 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4 py-8">
       <div className="w-full max-w-[420px]">
-        {/* Brand Block - Above Form */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Logo variant="primary" size="lg" />
-          </div>
-          <p className="text-[15px] font-medium text-slate-700 mb-1">
-            By agents, for agents.
-          </p>
-          <p className="text-[14px] text-slate-600 mb-2">
-            Built for all agents.
-          </p>
-          <p className="text-xs text-slate-400">
-            Active since 2016
-          </p>
+        {/* Logo Only */}
+        <div className="flex justify-center mb-8">
+          <Logo variant="primary" size="lg" />
         </div>
 
         {/* Form Container */}
