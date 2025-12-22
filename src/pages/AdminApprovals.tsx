@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
@@ -6,7 +6,19 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Check, X, ExternalLink, Shield } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  ExternalLink, 
+  Shield, 
+  Search, 
+  Pencil, 
+  Trash2, 
+  Mail, 
+  ChevronUp, 
+  ChevronDown,
+  Users
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -22,20 +34,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AgentEditDrawer } from "@/components/admin/AgentEditDrawer";
+import { DeleteAgentDialog } from "@/components/admin/DeleteAgentDialog";
+import { EmailAgentDialog } from "@/components/admin/EmailAgentDialog";
 
 interface Agent {
-  user_id: string;
-  agent_status: string;
+  id: string;
+  aac_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  company: string | null;
+  bio: string | null;
   license_number: string | null;
   license_state: string | null;
-  license_last_name: string | null;
-  created_at: string;
+  agent_status: string;
   verified_at: string | null;
-  profile: {
-    first_name: string;
-    last_name: string;
-    email: string;
-  } | null;
+  created_at: string;
 }
 
 const stateLicenseLookupUrls: Record<string, string> = {
@@ -63,11 +79,23 @@ const stateNames: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  verified: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800",
-  unverified: "bg-gray-100 text-gray-800",
+  pending: "bg-amber-100 text-amber-800 border-amber-200",
+  verified: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  rejected: "bg-rose-100 text-rose-800 border-rose-200",
+  unverified: "bg-slate-100 text-slate-600 border-slate-200",
+  suspended: "bg-orange-100 text-orange-800 border-orange-200",
 };
+
+const statusOptions = [
+  { value: "unverified", label: "Unverified" },
+  { value: "pending", label: "Pending" },
+  { value: "verified", label: "Verified" },
+  { value: "rejected", label: "Rejected" },
+  { value: "suspended", label: "Suspended" },
+];
+
+type SortField = "name" | "status" | "created_at" | "company";
+type SortDirection = "asc" | "desc";
 
 export default function AdminApprovals() {
   const navigate = useNavigate();
@@ -76,7 +104,22 @@ export default function AdminApprovals() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  
+  // Filters & Search
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Sorting
+  const [sortField, setSortField] = useState<SortField>("created_at");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  
+  // Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
+  // Dialogs
+  const [editAgent, setEditAgent] = useState<Agent | null>(null);
+  const [deleteAgent, setDeleteAgent] = useState<Agent | null>(null);
+  const [emailRecipients, setEmailRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
 
   // Check if user is admin
   useEffect(() => {
@@ -107,145 +150,234 @@ export default function AdminApprovals() {
     }
   }, [user, authLoading]);
 
-  // Fetch all agents
-  useEffect(() => {
-    async function fetchAgents() {
-      if (!isAdmin) return;
+  // Fetch all agents - profiles first, then settings
+  const fetchAgents = async () => {
+    if (!isAdmin) return;
 
-      setLoading(true);
-      
-      const { data: settings, error: settingsError } = await supabase
-        .from("agent_settings")
-        .select("user_id, agent_status, license_number, license_state, license_last_name, created_at, verified_at")
+    setLoading(true);
+    
+    try {
+      // 1. Fetch ALL agent_profiles (source of truth)
+      const { data: profiles, error: profilesError } = await supabase
+        .from("agent_profiles")
+        .select("id, aac_id, first_name, last_name, email, phone, company, bio, created_at")
         .order("created_at", { ascending: false });
 
-      if (settingsError) {
-        console.error("Error fetching agents:", settingsError);
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
         toast.error("Failed to load agents");
         setLoading(false);
         return;
       }
 
-      if (!settings || settings.length === 0) {
+      if (!profiles || profiles.length === 0) {
         setAgents([]);
         setLoading(false);
         return;
       }
 
-      // Fetch profiles for all agents
-      const userIds = settings.map((s) => s.user_id);
-      const { data: profiles, error: profilesError } = await supabase
-        .from("agent_profiles")
-        .select("id, first_name, last_name, email")
-        .in("id", userIds);
+      // 2. Fetch settings for all profile IDs
+      const userIds = profiles.map((p) => p.id);
+      const { data: settings, error: settingsError } = await supabase
+        .from("agent_settings")
+        .select("user_id, agent_status, license_number, license_state, verified_at")
+        .in("user_id", userIds);
 
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
+      if (settingsError) {
+        console.error("Error fetching settings:", settingsError);
       }
 
-      const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+      // 3. Merge: create a map of settings by user_id
+      const settingsByUser = new Map(
+        settings?.map((s) => [s.user_id, s]) || []
+      );
 
-      const agentsWithProfiles: Agent[] = settings.map((s) => ({
-        ...s,
-        profile: profileMap.get(s.user_id) || null,
-      }));
+      // 4. Build final agent list
+      const agentList: Agent[] = profiles.map((p) => {
+        const s = settingsByUser.get(p.id);
+        return {
+          id: p.id,
+          aac_id: p.aac_id,
+          first_name: p.first_name,
+          last_name: p.last_name,
+          email: p.email,
+          phone: p.phone,
+          company: p.company,
+          bio: p.bio,
+          license_number: s?.license_number ?? null,
+          license_state: s?.license_state ?? null,
+          agent_status: s?.agent_status ?? "unverified",
+          verified_at: s?.verified_at ?? null,
+          created_at: p.created_at || new Date().toISOString(),
+        };
+      });
 
-      setAgents(agentsWithProfiles);
+      setAgents(agentList);
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast.error("Failed to load agents");
+    } finally {
       setLoading(false);
     }
+  };
 
+  useEffect(() => {
     if (isAdmin) {
       fetchAgents();
     }
   }, [isAdmin]);
 
-  const handleApprove = async (userId: string, email: string, firstName: string) => {
-    setProcessingIds((prev) => new Set(prev).add(userId));
+  // Handle status change with upsert
+  const handleStatusChange = async (agent: Agent, newStatus: string) => {
+    setProcessingIds((prev) => new Set(prev).add(agent.id));
 
     try {
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from("agent_settings")
-        .update({ 
-          agent_status: "verified",
-          verified_at: new Date().toISOString()
-        })
-        .eq("user_id", userId);
+        .upsert(
+          [{
+            user_id: agent.id,
+            agent_status: newStatus as any,
+            verified_at: newStatus === "verified" ? new Date().toISOString() : null,
+            updated_at: new Date().toISOString(),
+          }],
+          { onConflict: "user_id" }
+        );
 
-      if (updateError) {
-        throw updateError;
+      if (error) throw error;
+
+      // Send email for approval/rejection
+      if (newStatus === "verified" || newStatus === "rejected") {
+        await supabase.functions.invoke("send-agent-approval-email", {
+          body: {
+            userId: agent.id,
+            email: agent.email,
+            firstName: agent.first_name,
+            approved: newStatus === "verified",
+          },
+        });
       }
 
-      const { error: emailError } = await supabase.functions.invoke(
-        "send-agent-approval-email",
-        { body: { userId, email, firstName, approved: true } }
+      toast.success(`Status updated to ${newStatus}`);
+      setAgents((prev) =>
+        prev.map((a) =>
+          a.id === agent.id
+            ? {
+                ...a,
+                agent_status: newStatus,
+                verified_at: newStatus === "verified" ? new Date().toISOString() : a.verified_at,
+              }
+            : a
+        )
       );
-
-      if (emailError) {
-        console.error("Error sending approval email:", emailError);
-      }
-
-      toast.success(`${firstName} has been approved!`);
-      setAgents((prev) => prev.map((a) => 
-        a.user_id === userId 
-          ? { ...a, agent_status: "verified", verified_at: new Date().toISOString() }
-          : a
-      ));
     } catch (error: any) {
-      console.error("Error approving agent:", error);
-      toast.error("Failed to approve agent");
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
     } finally {
       setProcessingIds((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(userId);
+        newSet.delete(agent.id);
         return newSet;
       });
     }
   };
 
-  const handleReject = async (userId: string, email: string, firstName: string) => {
-    setProcessingIds((prev) => new Set(prev).add(userId));
+  // Filter + Search + Sort
+  const filteredAgents = useMemo(() => {
+    let result = agents;
 
-    try {
-      const { error: updateError } = await supabase
-        .from("agent_settings")
-        .update({ agent_status: "rejected" })
-        .eq("user_id", userId);
+    // Status filter
+    if (statusFilter !== "all") {
+      result = result.filter((a) => a.agent_status === statusFilter);
+    }
 
-      if (updateError) {
-        throw updateError;
-      }
-
-      const { error: emailError } = await supabase.functions.invoke(
-        "send-agent-approval-email",
-        { body: { userId, email, firstName, approved: false } }
+    // Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (a) =>
+          a.first_name.toLowerCase().includes(q) ||
+          a.last_name.toLowerCase().includes(q) ||
+          a.email.toLowerCase().includes(q) ||
+          (a.company && a.company.toLowerCase().includes(q)) ||
+          a.aac_id.toLowerCase().includes(q)
       );
+    }
 
-      if (emailError) {
-        console.error("Error sending rejection email:", emailError);
+    // Sort
+    result = [...result].sort((a, b) => {
+      let comparison = 0;
+      switch (sortField) {
+        case "name":
+          comparison = `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+          break;
+        case "status":
+          comparison = a.agent_status.localeCompare(b.agent_status);
+          break;
+        case "company":
+          comparison = (a.company || "").localeCompare(b.company || "");
+          break;
+        case "created_at":
+        default:
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
       }
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
 
-      toast.success(`${firstName} has been rejected`);
-      setAgents((prev) => prev.map((a) => 
-        a.user_id === userId 
-          ? { ...a, agent_status: "rejected" }
-          : a
-      ));
-    } catch (error: any) {
-      console.error("Error rejecting agent:", error);
-      toast.error("Failed to reject agent");
-    } finally {
-      setProcessingIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(userId);
-        return newSet;
-      });
+    return result;
+  }, [agents, statusFilter, searchQuery, sortField, sortDirection]);
+
+  // Selection handlers
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredAgents.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredAgents.map((a) => a.id)));
     }
   };
 
-  const filteredAgents = agents.filter((agent) => {
-    if (statusFilter === "all") return true;
-    return agent.agent_status === statusFilter;
-  });
+  const toggleSelect = (id: string) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
+  };
+
+  // Column sort handler
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return null;
+    return sortDirection === "asc" ? (
+      <ChevronUp className="h-3 w-3 ml-1 inline" />
+    ) : (
+      <ChevronDown className="h-3 w-3 ml-1 inline" />
+    );
+  };
+
+  // Bulk email
+  const handleBulkEmail = () => {
+    const recipients = filteredAgents
+      .filter((a) => selectedIds.has(a.id))
+      .map((a) => ({ id: a.id, email: a.email, name: `${a.first_name} ${a.last_name}` }));
+    setEmailRecipients(recipients);
+  };
+
+  // Single email
+  const handleEmailAgent = (agent: Agent) => {
+    setEmailRecipients([{ id: agent.id, email: agent.email, name: `${agent.first_name} ${agent.last_name}` }]);
+  };
 
   if (authLoading || isAdmin === null) {
     return <LoadingScreen />;
@@ -262,137 +394,244 @@ export default function AdminApprovals() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4">
+    <div className="min-h-screen bg-[#FAFAF8]">
+      <div className="container mx-auto py-8 px-4 max-w-7xl">
+        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Agent Management</h1>
-          </div>
-          <p className="text-muted-foreground">
-            View and manage all agent verification requests
-          </p>
-        </div>
-
-        <div className="flex items-center gap-4 mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Filter by status:</span>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="verified">Verified</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-                <SelectItem value="unverified">Unverified</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Showing {filteredAgents.length} of {agents.length} agents
+            <div className="p-2.5 rounded-2xl bg-[#F7F6F3] border border-slate-200">
+              <Shield className="h-6 w-6 text-slate-700" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Agent CRM</h1>
+              <p className="text-sm text-muted-foreground">
+                Manage all agents, update info, control access
+              </p>
+            </div>
           </div>
         </div>
 
+        {/* Filters Bar */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)] mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-3 flex-1">
+              {/* Search */}
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search name, email, company, AAC ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 border-slate-200 rounded-xl"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[160px] border-slate-200 rounded-xl">
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  {statusOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="text-sm text-muted-foreground">
+              {filteredAgents.length} of {agents.length} agents
+            </div>
+          </div>
+
+          {/* Bulk Actions */}
+          {selectedIds.size > 0 && (
+            <div className="mt-4 pt-4 border-t border-slate-200 flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">
+                {selectedIds.size} selected
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBulkEmail}
+                className="rounded-xl border-slate-200 hover:text-emerald-600"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Email Selected
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedIds(new Set())}
+                className="rounded-xl text-muted-foreground"
+              >
+                Clear
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Table */}
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-600"></div>
           </div>
         ) : agents.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="rounded-3xl border border-slate-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
+            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No agents found</p>
           </div>
         ) : (
-          <div className="rounded-md border">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>License #</TableHead>
-                  <TableHead>State</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Registered</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="bg-[#FAFAF8] border-b border-slate-200">
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedIds.size === filteredAgents.length && filteredAgents.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground">AAC ID</TableHead>
+                  <TableHead 
+                    className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
+                    onClick={() => handleSort("name")}
+                  >
+                    Name <SortIcon field="name" />
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground">Email</TableHead>
+                  <TableHead 
+                    className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
+                    onClick={() => handleSort("company")}
+                  >
+                    Company <SortIcon field="company" />
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground">Phone</TableHead>
+                  <TableHead className="font-semibold text-foreground">License</TableHead>
+                  <TableHead 
+                    className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
+                    onClick={() => handleSort("status")}
+                  >
+                    Status <SortIcon field="status" />
+                  </TableHead>
+                  <TableHead 
+                    className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
+                    onClick={() => handleSort("created_at")}
+                  >
+                    Registered <SortIcon field="created_at" />
+                  </TableHead>
+                  <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAgents.map((agent) => {
-                  const isProcessing = processingIds.has(agent.user_id);
-                  const licenseUrl = agent.license_state 
-                    ? stateLicenseLookupUrls[agent.license_state] 
+                  const isProcessing = processingIds.has(agent.id);
+                  const licenseUrl = agent.license_state
+                    ? stateLicenseLookupUrls[agent.license_state]
                     : null;
-                  const stateName = agent.license_state 
-                    ? stateNames[agent.license_state] || agent.license_state 
-                    : "—";
+                  const stateName = agent.license_state
+                    ? stateNames[agent.license_state] || agent.license_state
+                    : null;
 
                   return (
-                    <TableRow key={agent.user_id}>
-                      <TableCell className="font-medium">
-                        {agent.profile?.first_name} {agent.profile?.last_name || agent.license_last_name}
+                    <TableRow key={agent.id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(agent.id)}
+                          onCheckedChange={() => toggleSelect(agent.id)}
+                          aria-label={`Select ${agent.first_name}`}
+                        />
                       </TableCell>
-                      <TableCell>{agent.profile?.email || "—"}</TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">
+                        {agent.aac_id}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {agent.first_name} {agent.last_name}
+                      </TableCell>
+                      <TableCell className="text-sm">{agent.email}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {agent.company || "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {agent.phone || "—"}
+                      </TableCell>
                       <TableCell>
                         {agent.license_number ? (
-                          <div className="flex items-center gap-1">
-                            {agent.license_number}
+                          <div className="flex items-center gap-1 text-sm">
+                            <span className="text-muted-foreground">{stateName}:</span>
+                            <span>{agent.license_number}</span>
                             {licenseUrl && (
-                              <a 
-                                href={licenseUrl} 
-                                target="_blank" 
+                              <a
+                                href={licenseUrl}
+                                target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-primary hover:text-primary/80"
+                                className="text-slate-500 hover:text-emerald-600"
                               >
                                 <ExternalLink className="h-3.5 w-3.5" />
                               </a>
                             )}
                           </div>
-                        ) : "—"}
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
                       </TableCell>
-                      <TableCell>{stateName}</TableCell>
                       <TableCell>
-                        <Badge 
-                          variant="secondary" 
-                          className={statusColors[agent.agent_status] || statusColors.unverified}
+                        <Select
+                          value={agent.agent_status}
+                          onValueChange={(val) => handleStatusChange(agent, val)}
+                          disabled={isProcessing}
                         >
-                          {agent.agent_status}
-                        </Badge>
+                          <SelectTrigger className="w-[130px] h-8 rounded-lg border-0 bg-transparent p-0">
+                            <Badge
+                              variant="outline"
+                              className={`${statusColors[agent.agent_status] || statusColors.unverified} capitalize`}
+                            >
+                              {agent.agent_status}
+                            </Badge>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statusOptions.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
                         {new Date(agent.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        {agent.agent_status === "pending" && (
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleReject(
-                                agent.user_id,
-                                agent.profile?.email || "",
-                                agent.profile?.first_name || "Agent"
-                              )}
-                              disabled={isProcessing}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleApprove(
-                                agent.user_id,
-                                agent.profile?.email || "",
-                                agent.profile?.first_name || "Agent"
-                              )}
-                              disabled={isProcessing}
-                              className="text-green-600 hover:text-green-700"
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEmailAgent(agent)}
+                            className="h-8 w-8 p-0 text-slate-500 hover:text-emerald-600"
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditAgent(agent)}
+                            className="h-8 w-8 p-0 text-slate-500 hover:text-emerald-600"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteAgent(agent)}
+                            className="h-8 w-8 p-0 text-slate-500 hover:text-rose-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -402,6 +641,27 @@ export default function AdminApprovals() {
           </div>
         )}
       </div>
+
+      {/* Dialogs */}
+      <AgentEditDrawer
+        open={!!editAgent}
+        onOpenChange={(open) => !open && setEditAgent(null)}
+        agent={editAgent}
+        onSaved={fetchAgents}
+      />
+
+      <DeleteAgentDialog
+        open={!!deleteAgent}
+        onOpenChange={(open) => !open && setDeleteAgent(null)}
+        agent={deleteAgent}
+        onDeleted={fetchAgents}
+      />
+
+      <EmailAgentDialog
+        open={emailRecipients.length > 0}
+        onOpenChange={(open) => !open && setEmailRecipients([])}
+        recipients={emailRecipients}
+      />
     </div>
   );
 }
