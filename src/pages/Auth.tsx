@@ -413,34 +413,28 @@ const Auth = () => {
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-[420px]">
           <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] text-center">
-            <div className="flex justify-center mb-6">
-              <Logo variant="primary" size="lg" />
-            </div>
-
             {isPending ? (
               <>
-                <div className="mb-4">
-                  <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Clock className="w-6 h-6 text-amber-600" />
-                  </div>
-                  <h2 className="text-lg font-semibold text-slate-900 mb-2">
-                    Access Request Pending
-                  </h2>
-                  <p className="text-slate-600 text-sm">
-                    Your license is being verified. You'll receive an email once approved.
-                  </p>
+                <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <Clock className="w-7 h-7 text-amber-600" />
                 </div>
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">
+                  Access Request Pending
+                </h2>
+                <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+                  Your license verification is in progress. We'll email you once your account is approved.
+                </p>
                 <div className="space-y-3">
                   <Button
                     onClick={() => navigate('/pending-verification', { replace: true })}
                     className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl"
                   >
-                    View Status
+                    View Request Status
                   </Button>
                   <Button
                     onClick={handleLogout}
                     variant="ghost"
-                    className="w-full h-11 text-slate-500 hover:text-slate-700 hover:bg-transparent font-medium"
+                    className="w-full h-11 text-slate-400 hover:text-slate-600 hover:bg-slate-50 font-medium rounded-xl"
                     disabled={loading}
                   >
                     {loading ? (
@@ -454,8 +448,14 @@ const Auth = () => {
               </>
             ) : isVerified ? (
               <>
-                <p className="text-slate-600 text-sm mb-6">
-                  You're already signed in. Continue to the app or switch accounts.
+                <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <CheckCircle2 className="w-7 h-7 text-emerald-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">
+                  You're Signed In
+                </h2>
+                <p className="text-slate-500 text-sm mb-6">
+                  Continue to the app or switch to a different account.
                 </p>
                 <div className="space-y-3">
                   <Button
@@ -467,7 +467,7 @@ const Auth = () => {
                   <Button
                     onClick={handleLogout}
                     variant="ghost"
-                    className="w-full h-11 text-slate-500 hover:text-slate-700 hover:bg-transparent font-medium"
+                    className="w-full h-11 text-slate-400 hover:text-slate-600 hover:bg-slate-50 font-medium rounded-xl"
                     disabled={loading}
                   >
                     {loading ? (
@@ -475,29 +475,33 @@ const Auth = () => {
                     ) : (
                       <LogOut className="mr-2 h-4 w-4" />
                     )}
-                    Switch account
+                    Switch Account
                   </Button>
                 </div>
               </>
             ) : (
               <>
-                <p className="text-slate-600 text-sm mb-6">
-                  A session is active. Sign out to register a different account.
-                </p>
-                <div className="space-y-3">
-                  <Button
-                    onClick={handleLogout}
-                    className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <LogOut className="mr-2 h-4 w-4" />
-                    )}
-                    Sign out
-                  </Button>
+                <div className="w-14 h-14 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <LogOut className="w-7 h-7 text-slate-500" />
                 </div>
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">
+                  Session Active
+                </h2>
+                <p className="text-slate-500 text-sm mb-6">
+                  Sign out to request access with a different account.
+                </p>
+                <Button
+                  onClick={handleLogout}
+                  className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="mr-2 h-4 w-4" />
+                  )}
+                  Sign Out
+                </Button>
               </>
             )}
           </div>
