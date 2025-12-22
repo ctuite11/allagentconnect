@@ -337,13 +337,13 @@ const ListingSearchResults = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[#FAFAF8]">
       <Navigation />
 
       <main className="flex-1 pt-20">
-        <div className="max-w-[1400px] mx-auto px-6">
+        <div className="max-w-[1400px] mx-auto px-6 pt-6">
           {/* Page Header */}
-          <div className="mb-4 py-5 px-5 bg-white border border-slate-200 rounded-xl">
+          <div className="mb-6 border-b border-slate-200/70 bg-transparent px-0 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <button
