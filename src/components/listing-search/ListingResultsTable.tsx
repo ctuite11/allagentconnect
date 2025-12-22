@@ -418,16 +418,16 @@ const ListingResultsTable = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0">
       {/* Sticky Action Bar */}
-      <div className="sticky top-4 z-10 bg-white p-4">
+      <div className="sticky top-4 z-10 bg-white px-5 py-4">
         {/* Select All / Actions Row */}
         <div className="flex items-center gap-2 flex-wrap mb-3">
           <Button
             variant="outline"
             size="sm"
             onClick={toggleSelectAll}
-            className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
+            className="h-9 px-4 text-sm font-medium rounded-xl bg-white border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
           >
             {selectedRows.size === displayedListings.length && displayedListings.length > 0 ? "Deselect All" : "Select All"}
           </Button>
@@ -436,7 +436,7 @@ const ListingResultsTable = ({
             size="sm"
             disabled={selectedRows.size === 0 && !showSelectedOnly}
             onClick={handleKeepSelected}
-            className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors disabled:opacity-50"
+            className="h-9 px-4 text-sm font-medium rounded-xl bg-white border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors disabled:opacity-50"
           >
             {showSelectedOnly ? (
               <>
@@ -454,7 +454,7 @@ const ListingResultsTable = ({
             variant="outline"
             size="sm"
             onClick={() => setSaveSearchDialogOpen(true)}
-            className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
+            className="h-9 px-4 text-sm font-medium rounded-xl bg-white border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
           >
             <Bookmark className="h-4 w-4 mr-1.5" />
             Save Search
@@ -477,7 +477,7 @@ const ListingResultsTable = ({
               }
               setHotSheetDialogOpen(true);
             }}
-            className="h-9 px-4 text-sm font-medium rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
+            className="h-9 px-4 text-sm font-medium rounded-xl bg-white border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
           >
             <FileSpreadsheet className="h-4 w-4 mr-1.5" />
             Save as Hot Sheet
@@ -493,7 +493,7 @@ const ListingResultsTable = ({
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-500">Sort by:</span>
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[150px] h-9 text-sm rounded-xl border-slate-200 bg-white">
+            <SelectTrigger className="w-[150px] h-9 text-sm rounded-xl border-slate-200 bg-white focus:ring-0 focus:ring-offset-0 focus:border-slate-300">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-slate-200 bg-white">
@@ -542,39 +542,39 @@ const ListingResultsTable = ({
         {/* Responsive min-widths: md=720px, lg=920px, xl=1100px */}
         <div className="min-w-[720px] lg:min-w-[920px] xl:min-w-[1100px] space-y-3">
           {/* Header Row */}
-          <div className="sticky top-[88px] z-[5] bg-white/95 backdrop-blur-sm rounded-xl border border-neutral-200 px-4 py-3 shadow-sm">
+          <div className="sticky top-[88px] z-[5] bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200/60 px-4 py-3">
             {/* Responsive grid: md=compact, lg=+SqFt/DOM, xl=+Agent */}
             <div className="grid grid-cols-[170px_minmax(240px,1fr)_100px_60px_60px_100px] lg:grid-cols-[170px_minmax(260px,1fr)_100px_60px_60px_80px_60px_100px] xl:grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-center">
-              <div className="text-xs font-medium text-muted-foreground"></div>
-              <div className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1" onClick={() => onSort("address")}>
+              <div className="text-xs font-medium text-slate-500"></div>
+              <div className="text-xs font-medium text-slate-500 cursor-pointer hover:text-slate-900 flex items-center gap-1" onClick={() => onSort("address")}>
                 Address
-                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "address" ? "text-foreground" : "text-muted-foreground/50"}`} />
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "address" ? "text-slate-700" : "text-slate-400"}`} />
               </div>
-              <div className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1" onClick={() => onSort("price")}>
+              <div className="text-xs font-medium text-slate-500 cursor-pointer hover:text-slate-900 flex items-center gap-1" onClick={() => onSort("price")}>
                 Price
-                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "price" ? "text-foreground" : "text-muted-foreground/50"}`} />
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "price" ? "text-slate-700" : "text-slate-400"}`} />
               </div>
-              <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("bedrooms")}>
+              <div className="text-xs font-medium text-slate-500 text-center cursor-pointer hover:text-slate-900 flex items-center justify-center gap-1" onClick={() => onSort("bedrooms")}>
                 Beds
-                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "bedrooms" ? "text-foreground" : "text-muted-foreground/50"}`} />
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "bedrooms" ? "text-slate-700" : "text-slate-400"}`} />
               </div>
-              <div className="text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground flex items-center justify-center gap-1" onClick={() => onSort("bathrooms")}>
+              <div className="text-xs font-medium text-slate-500 text-center cursor-pointer hover:text-slate-900 flex items-center justify-center gap-1" onClick={() => onSort("bathrooms")}>
                 Baths
-                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "bathrooms" ? "text-foreground" : "text-muted-foreground/50"}`} />
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "bathrooms" ? "text-slate-700" : "text-slate-400"}`} />
               </div>
               {/* SqFt: hidden at md, visible at lg+ */}
-              <div className="hidden lg:flex text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground items-center justify-center gap-1" onClick={() => onSort("square_feet")}>
+              <div className="hidden lg:flex text-xs font-medium text-slate-500 text-center cursor-pointer hover:text-slate-900 items-center justify-center gap-1" onClick={() => onSort("square_feet")}>
                 SqFt
-                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "square_feet" ? "text-foreground" : "text-muted-foreground/50"}`} />
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "square_feet" ? "text-slate-700" : "text-slate-400"}`} />
               </div>
               {/* DOM: hidden at md, visible at lg+ */}
-              <div className="hidden lg:flex text-xs font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground items-center justify-center gap-1" onClick={() => onSort("list_date")}>
+              <div className="hidden lg:flex text-xs font-medium text-slate-500 text-center cursor-pointer hover:text-slate-900 items-center justify-center gap-1" onClick={() => onSort("list_date")}>
                 DOM
-                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "list_date" ? "text-foreground" : "text-muted-foreground/50"}`} />
+                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "list_date" ? "text-slate-700" : "text-slate-400"}`} />
               </div>
               {/* Agent: hidden at md/lg, visible at xl+ */}
-              <div className="hidden xl:block text-xs font-medium text-muted-foreground">Agent</div>
-              <div className="text-xs font-medium text-muted-foreground"></div>
+              <div className="hidden xl:block text-xs font-medium text-slate-500">Agent</div>
+              <div className="text-xs font-medium text-slate-500"></div>
             </div>
           </div>
 
@@ -597,9 +597,10 @@ const ListingResultsTable = ({
                 toggleExpand(listing.id);
               }}
               className={[
-                "aac-card aac-card-3 cursor-pointer outline-none",
-                "focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2",
-                isExpanded ? "ring-2 ring-primary/10" : ""
+                "rounded-xl border border-slate-200/70 bg-white px-4 py-3 cursor-pointer outline-none transition-colors",
+                "hover:bg-slate-50",
+                "focus-visible:ring-2 focus-visible:ring-emerald-500/20 focus-visible:ring-offset-2",
+                isExpanded ? "ring-2 ring-emerald-500/10" : ""
               ].join(" ")}
             >
               {/* Main Row Content - Responsive grid matching header */}
@@ -609,21 +610,21 @@ const ListingResultsTable = ({
                   {/* Checkbox overlay */}
                   <button
                     onClick={(e) => toggleRowSelection(listing.id, e)}
-                    className="absolute left-2 top-2 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow flex items-center justify-center"
+                    className="absolute left-2 top-2 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow-sm flex items-center justify-center"
                     aria-label="Select listing"
                   >
-                    {selectedRows.has(listing.id) && <Check className="h-3 w-3" />}
+                    {selectedRows.has(listing.id) && <Check className="h-3 w-3 text-emerald-600" />}
                   </button>
 
                   {/* Photo */}
                   <div className={[
-                    "relative h-[84px] w-[148px] overflow-hidden rounded-xl bg-neutral-50",
-                    selectedRows.has(listing.id) ? "border-neutral-400 ring-2 ring-neutral-300/20 border" : "border border-neutral-200/70"
+                    "relative h-[84px] w-[148px] overflow-hidden rounded-lg bg-slate-50",
+                    selectedRows.has(listing.id) ? "border-emerald-400 ring-2 ring-emerald-300/20 border" : "border border-slate-200/70"
                   ].join(" ")}>
                     {thumbnail ? (
                       <img src={thumbnail} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                      <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
                         No photo
                       </div>
                     )}
@@ -660,89 +661,89 @@ const ListingResultsTable = ({
                       microFacts.push(style);
                     }
                     
-                    return (
-                      <>
-                        {/* Street + Status Badge Row */}
-                        <div className="flex items-start justify-between gap-2">
-                          <a
-                            href="#"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              navigate(`/property/${listing.id}`, { state: { from: fromPath } });
-                            }}
-                            className="text-sm font-semibold text-foreground hover:text-primary hover:underline"
-                          >
-                            {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
-                          </a>
-                        </div>
-
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          {loc.city}{loc.city ? "," : ""} {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
-                        </div>
-
-                        {loc.showNeighborhood && (
-                          <div className="mt-0.5 text-xs text-muted-foreground">
-                            {loc.neighborhood}
+                      return (
+                        <>
+                          {/* Street + Status Badge Row */}
+                          <div className="flex items-start justify-between gap-2">
+                            <a
+                              href="#"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                navigate(`/property/${listing.id}`, { state: { from: fromPath } });
+                              }}
+                              className="text-sm font-semibold text-slate-900 hover:text-emerald-600 transition-colors"
+                            >
+                              {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
+                            </a>
                           </div>
-                        )}
 
-                        {/* Listing Number + Status */}
-                        <div className="mt-1 flex items-center gap-2">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
-                            className="text-[11px] font-mono text-primary hover:underline"
-                          >
-                            #{listing.listing_number}
-                          </button>
-                          {getStatusBadge(listing.status)}
-                        </div>
-
-                        {/* Micro-facts line */}
-                        {microFacts.length > 0 && (
-                          <div className="mt-1 flex items-center overflow-hidden whitespace-nowrap text-[11px] text-muted-foreground">
-                            <span className="truncate">{microFacts.join(" • ")}</span>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {loc.city}{loc.city ? "," : ""} {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
                           </div>
-                        )}
-                      </>
-                    );
-                  })()}
+
+                          {loc.showNeighborhood && (
+                            <div className="mt-0.5 text-xs text-slate-500">
+                              {loc.neighborhood}
+                            </div>
+                          )}
+
+                          {/* Listing Number + Status */}
+                          <div className="mt-1 flex items-center gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
+                              className="text-[11px] font-mono text-slate-600 hover:text-emerald-600 transition-colors"
+                            >
+                              #{listing.listing_number}
+                            </button>
+                            {getStatusBadge(listing.status)}
+                          </div>
+
+                          {/* Micro-facts line */}
+                          {microFacts.length > 0 && (
+                            <div className="mt-1 flex items-center overflow-hidden whitespace-nowrap text-[11px] text-slate-500">
+                              <span className="truncate">{microFacts.join(" • ")}</span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                 </div>
 
                 {/* Price */}
                 <div>
-                  <div className="text-sm font-semibold">{formatPrice(listing.price)}</div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-sm font-semibold text-slate-900">{formatPrice(listing.price)}</div>
+                  <div className="text-xs text-slate-500 mt-1">
                     {pricePerSqFt ? `$${pricePerSqFt}/sqft` : ""}
                   </div>
                 </div>
 
                 {/* Beds */}
-                <div className="text-sm text-center">{listing.bedrooms || "-"}</div>
+                <div className="text-sm text-center text-slate-700">{listing.bedrooms || "-"}</div>
 
                 {/* Baths */}
-                <div className="text-sm text-center">{listing.bathrooms || "-"}</div>
+                <div className="text-sm text-center text-slate-700">{listing.bathrooms || "-"}</div>
 
                 {/* SqFt: hidden at md, visible at lg+ */}
-                <div className="hidden lg:block text-sm text-center">
+                <div className="hidden lg:block text-sm text-center text-slate-700">
                   {listing.square_feet?.toLocaleString() || "-"}
                 </div>
 
                 {/* DOM: hidden at md, visible at lg+ */}
-                <div className="hidden lg:block text-sm text-center">
+                <div className="hidden lg:block text-sm text-center text-slate-700">
                   {getDaysOnMarket(listing.list_date)}
                 </div>
 
                 {/* Agent: hidden at md/lg, visible at xl+ */}
                 <div className="hidden xl:block">
-                  <div className="text-sm font-semibold truncate max-w-[180px]">{listing.agent_name || ""}</div>
+                  <div className="text-sm font-semibold text-slate-900 truncate max-w-[180px]">{listing.agent_name || ""}</div>
                   {listing.list_office && (
-                    <div className="mt-0.5 text-xs text-muted-foreground truncate max-w-[180px]">
+                    <div className="mt-0.5 text-xs text-slate-500 truncate max-w-[180px]">
                       {listing.list_office}
                     </div>
                   )}
                   {listing.list_agent_phone && formatPhoneNumber(listing.list_agent_phone) !== "—" && (
-                    <div className="mt-0.5 text-xs text-muted-foreground">
+                    <div className="mt-0.5 text-xs text-slate-500">
                       {formatPhoneNumber(listing.list_agent_phone)}
                     </div>
                   )}
@@ -751,7 +752,7 @@ const ListingResultsTable = ({
                       e.stopPropagation();
                       setContactListing(listing);
                     }}
-                    className="mt-1 text-xs text-primary hover:underline"
+                    className="mt-1 text-xs text-slate-600 hover:text-emerald-600 transition-colors"
                   >
                     Contact
                   </button>
@@ -762,6 +763,7 @@ const ListingResultsTable = ({
                   <Button
                     size="sm"
                     variant="outline"
+                    className="border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300"
                     onClick={() => navigate(`/property/${listing.id}`, { state: { from: fromPath } })}
                   >
                     <ExternalLink className="h-4 w-4" />
@@ -772,44 +774,44 @@ const ListingResultsTable = ({
 
               {/* Expanded Content */}
               {isExpanded && (
-                <div className="mt-4 pt-4 border-t border-neutral-200/70">
+                <div className="mt-4 pt-4 border-t border-slate-200/70">
                   <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4">
                     {/* Left: photo preview */}
-                    <div className="rounded-xl border border-neutral-200/70 bg-neutral-50/40 p-3">
-                      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <div className="rounded-xl border border-slate-200/70 bg-slate-50/40 p-3">
+                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         Preview
                       </div>
-                      <div className="mt-3 h-[200px] rounded-lg overflow-hidden border border-neutral-200/70 bg-neutral-50">
+                      <div className="mt-3 h-[200px] rounded-lg overflow-hidden border border-slate-200/70 bg-slate-50">
                         {thumbnail ? (
                           <img src={thumbnail} alt="" className="h-full w-full object-cover" />
                         ) : (
-                          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                          <div className="flex h-full items-center justify-center text-xs text-slate-400">
                             No photos available
                           </div>
                         )}
                       </div>
 
                       <div className="mt-3 flex gap-2">
-                        <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); setContactListing(listing); }}>
+                        <Button size="sm" variant="outline" className="border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300" onClick={(e) => { e.stopPropagation(); setContactListing(listing); }}>
                           Contact
                         </Button>
-                        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}>
+                        <Button size="sm" variant="outline" className="border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300" onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}>
                           View Details
                         </Button>
                       </div>
                     </div>
 
                     {/* Right: quick facts */}
-                    <div className="rounded-xl border border-neutral-200/70 bg-neutral-50/40 p-3">
+                    <div className="rounded-xl border border-slate-200/70 bg-slate-50/40 p-3">
                       <div className="flex items-start justify-between gap-4">
                         {(() => {
                           const loc = getLocation(listing);
                           return (
                             <div>
-                              <div className="text-sm font-semibold">
+                              <div className="text-sm font-semibold text-slate-900">
                                 {loc.street}{listing.unit_number ? ` #${listing.unit_number}` : ""}
                               </div>
-                              <div className="mt-1 text-xs text-muted-foreground">
+                              <div className="mt-1 text-xs text-slate-500">
                                 {loc.city}{loc.city ? "," : ""} {loc.state}{loc.zip ? ` ${loc.zip}` : ""}
                                 {loc.showNeighborhood ? ` • ${loc.neighborhood}` : ""}
                               </div>
@@ -817,8 +819,8 @@ const ListingResultsTable = ({
                           );
                         })()}
                         <div className="text-right">
-                          <div className="text-sm font-semibold">{formatPrice(listing.price)}</div>
-                          <div className="mt-1 text-xs text-muted-foreground">
+                          <div className="text-sm font-semibold text-slate-900">{formatPrice(listing.price)}</div>
+                          <div className="mt-1 text-xs text-slate-500">
                             DOM {getDaysOnMarket(listing.list_date)}
                           </div>
                         </div>
@@ -826,52 +828,52 @@ const ListingResultsTable = ({
 
                       {/* Property Details */}
                       <div className="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
-                          <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Beds</div>
-                          <div className="mt-1 text-sm font-semibold">{listing.bedrooms || "—"}</div>
+                        <div className="rounded-lg border border-slate-200/70 bg-white p-3">
+                          <div className="text-[11px] text-slate-500 uppercase tracking-wider">Beds</div>
+                          <div className="mt-1 text-sm font-semibold text-slate-900">{listing.bedrooms || "—"}</div>
                         </div>
-                        <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
-                          <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Baths</div>
-                          <div className="mt-1 text-sm font-semibold">{listing.bathrooms || "—"}</div>
+                        <div className="rounded-lg border border-slate-200/70 bg-white p-3">
+                          <div className="text-[11px] text-slate-500 uppercase tracking-wider">Baths</div>
+                          <div className="mt-1 text-sm font-semibold text-slate-900">{listing.bathrooms || "—"}</div>
                         </div>
-                        <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
-                          <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Sq Ft</div>
-                          <div className="mt-1 text-sm font-semibold">
+                        <div className="rounded-lg border border-slate-200/70 bg-white p-3">
+                          <div className="text-[11px] text-slate-500 uppercase tracking-wider">Sq Ft</div>
+                          <div className="mt-1 text-sm font-semibold text-slate-900">
                             {listing.square_feet ? listing.square_feet.toLocaleString() : "—"}
                           </div>
                         </div>
-                        <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
-                          <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Status</div>
+                        <div className="rounded-lg border border-slate-200/70 bg-white p-3">
+                          <div className="text-[11px] text-slate-500 uppercase tracking-wider">Status</div>
                           <div className="mt-1">{getStatusBadge(listing.status)}</div>
                         </div>
                         {getPropertyStyle(listing) && (
-                          <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
-                            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Type</div>
-                            <div className="mt-1 text-sm font-semibold">{getPropertyStyle(listing)}</div>
+                          <div className="rounded-lg border border-slate-200/70 bg-white p-3">
+                            <div className="text-[11px] text-slate-500 uppercase tracking-wider">Type</div>
+                            <div className="mt-1 text-sm font-semibold text-slate-900">{getPropertyStyle(listing)}</div>
                           </div>
                         )}
                         {listing.year_built && (
-                          <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
-                            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Year Built</div>
-                            <div className="mt-1 text-sm font-semibold">{listing.year_built}</div>
+                          <div className="rounded-lg border border-slate-200/70 bg-white p-3">
+                            <div className="text-[11px] text-slate-500 uppercase tracking-wider">Year Built</div>
+                            <div className="mt-1 text-sm font-semibold text-slate-900">{listing.year_built}</div>
                           </div>
                         )}
                         {listing.lot_size && (
-                          <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
-                            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Lot Size</div>
-                            <div className="mt-1 text-sm font-semibold">{formatLotSize(listing.lot_size)}</div>
+                          <div className="rounded-lg border border-slate-200/70 bg-white p-3">
+                            <div className="text-[11px] text-slate-500 uppercase tracking-wider">Lot Size</div>
+                            <div className="mt-1 text-sm font-semibold text-slate-900">{formatLotSize(listing.lot_size)}</div>
                           </div>
                         )}
                         {listing.total_parking_spaces && (
-                          <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
-                            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Parking</div>
-                            <div className="mt-1 text-sm font-semibold">{listing.total_parking_spaces}</div>
+                          <div className="rounded-lg border border-slate-200/70 bg-white p-3">
+                            <div className="text-[11px] text-slate-500 uppercase tracking-wider">Parking</div>
+                            <div className="mt-1 text-sm font-semibold text-slate-900">{listing.total_parking_spaces}</div>
                           </div>
                         )}
                         {listing.annual_property_tax && (
-                          <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
-                            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Annual Tax</div>
-                            <div className="mt-1 text-sm font-semibold">${listing.annual_property_tax.toLocaleString()}</div>
+                          <div className="rounded-lg border border-slate-200/70 bg-white p-3">
+                            <div className="text-[11px] text-slate-500 uppercase tracking-wider">Annual Tax</div>
+                            <div className="mt-1 text-sm font-semibold text-slate-900">${listing.annual_property_tax.toLocaleString()}</div>
                           </div>
                         )}
                       </div>
