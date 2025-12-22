@@ -636,7 +636,22 @@ const Auth = () => {
                     type="tel"
                     placeholder="(555) 123-4567"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      // Format phone as user types
+                      const input = e.target.value;
+                      const digits = input.replace(/\D/g, "").slice(0, 10);
+                      let formatted = "";
+                      if (digits.length > 0) {
+                        formatted = "(" + digits.slice(0, 3);
+                        if (digits.length >= 3) {
+                          formatted += ") " + digits.slice(3, 6);
+                          if (digits.length >= 6) {
+                            formatted += "-" + digits.slice(6);
+                          }
+                        }
+                      }
+                      setPhone(formatted);
+                    }}
                     className="mt-1.5 h-11 border-slate-300 rounded-[10px] bg-white placeholder:text-slate-400 focus:ring-slate-900 focus:border-slate-900 focus-visible:ring-slate-900"
                   />
                 </div>

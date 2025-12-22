@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { Logo } from "@/components/brand";
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -83,7 +84,7 @@ const PendingVerification = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     );
@@ -92,13 +93,10 @@ const PendingVerification = () => {
   // Show approval message before redirect
   if (isApproved) {
     return (
-      <div className="min-h-screen flex flex-col bg-slate-50">
+      <div className="min-h-screen flex flex-col bg-white">
         <header className="py-6 px-6 border-b border-slate-200/70 bg-white">
           <div className="max-w-xl mx-auto">
-            <div className="text-xl font-semibold">
-              <span className="text-slate-900">AllAgent</span>
-              <span className="text-slate-400">Connect</span>
-            </div>
+            <Logo size="md" />
           </div>
         </header>
 
@@ -123,13 +121,10 @@ const PendingVerification = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-white">
       <header className="py-6 px-6 border-b border-slate-200/70 bg-white">
         <div className="max-w-xl mx-auto">
-          <div className="text-xl font-semibold">
-            <span className="text-slate-900">AllAgent</span>
-            <span className="text-slate-400">Connect</span>
-          </div>
+          <Logo size="md" />
         </div>
       </header>
 
@@ -144,7 +139,7 @@ const PendingVerification = () => {
                 Almost there.
               </h1>
               <p className="text-slate-600 text-base leading-relaxed">
-                We're verifying your license to keep AllAgentConnect trusted and agent-only.
+                We're verifying your license to keep our network trusted and agent-only.
               </p>
             </div>
 
