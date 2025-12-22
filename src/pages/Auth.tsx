@@ -283,7 +283,24 @@ const Auth = () => {
         console.error("Role assignment error:", roleError);
       }
 
-      // 5. Redirect to pending-verification
+      // 5. Notify admin of new license for verification (non-blocking)
+      try {
+        await supabase.functions.invoke('send-verification-submitted', {
+          body: {
+            email: validatedEmail,
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            licenseState: licenseState,
+            licenseNumber: licenseNumber.trim(),
+          },
+        });
+        console.log('Admin notification sent for license verification');
+      } catch (emailError) {
+        console.error('Failed to send admin notification:', emailError);
+        // Don't block registration if email fails
+      }
+
+      // 6. Redirect to pending-verification
       didNavigate.current = true;
       navigate('/pending-verification', { replace: true });
 
@@ -354,7 +371,7 @@ const Auth = () => {
   // Loading state while checking session
   if (checkingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <Loader2 className="h-8 w-8 animate-spin text-slate-900" />
       </div>
     );
@@ -363,7 +380,7 @@ const Auth = () => {
   // Already signed in state
   if (existingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-[420px]">
           <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] text-center">
             {/* Brand Block */}
@@ -407,7 +424,7 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-8">
       <div className="w-full max-w-[420px]">
         {/* Brand Block - Above Form */}
         <div className="text-center mb-8">
