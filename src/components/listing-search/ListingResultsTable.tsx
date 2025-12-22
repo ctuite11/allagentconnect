@@ -620,7 +620,7 @@ const ListingResultsTable = ({
 
                   {/* Photo */}
                   <div className={[
-                    "relative h-[84px] w-[148px] overflow-hidden rounded-lg bg-slate-50",
+                    "relative h-[104px] w-[156px] overflow-hidden rounded-lg bg-slate-50",
                     selectedRows.has(listing.id) ? "border-emerald-400 ring-2 ring-emerald-300/20 border" : "border border-slate-200/70"
                   ].join(" ")}>
                     {thumbnail ? (
