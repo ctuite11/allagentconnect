@@ -127,7 +127,7 @@ const PendingVerification = () => {
                 Almost there.
               </h1>
               <p className="text-slate-600 text-base leading-relaxed">
-                We're verifying your license to keep our network trusted and agent-only.
+                Thanks for your request. We'll email you as soon as your license verification is complete.
               </p>
             </div>
 
