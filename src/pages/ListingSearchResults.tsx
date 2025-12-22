@@ -439,7 +439,7 @@ const ListingSearchResults = () => {
 
           {/* Results */}
           {viewMode === "list" ? (
-            <section className="bg-white">
+            <section className="bg-transparent">
               <ListingResultsTable
                 listings={listings}
                 loading={loading}
