@@ -212,7 +212,7 @@ const AgentSearch = () => {
             <Button
               size="lg"
               variant="secondary"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/auth?mode=register")}
             >
               Register as an Agent
             </Button>
