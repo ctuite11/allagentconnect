@@ -55,7 +55,7 @@ const HeroAgentFirst = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
               size="lg"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/auth?mode=register")}
               className="bg-neutral-900 text-white hover:bg-neutral-800 font-medium px-8 py-6 text-base rounded-full shadow-sm"
             >
               Join the Network

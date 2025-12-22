@@ -96,12 +96,12 @@ const App = () => (
                 <Route path="/password-reset" element={<PasswordReset />} />
                 
                 {/* Legacy redirects - all go to /auth */}
-                <Route path="/choose" element={<Navigate to="/auth" replace />} />
-                <Route path="/get-started" element={<Navigate to="/auth" replace />} />
-                <Route path="/onboarding" element={<Navigate to="/auth" replace />} />
-                <Route path="/onboarding/create-account" element={<Navigate to="/auth" replace />} />
-                <Route path="/onboarding/verify-license" element={<Navigate to="/auth" replace />} />
-                <Route path="/verify-agent" element={<Navigate to="/auth" replace />} />
+                <Route path="/choose" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/get-started" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/onboarding" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/onboarding/create-account" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/onboarding/verify-license" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/verify-agent" element={<Navigate to="/auth?mode=register" replace />} />
                 
                 {/* Agent routes - ALL require verification by default via RouteGuard */}
                 <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />

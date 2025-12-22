@@ -383,7 +383,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
             </p>
             <button
               className="inline-flex items-center justify-center rounded-md bg-white border border-neutral-200 px-6 py-2.5 text-sm font-medium text-foreground hover:bg-neutral-soft transition-colors"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/auth?mode=register")}
             >
               Register as an Agent
             </button>
