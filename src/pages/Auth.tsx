@@ -405,9 +405,17 @@ const Auth = () => {
 
   // Already signed in state - only block signin, not registration
   if (existingSession && mode !== "register") {
-    // Check if user is verified or pending
     const isPending = agentStatus === 'pending_verification' || agentStatus === 'pending_approval';
     const isVerified = agentStatus === 'verified';
+    
+    // Still loading agent status
+    if (agentStatus === null) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-white px-4">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-900" />
+        </div>
+      );
+    }
     
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
@@ -422,7 +430,7 @@ const Auth = () => {
                   Access Request Pending
                 </h2>
                 <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-                  Your license verification is in progress. We'll email you once your account is approved.
+                  Your license verification is in progress. We'll notify you once approved.
                 </p>
                 <div className="space-y-3">
                   <Button
@@ -437,11 +445,7 @@ const Auth = () => {
                     className="w-full h-11 text-slate-400 hover:text-slate-600 hover:bg-slate-50 font-medium rounded-xl"
                     disabled={loading}
                   >
-                    {loading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <LogOut className="mr-2 h-4 w-4" />
-                    )}
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
                     Sign out
                   </Button>
                 </div>
@@ -452,10 +456,10 @@ const Auth = () => {
                   <CheckCircle2 className="w-7 h-7 text-emerald-600" />
                 </div>
                 <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                  You're Signed In
+                  Welcome Back
                 </h2>
                 <p className="text-slate-500 text-sm mb-6">
-                  Continue to the app or switch to a different account.
+                  You're already signed in. Continue to your dashboard.
                 </p>
                 <div className="space-y-3">
                   <Button
@@ -470,12 +474,8 @@ const Auth = () => {
                     className="w-full h-11 text-slate-400 hover:text-slate-600 hover:bg-slate-50 font-medium rounded-xl"
                     disabled={loading}
                   >
-                    {loading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <LogOut className="mr-2 h-4 w-4" />
-                    )}
-                    Switch Account
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+                    Use Different Account
                   </Button>
                 </div>
               </>
@@ -485,21 +485,17 @@ const Auth = () => {
                   <LogOut className="w-7 h-7 text-slate-500" />
                 </div>
                 <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                  Session Active
+                  Account Already Exists
                 </h2>
                 <p className="text-slate-500 text-sm mb-6">
-                  Sign out to request access with a different account.
+                  You're signed in but your access status is unclear. Sign out to request access with a different account.
                 </p>
                 <Button
                   onClick={handleLogout}
                   className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl"
                   disabled={loading}
                 >
-                  {loading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <LogOut className="mr-2 h-4 w-4" />
-                  )}
+                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
                   Sign Out
                 </Button>
               </>
