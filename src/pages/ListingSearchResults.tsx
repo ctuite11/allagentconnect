@@ -343,53 +343,51 @@ const ListingSearchResults = () => {
       <main className="flex-1 pt-20">
         <div className="max-w-[1400px] mx-auto px-6">
           {/* Page Header */}
-          <SectionCard className="mb-4 p-3">
+          <div className="mb-4 py-5 px-5 bg-white border border-slate-200 rounded-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleBackToSearch}
-                  className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  className="p-1.5 -ml-1.5 rounded-md hover:bg-slate-50 transition-colors text-slate-400 hover:text-slate-700"
                   aria-label="Go back"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <div className="h-5 w-px bg-border" />
+                <div className="h-5 w-px bg-slate-200" />
                 <div>
-                  <h1 className="text-lg font-semibold text-foreground">Search Results</h1>
+                  <h1 className="text-lg font-semibold text-slate-900">Search Results</h1>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground bg-muted px-2 py-0.5 rounded">
-                    {loading ? "..." : listings.length}
-                  </span>
+                <span className="text-sm text-slate-500">
+                  <span className="font-semibold text-slate-900">{loading ? "..." : listings.length}</span>
                   {" "}listings found
                 </span>
-                <div className="h-5 w-px bg-border" />
+                <div className="h-5 w-px bg-slate-200" />
                 <ToggleGroup 
                   type="single" 
                   value={viewMode} 
                   onValueChange={(value) => value && setViewMode(value as "list" | "grid")}
-                  className="bg-muted rounded-md p-0.5"
+                  className="bg-slate-100 rounded-lg p-0.5"
                 >
                   <ToggleGroupItem 
                     value="list" 
                     aria-label="List view"
-                    className="h-7 w-7 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                    className="h-7 w-7 p-0 rounded-md data-[state=on]:bg-white data-[state=on]:shadow-sm text-slate-500 data-[state=on]:text-slate-900"
                   >
                     <List className="h-4 w-4" />
                   </ToggleGroupItem>
                   <ToggleGroupItem 
                     value="grid" 
                     aria-label="Grid view"
-                    className="h-7 w-7 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                    className="h-7 w-7 p-0 rounded-md data-[state=on]:bg-white data-[state=on]:shadow-sm text-slate-500 data-[state=on]:text-slate-900"
                   >
                     <LayoutGrid className="h-4 w-4" />
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
             </div>
-          </SectionCard>
+          </div>
 
           {/* Sticky Bulk Action Bar */}
           {selectedListings.size > 0 && (
@@ -441,7 +439,7 @@ const ListingSearchResults = () => {
 
           {/* Results */}
           {viewMode === "list" ? (
-            <section className="bg-background border border-border rounded-lg shadow-sm">
+            <section className="bg-white border border-slate-200/70 rounded-xl">
               <ListingResultsTable
                 listings={listings}
                 loading={loading}
