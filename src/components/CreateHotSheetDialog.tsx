@@ -1911,7 +1911,7 @@ export function CreateHotSheetDialog({
                 setShowAddAnotherContactModal(false);
                 setClientInfoOpen(true);
               }}
-              className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600"
+              className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800"
             >
               Add Another Contact
             </AlertDialogAction>
