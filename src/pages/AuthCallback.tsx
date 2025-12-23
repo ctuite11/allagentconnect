@@ -149,7 +149,21 @@ const AuthCallback = () => {
         return;
       }
 
-      // Check existing role in user_roles table
+      // Check for admin role first (prioritize admin over other roles)
+      const { data: adminRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (adminRole) {
+        didNavigate.current = true;
+        navigate('/admin/approvals', { replace: true });
+        return;
+      }
+
+      // Check for other roles
       const { data: userRole } = await supabase
         .from('user_roles')
         .select('role')
@@ -158,12 +172,6 @@ const AuthCallback = () => {
 
       if (userRole?.role) {
         didNavigate.current = true;
-        
-        // Admin routing
-        if (userRole.role === 'admin') {
-          navigate('/admin/approvals', { replace: true });
-          return;
-        }
         
         // Agent-only platform: check verification status
         const { data: settings } = await supabase
