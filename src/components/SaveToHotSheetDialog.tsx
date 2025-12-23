@@ -347,14 +347,15 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[540px] max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle className="text-lg font-semibold">
             Save Hotsheet
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-5 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="grid gap-5">
           {/* Section 1: Hotsheet Name */}
           <div className="grid gap-2">
             <Label htmlFor="name" className="text-sm font-medium">
@@ -546,7 +547,7 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
               The current search criteria will be saved with this hotsheet for reference.
             </p>
             {filterSummary.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {filterSummary.map((item, index) => (
                   <Badge 
                     key={index} 
@@ -563,9 +564,10 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
               </p>
             )}
           </div>
+          </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <div className="sticky bottom-0 bg-white border-t border-neutral-200 px-6 py-4 flex justify-end gap-3">
           <Button
             type="button"
             variant="outline"
@@ -580,7 +582,7 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
           >
             {loading ? "Saving..." : "Save Hotsheet"}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
