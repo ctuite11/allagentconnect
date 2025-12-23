@@ -552,7 +552,11 @@ export default function AdminApprovals() {
                   const isProcessing = processingIds.has(agent.id);
 
                   return (
-                    <TableRow key={agent.id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <TableRow 
+                      key={agent.id} 
+                      className="border-b border-gray-200 hover:!bg-[#FAFAF8] data-[state=selected]:!bg-[#F7F6F3]"
+                      data-state={selectedIds.has(agent.id) ? "selected" : undefined}
+                    >
                       <TableCell>
                         <Checkbox
                           checked={selectedIds.has(agent.id)}
