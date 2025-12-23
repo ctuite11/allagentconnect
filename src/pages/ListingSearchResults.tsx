@@ -348,19 +348,19 @@ const ListingSearchResults = () => {
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleBackToSearch}
-                  className="p-1.5 -ml-1.5 rounded-md hover:bg-slate-50 transition-colors text-slate-400 hover:text-slate-700"
+                  className="p-1.5 -ml-1.5 rounded-md hover:bg-neutral-50 transition-colors text-neutral-400 hover:text-neutral-700"
                   aria-label="Go back"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="h-5 w-px bg-neutral-200" />
                 <div>
-                  <h1 className="text-lg font-semibold text-slate-900">Search Results</h1>
+                  <h1 className="text-lg font-semibold text-neutral-900">Search Results</h1>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-sm text-slate-500">
-                  <span className="font-semibold text-slate-900">{loading ? "..." : listings.length}</span>
+                <span className="text-sm text-neutral-500">
+                  <span className="font-semibold text-neutral-900">{loading ? "..." : listings.length}</span>
                   {" "}listings found
                 </span>
                 <div className="h-5 w-px bg-neutral-200" />
@@ -368,19 +368,19 @@ const ListingSearchResults = () => {
                   type="single" 
                   value={viewMode} 
                   onValueChange={(value) => value && setViewMode(value as "list" | "grid")}
-                  className="bg-slate-100 rounded-lg p-0.5"
+                  className="bg-neutral-100 rounded-lg p-0.5"
                 >
                   <ToggleGroupItem 
                     value="list" 
                     aria-label="List view"
-                    className="h-7 w-7 p-0 rounded-md data-[state=on]:bg-white data-[state=on]:shadow-sm text-slate-500 data-[state=on]:text-slate-900"
+                    className="h-7 w-7 p-0 rounded-md data-[state=on]:bg-white data-[state=on]:shadow-sm text-neutral-500 data-[state=on]:text-neutral-900"
                   >
                     <List className="h-4 w-4" />
                   </ToggleGroupItem>
                   <ToggleGroupItem 
                     value="grid" 
                     aria-label="Grid view"
-                    className="h-7 w-7 p-0 rounded-md data-[state=on]:bg-white data-[state=on]:shadow-sm text-slate-500 data-[state=on]:text-slate-900"
+                    className="h-7 w-7 p-0 rounded-md data-[state=on]:bg-white data-[state=on]:shadow-sm text-neutral-500 data-[state=on]:text-neutral-900"
                   >
                     <LayoutGrid className="h-4 w-4" />
                   </ToggleGroupItem>
@@ -391,7 +391,7 @@ const ListingSearchResults = () => {
 
           {/* Sticky Bulk Action Bar */}
           {selectedListings.size > 0 && (
-            <SectionCard className="sticky top-16 z-30 mb-4 p-3 bg-muted">
+            <SectionCard className="sticky top-16 z-30 mb-4 p-3 bg-neutral-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-foreground">
                   <CheckSquare className="h-5 w-5" />

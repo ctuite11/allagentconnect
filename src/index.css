@@ -197,6 +197,22 @@ All colors MUST be HSL.
     box-shadow: 0 2px 6px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.16);
   }
 
+  /* Card surface token - prevents drift to slate */
+  .card-surface {
+    @apply bg-white border border-neutral-200 rounded-2xl;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08);
+  }
+
+  .card-surface-elevated {
+    @apply bg-white border border-neutral-200 rounded-3xl;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  }
+
+  .card-surface-subtle {
+    @apply bg-white border border-neutral-200/70 rounded-xl;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+
   /* Tier sizing */
   .aac-card-1 { @apply p-6; }
   .aac-card-2 { @apply p-5; }
