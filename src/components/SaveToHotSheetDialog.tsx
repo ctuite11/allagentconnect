@@ -347,18 +347,17 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px] max-h-[85vh] overflow-hidden flex flex-col">
-        <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle className="text-lg font-semibold">
+      <DialogContent className="bg-white border border-neutral-200 rounded-2xl shadow-lg w-[min(92vw,720px)] max-h-[85vh] flex flex-col overflow-hidden p-0">
+        <DialogHeader className="px-6 py-5 border-b border-neutral-200">
+          <DialogTitle className="text-xl font-semibold text-neutral-900">
             Save Hotsheet
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          <div className="grid gap-5">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
           {/* Section 1: Hotsheet Name */}
-          <div className="grid gap-2">
-            <Label htmlFor="name" className="text-sm font-medium">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-sm font-semibold text-neutral-900">
               Hotsheet Name <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -372,11 +371,10 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
 
           <Separator />
 
-          {/* Section 2: Contacts */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
+              <Label className="text-sm font-semibold text-neutral-900 flex items-center gap-2">
+                <Users className="h-4 w-4 text-emerald-600" />
                 Contacts
               </Label>
               {selectedClients.length > 0 && (
@@ -385,7 +383,7 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-neutral-600">
               Attach one or more contacts to track interest for this hotsheet.
             </p>
 
@@ -518,19 +516,19 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
 
           {/* Section 3: Selected Properties */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              <Home className="h-4 w-4 text-primary" />
+            <Label className="text-sm font-semibold text-neutral-900 flex items-center gap-2">
+              <Home className="h-4 w-4 text-emerald-600" />
               Selected Properties
             </Label>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-sm font-semibold">
                 {selectedListingIds.length}
               </Badge>
-              <span className="text-sm text-foreground">
+              <span className="text-sm text-neutral-900">
                 {selectedListingIds.length === 1 ? 'property' : 'properties'} selected
               </span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-neutral-600">
               These properties will be saved to the hotsheet.
             </p>
           </div>
@@ -539,11 +537,11 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
 
           {/* Section 4: Saved Search Preferences */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              <Filter className="h-4 w-4 text-primary" />
+            <Label className="text-sm font-semibold text-neutral-900 flex items-center gap-2">
+              <Filter className="h-4 w-4 text-emerald-600" />
               Saved Search Preferences
             </Label>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-neutral-600">
               The current search criteria will be saved with this hotsheet for reference.
             </p>
             {filterSummary.length > 0 ? (
@@ -559,11 +557,10 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground italic">
+              <p className="text-sm text-neutral-500 italic">
                 No additional filters applied
               </p>
             )}
-          </div>
           </div>
         </div>
 
@@ -572,13 +569,14 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            className="border-neutral-300 text-neutral-700 hover:bg-neutral-50"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={loading || !name.trim()}
-            className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             {loading ? "Saving..." : "Save Hotsheet"}
           </Button>
