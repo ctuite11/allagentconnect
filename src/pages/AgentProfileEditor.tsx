@@ -554,7 +554,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
           <PageHeader
             title="Edit Profile"
             subtitle="Customize how you appear to clients"
-            backTo="/allagentconnect"
+            backTo="/agent-dashboard"
           />
           {/* Mobile Preview Button */}
           <Button 

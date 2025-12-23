@@ -216,7 +216,7 @@ export default function Home() {
                 Start verification <ArrowRight className="ml-2 h-4 w-4" />
               </button>
               <button
-                onClick={() => navigate("/allagentconnect")}
+                onClick={() => navigate("/agent-dashboard")}
                 className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
               >
                 Learn more

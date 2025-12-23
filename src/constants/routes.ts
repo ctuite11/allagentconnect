@@ -8,7 +8,7 @@
 export const ROUTES = {
   // Root pages (no back button)
   HOME: '/',
-  SUCCESS_HUB: '/allagentconnect',
+  SUCCESS_HUB: '/agent-dashboard',
   LISTING_SEARCH: '/listing-search',
   MY_LISTINGS: '/agent/listings',
   HOT_SHEETS: '/hot-sheets',

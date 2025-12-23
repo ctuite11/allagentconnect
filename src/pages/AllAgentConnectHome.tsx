@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
+import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { 
   Search, 
@@ -12,8 +14,12 @@ import {
   Users, 
   UserCircle, 
   UsersRound, 
-  SearchCheck 
+  SearchCheck,
+  Shield
 } from "lucide-react";
+
+// Build ID for verification (set via env or fallback to timestamp)
+const BUILD_ID = import.meta.env.VITE_BUILD_ID || `dev-${Date.now()}`;
 
 interface HotSheetSummary {
   id: string;
@@ -41,8 +47,17 @@ const tier3 = "p-4";
 const AllAgentConnectHome = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
   const [hotsheets, setHotsheets] = useState<HotSheetSummary[]>([]);
   const [commSummary, setCommSummary] = useState<CommCenterSummary>({ unreadCount: 0, recentThread: null });
+  
+  const { role } = useUserRole(user);
+  const isAdmin = role === "admin";
+
+  // Instrumentation: Log on mount
+  useEffect(() => {
+    console.log("HUB: AllAgentConnectHome (NEW) ✅", BUILD_ID);
+  }, []);
 
   useEffect(() => {
     loadWorkspaceData();
@@ -50,17 +65,19 @@ const AllAgentConnectHome = () => {
 
   const loadWorkspaceData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
         setLoading(false);
         return;
       }
+      
+      setUser(authUser);
 
       // Load hotsheets
       const { data: hotsheetsData } = await supabase
         .from("hot_sheets")
         .select("id, name, updated_at, criteria")
-        .eq("user_id", user.id)
+        .eq("user_id", authUser.id)
         .eq("is_active", true)
         .order("updated_at", { ascending: false })
         .limit(5);
@@ -88,7 +105,7 @@ const AllAgentConnectHome = () => {
       const { data: recentCampaign } = await supabase
         .from("email_campaigns")
         .select("subject, sent_at")
-        .eq("agent_id", user.id)
+        .eq("agent_id", authUser.id)
         .order("sent_at", { ascending: false })
         .limit(1)
         .single();
@@ -97,7 +114,7 @@ const AllAgentConnectHome = () => {
       const { count: pendingCount } = await supabase
         .from("email_campaigns")
         .select("*", { count: "exact", head: true })
-        .eq("agent_id", user.id)
+        .eq("agent_id", authUser.id)
         .is("sent_at", null);
 
       setCommSummary({
@@ -115,6 +132,34 @@ const AllAgentConnectHome = () => {
     }
   };
 
+  // Hub analytics: track card clicks
+  const trackHubAction = async (action: string, path: string) => {
+    try {
+      if (!user) return;
+      
+      // Insert to audit_logs table
+      const { error } = await supabase.from("audit_logs").insert({
+        user_id: user.id,
+        action: "HUB_CARD_CLICK",
+        table_name: "success_hub",
+        record_id: action,
+      });
+      
+      if (error) {
+        // RLS may block insert - fallback to console
+        console.warn("Hub tracking (fallback):", { action, path, user_id: user.id });
+      }
+    } catch (e) {
+      console.warn("Hub tracking error:", e);
+    }
+  };
+
+  // Navigate with tracking
+  const handleCardClick = (action: string, path: string) => {
+    trackHubAction(action, path);
+    navigate(path);
+  };
+
   return (
     <>
       <Helmet>
@@ -127,17 +172,25 @@ const AllAgentConnectHome = () => {
 
       <div className="min-h-screen bg-neutral-50">
         <div className="mx-auto max-w-6xl px-6 pt-28 pb-10">
-          {/* Page Title */}
+          {/* Page Title with Hub v2 Badge */}
           <div className="mb-14">
-            <h1 className="text-4xl font-semibold text-neutral-800 font-display">
-              Success Hub
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-4xl font-semibold text-neutral-800 font-display">
+                Success Hub
+              </h1>
+              <span 
+                className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium"
+                title={`Build: ${BUILD_ID}`}
+              >
+                HUB v2
+              </span>
+            </div>
             <p className="mt-3 text-base text-neutral-500">
               Connect · Communicate · Collaborate
             </p>
           </div>
 
-          {/* Tier 1 – Command Panels */}
+          {/* Tier 1 – Command Panels: grid-cols-1 lg:grid-cols-3 */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Listing Search */}
             <div className={`${hubCard} ${tier1} flex flex-col`}>
@@ -152,7 +205,7 @@ const AllAgentConnectHome = () => {
               <div className="mt-auto">
                 <Button 
                   size="sm" 
-                  onClick={() => navigate("/listing-search")}
+                  onClick={() => handleCardClick("listing_search", "/listing-search")}
                   className="gap-2"
                 >
                   Open
@@ -179,7 +232,7 @@ const AllAgentConnectHome = () => {
               <div className="mt-auto">
                 <Button 
                   size="sm" 
-                  onClick={() => navigate("/hot-sheets")}
+                  onClick={() => handleCardClick("hot_sheets", "/hot-sheets")}
                   className="gap-2"
                 >
                   Open
@@ -201,7 +254,7 @@ const AllAgentConnectHome = () => {
               <div className="mt-auto">
                 <Button 
                   size="sm" 
-                  onClick={() => navigate("/communication-center")}
+                  onClick={() => handleCardClick("communication_center", "/communication-center")}
                   className="gap-2"
                 >
                   Open
@@ -211,10 +264,10 @@ const AllAgentConnectHome = () => {
             </div>
           </div>
 
-          {/* Tier 2 – Assets */}
+          {/* Tier 2 – Assets: grid-cols-1 md:grid-cols-3 */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
             <button
-              onClick={() => navigate("/agent/listings")}
+              onClick={() => handleCardClick("my_listings", "/agent/listings")}
               className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
               <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
@@ -225,7 +278,7 @@ const AllAgentConnectHome = () => {
             </button>
 
             <button
-              onClick={() => navigate("/my-clients")}
+              onClick={() => handleCardClick("my_contacts", "/my-clients")}
               className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
               <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
@@ -236,7 +289,7 @@ const AllAgentConnectHome = () => {
             </button>
 
             <button
-              onClick={() => navigate("/agent-profile-editor")}
+              onClick={() => handleCardClick("profile_branding", "/agent-profile-editor")}
               className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
               <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
@@ -247,10 +300,10 @@ const AllAgentConnectHome = () => {
             </button>
           </div>
 
-          {/* Tier 3 – System */}
+          {/* Tier 3 – System: grid-cols-1 md:grid-cols-2 */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <button
-              onClick={() => navigate("/manage-team")}
+              onClick={() => handleCardClick("manage_team", "/manage-team")}
               className={`${hubCard} ${tier3} group flex items-center gap-3 text-left`}
             >
               <div className="h-9 w-9 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
@@ -261,7 +314,7 @@ const AllAgentConnectHome = () => {
             </button>
 
             <button
-              onClick={() => navigate("/agent-search")}
+              onClick={() => handleCardClick("global_search", "/agent-search")}
               className={`${hubCard} ${tier3} group flex items-center gap-3 text-left`}
             >
               <div className="h-9 w-9 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
@@ -271,6 +324,22 @@ const AllAgentConnectHome = () => {
               <ArrowRight className="h-3.5 w-3.5 text-neutral-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           </div>
+
+          {/* Admin Tools Card - Only visible to admins */}
+          {isAdmin && (
+            <div className="mt-6">
+              <button
+                onClick={() => handleCardClick("admin_tools", "/admin/approvals")}
+                className={`${hubCard} ${tier3} group flex items-center gap-3 text-left w-full md:w-1/2 border-l-4 border-amber-400`}
+              >
+                <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                  <Shield className="h-4 w-4 text-amber-600" />
+                </div>
+                <h3 className="text-sm font-medium text-neutral-600">Admin Tools</h3>
+                <ArrowRight className="h-3.5 w-3.5 text-neutral-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>
