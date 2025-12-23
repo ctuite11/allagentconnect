@@ -102,6 +102,9 @@ const App = () => (
                 <Route path="/onboarding/verify-license" element={<Navigate to="/auth?mode=register" replace />} />
                 <Route path="/verify-agent" element={<Navigate to="/auth?mode=register" replace />} />
                 
+                {/* Legacy route redirect */}
+                <Route path="/allagentconnect" element={<Navigate to="/agent-dashboard" replace />} />
+                
                 {/* Agent routes - ALL require verification by default via RouteGuard */}
                 <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AllAgentConnectHome /></RouteGuard>} />
                 <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />

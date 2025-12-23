@@ -57,7 +57,7 @@ const ManageCoverageAreas = () => {
   <div className="max-w-4xl mx-auto">
     <div className="flex items-center gap-4 mb-6">
       <button
-        onClick={() => navigate("/allagentconnect")}
+        onClick={() => navigate("/agent-dashboard")}
         className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
         aria-label="Go back"
       >

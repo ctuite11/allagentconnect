@@ -143,7 +143,7 @@ const Navigation = () => {
                   <DropdownMenuSeparator className="bg-slate-200" />
                   <DropdownMenuLabel className="text-slate-500 text-xs">Agent Tools</DropdownMenuLabel>
                   <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={() => navigate("/allagentconnect")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                    <DropdownMenuItem onClick={() => navigate("/agent-dashboard")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Success Hub
                     </DropdownMenuItem>
@@ -212,7 +212,7 @@ const Navigation = () => {
 
           {user && role === "agent" && (
             <button
-              onClick={() => navigate("/allagentconnect")}
+              onClick={() => navigate("/agent-dashboard")}
               className="hover:text-emerald-600 transition-colors"
             >
               Success Hub
@@ -236,7 +236,7 @@ const Navigation = () => {
                   <DropdownMenuContent className="w-56 bg-white border-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.08)] rounded-xl z-[100]">
                     <DropdownMenuLabel className="text-slate-500 text-xs">Agent Tools</DropdownMenuLabel>
                     <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => navigate("/allagentconnect")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <DropdownMenuItem onClick={() => navigate("/agent-dashboard")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         Success Hub
                       </DropdownMenuItem>
@@ -426,7 +426,7 @@ const Navigation = () => {
                     <p className="text-xs font-semibold text-slate-500 mb-2 px-2">Agent Tools</p>
                     <button
                       onClick={() => {
-                        navigate("/allagentconnect");
+                        navigate("/agent-dashboard");
                         setIsMenuOpen(false);
                       }}
                       className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"

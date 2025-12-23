@@ -1,5 +1,8 @@
 # Proxy social-preview requests to Supabase function for social media crawlers
 /social-preview/* https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview/property/:splat 200
 
+# Legacy route redirect
+/allagentconnect /agent-dashboard 301
+
 # SPA fallback
 /* /index.html 200
