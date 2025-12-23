@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const ADMIN_EMAIL = "chris@allagentconnect.com";
+const ADMIN_PANEL_URL = "https://allagentconnect.com/admin/approvals";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -106,9 +107,15 @@ serve(async (req: Request): Promise<Response> => {
           </div>
           ` : ''}
           
-          <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-            <p style="margin: 0; color: #92400e; font-size: 14px;">
-              <strong>Action Required:</strong> Once verified, update this agent's <code>agent_status</code> to <code>'verified'</code> in the database.
+          <div style="text-align: center; margin: 25px 0;">
+            <a href="${ADMIN_PANEL_URL}" target="_blank" style="display: inline-block; background: #059669; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
+              ✅ Review in Admin Panel
+            </a>
+          </div>
+          
+          <div style="background: #ecfdf5; border-left: 4px solid #059669; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+            <p style="margin: 0; color: #065f46; font-size: 14px;">
+              <strong>Next Step:</strong> Click the button above to review and approve/reject this agent in your Admin Panel.
             </p>
           </div>
           
