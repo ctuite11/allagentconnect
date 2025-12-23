@@ -44,13 +44,13 @@ const getStatusBadge = (status: string) => {
     coming_soon: { bg: "bg-amber-50", text: "text-amber-700", label: "Coming Soon" },
     off_market: { bg: "bg-rose-50", text: "text-rose-700", label: "Off-Market" },
     back_on_market: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Back on Market" },
-    price_changed: { bg: "bg-slate-100", text: "text-slate-700", label: "Price Change" },
+    price_changed: { bg: "bg-neutral-100", text: "text-neutral-700", label: "Price Change" },
     under_agreement: { bg: "bg-violet-50", text: "text-violet-700", label: "Under Agreement" },
     pending: { bg: "bg-violet-50", text: "text-violet-700", label: "Pending" },
-    sold: { bg: "bg-slate-100", text: "text-slate-500", label: "Sold" },
-    withdrawn: { bg: "bg-slate-100", text: "text-slate-500", label: "Withdrawn" },
-    expired: { bg: "bg-slate-100", text: "text-slate-500", label: "Expired" },
-    cancelled: { bg: "bg-slate-100", text: "text-slate-500", label: "Cancelled" },
+    sold: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Sold" },
+    withdrawn: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Withdrawn" },
+    expired: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Expired" },
+    cancelled: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Cancelled" },
   };
 
   const config = statusConfig[status] || { bg: "bg-muted", text: "text-muted-foreground", label: status };
@@ -130,7 +130,7 @@ export const ListingResultCard = ({
   return (
     <div
       onClick={handleCardClick}
-      className="rounded-3xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-4 cursor-pointer transition-all hover:shadow-[0_14px_34px_rgba(0,0,0,0.12)] hover:border-slate-300 hover:-translate-y-[1px] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30"
+      className="rounded-3xl border border-neutral-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-4 cursor-pointer transition-all hover:shadow-[0_14px_34px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:-translate-y-[1px] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30"
     >
       {/* Top Row: Photo + Address/Status */}
       <div className="flex gap-3">
@@ -146,7 +146,7 @@ export const ListingResultCard = ({
           >
             {isSelected && <Check className="h-3 w-3" />}
           </button>
-          <div className={`relative h-[75px] w-[100px] overflow-hidden rounded-xl bg-slate-50 ${isSelected ? "ring-2 ring-slate-300/50 border border-slate-400" : "border border-slate-200/70"}`}>
+          <div className={`relative h-[75px] w-[100px] overflow-hidden rounded-xl bg-neutral-50 ${isSelected ? "ring-2 ring-neutral-300/50 border border-neutral-400" : "border border-neutral-200/70"}`}>
             {thumbnail ? (
               <img src={thumbnail} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -174,7 +174,7 @@ export const ListingResultCard = ({
       </div>
 
       {/* Stats Row */}
-      <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+      <div className="mt-3 flex items-center justify-between border-t border-neutral-100 pt-3">
         <div className="flex items-center gap-4 text-sm">
           <span className="font-semibold">{formatPrice(listing.price)}</span>
           <span className="text-muted-foreground">
@@ -196,7 +196,7 @@ export const ListingResultCard = ({
             e.stopPropagation();
             navigate(`/property/${listing.id}`, { state: { from: fromPath } });
           }}
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 transition hover:text-emerald-600"
+          className="inline-flex items-center gap-2 text-sm font-medium text-neutral-700 transition hover:text-emerald-600"
         >
           <ExternalLink className="h-4 w-4" />
           View
