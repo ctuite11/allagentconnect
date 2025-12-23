@@ -406,7 +406,7 @@ export default function AdminApprovals() {
                 <Shield className="h-6 w-6 text-emerald-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Agent CRM</h1>
+                <h1 className="text-2xl font-bold text-foreground">Admin Tools</h1>
                 <p className="text-sm text-muted-foreground">
                   Manage all agents, update info, control access
                 </p>
