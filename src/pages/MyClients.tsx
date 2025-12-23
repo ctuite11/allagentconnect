@@ -400,7 +400,7 @@ const MyClients = () => {
             )}
             
             {/* Import CSV - always visible so users can import their first contacts */}
-            <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+            <Button variant="ghost" className="text-neutral-600 hover:text-neutral-900" onClick={() => setImportDialogOpen(true)}>
               <Upload className="h-4 w-4 mr-2" />
               Import CSV
             </Button>
@@ -514,11 +514,11 @@ const MyClients = () => {
           </div>
 
           {clients.length === 0 ? (
-            <div className="aac-card p-12">
-              <div className="text-center">
-                  <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-xl font-semibold text-neutral-800 mb-2">No contacts yet</h3>
-                  <p className="text-muted-foreground mb-6">
+            <div className="aac-card p-8">
+              <div className="text-center py-4">
+                  <User className="h-12 w-12 mx-auto mb-3 text-neutral-400" />
+                  <h3 className="text-lg font-semibold text-neutral-800 mb-1">No contacts yet</h3>
+                  <p className="text-sm text-neutral-600 mb-5">
                     Add your first contact to start managing their property search
                   </p>
                   <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleAddClient}>
