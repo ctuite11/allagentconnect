@@ -10,12 +10,12 @@ export const homeStyles = {
   iconContainerBg: "bg-[#F7F6F3]",  // Soft warm gray
 
   // ============ CONTAINERS ============
-  pageWrap: "min-h-screen bg-[#FAFAF8] text-slate-900",
+  pageWrap: "min-h-screen bg-[#FAFAF8] text-neutral-900",
   sectionWrap: "mx-auto max-w-6xl px-5",
   
   // ============ CARDS ============
-  cardBase: "rounded-3xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)]",
-  cardLight: "rounded-3xl border border-slate-200 bg-white shadow-[0_6px_18px_rgba(0,0,0,0.06)]",
+  cardBase: "rounded-3xl border border-neutral-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)]",
+  cardLight: "rounded-3xl border border-neutral-200 bg-white shadow-[0_6px_18px_rgba(0,0,0,0.06)]",
   cardHover: "hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition",
   cardPadding: "p-6",
   cardPaddingLg: "p-7 sm:p-9",
