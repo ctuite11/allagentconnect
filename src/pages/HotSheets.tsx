@@ -245,10 +245,12 @@ const HotSheets = () => {
             subtitle="Create and manage your custom listing alerts"
             className="mb-8"
             actions={
-              <Button onClick={() => setCreateDialogOpen(true)} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                <Plus className="h-4 w-4 mr-2" />
-                Create New Hot Sheet
-              </Button>
+              hotSheets.length > 0 ? (
+                <Button onClick={() => setCreateDialogOpen(true)} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create New Hot Sheet
+                </Button>
+              ) : null
             }
           />
 
