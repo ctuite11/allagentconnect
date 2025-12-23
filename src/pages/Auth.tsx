@@ -132,9 +132,26 @@ const Auth = () => {
       if (!mounted) return;
       
       if (session?.user) {
+        // Check for admin role first - admins should go straight to admin panel
+        const { data: adminRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+
+        if (adminRole) {
+          // Admin user - redirect directly to admin panel
+          if (mounted) {
+            didNavigate.current = true;
+            navigate('/admin/approvals', { replace: true });
+          }
+          return;
+        }
+
         setExistingSession(true);
         
-        // Fetch agent status to determine UI
+        // Fetch agent status to determine UI for non-admin users
         const { data: settings } = await supabase
           .from('agent_settings')
           .select('agent_status')

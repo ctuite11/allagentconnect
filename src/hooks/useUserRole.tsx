@@ -17,6 +17,20 @@ export const useUserRole = (user: User | null) => {
       }
 
       try {
+        // Check for admin role first (prioritize admin over other roles)
+        const { data: adminCheck } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+
+        if (adminCheck) {
+          setRole("admin");
+          return;
+        }
+
+        // Fall back to other role check
         const { data, error } = await supabase
           .from("user_roles")
           .select("role")
