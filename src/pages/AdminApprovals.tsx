@@ -426,13 +426,13 @@ export default function AdminApprovals() {
                   placeholder="Search name, email, company, AAC ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 border-0 bg-gray-100 rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                  className="pl-9 border-0 bg-[#FAFAF8] rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                 />
               </div>
 
               {/* Status Filter */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px] border-0 bg-gray-100 rounded-xl focus:ring-0 outline-none data-[state=open]:bg-gray-100">
+                <SelectTrigger className="w-[160px] border-0 bg-[#FAFAF8] rounded-xl focus:ring-0 outline-none data-[state=open]:bg-[#FAFAF8]">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -454,7 +454,7 @@ export default function AdminApprovals() {
                   setSortDirection(dir);
                 }}
               >
-                <SelectTrigger className="w-[140px] border-0 bg-gray-100 rounded-xl focus:ring-0 outline-none data-[state=open]:bg-gray-100">
+                <SelectTrigger className="w-[140px] border-0 bg-[#FAFAF8] rounded-xl focus:ring-0 outline-none data-[state=open]:bg-[#FAFAF8]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
