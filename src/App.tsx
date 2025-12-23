@@ -9,7 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import { RouteGuard } from "./components/RouteGuard";
-import AgentSuccessHub from "./pages/AgentSuccessHub";
+// AgentSuccessHub archived → AgentSuccessHub.legacy.tsx
 
 import MLSPINSearch from "./pages/MLSPINSearch";
 import ListingSearch from "./pages/ListingSearch";
@@ -87,7 +87,6 @@ const App = () => (
               <Navigation />
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/allagentconnect" element={<AllAgentConnectHome />} />
                 
                 {/* Auth routes */}
                 <Route path="/auth" element={<Auth />} />
@@ -104,7 +103,7 @@ const App = () => (
                 <Route path="/verify-agent" element={<Navigate to="/auth?mode=register" replace />} />
                 
                 {/* Agent routes - ALL require verification by default via RouteGuard */}
-                <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
+                <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AllAgentConnectHome /></RouteGuard>} />
                 <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
                 <Route path="/agent/listings/new" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
                 <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent"><ManageListingPhotos /></RouteGuard>} />
