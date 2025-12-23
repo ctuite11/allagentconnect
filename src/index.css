@@ -48,6 +48,10 @@ All colors MUST be HSL.
     --aac-card-border: 0 0% 85%;
     --aac-card-border-hover: 0 0% 75%;
 
+    /* Card shadow tokens - neutral black (prevents slate tint drift) */
+    --aac-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --aac-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
+
     --radius: 1rem;
 
     /* Success uses AAC Green for verified/approved/active states */
@@ -117,7 +121,9 @@ All colors MUST be HSL.
     --aac-card-border: 0 0% 25%;
     --aac-card-border-hover: 0 0% 35%;
 
-    /* Tech-forward colors */
+    /* Card shadow tokens - dark mode */
+    --aac-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+    --aac-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.55);
     --electric-blue: 215 100% 55%;
     --neon-cyan: 185 100% 50%;
     --neon-green: 165 100% 44%;
@@ -182,35 +188,39 @@ All colors MUST be HSL.
   /* AAC Card System - Locked Standard from Success Hub */
   .aac-card {
     @apply bg-white border border-aac-card-border rounded-2xl will-change-transform;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.16);
+    box-shadow: var(--aac-shadow);
     transition: all 150ms cubic-bezier(.2,.8,.2,1);
   }
 
   .aac-card:hover {
     @apply border-aac-card-borderHover;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 16px 40px rgba(0,0,0,0.18);
+    box-shadow: var(--aac-shadow-hover);
     transform: translateY(-1px);
   }
 
   .aac-card:active {
     transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.16);
+    box-shadow: var(--aac-shadow);
   }
 
-  /* Card surface token - prevents drift to slate */
+  /* Shadow utilities (use everywhere instead of slate-based shadows) */
+  .aac-shadow { box-shadow: var(--aac-shadow); }
+  .aac-shadow-hover:hover { box-shadow: var(--aac-shadow-hover); }
+
+  /* Card surface token - prevents drift */
   .card-surface {
     @apply bg-white border border-neutral-200 rounded-2xl;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08);
+    box-shadow: var(--aac-shadow);
   }
 
   .card-surface-elevated {
     @apply bg-white border border-neutral-200 rounded-3xl;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    box-shadow: var(--aac-shadow);
   }
 
   .card-surface-subtle {
     @apply bg-white border border-neutral-200/70 rounded-xl;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    box-shadow: var(--aac-shadow);
   }
 
   /* Tier sizing */

@@ -279,7 +279,7 @@ const ListingSearchFilters = ({
   const filteredCounties = counties.filter(c => c.state === filters.state);
 
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-5">
+    <div className="rounded-3xl border border-neutral-200 bg-white shadow-none p-5">
         {/* ROW 1: 3-Column Grid - Property Type (narrow) | Status+Date+Price (wide) | Standard Criteria */}
         <div className="flex flex-col md:flex-row gap-4 mb-4">
           
@@ -465,7 +465,7 @@ const ListingSearchFilters = ({
           </div>
 
           {/* STANDARD SEARCH CRITERIA Section (right) */}
-          <div className="w-full md:w-[280px] md:shrink-0 bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <div className="w-full md:w-[280px] md:shrink-0 bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-none">
             <button
               onClick={() => toggleSection("standardCriteria")}
               className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-neutral-100 hover:bg-neutral-100 transition-colors"
@@ -576,7 +576,7 @@ const ListingSearchFilters = ({
         </div>
 
         {/* ROW 2: ADDRESS Section (Full Width) */}
-        <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden mb-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+        <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden mb-4 shadow-none">
           <button
             onClick={() => toggleSection("address")}
             className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-neutral-100 hover:bg-neutral-100 transition-colors"
@@ -669,7 +669,7 @@ const ListingSearchFilters = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           
           {/* TOWNS Section */}
-          <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-none">
             <button
               onClick={() => toggleSection("towns")}
               className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-neutral-100 hover:bg-neutral-100 transition-colors"

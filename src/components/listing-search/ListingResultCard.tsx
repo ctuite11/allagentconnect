@@ -130,7 +130,7 @@ export const ListingResultCard = ({
   return (
     <div
       onClick={handleCardClick}
-      className="rounded-3xl border border-neutral-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-4 cursor-pointer transition-all hover:shadow-[0_14px_34px_rgba(0,0,0,0.12)] hover:border-neutral-300 hover:-translate-y-[1px] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30"
+      className="rounded-3xl border border-neutral-200 bg-white aac-shadow aac-shadow-hover p-4 cursor-pointer transition-all hover:border-neutral-300 hover:-translate-y-[1px] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30"
     >
       {/* Top Row: Photo + Address/Status */}
       <div className="flex gap-3">

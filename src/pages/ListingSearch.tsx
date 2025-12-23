@@ -185,7 +185,7 @@ const ListingSearch = () => {
           </h1>
           
           {/* Action Bar */}
-          <div className="rounded-3xl border border-neutral-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] mb-4">
+          <div className="rounded-3xl border border-neutral-200 bg-white aac-shadow mb-4">
             <div className="px-5 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

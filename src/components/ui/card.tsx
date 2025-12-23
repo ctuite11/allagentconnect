@@ -8,11 +8,9 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     className={cn(
       "rounded-2xl border border-aac-card-border bg-white text-card-foreground transition-all",
       "hover:border-aac-card-borderHover",
+      "aac-shadow aac-shadow-hover",
       className
     )} 
-    style={{ 
-      boxShadow: '0 2px 6px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.16)',
-    }}
     {...props} 
   />
 ));
