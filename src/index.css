@@ -44,6 +44,10 @@ All colors MUST be HSL.
     --input: 0 0% 85%;
     --ring: 0 0% 55%;
 
+    /* Card border tokens - neutral warm gray */
+    --aac-card-border: 0 0% 85%;
+    --aac-card-border-hover: 0 0% 75%;
+
     --radius: 1rem;
 
     /* Success uses AAC Green for verified/approved/active states */
@@ -109,6 +113,10 @@ All colors MUST be HSL.
     --input: 0 0% 20%;
     --ring: 0 0% 55%;
 
+    /* Card border tokens - dark mode */
+    --aac-card-border: 0 0% 25%;
+    --aac-card-border-hover: 0 0% 35%;
+
     /* Tech-forward colors */
     --electric-blue: 215 100% 55%;
     --neon-cyan: 185 100% 50%;
@@ -173,13 +181,13 @@ All colors MUST be HSL.
 
   /* AAC Card System - Locked Standard from Success Hub */
   .aac-card {
-    @apply bg-white border border-neutral-200 rounded-2xl will-change-transform;
+    @apply bg-white border border-aac-card-border rounded-2xl will-change-transform;
     box-shadow: 0 2px 6px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.16);
     transition: all 150ms cubic-bezier(.2,.8,.2,1);
   }
 
   .aac-card:hover {
-    @apply border-neutral-300;
+    @apply border-aac-card-borderHover;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 16px 40px rgba(0,0,0,0.18);
     transform: translateY(-1px);
   }

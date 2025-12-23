@@ -79,6 +79,12 @@ export default {
           section: "hsl(var(--heading-section))",
         },
         "text-body": "hsl(var(--text-body))",
+        aac: {
+          card: {
+            border: "hsl(var(--aac-card-border))",
+            borderHover: "hsl(var(--aac-card-border-hover))",
+          },
+        },
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',

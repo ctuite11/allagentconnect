@@ -185,7 +185,7 @@ const ListingSearch = () => {
           </h1>
           
           {/* Action Bar */}
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] mb-4">
+          <div className="rounded-3xl border border-neutral-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] mb-4">
             <div className="px-5 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -193,7 +193,7 @@ const ListingSearch = () => {
                     variant="outline"
                     size="sm"
                     onClick={handleReset}
-                    className="h-9 gap-1.5 text-sm rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
+                    className="h-9 gap-1.5 text-sm rounded-xl border-neutral-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-neutral-300 transition-colors"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                     Reset
@@ -228,7 +228,7 @@ const ListingSearch = () => {
                     size="sm"
                     onClick={handleViewResultsNewTab}
                     disabled={countLoading || resultCount === 0}
-                    className="h-9 gap-1.5 text-sm rounded-xl border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-slate-300 transition-colors"
+                    className="h-9 gap-1.5 text-sm rounded-xl border-neutral-200 text-slate-700 hover:text-emerald-600 hover:bg-transparent hover:border-neutral-300 transition-colors"
                     title="Open results in new tab"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />

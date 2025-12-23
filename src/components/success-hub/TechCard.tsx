@@ -24,16 +24,16 @@ export const TechCard = ({
   return (
     <div
       className={cn(
-        "rounded-3xl border border-slate-200 bg-white p-6 cursor-pointer group",
+        "rounded-3xl border border-neutral-200 bg-white p-6 cursor-pointer group",
         "shadow-[0_6px_18px_rgba(0,0,0,0.06)]",
-        "hover:shadow-[0_14px_34px_rgba(0,0,0,0.10)] hover:-translate-y-1",
+        "hover:shadow-[0_14px_34px_rgba(0,0,0,0.10)] hover:-translate-y-1 hover:border-neutral-300",
         "transition-all duration-200 ease-out",
         className
       )}
       onClick={onClick}
     >
       {/* Icon with Home-style container */}
-      <div className="h-10 w-10 rounded-2xl border border-slate-200 bg-[#F7F6F3] flex items-center justify-center mb-4">
+      <div className="h-10 w-10 rounded-2xl border border-neutral-200 bg-neutral-50 flex items-center justify-center mb-4">
         <div className="text-emerald-600">{icon}</div>
       </div>
 

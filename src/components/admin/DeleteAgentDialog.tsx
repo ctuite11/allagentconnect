@@ -143,7 +143,7 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="rounded-2xl border-slate-200 bg-white">
+      <AlertDialogContent className="rounded-2xl border-neutral-200 bg-white">
         <AlertDialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-xl bg-rose-100 border border-rose-200">
@@ -172,7 +172,7 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
         <AlertDialogFooter>
           <AlertDialogCancel 
             disabled={deleting}
-            className="rounded-xl border-slate-200"
+            className="rounded-xl border-neutral-200"
           >
             Cancel
           </AlertDialogCancel>
