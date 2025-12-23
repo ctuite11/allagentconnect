@@ -77,7 +77,7 @@ const Navigation = () => {
   if (isPending) return null;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-neutral-200">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-neutral-200 relative">
       <div className="mx-auto max-w-6xl px-5 py-5 flex items-center justify-between">
         <div onClick={() => navigate("/")} className="cursor-pointer">
           <Logo size="lg" />
@@ -557,6 +557,8 @@ const Navigation = () => {
           </div>
         </div>
       )}
+      {/* Bottom fade overlay - no blur, just visual fade */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-b from-white to-transparent translate-y-full" />
     </header>
   );
 };
