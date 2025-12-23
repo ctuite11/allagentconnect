@@ -80,12 +80,12 @@ const Navigation = () => {
     <div className="fixed top-0 left-0 right-0 z-50">
     <header className="bg-white relative">
       <div className="mx-auto max-w-6xl px-5 py-3 flex items-center justify-between">
-        <div onClick={() => navigate("/")} className="cursor-pointer translate-y-[1px]">
+        <div onClick={() => navigate("/")} className="cursor-pointer">
           <Logo size="lg" />
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-7 text-sm text-slate-600">
+        <nav className="hidden md:flex items-center gap-7 text-sm text-slate-600 relative top-[1px]">
           <button
             onClick={() => navigate("/")}
             className="hover:text-emerald-600 transition-colors"
@@ -222,7 +222,7 @@ const Navigation = () => {
         </nav>
 
         {/* Desktop Auth Buttons */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-2 relative top-[1px]">
           {user ? (
             <>
               {role === "agent" && (
