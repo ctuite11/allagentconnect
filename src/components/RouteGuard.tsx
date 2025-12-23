@@ -43,11 +43,10 @@ export const RouteGuard: React.FC<Props> = ({
     }
 
     // If we have a user and a required role, but it doesn't match, route to correct dashboard
-    if (user && requireRole && role && role !== requireRole) {
+    // Admin can access all routes (superuser) - skip role mismatch redirect for admins
+    if (user && requireRole && role && role !== requireRole && role !== "admin") {
       if (role === "agent") {
         navigate("/agent-dashboard", { replace: true });
-      } else if (role === "admin") {
-        navigate("/admin/approvals", { replace: true });
       } else {
         // Legacy buyer role - redirect to auth
         navigate("/auth", { replace: true });
@@ -105,7 +104,8 @@ export const RouteGuard: React.FC<Props> = ({
   }
 
   // If role mismatch, we've already navigated; render nothing
-  if (requireRole && role && user && role !== requireRole) {
+  // Admin bypasses role checks (superuser)
+  if (requireRole && role && user && role !== requireRole && role !== "admin") {
     return null;
   }
 
