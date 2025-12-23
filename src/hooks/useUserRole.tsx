@@ -27,6 +27,7 @@ export const useUserRole = (user: User | null) => {
 
         if (adminCheck) {
           setRole("admin");
+          setLoading(false);
           return;
         }
 
