@@ -77,7 +77,7 @@ const Navigation = () => {
   if (isPending) return null;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-white via-white/90 to-transparent backdrop-blur-[2px] shadow-none ring-0 border-0">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-neutral-200">
       <div className="mx-auto max-w-6xl px-5 py-5 flex items-center justify-between">
         <div onClick={() => navigate("/")} className="cursor-pointer">
           <Logo size="lg" />
