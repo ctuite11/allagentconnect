@@ -515,14 +515,7 @@ export default function AdminApprovals() {
                     Name <SortIcon field="name" />
                   </TableHead>
                   <TableHead className="font-semibold text-foreground">Email</TableHead>
-                  <TableHead 
-                    className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
-                    onClick={() => handleSort("company")}
-                  >
-                    Company <SortIcon field="company" />
-                  </TableHead>
                   <TableHead className="font-semibold text-foreground">Phone</TableHead>
-                  <TableHead className="font-semibold text-foreground">License</TableHead>
                   <TableHead 
                     className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
                     onClick={() => handleSort("status")}
@@ -541,12 +534,6 @@ export default function AdminApprovals() {
               <TableBody>
                 {filteredAgents.map((agent) => {
                   const isProcessing = processingIds.has(agent.id);
-                  const licenseUrl = agent.license_state
-                    ? stateLicenseLookupUrls[agent.license_state]
-                    : null;
-                  const stateName = agent.license_state
-                    ? stateNames[agent.license_state] || agent.license_state
-                    : null;
 
                   return (
                     <TableRow key={agent.id} className="border-b border-slate-100 hover:bg-slate-50/50">
@@ -565,30 +552,7 @@ export default function AdminApprovals() {
                       </TableCell>
                       <TableCell className="text-sm">{agent.email}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {agent.company || "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
                         {agent.phone || "—"}
-                      </TableCell>
-                      <TableCell>
-                        {agent.license_number ? (
-                          <div className="flex items-center gap-1 text-sm">
-                            <span className="text-muted-foreground">{stateName}:</span>
-                            <span>{agent.license_number}</span>
-                            {licenseUrl && (
-                              <a
-                                href={licenseUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-slate-500 hover:text-emerald-600"
-                              >
-                                <ExternalLink className="h-3.5 w-3.5" />
-                              </a>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
-                        )}
                       </TableCell>
                       <TableCell>
                         <Select
