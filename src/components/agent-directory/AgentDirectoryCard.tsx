@@ -171,7 +171,7 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage, agentIndex = 999 }:
             {fullName}
           </h3>
           {isVerified && (
-            <span className="inline-flex items-center gap-0.5 text-green-600 dark:text-green-400 text-xs font-medium">
+            <span className="inline-flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Verified
             </span>
@@ -209,7 +209,7 @@ const AgentDirectoryCard = ({ agent, isAgentMode, onMessage, agentIndex = 999 }:
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-full bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 hover:-translate-y-0.5 hover:shadow-md hover:shadow-green-200/50 dark:bg-green-950 dark:text-green-400 dark:hover:bg-green-900 dark:hover:shadow-green-900/50 transition-all duration-200 cursor-pointer"
+              className="h-10 w-10 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 hover:-translate-y-0.5 hover:shadow-md hover:shadow-emerald-200/50 dark:bg-emerald-950 dark:text-emerald-400 dark:hover:bg-emerald-900 dark:hover:shadow-emerald-900/50 transition-all duration-200 cursor-pointer"
               onClick={handlePhoneClick}
               title={formatPhoneNumber(phoneNumber)}
             >

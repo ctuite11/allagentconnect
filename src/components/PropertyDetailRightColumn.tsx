@@ -122,7 +122,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
               <p className="text-xs text-muted-foreground">Visible to consumers</p>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
                 {compensationDisplay}
               </p>
               {listing.commission_notes && (
@@ -339,16 +339,16 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
 
       {/* Buyer Agent Compensation - Public Version */}
       {compensationDisplay && (
-        <Card className="border-green-200 bg-green-50/30 dark:bg-green-950/10">
+        <Card className="border-emerald-200 bg-emerald-50/30 dark:bg-emerald-950/10">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <DollarSign className="w-5 h-5 text-green-600" />
+              <DollarSign className="w-5 h-5 text-emerald-600" />
               Buyer Agent Compensation
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <p className="text-xl font-bold text-green-700 dark:text-green-300">
+              <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
                 {compensationDisplay}
               </p>
               <BuyerCompensationInfoModal compensationDisplay={compensationDisplay} />

@@ -386,8 +386,8 @@ const MarketInsightsDialog = ({ open, onOpenChange, listing }: MarketInsightsDia
                               </>
                             ) : (
                               <>
-                                <TrendingDown className="w-4 h-4 text-green-500" />
-                                <span className="font-semibold text-green-500">
+                                <TrendingDown className="w-4 h-4 text-emerald-500" />
+                                <span className="font-semibold text-emerald-500">
                                   {formatPercent(((listing.price - marketData.avm.property[0].avm.amount.value) / marketData.avm.property[0].avm.amount.value) * 100)}
                                 </span>
                               </>

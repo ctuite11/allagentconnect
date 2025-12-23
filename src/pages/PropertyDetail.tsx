@@ -284,7 +284,7 @@ const PropertyDetail = () => {
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'active':
-        return 'bg-green-500/10 text-green-700 border-green-500/20';
+        return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
       case 'pending':
         return 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20';
       case 'sold':

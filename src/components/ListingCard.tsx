@@ -490,7 +490,7 @@ const ListingCard = ({
       // High demand - green
       return {
         variant: "default" as const,
-        className: "bg-green-600 hover:bg-green-700 text-white border-green-600"
+        className: "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600"
       };
     } else if (matchCount >= 5) {
       // Medium demand - yellow/amber
@@ -648,7 +648,7 @@ const ListingCard = ({
           
           {/* Open House Info */}
           {nextOpenHouse && (
-            <div className={`flex items-center gap-2 text-sm p-2 rounded-md mt-2 ${nextOpenHouse.event_type === 'broker_tour' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300'}`}>
+            <div className={`flex items-center gap-2 text-sm p-2 rounded-md mt-2 ${nextOpenHouse.event_type === 'broker_tour' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300'}`}>
               <Calendar className="h-4 w-4" />
               <span className="font-medium">
                 {nextOpenHouse.event_type === 'broker_tour' ? 'Broker Tour' : 'Open House'}: {format(new Date(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} - {formatTime(nextOpenHouse.end_time)}
@@ -839,13 +839,13 @@ const ListingCard = ({
               
               {/* Open House Info */}
               {nextOpenHouse && (
-                <div className={`flex items-center gap-1.5 text-xs p-2 rounded-md mb-2 ${nextOpenHouse.type === 'broker' ? 'bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800' : 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'}`}>
-                  <Calendar className={`h-4 w-4 ${nextOpenHouse.type === 'broker' ? 'text-purple-600 dark:text-purple-400' : 'text-green-600 dark:text-green-400'}`} />
+                <div className={`flex items-center gap-1.5 text-xs p-2 rounded-md mb-2 ${nextOpenHouse.type === 'broker' ? 'bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800' : 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800'}`}>
+                  <Calendar className={`h-4 w-4 ${nextOpenHouse.type === 'broker' ? 'text-purple-600 dark:text-purple-400' : 'text-emerald-600 dark:text-emerald-400'}`} />
                   <div className="flex-1">
-                    <div className={`font-semibold ${nextOpenHouse.type === 'broker' ? 'text-purple-700 dark:text-purple-300' : 'text-green-700 dark:text-green-300'}`}>
+                    <div className={`font-semibold ${nextOpenHouse.type === 'broker' ? 'text-purple-700 dark:text-purple-300' : 'text-emerald-700 dark:text-emerald-300'}`}>
                       {nextOpenHouse.type === 'broker' ? 'Broker Tour' : 'Open House'}
                     </div>
-                    <div className={`${nextOpenHouse.type === 'broker' ? 'text-purple-600 dark:text-purple-400' : 'text-green-600 dark:text-green-400'}`}>
+                    <div className={`${nextOpenHouse.type === 'broker' ? 'text-purple-600 dark:text-purple-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                       {format(new Date(nextOpenHouse.date), "EEE, MMM d")} • {nextOpenHouse.start_time} - {nextOpenHouse.end_time}
                     </div>
                   </div>
@@ -938,16 +938,16 @@ const ListingCard = ({
                   Schedule OH
                 </Button>
               </div>
-              {listing.status === 'cancelled' && onReactivate && <Button variant="default" size="sm" onClick={() => onReactivate(listing.id)} className="w-full bg-green-600 hover:bg-green-700">
+              {listing.status === 'cancelled' && onReactivate && <Button variant="default" size="sm" onClick={() => onReactivate(listing.id)} className="w-full bg-emerald-600 hover:bg-emerald-700">
                   <RefreshCw className="w-3 h-3 mr-1" />
                   Reactivate
                 </Button>}
             </div>
           </div>
         </div>
-        {openHouseBanner && <div className={`${openHouseBanner.isBroker ? 'bg-purple-50 border-t border-purple-200' : 'bg-green-50 border-t border-green-200'} px-3 py-1.5 text-xs`}>
-            <Calendar className={`w-4 h-4 inline mr-2 ${openHouseBanner.isBroker ? 'text-purple-600' : 'text-green-600'}`} />
-            <span className={`font-semibold ${openHouseBanner.isBroker ? 'text-purple-700' : 'text-green-700'}`}>
+        {openHouseBanner && <div className={`${openHouseBanner.isBroker ? 'bg-purple-50 border-t border-purple-200' : 'bg-emerald-50 border-t border-emerald-200'} px-3 py-1.5 text-xs`}>
+            <Calendar className={`w-4 h-4 inline mr-2 ${openHouseBanner.isBroker ? 'text-purple-600' : 'text-emerald-600'}`} />
+            <span className={`font-semibold ${openHouseBanner.isBroker ? 'text-purple-700' : 'text-emerald-700'}`}>
               {openHouseBanner.isBroker ? 'Broker Open House:' : 'Open House:'}
             </span>{" "}
             {format(new Date(nextOpenHouse.date), "EEEE, MMMM d, yyyy")} • {openHouseBanner.time}
