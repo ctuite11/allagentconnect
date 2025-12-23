@@ -4,6 +4,8 @@ import { Check } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+// NOTE: Checkbox styling is intentional (emerald-800 checked state).
+// Do not adjust color/stroke without design review.
 const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
