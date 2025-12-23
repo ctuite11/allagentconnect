@@ -328,7 +328,7 @@ const ListingSearchFilters = ({
               <div className="p-3 flex flex-col md:flex-row gap-4">
                 {/* STATUS Section - 2 columns, no scroll */}
                 <div className="flex-1">
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-1 rounded-lg transition-colors mb-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-0.5 rounded-lg transition-colors mb-1">
                     <Checkbox
                       checked={filters.statuses.length === STATUSES.length}
                       onCheckedChange={toggleAllStatuses}
@@ -336,11 +336,11 @@ const ListingSearchFilters = ({
                     />
                     <span className="text-xs font-medium text-neutral-800">Select All</span>
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5">
                     {STATUSES.map((status) => (
                       <label
                         key={status.value}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-1 rounded-lg transition-colors"
+                        className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-0.5 rounded-lg transition-colors"
                       >
                         <Checkbox
                           checked={filters.statuses.includes(status.value)}
