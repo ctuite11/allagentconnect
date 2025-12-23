@@ -5,12 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { 
   Users, Mail, Heart, Bell, 
-  Home, Megaphone, Palette
+  Home, Megaphone, Palette, Shield
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
 import { TechCard } from "@/components/success-hub/TechCard";
+import { useUserRole } from "@/hooks/useUserRole";
+import { User } from "@supabase/supabase-js";
+
+const BUILD_ID = import.meta.env.VITE_BUILD_ID || `build-${Date.now()}`;
 
 interface Buyer {
   id: string;
@@ -44,6 +48,8 @@ export default function AgentSuccessHub() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [currentAgentId, setCurrentAgentId] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const { role } = useUserRole(user);
   
   // KPIs
   const [activeBuyersCount, setActiveBuyersCount] = useState(0);
@@ -59,26 +65,47 @@ export default function AgentSuccessHub() {
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
 
   useEffect(() => {
+    console.log("HUB: AgentSuccessHub (APPROVED) ✅", BUILD_ID);
     loadDashboardData();
   }, []);
+
+  // Analytics tracking
+  const trackHubAction = async (cardKey: string, path: string) => {
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      await supabase.from("audit_logs").insert({
+        action: `HUB_CARD_CLICK|${cardKey}|${path}|${BUILD_ID}`,
+        table_name: "success_hub",
+        user_id: currentUser?.id || null,
+      });
+    } catch (err) {
+      console.warn("Hub tracking (fallback)", { cardKey, path, BUILD_ID });
+    }
+  };
+
+  const handleCardClick = (cardKey: string, route: string) => {
+    trackHubAction(cardKey, route);
+    navigate(route);
+  };
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
         navigate("/auth");
         return;
       }
       
-      setCurrentAgentId(user.id);
+      setUser(currentUser);
+      setCurrentAgentId(currentUser.id);
       
       await Promise.all([
-        loadKPIs(user.id),
-        loadBuyers(user.id),
-        loadHotsheets(user.id),
-        loadRecentActivity(user.id)
+        loadKPIs(currentUser.id),
+        loadBuyers(currentUser.id),
+        loadHotsheets(currentUser.id),
+        loadRecentActivity(currentUser.id)
       ]);
       
     } catch (error) {
@@ -371,6 +398,7 @@ export default function AgentSuccessHub() {
   // Unified hub cards - functional navigation cards only
   const hubCards = [
     {
+      key: "my_listings",
       icon: <Home className="w-5 h-5" />,
       title: "My Listings",
       description: "Manage all your listings in one place",
@@ -379,6 +407,7 @@ export default function AgentSuccessHub() {
       route: "/agent/listings",
     },
     {
+      key: "my_contacts",
       icon: <Users className="w-5 h-5" />,
       title: "My Contacts",
       description: "CRM for leads & clients",
@@ -387,6 +416,7 @@ export default function AgentSuccessHub() {
       route: "/my-clients",
     },
     {
+      key: "hot_sheets",
       icon: <Bell className="w-5 h-5" />,
       title: "Hot Sheets",
       description: "Automated buyer and market tracking",
@@ -395,12 +425,14 @@ export default function AgentSuccessHub() {
       route: "/hot-sheets",
     },
     {
+      key: "communication_center",
       icon: <Megaphone className="w-5 h-5" />,
       title: "Communications Center",
       description: "Outbound email campaigns & logs",
       route: "/communication-center",
     },
     {
+      key: "profile_branding",
       icon: <Palette className="w-5 h-5" />,
       title: "Profile & Branding",
       description: "Edit your profile and branding",
@@ -408,27 +440,46 @@ export default function AgentSuccessHub() {
     },
   ];
 
+  // Add admin card if user is admin
+  if (role === "admin") {
+    hubCards.push({
+      key: "admin_tools",
+      icon: <Shield className="w-5 h-5" />,
+      title: "Admin Tools",
+      description: "Manage agent approvals and system settings",
+      route: "/admin/approvals",
+    });
+  }
+
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-slate-900">
       <Navigation />
       <div className="mx-auto max-w-6xl px-5 py-8 pt-28 space-y-10">
         {/* Header */}
-        <PageHeader
-          title="Success Hub"
-          subtitle="Your command center for client success"
-        />
+        <div className="flex items-center gap-3">
+          <PageHeader
+            title="Success Hub"
+            subtitle="Your command center for client success"
+          />
+          <span 
+            className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800"
+            title={`Build: ${BUILD_ID}`}
+          >
+            HUB v2
+          </span>
+        </div>
 
         {/* Unified Hub Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {hubCards.map((card) => (
             <TechCard
-              key={card.title}
+              key={card.key}
               icon={card.icon}
               title={card.title}
               description={card.description}
               metricValue={card.metricValue}
               metricLabel={card.metricLabel}
-              onClick={() => navigate(card.route)}
+              onClick={() => handleCardClick(card.key, card.route)}
             />
           ))}
         </div>
