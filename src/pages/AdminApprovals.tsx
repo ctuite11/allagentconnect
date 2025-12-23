@@ -426,13 +426,13 @@ export default function AdminApprovals() {
                   placeholder="Search name, email, company, AAC ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 border-slate-200 rounded-xl"
+                  className="pl-9 border-0 bg-gray-100 rounded-xl"
                 />
               </div>
 
               {/* Status Filter */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px] border-slate-200 rounded-xl">
+                <SelectTrigger className="w-[160px] border-0 bg-gray-100 rounded-xl">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -442,6 +442,26 @@ export default function AdminApprovals() {
                       {opt.label}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+
+              {/* Sort Dropdown */}
+              <Select 
+                value={`${sortField}-${sortDirection}`} 
+                onValueChange={(val) => {
+                  const [field, dir] = val.split("-") as [SortField, SortDirection];
+                  setSortField(field);
+                  setSortDirection(dir);
+                }}
+              >
+                <SelectTrigger className="w-[140px] border-0 bg-gray-100 rounded-xl">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">Name A-Z</SelectItem>
+                  <SelectItem value="name-desc">Name Z-A</SelectItem>
+                  <SelectItem value="created_at-desc">Newest first</SelectItem>
+                  <SelectItem value="created_at-asc">Oldest first</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -521,11 +541,8 @@ export default function AdminApprovals() {
                   >
                     Status <SortIcon field="status" />
                   </TableHead>
-                  <TableHead 
-                    className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
-                    onClick={() => handleSort("created_at")}
-                  >
-                    Registered <SortIcon field="created_at" />
+                  <TableHead className="font-semibold text-foreground">
+                    Registered
                   </TableHead>
                   <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
                 </TableRow>
@@ -535,7 +552,7 @@ export default function AdminApprovals() {
                   const isProcessing = processingIds.has(agent.id);
 
                   return (
-                    <TableRow key={agent.id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                    <TableRow key={agent.id} className="border-0">
                       <TableCell>
                         <Checkbox
                           checked={selectedIds.has(agent.id)}
