@@ -560,7 +560,7 @@ const Navigation = () => {
       )}
     </header>
       {/* Bottom fade overlay - no blur, just visual fade */}
-      <div className="pointer-events-none h-4 bg-gradient-to-b from-white/80 to-transparent" />
+      <div className="pointer-events-none h-4 bg-gradient-to-b from-white/60 to-transparent" />
     </div>
   );
 };
