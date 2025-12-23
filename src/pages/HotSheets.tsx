@@ -245,7 +245,7 @@ const HotSheets = () => {
             subtitle="Create and manage your custom listing alerts"
             className="mb-8"
             actions={
-              <Button onClick={() => setCreateDialogOpen(true)}>
+              <Button onClick={() => setCreateDialogOpen(true)} className="bg-accent hover:bg-accent/90 text-accent-foreground">
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Hot Sheet
               </Button>
@@ -254,13 +254,13 @@ const HotSheets = () => {
 
           {/* Hot Sheets List */}
           {hotSheets.length === 0 ? (
-            <div className="bg-white border border-neutral-200 rounded-2xl p-12 text-center">
-              <Plus className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">No hot sheets yet</h3>
-              <p className="text-muted-foreground mb-6">
+            <div className="aac-card p-12 text-center">
+              <Plus className="h-16 w-16 mx-auto mb-4 text-neutral-400" />
+              <h3 className="text-xl font-semibold text-neutral-800 mb-2">No hot sheets yet</h3>
+              <p className="text-neutral-600 mb-6">
                 Create your first hot sheet to start receiving listing alerts
               </p>
-              <Button onClick={() => setCreateDialogOpen(true)}>
+              <Button onClick={() => setCreateDialogOpen(true)} className="bg-accent hover:bg-accent/90 text-accent-foreground">
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Hot Sheet
               </Button>
