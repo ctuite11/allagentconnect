@@ -49,16 +49,16 @@ const SaveSearchDialog = ({ open, onOpenChange, searchSummary }: SaveSearchDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Bookmark className="h-5 w-5 text-primary" />
+      <DialogContent className="bg-white border border-neutral-200 rounded-2xl shadow-lg w-[min(92vw,480px)] max-h-[85vh] flex flex-col overflow-hidden p-0">
+        <DialogHeader className="px-6 py-5 border-b border-neutral-200">
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-neutral-900">
+            <Bookmark className="h-5 w-5 text-emerald-600" />
             Save Search
           </DialogTitle>
         </DialogHeader>
 
-        <div className="py-4">
-          <Label htmlFor="search-name" className="text-sm font-medium">
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <Label htmlFor="search-name" className="text-sm font-medium text-neutral-900">
             Search name
           </Label>
           <Input
@@ -69,19 +69,22 @@ const SaveSearchDialog = ({ open, onOpenChange, searchSummary }: SaveSearchDialo
             className="mt-1.5"
             autoFocus
           />
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-sm text-neutral-600 mt-2">
             You can manage saved searches from My Saved Searches.
           </p>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <div className="sticky bottom-0 bg-white border-t border-neutral-200 px-6 py-4 flex justify-end gap-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>
+          <Button 
+            onClick={handleSave}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
             Save
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
