@@ -171,9 +171,9 @@ const AllAgentConnectHome = () => {
       </Helmet>
 
       <div className="min-h-screen bg-neutral-50">
-        <div className="mx-auto max-w-6xl px-6 pt-28 pb-10">
+        <div className="mx-auto max-w-6xl px-6 pt-24 pb-10">
           {/* Page Title with Hub v2 Badge */}
-          <div className="mb-14">
+          <div className="mb-8">
             <div className="flex items-center gap-3">
               <h1 className="text-4xl font-semibold text-neutral-800 font-display">
                 Success Hub
