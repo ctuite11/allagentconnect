@@ -125,8 +125,8 @@ const AllAgentConnectHome = () => {
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-7xl px-8 pt-28 pb-16">
+      <div className="min-h-screen bg-neutral-50">
+        <div className="mx-auto max-w-6xl px-6 pt-28 pb-10">
           {/* Page Title */}
           <div className="mb-14">
             <h1 className="text-4xl font-semibold text-neutral-800 font-display">
@@ -225,7 +225,7 @@ const AllAgentConnectHome = () => {
             </button>
 
             <button
-              onClick={() => navigate("/agent/clients")}
+              onClick={() => navigate("/my-clients")}
               className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
               <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
@@ -236,7 +236,7 @@ const AllAgentConnectHome = () => {
             </button>
 
             <button
-              onClick={() => navigate("/agent/profile-editor")}
+              onClick={() => navigate("/agent-profile-editor")}
               className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
               <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
@@ -250,7 +250,7 @@ const AllAgentConnectHome = () => {
           {/* Tier 3 – System */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <button
-              onClick={() => navigate("/agent/team")}
+              onClick={() => navigate("/manage-team")}
               className={`${hubCard} ${tier3} group flex items-center gap-3 text-left`}
             >
               <div className="h-9 w-9 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
