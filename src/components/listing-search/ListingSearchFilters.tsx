@@ -296,7 +296,7 @@ const ListingSearchFilters = ({
                   onCheckedChange={toggleAllPropertyTypes}
                   className="h-3.5 w-3.5"
                 />
-                <span className="text-xs font-medium text-slate-700">Select All</span>
+                <span className="text-xs font-medium text-slate-800">Select All</span>
               </label>
               {PROPERTY_TYPES.map((type) => (
                 <label
@@ -308,7 +308,7 @@ const ListingSearchFilters = ({
                     onCheckedChange={() => togglePropertyType(type.value)}
                     className="h-3.5 w-3.5"
                   />
-                  <span className="text-xs text-slate-700">{type.label}</span>
+                  <span className="text-xs text-slate-800">{type.label}</span>
                 </label>
               ))}
             </div>
@@ -334,7 +334,7 @@ const ListingSearchFilters = ({
                       onCheckedChange={toggleAllStatuses}
                       className="h-3.5 w-3.5"
                     />
-                    <span className="text-xs font-medium text-slate-700">Select All</span>
+                    <span className="text-xs font-medium text-slate-800">Select All</span>
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
                     {STATUSES.map((status) => (
@@ -347,7 +347,7 @@ const ListingSearchFilters = ({
                           onCheckedChange={() => toggleStatus(status.value)}
                           className="h-3.5 w-3.5"
                         />
-                        <span className="text-xs text-slate-700 whitespace-nowrap">{status.label}</span>
+                        <span className="text-xs text-slate-800 whitespace-nowrap">{status.label}</span>
                       </label>
                     ))}
                   </div>
@@ -366,7 +366,7 @@ const ListingSearchFilters = ({
                         type="date"
                         value={filters.listDateFrom}
                         onChange={e => updateFilter("listDateFrom", e.target.value)}
-                        className="h-11 rounded-xl border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                        className="h-11 rounded-xl border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                       />
                     </div>
                     <div>
@@ -410,7 +410,7 @@ const ListingSearchFilters = ({
                         value={filters.hasNoMin ? "" : formatNumberWithCommas(filters.priceMin)}
                         onChange={e => updateFilter("priceMin", parseFormattedNumber(e.target.value))}
                         disabled={filters.hasNoMin}
-                        className="h-11 rounded-xl border-slate-200 bg-white pl-6 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50"
+                        className="h-11 rounded-xl border-slate-200 bg-white pl-6 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50"
                       />
                     </div>
                     <label className="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
@@ -425,7 +425,7 @@ const ListingSearchFilters = ({
                         }}
                         className="h-3.5 w-3.5"
                       />
-                      <span className="text-xs text-slate-500">No Min</span>
+                      <span className="text-xs text-slate-600">No Min</span>
                     </label>
                   </div>
                 </div>
@@ -441,7 +441,7 @@ const ListingSearchFilters = ({
                         value={filters.hasNoMax ? "" : formatNumberWithCommas(filters.priceMax)}
                         onChange={e => updateFilter("priceMax", parseFormattedNumber(e.target.value))}
                         disabled={filters.hasNoMax}
-                        className="h-11 rounded-xl border-slate-200 bg-white pl-6 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50"
+                        className="h-11 rounded-xl border-slate-200 bg-white pl-6 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50"
                       />
                     </div>
                     <label className="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
@@ -456,7 +456,7 @@ const ListingSearchFilters = ({
                         }}
                         className="h-3.5 w-3.5"
                       />
-                      <span className="text-xs text-slate-500">No Max</span>
+                      <span className="text-xs text-slate-600">No Max</span>
                     </label>
                   </div>
                 </div>
@@ -490,7 +490,7 @@ const ListingSearchFilters = ({
                       placeholder="Min"
                       value={filters.bedsMin}
                       onChange={(e) => updateFilter("bedsMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                   <div>
@@ -500,7 +500,7 @@ const ListingSearchFilters = ({
                       placeholder="Min"
                       value={filters.bathsMin}
                       onChange={(e) => updateFilter("bathsMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
@@ -512,7 +512,7 @@ const ListingSearchFilters = ({
                       placeholder="Min"
                       value={filters.rooms}
                       onChange={(e) => updateFilter("rooms", e.target.value.replace(/\D/g, ""))}
-                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                   <div>
@@ -522,7 +522,7 @@ const ListingSearchFilters = ({
                       placeholder="Min"
                       value={filters.acres}
                       onChange={(e) => updateFilter("acres", e.target.value)}
-                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
@@ -534,7 +534,7 @@ const ListingSearchFilters = ({
                       placeholder="Min SqFt"
                       value={filters.sqftMin}
                       onChange={(e) => updateFilter("sqftMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                   <div>
@@ -544,7 +544,7 @@ const ListingSearchFilters = ({
                       placeholder="Max"
                       value={filters.pricePerSqFt}
                       onChange={(e) => updateFilter("pricePerSqFt", e.target.value.replace(/\D/g, ""))}
-                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
@@ -556,7 +556,7 @@ const ListingSearchFilters = ({
                       placeholder="From"
                       value={filters.yearBuiltMin}
                       onChange={(e) => updateFilter("yearBuiltMin", e.target.value.replace(/\D/g, ""))}
-                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                   <div>
@@ -566,7 +566,7 @@ const ListingSearchFilters = ({
                       placeholder="Min"
                       value={filters.parkingSpaces}
                       onChange={(e) => updateFilter("parkingSpaces", e.target.value.replace(/\D/g, ""))}
-                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
@@ -582,8 +582,8 @@ const ListingSearchFilters = ({
             className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-slate-100 hover:bg-slate-100 transition-colors"
           >
             <div className="flex items-center gap-2">
-              <MapPin className="h-3.5 w-3.5 text-slate-400" />
-              <span className="text-xs font-medium text-slate-700">Address</span>
+              <MapPin className="h-3.5 w-3.5 text-slate-500" />
+              <span className="text-xs font-semibold text-slate-900">Address</span>
             </div>
             {sectionsOpen.address ? (
               <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
@@ -600,11 +600,11 @@ const ListingSearchFilters = ({
               >
                 <div className="flex items-center gap-1.5">
                   <RadioGroupItem value="street" id="street" className="h-3.5 w-3.5" />
-                  <Label htmlFor="street" className="text-xs text-slate-700 cursor-pointer">Street Address</Label>
+                  <Label htmlFor="street" className="text-xs text-slate-800 cursor-pointer">Street Address</Label>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <RadioGroupItem value="location" id="location" className="h-3.5 w-3.5" />
-                  <Label htmlFor="location" className="text-xs text-slate-700 cursor-pointer">My Location</Label>
+                  <Label htmlFor="location" className="text-xs text-slate-800 cursor-pointer">My Location</Label>
                 </div>
               </RadioGroup>
               <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
@@ -675,8 +675,8 @@ const ListingSearchFilters = ({
               className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-slate-100 hover:bg-slate-100 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-xs font-medium text-slate-700">Towns</span>
+                <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-xs font-semibold text-slate-900">Towns</span>
               </div>
               {sectionsOpen.towns ? (
                 <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
@@ -773,7 +773,7 @@ const ListingSearchFilters = ({
                     <div className="min-h-[260px] max-h-[300px] border border-slate-200 rounded-lg overflow-y-auto p-2 bg-white">
                       <button
                         onClick={addAllTowns}
-                        className="w-full text-left px-2 py-1 text-xs text-slate-700 hover:text-emerald-600 hover:bg-slate-100 rounded transition-colors font-medium mb-1"
+                        className="w-full text-left px-2 py-1 text-xs text-slate-800 hover:text-emerald-600 hover:bg-slate-100 rounded transition-colors font-medium mb-1"
                       >
                         - Add All Towns ({townsList.length}) -
                       </button>
@@ -839,8 +839,8 @@ const ListingSearchFilters = ({
                 className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-slate-100 hover:bg-slate-100 transition-colors"
               >
               <div className="flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-xs font-medium text-slate-700">Listing Events</span>
+                <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-xs font-semibold text-slate-900">Listing Events</span>
                 </div>
               {sectionsOpen.listingEvents ? (
                 <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
@@ -856,7 +856,7 @@ const ListingSearchFilters = ({
                       onCheckedChange={checked => updateFilter("openHouses", checked as boolean)}
                       className="h-3.5 w-3.5"
                     />
-                    <span className="text-xs text-slate-700">🎈 Open Houses</span>
+                    <span className="text-xs text-slate-800">🎈 Open Houses</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 px-1.5 py-1 rounded transition-colors">
                     <Checkbox
@@ -864,7 +864,7 @@ const ListingSearchFilters = ({
                       onCheckedChange={checked => updateFilter("brokerTours", checked as boolean)}
                       className="h-3.5 w-3.5"
                     />
-                    <span className="text-xs text-slate-700">🚗 Broker Tours</span>
+                    <span className="text-xs text-slate-800">🚗 Broker Tours</span>
                   </label>
                   <div className="pt-1">
                     <Label className="text-xs text-slate-500 mb-1 block">For:</Label>
@@ -894,8 +894,8 @@ const ListingSearchFilters = ({
                 className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-slate-100 hover:bg-slate-100 transition-colors"
               >
               <div className="flex items-center gap-2">
-                <FileText className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-xs font-medium text-slate-700">Keywords</span>
+                <FileText className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-xs font-semibold text-slate-900">Keywords</span>
                 </div>
               {sectionsOpen.keywords ? (
                 <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
@@ -913,11 +913,11 @@ const ListingSearchFilters = ({
                     >
                       <div className="flex items-center gap-1.5">
                         <RadioGroupItem value="any" id="any" className="h-3.5 w-3.5" />
-                        <Label htmlFor="any" className="text-xs text-slate-700 cursor-pointer">Any</Label>
+                        <Label htmlFor="any" className="text-xs text-slate-800 cursor-pointer">Any</Label>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <RadioGroupItem value="all" id="all" className="h-3.5 w-3.5" />
-                        <Label htmlFor="all" className="text-xs text-slate-700 cursor-pointer">All</Label>
+                        <Label htmlFor="all" className="text-xs text-slate-800 cursor-pointer">All</Label>
                       </div>
                     </RadioGroup>
                     <div className="border-l border-slate-100 h-4" />
@@ -928,11 +928,11 @@ const ListingSearchFilters = ({
                     >
                       <div className="flex items-center gap-1.5">
                         <RadioGroupItem value="include" id="include" className="h-3.5 w-3.5" />
-                        <Label htmlFor="include" className="text-xs text-slate-700 cursor-pointer">Include</Label>
+                        <Label htmlFor="include" className="text-xs text-slate-800 cursor-pointer">Include</Label>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <RadioGroupItem value="exclude" id="exclude" className="h-3.5 w-3.5" />
-                        <Label htmlFor="exclude" className="text-xs text-slate-700 cursor-pointer">Exclude</Label>
+                        <Label htmlFor="exclude" className="text-xs text-slate-800 cursor-pointer">Exclude</Label>
                       </div>
                     </RadioGroup>
                   </div>
