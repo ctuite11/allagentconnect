@@ -1008,7 +1008,7 @@ export function CreateHotSheetDialog({
                     <CardTitle className="text-base">
                       Contact Information *
                       {selectedClients.length > 0 && (
-                        <span className="ml-2 text-sm font-normal text-green-600">
+                        <span className="ml-2 text-sm font-normal text-emerald-600">
                           ✓ {selectedClients.length} {selectedClients.length === 1 ? 'contact' : 'contacts'}
                         </span>
                       )}
@@ -1115,7 +1115,7 @@ export function CreateHotSheetDialog({
                     className={errors.clientFirstName ? "border-destructive" : ""}
                   />
                   {existingClient && (
-                    <p className="text-sm text-green-600 flex items-center gap-1">
+                    <p className="text-sm text-emerald-600 flex items-center gap-1">
                       <Check className="w-4 h-4" />
                       Existing contact found
                     </p>
