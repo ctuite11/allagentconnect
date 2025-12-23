@@ -28,6 +28,45 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
 
     setDeleting(true);
     try {
+      // First, get current user for deleted_by field
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+      // Fetch full agent profile data for archival
+      const { data: agentProfile } = await supabase
+        .from("agent_profiles")
+        .select("*")
+        .eq("id", agent.id)
+        .single();
+
+      const { data: agentSettings } = await supabase
+        .from("agent_settings")
+        .select("*")
+        .eq("user_id", agent.id)
+        .single();
+
+      // Archive the user to deleted_users table
+      const { error: archiveError } = await supabase
+        .from("deleted_users")
+        .insert({
+          original_user_id: agent.id,
+          email: agent.email,
+          first_name: agent.first_name,
+          last_name: agent.last_name,
+          phone: agentProfile?.phone || null,
+          company: agentProfile?.company || null,
+          deleted_by: currentUser?.id || null,
+          deletion_reason: "Admin deletion",
+          original_data: {
+            agent_profile: agentProfile,
+            agent_settings: agentSettings,
+          },
+        });
+
+      if (archiveError) {
+        console.error("Error archiving user:", archiveError);
+        // Continue with deletion even if archiving fails
+      }
+
       // Delete in order to avoid FK constraints:
       // 1. Delete from agent_settings
       await supabase.from("agent_settings").delete().eq("user_id", agent.id);
@@ -67,8 +106,11 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
       
       // 13. Delete listings (this will cascade to listing-related tables)
       await supabase.from("listings").delete().eq("agent_id", agent.id);
+
+      // 14. Delete from profiles table
+      await supabase.from("profiles").delete().eq("id", agent.id);
       
-      // 14. Finally delete from agent_profiles
+      // 15. Finally delete from agent_profiles
       const { error: profileError } = await supabase
         .from("agent_profiles")
         .delete()
@@ -76,7 +118,7 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
 
       if (profileError) throw profileError;
 
-      // 15. Delete auth user via edge function
+      // 16. Delete auth user via edge function
       const { error: authError } = await supabase.functions.invoke("delete-users", {
         body: { userIds: [agent.id] },
       });
@@ -86,7 +128,7 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
         // Don't throw here - the profile is already deleted
       }
 
-      toast.success(`${agent.first_name} ${agent.last_name} has been deleted`);
+      toast.success(`${agent.first_name} ${agent.last_name} has been permanently deleted and archived`);
       onDeleted();
       onOpenChange(false);
     } catch (error: any) {
@@ -109,18 +151,22 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
             </div>
             <AlertDialogTitle className="text-foreground">Delete Agent</AlertDialogTitle>
           </div>
-          <AlertDialogDescription className="text-muted-foreground">
-            Are you sure you want to delete <strong>{agent.first_name} {agent.last_name}</strong> ({agent.email})?
-            <br /><br />
-            This will permanently remove:
-            <ul className="list-disc ml-5 mt-2 space-y-1">
-              <li>Their agent profile and settings</li>
-              <li>All their listings</li>
-              <li>All their clients and hot sheets</li>
-              <li>Their auth account</li>
-            </ul>
-            <br />
-            <span className="text-rose-600 font-medium">This action cannot be undone.</span>
+          <AlertDialogDescription asChild>
+            <div className="text-muted-foreground">
+              Are you sure you want to delete <strong>{agent.first_name} {agent.last_name}</strong> ({agent.email})?
+              <br /><br />
+              This will permanently remove:
+              <ul className="list-disc ml-5 mt-2 space-y-1">
+                <li>Their agent profile and settings</li>
+                <li>All their listings</li>
+                <li>All their clients and hot sheets</li>
+                <li>Their auth account</li>
+              </ul>
+              <br />
+              <span className="text-amber-600 font-medium">The user will be archived in the deleted users database for record keeping.</span>
+              <br />
+              <span className="text-rose-600 font-medium">This action cannot be undone.</span>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

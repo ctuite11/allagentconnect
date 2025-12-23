@@ -879,6 +879,48 @@ export type Database = {
         }
         Relationships: []
       }
+      deleted_users: {
+        Row: {
+          company: string | null
+          deleted_at: string
+          deleted_by: string | null
+          deletion_reason: string | null
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          original_data: Json | null
+          original_user_id: string
+          phone: string | null
+        }
+        Insert: {
+          company?: string | null
+          deleted_at?: string
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          original_data?: Json | null
+          original_user_id: string
+          phone?: string | null
+        }
+        Update: {
+          company?: string | null
+          deleted_at?: string
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          original_data?: Json | null
+          original_user_id?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
       email_campaigns: {
         Row: {
           agent_id: string
