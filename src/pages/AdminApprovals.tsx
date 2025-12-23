@@ -17,7 +17,9 @@ import {
   Mail, 
   ChevronUp, 
   ChevronDown,
-  Users
+  Users,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import {
   Table,
@@ -616,6 +618,31 @@ export default function AdminApprovals() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {/* Quick verify/reject buttons for pending agents */}
+                          {agent.agent_status === "pending" && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleStatusChange(agent, "verified")}
+                                disabled={isProcessing}
+                                className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                title="Verify License"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleStatusChange(agent, "rejected")}
+                                disabled={isProcessing}
+                                className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                                title="Reject"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
