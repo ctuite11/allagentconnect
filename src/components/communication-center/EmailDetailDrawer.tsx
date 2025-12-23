@@ -88,7 +88,7 @@ export function EmailDetailDrawer({
               <span className="text-muted-foreground">Status:</span>
               <Badge 
                 variant="outline" 
-                className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800"
+                className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800"
               >
                 Sent
               </Badge>

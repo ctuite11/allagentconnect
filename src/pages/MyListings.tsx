@@ -69,7 +69,7 @@ function statusBadgeClass(status: string) {
   switch (status) {
     case "active":
     case "new":
-      return "bg-green-100 text-green-700";
+      return "bg-emerald-100 text-emerald-700";
     case "coming_soon":
       return "bg-amber-100 text-amber-700";
     case "pending":
@@ -933,7 +933,7 @@ const MyListings = () => {
       if (error) throw error;
 
       toast.success("Listing deleted successfully", {
-        className: "bg-green-50 border-green-200 text-green-800",
+        className: "bg-emerald-50 border-emerald-200 text-emerald-800",
       });
       fetchListings();
     } catch (error) {
@@ -998,7 +998,7 @@ const MyListings = () => {
       if (error) throw error;
       
       toast.success(`Successfully deleted ${ids.length} draft listing(s)`, {
-        className: "bg-green-50 border-green-200 text-green-800",
+        className: "bg-emerald-50 border-emerald-200 text-emerald-800",
       });
       fetchListings();
     } catch (error) {

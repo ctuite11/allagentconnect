@@ -473,7 +473,7 @@ const MarketInsights = () => {
                                     <Square className="w-12 h-12 text-muted-foreground" />
                                   </div>
                                 )}
-                                <Badge className="absolute top-4 right-4 bg-green-600 text-white border-0">
+                                <Badge className="absolute top-4 right-4 bg-emerald-600 text-white border-0">
                                   SOLD
                                 </Badge>
                               </div>

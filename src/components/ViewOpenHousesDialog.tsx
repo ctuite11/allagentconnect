@@ -97,7 +97,7 @@ export function ViewOpenHousesDialog({
   const formatEventType = (type: string): { label: string; emoji: string; colorClass: string } => {
     switch (type) {
       case "in_person":
-        return { label: "Public Open House", emoji: "🎈", colorClass: "bg-green-100 text-green-700" };
+        return { label: "Public Open House", emoji: "🎈", colorClass: "bg-emerald-100 text-emerald-700" };
       case "broker_tour":
         return { label: "Broker Tour", emoji: "🚗", colorClass: "bg-purple-100 text-purple-700" };
       default:

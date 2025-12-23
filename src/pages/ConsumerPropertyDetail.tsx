@@ -317,7 +317,7 @@ const ConsumerPropertyDetail = () => {
 
               {/* Status and Property Type Badges */}
               <div className="absolute bottom-4 left-4 flex gap-2">
-                <Badge className="bg-green-600 text-white text-base px-4 py-2">
+                <Badge className="bg-emerald-600 text-white text-base px-4 py-2">
                   {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
                 </Badge>
                 {listing.property_type && (

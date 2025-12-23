@@ -571,9 +571,9 @@ const ListingAnalytics = () => {
                             {currentStats.contact_count} ({calculateConversionRate(currentStats.contact_count, currentStats.view_count)})
                           </span>
                         </div>
-                        <div className="w-full h-4 bg-green-100 rounded-full overflow-hidden">
+                        <div className="w-full h-4 bg-emerald-100 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-green-600" 
+                            className="h-full bg-emerald-600"
                             style={{ 
                               width: `${(currentStats.contact_count / Math.max(currentStats.view_count, 1)) * 100}%` 
                             }} 
