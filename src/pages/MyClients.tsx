@@ -383,7 +383,7 @@ const MyClients = () => {
             {clients.length > 0 && (
               <>
                 {selectedClients.size > 0 && (
-                  <Button variant="default" onClick={handleBulkEmail}>
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleBulkEmail}>
                     <Send className="h-4 w-4 mr-2" />
                     Send Email ({selectedClients.size})
                   </Button>
@@ -411,19 +411,19 @@ const MyClients = () => {
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button onClick={handleAddClient}>
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleAddClient}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Contact
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>{editingClient ? "Edit Contact" : "Add New Contact"}</DialogTitle>
-                  <DialogDescription>
+              <DialogContent className="bg-white border border-neutral-200 rounded-2xl shadow-lg w-[min(92vw,500px)] max-h-[85vh] flex flex-col overflow-hidden p-0">
+                <DialogHeader className="px-6 py-5 border-b border-neutral-200">
+                  <DialogTitle className="text-xl font-semibold text-neutral-900">{editingClient ? "Edit Contact" : "Add New Contact"}</DialogTitle>
+                  <DialogDescription className="text-sm text-neutral-600">
                     {editingClient ? "Update contact information" : "Add a new contact to your roster"}
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="first_name">First Name *</Label>
@@ -500,11 +500,11 @@ const MyClients = () => {
                     </Select>
                   </div>
 
-                  <div className="flex justify-end gap-3">
+                  <div className="sticky bottom-0 bg-white border-t border-neutral-200 -mx-6 -mb-5 px-6 py-4 flex justify-end gap-3 mt-6">
                     <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={saving}>
+                    <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                       {saving ? "Saving..." : editingClient ? "Update" : "Add Contact"}
                     </Button>
                   </div>
@@ -521,7 +521,7 @@ const MyClients = () => {
                   <p className="text-muted-foreground mb-6">
                     Add your first contact to start managing their property search
                   </p>
-                  <Button onClick={handleAddClient}>
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleAddClient}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add First Contact
                   </Button>
