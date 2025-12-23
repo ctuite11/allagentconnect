@@ -78,7 +78,7 @@ const Navigation = () => {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
-    <header className="bg-white border-b border-neutral-200">
+    <header className="bg-white">
       <div className="mx-auto max-w-6xl px-5 py-5 flex items-center justify-between">
         <div onClick={() => navigate("/")} className="cursor-pointer">
           <Logo size="lg" />
@@ -560,7 +560,7 @@ const Navigation = () => {
       )}
     </header>
       {/* Bottom fade overlay - no blur, just visual fade */}
-      <div className="pointer-events-none h-8 bg-gradient-to-b from-white to-transparent" />
+      <div className="pointer-events-none h-4 bg-gradient-to-b from-white/80 to-transparent" />
     </div>
   );
 };
