@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut, ArrowRight } from "lucide-react";
+import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut, ArrowRight, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -280,6 +280,15 @@ const Navigation = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
+              {role === "admin" && (
+                <button 
+                  onClick={() => navigate("/admin/approvals")}
+                  className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Agent CRM
+                </button>
+              )}
               {role === "buyer" && (
                 <>
                   <button 
@@ -398,7 +407,21 @@ const Navigation = () => {
           {user && (
             <>
               <div className="pt-2 border-t border-slate-200 mt-2">
-                {role === "agent" ? (
+                {role === "admin" ? (
+                  <>
+                    <p className="text-xs font-semibold text-slate-500 mb-2 px-2">Admin</p>
+                    <button
+                      onClick={() => {
+                        navigate("/admin/approvals");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Agent CRM
+                    </button>
+                  </>
+                ) : role === "agent" ? (
                   <>
                     <p className="text-xs font-semibold text-slate-500 mb-2 px-2">Agent Tools</p>
                     <button
