@@ -160,6 +160,12 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
+  /* Custom text selection - gray instead of blue */
+  ::selection {
+    background-color: hsl(0 0% 85%);
+    color: hsl(0 0% 15%);
+  }
+  
   .text-security-disc {
     -webkit-text-security: disc;
     text-security: disc;
