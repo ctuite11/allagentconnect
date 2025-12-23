@@ -432,7 +432,7 @@ export default function AdminApprovals() {
 
               {/* Status Filter */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px] border-0 bg-gray-100 rounded-xl focus:ring-0 outline-none">
+                <SelectTrigger className="w-[160px] border-0 bg-gray-100 rounded-xl focus:ring-0 outline-none data-[state=open]:bg-gray-100">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -454,7 +454,7 @@ export default function AdminApprovals() {
                   setSortDirection(dir);
                 }}
               >
-                <SelectTrigger className="w-[140px] border-0 bg-gray-100 rounded-xl focus:ring-0 outline-none">
+                <SelectTrigger className="w-[140px] border-0 bg-gray-100 rounded-xl focus:ring-0 outline-none data-[state=open]:bg-gray-100">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
