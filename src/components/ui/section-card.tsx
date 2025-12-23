@@ -20,12 +20,9 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-aac-card-border bg-white p-4 transition-all hover:border-aac-card-borderHover",
+        "rounded-2xl border border-aac-card-border bg-white p-4 transition-all hover:border-aac-card-borderHover aac-shadow aac-shadow-hover",
         className
       )}
-      style={{ 
-        boxShadow: '0 2px 6px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.16)',
-      }}
       {...props}
     >
       {(title || rightSlot || description) ? (
