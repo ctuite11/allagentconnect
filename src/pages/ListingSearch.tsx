@@ -8,6 +8,9 @@ import ListingSearchFilters, { FilterState, initialFilters } from "@/components/
 import { RotateCcw, Search, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+// DEBUG: Toggle between warm (#FAFAF8) and neutral (#fafafa) background
+const USE_NEUTRAL_BG = true; // Set to false to compare
+
 const ListingSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -174,7 +177,7 @@ const ListingSearch = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAF8] text-neutral-900">
+    <div className={`min-h-screen flex flex-col text-neutral-900 ${USE_NEUTRAL_BG ? 'bg-neutral-50' : 'bg-[#FAFAF8]'}`}>
       <Navigation />
 
       <main className="flex-1 pt-28">
