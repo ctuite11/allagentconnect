@@ -402,8 +402,8 @@ export default function AdminApprovals() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-[#F7F6F3] border border-slate-200">
-                <Shield className="h-6 w-6 text-slate-700" />
+              <div className="p-2.5 rounded-2xl bg-[#F7F6F3] border border-emerald-500">
+                <Shield className="h-6 w-6 text-emerald-600" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Agent CRM</h1>
@@ -416,7 +416,7 @@ export default function AdminApprovals() {
         </div>
 
         {/* Filters Bar */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)] mb-6">
+        <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)] mb-6">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="flex flex-col sm:flex-row gap-3 flex-1">
               {/* Search */}
@@ -426,13 +426,13 @@ export default function AdminApprovals() {
                   placeholder="Search name, email, company, AAC ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 border-0 bg-gray-100 rounded-xl"
+                  className="pl-9 border-0 bg-gray-100 rounded-xl focus-visible:ring-2 focus-visible:ring-gray-300"
                 />
               </div>
 
               {/* Status Filter */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px] border-0 bg-gray-100 rounded-xl">
+                <SelectTrigger className="w-[160px] border-0 bg-gray-100 rounded-xl focus:ring-2 focus:ring-gray-300">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -454,7 +454,7 @@ export default function AdminApprovals() {
                   setSortDirection(dir);
                 }}
               >
-                <SelectTrigger className="w-[140px] border-0 bg-gray-100 rounded-xl">
+                <SelectTrigger className="w-[140px] border-0 bg-gray-100 rounded-xl focus:ring-2 focus:ring-gray-300">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -473,7 +473,7 @@ export default function AdminApprovals() {
 
           {/* Bulk Actions */}
           {selectedIds.size > 0 && (
-            <div className="mt-4 pt-4 border-t border-slate-200 flex items-center gap-3">
+            <div className="mt-4 pt-4 border-t border-gray-200 flex items-center gap-3">
               <span className="text-sm text-muted-foreground">
                 {selectedIds.size} selected
               </span>
@@ -481,7 +481,7 @@ export default function AdminApprovals() {
                 variant="outline"
                 size="sm"
                 onClick={handleBulkEmail}
-                className="rounded-xl border-slate-200 hover:text-emerald-600"
+                className="rounded-xl border-gray-200 hover:border-emerald-500 hover:text-emerald-600 focus-visible:ring-gray-300"
               >
                 <Mail className="h-4 w-4 mr-2" />
                 Email Selected
@@ -490,7 +490,7 @@ export default function AdminApprovals() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedIds(new Set())}
-                className="rounded-xl text-muted-foreground"
+                className="rounded-xl text-muted-foreground hover:text-emerald-600"
               >
                 Clear
               </Button>
@@ -504,15 +504,15 @@ export default function AdminApprovals() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-600"></div>
           </div>
         ) : agents.length === 0 ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
+          <div className="rounded-3xl border border-gray-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No agents found</p>
           </div>
         ) : (
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] overflow-hidden">
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="bg-[#FAFAF8] border-b border-slate-200">
+                <TableRow className="bg-[#FAFAF8] border-b border-gray-200">
                   <TableHead className="w-12">
                     <Checkbox
                       checked={selectedIds.size === filteredAgents.length && filteredAgents.length > 0}
@@ -552,7 +552,7 @@ export default function AdminApprovals() {
                   const isProcessing = processingIds.has(agent.id);
 
                   return (
-                    <TableRow key={agent.id} className="border-0">
+                    <TableRow key={agent.id} className="border-b border-gray-200 hover:bg-gray-50">
                       <TableCell>
                         <Checkbox
                           checked={selectedIds.has(agent.id)}
