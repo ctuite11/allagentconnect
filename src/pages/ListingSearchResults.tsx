@@ -343,7 +343,7 @@ const ListingSearchResults = () => {
       <main className="flex-1 pt-20">
         <div className="max-w-[1400px] mx-auto px-6 pt-6">
           {/* Page Header */}
-          <div className="mb-6 border-b border-slate-200/70 bg-transparent px-0 py-6">
+          <div className="mb-6 border-b border-neutral-200/70 bg-transparent px-0 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <button
@@ -353,7 +353,7 @@ const ListingSearchResults = () => {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <div className="h-5 w-px bg-slate-200" />
+                <div className="h-5 w-px bg-neutral-200" />
                 <div>
                   <h1 className="text-lg font-semibold text-slate-900">Search Results</h1>
                 </div>
@@ -363,8 +363,8 @@ const ListingSearchResults = () => {
                   <span className="font-semibold text-slate-900">{loading ? "..." : listings.length}</span>
                   {" "}listings found
                 </span>
-                <div className="h-5 w-px bg-slate-200" />
-                <ToggleGroup 
+                <div className="h-5 w-px bg-neutral-200" />
+                <ToggleGroup
                   type="single" 
                   value={viewMode} 
                   onValueChange={(value) => value && setViewMode(value as "list" | "grid")}
