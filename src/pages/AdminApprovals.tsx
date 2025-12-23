@@ -515,6 +515,12 @@ export default function AdminApprovals() {
                     Name <SortIcon field="name" />
                   </TableHead>
                   <TableHead className="font-semibold text-foreground">Email</TableHead>
+                  <TableHead 
+                    className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
+                    onClick={() => handleSort("company")}
+                  >
+                    Company <SortIcon field="company" />
+                  </TableHead>
                   <TableHead className="font-semibold text-foreground">Phone</TableHead>
                   <TableHead 
                     className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
@@ -552,6 +558,9 @@ export default function AdminApprovals() {
                       </TableCell>
                       <TableCell className="text-sm">{agent.email}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
+                        {agent.company || "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
                         {agent.phone || "—"}
                       </TableCell>
                       <TableCell>
@@ -560,7 +569,7 @@ export default function AdminApprovals() {
                           onValueChange={(val) => handleStatusChange(agent, val)}
                           disabled={isProcessing}
                         >
-                          <SelectTrigger className="w-[130px] h-8 rounded-lg border-0 bg-transparent p-0">
+                          <SelectTrigger className="w-[130px] h-8 rounded-lg border-0 bg-transparent p-0 [&>svg]:hidden">
                             <Badge
                               variant="outline"
                               className={`${statusColors[agent.agent_status] || statusColors.unverified} capitalize`}
