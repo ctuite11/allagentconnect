@@ -286,8 +286,8 @@ const ListingSearchFilters = ({
           {/* PROPERTY TYPE Section (narrow) */}
           <div className="w-full md:w-[160px] md:shrink-0 rounded-2xl border border-slate-200 bg-white overflow-hidden">
             <div className="w-full flex items-center gap-2 px-3 py-2.5 bg-[#F7F6F3] border-b border-slate-100">
-              <Home className="h-3.5 w-3.5 text-slate-400" />
-              <span className="text-xs font-medium text-slate-700">Property Type</span>
+              <Home className="h-3.5 w-3.5 text-slate-500" />
+              <span className="text-xs font-semibold text-slate-900">Property Type</span>
             </div>
             <div className="p-3 space-y-1.5">
               <label className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-1 rounded-lg transition-colors">
@@ -320,8 +320,8 @@ const ListingSearchFilters = ({
             <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
               {/* STATUS + DATE/TIMEFRAME Header */}
               <div className="w-full flex items-center gap-2 px-3 py-2.5 bg-[#F7F6F3] border-b border-slate-100">
-                <Tag className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-xs font-medium text-slate-700">Status & Date</span>
+                <Tag className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-xs font-semibold text-slate-900">Status & Date</span>
               </div>
 
               {/* Top row: Status (left) + Date/Timeframe (right, vertically centered) */}
@@ -356,8 +356,8 @@ const ListingSearchFilters = ({
                 {/* DATE/TIMEFRAME Section (right side, vertically centered) */}
                 <div className="w-full md:w-[180px] md:shrink-0 md:pl-4 md:border-l border-t md:border-t-0 pt-4 md:pt-0 border-slate-100 flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-2">
-                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                    <span className="text-xs font-medium text-slate-700">Date / Timeframe</span>
+                    <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                    <span className="text-xs font-semibold text-slate-900">Date / Timeframe</span>
                   </div>
                   <div className="space-y-2.5">
                     <div>
@@ -394,8 +394,8 @@ const ListingSearchFilters = ({
             {/* PRICE RANGE Card (separate card) */}
             <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
               <div className="w-full flex items-center gap-2 px-3 py-2.5 bg-[#F7F6F3] border-b border-slate-100">
-                <DollarSign className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-xs font-medium text-slate-700">Price Range</span>
+                <DollarSign className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-xs font-semibold text-slate-900">Price Range</span>
               </div>
               <div className="p-3 flex items-end gap-4">
                 {/* Min Price */}
@@ -471,8 +471,8 @@ const ListingSearchFilters = ({
               className="w-full flex items-center justify-between px-3 py-2 bg-[#F7F6F3] border-b border-slate-100 hover:bg-slate-100 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <Building className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-xs font-medium text-slate-700">Standard Criteria</span>
+                <Building className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-xs font-semibold text-slate-900">Standard Criteria</span>
               </div>
               {sectionsOpen.standardCriteria ? (
                 <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
