@@ -475,7 +475,7 @@ const MyClients = () => {
                     />
                   </div>
 
-                  <div className="border border-neutral-200 rounded-lg p-4 bg-neutral-50 space-y-2">
+                  <div className="border border-border rounded-lg p-4 bg-muted space-y-2">
                     <Label htmlFor="client_type" className="text-base font-semibold">
                       Contact Type
                     </Label>
