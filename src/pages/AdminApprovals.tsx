@@ -398,16 +398,25 @@ export default function AdminApprovals() {
       <div className="container mx-auto py-8 px-4 max-w-7xl">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-2xl bg-[#F7F6F3] border border-slate-200">
-              <Shield className="h-6 w-6 text-slate-700" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-[#F7F6F3] border border-slate-200">
+                <Shield className="h-6 w-6 text-slate-700" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Agent CRM</h1>
+                <p className="text-sm text-muted-foreground">
+                  Manage all agents, update info, control access
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Agent CRM</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage all agents, update info, control access
-              </p>
-            </div>
+            <Button
+              onClick={() => navigate("/agent-dashboard")}
+              className="rounded-xl"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Agent Dashboard
+            </Button>
           </div>
         </div>
 
