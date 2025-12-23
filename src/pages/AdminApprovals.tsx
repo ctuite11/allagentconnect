@@ -412,13 +412,6 @@ export default function AdminApprovals() {
                 </p>
               </div>
             </div>
-            <Button
-              onClick={() => navigate("/agent-dashboard")}
-              className="rounded-xl"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Agent Dashboard
-            </Button>
           </div>
         </div>
 
