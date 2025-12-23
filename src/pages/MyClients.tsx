@@ -431,8 +431,9 @@ const MyClients = () => {
                         id="first_name"
                         value={formData.first_name}
                         onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                        placeholder="John"
+                        placeholder="First Name"
                         maxLength={100}
+                        className="capitalize"
                       />
                       {errors.first_name && <p className="text-sm text-destructive">{errors.first_name}</p>}
                     </div>
@@ -442,8 +443,9 @@ const MyClients = () => {
                         id="last_name"
                         value={formData.last_name}
                         onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                        placeholder="Doe"
+                        placeholder="Last Name"
                         maxLength={100}
+                        className="capitalize"
                       />
                       {errors.last_name && <p className="text-sm text-destructive">{errors.last_name}</p>}
                     </div>
@@ -473,7 +475,7 @@ const MyClients = () => {
                     />
                   </div>
 
-                  <div className="border border-accent/30 rounded-lg p-4 bg-accent/5 space-y-2">
+                  <div className="border border-neutral-200 rounded-lg p-4 bg-neutral-50 space-y-2">
                     <Label htmlFor="client_type" className="text-base font-semibold">
                       Contact Type
                     </Label>
