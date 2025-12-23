@@ -17,11 +17,27 @@ export function useAuthRole(): AuthRoleState {
   const initialLoadDone = useRef(false);
 
   // Load role for a given user - doesn't set loading state
+  // Prioritizes admin role when user has multiple roles
   async function loadRoleForUser(userId: string) {
+    // Check for admin role first
+    const { data: adminCheck } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (adminCheck) {
+      setRole("admin");
+      return;
+    }
+
+    // Fall back to other role check
     const { data: roleRow, error: roleError } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
+      .limit(1)
       .maybeSingle();
 
     if (roleError) {
