@@ -402,7 +402,7 @@ export default function AdminApprovals() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-[#F7F6F3] border border-emerald-500">
+              <div className="p-2.5 rounded-2xl bg-[#F7F6F3] border border-slate-900">
                 <Shield className="h-6 w-6 text-emerald-600" />
               </div>
               <div>
@@ -426,13 +426,13 @@ export default function AdminApprovals() {
                   placeholder="Search name, email, company, AAC ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 border-0 bg-gray-100 rounded-xl focus-visible:ring-2 focus-visible:ring-gray-300"
+                  className="pl-9 border-0 bg-gray-100 rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                 />
               </div>
 
               {/* Status Filter */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px] border-0 bg-gray-100 rounded-xl focus:ring-2 focus:ring-gray-300">
+                <SelectTrigger className="w-[160px] border-0 bg-gray-100 rounded-xl focus:ring-0 outline-none">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -454,7 +454,7 @@ export default function AdminApprovals() {
                   setSortDirection(dir);
                 }}
               >
-                <SelectTrigger className="w-[140px] border-0 bg-gray-100 rounded-xl focus:ring-2 focus:ring-gray-300">
+                <SelectTrigger className="w-[140px] border-0 bg-gray-100 rounded-xl focus:ring-0 outline-none">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -478,10 +478,10 @@ export default function AdminApprovals() {
                 {selectedIds.size} selected
               </span>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={handleBulkEmail}
-                className="rounded-xl border-gray-200 hover:border-emerald-500 hover:text-emerald-600 focus-visible:ring-gray-300"
+                className="rounded-xl text-muted-foreground hover:text-emerald-600 hover:bg-gray-100"
               >
                 <Mail className="h-4 w-4 mr-2" />
                 Email Selected
