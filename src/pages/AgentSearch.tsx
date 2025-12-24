@@ -23,7 +23,7 @@ const AgentSearch = () => {
     try {
       setLoading(true);
       
-      // Fetch agents with county preferences
+      // Fetch agents with county preferences and settings (for verification status)
       const { data: agentData, error: agentError } = await supabase
         .from("agent_profiles")
         .select(`
@@ -31,6 +31,9 @@ const AgentSearch = () => {
           agent_county_preferences (
             county_id,
             counties (id, name, state)
+          ),
+          agent_settings!agent_settings_user_id_fkey (
+            agent_status
           )
         `)
         .eq("receive_buyer_alerts", true)
@@ -142,17 +145,16 @@ const AgentSearch = () => {
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-12 bg-primary text-primary-foreground">
+        {/* Secondary CTA - Register as Agent (below grid, smaller, not competing) */}
+        <section className="py-8 border-t border-border">
           <div className="max-w-6xl mx-auto px-4 text-center">
-            <h2 className="text-2xl font-bold mb-3">Are You a Real Estate Agent?</h2>
-            <p className="text-base mb-6 opacity-90 max-w-xl mx-auto">
-              Join All Agent Connect and showcase your incentives to buyers and sellers
-              actively searching for agents.
+            <p className="text-sm text-muted-foreground mb-3">
+              Are you a real estate agent? Showcase your incentives to buyers and sellers.
             </p>
             <Button
-              size="lg"
-              variant="secondary"
+              variant="outline"
+              size="sm"
+              className="text-neutral-700 border-neutral-300 hover:bg-neutral-50"
               onClick={() => navigate("/auth?mode=register")}
             >
               Register as an Agent
