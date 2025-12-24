@@ -69,8 +69,8 @@ const Navigation = () => {
     }
   };
 
-  // Hide global navigation on home page and auth page
-  if (location.pathname === "/" || location.pathname === "/auth") return null;
+  // Hide global navigation on auth page
+  if (location.pathname === "/auth") return null;
 
   // Hide navigation only for pending agents - they have their own locked screen
   const isPending = user && role === "agent" && agentStatus === "pending";
