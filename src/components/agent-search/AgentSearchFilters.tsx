@@ -4,9 +4,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search, X, MapPin, ChevronDown, RotateCcw, FileSpreadsheet, Filter, Users, Gift, Home } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Search, X, MapPin, ChevronDown, RotateCcw, FileSpreadsheet, Filter, Gift, Home, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { SectionCard } from "@/components/ui/section-card";
 
 interface County {
   id: string;
@@ -27,7 +27,6 @@ interface AgentSearchFiltersProps {
   sortOrder: "a-z" | "z-a" | "listings";
   setSortOrder: (order: "a-z" | "z-a" | "listings") => void;
   onClearFilters: () => void;
-  resultCount: number;
 }
 
 const AgentSearchFilters = ({
@@ -43,9 +42,11 @@ const AgentSearchFilters = ({
   sortOrder,
   setSortOrder,
   onClearFilters,
-  resultCount,
 }: AgentSearchFiltersProps) => {
   const hasActiveFilters = searchQuery || selectedCounties.length > 0 || showBuyerIncentivesOnly || showListingAgentsOnly;
+
+  // Get unique states from counties
+  const uniqueStates = [...new Set(counties.map(c => c.state))].sort();
 
   // Build active filters summary
   const activeFilterPills: { label: string; onRemove: () => void }[] = [];
@@ -88,47 +89,62 @@ const AgentSearchFilters = ({
   };
 
   return (
-    <div className="sticky top-16 z-30 bg-background border-b border-border">
-      <div className="container mx-auto px-4 py-4 space-y-3">
-        {/* Filter Sections Row */}
-        <div className="flex flex-wrap items-stretch gap-3">
-          {/* Search Section Card */}
-          <SectionCard className="flex-1 min-w-[200px] max-w-md p-0">
-            <div className="relative p-2">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary h-4 w-4" />
+    <div className="sticky top-16 z-30 bg-muted/30 py-4">
+      <div className="container mx-auto px-4">
+        {/* Filter Card */}
+        <div className="bg-white border border-neutral-200 rounded-2xl p-4 shadow-sm">
+          {/* Row 1: Search, State, County */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search Input - Wide */}
+            <div className="relative flex-1 min-w-[280px] max-w-lg">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 h-4 w-4" />
               <Input
                 type="text"
                 placeholder="Search name, company, email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-8 h-9 border-0 shadow-none focus-visible:ring-0"
+                className="pl-9 pr-9 h-10 border-neutral-200 hover:border-neutral-300 focus:ring-emerald-500/20 focus:border-emerald-600"
               />
               {searchQuery && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0 text-neutral-400 hover:text-neutral-600"
                   onClick={() => setSearchQuery("")}
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-4 w-4" />
                 </Button>
               )}
             </div>
-          </SectionCard>
 
-          {/* Service Areas Section Card */}
-          <SectionCard className="p-0">
+            {/* State Select */}
+            <Select>
+              <SelectTrigger className="w-40 h-10 border-neutral-200 hover:border-neutral-300">
+                <MapPin className="h-4 w-4 text-neutral-400 mr-2" />
+                <SelectValue placeholder="State" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All States</SelectItem>
+                {uniqueStates.map((state) => (
+                  <SelectItem key={state} value={state}>{state}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* County Popover */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" className="h-full px-4 gap-2 hover:bg-muted rounded-l-none">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Service Areas</span>
+                <Button 
+                  variant="outline" 
+                  className="h-10 px-4 gap-2 border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
+                >
+                  <span className="text-sm">County</span>
                   {selectedCounties.length > 0 && (
-                    <span className="rounded-full bg-primary text-primary-foreground px-2 py-0.5 text-xs font-medium">
+                    <span className="rounded-full bg-emerald-600 text-white px-2 py-0.5 text-xs font-medium">
                       {selectedCounties.length}
                     </span>
                   )}
-                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                  <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-72 p-3" align="start">
@@ -168,72 +184,103 @@ const AgentSearchFilters = ({
                 </div>
               </PopoverContent>
             </Popover>
-          </SectionCard>
+          </div>
 
-          {/* Quick Toggles Section Card */}
-          <SectionCard className="p-2 flex items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="filter-incentives"
-                checked={showBuyerIncentivesOnly}
-                onCheckedChange={(checked) => setShowBuyerIncentivesOnly(checked as boolean)}
-              />
-              <Label htmlFor="filter-incentives" className="text-sm cursor-pointer whitespace-nowrap flex items-center gap-1.5">
-                <Gift className="h-3.5 w-3.5 text-primary" />
-                Buyer Incentives
-              </Label>
+          {/* Divider */}
+          <div className="border-t border-neutral-200 my-3" />
+
+          {/* Row 2: Sort, Agent Intel Toggle, Quick Filters */}
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Sort */}
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-neutral-500 whitespace-nowrap">Sort:</Label>
+              <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as "a-z" | "z-a" | "listings")}>
+                <SelectTrigger className="w-36 h-9 border-neutral-200 hover:border-neutral-300">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="a-z">Name A-Z</SelectItem>
+                  <SelectItem value="z-a">Name Z-A</SelectItem>
+                  <SelectItem value="listings">Most Listings</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="filter-listings"
-                checked={showListingAgentsOnly}
-                onCheckedChange={(checked) => setShowListingAgentsOnly(checked as boolean)}
-              />
-              <Label htmlFor="filter-listings" className="text-sm cursor-pointer whitespace-nowrap flex items-center gap-1.5">
-                <Home className="h-3.5 w-3.5 text-primary" />
-                Has Listings
-              </Label>
+
+            {/* Separator */}
+            <div className="h-6 w-px bg-neutral-200" />
+
+            {/* Agent Intel Toggle */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-emerald-600" />
+                <Label htmlFor="agent-intel" className="text-sm font-medium cursor-pointer">Agent Intel</Label>
+              </div>
+              <Switch id="agent-intel" />
+              <span className="text-xs text-neutral-400">View agent analytics</span>
             </div>
-          </SectionCard>
 
-          {/* Sort Section Card */}
-          <SectionCard className="p-2 flex items-center gap-2">
-            <Label className="text-sm text-muted-foreground whitespace-nowrap">Sort:</Label>
-            <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as "a-z" | "z-a" | "listings")}>
-              <SelectTrigger className="w-36 h-9 border-0 shadow-none">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="a-z">Name A-Z</SelectItem>
-                <SelectItem value="z-a">Name Z-A</SelectItem>
-                <SelectItem value="listings">Most Listings</SelectItem>
-              </SelectContent>
-            </Select>
-          </SectionCard>
+            {/* Separator */}
+            <div className="h-6 w-px bg-neutral-200" />
 
-          {/* Result Count */}
-          <div className="flex items-center ml-auto text-sm text-muted-foreground">
-            <Users className="h-4 w-4 mr-1.5 text-primary" />
-            <span className="font-semibold text-foreground">{resultCount}</span>
-            <span className="ml-1">agents</span>
+            {/* Quick Filters */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="filter-incentives"
+                  checked={showBuyerIncentivesOnly}
+                  onCheckedChange={(checked) => setShowBuyerIncentivesOnly(checked as boolean)}
+                />
+                <Label htmlFor="filter-incentives" className="text-sm cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+                  <Gift className="h-3.5 w-3.5 text-emerald-600" />
+                  Buyer Incentives
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="filter-listings"
+                  checked={showListingAgentsOnly}
+                  onCheckedChange={(checked) => setShowListingAgentsOnly(checked as boolean)}
+                />
+                <Label htmlFor="filter-listings" className="text-sm cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+                  <Home className="h-3.5 w-3.5 text-emerald-600" />
+                  Has Listings
+                </Label>
+              </div>
+            </div>
+
+            {/* Clear Filters - Push to Right */}
+            {hasActiveFilters && (
+              <>
+                <div className="flex-1" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClearFilters}
+                  className="h-8 px-3 text-xs text-neutral-500 hover:text-neutral-700"
+                >
+                  <RotateCcw className="h-3 w-3 mr-1.5" />
+                  Clear All
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
         {/* Active Filters Summary Bar */}
         {hasActiveFilters && (
-          <SectionCard className="p-2 flex items-center gap-2 flex-wrap">
-            <Filter className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-muted-foreground">Active:</span>
+          <div className="mt-3 bg-white border border-neutral-200 rounded-xl p-3 flex items-center gap-2 flex-wrap">
+            <Filter className="h-4 w-4 text-emerald-600" />
+            <span className="text-sm font-medium text-neutral-500">Active:</span>
             
             {activeFilterPills.map((pill, index) => (
               <span
                 key={index}
-                className="inline-flex items-center gap-1 bg-muted border border-border rounded-md px-2 py-1 text-xs font-medium text-foreground"
+                className="inline-flex items-center gap-1 bg-neutral-100 border border-neutral-200 rounded-md px-2 py-1 text-xs font-medium text-neutral-700"
               >
                 {pill.label}
                 <button
                   onClick={pill.onRemove}
-                  className="hover:text-destructive ml-0.5"
+                  className="hover:text-red-500 ml-0.5 transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -242,26 +289,16 @@ const AgentSearchFilters = ({
 
             <div className="flex-1" />
 
-            {/* Actions */}
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearFilters}
-              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Reset
-            </Button>
-            <Button
-              variant="brandOutline"
+              variant="outline"
               size="sm"
               onClick={handleSaveAsHotsheet}
-              className="h-7 px-2 text-xs"
+              className="h-7 px-3 text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50"
             >
-              <FileSpreadsheet className="h-3 w-3 mr-1" />
+              <FileSpreadsheet className="h-3 w-3 mr-1.5" />
               Save as Hotsheet
             </Button>
-          </SectionCard>
+          </div>
         )}
       </div>
     </div>
