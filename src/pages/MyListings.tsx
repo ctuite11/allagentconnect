@@ -1043,7 +1043,7 @@ const MyListings = () => {
           
           {/* AAC Empty State Card - matches Hot Sheets pattern */}
           <div className="aac-card p-12 text-center">
-            <Home className="h-16 w-16 mx-auto mb-4 text-neutral-400" />
+            <Plus className="h-16 w-16 mx-auto mb-4 text-neutral-400" />
             <h3 className="text-xl font-semibold text-neutral-800 mb-2">No listings yet</h3>
             <p className="text-neutral-600 mb-6">
               Create your first listing to get started.
@@ -1053,7 +1053,7 @@ const MyListings = () => {
               className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create Listing
+              Create New Listing
             </Button>
           </div>
         </div>
