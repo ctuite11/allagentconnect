@@ -180,9 +180,11 @@ const ListingSearch = () => {
       <main className="flex-1 pt-28">
         <div className="max-w-[1280px] mx-auto px-6 py-6">
           {/* Page Header */}
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-neutral-900 font-display mb-8">
-            Listing Search
-          </h1>
+          <PageHeader
+            title="Listing Search"
+            subtitle="Search and filter available listings"
+            className="mb-8"
+          />
           
           {/* Action Bar */}
           <div className="rounded-3xl border border-neutral-200 bg-white aac-shadow mb-4">

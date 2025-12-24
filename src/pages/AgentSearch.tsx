@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Users } from "lucide-react";
 import { toast } from "sonner";
 import AgentSearchFilters from "@/components/agent-search/AgentSearchFilters";
 import AgentMarketplaceGrid from "@/components/agent-search/AgentMarketplaceGrid";
@@ -91,29 +91,14 @@ const AgentSearch = () => {
       <Navigation />
 
       <main className="flex-1 pt-16">
-        {/* Header Section */}
-        <section className="bg-card border-b border-border py-10">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="flex items-start justify-between gap-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-100">
-                  <Users className="h-6 w-6 text-emerald-600" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">Find an Agent</h1>
-                  <p className="text-muted-foreground mt-1">
-                    Browse verified agents and the incentives they offer to buyers and sellers.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-lg border border-border">
-                <Users className="h-4 w-4 text-emerald-600" />
-                <span className="text-lg font-bold text-foreground">{filteredAgents.length}</span>
-                <span className="text-sm text-muted-foreground">agents</span>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* Header */}
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <PageHeader
+            title="Find an Agent"
+            subtitle="Browse verified agents and the incentives they offer to buyers and sellers."
+            className="mb-8"
+          />
+        </div>
 
         {/* Simplified Filters */}
         <AgentSearchFilters

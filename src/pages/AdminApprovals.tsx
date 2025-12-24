@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -10,16 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   ExternalLink, 
-  Shield, 
   Search, 
   Pencil, 
   Trash2, 
   Mail, 
   ChevronUp, 
   ChevronDown,
-  Users,
   CheckCircle,
-  XCircle
+  XCircle,
+  Users
 } from "lucide-react";
 import {
   Table,
@@ -399,21 +399,11 @@ export default function AdminApprovals() {
     <div className="min-h-screen bg-[#FAFAF8] pt-20">
       <div className="container mx-auto py-8 px-4 max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-[#F7F6F3] border border-slate-900">
-                <Shield className="h-6 w-6 text-emerald-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Admin Tools</h1>
-                <p className="text-sm text-muted-foreground">
-                  Manage all agents, update info, control access
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Admin Tools"
+          subtitle="Manage all agents, update info, control access"
+          className="mb-8"
+        />
 
         {/* Filters Bar */}
         <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)] mb-6">

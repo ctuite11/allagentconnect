@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Bed, Bath, Square, TrendingUp, TrendingDown, Calendar, DollarSign, BarChart3 } from "lucide-react";
+import { MapPin, Bed, Bath, Square, TrendingUp, TrendingDown, Calendar, DollarSign } from "lucide-react";
 import { differenceInDays, format, subDays, subMonths } from "date-fns";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
@@ -203,7 +203,6 @@ const MarketInsights = () => {
           <PageHeader
             title="Market Insights"
             subtitle="Real-time analytics and trends from recently sold properties"
-            icon={<BarChart3 className="w-10 h-10 text-primary" />}
             className="mb-8"
           />
 

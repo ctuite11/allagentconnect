@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -215,12 +216,11 @@ const MyFavorites = () => {
       
       <main className="flex-1 bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">My Favorites</h1>
-            <p className="text-lg text-muted-foreground">
-              All your saved listings from hot sheets
-            </p>
-          </div>
+          <PageHeader
+            title="My Favorites"
+            subtitle="All your saved listings from hot sheets"
+            className="mb-8"
+          />
 
           {/* Bulk Actions Toolbar */}
           <div className="flex justify-between items-center mb-6 gap-4">
