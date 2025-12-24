@@ -965,11 +965,11 @@ export function CreateHotSheetDialog({
               <span className="text-sm font-medium text-foreground">Matching Listings:</span>
               {loadingCount ? (
                 <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
                   <span className="text-sm text-muted-foreground">Searching...</span>
                 </div>
               ) : (
-                <span className="text-lg font-bold text-primary">
+                <span className="text-lg font-bold text-emerald-600">
                   {matchingListingsCount} {matchingListingsCount === 1 ? "property" : "properties"}
                 </span>
               )}
@@ -1262,7 +1262,7 @@ export function CreateHotSheetDialog({
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Towns & Neighborhoods
                           {selectedCities.length > 0 && (
-                            <span className="ml-2 text-xs font-normal text-green-600">
+                            <span className="ml-2 text-xs font-normal text-emerald-600">
                               ({selectedCities.length} selected)
                             </span>
                           )}
@@ -1282,7 +1282,7 @@ export function CreateHotSheetDialog({
                                 name="show-areas"
                                 checked={showAreas === true}
                                 onChange={() => setShowAreas(true)}
-                                className="w-4 h-4"
+                                className="w-4 h-4 accent-emerald-600"
                               />
                               <Label htmlFor="show-yes" className="text-sm">Yes</Label>
                             </div>
@@ -1293,7 +1293,7 @@ export function CreateHotSheetDialog({
                                 name="show-areas"
                                 checked={showAreas === false}
                                 onChange={() => setShowAreas(false)}
-                                className="w-4 h-4"
+                                className="w-4 h-4 accent-emerald-600"
                               />
                               <Label htmlFor="show-no" className="text-sm">No</Label>
                             </div>
@@ -1387,7 +1387,7 @@ export function CreateHotSheetDialog({
                             <Button 
                               type="button" 
                               onClick={handleAddMultipleTowns}
-                              className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 text-sm"
+                              className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-4 text-sm"
                             >
                               Add
                             </Button>
@@ -1404,7 +1404,7 @@ export function CreateHotSheetDialog({
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Property Type
                           {propertyTypes.length > 0 && (
-                            <span className="ml-2 text-xs font-normal text-green-600">
+                            <span className="ml-2 text-xs font-normal text-emerald-600">
                               ({propertyTypes.length} selected)
                             </span>
                           )}
@@ -1453,7 +1453,7 @@ export function CreateHotSheetDialog({
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Status
                           {statuses.length > 0 && (
-                            <span className="ml-2 text-xs font-normal text-green-600">
+                            <span className="ml-2 text-xs font-normal text-emerald-600">
                               ({statuses.length} selected)
                             </span>
                           )}
@@ -1766,7 +1766,7 @@ export function CreateHotSheetDialog({
             <Button 
               onClick={handleValidateAndShowConfirmation} 
               disabled={saving}
-              className="min-w-[180px]"
+              className="min-w-[180px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
             >
               {saving ? (
                 <>
@@ -1843,7 +1843,7 @@ export function CreateHotSheetDialog({
 
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCreate}>
+            <AlertDialogAction onClick={handleCreate} className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white">
               Confirm & Create
             </AlertDialogAction>
           </AlertDialogFooter>
