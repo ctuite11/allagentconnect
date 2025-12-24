@@ -7,7 +7,6 @@ import { Users } from "lucide-react";
 import { toast } from "sonner";
 import AgentSearchFilters from "@/components/agent-search/AgentSearchFilters";
 import AgentSearchTable from "@/components/agent-search/AgentSearchTable";
-import { PageHeader } from "@/components/ui/page-header";
 
 const AgentSearch = () => {
   const navigate = useNavigate();
@@ -161,18 +160,29 @@ const AgentSearch = () => {
       <Navigation />
 
       <main className="flex-1 pt-16">
-        {/* Compact Header */}
-        <section className="bg-card border-b border-border py-6">
+        {/* Context Zone - Title, Subtitle, Agent Count */}
+        <section className="bg-card border-b border-border py-8">
           <div className="container mx-auto px-4">
-            <PageHeader
-              title="Agent Directory"
-              subtitle="Find agents, view listings, and connect for deals"
-              icon={<Users className="h-6 w-6 text-primary" />}
-            />
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                  <Users className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Agent Directory</h1>
+                  <p className="text-muted-foreground mt-1">Search and connect with verified agents across the network</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-lg border border-border">
+                <Users className="h-4 w-4 text-emerald-600" />
+                <span className="text-lg font-bold text-foreground">{sortedAgents.length}</span>
+                <span className="text-sm text-muted-foreground">agents</span>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Sticky Filter Bar */}
+        {/* Search Zone - Filters in Card */}
         <AgentSearchFilters
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -186,7 +196,6 @@ const AgentSearch = () => {
           sortOrder={sortOrder}
           setSortOrder={setSortOrder}
           onClearFilters={handleClearFilters}
-          resultCount={sortedAgents.length}
         />
 
         {/* Table View */}
