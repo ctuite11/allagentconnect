@@ -24,6 +24,10 @@ interface Agent {
   office_city?: string;
   office_state?: string;
   agent_county_preferences?: any[];
+  // Verification comes from agent_settings
+  agent_settings?: {
+    agent_status?: string;
+  };
 }
 
 interface AgentMarketplaceCardProps {
@@ -32,53 +36,59 @@ interface AgentMarketplaceCardProps {
 }
 
 // Determine the primary incentive badge for an agent
+// AAC rule: all badges use emerald (primary) or neutral (secondary) only
 const getIncentiveBadge = (agent: Agent): { label: string; icon: React.ReactNode; color: string } | null => {
   const buyerIncentives = agent.buyer_incentives?.toLowerCase() || "";
   const sellerIncentives = agent.seller_incentives?.toLowerCase() || "";
   
-  // Check for rebate keywords
+  // Primary style for monetary incentives
+  const primaryStyle = "bg-emerald-50 text-emerald-800 border-emerald-200";
+  // Secondary style for non-monetary incentives
+  const secondaryStyle = "bg-neutral-50 text-neutral-800 border-neutral-200";
+  
+  // Check for rebate keywords (primary - monetary)
   if (buyerIncentives.includes("rebate") || buyerIncentives.includes("cash back")) {
     return { 
       label: "Buyer Rebate Available", 
       icon: <DollarSign className="h-3 w-3" />,
-      color: "bg-emerald-50 text-emerald-700 border-emerald-200"
+      color: primaryStyle
     };
   }
   
-  // Check for seller credit
+  // Check for seller credit (primary - monetary)
   if (sellerIncentives.includes("credit") || sellerIncentives.includes("closing")) {
     return { 
       label: "Seller Credit Offered", 
       icon: <Gift className="h-3 w-3" />,
-      color: "bg-blue-50 text-blue-700 border-blue-200"
+      color: primaryStyle
     };
   }
   
-  // Check for flexible commission
+  // Check for flexible commission (primary - monetary)
   if (buyerIncentives.includes("commission") || sellerIncentives.includes("commission") || 
       buyerIncentives.includes("flexible") || sellerIncentives.includes("flexible")) {
     return { 
       label: "Flexible Commission", 
       icon: <Percent className="h-3 w-3" />,
-      color: "bg-purple-50 text-purple-700 border-purple-200"
+      color: primaryStyle
     };
   }
   
-  // Check for referral friendly
+  // Check for referral friendly (secondary - non-monetary)
   if (buyerIncentives.includes("referral") || sellerIncentives.includes("referral")) {
     return { 
       label: "Referral Friendly", 
       icon: <Handshake className="h-3 w-3" />,
-      color: "bg-amber-50 text-amber-700 border-amber-200"
+      color: secondaryStyle
     };
   }
   
-  // If has any incentives text, show generic
+  // If has any incentives text, show generic (primary)
   if (agent.buyer_incentives || agent.seller_incentives) {
     return { 
       label: "Incentives Available", 
       icon: <Gift className="h-3 w-3" />,
-      color: "bg-emerald-50 text-emerald-700 border-emerald-200"
+      color: primaryStyle
     };
   }
   
@@ -98,12 +108,8 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
       ? `${agent.agent_county_preferences[0].counties.name}, ${agent.agent_county_preferences[0].counties.state}`
       : null;
 
-  // Verified badge logic
-  const hasPhoto = !!agent.headshot_url;
-  const hasBrokerage = !!(agent.company || agent.office_name);
-  const hasLocation = !!locationDisplay;
-  const hasContact = !!(phoneNumber || agent.email);
-  const isVerified = hasPhoto && hasBrokerage && hasLocation && hasContact;
+  // Verified badge logic - must be based on actual verification status, not profile completeness
+  const isVerified = agent.agent_settings?.agent_status === 'approved';
 
   // Get incentive badge
   const incentiveBadge = getIncentiveBadge(agent);
