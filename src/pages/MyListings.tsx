@@ -1041,33 +1041,20 @@ const MyListings = () => {
             className="mb-8"
           />
           
-          {/* AAC Empty State Card */}
-          <div className="aac-card p-12 text-center max-w-md mx-auto">
-            <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
-              <Home className="h-6 w-6 text-emerald-600" />
-            </div>
-            
-            <h3 className="text-lg font-semibold text-neutral-900 mb-1">No listings yet</h3>
-            <p className="text-neutral-600 text-sm mb-6">
-              Create a listing to manage it privately or share with AAC agents.
+          {/* AAC Empty State Card - matches Hot Sheets pattern */}
+          <div className="aac-card p-12 text-center">
+            <Home className="h-16 w-16 mx-auto mb-4 text-neutral-400" />
+            <h3 className="text-xl font-semibold text-neutral-800 mb-2">No listings yet</h3>
+            <p className="text-neutral-600 mb-6">
+              Create your first listing to get started.
             </p>
-            
-            <div className="flex items-center justify-center gap-3">
-              <Button 
-                onClick={() => handleNewListing("new")} 
-                className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Listing
-              </Button>
-              <Button 
-                variant="outline"
-                className="border-neutral-200 text-neutral-700 hover:bg-neutral-50"
-                onClick={() => handleNewListing("draft")}
-              >
-                Start Draft
-              </Button>
-            </div>
+            <Button 
+              onClick={() => handleNewListing("new")} 
+              className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Listing
+            </Button>
           </div>
         </div>
       </div>
