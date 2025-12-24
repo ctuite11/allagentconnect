@@ -1032,31 +1032,34 @@ const MyListings = () => {
 
   if (listings.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col">
         <Navigation />
-        <div className="flex-1 max-w-[1280px] mx-auto px-6 py-6 pt-20">
-          <PageHeader
-            title="My Listings"
-            subtitle="Manage your active, pending, and past listings from one place."
-            className="mb-8"
-          />
-          
-          {/* AAC Empty State Card - matches Hot Sheets pattern */}
-          <div className="aac-card p-12 text-center">
-            <Plus className="h-16 w-16 mx-auto mb-4 text-neutral-400" />
-            <h3 className="text-xl font-semibold text-neutral-800 mb-2">No listings yet</h3>
-            <p className="text-neutral-600 mb-6">
-              Create your first listing to get started.
-            </p>
-            <Button 
-              onClick={() => handleNewListing("new")} 
-              className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create New Listing
-            </Button>
+        
+        <main className="flex-1 bg-background pt-20">
+          <div className="container mx-auto px-4 py-8 max-w-5xl">
+            <PageHeader
+              title="My Listings"
+              subtitle="Manage your active, pending, and past listings from one place."
+              className="mb-8"
+            />
+            
+            {/* Empty State - matches Hot Sheets pattern */}
+            <div className="aac-card p-12 text-center">
+              <Plus className="h-16 w-16 mx-auto mb-4 text-neutral-400" />
+              <h3 className="text-xl font-semibold text-neutral-800 mb-2">No listings yet</h3>
+              <p className="text-neutral-600 mb-6">
+                Create your first listing to get started.
+              </p>
+              <Button 
+                onClick={() => handleNewListing("new")} 
+                className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Listing
+              </Button>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
