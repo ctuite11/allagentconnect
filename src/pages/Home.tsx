@@ -9,6 +9,7 @@ import {
   Lock,
 } from "lucide-react";
 import { Logo } from "@/components/brand";
+import { PageHeader } from "@/components/ui/page-header";
 import heroEditorial from "@/assets/hero-editorial.png";
 
 const cx = (...c: Array<string | false | undefined | null>) => c.filter(Boolean).join(" ");
@@ -53,6 +54,14 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Page Header */}
+      <div className="mx-auto max-w-6xl px-5 pt-6">
+        <PageHeader
+          title="All Agent Connect"
+          subtitle="The private network where verified agents close real deals."
+        />
+      </div>
 
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-5 pt-14 pb-10">
