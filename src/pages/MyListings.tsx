@@ -1035,41 +1035,60 @@ const MyListings = () => {
       <div className="min-h-screen flex flex-col bg-background">
         <Navigation />
         <div className="flex-1 max-w-[1280px] mx-auto px-6 py-6 pt-20">
-          <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-            <h1 className="text-3xl font-bold text-foreground font-display mb-2">My Listings</h1>
-            <p className="text-muted-foreground mb-6">You haven't created any listings yet.</p>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition text-lg">
-                  <Plus className="h-5 w-5" />
-                  Create Your First Listing
-                  <ChevronDown className="h-4 w-4 ml-1" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-56">
-                <DropdownMenuItem onClick={() => handleNewListing("new")} className="cursor-pointer">
-                  <Home className="h-4 w-4 mr-2 text-emerald-500" />
-                  <div>
-                    <div className="font-medium">New (Active)</div>
-                    <div className="text-xs text-muted-foreground">Ready to go live on market</div>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNewListing("off_market")} className="cursor-pointer">
-                  <Lock className="h-4 w-4 mr-2 text-amber-500" />
-                  <div>
-                    <div className="font-medium">Off-Market (Private)</div>
-                    <div className="text-xs text-muted-foreground">Private listing for agents only</div>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNewListing("coming_soon")} className="cursor-pointer">
-                  <Sparkles className="h-4 w-4 mr-2 text-purple-500" />
-                  <div>
-                    <div className="font-medium">Coming Soon</div>
-                    <div className="text-xs text-muted-foreground">Pre-market announcement</div>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <PageHeader
+            title="My Listings"
+            subtitle="Manage your active, pending, and past listings from one place."
+            className="mb-8"
+          />
+          
+          {/* AAC Empty State Card */}
+          <div className="aac-card p-12 text-center max-w-xl mx-auto">
+            {/* Emerald Icon Chip */}
+            <div className="w-16 h-16 bg-emerald-50 border border-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Home className="h-8 w-8 text-emerald-600" />
+            </div>
+            
+            {/* Title */}
+            <h3 className="text-xl font-semibold text-neutral-900 mb-2">No listings yet</h3>
+            
+            {/* Body */}
+            <p className="text-neutral-600 mb-2">
+              Create your first listing to track it privately, share it with AAC agents, or keep it as a draft until it's ready.
+            </p>
+            <p className="text-sm text-neutral-500 mb-6">
+              Create a listing to share privately with agents or keep as draft.
+            </p>
+            
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
+              <Button 
+                onClick={() => handleNewListing("new")} 
+                className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Listing
+              </Button>
+              <Button 
+                variant="outline"
+                className="border-neutral-200 text-neutral-800 hover:bg-neutral-50"
+                onClick={() => handleNewListing("draft")}
+              >
+                Start as Draft
+              </Button>
+            </div>
+            
+            {/* Quick Tips Pills */}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
+                Draft first
+              </span>
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
+                Share with AAC agents
+              </span>
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
+                Add incentives later
+              </span>
+            </div>
           </div>
         </div>
       </div>
