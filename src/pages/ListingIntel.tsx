@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
+import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -136,12 +137,11 @@ const ListingIntel = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Listing Intel</h1>
-          <p className="text-muted-foreground">
-            Filter and find potential buyers for your listings
-          </p>
-        </div>
+        <PageHeader
+          title="Listing Intel"
+          subtitle="Filter and find potential buyers for your listings"
+          className="mb-8"
+        />
 
         {/* Filters */}
         <Card className="mb-6 border-l-4 border-l-primary">
