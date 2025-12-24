@@ -1042,25 +1042,17 @@ const MyListings = () => {
           />
           
           {/* AAC Empty State Card */}
-          <div className="aac-card p-12 text-center max-w-xl mx-auto">
-            {/* Emerald Icon Chip */}
-            <div className="w-16 h-16 bg-emerald-50 border border-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Home className="h-8 w-8 text-emerald-600" />
+          <div className="aac-card p-12 text-center max-w-md mx-auto">
+            <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
+              <Home className="h-6 w-6 text-emerald-600" />
             </div>
             
-            {/* Title */}
-            <h3 className="text-xl font-semibold text-neutral-900 mb-2">No listings yet</h3>
-            
-            {/* Body */}
-            <p className="text-neutral-600 mb-2">
-              Create your first listing to track it privately, share it with AAC agents, or keep it as a draft until it's ready.
-            </p>
-            <p className="text-sm text-neutral-500 mb-6">
-              Create a listing to share privately with agents or keep as draft.
+            <h3 className="text-lg font-semibold text-neutral-900 mb-1">No listings yet</h3>
+            <p className="text-neutral-600 text-sm mb-6">
+              Create a listing to manage it privately or share with AAC agents.
             </p>
             
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
+            <div className="flex items-center justify-center gap-3">
               <Button 
                 onClick={() => handleNewListing("new")} 
                 className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
@@ -1070,24 +1062,11 @@ const MyListings = () => {
               </Button>
               <Button 
                 variant="outline"
-                className="border-neutral-200 text-neutral-800 hover:bg-neutral-50"
+                className="border-neutral-200 text-neutral-700 hover:bg-neutral-50"
                 onClick={() => handleNewListing("draft")}
               >
-                Start as Draft
+                Start Draft
               </Button>
-            </div>
-            
-            {/* Quick Tips Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
-                Draft first
-              </span>
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
-                Share with AAC agents
-              </span>
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
-                Add incentives later
-              </span>
             </div>
           </div>
         </div>
