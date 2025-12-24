@@ -24,7 +24,7 @@ export default function Home() {
       {/* Top Nav */}
       <header className="sticky top-0 z-40 bg-gradient-to-b from-white via-white/90 to-transparent backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-5 py-4 flex items-center justify-between">
-          <Logo size="md" />
+          <Logo size="xl" />
 
           <nav className="hidden md:flex items-center gap-7 text-sm text-slate-600">
             <a className="hover:text-slate-900 transition" href="#proof">
