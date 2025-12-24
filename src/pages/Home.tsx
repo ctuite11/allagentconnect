@@ -54,12 +54,12 @@ export default function Home() {
           </div>
         </div>
       </header>
-
       {/* Page Header */}
-      <div className="mx-auto max-w-6xl px-5 pt-6">
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
         <PageHeader
           title="All Agent Connect"
           subtitle="The private network where verified agents close real deals."
+          className="mb-8"
         />
       </div>
 
