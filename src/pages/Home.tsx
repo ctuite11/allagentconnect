@@ -6,10 +6,8 @@ import {
   MessageSquare,
   MapPinned,
   ArrowRight,
-  Lock,
 } from "lucide-react";
-import { Logo } from "@/components/brand";
-import { PageHeader } from "@/components/ui/page-header";
+import Navigation from "@/components/Navigation";
 import heroEditorial from "@/assets/hero-editorial.png";
 
 const cx = (...c: Array<string | false | undefined | null>) => c.filter(Boolean).join(" ");
@@ -20,51 +18,11 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-slate-900 pb-12">
-      {/* Top Nav */}
-      <header className="sticky top-0 z-40 bg-gradient-to-b from-white via-white/90 to-transparent backdrop-blur-sm">
-        <div className="mx-auto max-w-6xl px-5 py-4 flex items-center justify-between">
-          <Logo size="xl" />
-
-          <nav className="hidden md:flex items-center gap-7 text-sm text-slate-600">
-            <a className="hover:text-slate-900 transition" href="#proof">
-              Proof
-            </a>
-            <a className="hover:text-slate-900 transition" href="#how">
-              How it works
-            </a>
-            <a className="hover:text-slate-900 transition" href="#access">
-              Access
-            </a>
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate("/auth")}
-              className="hidden sm:inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 transition"
-            >
-              Log in
-            </button>
-            <button
-              onClick={() => navigate("/auth?mode=register")}
-              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition"
-            >
-              Request access <ArrowRight className="ml-2 h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </header>
-      {/* Page Header */}
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <PageHeader
-          title="All Agent Connect"
-          subtitle="The private network where verified agents close real deals."
-          className="mb-8"
-        />
-      </div>
-
-      {/* Hero */}
-      <section className="mx-auto max-w-6xl px-5 pt-14 pb-10">
+    <div className="min-h-screen bg-[#FAFAF8] text-slate-900">
+      <Navigation />
+      <main className="pt-20 pb-12">
+        {/* Hero */}
+        <section className="mx-auto max-w-6xl px-5 pt-14 pb-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Copy */}
           <div>
@@ -254,6 +212,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-200/70 bg-[#FAFAF8]">
