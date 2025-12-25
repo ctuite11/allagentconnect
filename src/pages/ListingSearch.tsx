@@ -20,7 +20,10 @@ const ListingSearch = () => {
     if (propertyTypes) urlFilters.propertyTypes = propertyTypes.split(",");
     
     const statuses = searchParams.get("statuses");
-    if (statuses) urlFilters.statuses = statuses.split(",");
+    if (statuses) {
+      // Map legacy "private" to "off_market" for backwards compatibility
+      urlFilters.statuses = statuses.split(",").map(s => s === "private" ? "off_market" : s);
+    }
     
     const towns = searchParams.get("towns");
     if (towns) urlFilters.selectedTowns = towns.split(",");

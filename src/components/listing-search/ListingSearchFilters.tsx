@@ -59,6 +59,7 @@ export interface FilterState {
   brokerTours: boolean;
   listingEventsTimeframe: string;
   internalFilter: "all" | "off_market" | "coming_soon";
+  myOffMarketOnly: boolean;
   listDateFrom: string;
   listDateTo: string;
   offMarketTimeframe: string;
@@ -81,7 +82,7 @@ const parseFormattedNumber = (value: string): string => {
 
 export const initialFilters: FilterState = {
   propertyTypes: [],
-  statuses: ["new", "active", "price_changed", "back_on_market", "extended", "reactivated", "coming_soon", "private"],
+  statuses: ["new", "active", "price_changed", "back_on_market", "extended", "reactivated", "coming_soon", "off_market"],
   bedsMin: "",
   bedsMax: "",
   bathsMin: "",
@@ -115,6 +116,7 @@ export const initialFilters: FilterState = {
   brokerTours: false,
   listingEventsTimeframe: "3days",
   internalFilter: "all",
+  myOffMarketOnly: false,
   listDateFrom: "",
   listDateTo: "",
   offMarketTimeframe: "6months",
@@ -140,7 +142,7 @@ const STATUSES = [
   { value: "extended", label: "Extended" },
   { value: "reactivated", label: "Reactivated" },
   { value: "coming_soon", label: "Coming Soon" },
-  { value: "private", label: "Private" },
+  { value: "off_market", label: "Off-Market (Private)" },
   { value: "under_agreement", label: "Under Agreement" },
   { value: "pending", label: "Pending" },
   { value: "contingent", label: "Contingent" },
@@ -328,14 +330,33 @@ const ListingSearchFilters = ({
               <div className="p-3 flex flex-col md:flex-row gap-4">
                 {/* STATUS Section - 2 columns, no scroll */}
                 <div className="flex-1">
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-0.5 rounded-lg transition-colors mb-1">
-                    <Checkbox
-                      checked={filters.statuses.length === STATUSES.length}
-                      onCheckedChange={toggleAllStatuses}
-                      className="h-3.5 w-3.5"
-                    />
-                    <span className="text-xs font-medium text-neutral-800">Select All</span>
-                  </label>
+                  <div className="flex items-center gap-4 mb-1">
+                    <label className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-0.5 rounded-lg transition-colors">
+                      <Checkbox
+                        checked={filters.statuses.length === STATUSES.length}
+                        onCheckedChange={toggleAllStatuses}
+                        className="h-3.5 w-3.5"
+                      />
+                      <span className="text-xs font-medium text-neutral-800">Select All</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg transition-colors border border-emerald-200">
+                      <Checkbox
+                        checked={filters.myOffMarketOnly}
+                        onCheckedChange={(checked) => {
+                          onFiltersChange({
+                            ...filters,
+                            myOffMarketOnly: !!checked,
+                            // When turning on, ensure off_market is in statuses
+                            statuses: checked 
+                              ? (filters.statuses.includes("off_market") ? filters.statuses : [...filters.statuses, "off_market"])
+                              : filters.statuses
+                          });
+                        }}
+                        className="h-3.5 w-3.5"
+                      />
+                      <span className="text-xs font-medium text-emerald-700">My Off-Market</span>
+                    </label>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5">
                     {STATUSES.map((status) => (
                       <label
