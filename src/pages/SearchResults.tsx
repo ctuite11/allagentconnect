@@ -62,6 +62,10 @@ const SearchResults = () => {
       try {
         setLoading(true);
         
+        // Get current user for private listing visibility check
+        const { data: { user } } = await supabase.auth.getUser();
+        const currentUserId = user?.id;
+        
         // Build unified search criteria
         const criteria = {
           statuses: filters.statuses,
@@ -116,6 +120,13 @@ const SearchResults = () => {
             });
           });
         }
+
+        // Private visibility rule: private listings only visible to listing agent
+        finalListings = finalListings.filter((listing: any) => {
+          if (listing.status !== 'private') return true;
+          // Private listings: only show if current user is the listing agent
+          return currentUserId && listing.agent_id === currentUserId;
+        });
 
         // Fetch agent profiles in batch and attach to listings
         const agentIds = Array.from(new Set((finalListings as any[]).map(l => l.agent_id).filter(Boolean)));
