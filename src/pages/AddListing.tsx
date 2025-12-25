@@ -2016,11 +2016,30 @@ const AddListing = () => {
     return data.id;
   };
 
+  // Helper to get fresh user from server - single source of truth for identity
+  // Uses auth.getUser() which is server-verified, NOT cached state
+  const getFreshUserOrRedirect = async () => {
+    const { data: { user: freshUser }, error } = await supabase.auth.getUser();
+    if (error || !freshUser) {
+      toast.error("Session expired. Please log in again.");
+      navigate("/auth");
+      return null;
+    }
+    return freshUser;
+  };
+
   // Centralized helper to build listing payload from form data
+  // IMPORTANT: agentId is now a REQUIRED parameter - must come from getFreshUserOrRedirect()
   const buildListingDataFromForm = (
     uploadedMedia: { photos: any[]; floorPlans: any[]; documents: any[] },
-    overrideStatus?: string
+    overrideStatus?: string,
+    agentId?: string
   ) => {
+    // Hard guard - agent_id is required
+    if (!agentId) {
+      throw new Error("Missing agentId for listing save - session may have expired");
+    }
+
     // Normalize Boston neighborhoods at save time - safety net for all code paths
     let finalCity = formData.city?.trim() || "TBD";
     let finalNeighborhood = formData.neighborhood || null;
@@ -2035,8 +2054,8 @@ const AddListing = () => {
     }
 
     return {
-      // Agent
-      agent_id: user?.id,
+      // Agent - from verified session, not cached state
+      agent_id: agentId,
       
       // Status & Type
       status: overrideStatus || formData.status,
@@ -2129,10 +2148,11 @@ const AddListing = () => {
 
   const handleSaveDraft = async (isAutoSave = false) => {
     try {
-      if (!user) {
+      // Get fresh user from server - single source of truth
+      const freshUser = await getFreshUserOrRedirect();
+      if (!freshUser) {
         if (!isAutoSave) {
-          toast.error("Please sign in to save drafts");
-          navigate("/auth");
+          // getFreshUserOrRedirect already shows toast and redirects
         }
         return;
       }
@@ -2164,10 +2184,10 @@ const AddListing = () => {
         }
       }
 
-      // Use centralized helper to build payload
-      const payload = buildListingDataFromForm(uploaded, "draft");
+      // Use centralized helper to build payload with FRESH user ID
+      const payload = buildListingDataFromForm(uploaded, "draft", freshUser.id);
 
-      console.log('Saving draft with payload:', { ...payload, photos: payload.photos?.length || 0 });
+      console.log('Saving draft with payload:', { ...payload, photos: payload.photos?.length || 0, agent_id: payload.agent_id });
 
       // Remove agent_id from update payload (it's immutable after creation)
       const { agent_id, ...updatePayload } = payload;
@@ -2245,9 +2265,10 @@ const AddListing = () => {
 
   // Handler for "Save Changes" in edit mode - preserves current status (does NOT force draft)
   const handleSaveChanges = async () => {
-    if (!user) {
-      toast.error("You must be logged in to save changes.");
-      return;
+    // Get fresh user from server - single source of truth
+    const freshUser = await getFreshUserOrRedirect();
+    if (!freshUser) {
+      return; // getFreshUserOrRedirect already shows toast and redirects
     }
 
     const targetId = listingId || draftId;
@@ -2288,9 +2309,10 @@ const AddListing = () => {
       }
 
       // Use centralized helper WITHOUT overriding status - keeps current form status
-      const payload = buildListingDataFromForm(uploaded);
+      // IMPORTANT: Use fresh user ID from server-verified session
+      const payload = buildListingDataFromForm(uploaded, undefined, freshUser.id);
 
-      console.log('[handleSaveChanges] Saving with status:', payload.status);
+      console.log('[handleSaveChanges] Saving with status:', payload.status, 'agent_id:', payload.agent_id);
 
       // Remove agent_id from update payload (it's immutable after creation)
       const { agent_id, ...updatePayload } = payload;
@@ -2367,13 +2389,19 @@ const AddListing = () => {
     
     // Save current form data silently before navigating (don't overwrite media - photos page handles it)
     try {
+      // Get fresh user for consistency (though we're only updating, not inserting)
+      const freshUser = await getFreshUserOrRedirect();
+      if (!freshUser) return;
+      
       // Get current media from state to preserve it
       const currentPhotos = photos.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
       const currentFloorPlans = floorPlans.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
       const currentDocuments = documents.filter(d => d.uploaded && d.url).map(d => ({ url: d.url, name: d.file?.name || '' }));
       
       const payload = buildListingDataFromForm(
-        { photos: currentPhotos, floorPlans: currentFloorPlans, documents: currentDocuments }
+        { photos: currentPhotos, floorPlans: currentFloorPlans, documents: currentDocuments },
+        undefined,
+        freshUser.id
       );
       
       // Remove agent_id from update (it's immutable)
@@ -2408,12 +2436,18 @@ const AddListing = () => {
     
     // Save current form data silently before navigating
     try {
+      // Get fresh user for consistency
+      const freshUser = await getFreshUserOrRedirect();
+      if (!freshUser) return;
+      
       const currentPhotos = photos.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
       const currentFloorPlans = floorPlans.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
       const currentDocuments = documents.filter(d => d.uploaded && d.url).map(d => ({ url: d.url, name: d.file?.name || '' }));
       
       const payload = buildListingDataFromForm(
-        { photos: currentPhotos, floorPlans: currentFloorPlans, documents: currentDocuments }
+        { photos: currentPhotos, floorPlans: currentFloorPlans, documents: currentDocuments },
+        undefined,
+        freshUser.id
       );
       
       const { agent_id, ...updatePayload } = payload;
@@ -2440,6 +2474,13 @@ const AddListing = () => {
     setSubmitting(true);
 
     try {
+      // Get fresh user from server FIRST - single source of truth for identity
+      const freshUser = await getFreshUserOrRedirect();
+      if (!freshUser) {
+        setSubmitting(false);
+        return; // getFreshUserOrRedirect already shows toast and redirects
+      }
+
       // Validate required fields based on listing type
       const requiredFields = formData.listing_type === "for_sale" 
         ? { address: formData.address, city: formData.city, state: formData.state, zipCode: formData.zip_code, price: formData.price }
@@ -2511,12 +2552,13 @@ const AddListing = () => {
       toast.info("Uploading files...");
       const uploadedFiles = await uploadFiles();
 
-      // Use centralized helper to build payload (same as handleSaveDraft for consistency)
+      // Use centralized helper to build payload with FRESH user ID
       // When publishing, ensure we never save "draft" - default to "new" if somehow still draft
       const statusForPublish = (formData.status === "draft" || !formData.status) ? "new" : formData.status;
       const listingData = buildListingDataFromForm(
         { photos: uploadedFiles.photos, floorPlans: uploadedFiles.floorPlans, documents: uploadedFiles.documents },
-        publishNow ? statusForPublish : "draft"
+        publishNow ? statusForPublish : "draft",
+        freshUser.id  // Use fresh user ID from server-verified session
       );
       
       // Override with validated data for consistency
@@ -2709,6 +2751,12 @@ const AddListing = () => {
               Hovering over your Dashboard within the Menu will give you easy access to your Account. 
               If you have to walk away from your Listing use Save as Draft.
             </p>
+            {/* Creating as indicator - shows which agent is logged in */}
+            {user?.email && (
+              <div className="text-xs text-muted-foreground mt-2">
+                Creating as: <span className="font-medium text-foreground">{user.email}</span>
+              </div>
+            )}
           </div>
 
           {/* Action Buttons - Sticky Top Bar */}
