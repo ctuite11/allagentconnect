@@ -463,7 +463,7 @@ const Auth = () => {
                 <div className="space-y-3">
                   <Button
                     onClick={() => navigate('/pending-verification', { replace: true })}
-                    className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-xl"
+                    className="w-full h-11 bg-accent hover:bg-accent/90 text-white font-medium rounded-xl"
                   >
                     View Request Status
                   </Button>
@@ -480,8 +480,8 @@ const Auth = () => {
               </>
             ) : isVerified ? (
               <>
-                <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mx-auto mb-5">
-                  <CheckCircle2 className="w-7 h-7 text-emerald-600" />
+                <div className="w-14 h-14 bg-accent/10 border border-accent/30 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <CheckCircle2 className="w-7 h-7 text-accent" />
                 </div>
                 <h2 className="text-xl font-semibold text-neutral-900 mb-2">
                   Welcome Back
@@ -492,7 +492,7 @@ const Auth = () => {
                 <div className="space-y-3">
                   <Button
                     onClick={() => navigate('/auth/callback', { replace: true })}
-                    className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-xl"
+                    className="w-full h-11 bg-accent hover:bg-accent/90 text-white font-medium rounded-xl"
                   >
                     Continue to App
                   </Button>
@@ -520,7 +520,7 @@ const Auth = () => {
                 </p>
                 <Button
                   onClick={handleLogout}
-                  className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-xl"
+                  className="w-full h-11 bg-accent hover:bg-accent/90 text-white font-medium rounded-xl"
                   disabled={loading}
                 >
                   {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
@@ -577,7 +577,7 @@ const Auth = () => {
               </p>
               <Button
                 onClick={() => switchMode("signin")}
-                className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-xl"
+                className="w-full h-11 bg-accent hover:bg-accent/90 text-white font-medium rounded-xl"
               >
                 Back to Sign In
               </Button>
@@ -605,7 +605,7 @@ const Auth = () => {
                       required
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-neutral-900 focus:border-neutral-900 focus-visible:ring-neutral-900"
+                      className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
                     />
                   </div>
                   <div>
@@ -619,7 +619,7 @@ const Auth = () => {
                       required
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-neutral-900 focus:border-neutral-900 focus-visible:ring-neutral-900"
+                      className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
                     />
                   </div>
                 </div>
@@ -638,7 +638,7 @@ const Auth = () => {
                   autoFocus={mode !== "register"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-neutral-900 focus:border-neutral-900 focus-visible:ring-neutral-900"
+                  className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
                 />
               </div>
 
@@ -669,7 +669,7 @@ const Auth = () => {
                       }
                       setPhone(formatted);
                     }}
-                    className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-neutral-900 focus:border-neutral-900 focus-visible:ring-neutral-900"
+                    className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
                   />
                 </div>
               )}
@@ -682,7 +682,7 @@ const Auth = () => {
                       License State
                     </Label>
                     <Select value={licenseState} onValueChange={setLicenseState}>
-                      <SelectTrigger className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white focus:ring-neutral-900 focus:border-neutral-900">
+                      <SelectTrigger className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white focus:ring-0 focus:border-accent">
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
@@ -705,7 +705,7 @@ const Auth = () => {
                       required
                       value={licenseNumber}
                       onChange={(e) => setLicenseNumber(e.target.value)}
-                      className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-neutral-900 focus:border-neutral-900 focus-visible:ring-neutral-900"
+                      className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
                     />
                   </div>
                 </div>
@@ -725,7 +725,7 @@ const Auth = () => {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 pr-10 focus:ring-neutral-900 focus:border-neutral-900 focus-visible:ring-neutral-900"
+                      className="h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 pr-10 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
                     />
                     <button
                       type="button"
@@ -744,11 +744,11 @@ const Auth = () => {
                   {passwordValidation.map((rule) => (
                     <div key={rule.id} className="flex items-center gap-2 text-sm">
                       {rule.valid ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <CheckCircle2 className="h-4 w-4 text-accent" />
                       ) : (
                         <Circle className="h-4 w-4 text-neutral-400" />
                       )}
-                      <span className={rule.valid ? "text-emerald-700" : "text-neutral-500"}>
+                      <span className={rule.valid ? "text-accent" : "text-neutral-500"}>
                         {rule.label}
                       </span>
                     </div>
@@ -769,14 +769,14 @@ const Auth = () => {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-neutral-900 focus:border-neutral-900 focus-visible:ring-neutral-900"
+                    className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
                   />
                   {confirmPassword.length > 0 && (
                     <div className="flex items-center gap-2 text-sm mt-2">
                       {passwordsMatch ? (
                         <>
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                          <span className="text-emerald-700">Passwords match</span>
+                          <CheckCircle2 className="h-4 w-4 text-accent" />
+                          <span className="text-accent">Passwords match</span>
                         </>
                       ) : (
                         <>
@@ -795,7 +795,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("forgot-password")}
-                    className="text-[13px] text-emerald-700 hover:underline"
+                    className="text-[13px] text-accent hover:underline"
                   >
                     Forgot password?
                   </button>
@@ -804,7 +804,7 @@ const Auth = () => {
 
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-xl" 
+                className="w-full h-11 bg-accent hover:bg-accent/90 text-white font-medium rounded-xl" 
                 disabled={loading || (mode === "register" && (!allPasswordRulesPass || !passwordsMatch || !licenseState || !licenseNumber.trim()))}
               >
                 {loading ? (
@@ -833,7 +833,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("register")}
-                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border-2 border-emerald-600 text-emerald-700 font-semibold hover:bg-emerald-50 transition-colors"
+                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border-2 border-accent text-accent font-semibold hover:bg-accent/10 transition-colors"
                   >
                     Create an Account
                   </button>
@@ -844,7 +844,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("signin")}
-                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border-2 border-emerald-600 text-emerald-700 font-semibold hover:bg-emerald-50 transition-colors"
+                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border-2 border-accent text-accent font-semibold hover:bg-accent/10 transition-colors"
                   >
                     Sign In
                   </button>
