@@ -28,7 +28,10 @@ const ListingSearchResults = () => {
     if (propertyTypes) urlFilters.propertyTypes = propertyTypes.split(",");
     
     const statuses = searchParams.get("statuses");
-    if (statuses) urlFilters.statuses = statuses.split(",");
+    if (statuses) {
+      // Map legacy "private" to "off_market" for backwards compatibility
+      urlFilters.statuses = statuses.split(",").map(s => s === "private" ? "off_market" : s);
+    }
     
     const towns = searchParams.get("towns");
     if (towns) urlFilters.selectedTowns = towns.split(",");
@@ -131,6 +134,10 @@ const ListingSearchResults = () => {
   const handleSearch = useCallback(async () => {
     setLoading(true);
     try {
+    // Get current user for off-market visibility check
+    const { data: { user } } = await supabase.auth.getUser();
+    const currentUserId = user?.id;
+
     let query = supabase
       .from("listings")
       .select(`
@@ -171,6 +178,11 @@ const ListingSearchResults = () => {
         query = query.eq("status", "off_market");
       } else if (filters.internalFilter === "coming_soon") {
         query = query.eq("status", "coming_soon");
+      }
+
+      // Apply "My Off-Market" filter - forces off_market status and current user's listings only
+      if (filters.myOffMarketOnly && currentUserId) {
+        query = query.eq("status", "off_market").eq("agent_id", currentUserId);
       }
 
       // Apply property type filter
@@ -282,7 +294,7 @@ const ListingSearchResults = () => {
           }]) || []
         );
 
-        const listingsWithAgents = data.map(l => {
+        let listingsWithAgents = data.map(l => {
           const agentInfo = agentMap.get(l.agent_id);
           return {
             ...l,
@@ -291,6 +303,13 @@ const ListingSearchResults = () => {
             list_agent_phone: agentInfo?.phone || null,
             list_office: agentInfo?.office || null,
           };
+        });
+
+        // Off-market visibility rule: off_market listings only visible to listing agent
+        listingsWithAgents = listingsWithAgents.filter(listing => {
+          if (listing.status !== 'off_market') return true;
+          // Off-market listings: only show if current user is the listing agent
+          return currentUserId && listing.agent_id === currentUserId;
         });
 
         setListings(listingsWithAgents);

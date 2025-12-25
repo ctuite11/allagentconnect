@@ -121,10 +121,10 @@ const SearchResults = () => {
           });
         }
 
-        // Private visibility rule: private listings only visible to listing agent
+        // Off-market visibility rule: off_market listings only visible to listing agent
         finalListings = finalListings.filter((listing: any) => {
-          if (listing.status !== 'private') return true;
-          // Private listings: only show if current user is the listing agent
+          if (listing.status !== 'off_market') return true;
+          // Off-market listings: only show if current user is the listing agent
           return currentUserId && listing.agent_id === currentUserId;
         });
 
