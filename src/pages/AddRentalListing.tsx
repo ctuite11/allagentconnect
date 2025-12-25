@@ -1322,7 +1322,6 @@ const AddRentalListing = () => {
                       'Updated kitchen',
                       'Updated bathrooms',
                       'Fireplace',
-                      'Central air',
                       'Forced air heating',
                       'Basement',
                       'Finished basement',

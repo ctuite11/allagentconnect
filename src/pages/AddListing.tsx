@@ -722,9 +722,18 @@ const AddListing = () => {
         const dbPropertyFeatures = Array.isArray(data.property_features) ? data.property_features as string[] : [];
         const dbAmenities = Array.isArray(data.amenities) ? data.amenities as string[] : [];
         const combinedFeatures = Array.from(new Set([...dbPropertyFeatures, ...dbAmenities]));
-        setPropertyFeatures(combinedFeatures);
+        
+        // Extract otherAmenities from the special __OTHER__ entry if present
+        const otherEntry = combinedFeatures.find(f => f.startsWith('__OTHER__:'));
+        if (otherEntry) {
+          setOtherAmenities(otherEntry.replace('__OTHER__:', ''));
+        }
+        
+        // Filter out the __OTHER__ entry from displayed features
+        const displayFeatures = combinedFeatures.filter(f => !f.startsWith('__OTHER__:'));
+        setPropertyFeatures(displayFeatures);
         // Keep amenities in sync for backward compatibility
-        setAmenities(combinedFeatures);
+        setAmenities(displayFeatures);
         
         if (data.deposit_requirements && Array.isArray(data.deposit_requirements)) {
           setDepositRequirements(data.deposit_requirements as string[]);
@@ -2057,10 +2066,14 @@ const AddListing = () => {
     description: formData.description || null,
     
     // Features & Amenities - write combined set to BOTH columns for backward compatibility
-    property_features: propertyFeatures,
+    // Include otherAmenities in property_features as a special entry if present
+    property_features: otherAmenities?.trim() 
+      ? [...propertyFeatures, `__OTHER__:${otherAmenities.trim()}`] 
+      : propertyFeatures,
     amenities: propertyFeatures, // Same as property_features - unified storage
     area_amenities: areaAmenities.length > 0 ? areaAmenities : null,
     disclosures: disclosures,
+    broker_comments: formData.additional_notes || null, // Broker remarks
     
     // Media
     photos: uploadedMedia.photos,
@@ -3946,7 +3959,7 @@ const AddListing = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {[
                         'Hardwood floors', 'Granite countertops', 'Stainless appliances',
-                        'Updated kitchen', 'Updated bathrooms', 'Fireplace', 'Central air',
+                        'Updated kitchen', 'Updated bathrooms', 'Fireplace',
                         'Forced air heating', 'Basement', 'Finished basement', 'Attic',
                         'Garage', 'Carport', 'Energy efficient', 'Smart home features'
                       ].map((feature) => (
@@ -3974,7 +3987,7 @@ const AddListing = () => {
                   <div className="space-y-3">
                     <Label className="text-base font-medium">Interior Features</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {["Air Conditioning", "Central Air", "Window AC", "Ceiling Fans", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Home Office", "Mudroom", "In-Home Laundry", "Shared Laundry"].map((feature) => (
+                      {["Air Conditioning", "Window AC", "Ceiling Fans", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Mudroom", "In-Home Laundry"].map((feature) => (
                         <div key={feature} className="flex items-center space-x-2">
                           <Checkbox
                             id={`interior-${feature}`}
@@ -4025,7 +4038,7 @@ const AddListing = () => {
                     <div className="space-y-3">
                       <Label className="text-base font-medium">Community Features</Label>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room"].map((feature) => (
+                        {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room", "Common Laundry"].map((feature) => (
                           <div key={feature} className="flex items-center space-x-2">
                             <Checkbox
                               id={`community-${feature}`}
@@ -4571,6 +4584,7 @@ const AddListing = () => {
                         type="button"
                         onClick={handleSaveChanges}
                         disabled={submitting || autoSaving}
+                        className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
                       >
                         {autoSaving ? (
                           <>
@@ -4626,6 +4640,7 @@ const AddListing = () => {
                         type="button"
                         disabled={submitting || autoSaving}
                         onClick={(e) => handleSubmit(e as unknown as React.FormEvent, true)}
+                        className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
                       >
                         {submitting ? (
                           <>

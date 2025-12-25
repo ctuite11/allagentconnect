@@ -954,7 +954,7 @@ const AgentListingDetail = () => {
             )}
 
             {/* Broker Remarks - Agent Only */}
-            {isAgentView && listing.broker_comments && (
+            {isAgentView && (
               <Card className="bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/50 dark:border-amber-800/50 rounded-xl shadow-sm">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -968,22 +968,20 @@ const AgentListingDetail = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{listing.broker_comments}</p>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{listing.broker_comments || "N/A"}</p>
                 </CardContent>
               </Card>
             )}
 
             {/* Additional Notes */}
-            {listing.additional_notes && (
-              <Card className="bg-card border-border rounded-xl shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold">Additional Notes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{listing.additional_notes}</p>
-                </CardContent>
-              </Card>
-            )}
+            <Card className="bg-card border-border rounded-xl shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold">Additional Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-foreground whitespace-pre-wrap">{listing.additional_notes || "N/A"}</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
