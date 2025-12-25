@@ -332,7 +332,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
       )}
 
       {/* Agent-Only: Firm Remarks */}
-      {isAgentView && listing.broker_comments && (
+      {isAgentView && (
         <Card className="rounded-3xl border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base text-orange-900 dark:text-orange-100">
@@ -342,7 +342,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm whitespace-pre-wrap text-foreground/90">{listing.broker_comments}</p>
+            <p className="text-sm whitespace-pre-wrap text-foreground/90">{listing.broker_comments || "N/A"}</p>
           </CardContent>
         </Card>
       )}

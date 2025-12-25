@@ -75,6 +75,7 @@ export function buildListingsQuery(
   };
 
   // Status filter (defaults to active and coming_soon)
+  // Note: Private listings are included in the status filter when explicitly requested
   if (criteria.statuses.length > 0) {
     query = query.in("status", criteria.statuses);
   }
