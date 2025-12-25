@@ -34,8 +34,10 @@ All colors MUST be HSL.
     /* AAC Green Accent System - #6FB83F = hsl(93 50% 48%) */
     --accent: 93 50% 48%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 93 50% 48%;
-    --accent-muted: 93 45% 60%;
+    --accent-hover: 93 55% 42%;
+    --accent-active: 93 60% 36%;
+    --accent-soft: 93 50% 95%;
+    --accent-muted: 93 40% 92%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -107,8 +109,10 @@ All colors MUST be HSL.
     /* AAC Green Accent System (dark mode) */
     --accent: 93 50% 48%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 93 50% 48%;
-    --accent-muted: 93 45% 55%;
+    --accent-hover: 93 55% 42%;
+    --accent-active: 93 60% 36%;
+    --accent-soft: 93 50% 20%;
+    --accent-muted: 93 40% 25%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
