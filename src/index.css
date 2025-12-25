@@ -42,7 +42,7 @@ All colors MUST be HSL.
 
     --border: 0 0% 85%;
     --input: 0 0% 85%;
-    --ring: 160 84% 39%;
+    --ring: 93 50% 48%;
 
     /* Card border tokens - neutral warm gray */
     --aac-card-border: 0 0% 85%;
@@ -115,7 +115,7 @@ All colors MUST be HSL.
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 160 84% 39%;
+    --ring: 93 50% 48%;
 
     /* Card border tokens - dark mode */
     --aac-card-border: 0 0% 25%;
