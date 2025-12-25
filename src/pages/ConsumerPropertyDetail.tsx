@@ -1141,16 +1141,14 @@ const ConsumerPropertyDetail = () => {
               )}
 
               {/* Additional Notes */}
-              {listing.additional_notes && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Additional Notes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{listing.additional_notes}</p>
-                  </CardContent>
-                </Card>
-              )}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Additional Notes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground whitespace-pre-wrap">{listing.additional_notes || "N/A"}</p>
+                </CardContent>
+              </Card>
 
               {/* MLS-Style Detail Sections */}
               <ListingDetailSections 

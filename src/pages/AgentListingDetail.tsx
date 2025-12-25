@@ -943,12 +943,10 @@ const AgentListingDetail = () => {
                   {listing.showing_contact_phone && (
                     <DetailRow label="Contact Phone" value={formatPhoneNumber(listing.showing_contact_phone)} />
                   )}
-                  {listing.showing_instructions && (
-                    <div className="pt-2 mt-2 border-t border-border">
-                      <p className="text-sm text-muted-foreground mb-1">Instructions:</p>
-                      <p className="text-sm text-foreground whitespace-pre-wrap">{listing.showing_instructions}</p>
-                    </div>
-                  )}
+                  <div className="pt-2 mt-2 border-t border-border">
+                    <p className="text-sm text-muted-foreground mb-1">Instructions:</p>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{listing.showing_instructions || "N/A"}</p>
+                  </div>
                 </CardContent>
               </Card>
             )}

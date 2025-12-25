@@ -2751,11 +2751,11 @@ const AddListing = () => {
               Hovering over your Dashboard within the Menu will give you easy access to your Account. 
               If you have to walk away from your Listing use Save as Draft.
             </p>
-            {/* Creating as indicator - shows which agent is logged in */}
+            {/* Signed in indicator - shows which agent is logged in */}
             {user?.email && (
-              <div className="text-xs text-muted-foreground mt-2">
-                Creating as: <span className="font-medium text-foreground">{user.email}</span>
-              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Signed in as: <span className="font-medium">{user.email}</span>
+              </p>
             )}
           </div>
 

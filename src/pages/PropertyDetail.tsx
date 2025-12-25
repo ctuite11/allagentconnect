@@ -815,7 +815,7 @@ const PropertyDetail = () => {
                       )}
                       
                       {/* Agent-Only: Broker Remarks */}
-                      {isAgentView && listing.broker_comments && (
+                      {isAgentView && (
                         <div className="mt-4 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-xs font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
@@ -824,7 +824,7 @@ const PropertyDetail = () => {
                             <Badge variant="outline" className="text-xs">Agent Only</Badge>
                           </div>
                           <p className="text-sm text-orange-900 dark:text-orange-100 whitespace-pre-wrap">
-                            {listing.broker_comments}
+                            {listing.broker_comments || "N/A"}
                           </p>
                         </div>
                       )}
@@ -986,12 +986,10 @@ const PropertyDetail = () => {
                         </div>
                       )}
                     </div>
-                    {listing.showing_instructions && (
-                      <div className="pt-3 border-t">
-                        <p className="text-xs font-semibold text-muted-foreground mb-1">Instructions:</p>
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{listing.showing_instructions}</p>
-                      </div>
-                    )}
+                    <div className="pt-3 border-t">
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">Instructions:</p>
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{listing.showing_instructions || "N/A"}</p>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -1033,15 +1031,13 @@ const PropertyDetail = () => {
                       </div>
                     )}
                     {/* Firm Remarks inside yellow card */}
-                    {listing.broker_comments && (
-                      <div className="pt-2 border-t">
-                        <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-                          Firm Remarks
-                          <Badge variant="outline" className="text-[10px] ml-1">Agent Only</Badge>
-                        </p>
-                        <p className="whitespace-pre-wrap leading-relaxed">{listing.broker_comments}</p>
-                      </div>
-                    )}
+                    <div className="pt-2 border-t">
+                      <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                        Firm Remarks
+                        <Badge variant="outline" className="text-[10px] ml-1">Agent Only</Badge>
+                      </p>
+                      <p className="whitespace-pre-wrap leading-relaxed">{listing.broker_comments || "N/A"}</p>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
