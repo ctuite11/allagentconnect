@@ -826,29 +826,29 @@ const Auth = () => {
           )}
 
           {mode !== "forgot-password" && !resetEmailSent && (
-            <div className="mt-6 text-center text-sm text-neutral-600">
+            <div className="mt-8 pt-6 border-t border-neutral-200 text-center">
               {mode === "signin" ? (
-                <>
-                  Don't have an account?{" "}
+                <div className="space-y-2">
+                  <p className="text-neutral-500 text-sm">New to AllAgentConnect?</p>
                   <button
                     type="button"
                     onClick={() => switchMode("register")}
-                    className="text-emerald-700 hover:underline font-medium"
+                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border-2 border-emerald-600 text-emerald-700 font-semibold hover:bg-emerald-50 transition-colors"
                   >
-                    Create one
+                    Create an Account
                   </button>
-                </>
+                </div>
               ) : (
-                <>
-                  Already have an account?{" "}
+                <div className="space-y-2">
+                  <p className="text-neutral-500 text-sm">Already have an account?</p>
                   <button
                     type="button"
                     onClick={() => switchMode("signin")}
-                    className="text-emerald-700 hover:underline font-medium"
+                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border-2 border-emerald-600 text-emerald-700 font-semibold hover:bg-emerald-50 transition-colors"
                   >
-                    Sign in
+                    Sign In
                   </button>
-                </>
+                </div>
               )}
             </div>
           )}

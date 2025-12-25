@@ -332,10 +332,10 @@ const Navigation = () => {
                 Log in
               </button>
               <button
-                onClick={() => navigate("/auth?mode=register")}
+                onClick={() => navigate("/auth")}
                 className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
               >
-                Request access <ArrowRight className="ml-2 h-4 w-4" />
+                Get Access <ArrowRight className="ml-2 h-4 w-4" />
               </button>
             </>
           )}
@@ -547,11 +547,11 @@ const Navigation = () => {
                 <button 
                   className="w-full inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition"
                   onClick={() => {
-                    navigate("/auth?mode=register");
+                    navigate("/auth");
                     setIsMenuOpen(false);
                   }}
                 >
-                  Request access <ArrowRight className="ml-2 h-4 w-4" />
+                  Get Access <ArrowRight className="ml-2 h-4 w-4" />
                 </button>
               </>
             )}

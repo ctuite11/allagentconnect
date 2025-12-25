@@ -36,10 +36,10 @@ export default function Home() {
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <button
-                onClick={() => navigate("/auth?mode=register")}
+                onClick={() => navigate("/auth")}
                 className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
               >
-                Request Access <ArrowRight className="ml-2 h-4 w-4" />
+                Get Access <ArrowRight className="ml-2 h-4 w-4" />
               </button>
 
               <a
@@ -177,10 +177,10 @@ export default function Home() {
 
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <button
-                onClick={() => navigate("/auth?mode=register")}
+                onClick={() => navigate("/auth")}
                 className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
               >
-                Start verification <ArrowRight className="ml-2 h-4 w-4" />
+                Get Access <ArrowRight className="ml-2 h-4 w-4" />
               </button>
               <button
                 onClick={() => navigate("/agent-dashboard")}
@@ -230,10 +230,10 @@ export default function Home() {
               Terms
             </a>
             <button
-              onClick={() => navigate("/auth?mode=register")}
+              onClick={() => navigate("/auth")}
               className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition"
             >
-              Request access
+              Get Access
             </button>
           </div>
         </div>
