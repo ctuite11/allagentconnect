@@ -180,11 +180,6 @@ const ListingSearchResults = () => {
         query = query.eq("status", "coming_soon");
       }
 
-      // Apply "My Off-Market" filter - forces off_market status and current user's listings only
-      if (filters.myOffMarketOnly && currentUserId) {
-        query = query.eq("status", "off_market").eq("agent_id", currentUserId);
-      }
-
       // Apply property type filter
       if (filters.propertyTypes.length > 0) {
         query = query.in("property_type", filters.propertyTypes);

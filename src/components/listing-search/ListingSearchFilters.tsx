@@ -59,7 +59,6 @@ export interface FilterState {
   brokerTours: boolean;
   listingEventsTimeframe: string;
   internalFilter: "all" | "off_market" | "coming_soon";
-  myOffMarketOnly: boolean;
   listDateFrom: string;
   listDateTo: string;
   rooms: string;
@@ -115,7 +114,6 @@ export const initialFilters: FilterState = {
   brokerTours: false,
   listingEventsTimeframe: "3days",
   internalFilter: "all",
-  myOffMarketOnly: false,
   listDateFrom: "",
   listDateTo: "",
   rooms: "",
@@ -336,23 +334,6 @@ const ListingSearchFilters = ({
                         className="h-3.5 w-3.5"
                       />
                       <span className="text-xs font-medium text-neutral-800">Select All</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg transition-colors border border-emerald-200">
-                      <Checkbox
-                        checked={filters.myOffMarketOnly}
-                        onCheckedChange={(checked) => {
-                          onFiltersChange({
-                            ...filters,
-                            myOffMarketOnly: !!checked,
-                            // When turning on, ensure off_market is in statuses
-                            statuses: checked 
-                              ? (filters.statuses.includes("off_market") ? filters.statuses : [...filters.statuses, "off_market"])
-                              : filters.statuses
-                          });
-                        }}
-                        className="h-3.5 w-3.5"
-                      />
-                      <span className="text-xs font-medium text-emerald-700">My Private Listings</span>
                     </label>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5">
