@@ -62,7 +62,6 @@ export interface FilterState {
   myOffMarketOnly: boolean;
   listDateFrom: string;
   listDateTo: string;
-  offMarketTimeframe: string;
   rooms: string;
   acres: string;
   pricePerSqFt: string;
@@ -119,7 +118,6 @@ export const initialFilters: FilterState = {
   myOffMarketOnly: false,
   listDateFrom: "",
   listDateTo: "",
-  offMarketTimeframe: "6months",
   rooms: "",
   acres: "",
   pricePerSqFt: "",
@@ -142,7 +140,7 @@ const STATUSES = [
   { value: "extended", label: "Extended" },
   { value: "reactivated", label: "Reactivated" },
   { value: "coming_soon", label: "Coming Soon" },
-  { value: "off_market", label: "Off-Market (Private)" },
+  { value: "off_market", label: "Private" },
   { value: "under_agreement", label: "Under Agreement" },
   { value: "pending", label: "Pending" },
   { value: "contingent", label: "Contingent" },
@@ -354,7 +352,7 @@ const ListingSearchFilters = ({
                         }}
                         className="h-3.5 w-3.5"
                       />
-                      <span className="text-xs font-medium text-emerald-700">My Off-Market</span>
+                      <span className="text-xs font-medium text-emerald-700">My Private Listings</span>
                     </label>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5">
@@ -389,23 +387,6 @@ const ListingSearchFilters = ({
                         onChange={e => updateFilter("listDateFrom", e.target.value)}
                         className="h-11 rounded-xl border-neutral-200 bg-white text-sm text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                       />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-neutral-500 mb-1 block">Off-Market Timeframe</Label>
-                      <Select 
-                        value={filters.offMarketTimeframe} 
-                        onValueChange={v => updateFilter("offMarketTimeframe", v)}
-                      >
-                        <SelectTrigger className="h-11 rounded-xl border-neutral-200 bg-white text-sm text-neutral-900">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-neutral-200 bg-white">
-                          <SelectItem value="3months">Today - 3 Months</SelectItem>
-                          <SelectItem value="6months">Today - 6 Months</SelectItem>
-                          <SelectItem value="12months">Today - 12 Months</SelectItem>
-                          <SelectItem value="24months">Today - 24 Months</SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
                   </div>
                 </div>
