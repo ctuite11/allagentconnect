@@ -42,12 +42,13 @@ export async function enforceClientIdentity({
       setShowLoginPrompt(false);
       return user;
     } else {
-      // Logged in as wrong person (agent or other client) → force logout and show popup
+      // Logged in as wrong person (agent or other client) → show popup WITHOUT signing out
+      // IMPORTANT: Do NOT call signOut() here - it causes global logout across all tabs
+      // which can corrupt sessions in other pages like AddListing
       console.warn(
-        `Logged in as different user (${user.email}) than client_email in token (${clientEmailFromToken}). Forcing logout.`
+        `Logged in as different user (${user.email}) than client_email in token (${clientEmailFromToken}). Showing onboarding prompt.`
       );
-      await supabase.auth.signOut();
-      setCurrentUser(null);
+      // Let the user manually decide to logout - don't force it
       setShowLoginPrompt(true);
       return null;
     }
