@@ -31,20 +31,20 @@ All colors MUST be HSL.
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    /* AAC Green Accent System - #6FB83F = hsl(93 50% 48%) */
-    --accent: 93 50% 48%;
+    /* AAC Brand Green - #059669 = hsl(161 91% 31%), hover #047857 = hsl(162 91% 24%) */
+    --accent: 161 91% 31%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 93 55% 42%;
-    --accent-active: 93 60% 36%;
-    --accent-soft: 93 50% 95%;
-    --accent-muted: 93 40% 92%;
+    --accent-hover: 162 91% 24%;
+    --accent-active: 162 91% 20%;
+    --accent-soft: 161 91% 96%;
+    --accent-muted: 161 91% 92%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 85%;
     --input: 0 0% 85%;
-    --ring: 93 50% 48%;
+    --ring: 161 91% 31%;
 
     /* Card border tokens - neutral warm gray */
     --aac-card-border: 0 0% 85%;
@@ -57,7 +57,7 @@ All colors MUST be HSL.
     --radius: 1rem;
 
     /* Success uses AAC Green for verified/approved/active states */
-    --success: 93 50% 48%;
+    --success: 161 91% 31%;
     --success-foreground: 0 0% 100%;
 
     /* Tech-forward colors - blue only for primary actions */
@@ -67,7 +67,7 @@ All colors MUST be HSL.
     
     /* Pill color tokens - neutral soft is true neutral */
     --primary-soft: 217 91% 60%;
-    --success-soft: 93 50% 48%;
+    --success-soft: 161 91% 31%;
     --warning: 38 92% 50%;
     --warning-soft: 38 92% 50%;
     --danger-soft: 0 84% 60%;
@@ -106,20 +106,20 @@ All colors MUST be HSL.
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 65%;
 
-    /* AAC Green Accent System (dark mode) */
-    --accent: 93 50% 48%;
+    /* AAC Brand Green (dark mode) */
+    --accent: 161 91% 31%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 93 55% 42%;
-    --accent-active: 93 60% 36%;
-    --accent-soft: 93 50% 20%;
-    --accent-muted: 93 40% 25%;
+    --accent-hover: 162 91% 24%;
+    --accent-active: 162 91% 20%;
+    --accent-soft: 161 40% 18%;
+    --accent-muted: 161 35% 22%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 93 50% 48%;
+    --ring: 161 91% 31%;
 
     /* Card border tokens - dark mode */
     --aac-card-border: 0 0% 25%;
@@ -134,7 +134,7 @@ All colors MUST be HSL.
     
     /* Pill color tokens (dark mode) - neutral */
     --primary-soft: 217 91% 60%;
-    --success-soft: 93 50% 48%;
+    --success-soft: 161 91% 31%;
     --warning: 38 92% 50%;
     --warning-soft: 38 92% 50%;
     --danger-soft: 0 84% 60%;
