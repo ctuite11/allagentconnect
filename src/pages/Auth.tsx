@@ -463,7 +463,7 @@ const Auth = () => {
                 <div className="space-y-3">
                   <Button
                     onClick={() => navigate('/pending-verification', { replace: true })}
-                    className="w-full h-11 bg-accent hover:bg-accent/90 text-white font-medium rounded-xl"
+                    className="w-full h-11 bg-accent hover:bg-accent-muted active:bg-accent-muted text-white font-medium rounded-xl"
                   >
                     View Request Status
                   </Button>
@@ -492,7 +492,7 @@ const Auth = () => {
                 <div className="space-y-3">
                   <Button
                     onClick={() => navigate('/auth/callback', { replace: true })}
-                    className="w-full h-11 bg-accent hover:bg-accent/90 text-white font-medium rounded-xl"
+                    className="w-full h-11 bg-accent hover:bg-accent-muted active:bg-accent-muted text-white font-medium rounded-xl"
                   >
                     Continue to App
                   </Button>
@@ -520,7 +520,7 @@ const Auth = () => {
                 </p>
                 <Button
                   onClick={handleLogout}
-                  className="w-full h-11 bg-accent hover:bg-accent/90 text-white font-medium rounded-xl"
+                  className="w-full h-11 bg-accent hover:bg-accent-muted active:bg-accent-muted text-white font-medium rounded-xl"
                   disabled={loading}
                 >
                   {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
@@ -577,7 +577,7 @@ const Auth = () => {
               </p>
               <Button
                 onClick={() => switchMode("signin")}
-                className="w-full h-11 bg-accent hover:bg-accent/90 text-white font-medium rounded-xl"
+                className="w-full h-11 bg-accent hover:bg-accent-muted active:bg-accent-muted text-white font-medium rounded-xl"
               >
                 Back to Sign In
               </Button>
@@ -804,7 +804,7 @@ const Auth = () => {
 
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-accent hover:bg-accent/90 text-white font-medium rounded-xl" 
+                className="w-full h-11 bg-accent hover:bg-accent-muted active:bg-accent-muted text-white font-medium rounded-xl" 
                 disabled={loading || (mode === "register" && (!allPasswordRulesPass || !passwordsMatch || !licenseState || !licenseNumber.trim()))}
               >
                 {loading ? (
