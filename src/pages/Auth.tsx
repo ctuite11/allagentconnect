@@ -833,7 +833,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("register")}
-                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-slate-300 text-slate-700 font-semibold bg-white hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-neutral-300 text-neutral-700 font-semibold bg-white hover:bg-neutral-100 hover:border-neutral-400 transition-colors"
                   >
                     Create an Account
                   </button>
@@ -844,7 +844,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("signin")}
-                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-slate-300 text-slate-700 font-semibold bg-white hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-neutral-300 text-neutral-700 font-semibold bg-white hover:bg-neutral-100 hover:border-neutral-400 transition-colors"
                   >
                     Sign In
                   </button>
