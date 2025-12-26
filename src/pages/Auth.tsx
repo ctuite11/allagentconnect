@@ -69,6 +69,7 @@ const Auth = () => {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const didNavigate = useRef(false);
+  const isRegistering = useRef(false);
 
   // Password validation for register mode
   const passwordValidation = useMemo(() => {
@@ -180,7 +181,7 @@ const Auth = () => {
       async (event, session) => {
         if (!mounted) return;
         
-        if (event === 'SIGNED_IN' && session?.user && !didNavigate.current) {
+        if (event === 'SIGNED_IN' && session?.user && !didNavigate.current && !isRegistering.current) {
           didNavigate.current = true;
           navigate('/auth/callback', { replace: true });
         }
@@ -259,6 +260,7 @@ const Auth = () => {
       }
 
       // 1. Create auth user (email confirmation is DISABLED in Supabase settings)
+      isRegistering.current = true;
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: validatedEmail,
         password,
@@ -357,8 +359,10 @@ const Auth = () => {
       // 6. Redirect to pending-verification
       didNavigate.current = true;
       navigate('/pending-verification', { replace: true });
+      isRegistering.current = false;
 
     } catch (error: any) {
+      isRegistering.current = false;
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
