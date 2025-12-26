@@ -11,6 +11,17 @@
   --aac-soft: 160 84% 39% / 0.08;
 }
 
+/* iOS Safari tap highlight (blue/gray overlay) */
+button,
+a,
+[role="button"],
+input,
+label,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Mobile hover fix - prevent sticky hover on touch devices */
 @media (hover: none) {
   .no-touch-hover:hover {
@@ -25,6 +36,12 @@
     border-color: hsl(0 0% 80%) !important;
     color: hsl(0 0% 40%) !important;
   }
+}
+
+/* Utility class for outline buttons - ensures no tap highlight */
+.no-touch-hover-outline {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
