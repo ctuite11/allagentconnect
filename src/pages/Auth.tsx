@@ -10,18 +10,24 @@ import { z } from "zod";
 import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
 import { Logo } from "@/components/brand";
 
-// Timeout wrapper that accepts PromiseLike<T> (works with backend query builders)
-function withTimeout<T>(promiseLike: PromiseLike<T>, ms = 20000, label = "Request"): Promise<T> {
+// Timeout wrapper - properly generic + typed for PromiseLike<T> (works with backend query builders)
+function withTimeout<T>(
+  promiseLike: PromiseLike<T>,
+  ms = 20000,
+  label = "Request"
+): Promise<T> {
   let timeoutId: number | undefined;
 
   const timeout = new Promise<never>((_, reject) => {
     timeoutId = window.setTimeout(() => {
-      reject(new Error(`${label} timed out after ${ms / 1000}s. Please check your connection and try again.`));
+      reject(new Error(`${label} timed out after ${ms / 1000}s. Please try again.`));
     }, ms);
   });
 
-  // Normalize PromiseLike to Promise via Promise.resolve
-  return Promise.race([Promise.resolve(promiseLike), timeout]).finally(() => {
+  // Normalize PromiseLike to Promise with explicit typing
+  const promise = Promise.resolve(promiseLike as T extends infer U ? PromiseLike<U> : never) as Promise<T>;
+
+  return Promise.race([promise, timeout]).finally(() => {
     if (timeoutId) window.clearTimeout(timeoutId);
   });
 }
@@ -87,20 +93,53 @@ const Auth = () => {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const [registerStep, setRegisterStep] = useState<RegisterStep>(null);
-  const [sessionMismatchEmail, setSessionMismatchEmail] = useState<string | null>(null);
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const didNavigate = useRef(false);
   const isRegistering = useRef(false);
   const cancelledRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
 
-  // Cancel registration handler with real cancellation
+  // Computed mismatch detection with normalized emails
+  const normalizedSessionEmail = (sessionEmail || "").trim().toLowerCase();
+  const normalizedTypedEmail = (email || "").trim().toLowerCase();
+  const hasEmailMismatch = mode === "register" && 
+    normalizedSessionEmail.length > 0 && 
+    normalizedTypedEmail.length > 0 && 
+    normalizedSessionEmail !== normalizedTypedEmail;
+
+  // Cancel registration handler with real AbortController cancellation
   const handleCancelRegistration = () => {
     console.log('[REGISTER] User cancelled registration');
     cancelledRef.current = true;
+    abortRef.current?.abort();
     isRegistering.current = false;
     setLoading(false);
     setRegisterStep(null);
     toast.info("Registration cancelled");
+  };
+
+  // Handle continuing with current session (use session email)
+  const handleContinueWithSession = () => {
+    if (sessionEmail) {
+      setEmail(sessionEmail);
+    }
+  };
+
+  // Handle switching to a different account
+  const handleSwitchAccount = async () => {
+    setLoading(true);
+    await supabase.auth.signOut();
+    setExistingSession(false);
+    setSessionEmail(null);
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setFirstName("");
+    setLastName("");
+    setPhone("");
+    setLicenseState("");
+    setLicenseNumber("");
+    setLoading(false);
   };
 
   // Password validation for register mode
@@ -277,8 +316,11 @@ const Auth = () => {
       return;
     }
     
-    // Reset cancellation flag
+    // Reset cancellation flag and abort any previous request
     cancelledRef.current = false;
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+    
     setLoading(true);
     setRegisterStep("creating_account");
     isRegistering.current = true;
@@ -572,6 +614,7 @@ const Auth = () => {
     } finally {
       // ALWAYS reset state - this guarantees we never get stuck
       isRegistering.current = false;
+      abortRef.current = null;
       setLoading(false);
       setRegisterStep(null);
     }
@@ -613,24 +656,8 @@ const Auth = () => {
     await supabase.auth.signOut();
     setExistingSession(false);
     setSessionEmail(null);
-    setSessionMismatchEmail(null);
     setLoading(false);
     toast.success("Signed out successfully");
-  };
-
-  // Handle dismissing session mismatch and continuing with current session
-  const handleContinueWithSession = () => {
-    setSessionMismatchEmail(null);
-  };
-
-  // Handle switching to a different account
-  const handleSwitchAccount = async () => {
-    setLoading(true);
-    await supabase.auth.signOut();
-    setExistingSession(false);
-    setSessionEmail(null);
-    setSessionMismatchEmail(null);
-    setLoading(false);
   };
 
   const switchMode = (newMode: AuthMode) => {
@@ -638,7 +665,6 @@ const Auth = () => {
     setPassword("");
     setConfirmPassword("");
     setResetEmailSent(false);
-    setSessionMismatchEmail(null);
     if (newMode !== "register") {
       setFirstName("");
       setLastName("");
@@ -658,8 +684,8 @@ const Auth = () => {
   }
 
   // Session mismatch interstitial - shows when user is signed in as a different email
-  // This prevents wrong-account resume on mobile after email verification
-  if (sessionEmail && mode === "register" && email && sessionEmail !== email) {
+  // Uses normalized comparison to prevent case sensitivity issues
+  if (hasEmailMismatch) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-[420px]">
@@ -684,7 +710,7 @@ const Auth = () => {
             </p>
             <div className="space-y-3">
               <Button
-                onClick={() => navigate('/auth/callback', { replace: true })}
+                onClick={handleContinueWithSession}
                 className="w-full h-11 bg-aac hover:bg-aac-hover active:bg-aac-active text-white font-medium rounded-xl no-touch-hover focus:outline-none focus-visible:outline-none"
               >
                 Continue as {sessionEmail?.split('@')[0]}
@@ -696,7 +722,7 @@ const Auth = () => {
                 disabled={loading}
               >
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
-                Sign Out & Register New Account
+                Sign Out & Register Different Email
               </Button>
             </div>
           </div>
