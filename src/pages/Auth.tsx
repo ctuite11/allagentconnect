@@ -7,8 +7,25 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock } from "lucide-react";
+import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
 import { Logo } from "@/components/brand";
+
+// Timeout wrapper to prevent hanging requests
+function withTimeout<T>(promise: Promise<T>, ms = 20000, label = "Request"): Promise<T> {
+  let timeoutId: number | undefined;
+
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms / 1000}s. Please check your connection and try again.`));
+    }, ms);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timeoutId) window.clearTimeout(timeoutId);
+  }) as Promise<T>;
+}
+
+type RegisterStep = "creating_account" | "saving_profile" | "saving_license" | "finishing" | null;
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
 
@@ -68,8 +85,18 @@ const Auth = () => {
   const [checkingSession, setCheckingSession] = useState(true);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [agentStatus, setAgentStatus] = useState<string | null>(null);
+  const [registerStep, setRegisterStep] = useState<RegisterStep>(null);
   const didNavigate = useRef(false);
   const isRegistering = useRef(false);
+
+  // Cancel registration handler
+  const handleCancelRegistration = () => {
+    console.log('[REGISTER] User cancelled registration');
+    isRegistering.current = false;
+    setLoading(false);
+    setRegisterStep(null);
+    toast.info("Registration cancelled");
+  };
 
   // Password validation for register mode
   const passwordValidation = useMemo(() => {
@@ -235,8 +262,16 @@ const Auth = () => {
       console.log('[REGISTER] Already registering, ignoring duplicate submission');
       return;
     }
+
+    // Check network connectivity first
+    if (!navigator.onLine) {
+      toast.error("No internet connection. Please check your network and try again.");
+      return;
+    }
     
     setLoading(true);
+    setRegisterStep("creating_account");
+    isRegistering.current = true;
 
     try {
       // ========== STEP 0: Validate all fields upfront ==========
@@ -246,48 +281,46 @@ const Auth = () => {
 
       if (!firstName.trim() || !lastName.trim()) {
         toast.error("Please enter your first and last name");
-        setLoading(false);
         return;
       }
 
       if (!licenseState || !licenseNumber.trim()) {
         toast.error("Please enter your license information");
-        setLoading(false);
         return;
       }
 
       if (!allPasswordRulesPass) {
         toast.error("Password does not meet all requirements");
-        setLoading(false);
         return;
       }
 
       if (password !== confirmPassword) {
         toast.error("Passwords do not match");
-        setLoading(false);
         return;
       }
 
-      // ========== STEP 1: Create auth user ==========
-      isRegistering.current = true;
+      // ========== STEP 1: Create auth user with timeout ==========
       console.log('[REGISTER] Step 1: Creating auth user for:', validatedEmail);
+      setRegisterStep("creating_account");
       
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: validatedEmail,
-        password,
-        options: {
-          data: {
-            intended_role: 'agent',
+      const { data: authData, error: authError } = await withTimeout(
+        supabase.auth.signUp({
+          email: validatedEmail,
+          password,
+          options: {
+            data: {
+              intended_role: 'agent',
+            },
           },
-        },
-      });
+        }),
+        20000,
+        "Create account"
+      );
 
       // Check for "fake success" - user exists but identities is empty
       if (authData?.user && authData.user.identities?.length === 0) {
         console.error('[REGISTER] FAILED at Step 1: User already exists (empty identities)');
         toast.error("This email is already registered. Please sign in instead.");
-        isRegistering.current = false;
-        setLoading(false);
         return;
       }
 
@@ -298,8 +331,6 @@ const Auth = () => {
         } else {
           toast.error(authError.message);
         }
-        isRegistering.current = false;
-        setLoading(false);
         return;
       }
 
@@ -307,31 +338,32 @@ const Auth = () => {
       if (!userId) {
         console.error('[REGISTER] FAILED at Step 1: No user ID returned');
         toast.error("Failed to create account. Please try again.");
-        isRegistering.current = false;
-        setLoading(false);
         return;
       }
 
       console.log('[REGISTER] Step 1 complete: User created', { userId });
 
-      // ========== STEP 2: Create agent profile ==========
+      // ========== STEP 2: Create agent profile with timeout ==========
       console.log('[REGISTER] Step 2: Creating agent profile');
+      setRegisterStep("saving_profile");
       
-      const { error: profileError } = await supabase
-        .from('agent_profiles')
-        .insert({
-          id: userId,
-          email: validatedEmail,
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          phone: phone.trim() || null,
-        });
+      const profileResult = await withTimeout(
+        Promise.resolve(supabase
+          .from('agent_profiles')
+          .insert({
+            id: userId,
+            email: validatedEmail,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            phone: phone.trim() || null,
+          })),
+        20000,
+        "Save profile"
+      );
 
-      if (profileError) {
-        console.error('[REGISTER] FAILED at Step 2:', profileError);
+      if (profileResult.error) {
+        console.error('[REGISTER] FAILED at Step 2:', profileResult.error);
         toast.error("Failed to create profile. Please contact support.");
-        isRegistering.current = false;
-        setLoading(false);
         return;
       }
       
@@ -339,27 +371,32 @@ const Auth = () => {
 
       // ========== STEP 3: Save license info with UPDATE→INSERT fallback ==========
       console.log('[REGISTER] Step 3: Saving license information');
+      setRegisterStep("saving_license");
       
       let licenseWriteSuccess = false;
       
       // First, try UPDATE (row may already exist from handle_new_user trigger)
-      const { data: updateResult, error: updateError } = await supabase
-        .from('agent_settings')
-        .update({
-          license_state: licenseState,
-          license_number: licenseNumber.trim(),
-          license_last_name: lastName.trim(),
-          agent_status: 'pending',
-        })
-        .eq('user_id', userId)
-        .select();
+      const updateResult = await withTimeout(
+        Promise.resolve(supabase
+          .from('agent_settings')
+          .update({
+            license_state: licenseState,
+            license_number: licenseNumber.trim(),
+            license_last_name: lastName.trim(),
+            agent_status: 'pending',
+          })
+          .eq('user_id', userId)
+          .select()),
+        20000,
+        "Save license"
+      );
 
-      if (updateError) {
-        console.error('[REGISTER] Step 3 UPDATE error:', updateError);
+      if (updateResult.error) {
+        console.error('[REGISTER] Step 3 UPDATE error:', updateResult.error);
       }
 
       // Check if UPDATE affected any rows
-      if (updateResult && updateResult.length > 0) {
+      if (updateResult.data && updateResult.data.length > 0) {
         console.log('[REGISTER] Step 3 complete: License info updated via UPDATE', { 
           license_state: licenseState, 
           license_number: licenseNumber.trim() 
@@ -369,21 +406,23 @@ const Auth = () => {
         // No rows updated - try INSERT as fallback
         console.log('[REGISTER] Step 3: UPDATE affected 0 rows, trying INSERT fallback');
         
-        const { error: insertError } = await supabase
-          .from('agent_settings')
-          .insert({
-            user_id: userId,
-            license_state: licenseState,
-            license_number: licenseNumber.trim(),
-            license_last_name: lastName.trim(),
-            agent_status: 'pending',
-          });
+        const insertResult = await withTimeout(
+          Promise.resolve(supabase
+            .from('agent_settings')
+            .insert({
+              user_id: userId,
+              license_state: licenseState,
+              license_number: licenseNumber.trim(),
+              license_last_name: lastName.trim(),
+              agent_status: 'pending',
+            })),
+          20000,
+          "Save license"
+        );
 
-        if (insertError) {
-          console.error('[REGISTER] FAILED at Step 3 INSERT fallback:', insertError);
+        if (insertResult.error) {
+          console.error('[REGISTER] FAILED at Step 3 INSERT fallback:', insertResult.error);
           toast.error("Failed to save license information. Please contact support.");
-          isRegistering.current = false;
-          setLoading(false);
           return;
         }
         
@@ -395,94 +434,106 @@ const Auth = () => {
       if (!licenseWriteSuccess) {
         console.error('[REGISTER] FAILED at Step 3: License write not confirmed');
         toast.error("Failed to save license information. Please contact support.");
-        isRegistering.current = false;
-        setLoading(false);
         return;
       }
 
       // ========== STEP 4: Assign agent role ==========
       console.log('[REGISTER] Step 4: Assigning agent role');
+      setRegisterStep("finishing");
       
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: userId,
-          role: 'agent'
-        }, {
-          onConflict: 'user_id,role'
-        });
+      const roleResult = await withTimeout(
+        Promise.resolve(supabase
+          .from('user_roles')
+          .upsert({
+            user_id: userId,
+            role: 'agent'
+          }, {
+            onConflict: 'user_id,role'
+          })),
+        20000,
+        "Assign role"
+      );
 
-      if (roleError) {
-        console.error('[REGISTER] Step 4 warning - role assignment error:', roleError);
+      if (roleResult.error) {
+        console.error('[REGISTER] Step 4 warning - role assignment error:', roleResult.error);
         // Don't fail registration for this - role can be fixed later
       } else {
         console.log('[REGISTER] Step 4 complete: Role assigned');
       }
 
-      // ========== STEP 5: Send admin notification (only after profile write confirmed) ==========
-      console.log('[REGISTER] Step 5: Sending admin notification');
+      // ========== STEP 5: Send admin notification (NON-BLOCKING) ==========
+      console.log('[REGISTER] Step 5: Sending admin notification (non-blocking)');
       
-      let adminNotified = false;
-      try {
-        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-verification-submitted', {
+      // Fire and forget - don't block the user
+      // Capture values for closure
+      const notificationData = {
+        userId,
+        email: validatedEmail,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        licenseState,
+        licenseNumber: licenseNumber.trim(),
+      };
+      
+      withTimeout(
+        supabase.functions.invoke('send-verification-submitted', {
           body: {
-            email: validatedEmail,
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            licenseState: licenseState,
-            licenseNumber: licenseNumber.trim(),
+            email: notificationData.email,
+            firstName: notificationData.firstName,
+            lastName: notificationData.lastName,
+            licenseState: notificationData.licenseState,
+            licenseNumber: notificationData.licenseNumber,
           },
-        });
-        
-        if (emailError) {
-          console.error('[REGISTER] Step 5 edge function error:', emailError);
-        } else {
-          console.log('[REGISTER] Step 5 complete: Admin notification sent', emailData);
-          adminNotified = true;
-        }
-      } catch (emailError) {
-        console.error('[REGISTER] Step 5 exception:', emailError);
-      }
-
-      // Store backup if admin notification failed
-      if (!adminNotified) {
-        console.log('[REGISTER] Step 5: Storing backup verification record');
-        try {
-          await supabase.from('pending_verifications').insert({
-            user_id: userId,
-            email: validatedEmail,
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            license_state: licenseState,
-            license_number: licenseNumber.trim(),
+        }),
+        15000,
+        "Admin notification"
+      ).then((result) => {
+        if (result.error) {
+          console.error('[REGISTER] Step 5 edge function error:', result.error);
+          // Store backup if admin notification failed
+          Promise.resolve(supabase.from('pending_verifications').insert({
+            user_id: notificationData.userId,
+            email: notificationData.email,
+            first_name: notificationData.firstName,
+            last_name: notificationData.lastName,
+            license_state: notificationData.licenseState,
+            license_number: notificationData.licenseNumber,
+          })).then(() => {
+            console.log('[REGISTER] Step 5: Backup verification stored');
+          }).catch((backupError: unknown) => {
+            console.error('[REGISTER] Step 5 backup storage error:', backupError);
           });
-          console.log('[REGISTER] Step 5: Backup verification stored');
-        } catch (backupError) {
-          console.error('[REGISTER] Step 5 backup storage error:', backupError);
+        } else {
+          console.log('[REGISTER] Step 5 complete: Admin notification sent');
         }
-      }
+      }).catch((emailError: unknown) => {
+        console.error('[REGISTER] Step 5 exception:', emailError);
+      });
 
       // ========== STEP 6: Success - redirect to pending verification ==========
-      console.log('[REGISTER] Complete: All steps finished successfully');
+      console.log('[REGISTER] Complete: All critical steps finished successfully');
       
       // Single success toast (no waterfall)
       toast.success("Account created! Your license is pending verification.");
       
       didNavigate.current = true;
       navigate('/pending-verification', { replace: true });
-      isRegistering.current = false;
 
     } catch (error: any) {
       console.error('[REGISTER] Unexpected error:', error);
-      isRegistering.current = false;
       
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
+      } else if (error.message?.includes('timed out')) {
+        toast.error(error.message);
       } else {
         toast.error(error.message || "Failed to create account. Please try again.");
       }
     } finally {
+      // ALWAYS reset state - this guarantees we never get stuck
+      isRegistering.current = false;
       setLoading(false);
+      setRegisterStep(null);
     }
   };
 
@@ -928,7 +979,13 @@ const Auth = () => {
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {mode === "signin" && "Signing in..."}
-                    {mode === "register" && "Creating account..."}
+                    {mode === "register" && (
+                      registerStep === "creating_account" ? "Creating account..." :
+                      registerStep === "saving_profile" ? "Saving profile..." :
+                      registerStep === "saving_license" ? "Saving license..." :
+                      registerStep === "finishing" ? "Finishing up..." :
+                      "Creating account..."
+                    )}
                     {mode === "forgot-password" && "Sending..."}
                   </>
                 ) : (
@@ -939,6 +996,19 @@ const Auth = () => {
                   </>
                 )}
               </Button>
+
+              {/* Cancel button - only show when registration is in progress */}
+              {loading && mode === "register" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleCancelRegistration}
+                  className="w-full h-10 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 font-medium rounded-xl mt-2"
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+              )}
             </form>
           )}
 
