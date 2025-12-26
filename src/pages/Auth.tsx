@@ -261,6 +261,8 @@ const Auth = () => {
 
       // 1. Create auth user (email confirmation is DISABLED in Supabase settings)
       isRegistering.current = true;
+      console.log('[REGISTER] Starting registration for:', validatedEmail);
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: validatedEmail,
         password,
@@ -274,6 +276,7 @@ const Auth = () => {
       // Check for "fake success" - user exists but identities is empty
       if (authData?.user && authData.user.identities?.length === 0) {
         toast.error("This email is already registered. Please sign in instead.");
+        isRegistering.current = false;
         setLoading(false);
         return;
       }
@@ -284,6 +287,7 @@ const Auth = () => {
         } else {
           toast.error(authError.message);
         }
+        isRegistering.current = false;
         setLoading(false);
         return;
       }
@@ -291,9 +295,12 @@ const Auth = () => {
       const userId = authData.user?.id;
       if (!userId) {
         toast.error("Failed to create account. Please try again.");
+        isRegistering.current = false;
         setLoading(false);
         return;
       }
+
+      console.log('[REGISTER] User created:', userId);
 
       // 2. Insert agent_profiles
       const { error: profileError } = await supabase
@@ -307,7 +314,9 @@ const Auth = () => {
         });
 
       if (profileError) {
-        console.error("Profile creation error:", profileError);
+        console.error("[REGISTER] Profile creation error:", profileError);
+      } else {
+        console.log('[REGISTER] Profile inserted');
       }
 
       // 3. Insert agent_settings with license info and pending status
@@ -322,7 +331,9 @@ const Auth = () => {
         });
 
       if (settingsError) {
-        console.error("Settings creation error:", settingsError);
+        console.error("[REGISTER] Settings creation error:", settingsError);
+      } else {
+        console.log('[REGISTER] Settings inserted with license:', licenseState, licenseNumber.trim());
       }
 
       // 4. Insert user_roles with role='agent'
@@ -336,12 +347,14 @@ const Auth = () => {
         });
 
       if (roleError) {
-        console.error("Role assignment error:", roleError);
+        console.error("[REGISTER] Role assignment error:", roleError);
+      } else {
+        console.log('[REGISTER] Role assigned');
       }
 
       // 5. Notify admin of new license for verification (non-blocking)
       try {
-        await supabase.functions.invoke('send-verification-submitted', {
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-verification-submitted', {
           body: {
             email: validatedEmail,
             firstName: firstName.trim(),
@@ -350,13 +363,19 @@ const Auth = () => {
             licenseNumber: licenseNumber.trim(),
           },
         });
-        console.log('Admin notification sent for license verification');
+        
+        if (emailError) {
+          console.error('[REGISTER] Edge function error:', emailError);
+        } else {
+          console.log('[REGISTER] Admin notification sent:', emailData);
+        }
       } catch (emailError) {
-        console.error('Failed to send admin notification:', emailError);
+        console.error('[REGISTER] Failed to send admin notification:', emailError);
         // Don't block registration if email fails
       }
 
-      // 6. Redirect to pending-verification
+      // 6. Redirect to pending-verification (AFTER all inserts complete)
+      console.log('[REGISTER] All steps complete, navigating to /pending-verification');
       didNavigate.current = true;
       navigate('/pending-verification', { replace: true });
       isRegistering.current = false;

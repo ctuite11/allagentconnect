@@ -15,14 +15,25 @@ const PendingVerification = () => {
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    let attempts = 0;
+    const maxAttempts = 5;
+
     const checkStatus = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
+      // Mobile browsers need extra time for session to persist
+      if (!session?.user && attempts < maxAttempts) {
+        attempts++;
+        console.log(`[PENDING] No session yet, retry ${attempts}/${maxAttempts}`);
+        setTimeout(checkStatus, 500);
+        return;
+      }
+      
+      // After retries, if still no session, show the page anyway
+      // User just completed signup - don't kick them back to login
       if (!session?.user) {
-        if (!didNavigate.current) {
-          didNavigate.current = true;
-          navigate("/auth", { replace: true });
-        }
+        console.log('[PENDING] No session after retries, showing pending page');
+        setLoading(false);
         return;
       }
 
@@ -34,6 +45,7 @@ const PendingVerification = () => {
         .maybeSingle();
 
       const status = settings?.agent_status || 'unverified';
+      console.log('[PENDING] Agent status:', status);
 
       if (status === 'verified') {
         // Show approval message briefly, then redirect
