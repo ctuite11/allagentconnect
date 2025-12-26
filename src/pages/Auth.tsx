@@ -795,7 +795,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("forgot-password")}
-                    className="text-[13px] text-accent hover:underline"
+                    className="text-[13px] text-aac hover:underline"
                   >
                     Forgot password?
                   </button>
@@ -804,7 +804,7 @@ const Auth = () => {
 
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-accent hover:bg-accent-hover active:bg-accent-active text-white font-medium rounded-xl" 
+                className="w-full h-11 bg-aac hover:bg-aac-hover active:bg-aac-active text-white font-medium rounded-xl focus-visible:ring-2 focus-visible:ring-aac-ring no-touch-hover" 
                 disabled={loading || (mode === "register" && (!allPasswordRulesPass || !passwordsMatch || !licenseState || !licenseNumber.trim()))}
               >
                 {loading ? (
@@ -833,7 +833,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("register")}
-                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-neutral-300 text-neutral-700 font-semibold bg-white hover:bg-neutral-100 hover:border-neutral-400 transition-colors"
+                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-neutral-200 text-neutral-700 font-semibold bg-white hover:bg-neutral-50 hover:border-neutral-300 hover:text-neutral-900 active:bg-neutral-100 transition-colors no-touch-hover"
                   >
                     Create an Account
                   </button>
@@ -844,7 +844,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("signin")}
-                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-neutral-300 text-neutral-700 font-semibold bg-white hover:bg-neutral-100 hover:border-neutral-400 transition-colors"
+                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-neutral-200 text-neutral-700 font-semibold bg-white hover:bg-neutral-50 hover:border-neutral-300 hover:text-neutral-900 active:bg-neutral-100 transition-colors no-touch-hover"
                   >
                     Sign In
                   </button>

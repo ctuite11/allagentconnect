@@ -82,6 +82,11 @@ export default {
         },
         "text-body": "hsl(var(--text-body))",
         aac: {
+          DEFAULT: "hsl(var(--aac))",
+          hover: "hsl(var(--aac-hover))",
+          active: "hsl(var(--aac-active))",
+          ring: "hsl(var(--aac-ring))",
+          soft: "hsl(var(--aac-soft))",
           card: {
             border: "hsl(var(--aac-card-border))",
             borderHover: "hsl(var(--aac-card-border-hover))",
