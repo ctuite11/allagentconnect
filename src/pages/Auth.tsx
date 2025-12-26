@@ -463,7 +463,7 @@ const Auth = () => {
                 <div className="space-y-3">
                   <Button
                     onClick={() => navigate('/pending-verification', { replace: true })}
-                    className="w-full h-11 bg-accent hover:bg-accent-hover active:bg-accent-active text-white font-medium rounded-xl"
+                    className="w-full h-11 bg-aac hover:bg-aac-hover active:bg-aac-active text-white font-medium rounded-xl no-touch-hover focus:outline-none focus-visible:outline-none"
                   >
                     View Request Status
                   </Button>
@@ -480,8 +480,8 @@ const Auth = () => {
               </>
             ) : isVerified ? (
               <>
-                <div className="w-14 h-14 bg-accent/10 border border-accent/30 rounded-full flex items-center justify-center mx-auto mb-5">
-                  <CheckCircle2 className="w-7 h-7 text-accent" />
+                <div className="w-14 h-14 bg-aac/10 border border-aac/30 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <CheckCircle2 className="w-7 h-7 text-aac" />
                 </div>
                 <h2 className="text-xl font-semibold text-neutral-900 mb-2">
                   Welcome Back
@@ -492,7 +492,7 @@ const Auth = () => {
                 <div className="space-y-3">
                   <Button
                     onClick={() => navigate('/auth/callback', { replace: true })}
-                    className="w-full h-11 bg-accent hover:bg-accent-hover active:bg-accent-active text-white font-medium rounded-xl"
+                    className="w-full h-11 bg-aac hover:bg-aac-hover active:bg-aac-active text-white font-medium rounded-xl no-touch-hover focus:outline-none focus-visible:outline-none"
                   >
                     Continue to App
                   </Button>
@@ -520,7 +520,7 @@ const Auth = () => {
                 </p>
                 <Button
                   onClick={handleLogout}
-                  className="w-full h-11 bg-accent hover:bg-accent-hover active:bg-accent-active text-white font-medium rounded-xl"
+                  className="w-full h-11 bg-aac hover:bg-aac-hover active:bg-aac-active text-white font-medium rounded-xl no-touch-hover focus:outline-none focus-visible:outline-none"
                   disabled={loading}
                 >
                   {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
@@ -577,7 +577,7 @@ const Auth = () => {
               </p>
               <Button
                 onClick={() => switchMode("signin")}
-                className="w-full h-11 bg-accent hover:bg-accent-hover active:bg-accent-active text-white font-medium rounded-xl"
+                className="w-full h-11 bg-aac hover:bg-aac-hover active:bg-aac-active text-white font-medium rounded-xl no-touch-hover focus:outline-none focus-visible:outline-none"
               >
                 Back to Sign In
               </Button>
