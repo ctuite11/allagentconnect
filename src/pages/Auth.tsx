@@ -323,22 +323,25 @@ const Auth = () => {
 
       toast.info("Profile created, configuring settings...");
 
-      // 3. Insert agent_settings with license info and pending status
+      // 3. Upsert agent_settings with license info and pending status
+      // Use upsert because handle_new_user trigger may have already created an empty row
       const { error: settingsError } = await supabase
         .from('agent_settings')
-        .insert({
+        .upsert({
           user_id: userId,
           license_state: licenseState,
           license_number: licenseNumber.trim(),
           license_last_name: lastName.trim(),
           agent_status: 'pending',
+        }, {
+          onConflict: 'user_id'
         });
 
       if (settingsError) {
-        console.error("[REGISTER] Settings creation error:", settingsError);
-        toast.warning("Settings setup had an issue, continuing...");
+        console.error("[REGISTER] Settings upsert error:", settingsError);
+        toast.error("Failed to save license information. Please contact support.");
       } else {
-        console.log('[REGISTER] Settings inserted with license:', licenseState, licenseNumber.trim());
+        console.log('[REGISTER] Settings upserted with license:', licenseState, licenseNumber.trim());
       }
 
       // 4. Insert user_roles with role='agent'
