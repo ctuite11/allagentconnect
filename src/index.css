@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* AAC Brand Tokens */
+:root {
+  --aac: 160 84% 39%; /* #059669 in HSL */
+  --aac-hover: 162 89% 29%; /* #047857 */
+  --aac-active: 163 80% 25%; /* #065f46 */
+  --aac-ring: 160 84% 39% / 0.25;
+  --aac-soft: 160 84% 39% / 0.08;
+}
+
+/* Mobile hover fix - prevent sticky hover on touch devices */
+@media (hover: none) {
+  .no-touch-hover:hover {
+    background: inherit !important;
+    color: inherit !important;
+    border-color: inherit !important;
+  }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
