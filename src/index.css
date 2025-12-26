@@ -73,11 +73,11 @@ All colors MUST be HSL.
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    /* AAC Brand Green - #059669 = hsl(161 91% 31%), hover #047857 = hsl(162 91% 24%) */
-    --accent: 161 91% 31%;
+    /* Force shadcn accent to use AAC tokens (single source of truth) */
+    --accent: var(--aac);
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 162 91% 24%;
-    --accent-active: 162 91% 20%;
+    --accent-hover: var(--aac-hover);
+    --accent-active: var(--aac-active);
     --accent-soft: 161 91% 96%;
     --accent-muted: 161 91% 92%;
 
