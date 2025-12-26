@@ -14,9 +14,16 @@
 /* Mobile hover fix - prevent sticky hover on touch devices */
 @media (hover: none) {
   .no-touch-hover:hover {
-    background: inherit !important;
+    background-color: transparent !important;
     color: inherit !important;
     border-color: inherit !important;
+  }
+  
+  /* Explicit fix for outlined/secondary buttons */
+  .no-touch-hover-outline:hover {
+    background-color: white !important;
+    border-color: hsl(0 0% 80%) !important;
+    color: hsl(0 0% 40%) !important;
   }
 }
 
