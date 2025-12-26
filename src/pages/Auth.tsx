@@ -833,7 +833,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("register")}
-                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-neutral-200 text-neutral-700 font-semibold bg-white hover:bg-neutral-50 hover:border-neutral-300 hover:text-neutral-900 active:bg-neutral-100 transition-colors no-touch-hover-outline"
+                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-neutral-200 text-neutral-700 font-semibold bg-white hover:bg-neutral-50 hover:border-neutral-300 hover:text-neutral-900 active:bg-neutral-100 transition-colors no-touch-hover-outline focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
                   >
                     Create an Account
                   </button>
@@ -844,7 +844,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => switchMode("signin")}
-                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-neutral-200 text-neutral-700 font-semibold bg-white hover:bg-neutral-50 hover:border-neutral-300 hover:text-neutral-900 active:bg-neutral-100 transition-colors no-touch-hover-outline"
+                    className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl border border-neutral-200 text-neutral-700 font-semibold bg-white hover:bg-neutral-50 hover:border-neutral-300 hover:text-neutral-900 active:bg-neutral-100 transition-colors no-touch-hover-outline focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
                   >
                     Sign In
                   </button>
