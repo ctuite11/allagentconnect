@@ -106,6 +106,16 @@ export default function AdminApprovals() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [pendingVerifications, setPendingVerifications] = useState<Array<{
+    id: string;
+    user_id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    license_state: string | null;
+    license_number: string | null;
+    created_at: string;
+  }>>([]);
   
   // Filters & Search
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -215,6 +225,17 @@ export default function AdminApprovals() {
       });
 
       setAgents(agentList);
+
+      // 5. Fetch pending verifications (backup notifications)
+      const { data: pendingData } = await supabase
+        .from("pending_verifications")
+        .select("*")
+        .eq("processed", false)
+        .order("created_at", { ascending: false });
+
+      if (pendingData) {
+        setPendingVerifications(pendingData);
+      }
     } catch (error) {
       console.error("Unexpected error:", error);
       toast.error("Failed to load agents");
@@ -447,6 +468,54 @@ export default function AdminApprovals() {
             Switch Account
           </Button>
         </div>
+
+        {/* Pending Verifications Banner (fallback notifications) */}
+        {pendingVerifications.length > 0 && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
+                <Mail className="h-4 w-4 text-amber-700" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-medium text-amber-900 mb-1">
+                  Pending Verification Requests
+                </h3>
+                <p className="text-sm text-amber-700 mb-3">
+                  These registrations were saved but admin email notification may have failed.
+                </p>
+                <div className="space-y-2">
+                  {pendingVerifications.map((pv) => (
+                    <div key={pv.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-amber-200">
+                      <div className="text-sm">
+                        <span className="font-medium text-slate-900">{pv.first_name} {pv.last_name}</span>
+                        <span className="text-slate-500 ml-2">{pv.email}</span>
+                        {pv.license_state && (
+                          <span className="text-slate-400 ml-2">• {pv.license_state} #{pv.license_number}</span>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-amber-700 hover:text-amber-900"
+                        onClick={async () => {
+                          await supabase.from('pending_verifications').update({
+                            processed: true,
+                            processed_at: new Date().toISOString(),
+                            processed_by: user?.id
+                          }).eq('id', pv.id);
+                          setPendingVerifications(prev => prev.filter(p => p.id !== pv.id));
+                          toast.success("Marked as processed");
+                        }}
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filters Bar */}
         <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)] mb-6">

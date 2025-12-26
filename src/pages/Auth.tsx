@@ -301,6 +301,7 @@ const Auth = () => {
       }
 
       console.log('[REGISTER] User created:', userId);
+      toast.info("Account created, setting up profile...");
 
       // 2. Insert agent_profiles
       const { error: profileError } = await supabase
@@ -315,9 +316,12 @@ const Auth = () => {
 
       if (profileError) {
         console.error("[REGISTER] Profile creation error:", profileError);
+        toast.warning("Profile setup had an issue, continuing...");
       } else {
         console.log('[REGISTER] Profile inserted');
       }
+
+      toast.info("Profile created, configuring settings...");
 
       // 3. Insert agent_settings with license info and pending status
       const { error: settingsError } = await supabase
@@ -332,6 +336,7 @@ const Auth = () => {
 
       if (settingsError) {
         console.error("[REGISTER] Settings creation error:", settingsError);
+        toast.warning("Settings setup had an issue, continuing...");
       } else {
         console.log('[REGISTER] Settings inserted with license:', licenseState, licenseNumber.trim());
       }
@@ -352,7 +357,10 @@ const Auth = () => {
         console.log('[REGISTER] Role assigned');
       }
 
-      // 5. Notify admin of new license for verification (non-blocking)
+      toast.info("Notifying admin for verification...");
+
+      // 5. Notify admin of new license for verification
+      let adminNotified = false;
       try {
         const { data: emailData, error: emailError } = await supabase.functions.invoke('send-verification-submitted', {
           body: {
@@ -368,13 +376,33 @@ const Auth = () => {
           console.error('[REGISTER] Edge function error:', emailError);
         } else {
           console.log('[REGISTER] Admin notification sent:', emailData);
+          adminNotified = true;
         }
       } catch (emailError) {
         console.error('[REGISTER] Failed to send admin notification:', emailError);
-        // Don't block registration if email fails
       }
 
-      // 6. Redirect to pending-verification (AFTER all inserts complete)
+      // 6. If edge function failed, store in pending_verifications as backup
+      if (!adminNotified) {
+        try {
+          await supabase.from('pending_verifications').insert({
+            user_id: userId,
+            email: validatedEmail,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            license_state: licenseState,
+            license_number: licenseNumber.trim(),
+          });
+          console.log('[REGISTER] Stored pending verification as backup');
+          toast.warning("Admin notification delayed, but registration saved.");
+        } catch (backupError) {
+          console.error('[REGISTER] Failed to store backup verification:', backupError);
+        }
+      } else {
+        toast.success("Registration complete! Admin has been notified.");
+      }
+
+      // 7. Redirect to pending-verification (AFTER all inserts complete)
       console.log('[REGISTER] All steps complete, navigating to /pending-verification');
       didNavigate.current = true;
       navigate('/pending-verification', { replace: true });

@@ -2175,6 +2175,48 @@ export type Database = {
           },
         ]
       }
+      pending_verifications: {
+        Row: {
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          license_number: string | null
+          license_state: string | null
+          processed: boolean | null
+          processed_at: string | null
+          processed_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          license_number?: string | null
+          license_state?: string | null
+          processed?: boolean | null
+          processed_at?: string | null
+          processed_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          license_number?: string | null
+          license_state?: string | null
+          processed?: boolean | null
+          processed_at?: string | null
+          processed_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
