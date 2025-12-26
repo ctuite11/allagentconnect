@@ -10,8 +10,8 @@ import { z } from "zod";
 import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
 import { Logo } from "@/components/brand";
 
-// Timeout wrapper to prevent hanging requests
-function withTimeout<T>(promise: Promise<T>, ms = 20000, label = "Request"): Promise<T> {
+// Timeout wrapper that accepts PromiseLike<T> (works with backend query builders)
+function withTimeout<T>(promiseLike: PromiseLike<T>, ms = 20000, label = "Request"): Promise<T> {
   let timeoutId: number | undefined;
 
   const timeout = new Promise<never>((_, reject) => {
@@ -20,9 +20,10 @@ function withTimeout<T>(promise: Promise<T>, ms = 20000, label = "Request"): Pro
     }, ms);
   });
 
-  return Promise.race([promise, timeout]).finally(() => {
+  // Normalize PromiseLike to Promise via Promise.resolve
+  return Promise.race([Promise.resolve(promiseLike), timeout]).finally(() => {
     if (timeoutId) window.clearTimeout(timeoutId);
-  }) as Promise<T>;
+  });
 }
 
 type RegisterStep = "creating_account" | "saving_profile" | "saving_license" | "finishing" | null;
@@ -86,12 +87,16 @@ const Auth = () => {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const [registerStep, setRegisterStep] = useState<RegisterStep>(null);
+  const [sessionMismatchEmail, setSessionMismatchEmail] = useState<string | null>(null);
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const didNavigate = useRef(false);
   const isRegistering = useRef(false);
+  const cancelledRef = useRef(false);
 
-  // Cancel registration handler
+  // Cancel registration handler with real cancellation
   const handleCancelRegistration = () => {
     console.log('[REGISTER] User cancelled registration');
+    cancelledRef.current = true;
     isRegistering.current = false;
     setLoading(false);
     setRegisterStep(null);
@@ -160,6 +165,9 @@ const Auth = () => {
       if (!mounted) return;
       
       if (session?.user) {
+        // Store session email for mismatch detection
+        setSessionEmail(session.user.email || null);
+        
         // Check for admin role first - admins should go straight to admin panel
         const { data: adminRole } = await supabase
           .from('user_roles')
@@ -269,9 +277,20 @@ const Auth = () => {
       return;
     }
     
+    // Reset cancellation flag
+    cancelledRef.current = false;
     setLoading(true);
     setRegisterStep("creating_account");
     isRegistering.current = true;
+
+    // Helper to check if cancelled before proceeding
+    const checkCancelled = (): boolean => {
+      if (cancelledRef.current) {
+        console.log('[REGISTER] Operation cancelled by user');
+        return true;
+      }
+      return false;
+    };
 
     try {
       // ========== STEP 0: Validate all fields upfront ==========
@@ -300,6 +319,7 @@ const Auth = () => {
       }
 
       // ========== STEP 1: Create auth user with timeout ==========
+      if (checkCancelled()) return;
       console.log('[REGISTER] Step 1: Creating auth user for:', validatedEmail);
       setRegisterStep("creating_account");
       
@@ -316,6 +336,8 @@ const Auth = () => {
         20000,
         "Create account"
       );
+
+      if (checkCancelled()) return;
 
       // Check for "fake success" - user exists but identities is empty
       if (authData?.user && authData.user.identities?.length === 0) {
@@ -344,11 +366,12 @@ const Auth = () => {
       console.log('[REGISTER] Step 1 complete: User created', { userId });
 
       // ========== STEP 2: Create agent profile with timeout ==========
+      if (checkCancelled()) return;
       console.log('[REGISTER] Step 2: Creating agent profile');
       setRegisterStep("saving_profile");
       
       const profileResult = await withTimeout(
-        Promise.resolve(supabase
+        supabase
           .from('agent_profiles')
           .insert({
             id: userId,
@@ -356,10 +379,12 @@ const Auth = () => {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
             phone: phone.trim() || null,
-          })),
+          }),
         20000,
         "Save profile"
       );
+
+      if (checkCancelled()) return;
 
       if (profileResult.error) {
         console.error('[REGISTER] FAILED at Step 2:', profileResult.error);
@@ -370,6 +395,7 @@ const Auth = () => {
       console.log('[REGISTER] Step 2 complete: Profile created');
 
       // ========== STEP 3: Save license info with UPDATE→INSERT fallback ==========
+      if (checkCancelled()) return;
       console.log('[REGISTER] Step 3: Saving license information');
       setRegisterStep("saving_license");
       
@@ -377,7 +403,7 @@ const Auth = () => {
       
       // First, try UPDATE (row may already exist from handle_new_user trigger)
       const updateResult = await withTimeout(
-        Promise.resolve(supabase
+        supabase
           .from('agent_settings')
           .update({
             license_state: licenseState,
@@ -386,10 +412,12 @@ const Auth = () => {
             agent_status: 'pending',
           })
           .eq('user_id', userId)
-          .select()),
+          .select(),
         20000,
         "Save license"
       );
+
+      if (checkCancelled()) return;
 
       if (updateResult.error) {
         console.error('[REGISTER] Step 3 UPDATE error:', updateResult.error);
@@ -407,7 +435,7 @@ const Auth = () => {
         console.log('[REGISTER] Step 3: UPDATE affected 0 rows, trying INSERT fallback');
         
         const insertResult = await withTimeout(
-          Promise.resolve(supabase
+          supabase
             .from('agent_settings')
             .insert({
               user_id: userId,
@@ -415,10 +443,12 @@ const Auth = () => {
               license_number: licenseNumber.trim(),
               license_last_name: lastName.trim(),
               agent_status: 'pending',
-            })),
+            }),
           20000,
           "Save license"
         );
+
+        if (checkCancelled()) return;
 
         if (insertResult.error) {
           console.error('[REGISTER] FAILED at Step 3 INSERT fallback:', insertResult.error);
@@ -438,21 +468,24 @@ const Auth = () => {
       }
 
       // ========== STEP 4: Assign agent role ==========
+      if (checkCancelled()) return;
       console.log('[REGISTER] Step 4: Assigning agent role');
       setRegisterStep("finishing");
       
       const roleResult = await withTimeout(
-        Promise.resolve(supabase
+        supabase
           .from('user_roles')
           .upsert({
             user_id: userId,
             role: 'agent'
           }, {
             onConflict: 'user_id,role'
-          })),
+          }),
         20000,
         "Assign role"
       );
+
+      if (checkCancelled()) return;
 
       if (roleResult.error) {
         console.error('[REGISTER] Step 4 warning - role assignment error:', roleResult.error);
@@ -489,7 +522,7 @@ const Auth = () => {
         "Admin notification"
       ).then((result) => {
         if (result.error) {
-          console.error('[REGISTER] Step 5 edge function error:', result.error);
+          console.error('[REGISTER] Step 5 backend function error:', result.error);
           // Store backup if admin notification failed
           Promise.resolve(supabase.from('pending_verifications').insert({
             user_id: notificationData.userId,
@@ -511,6 +544,7 @@ const Auth = () => {
       });
 
       // ========== STEP 6: Success - redirect to pending verification ==========
+      if (checkCancelled()) return;
       console.log('[REGISTER] Complete: All critical steps finished successfully');
       
       // Single success toast (no waterfall)
@@ -520,6 +554,12 @@ const Auth = () => {
       navigate('/pending-verification', { replace: true });
 
     } catch (error: any) {
+      // Don't show error if cancelled
+      if (cancelledRef.current) {
+        console.log('[REGISTER] Error after cancellation, ignoring');
+        return;
+      }
+      
       console.error('[REGISTER] Unexpected error:', error);
       
       if (error instanceof z.ZodError) {
@@ -572,8 +612,25 @@ const Auth = () => {
     setLoading(true);
     await supabase.auth.signOut();
     setExistingSession(false);
+    setSessionEmail(null);
+    setSessionMismatchEmail(null);
     setLoading(false);
     toast.success("Signed out successfully");
+  };
+
+  // Handle dismissing session mismatch and continuing with current session
+  const handleContinueWithSession = () => {
+    setSessionMismatchEmail(null);
+  };
+
+  // Handle switching to a different account
+  const handleSwitchAccount = async () => {
+    setLoading(true);
+    await supabase.auth.signOut();
+    setExistingSession(false);
+    setSessionEmail(null);
+    setSessionMismatchEmail(null);
+    setLoading(false);
   };
 
   const switchMode = (newMode: AuthMode) => {
@@ -581,6 +638,7 @@ const Auth = () => {
     setPassword("");
     setConfirmPassword("");
     setResetEmailSent(false);
+    setSessionMismatchEmail(null);
     if (newMode !== "register") {
       setFirstName("");
       setLastName("");
@@ -595,6 +653,54 @@ const Auth = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <Loader2 className="h-8 w-8 animate-spin text-neutral-900" />
+      </div>
+    );
+  }
+
+  // Session mismatch interstitial - shows when user is signed in as a different email
+  // This prevents wrong-account resume on mobile after email verification
+  if (sessionEmail && mode === "register" && email && sessionEmail !== email) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="w-full max-w-[420px]">
+          <div className="flex justify-center mb-8">
+            <Logo variant="primary" size="lg" />
+          </div>
+          <div className="bg-white rounded-2xl p-8 border border-neutral-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] text-center">
+            <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-5">
+              <LogOut className="w-7 h-7 text-amber-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-neutral-900 mb-2">
+              Signed in as Different Account
+            </h2>
+            <p className="text-neutral-500 text-sm mb-2">
+              You're currently signed in as:
+            </p>
+            <p className="text-neutral-900 font-medium mb-4 break-all">
+              {sessionEmail}
+            </p>
+            <p className="text-neutral-500 text-sm mb-6">
+              Would you like to continue with this account or sign out to register with a different email?
+            </p>
+            <div className="space-y-3">
+              <Button
+                onClick={() => navigate('/auth/callback', { replace: true })}
+                className="w-full h-11 bg-aac hover:bg-aac-hover active:bg-aac-active text-white font-medium rounded-xl no-touch-hover focus:outline-none focus-visible:outline-none"
+              >
+                Continue as {sessionEmail?.split('@')[0]}
+              </Button>
+              <Button
+                onClick={handleSwitchAccount}
+                variant="ghost"
+                className="w-full h-11 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50 font-medium rounded-xl"
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+                Sign Out & Register New Account
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
