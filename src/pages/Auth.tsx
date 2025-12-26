@@ -99,6 +99,7 @@ const Auth = () => {
   const handleCancelRegistration = () => {
     console.log('[REGISTER] User cancelled registration');
     cancelledRef.current = true;
+    didNavigate.current = false;
     abortRef.current?.abort();
     isRegistering.current = false;
     setLoading(false);
