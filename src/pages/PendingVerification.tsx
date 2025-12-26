@@ -11,6 +11,7 @@ const PendingVerification = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isApproved, setIsApproved] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const didNavigate = useRef(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -36,6 +37,9 @@ const PendingVerification = () => {
         setLoading(false);
         return;
       }
+
+      // Store the user's email for display
+      setUserEmail(session.user.email || null);
 
       // Check agent status
       const { data: settings } = await supabase
@@ -141,6 +145,11 @@ const PendingVerification = () => {
               <p className="text-slate-600 text-base leading-relaxed">
                 Thanks for your request. We'll email you as soon as your license verification is complete.
               </p>
+              {userEmail && (
+                <p className="text-slate-500 text-sm mt-2">
+                  Registered as: {userEmail}
+                </p>
+              )}
             </div>
 
             <Button 

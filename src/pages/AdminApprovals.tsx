@@ -391,8 +391,33 @@ export default function AdminApprovals() {
   }
 
   if (!isAdmin) {
-    navigate("/");
-    return null;
+    return (
+      <div className="min-h-screen bg-[#FAFAF8] pt-20 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Users className="h-8 w-8 text-amber-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">
+            Admin Access Required
+          </h2>
+          <p className="text-slate-600 mb-2">
+            You're signed in as <span className="font-medium">{user?.email}</span>
+          </p>
+          <p className="text-slate-500 text-sm mb-6">
+            Please sign in with your admin account to access this page.
+          </p>
+          <Button 
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate('/auth');
+            }}
+            className="bg-slate-900 hover:bg-slate-800"
+          >
+            Switch Account
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -404,6 +429,24 @@ export default function AdminApprovals() {
           subtitle="Manage all agents, update info, control access"
           className="mb-8"
         />
+
+        {/* Signed in as indicator */}
+        <div className="mb-4 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-2">
+          <span className="text-sm text-slate-600">
+            Signed in as: <span className="font-medium text-slate-900">{user?.email}</span>
+          </span>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate('/auth');
+            }}
+            className="text-sm text-slate-500 hover:text-slate-700"
+          >
+            Switch Account
+          </Button>
+        </div>
 
         {/* Filters Bar */}
         <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)] mb-6">
