@@ -11,25 +11,13 @@ import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock, X
 import { Logo } from "@/components/brand";
 
 // Timeout wrapper - properly generic + typed for PromiseLike<T> (works with backend query builders)
-function withTimeout<T>(
-  promiseLike: PromiseLike<T>,
-  ms = 20000,
-  label = "Request"
-): Promise<T> {
+function withTimeout<T>(promiseLike: PromiseLike<T>, ms = 20000, label = "Request"): Promise<T> {
   let timeoutId: number | undefined;
-
   const timeout = new Promise<never>((_, reject) => {
-    timeoutId = window.setTimeout(() => {
-      reject(new Error(`${label} timed out after ${ms / 1000}s. Please try again.`));
-    }, ms);
+    timeoutId = window.setTimeout(() => reject(new Error(`${label} timed out after ${ms/1000}s. Please try again.`)), ms);
   });
-
-  // Normalize PromiseLike to Promise with explicit typing
-  const promise = Promise.resolve(promiseLike as T extends infer U ? PromiseLike<U> : never) as Promise<T>;
-
-  return Promise.race([promise, timeout]).finally(() => {
-    if (timeoutId) window.clearTimeout(timeoutId);
-  });
+  const promise = Promise.resolve(promiseLike) as Promise<T>;
+  return Promise.race([promise, timeout]).finally(() => timeoutId && window.clearTimeout(timeoutId));
 }
 
 type RegisterStep = "creating_account" | "saving_profile" | "saving_license" | "finishing" | null;
@@ -586,14 +574,17 @@ const Auth = () => {
       });
 
       // ========== STEP 6: Success - redirect to pending verification ==========
-      if (checkCancelled()) return;
+      if (checkCancelled() || didNavigate.current) return;
       console.log('[REGISTER] Complete: All critical steps finished successfully');
       
       // Single success toast (no waterfall)
       toast.success("Account created! Your license is pending verification.");
       
-      didNavigate.current = true;
-      navigate('/pending-verification', { replace: true });
+      // Guard against late navigation after cancel
+      if (!cancelledRef.current && !didNavigate.current) {
+        didNavigate.current = true;
+        navigate('/pending-verification', { replace: true });
+      }
 
     } catch (error: any) {
       // Don't show error if cancelled
