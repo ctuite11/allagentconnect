@@ -229,10 +229,19 @@ const Auth = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (isRegistering.current) {
+      console.log('[REGISTER] Already registering, ignoring duplicate submission');
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      // Validate all fields
+      // ========== STEP 0: Validate all fields upfront ==========
+      console.log('[REGISTER] Step 0: Validating fields');
+      
       const validatedEmail = emailSchema.parse(email);
 
       if (!firstName.trim() || !lastName.trim()) {
@@ -259,9 +268,9 @@ const Auth = () => {
         return;
       }
 
-      // 1. Create auth user (email confirmation is DISABLED in Supabase settings)
+      // ========== STEP 1: Create auth user ==========
       isRegistering.current = true;
-      console.log('[REGISTER] Starting registration for:', validatedEmail);
+      console.log('[REGISTER] Step 1: Creating auth user for:', validatedEmail);
       
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: validatedEmail,
@@ -275,6 +284,7 @@ const Auth = () => {
 
       // Check for "fake success" - user exists but identities is empty
       if (authData?.user && authData.user.identities?.length === 0) {
+        console.error('[REGISTER] FAILED at Step 1: User already exists (empty identities)');
         toast.error("This email is already registered. Please sign in instead.");
         isRegistering.current = false;
         setLoading(false);
@@ -282,6 +292,7 @@ const Auth = () => {
       }
 
       if (authError) {
+        console.error('[REGISTER] FAILED at Step 1:', authError);
         if (authError.message.includes("already registered")) {
           toast.error("This email is already registered. Please sign in instead.");
         } else {
@@ -294,16 +305,18 @@ const Auth = () => {
 
       const userId = authData.user?.id;
       if (!userId) {
+        console.error('[REGISTER] FAILED at Step 1: No user ID returned');
         toast.error("Failed to create account. Please try again.");
         isRegistering.current = false;
         setLoading(false);
         return;
       }
 
-      console.log('[REGISTER] User created:', userId);
-      toast.info("Account created, setting up profile...");
+      console.log('[REGISTER] Step 1 complete: User created', { userId });
 
-      // 2. Insert agent_profiles
+      // ========== STEP 2: Create agent profile ==========
+      console.log('[REGISTER] Step 2: Creating agent profile');
+      
       const { error: profileError } = await supabase
         .from('agent_profiles')
         .insert({
@@ -315,36 +328,81 @@ const Auth = () => {
         });
 
       if (profileError) {
-        console.error("[REGISTER] Profile creation error:", profileError);
-        toast.warning("Profile setup had an issue, continuing...");
-      } else {
-        console.log('[REGISTER] Profile inserted');
+        console.error('[REGISTER] FAILED at Step 2:', profileError);
+        toast.error("Failed to create profile. Please contact support.");
+        isRegistering.current = false;
+        setLoading(false);
+        return;
       }
+      
+      console.log('[REGISTER] Step 2 complete: Profile created');
 
-      toast.info("Profile created, configuring settings...");
-
-      // 3. Upsert agent_settings with license info and pending status
-      // Use upsert because handle_new_user trigger may have already created an empty row
-      const { error: settingsError } = await supabase
+      // ========== STEP 3: Save license info with UPDATE→INSERT fallback ==========
+      console.log('[REGISTER] Step 3: Saving license information');
+      
+      let licenseWriteSuccess = false;
+      
+      // First, try UPDATE (row may already exist from handle_new_user trigger)
+      const { data: updateResult, error: updateError } = await supabase
         .from('agent_settings')
-        .upsert({
-          user_id: userId,
+        .update({
           license_state: licenseState,
           license_number: licenseNumber.trim(),
           license_last_name: lastName.trim(),
           agent_status: 'pending',
-        }, {
-          onConflict: 'user_id'
-        });
+        })
+        .eq('user_id', userId)
+        .select();
 
-      if (settingsError) {
-        console.error("[REGISTER] Settings upsert error:", settingsError);
-        toast.error("Failed to save license information. Please contact support.");
-      } else {
-        console.log('[REGISTER] Settings upserted with license:', licenseState, licenseNumber.trim());
+      if (updateError) {
+        console.error('[REGISTER] Step 3 UPDATE error:', updateError);
       }
 
-      // 4. Insert user_roles with role='agent'
+      // Check if UPDATE affected any rows
+      if (updateResult && updateResult.length > 0) {
+        console.log('[REGISTER] Step 3 complete: License info updated via UPDATE', { 
+          license_state: licenseState, 
+          license_number: licenseNumber.trim() 
+        });
+        licenseWriteSuccess = true;
+      } else {
+        // No rows updated - try INSERT as fallback
+        console.log('[REGISTER] Step 3: UPDATE affected 0 rows, trying INSERT fallback');
+        
+        const { error: insertError } = await supabase
+          .from('agent_settings')
+          .insert({
+            user_id: userId,
+            license_state: licenseState,
+            license_number: licenseNumber.trim(),
+            license_last_name: lastName.trim(),
+            agent_status: 'pending',
+          });
+
+        if (insertError) {
+          console.error('[REGISTER] FAILED at Step 3 INSERT fallback:', insertError);
+          toast.error("Failed to save license information. Please contact support.");
+          isRegistering.current = false;
+          setLoading(false);
+          return;
+        }
+        
+        console.log('[REGISTER] Step 3 complete: License info saved via INSERT fallback');
+        licenseWriteSuccess = true;
+      }
+
+      // Verify the write was successful
+      if (!licenseWriteSuccess) {
+        console.error('[REGISTER] FAILED at Step 3: License write not confirmed');
+        toast.error("Failed to save license information. Please contact support.");
+        isRegistering.current = false;
+        setLoading(false);
+        return;
+      }
+
+      // ========== STEP 4: Assign agent role ==========
+      console.log('[REGISTER] Step 4: Assigning agent role');
+      
       const { error: roleError } = await supabase
         .from('user_roles')
         .upsert({
@@ -355,14 +413,15 @@ const Auth = () => {
         });
 
       if (roleError) {
-        console.error("[REGISTER] Role assignment error:", roleError);
+        console.error('[REGISTER] Step 4 warning - role assignment error:', roleError);
+        // Don't fail registration for this - role can be fixed later
       } else {
-        console.log('[REGISTER] Role assigned');
+        console.log('[REGISTER] Step 4 complete: Role assigned');
       }
 
-      toast.info("Notifying admin for verification...");
-
-      // 5. Notify admin of new license for verification
+      // ========== STEP 5: Send admin notification (only after profile write confirmed) ==========
+      console.log('[REGISTER] Step 5: Sending admin notification');
+      
       let adminNotified = false;
       try {
         const { data: emailData, error: emailError } = await supabase.functions.invoke('send-verification-submitted', {
@@ -376,17 +435,18 @@ const Auth = () => {
         });
         
         if (emailError) {
-          console.error('[REGISTER] Edge function error:', emailError);
+          console.error('[REGISTER] Step 5 edge function error:', emailError);
         } else {
-          console.log('[REGISTER] Admin notification sent:', emailData);
+          console.log('[REGISTER] Step 5 complete: Admin notification sent', emailData);
           adminNotified = true;
         }
       } catch (emailError) {
-        console.error('[REGISTER] Failed to send admin notification:', emailError);
+        console.error('[REGISTER] Step 5 exception:', emailError);
       }
 
-      // 6. If edge function failed, store in pending_verifications as backup
+      // Store backup if admin notification failed
       if (!adminNotified) {
+        console.log('[REGISTER] Step 5: Storing backup verification record');
         try {
           await supabase.from('pending_verifications').insert({
             user_id: userId,
@@ -396,27 +456,30 @@ const Auth = () => {
             license_state: licenseState,
             license_number: licenseNumber.trim(),
           });
-          console.log('[REGISTER] Stored pending verification as backup');
-          toast.warning("Admin notification delayed, but registration saved.");
+          console.log('[REGISTER] Step 5: Backup verification stored');
         } catch (backupError) {
-          console.error('[REGISTER] Failed to store backup verification:', backupError);
+          console.error('[REGISTER] Step 5 backup storage error:', backupError);
         }
-      } else {
-        toast.success("Registration complete! Admin has been notified.");
       }
 
-      // 7. Redirect to pending-verification (AFTER all inserts complete)
-      console.log('[REGISTER] All steps complete, navigating to /pending-verification');
+      // ========== STEP 6: Success - redirect to pending verification ==========
+      console.log('[REGISTER] Complete: All steps finished successfully');
+      
+      // Single success toast (no waterfall)
+      toast.success("Account created! Your license is pending verification.");
+      
       didNavigate.current = true;
       navigate('/pending-verification', { replace: true });
       isRegistering.current = false;
 
     } catch (error: any) {
+      console.error('[REGISTER] Unexpected error:', error);
       isRegistering.current = false;
+      
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        toast.error(error.message || "Failed to create account");
+        toast.error(error.message || "Failed to create account. Please try again.");
       }
     } finally {
       setLoading(false);
