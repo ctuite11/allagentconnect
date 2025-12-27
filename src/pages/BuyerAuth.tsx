@@ -219,26 +219,30 @@ const BuyerAuth = () => {
     setLoading(true);
 
     try {
-      const validatedData = z.object({ email: z.string().email() }).parse({ email: formData.email });
+      const validatedData = z.object({ email: z.string().trim().email() }).parse({ email: formData.email });
       
-      // Call edge function to send password reset email via Resend
-      const { error: fnError } = await supabase.functions.invoke('send-password-reset', {
-        body: { 
+      // Call same-origin endpoint (no CORS, no functions/v1)
+      const response = await fetch('/api/auth/request-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
           email: validatedData.email,
-          redirectUrl: `${window.location.origin}/?auth=buyer-reset`
-        }
+          redirectUrl: `${window.location.origin}/buyer/auth`
+        })
       });
 
-      if (fnError) throw fnError;
+      if (!response.ok) {
+        throw new Error('Failed to send reset link');
+      }
       
-      toast.success("Password reset email sent! Check your inbox.");
+      toast.success("If an account exists with that email, you'll receive a reset link shortly.");
       setIsForgotPassword(false);
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
         console.error("Password reset error:", error);
-        toast.error(error.message || "Failed to send reset email");
+        toast.error("Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
