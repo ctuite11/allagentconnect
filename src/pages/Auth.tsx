@@ -10,14 +10,27 @@ import { z } from "zod";
 import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
 import { Logo } from "@/components/brand";
 
-// Timeout wrapper - properly generic + typed for PromiseLike<T> (works with backend query builders)
-function withTimeout<T>(promiseLike: PromiseLike<T>, ms = 20000, label = "Request"): Promise<T> {
+// Important: function withTimeout(promiseLike: PromiseLike, ...): Promise is not generic in TypeScript.
+// It must be withTimeout<T>(PromiseLike<T>): Promise<T>.
+// Timeout wrapper - truly generic + typed for PromiseLike
+function withTimeout<T>(
+  promiseLike: PromiseLike<T>,
+  ms = 20000,
+  label = "Request"
+): Promise<T> {
   let timeoutId: number | undefined;
+
   const timeout = new Promise<never>((_, reject) => {
-    timeoutId = window.setTimeout(() => reject(new Error(`${label} timed out after ${ms/1000}s. Please try again.`)), ms);
+    timeoutId = window.setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms / 1000}s. Please try again.`));
+    }, ms);
   });
+
   const promise = Promise.resolve(promiseLike) as Promise<T>;
-  return Promise.race([promise, timeout]).finally(() => timeoutId && window.clearTimeout(timeoutId));
+
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timeoutId) window.clearTimeout(timeoutId);
+  });
 }
 
 type RegisterStep = "creating_account" | "saving_profile" | "saving_license" | "finishing" | null;
