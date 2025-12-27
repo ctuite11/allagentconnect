@@ -131,26 +131,24 @@ const ConsumerAuth = () => {
     setFormLoading(true);
 
     try {
-      const emailSchema = z.string().trim().email("Invalid email address");
-      const validated = emailSchema.parse(resetEmail);
+      const emailValidation = z.string().trim().email("Invalid email address");
+      const validated = emailValidation.parse(resetEmail);
 
-      const redirectUrl = `${window.location.origin}/consumer/auth`;
-
-      // Call edge function to send password reset email via Resend
-      const { error: fnError } = await supabase.functions.invoke('send-password-reset', {
-        body: { 
+      // Call same-origin endpoint (no CORS, no functions/v1)
+      const response = await fetch('/api/auth/request-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
           email: validated,
-          redirectUrl: redirectUrl
-        }
+          redirectUrl: `${window.location.origin}/consumer/auth`
+        })
       });
 
-      if (fnError) {
-        console.error("Password reset error:", fnError);
-        toast.error(fnError.message || "Failed to send reset email");
-        return;
+      if (!response.ok) {
+        throw new Error('Failed to send reset link');
       }
 
-      toast.success("Password reset email sent! Check your inbox.");
+      toast.success("If an account exists with that email, you'll receive a reset link shortly.");
       setShowForgotPassword(false);
       setResetEmail("");
     } catch (error) {
@@ -158,7 +156,7 @@ const ConsumerAuth = () => {
         toast.error(error.errors[0].message);
       } else {
         console.error("Password reset error:", error);
-        toast.error("An error occurred sending reset email");
+        toast.error("Something went wrong. Please try again.");
       }
     } finally {
       setFormLoading(false);
