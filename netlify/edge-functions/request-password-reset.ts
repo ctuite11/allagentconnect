@@ -102,8 +102,13 @@ export default async function handler(request: Request, context: any) {
     });
 
     if (!generateLinkResponse.ok) {
-      // User might not exist - return success anyway (security: no user enumeration)
-      console.log("Generate link failed (user may not exist) - returning success");
+      // Log actual error for debugging (not exposed to user)
+      const errorBody = await generateLinkResponse.text();
+      console.error(
+        `[request-password-reset] generate_link failed: status=${generateLinkResponse.status} body=${errorBody.substring(0, 500)}`
+      );
+
+      // Keep generic success response (no account enumeration)
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
