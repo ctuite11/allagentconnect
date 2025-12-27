@@ -134,15 +134,17 @@ const ConsumerAuth = () => {
       const emailValidation = z.string().trim().email("Invalid email address");
       const validated = emailValidation.parse(resetEmail);
 
-      // Call backend edge function for password reset
-      const { error } = await supabase.functions.invoke('send-password-reset', {
-        body: { 
+      // Call same-origin Netlify endpoint (no CORS issues)
+      const response = await fetch('/api/auth/request-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
           email: validated,
-          redirectUrl: `${window.location.origin}/consumer/auth`
-        }
+          redirectUrl: `${window.location.origin}/password-reset`
+        })
       });
 
-      if (error) {
+      if (!response.ok) {
         throw new Error('Failed to send reset link');
       }
 
