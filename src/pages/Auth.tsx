@@ -623,12 +623,14 @@ const Auth = () => {
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
+    console.log("FORGOT PASSWORD: handler entered");
     e.preventDefault();
     setLoading(true);
 
     try {
       const validatedEmail = emailSchema.parse(email);
 
+      console.log("FORGOT PASSWORD: invoking send-password-reset");
       // Call edge function to send password reset email via Resend
       const { error: fnError } = await supabase.functions.invoke('send-password-reset', {
         body: { 
