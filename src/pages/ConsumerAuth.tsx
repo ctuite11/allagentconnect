@@ -104,8 +104,6 @@ const ConsumerAuth = () => {
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
           toast.error("Invalid email or password");
-        } else if (error.message.includes("Email not confirmed")) {
-          toast.error("Please confirm your email address");
         } else {
           toast.error(error.message);
         }
@@ -246,12 +244,12 @@ const ConsumerAuth = () => {
 
       // Check for "fake success" - user exists but identities is empty
       if (data.user && data.user.identities?.length === 0) {
-        toast.error("This email is already registered. Please login or check your email for a confirmation link.");
+        toast.error("This email is already registered. Please login instead.");
         return;
       }
 
       if (data.user) {
-        toast.success("Check your email to confirm your account!");
+        toast.success("Account created! You can now sign in.");
         
         // Send welcome email
         try {
