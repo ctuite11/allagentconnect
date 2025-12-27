@@ -221,15 +221,17 @@ const BuyerAuth = () => {
     try {
       const validatedData = z.object({ email: z.string().trim().email() }).parse({ email: formData.email });
       
-      // Call backend edge function for password reset
-      const { error } = await supabase.functions.invoke('send-password-reset', {
-        body: { 
+      // Call same-origin Netlify endpoint (no CORS issues)
+      const response = await fetch('/api/auth/request-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
           email: validatedData.email,
-          redirectUrl: `${window.location.origin}/buyer/auth`
-        }
+          redirectUrl: `${window.location.origin}/password-reset`
+        })
       });
 
-      if (error) {
+      if (!response.ok) {
         throw new Error('Failed to send reset link');
       }
       
