@@ -134,17 +134,15 @@ const ConsumerAuth = () => {
       const emailValidation = z.string().trim().email("Invalid email address");
       const validated = emailValidation.parse(resetEmail);
 
-      // Call same-origin endpoint (no CORS, no functions/v1)
-      const response = await fetch('/api/auth/request-password-reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      // Call backend edge function for password reset
+      const { error } = await supabase.functions.invoke('send-password-reset', {
+        body: { 
           email: validated,
           redirectUrl: `${window.location.origin}/consumer/auth`
-        })
+        }
       });
 
-      if (!response.ok) {
+      if (error) {
         throw new Error('Failed to send reset link');
       }
 
