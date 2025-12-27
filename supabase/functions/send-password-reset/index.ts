@@ -57,7 +57,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Security best practice: Don't reveal if email exists or not
     // Always return success to prevent user enumeration attacks
     if (linkError) {
-      console.log("User not found or error generating link - returning success anyway for security");
+      console.error("[send-password-reset] generateLink failed:", {
+        code: linkError.code,
+        message: linkError.message,
+        status: linkError.status,
+      });
+      console.log("[send-password-reset] Returning success anyway for security (no user enumeration)");
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: {
