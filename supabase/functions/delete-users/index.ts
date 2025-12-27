@@ -16,13 +16,43 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the request body
-    const { userIds } = await req.json();
+    // Get the request body - support both userIds and emails
+    const { userIds: providedUserIds, emails } = await req.json();
+    
+    const userIds: string[] = providedUserIds || [];
 
-    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+    // If emails provided, look up user IDs
+    if (emails && Array.isArray(emails) && emails.length > 0) {
+      console.log("Looking up user IDs for emails:", emails);
+      
+      const { data: usersData, error: listError } = await supabase.auth.admin.listUsers();
+      
+      if (listError) {
+        console.error("Error listing users:", listError);
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Failed to list users: ${listError.message}`
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      for (const email of emails) {
+        const user = usersData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+        if (user) {
+          console.log(`Found user ID ${user.id} for email ${email}`);
+          userIds.push(user.id);
+        } else {
+          console.log(`No user found for email ${email}`);
+        }
+      }
+    }
+
+    if (userIds.length === 0) {
       return new Response(JSON.stringify({
         success: false,
-        error: "userIds array is required"
+        error: "No valid userIds or emails provided"
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
