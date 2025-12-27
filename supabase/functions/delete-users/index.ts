@@ -21,32 +21,58 @@ serve(async (req) => {
     
     const userIds: string[] = providedUserIds || [];
 
-    // If emails provided, look up user IDs
+    // If emails provided, look up user IDs with PAGINATION
     if (emails && Array.isArray(emails) && emails.length > 0) {
       console.log("Looking up user IDs for emails:", emails);
       
-      const { data: usersData, error: listError } = await supabase.auth.admin.listUsers();
+      const emailsToFind = new Set(emails.map((e: string) => e.toLowerCase()));
+      let page = 1;
+      const perPage = 50;
+      let hasMore = true;
       
-      if (listError) {
-        console.error("Error listing users:", listError);
-        return new Response(JSON.stringify({
-          success: false,
-          error: `Failed to list users: ${listError.message}`
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      while (hasMore && emailsToFind.size > 0) {
+        console.log(`Fetching auth users page ${page}...`);
+        
+        const { data: usersData, error: listError } = await supabase.auth.admin.listUsers({
+          page,
+          perPage
         });
+        
+        if (listError) {
+          console.error(`Error listing users on page ${page}:`, listError);
+          return new Response(JSON.stringify({
+            success: false,
+            error: `Failed to list users: ${listError.message}`
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        console.log(`Page ${page}: found ${usersData.users.length} users`);
+        
+        // Check each user on this page
+        for (const user of usersData.users) {
+          const userEmail = user.email?.toLowerCase();
+          if (userEmail && emailsToFind.has(userEmail)) {
+            console.log(`Found user ID ${user.id} for email ${user.email} on page ${page}`);
+            userIds.push(user.id);
+            emailsToFind.delete(userEmail);
+          }
+        }
+        
+        // Check if there are more pages
+        hasMore = usersData.users.length === perPage;
+        page++;
       }
       
-      for (const email of emails) {
-        const user = usersData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
-        if (user) {
-          console.log(`Found user ID ${user.id} for email ${email}`);
-          userIds.push(user.id);
-        } else {
-          console.log(`No user found for email ${email}`);
-        }
+      console.log(`Searched ${page - 1} pages total. Found ${userIds.length} users.`);
+      
+      // Log any emails not found
+      if (emailsToFind.size > 0) {
+        console.log("Emails not found:", Array.from(emailsToFind));
       }
+      
     }
 
     if (userIds.length === 0) {
