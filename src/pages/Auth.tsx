@@ -623,32 +623,34 @@ const Auth = () => {
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
-    console.log("FORGOT PASSWORD: handler entered");
     e.preventDefault();
     setLoading(true);
 
     try {
       const validatedEmail = emailSchema.parse(email);
 
-      console.log("FORGOT PASSWORD: invoking send-password-reset");
-      // Call edge function to send password reset email via Resend
-      const { error: fnError } = await supabase.functions.invoke('send-password-reset', {
-        body: { 
+      // Call same-origin endpoint (no CORS, no functions/v1)
+      const response = await fetch('/api/auth/request-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
           email: validatedEmail,
           redirectUrl: `${window.location.origin}/password-reset`
-        }
+        })
       });
 
-      if (fnError) throw fnError;
+      if (!response.ok) {
+        throw new Error('Failed to send reset link');
+      }
 
       setResetEmailSent(true);
-      toast.success("Password reset link sent to your email");
+      toast.success("If an account exists with that email, you'll receive a reset link shortly");
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
         console.error("Password reset error:", error);
-        toast.error(error.message || "Failed to send reset link");
+        toast.error("Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);

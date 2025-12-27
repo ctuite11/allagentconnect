@@ -1,3 +1,7 @@
 [[edge_functions]]
   path = "/property/*"
   function = "social-preview"
+
+[[edge_functions]]
+  path = "/api/auth/request-password-reset"
+  function = "request-password-reset"
