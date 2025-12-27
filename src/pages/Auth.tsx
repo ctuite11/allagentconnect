@@ -10,8 +10,7 @@ import { z } from "zod";
 import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
 import { Logo } from "@/components/brand";
 
-// Important: function withTimeout(promiseLike: PromiseLike, ...): Promise is not generic in TypeScript.
-// It must be withTimeout<T>(PromiseLike<T>): Promise<T>.
+// NOTE: This is generic only when it declares <T> and returns Promise<T>.
 // Timeout wrapper - truly generic + typed for PromiseLike
 function withTimeout<T>(
   promiseLike: PromiseLike<T>,
