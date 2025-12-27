@@ -62,7 +62,13 @@ export default async function handler(request: Request, context: any) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const finalRedirectUrl = redirectUrl || `${new URL(request.url).origin}/password-reset`;
+    
+    // Use explicit redirect so Supabase recovery email lands on the reset screen (not home)
+    // Keep preview/local override if provided, otherwise use production
+    const finalRedirectUrl =
+      (redirectUrl && redirectUrl.startsWith("https://")) 
+        ? redirectUrl 
+        : "https://allagentconnect.com/password-reset";
 
     console.log(`Password reset requested for: ${cleanEmail.substring(0, 3)}***`);
 
