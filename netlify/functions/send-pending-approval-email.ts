@@ -136,7 +136,15 @@ ${appOrigin}`;
 
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) {
-      return { statusCode: 502, headers, body: JSON.stringify({ ok: false, error: data?.message || "Resend error", data }) };
+      console.error("[send-pending-approval-email] Resend error:", {
+        status: resp.status,
+        data,
+      });
+      return {
+        statusCode: 502,
+        headers,
+        body: JSON.stringify({ ok: false, error: (data as any)?.message || "Resend error", data }),
+      };
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, data }) };
