@@ -98,7 +98,7 @@ export default async function handler(request: Request, context: any) {
         type: "recovery",
         email: cleanEmail,
         options: {
-          redirect_to: "https://allagentconnect.com/password-reset",
+          redirect_to: "https://allagentconnect.com/auth/callback",
         },
       }),
     });
