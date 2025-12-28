@@ -14,6 +14,16 @@ interface WelcomeEmailRequest {
   lastName: string;
 }
 
+// Get the frontend URL from environment or derive it
+const getFrontendUrl = (): string => {
+  // Try explicit frontend URL first
+  const frontendUrl = Deno.env.get("FRONTEND_URL");
+  if (frontendUrl) return frontendUrl;
+  
+  // Default to allagentconnect.com for production
+  return "https://allagentconnect.com";
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -25,6 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending welcome email to:", email);
 
     const fullName = `${firstName} ${lastName}`;
+    const frontendUrl = getFrontendUrl();
 
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -206,7 +217,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <p>Ready to start exploring?</p>
                 
                 <div class="button-container">
-                  <a href="${Deno.env.get('VITE_SUPABASE_URL')?.replace('https://qocduqtfbsevnhlgsfka.supabase.co', 'https://95492335-3a75-4285-8d44-828003cae42a.lovableproject.com')}/browse" class="button">Browse Properties</a>
+                  <a href="${frontendUrl}/browse" class="button">Browse Properties</a>
                 </div>
                 
                 <p style="margin-top: 30px; font-size: 14px; color: #666;">

@@ -1,5 +1,18 @@
 const CRAWLER_REGEX = /facebookexternalhit|facebot|Twitterbot|LinkedInBot|pinterest|slackbot|whatsapp|telegrambot|discordbot/i;
-const SUPABASE_FUNCTION_URL = "https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/social-preview";
+
+// Derive Supabase function URL from environment variable
+const getSupabaseFunctionUrl = (): string => {
+  const supabaseUrl = Deno.env.get("VITE_SUPABASE_URL");
+  if (supabaseUrl) {
+    return `${supabaseUrl}/functions/v1/social-preview`;
+  }
+  // Fallback: derive from project ID if URL not set
+  const projectId = Deno.env.get("VITE_SUPABASE_PROJECT_ID");
+  if (projectId) {
+    return `https://${projectId}.supabase.co/functions/v1/social-preview`;
+  }
+  throw new Error("VITE_SUPABASE_URL or VITE_SUPABASE_PROJECT_ID must be set");
+};
 
 export default async function handler(request: Request, context: any) {
   const userAgent = request.headers.get("user-agent") || "";
@@ -13,7 +26,8 @@ export default async function handler(request: Request, context: any) {
   
   // For crawlers, proxy to Supabase social-preview function
   const listingId = match[1];
-  const proxyUrl = `${SUPABASE_FUNCTION_URL}/property/${listingId}`;
+  const supabaseFunctionUrl = getSupabaseFunctionUrl();
+  const proxyUrl = `${supabaseFunctionUrl}/property/${listingId}`;
   
   const response = await fetch(proxyUrl, {
     headers: {
