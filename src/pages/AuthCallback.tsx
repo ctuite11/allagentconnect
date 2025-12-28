@@ -25,14 +25,17 @@ const AuthCallback = () => {
       typeFromHash === "recovery" ||
       typeFromQuery === "recovery";
 
-    console.log("[AuthCallback] Init:", {
-      hasCode: !!code,
-      hasAccessToken: !!accessToken,
-      hasRefreshToken: !!refreshToken,
-      isRecoveryContext,
-      typeFromHash,
-      typeFromQuery
-    });
+    // Debug logging only in development
+    if (import.meta.env.DEV) {
+      console.log("[AuthCallback] Init:", {
+        hasCode: !!code,
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+        isRecoveryContext,
+        typeFromHash,
+        typeFromQuery
+      });
+    }
 
     // Check for error in URL hash
     const errorParam = hashParams.get("error");
@@ -53,7 +56,7 @@ const AuthCallback = () => {
     const init = async () => {
       // Handle hash-based recovery tokens (implicit flow)
       if (accessToken && refreshToken) {
-        console.log("[AuthCallback] Hash tokens detected - setting session");
+        if (import.meta.env.DEV) console.log("[AuthCallback] Hash tokens detected - setting session");
         try {
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -61,14 +64,14 @@ const AuthCallback = () => {
           });
           
           if (sessionError) {
-            console.error("[AuthCallback] setSession error:", sessionError);
+            if (import.meta.env.DEV) console.error("[AuthCallback] setSession error:", sessionError);
             if (!cancelled) {
               setError("Reset link expired or invalid. Please request a new one.");
             }
             return;
           }
 
-          console.log("[AuthCallback] Session set successfully, navigating to password-reset");
+          if (import.meta.env.DEV) console.log("[AuthCallback] Session set successfully");
           if (!cancelled && !didNavigate.current) {
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
@@ -76,7 +79,7 @@ const AuthCallback = () => {
           }
           return;
         } catch (err) {
-          console.error("[AuthCallback] setSession exception:", err);
+          if (import.meta.env.DEV) console.error("[AuthCallback] setSession exception:", err);
           if (!cancelled) {
             setError("Reset link expired or invalid. Please request a new one.");
           }
@@ -86,7 +89,7 @@ const AuthCallback = () => {
 
       // Handle PKCE recovery link
       if (code) {
-        console.log("[AuthCallback] PKCE code detected - exchanging for session");
+        if (import.meta.env.DEV) console.log("[AuthCallback] PKCE code detected - exchanging for session");
         try {
           await supabase.auth.exchangeCodeForSession(code);
           if (!cancelled && !didNavigate.current) {
@@ -96,7 +99,7 @@ const AuthCallback = () => {
           }
           return;
         } catch (err) {
-          console.error("[AuthCallback] PKCE exchange error:", err);
+          if (import.meta.env.DEV) console.error("[AuthCallback] PKCE exchange error:", err);
           if (!cancelled) {
             setError("Reset link expired or invalid. Please request a new one.");
           }
@@ -106,7 +109,7 @@ const AuthCallback = () => {
 
       // Set up auth state listener
       const { data } = supabase.auth.onAuthStateChange((event, session) => {
-        console.log("[AuthCallback] Auth event:", event, "isRecovery:", isRecoveryContext, !!session);
+        if (import.meta.env.DEV) console.log("[AuthCallback] Auth event:", event);
 
         // Handle password recovery
         if ((event === "PASSWORD_RECOVERY" || isRecoveryContext) && session?.user) {

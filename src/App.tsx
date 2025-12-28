@@ -8,6 +8,7 @@ import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
+import AuthDiagnostics from "./pages/AuthDiagnostics";
 import { RouteGuard } from "./components/RouteGuard";
 // AgentSuccessHub archived → AgentSuccessHub.legacy.tsx
 import AgentSuccessHub from "./pages/AgentSuccessHub.legacy";
@@ -92,6 +93,7 @@ const App = () => (
                 {/* Auth routes */}
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
                 <Route path="/pending-verification" element={<PendingVerification />} />
                 <Route path="/password-reset" element={<PasswordReset />} />
                 
