@@ -62,9 +62,9 @@ export default async function handler(request: Request, context: any) {
 
     const cleanEmail = email.trim().toLowerCase();
     
-    // Hardcode production redirect so recovery email always lands on reset screen
-    const finalRedirectUrl = "https://allagentconnect.com/password-reset";
-    console.log("[request-password-reset] redirectTo =", finalRedirectUrl);
+    // Redirect to auth/callback which handles the recovery token and routes to password-reset
+    const redirectTo = "https://allagentconnect.com/auth/callback";
+    console.log("[request-password-reset] redirectTo =", redirectTo);
 
     console.log(`Password reset requested for: ${cleanEmail.substring(0, 3)}***`);
 
@@ -98,7 +98,7 @@ export default async function handler(request: Request, context: any) {
         type: "recovery",
         email: cleanEmail,
         options: {
-          redirect_to: "https://allagentconnect.com/auth/callback",
+          redirect_to: redirectTo,
         },
       }),
     });
