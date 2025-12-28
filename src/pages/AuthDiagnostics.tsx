@@ -7,6 +7,17 @@ import { CheckCircle2, XCircle, Loader2, AlertTriangle, Copy, ArrowLeft } from "
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
+// Derive expected project ID from VITE_SUPABASE_URL at runtime
+const getProjectIdFromUrl = (url: string): string => {
+  if (!url || !url.includes("supabase.co")) return "unknown";
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname.split(".")[0] || "unknown";
+  } catch {
+    return "unknown";
+  }
+};
+
 const AuthDiagnostics = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<any>(null);
@@ -22,6 +33,9 @@ const AuthDiagnostics = () => {
   const supabaseProjectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "NOT SET";
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "NOT SET";
   
+  // Derive expected project ID from the URL (the source of truth)
+  const expectedProjectId = getProjectIdFromUrl(supabaseUrl);
+  
   // Mask the anon key for display
   const maskedAnonKey = anonKey.length > 12 
     ? `${anonKey.slice(0, 6)}...${anonKey.slice(-6)}`
@@ -31,6 +45,9 @@ const AuthDiagnostics = () => {
   const urlProjectId = supabaseUrl.includes("supabase.co") 
     ? supabaseUrl.split("//")[1]?.split(".")[0] || "unknown"
     : "non-supabase-url";
+
+  // Check if configuration is consistent
+  const isConfigValid = urlProjectId !== "unknown" && urlProjectId !== "non-supabase-url";
 
   useEffect(() => {
     const checkSession = async () => {
@@ -190,18 +207,18 @@ const AuthDiagnostics = () => {
             <DiagnosticRow 
               label="VITE_SUPABASE_URL" 
               value={supabaseUrl}
-              status={supabaseUrl.includes("qocduqtfbsevnhlgsfka") ? "ok" : "error"}
+              status={isConfigValid ? "ok" : "error"}
               copyable
             />
             <DiagnosticRow 
               label="URL Project ID" 
               value={urlProjectId}
-              status={urlProjectId === "qocduqtfbsevnhlgsfka" ? "ok" : "error"}
+              status={isConfigValid ? "ok" : "error"}
             />
             <DiagnosticRow 
               label="VITE_SUPABASE_PROJECT_ID" 
               value={supabaseProjectId}
-              status={supabaseProjectId === "qocduqtfbsevnhlgsfka" ? "ok" : "warning"}
+              status={supabaseProjectId === expectedProjectId ? "ok" : "warning"}
             />
             <DiagnosticRow 
               label="Anon Key (masked)" 
@@ -210,38 +227,42 @@ const AuthDiagnostics = () => {
           </CardContent>
         </Card>
 
-        {/* Expected vs Actual */}
-        <Card className={urlProjectId === "qocduqtfbsevnhlgsfka" ? "border-green-500" : "border-destructive"}>
+        {/* Configuration Consistency Check */}
+        <Card className={isConfigValid ? "border-green-500" : "border-destructive"}>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              Backend Match Check
-              {urlProjectId === "qocduqtfbsevnhlgsfka" ? (
-                <Badge variant="default" className="bg-green-500">MATCH</Badge>
+              Configuration Check
+              {isConfigValid ? (
+                <Badge variant="default" className="bg-green-500">VALID</Badge>
               ) : (
-                <Badge variant="destructive">MISMATCH</Badge>
+                <Badge variant="destructive">INVALID</Badge>
               )}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Expected Project ID:</span>
-                <code className="font-mono">qocduqtfbsevnhlgsfka</code>
+                <span className="text-muted-foreground">Derived Project ID:</span>
+                <code className="font-mono">{expectedProjectId}</code>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Actual Project ID:</span>
-                <code className={`font-mono ${urlProjectId !== "qocduqtfbsevnhlgsfka" ? "text-destructive font-bold" : ""}`}>
-                  {urlProjectId}
+                <span className="text-muted-foreground">Env Project ID:</span>
+                <code className={`font-mono ${supabaseProjectId !== expectedProjectId ? "text-amber-500" : ""}`}>
+                  {supabaseProjectId}
                 </code>
               </div>
-              {urlProjectId !== "qocduqtfbsevnhlgsfka" && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Backend URL:</span>
+                <code className="font-mono text-xs">{supabaseUrl}</code>
+              </div>
+              {!isConfigValid && (
                 <div className="mt-4 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
                   <p className="text-destructive font-medium">
-                    ⚠️ This build is connected to a DIFFERENT Supabase project!
+                    ⚠️ Configuration issue detected!
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    This domain is serving a build with the wrong backend configuration.
-                    The live domain needs to be re-published from the correct Lovable project.
+                    The Supabase URL appears to be invalid or not set correctly.
+                    Check your environment configuration.
                   </p>
                 </div>
               )}
@@ -341,7 +362,7 @@ const AuthDiagnostics = () => {
 
         <div className="text-center text-xs text-muted-foreground pt-4">
           <p>Diagnostics page for debugging auth issues.</p>
-          <p>Expected backend: qocduqtfbsevnhlgsfka.supabase.co</p>
+          <p>Backend: {supabaseUrl}</p>
         </div>
       </div>
     </div>
