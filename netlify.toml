@@ -5,3 +5,8 @@
 [[edge_functions]]
   path = "/api/auth/request-password-reset"
   function = "request-password-reset"
+
+[[redirects]]
+  from = "/api/send-pending-approval-email"
+  to = "/.netlify/functions/send-pending-approval-email"
+  status = 200
