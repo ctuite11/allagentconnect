@@ -183,9 +183,12 @@ const handler: Handler = async (event) => {
     });
 
     if (!emailResponse.ok) {
-      const errorData = await emailResponse.json();
-      console.error("[send-password-changed-email] Resend error:", errorData);
-      return { statusCode: 500, headers, body: JSON.stringify({ error: "Failed to send email" }) };
+      const errorData = await emailResponse.json().catch(() => ({}));
+      console.error("[send-password-changed-email] Resend error:", {
+        status: emailResponse.status,
+        data: errorData,
+      });
+      return { statusCode: 500, headers, body: JSON.stringify({ error: "Failed to send email", data: errorData }) };
     }
 
     console.log("[send-password-changed-email] Confirmation email sent to:", cleanEmail.substring(0, 3) + "***");
