@@ -67,12 +67,18 @@ const PendingVerification = () => {
       setUserEmail(email);
 
       // Check if user is admin - bypass pending screen entirely
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
+      // Query user_roles but don't fail if table doesn't exist or RLS blocks
+      let isAdmin = false;
+      try {
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId);
+        isAdmin = roles?.some(r => r.role === 'admin') ?? false;
+      } catch (err) {
+        console.log('[PENDING] Could not check admin role, continuing as non-admin');
+      }
 
-      const isAdmin = roles?.some(r => r.role === 'admin');
       if (isAdmin) {
         console.log('[PENDING] Admin detected, bypassing pending screen');
         if (!didNavigate.current) {
@@ -87,13 +93,6 @@ const PendingVerification = () => {
         .from('agent_settings')
         .select('agent_status')
         .eq('user_id', userId)
-        .maybeSingle();
-
-      // Also fetch profile for name (for email personalization)
-      const { data: profile } = await supabase
-        .from('agent_profiles')
-        .select('first_name, last_name')
-        .eq('id', userId)
         .maybeSingle();
 
       const status = settings?.agent_status || 'unverified';
@@ -121,8 +120,24 @@ const PendingVerification = () => {
       }
 
       // If pending/unverified, send the pending approval email (once)
+      // Profile lookup is optional - don't block email if it fails
       if (email && (status === 'pending' || status === 'unverified')) {
-        sendPendingApprovalEmail(email, profile?.first_name, profile?.last_name);
+        let firstName: string | undefined;
+        let lastName: string | undefined;
+        
+        try {
+          const { data: profile } = await supabase
+            .from('agent_profiles')
+            .select('first_name, last_name')
+            .eq('id', userId)
+            .maybeSingle();
+          firstName = profile?.first_name ?? undefined;
+          lastName = profile?.last_name ?? undefined;
+        } catch (err) {
+          console.log('[PENDING] Could not fetch profile, sending email without name');
+        }
+        
+        sendPendingApprovalEmail(email, firstName, lastName);
       }
 
       setLoading(false);
