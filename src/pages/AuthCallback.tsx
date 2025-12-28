@@ -16,10 +16,23 @@ const AuthCallback = () => {
     const typeFromQuery = searchParams.get("type");
     const code = searchParams.get("code");
 
+    // Hash-based tokens (implicit flow)
+    const accessToken = hashParams.get("access_token");
+    const refreshToken = hashParams.get("refresh_token");
+
     // Recovery detection
     const isRecoveryContext =
       typeFromHash === "recovery" ||
       typeFromQuery === "recovery";
+
+    console.log("[AuthCallback] Init:", {
+      hasCode: !!code,
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      isRecoveryContext,
+      typeFromHash,
+      typeFromQuery
+    });
 
     // Check for error in URL hash
     const errorParam = hashParams.get("error");
@@ -38,6 +51,39 @@ const AuthCallback = () => {
     let cancelled = false;
 
     const init = async () => {
+      // Handle hash-based recovery tokens (implicit flow)
+      if (accessToken && refreshToken) {
+        console.log("[AuthCallback] Hash tokens detected - setting session");
+        try {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (sessionError) {
+            console.error("[AuthCallback] setSession error:", sessionError);
+            if (!cancelled) {
+              setError("Reset link expired or invalid. Please request a new one.");
+            }
+            return;
+          }
+
+          console.log("[AuthCallback] Session set successfully, navigating to password-reset");
+          if (!cancelled && !didNavigate.current) {
+            didNavigate.current = true;
+            window.history.replaceState(null, "", window.location.pathname);
+            navigate("/password-reset", { replace: true });
+          }
+          return;
+        } catch (err) {
+          console.error("[AuthCallback] setSession exception:", err);
+          if (!cancelled) {
+            setError("Reset link expired or invalid. Please request a new one.");
+          }
+          return;
+        }
+      }
+
       // Handle PKCE recovery link
       if (code) {
         console.log("[AuthCallback] PKCE code detected - exchanging for session");
