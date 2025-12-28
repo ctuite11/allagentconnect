@@ -69,8 +69,8 @@ export default async function handler(request: Request, context: any) {
     console.log(`Password reset requested for: ${cleanEmail.substring(0, 3)}***`);
 
     // Get secrets from Netlify environment
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || Deno.env.get("VITE_SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "").trim();
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY) {
@@ -97,9 +97,9 @@ export default async function handler(request: Request, context: any) {
       body: JSON.stringify({
         type: "recovery",
         email: cleanEmail,
-        // include BOTH to be compatible with different SDK/request shapes
-        redirectTo: finalRedirectUrl,
-        options: { redirectTo: finalRedirectUrl },
+        options: {
+          redirect_to: "https://allagentconnect.com/password-reset",
+        },
       }),
     });
 
