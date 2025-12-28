@@ -629,19 +629,15 @@ const Auth = () => {
     try {
       const validatedEmail = emailSchema.parse(email);
 
-      // Call same-origin Netlify endpoint (no CORS issues)
-      const response = await fetch('/api/auth/request-password-reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      // Use backend password reset sender (keeps auth project + allowlist consistent)
+      const { error } = await supabase.functions.invoke("send-password-reset", {
+        body: {
           email: validatedEmail,
-          redirectUrl: `${window.location.origin}/password-reset`
-        })
+          redirectUrl: `${window.location.origin}/auth/callback`,
+        },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send reset link');
-      }
+      if (error) throw error;
 
       setResetEmailSent(true);
       toast.success("If an account exists with that email, you'll receive a reset link shortly");
