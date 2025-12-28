@@ -628,16 +628,38 @@ const Auth = () => {
 
     try {
       const validatedEmail = emailSchema.parse(email);
+      const redirectUrl = `${window.location.origin}/auth/callback`;
 
-      // Use backend password reset sender (keeps auth project + allowlist consistent)
-      const { error } = await supabase.functions.invoke("send-password-reset", {
-        body: {
-          email: validatedEmail,
-          redirectUrl: `${window.location.origin}/auth/callback`,
-        },
-      });
+      // Try custom edge function first
+      let functionWorked = false;
+      try {
+        const { error: fnError } = await supabase.functions.invoke("send-password-reset", {
+          body: {
+            email: validatedEmail,
+            redirectUrl,
+          },
+        });
+        
+        if (!fnError) {
+          functionWorked = true;
+        } else {
+          console.warn("Password reset function error, trying fallback:", fnError);
+        }
+      } catch (fnException) {
+        console.warn("Password reset function exception, trying fallback:", fnException);
+      }
 
-      if (error) throw error;
+      // If custom function failed, use native Supabase auth as fallback
+      if (!functionWorked) {
+        console.log("Using native resetPasswordForEmail fallback");
+        const { error: nativeError } = await supabase.auth.resetPasswordForEmail(validatedEmail, {
+          redirectTo: redirectUrl,
+        });
+        
+        if (nativeError) {
+          throw nativeError;
+        }
+      }
 
       setResetEmailSent(true);
       toast.success("If an account exists with that email, you'll receive a reset link shortly");
@@ -646,7 +668,7 @@ const Auth = () => {
         toast.error(error.errors[0].message);
       } else {
         console.error("Password reset error:", error);
-        toast.error("Something went wrong. Please try again.");
+        toast.error(error.message || "Failed to send reset email. Please try again.");
       }
     } finally {
       setLoading(false);
