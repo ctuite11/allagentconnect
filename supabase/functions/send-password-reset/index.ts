@@ -18,9 +18,11 @@ interface PasswordResetRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests - must return 200/204 with proper headers
+  console.log(`[send-password-reset] ${req.method} request from ${req.headers.get("origin") || "unknown"}`);
+  
+  // Handle CORS preflight requests - null body for proper 200 response
   if (req.method === "OPTIONS") {
-    return new Response("ok", { status: 204, headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
