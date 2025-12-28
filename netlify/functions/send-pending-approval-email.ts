@@ -31,7 +31,7 @@ export const handler: Handler = async (event) => {
       return { statusCode: 500, headers, body: JSON.stringify({ ok: false, error: "Missing RESEND_API_KEY" }) };
     }
 
-    const from = process.env.EMAIL_FROM || "AllAgentConnect <no-reply@allagentconnect.com>";
+    const from = process.env.EMAIL_FROM || "AllAgentConnect <onboarding@resend.dev>";
     const appOrigin = process.env.APP_ORIGIN || "https://allagentconnect.com";
 
     const { email, firstName, lastName } = JSON.parse(event.body || "{}");
