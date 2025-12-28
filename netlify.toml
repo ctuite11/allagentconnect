@@ -10,3 +10,8 @@
   from = "/api/send-pending-approval-email"
   to = "/.netlify/functions/send-pending-approval-email"
   status = 200
+
+[[redirects]]
+  from = "/api/send-password-changed-email"
+  to = "/.netlify/functions/send-password-changed-email"
+  status = 200

@@ -109,7 +109,7 @@ const PasswordReset = () => {
       // Send password changed confirmation email
       if (userEmail) {
         try {
-          await fetch("/.netlify/functions/send-password-changed-email", {
+          await fetch("/api/send-password-changed-email", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: userEmail }),
