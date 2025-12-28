@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
-
 const POLL_INTERVAL_MS = 5000;
 
 const PendingVerification = () => {
@@ -14,6 +13,29 @@ const PendingVerification = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const didNavigate = useRef(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const emailSentRef = useRef(false);
+
+  // Send pending approval email via Netlify function
+  const sendPendingApprovalEmail = async (email: string, firstName?: string, lastName?: string) => {
+    if (emailSentRef.current) return; // Only send once
+    emailSentRef.current = true;
+    
+    try {
+      const resp = await fetch("/api/send-pending-approval-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, firstName, lastName }),
+      });
+      const data = await resp.json();
+      if (!data.ok) {
+        console.error("[PENDING] Failed to send approval email:", data.error);
+      } else {
+        console.log("[PENDING] Pending approval email sent");
+      }
+    } catch (err) {
+      console.error("[PENDING] Error sending pending approval email:", err);
+    }
+  };
 
   useEffect(() => {
     let attempts = 0;
@@ -38,14 +60,40 @@ const PendingVerification = () => {
         return;
       }
 
+      const userId = session.user.id;
+      const email = session.user.email || null;
+
       // Store the user's email for display
-      setUserEmail(session.user.email || null);
+      setUserEmail(email);
+
+      // Check if user is admin - bypass pending screen entirely
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      const isAdmin = roles?.some(r => r.role === 'admin');
+      if (isAdmin) {
+        console.log('[PENDING] Admin detected, bypassing pending screen');
+        if (!didNavigate.current) {
+          didNavigate.current = true;
+          navigate("/admin/approvals", { replace: true });
+        }
+        return;
+      }
 
       // Check agent status
       const { data: settings } = await supabase
         .from('agent_settings')
         .select('agent_status')
-        .eq('user_id', session.user.id)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      // Also fetch profile for name (for email personalization)
+      const { data: profile } = await supabase
+        .from('agent_profiles')
+        .select('first_name, last_name')
+        .eq('id', userId)
         .maybeSingle();
 
       const status = settings?.agent_status || 'unverified';
@@ -72,9 +120,11 @@ const PendingVerification = () => {
         return;
       }
 
-      // If unverified (no settings record yet), stay on this page
-      // The registration creates settings with 'pending' status
-      
+      // If pending/unverified, send the pending approval email (once)
+      if (email && (status === 'pending' || status === 'unverified')) {
+        sendPendingApprovalEmail(email, profile?.first_name, profile?.last_name);
+      }
+
       setLoading(false);
     };
 
