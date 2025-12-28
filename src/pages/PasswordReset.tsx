@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Check, X } from "lucide-react";
+import { Check, X, AlertTriangle } from "lucide-react";
 
 // Password validation rules
 const passwordRules = [
@@ -25,20 +25,33 @@ const PasswordReset = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isValidSession, setIsValidSession] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if we have a valid recovery session
     const checkSession = async () => {
+      // CRITICAL: Require recovery flow marker from AuthCallback
+      const isRecoveryFlow = sessionStorage.getItem("aac_recovery_flow") === "1";
+      
+      if (!isRecoveryFlow) {
+        console.log("[PasswordReset] No recovery flow marker found");
+        setSessionError("Invalid or expired reset link. Please request a new password reset.");
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      
+      if (session?.user) {
+        console.log("[PasswordReset] Valid session found for recovery");
         setIsValidSession(true);
       } else {
-        toast.error("Invalid or expired reset link");
-        navigate("/auth");
+        console.log("[PasswordReset] No session found");
+        setSessionError("Your reset link has expired. Please request a new password reset.");
       }
     };
+    
     checkSession();
-  }, [navigate]);
+  }, []);
 
   // Live validation state
   const validationResults = useMemo(() => {
@@ -63,20 +76,60 @@ const PasswordReset = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      // Get user email before updating (for confirmation email)
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email;
+
+      const { data, error } = await supabase.auth.updateUser({
         password: password,
       });
 
       if (error) {
+        // Check for specific token-related errors
+        if (error.message.includes("token") || error.message.includes("expired") || error.message.includes("invalid")) {
+          toast.error("Your reset link has expired. Please request a new one.");
+          sessionStorage.removeItem("aac_recovery_flow");
+          navigate("/auth?mode=forgot-password", { replace: true });
+          return;
+        }
         toast.error(error.message);
         return;
       }
 
+      // Verify the update actually happened
+      if (!data.user) {
+        toast.error("Password update failed. Please request a new reset link.");
+        sessionStorage.removeItem("aac_recovery_flow");
+        navigate("/auth?mode=forgot-password", { replace: true });
+        return;
+      }
+
+      console.log("[PasswordReset] Password updated successfully");
+
+      // Send password changed confirmation email
+      if (userEmail) {
+        try {
+          await fetch("/.netlify/functions/send-password-changed-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: userEmail }),
+          });
+        } catch (emailErr) {
+          console.error("[PasswordReset] Failed to send confirmation email:", emailErr);
+          // Don't block success flow for email failure
+        }
+      }
+
+      // Clear recovery state
+      sessionStorage.removeItem("aac_recovery_flow");
+      
       // Clear recovery URL state before redirecting
       window.history.replaceState(null, "", "/password-reset");
       
       // CRITICAL: Sign out immediately to prevent recovery session from touching onboarding
       await supabase.auth.signOut();
+      
+      toast.success("Password updated successfully! Please sign in with your new password.");
       
       // Redirect to auth with success flag - NO auto-login, NO onboarding
       navigate("/auth?reset=success", { replace: true });
@@ -87,6 +140,44 @@ const PasswordReset = () => {
       setLoading(false);
     }
   };
+
+  const handleRequestNewLink = () => {
+    sessionStorage.removeItem("aac_recovery_flow");
+    navigate("/auth?mode=forgot-password", { replace: true });
+  };
+
+  // Show error state if session is invalid
+  if (sessionError) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navigation />
+        
+        <div className="flex-1 container mx-auto px-4 py-24 flex items-center justify-center">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <div className="flex items-center gap-2 text-destructive mb-2">
+                <AlertTriangle className="h-5 w-5" />
+                <CardTitle>Link Expired</CardTitle>
+              </div>
+              <CardDescription>
+                {sessionError}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={handleRequestNewLink}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white"
+              >
+                Request New Reset Link
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <Footer />
+      </div>
+    );
+  }
 
   if (!isValidSession) {
     return null;
@@ -105,6 +196,13 @@ const PasswordReset = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* One-time link warning */}
+            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md">
+              <p className="text-xs text-amber-800 dark:text-amber-200">
+                <strong>Important:</strong> This link works once. If you've already opened it or refreshed this page, you may need to request a new reset link.
+              </p>
+            </div>
+
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="password">New Password</Label>

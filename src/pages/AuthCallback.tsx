@@ -25,6 +25,13 @@ const AuthCallback = () => {
       typeFromHash === "recovery" ||
       typeFromQuery === "recovery";
 
+    // Generate a stable key to prevent double-processing
+    const tokenKey =
+      accessToken?.slice(0, 16) ||
+      code?.slice(0, 16) ||
+      "unknown";
+    const processedKey = `aac_processed_${isRecoveryContext ? "recovery" : "auth"}_${tokenKey}`;
+
     // Debug logging only in development
     if (import.meta.env.DEV) {
       console.log("[AuthCallback] Init:", {
@@ -33,7 +40,8 @@ const AuthCallback = () => {
         hasRefreshToken: !!refreshToken,
         isRecoveryContext,
         typeFromHash,
-        typeFromQuery
+        typeFromQuery,
+        tokenKey: tokenKey.substring(0, 8) + "..."
       });
     }
 
@@ -47,6 +55,19 @@ const AuthCallback = () => {
       return;
     }
 
+    // CRITICAL: Check if this link was already processed (email clients prefetch)
+    if (sessionStorage.getItem(processedKey)) {
+      console.log("[AuthCallback] Link already processed, showing error");
+      setError("This link was already used. Please request a new password reset link.");
+      return;
+    }
+
+    // Mark recovery flow in sessionStorage for PasswordReset to verify
+    if (isRecoveryContext) {
+      sessionStorage.setItem("aac_recovery_flow", "1");
+      if (import.meta.env.DEV) console.log("[AuthCallback] Recovery flow marked in sessionStorage");
+    }
+
     const hasAuthHash = window.location.hash.includes("access_token");
 
     let timeout: NodeJS.Timeout | undefined;
@@ -57,6 +78,10 @@ const AuthCallback = () => {
       // Handle hash-based recovery tokens (implicit flow)
       if (accessToken && refreshToken) {
         if (import.meta.env.DEV) console.log("[AuthCallback] Hash tokens detected - setting session");
+        
+        // Mark as processed BEFORE attempting to use the token
+        sessionStorage.setItem(processedKey, "1");
+        
         try {
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -65,6 +90,8 @@ const AuthCallback = () => {
           
           if (sessionError) {
             if (import.meta.env.DEV) console.error("[AuthCallback] setSession error:", sessionError);
+            // Clear the processed marker since we failed
+            sessionStorage.removeItem(processedKey);
             if (!cancelled) {
               setError("Reset link expired or invalid. Please request a new one.");
             }
@@ -80,6 +107,8 @@ const AuthCallback = () => {
           return;
         } catch (err) {
           if (import.meta.env.DEV) console.error("[AuthCallback] setSession exception:", err);
+          // Clear the processed marker since we failed
+          sessionStorage.removeItem(processedKey);
           if (!cancelled) {
             setError("Reset link expired or invalid. Please request a new one.");
           }
@@ -90,6 +119,10 @@ const AuthCallback = () => {
       // Handle PKCE recovery link
       if (code) {
         if (import.meta.env.DEV) console.log("[AuthCallback] PKCE code detected - exchanging for session");
+        
+        // Mark as processed BEFORE attempting to use the code
+        sessionStorage.setItem(processedKey, "1");
+        
         try {
           await supabase.auth.exchangeCodeForSession(code);
           if (!cancelled && !didNavigate.current) {
@@ -100,6 +133,8 @@ const AuthCallback = () => {
           return;
         } catch (err) {
           if (import.meta.env.DEV) console.error("[AuthCallback] PKCE exchange error:", err);
+          // Clear the processed marker since we failed
+          sessionStorage.removeItem(processedKey);
           if (!cancelled) {
             setError("Reset link expired or invalid. Please request a new one.");
           }
@@ -113,6 +148,9 @@ const AuthCallback = () => {
 
         // Handle password recovery
         if ((event === "PASSWORD_RECOVERY" || isRecoveryContext) && session?.user) {
+          // Mark recovery flow
+          sessionStorage.setItem("aac_recovery_flow", "1");
+          
           if (!didNavigate.current) {
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
@@ -190,7 +228,8 @@ const AuthCallback = () => {
       const isRecoverySession =
         !!session?.user?.recovery_sent_at ||
         hashParams.get("type") === "recovery" ||
-        urlParams.get("type") === "recovery";
+        urlParams.get("type") === "recovery" ||
+        sessionStorage.getItem("aac_recovery_flow") === "1";
       
       if (isRecoverySession) {
         didNavigate.current = true;
