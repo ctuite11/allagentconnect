@@ -221,12 +221,11 @@ const AuthCallback = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Check if this is a recovery session
+      // Check if this is a recovery session (type=recovery or sessionStorage flag only)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const urlParams = new URLSearchParams(window.location.search);
       
       const isRecoverySession =
-        !!session?.user?.recovery_sent_at ||
         hashParams.get("type") === "recovery" ||
         urlParams.get("type") === "recovery" ||
         sessionStorage.getItem("aac_recovery_flow") === "1";
