@@ -24,7 +24,6 @@ function isRateLimited(ip: string): boolean {
 
 interface PasswordResetRequest {
   email: string;
-  redirectUrl?: string;
 }
 
 export default async function handler(request: Request, context: any) {
@@ -50,7 +49,7 @@ export default async function handler(request: Request, context: any) {
 
   try {
     const body: PasswordResetRequest = await request.json();
-    const { email, redirectUrl } = body;
+    const { email } = body;
 
     // Basic email validation
     if (!email || typeof email !== "string" || !email.includes("@")) {
@@ -99,7 +98,7 @@ export default async function handler(request: Request, context: any) {
         type: "recovery",
         email: cleanEmail,
         options: {
-          redirect_to: finalRedirectUrl,
+          redirectTo: finalRedirectUrl,
         },
       }),
     });
@@ -120,6 +119,7 @@ export default async function handler(request: Request, context: any) {
 
     const linkData = await generateLinkResponse.json();
     const resetLink = linkData.action_link;
+    console.log("[request-password-reset] action_link =", resetLink);
 
     if (!resetLink) {
       console.log("No reset link generated - returning success");
