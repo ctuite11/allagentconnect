@@ -97,9 +97,9 @@ export default async function handler(request: Request, context: any) {
       body: JSON.stringify({
         type: "recovery",
         email: cleanEmail,
-        options: {
-          redirectTo: finalRedirectUrl,
-        },
+        // include BOTH to be compatible with different SDK/request shapes
+        redirectTo: finalRedirectUrl,
+        options: { redirectTo: finalRedirectUrl },
       }),
     });
 
@@ -118,7 +118,7 @@ export default async function handler(request: Request, context: any) {
     }
 
     const linkData = await generateLinkResponse.json();
-    const resetLink = linkData.action_link;
+    const resetLink = linkData?.properties?.action_link || linkData?.action_link;
     console.log("[request-password-reset] action_link =", resetLink);
     console.log("[request-password-reset] action_link redirect_to =", resetLink?.split("redirect_to=")[1]?.split("&")[0]);
 
