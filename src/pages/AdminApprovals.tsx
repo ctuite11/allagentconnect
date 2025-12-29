@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { isAdmin as checkIsAdminRole } from "@/lib/auth/roles";
+import { checkIsAdminRole } from "@/lib/auth/roles";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
