@@ -102,11 +102,19 @@ const PendingVerification = () => {
       const agentResult = await getAgentStatus(userId);
       authDebug("PendingVerification agent status", { userId, status: agentResult.status, error: agentResult.error });
       
-      // Handle fatal errors (404 = table not found/exposed, or severe RLS issue)
+      // Handle fatal errors: 404 = table not exposed / wrong backend (NOT RLS)
+      // Check error.status first if available, then fallback to message patterns
       if (agentResult.error) {
-        const errMsg = agentResult.error.toLowerCase();
-        if (errMsg.includes("404") || errMsg.includes("not found") || errMsg.includes("relation") || errMsg.includes("does not exist")) {
-          authDebug("PendingVerification FATAL", { error: agentResult.error });
+        // Try to parse structured error info from the error string
+        const errStr = agentResult.error;
+        const is404 = 
+          errStr.includes('404') || 
+          errStr.toLowerCase().includes('not found') || 
+          errStr.toLowerCase().includes('relation') || 
+          errStr.toLowerCase().includes('does not exist');
+        
+        if (is404) {
+          authDebug("PendingVerification FATAL 404", { error: agentResult.error });
           setFatalError("Configuration error: agent_settings table not found in API. Contact support.");
           setLoading(false);
           if (pollIntervalRef.current) {

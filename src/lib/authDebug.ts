@@ -47,8 +47,12 @@ export const checkIsAdmin = async (
   }
 };
 
-// Get agent status
-export const getAgentStatus = async (userId: string): Promise<{ status: string | null; error: string | null }> => {
+// Get agent status - includes HTTP status detection for 404 errors
+export const getAgentStatus = async (userId: string): Promise<{ 
+  status: string | null; 
+  error: string | null;
+  httpStatus?: number;
+}> => {
   try {
     authDebug("getAgentStatus", { userId });
     
@@ -59,8 +63,11 @@ export const getAgentStatus = async (userId: string): Promise<{ status: string |
       .maybeSingle();
     
     if (error) {
-      authDebug("getAgentStatus error", { userId, error: error.message });
-      return { status: null, error: error.message };
+      // PostgREST errors may include status code
+      const httpStatus = (error as any).status || (error as any).code === 'PGRST116' ? 404 : undefined;
+      const errorInfo = httpStatus ? `[${httpStatus}] ${error.message}` : error.message;
+      authDebug("getAgentStatus error", { userId, error: error.message, httpStatus, code: (error as any).code });
+      return { status: null, error: errorInfo, httpStatus };
     }
     
     const status = data?.agent_status || null;
