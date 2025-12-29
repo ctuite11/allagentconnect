@@ -20,23 +20,26 @@ export const authDebug = (context: string, data: Record<string, unknown>) => {
 };
 
 // Centralized admin check using has_role RPC
-export const checkIsAdmin = async (userId: string): Promise<{ isAdmin: boolean; error: string | null }> => {
+export const checkIsAdmin = async (
+  userId: string
+): Promise<{ isAdmin: boolean; error: string | null }> => {
   try {
     authDebug("checkIsAdmin", { userId });
-    
-    // Cast to the correct app_role type used in this codebase
+
+    // IMPORTANT: has_role returns a boolean. Treat it as such.
     const { data, error } = await supabase.rpc("has_role", {
       _user_id: userId,
       _role: "admin" as "admin" | "agent" | "buyer",
     });
-    
+
     if (error) {
       authDebug("checkIsAdmin error", { userId, error: error.message });
       return { isAdmin: false, error: error.message };
     }
-    
-    authDebug("checkIsAdmin result", { userId, isAdmin: !!data });
-    return { isAdmin: !!data, error: null };
+
+    const isAdmin = data === true;
+    authDebug("checkIsAdmin result", { userId, rpcData: data, isAdmin });
+    return { isAdmin, error: null };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     authDebug("checkIsAdmin exception", { userId, error: message });

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { authDebug, checkIsAdmin, getAgentStatus } from "@/lib/authDebug";
+import { authDebug, getAgentStatus } from "@/lib/authDebug";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -241,13 +241,24 @@ const AuthCallback = () => {
       }
 
       // PRIORITY 1: Check for admin role using has_role RPC - MUST happen before agent checks
-      const adminResult = await checkIsAdmin(userId);
-      authDebug("routeUser admin check", { userId, isAdmin: adminResult.isAdmin, error: adminResult.error });
-      
-      if (adminResult.isAdmin === true) {
+      // Do NOT rely on wrappers here; log raw RPC response for production debugging.
+      const { data: rpcData, error: rpcError } = await supabase.rpc("has_role", {
+        _user_id: userId,
+        _role: "admin",
+      });
+
+      authDebug("routeUser has_role(admin)", {
+        email: session?.user?.email ?? null,
+        userId,
+        rpcData,
+        rpcError: rpcError?.message ?? null,
+      });
+
+      const isAdmin = rpcData === true;
+      if (isAdmin) {
         authDebug("routeUser", { action: "admin_redirect_priority" });
         didNavigate.current = true;
-        navigate('/admin/approvals', { replace: true });
+        navigate("/admin/approvals", { replace: true });
         return; // HARD STOP - never continue to agent logic for admins
       }
 
