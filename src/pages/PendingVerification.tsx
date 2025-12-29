@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { authDebug, checkIsAdmin, getAgentStatus } from "@/lib/authDebug";
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -47,7 +48,7 @@ const PendingVerification = () => {
       // Mobile browsers need extra time for session to persist
       if (!session?.user && attempts < maxAttempts) {
         attempts++;
-        console.log(`[PENDING] No session yet, retry ${attempts}/${maxAttempts}`);
+        authDebug("PendingVerification no session", { attempt: attempts, maxAttempts });
         setTimeout(checkStatus, 500);
         return;
       }
@@ -55,7 +56,7 @@ const PendingVerification = () => {
       // After retries, if still no session, show the page anyway
       // User just completed signup - don't kick them back to login
       if (!session?.user) {
-        console.log('[PENDING] No session after retries, showing pending page');
+        authDebug("PendingVerification", { action: "no_session_showing_page" });
         setLoading(false);
         return;
       }
@@ -65,22 +66,15 @@ const PendingVerification = () => {
 
       // Store the user's email for display
       setUserEmail(email);
+      
+      authDebug("PendingVerification checking status", { userId, email });
 
-      // Check if user is admin - bypass pending screen entirely
-      // Query user_roles but don't fail if table doesn't exist or RLS blocks
-      let isAdmin = false;
-      try {
-        const { data: roles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId);
-        isAdmin = roles?.some(r => r.role === 'admin') ?? false;
-      } catch (err) {
-        console.log('[PENDING] Could not check admin role, continuing as non-admin');
-      }
+      // PRIORITY 1: Check if user is admin using has_role RPC - bypass pending screen entirely
+      const adminResult = await checkIsAdmin(userId);
+      authDebug("PendingVerification admin check", { userId, isAdmin: adminResult.isAdmin, error: adminResult.error });
 
-      if (isAdmin) {
-        console.log('[PENDING] Admin detected, bypassing pending screen');
+      if (adminResult.isAdmin) {
+        authDebug("PendingVerification", { action: "admin_redirect" });
         if (!didNavigate.current) {
           didNavigate.current = true;
           navigate("/admin/approvals", { replace: true });
@@ -89,17 +83,14 @@ const PendingVerification = () => {
       }
 
       // Check agent status
-      const { data: settings } = await supabase
-        .from('agent_settings')
-        .select('agent_status')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      const status = settings?.agent_status || 'unverified';
-      console.log('[PENDING] Agent status:', status);
+      const agentResult = await getAgentStatus(userId);
+      authDebug("PendingVerification agent status", { userId, status: agentResult.status, error: agentResult.error });
+      
+      const status = agentResult.status || 'unverified';
 
       if (status === 'verified') {
         // Show approval message briefly, then redirect
+        authDebug("PendingVerification", { action: "verified_redirect" });
         setIsApproved(true);
         setLoading(false);
         
@@ -120,7 +111,6 @@ const PendingVerification = () => {
       }
 
       // If pending/unverified, send the pending approval email (once)
-      // Profile lookup is optional - don't block email if it fails
       if (email && (status === 'pending' || status === 'unverified')) {
         let firstName: string | undefined;
         let lastName: string | undefined;
@@ -134,7 +124,7 @@ const PendingVerification = () => {
           firstName = profile?.first_name ?? undefined;
           lastName = profile?.last_name ?? undefined;
         } catch (err) {
-          console.log('[PENDING] Could not fetch profile, sending email without name');
+          authDebug("PendingVerification profile fetch error", { error: err instanceof Error ? err.message : "Unknown" });
         }
         
         sendPendingApprovalEmail(email, firstName, lastName);

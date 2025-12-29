@@ -72,7 +72,10 @@ const Navigation = () => {
   // Hide global navigation on auth page
   if (location.pathname === "/auth") return null;
 
-  // Hide navigation only for pending agents - they have their own locked screen
+  // HARD LOCKDOWN: Hide navigation on /pending-verification regardless of role
+  if (location.pathname === "/pending-verification") return null;
+
+  // Hide navigation for pending agents on any other page as fallback
   const isPending = user && role === "agent" && agentStatus === "pending";
   if (isPending) return null;
 
