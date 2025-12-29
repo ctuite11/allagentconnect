@@ -107,50 +107,49 @@ const handler = async (req: Request): Promise<Response> => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reset Your Password</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+<body style="margin:0;padding:0;background-color:#f8fafc;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc;">
     <tr>
       <td align="center" style="padding:48px 24px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background-color:#ffffff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background-color:#ffffff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);overflow:hidden;">
           <!-- Header -->
           <tr>
-            <td style="padding:40px 40px 32px;text-align:center;border-bottom:1px solid #e2e8f0;">
-              <h1 style="margin:0;font-size:22px;font-weight:600;color:#0f172a;letter-spacing:-0.02em;">AllAgentConnect</h1>
+            <td style="padding:40px 40px 32px;text-align:center;border-bottom:1px solid #e2e8f0;background-color:#ffffff;">
+              <h1 style="margin:0;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.02em;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AllAgentConnect</h1>
             </td>
           </tr>
           <!-- Content -->
           <tr>
-            <td style="padding:40px;">
-              <h2 style="margin:0 0 16px;font-size:20px;font-weight:600;color:#0f172a;">Reset your password</h2>
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;">
+            <td style="padding:40px;background-color:#ffffff;">
+              <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f172a;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Reset your password</h2>
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
                 We received a request to reset your password. Click below to choose a new one.
               </p>
               <!-- Button -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td align="center" style="padding:8px 0 32px;">
-                    <a href="${resetLink}" target="_blank" style="display:inline-block;padding:14px 32px;background-color:#0f172a;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:6px;">Reset Password</a>
+                  <td align="center" style="padding:8px 0 28px;">
+                    <a href="${resetLink}" target="_blank" style="display:inline-block;padding:14px 32px;background-color:#0f172a;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;border-radius:12px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Reset Password</a>
                   </td>
                 </tr>
               </table>
-              <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#64748b;">
+              <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#334155;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
                 This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
               </p>
+              <div style="height:1px;background-color:#e2e8f0;margin:20px 0;"></div>
               <!-- Fallback link -->
-              <p style="margin:0;font-size:13px;color:#94a3b8;">
+              <p style="margin:0;font-size:13px;line-height:1.6;color:#334155;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
                 Link not working? Copy and paste this URL into your browser:
               </p>
-              <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;word-break:break-all;">
+              <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:#334155;word-break:break-all;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
                 ${resetLink}
               </p>
             </td>
           </tr>
           <!-- Footer -->
           <tr>
-            <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
-              <p style="margin:0;font-size:13px;color:#94a3b8;">
-                mail.allagentconnect.com
-              </p>
+            <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;background-color:#ffffff;">
+              <p style="margin:0;font-size:13px;line-height:1.6;color:#334155;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">mail.allagentconnect.com</p>
             </td>
           </tr>
         </table>
