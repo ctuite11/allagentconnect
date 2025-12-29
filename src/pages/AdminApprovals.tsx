@@ -271,6 +271,17 @@ export default function AdminApprovals() {
     }
   }, [isAdmin]);
 
+  // DIAGNOSTIC: Log when agents state changes
+  useEffect(() => {
+    console.log("[AdminApprovals] agents state updated:", {
+      count: agents.length,
+      statuses: agents.reduce((acc, a) => {
+        acc[a.agent_status] = (acc[a.agent_status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+    });
+  }, [agents]);
+
   // Handle status change with upsert
   const handleStatusChange = async (agent: Agent, newStatus: string) => {
     setProcessingIds((prev) => new Set(prev).add(agent.id));
