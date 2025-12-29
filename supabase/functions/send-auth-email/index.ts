@@ -30,80 +30,71 @@ function escapeHtml(s: string) {
     .replaceAll("'", "&#39;");
 }
 
-function baseEmailHtml(opts: { title: string; bodyHtml: string; ctaLabel?: string; ctaUrl?: string }) {
-  const { title, bodyHtml, ctaLabel, ctaUrl } = opts;
+// Locked AAC transactional email template
+function buildLockedEmailHtml(opts: { title: string; bodyText: string; ctaLabel?: string; ctaUrl?: string }): string {
+  const { title, bodyText, ctaLabel, ctaUrl } = opts;
 
-  const buttonHtml =
-    ctaLabel && ctaUrl
-      ? `
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:32px auto;">
+  const buttonHtml = ctaLabel && ctaUrl
+    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0">
         <tr>
-          <td style="border-radius:6px;background:#18181b;">
-            <a href="${escapeHtml(ctaUrl)}" target="_blank" style="display:inline-block;padding:14px 36px;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-              ${escapeHtml(ctaLabel)}
-            </a>
+          <td align="center" style="padding:8px 0 24px;">
+            <a href="${escapeHtml(ctaUrl)}" target="_blank" style="display:inline-block;padding:14px 28px;background-color:#0F172A;color:#FFFFFF;text-decoration:none;font-size:14px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(ctaLabel)}</a>
           </td>
         </tr>
-      </table>
-    `
-      : "";
+      </table>`
+    : "";
 
-  return `
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <meta name="color-scheme" content="light">
-      <meta name="supported-color-schemes" content="light">
-      <title>AllAgentConnect</title>
-    </head>
-    <body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f8fafc;">
-        <tr>
-          <td align="center" style="padding:48px 16px;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:480px;background-color:#ffffff;border-radius:8px;border:1px solid #e2e8f0;">
-              <!-- Header -->
-              <tr>
-                <td style="padding:32px 32px 24px;border-bottom:1px solid #e2e8f0;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td style="font-size:20px;font-weight:700;color:#18181b;letter-spacing:-0.025em;">
-                        All<span style="color:#64748b;">Agent</span>Connect
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-              <!-- Body -->
-              <tr>
-                <td style="padding:32px;">
-                  <h1 style="margin:0 0 20px;font-size:24px;font-weight:700;color:#18181b;line-height:1.3;">
-                    ${escapeHtml(title)}
-                  </h1>
-                  <div style="font-size:15px;line-height:1.7;color:#475569;">
-                    ${bodyHtml}
-                  </div>
-                  ${buttonHtml}
-                </td>
-              </tr>
-              <!-- Footer -->
-              <tr>
-                <td style="padding:24px 32px;border-top:1px solid #e2e8f0;text-align:center;">
-                  <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">
-                    © ${new Date().getFullYear()} AllAgentConnect
-                  </p>
-                  <p style="margin:0;font-size:12px;color:#cbd5e1;">
-                    mail.allagentconnect.com
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </body>
-  </html>`;
+  const fallbackHtml = ctaUrl
+    ? `<p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+        If the button doesn't work, copy and paste this URL into your browser:
+      </p>
+      <div style="background-color:#F8FAFC;padding:12px;border-radius:6px;">
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#475569;word-break:break-all;font-family:monospace;">${escapeHtml(ctaUrl)}</p>
+      </div>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(title)}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f8fafc;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc;">
+    <tr>
+      <td align="center" style="padding:48px 24px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background-color:#ffffff;border-radius:8px;">
+          <!-- Header: Plain text only -->
+          <tr>
+            <td style="padding:32px 40px 24px;text-align:center;">
+              <p style="margin:0;font-size:20px;font-weight:600;color:#0F172A;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AllAgentConnect</p>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding:0 40px 32px;">
+              <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0F172A;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(title)}</h2>
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+                ${escapeHtml(bodyText)}
+              </p>
+              ${buttonHtml}
+              ${fallbackHtml}
+            </td>
+          </tr>
+          <!-- Footer: Plain text only -->
+          <tr>
+            <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
+              <p style="margin:0 0 4px;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AllAgentConnect</p>
+              <p style="margin:0;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">mail.allagentconnect.com</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 }
 
 function buildEmailForType(params: {
@@ -113,37 +104,26 @@ function buildEmailForType(params: {
   otp?: string;
 }): { subject: string; html: string; text: string } {
   const { type, actionUrl, otp } = params;
-
   const t = (type || "").toLowerCase();
 
   if (t.includes("recovery") || t.includes("reset")) {
     const subject = "Reset your password";
-    const title = "Reset your password";
-    const bodyHtml = `
-      <p style="margin:0 0 16px;">Click below to set a new password for your account.</p>
-      <p style="margin:0;color:#64748b;font-size:14px;">This link expires in 24 hours. If you didn't request this, you can safely ignore this email.</p>
-    `;
-    const html = baseEmailHtml({
-      title,
-      bodyHtml,
+    const html = buildLockedEmailHtml({
+      title: "Reset your password",
+      bodyText: "We received a request to reset your password. Click below to choose a new one. This link expires in 1 hour. If you didn't request this, you can safely ignore this email.",
       ctaLabel: "Reset Password",
       ctaUrl: actionUrl,
     });
-    const text = `Reset your password: ${actionUrl ?? ""}\n\nThis link expires in 24 hours. If you didn't request this, ignore this email.`;
+    const text = `Reset your password: ${actionUrl ?? ""}\n\nThis link expires in 1 hour. If you didn't request this, ignore this email.`;
     return { subject, html, text };
   }
 
   if (t.includes("signup") || t.includes("confirm")) {
     const subject = "Confirm your email for AllAgentConnect";
-    const title = "Confirm your email";
-    const bodyHtml = `
-      <p>To finish signing up for AllAgentConnect, please confirm your email address.</p>
-      <p>This helps us keep the platform trusted and agent-only.</p>
-    `;
-    const html = baseEmailHtml({
-      title,
-      bodyHtml,
-      ctaLabel: "Confirm email",
+    const html = buildLockedEmailHtml({
+      title: "Confirm your email",
+      bodyText: "To finish signing up for AllAgentConnect, please confirm your email address. This helps us keep the platform trusted and agent-only.",
+      ctaLabel: "Confirm Email",
       ctaUrl: actionUrl,
     });
     const text = `Confirm your email: ${actionUrl ?? ""}`;
@@ -152,14 +132,10 @@ function buildEmailForType(params: {
 
   if (t.includes("magic")) {
     const subject = "Your AllAgentConnect sign-in link";
-    const title = "Sign in to AllAgentConnect";
-    const bodyHtml = `
-      <p>Use the button below to sign in. This link may expire for security.</p>
-    `;
-    const html = baseEmailHtml({
-      title,
-      bodyHtml,
-      ctaLabel: "Sign in",
+    const html = buildLockedEmailHtml({
+      title: "Sign in to AllAgentConnect",
+      bodyText: "Use the button below to sign in. This link may expire for security.",
+      ctaLabel: "Sign In",
       ctaUrl: actionUrl,
     });
     const text = `Sign in: ${actionUrl ?? ""}`;
@@ -168,14 +144,10 @@ function buildEmailForType(params: {
 
   if (t.includes("email_change")) {
     const subject = "Confirm your new email for AllAgentConnect";
-    const title = "Confirm your new email";
-    const bodyHtml = `
-      <p>Use the button below to confirm your new email address.</p>
-    `;
-    const html = baseEmailHtml({
-      title,
-      bodyHtml,
-      ctaLabel: "Confirm new email",
+    const html = buildLockedEmailHtml({
+      title: "Confirm your new email",
+      bodyText: "Use the button below to confirm your new email address.",
+      ctaLabel: "Confirm New Email",
       ctaUrl: actionUrl,
     });
     const text = `Confirm new email: ${actionUrl ?? ""}`;
@@ -183,15 +155,13 @@ function buildEmailForType(params: {
   }
 
   // Fallback
-  const subject = "AllAgentConnect email";
-  const title = "Action required";
-  const bodyHtml = `
-    <p>Please use the link below to continue.</p>
-    ${otp ? `<p style="font-size:18px;font-weight:600;">One-time code: ${escapeHtml(otp)}</p>` : ""}
-  `;
-  const html = baseEmailHtml({
-    title,
-    bodyHtml,
+  const subject = "AllAgentConnect";
+  const bodyText = otp
+    ? `Please use the link below to continue. Your one-time code is: ${otp}`
+    : "Please use the link below to continue.";
+  const html = buildLockedEmailHtml({
+    title: "Action required",
+    bodyText,
     ctaLabel: actionUrl ? "Continue" : undefined,
     ctaUrl: actionUrl,
   });
