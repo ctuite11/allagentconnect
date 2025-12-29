@@ -112,10 +112,10 @@ const handler = async (req: Request): Promise<Response> => {
     <tr>
       <td align="center" style="padding:48px 24px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background-color:#ffffff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);overflow:hidden;">
-          <!-- Header -->
+          <!-- Header with Logo -->
           <tr>
-            <td style="padding:40px 40px 32px;text-align:center;border-bottom:1px solid #e2e8f0;background-color:#ffffff;">
-              <h1 style="margin:0;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.02em;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AllAgentConnect</h1>
+            <td style="padding:40px 40px 32px;text-align:center;background-color:#ffffff;">
+              <img src="https://allagentconnect.com/brand/aac-wordmark.png" alt="AllAgentConnect" height="32" style="display:block;margin:0 auto;height:32px;max-width:200px;" />
             </td>
           </tr>
           <!-- Content -->
@@ -129,27 +129,28 @@ const handler = async (req: Request): Promise<Response> => {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center" style="padding:8px 0 28px;">
-                    <a href="${resetLink}" target="_blank" style="display:inline-block;padding:14px 32px;background-color:#0f172a;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;border-radius:12px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Reset Password</a>
+                    <a href="${resetLink}" target="_blank" style="display:inline-block;padding:12px 18px;background-color:#0f172a;color:#ffffff !important;text-decoration:none;font-size:14px;font-weight:700;border-radius:12px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Reset Password</a>
                   </td>
                 </tr>
               </table>
               <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#334155;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
                 This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
               </p>
-              <div style="height:1px;background-color:#e2e8f0;margin:20px 0;"></div>
-              <!-- Fallback link -->
-              <p style="margin:0;font-size:13px;line-height:1.6;color:#334155;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-                Link not working? Copy and paste this URL into your browser:
-              </p>
-              <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:#334155;word-break:break-all;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-                ${resetLink}
-              </p>
+              <!-- Fallback Link -->
+              <div style="margin-top:18px;padding-top:16px;border-top:1px solid #e2e8f0;">
+                <p style="margin:0 0 8px;font-size:12px;line-height:1.6;color:#64748b;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+                  Link not working? Copy and paste this URL into your browser:
+                </p>
+                <p style="margin:0;font-size:12px;line-height:1.6;color:#334155;word-break:break-all;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+                  ${resetLink}
+                </p>
+              </div>
             </td>
           </tr>
           <!-- Footer -->
           <tr>
             <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;background-color:#ffffff;">
-              <p style="margin:0;font-size:13px;line-height:1.6;color:#334155;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">mail.allagentconnect.com</p>
+              <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">mail.allagentconnect.com</p>
             </td>
           </tr>
         </table>
