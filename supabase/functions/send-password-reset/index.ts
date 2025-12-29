@@ -99,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
         from: "AllAgentConnect <hello@mail.allagentconnect.com>",
         reply_to: "hello@allagentconnect.com",
         to: [email],
-        subject: "Reset Your Password",
+        subject: "Reset your password",
         html: `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -121,15 +121,15 @@ const handler = async (req: Request): Promise<Response> => {
           <!-- Content -->
           <tr>
             <td style="padding:40px;">
-              <h2 style="margin:0 0 16px;font-size:20px;font-weight:600;color:#0f172a;">Reset Your Password</h2>
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#475569;">
+              <h2 style="margin:0 0 16px;font-size:20px;font-weight:600;color:#0f172a;">Reset your password</h2>
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;">
                 We received a request to reset your password. Click below to choose a new one.
               </p>
               <!-- Button -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center" style="padding:8px 0 32px;">
-                    <a href="${resetLink}" target="_blank" style="display:inline-block;padding:14px 32px;background-color:#1e293b;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:6px;">Reset Password</a>
+                    <a href="${resetLink}" target="_blank" style="display:inline-block;padding:14px 32px;background-color:#0f172a;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:6px;">Reset Password</a>
                   </td>
                 </tr>
               </table>
