@@ -106,6 +106,25 @@ export default function AdminApprovals() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // DIAGNOSTIC: Debug state for on-page panel
+  const [debugInfo, setDebugInfo] = useState<{
+    profilesCount: number | null;
+    profilesError: string | null;
+    settingsCount: number | null;
+    settingsError: string | null;
+    mergedCount: number | null;
+    statusDistribution: Record<string, number>;
+    stateCount: number | null;
+  }>({
+    profilesCount: null,
+    profilesError: null,
+    settingsCount: null,
+    settingsError: null,
+    mergedCount: null,
+    statusDistribution: {},
+    stateCount: null,
+  });
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [pendingVerifications, setPendingVerifications] = useState<Array<{
     id: string;
@@ -173,6 +192,13 @@ export default function AdminApprovals() {
         count: profiles?.length ?? 0,
         sample: profiles?.[0] ?? null,
       });
+      
+      // DIAGNOSTIC: Update debug state
+      setDebugInfo(prev => ({
+        ...prev,
+        profilesCount: profiles?.length ?? 0,
+        profilesError: profilesError?.message ?? null,
+      }));
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
@@ -201,6 +227,13 @@ export default function AdminApprovals() {
         count: settings?.length ?? 0,
         statuses: settings?.map(s => ({ user_id: s.user_id.slice(0,8), status: s.agent_status })) ?? [],
       });
+      
+      // DIAGNOSTIC: Update debug state
+      setDebugInfo(prev => ({
+        ...prev,
+        settingsCount: settings?.length ?? 0,
+        settingsError: settingsError?.message ?? null,
+      }));
 
       if (settingsError) {
         console.error("Error fetching settings:", settingsError);
@@ -244,6 +277,13 @@ export default function AdminApprovals() {
           status: a.agent_status 
         })),
       });
+      
+      // DIAGNOSTIC: Update debug state
+      setDebugInfo(prev => ({
+        ...prev,
+        mergedCount: agentList.length,
+        statusDistribution: statusCounts,
+      }));
 
       setAgents(agentList);
 
@@ -271,7 +311,7 @@ export default function AdminApprovals() {
     }
   }, [isAdmin]);
 
-  // DIAGNOSTIC: Log when agents state changes
+  // DIAGNOSTIC: Log when agents state changes and update debug panel
   useEffect(() => {
     console.log("[AdminApprovals] agents state updated:", {
       count: agents.length,
@@ -280,6 +320,7 @@ export default function AdminApprovals() {
         return acc;
       }, {} as Record<string, number>),
     });
+    setDebugInfo(prev => ({ ...prev, stateCount: agents.length }));
   }, [agents]);
 
   // Handle status change with upsert
@@ -483,7 +524,19 @@ export default function AdminApprovals() {
           className="mb-8"
         />
 
-        {/* Signed in as indicator */}
+        {/* DIAGNOSTIC DEBUG PANEL - REMOVE AFTER FIX */}
+        <div className="mb-4 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-xl font-mono text-sm">
+          <div className="font-bold text-yellow-800 mb-2">🔍 DEBUG PANEL (remove after fix)</div>
+          <div className="grid grid-cols-2 gap-2 text-yellow-900">
+            <div>Profiles Query: <span className="font-bold">{debugInfo.profilesCount ?? 'pending...'}</span> {debugInfo.profilesError && <span className="text-red-600">ERROR: {debugInfo.profilesError}</span>}</div>
+            <div>Settings Query: <span className="font-bold">{debugInfo.settingsCount ?? 'pending...'}</span> {debugInfo.settingsError && <span className="text-red-600">ERROR: {debugInfo.settingsError}</span>}</div>
+            <div>Merged Agents: <span className="font-bold">{debugInfo.mergedCount ?? 'pending...'}</span></div>
+            <div>State Count: <span className="font-bold">{debugInfo.stateCount ?? 'pending...'}</span></div>
+            <div className="col-span-2">Status Distribution: <span className="font-bold">{JSON.stringify(debugInfo.statusDistribution)}</span></div>
+            <div className="col-span-2">filteredAgents.length: <span className="font-bold">{filteredAgents.length}</span> | agents.length: <span className="font-bold">{agents.length}</span></div>
+          </div>
+        </div>
+
         <div className="mb-4 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-2">
           <span className="text-sm text-slate-600">
             Signed in as: <span className="font-medium text-slate-900">{user?.email}</span>
