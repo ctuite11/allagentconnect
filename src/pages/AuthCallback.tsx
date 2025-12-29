@@ -31,6 +31,8 @@ const AuthCallback = () => {
       accessToken?.slice(0, 16) ||
       code?.slice(0, 16) ||
       "unknown";
+
+    const hasStableTokenKey = tokenKey !== "unknown";
     const processedKey = `aac_processed_${isRecoveryContext ? "recovery" : "auth"}_${tokenKey}`;
 
     // Debug logging only in development
@@ -42,7 +44,7 @@ const AuthCallback = () => {
         isRecoveryContext,
         typeFromHash,
         typeFromQuery,
-        tokenKey: tokenKey.substring(0, 8) + "..."
+        tokenKey: hasStableTokenKey ? tokenKey.substring(0, 8) + "..." : "unknown",
       });
     }
 
@@ -56,8 +58,16 @@ const AuthCallback = () => {
       return;
     }
 
-    // CRITICAL: Check if this link was already processed (email clients prefetch)
-    if (sessionStorage.getItem(processedKey)) {
+    // If we landed here without a usable token/code, fail fast with a clear message.
+    // This commonly happens when the one-time link was already consumed.
+    if (isRecoveryContext && !accessToken && !refreshToken && !code) {
+      setError("Reset link expired or invalid. Please request a new one.");
+      return;
+    }
+
+    // CRITICAL: Check if this link was already processed (email clients can double-open)
+    // Only enforce this when we actually have a stable token key.
+    if (hasStableTokenKey && sessionStorage.getItem(processedKey)) {
       console.log("[AuthCallback] Link already processed, showing error");
       setError("This link was already used. Please request a new password reset link.");
       return;
@@ -80,9 +90,6 @@ const AuthCallback = () => {
       if (accessToken && refreshToken) {
         if (import.meta.env.DEV) console.log("[AuthCallback] Hash tokens detected - setting session");
         
-        // Mark as processed BEFORE attempting to use the token
-        sessionStorage.setItem(processedKey, "1");
-        
         try {
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -100,6 +107,9 @@ const AuthCallback = () => {
           }
 
           if (import.meta.env.DEV) console.log("[AuthCallback] Session set successfully");
+          // Mark as processed AFTER successfully establishing session
+          if (hasStableTokenKey) sessionStorage.setItem(processedKey, "1");
+
           if (!cancelled && !didNavigate.current) {
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
@@ -121,11 +131,11 @@ const AuthCallback = () => {
       if (code) {
         if (import.meta.env.DEV) console.log("[AuthCallback] PKCE code detected - exchanging for session");
         
-        // Mark as processed BEFORE attempting to use the code
-        sessionStorage.setItem(processedKey, "1");
-        
         try {
           await supabase.auth.exchangeCodeForSession(code);
+          // Mark as processed AFTER successfully exchanging code
+          if (hasStableTokenKey) sessionStorage.setItem(processedKey, "1");
+
           if (!cancelled && !didNavigate.current) {
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
