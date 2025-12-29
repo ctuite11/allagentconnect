@@ -211,17 +211,18 @@ const Auth = () => {
         
         authDebug("handleSession existing session", { userId: session.user.id, email: session.user.email });
         
-        // Check for admin role first using has_role RPC - admins should go straight to admin panel
+        // PRIORITY 1: Check for admin role using has_role RPC - MUST happen before agent checks
         const adminResult = await checkIsAdmin(session.user.id);
         authDebug("handleSession admin check", { isAdmin: adminResult.isAdmin, error: adminResult.error });
 
-        if (adminResult.isAdmin) {
-          // Admin user - redirect directly to admin panel
+        if (adminResult.isAdmin === true) {
+          // Admin user - redirect directly to admin panel, NEVER continue to agent logic
+          authDebug("handleSession", { action: "admin_redirect_priority" });
           if (mounted) {
             didNavigate.current = true;
             navigate('/admin/approvals', { replace: true });
           }
-          return;
+          return; // HARD STOP
         }
 
         setExistingSession(true);

@@ -240,15 +240,15 @@ const AuthCallback = () => {
         return;
       }
 
-      // PRIORITY 1: Check for admin role using has_role RPC
+      // PRIORITY 1: Check for admin role using has_role RPC - MUST happen before agent checks
       const adminResult = await checkIsAdmin(userId);
       authDebug("routeUser admin check", { userId, isAdmin: adminResult.isAdmin, error: adminResult.error });
       
-      if (adminResult.isAdmin) {
-        authDebug("routeUser", { action: "admin_redirect" });
+      if (adminResult.isAdmin === true) {
+        authDebug("routeUser", { action: "admin_redirect_priority" });
         didNavigate.current = true;
         navigate('/admin/approvals', { replace: true });
-        return;
+        return; // HARD STOP - never continue to agent logic for admins
       }
 
       // PRIORITY 2: Check agent status for non-admin users
