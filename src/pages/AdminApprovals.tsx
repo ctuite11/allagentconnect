@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthRole } from "@/hooks/useAuthRole";
+import { isAdmin as checkIsAdminRole } from "@/lib/auth/roles";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
@@ -101,8 +101,9 @@ type SortDirection = "asc" | "desc";
 
 export default function AdminApprovals() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuthRole();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [isChecking, setIsChecking] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
@@ -133,34 +134,25 @@ export default function AdminApprovals() {
   const [deleteAgent, setDeleteAgent] = useState<Agent | null>(null);
   const [emailRecipients, setEmailRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
 
-  // Check if user is admin
+  // Check admin role using has_role RPC - loading → allow → deny pattern
   useEffect(() => {
-    async function checkAdmin() {
-      if (!user) {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+
+      if (!userId) {
+        setUser(null);
         setIsAdmin(false);
+        setIsChecking(false);
         return;
       }
 
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error checking admin role:", error);
-        setIsAdmin(false);
-        return;
-      }
-
-      setIsAdmin(!!data);
-    }
-
-    if (!authLoading) {
-      checkAdmin();
-    }
-  }, [user, authLoading]);
+      setUser({ id: userId, email: session?.user?.email });
+      const ok = await checkIsAdminRole(userId);
+      setIsAdmin(ok);
+      setIsChecking(false);
+    })();
+  }, []);
 
   // Fetch all agents - profiles first, then settings
   const fetchAgents = async () => {
@@ -402,8 +394,8 @@ export default function AdminApprovals() {
     setEmailRecipients([{ id: agent.id, email: agent.email, name: `${agent.first_name} ${agent.last_name}` }]);
   };
 
-  if (authLoading || isAdmin === null) {
-    return <LoadingScreen />;
+  if (isChecking) {
+    return <LoadingScreen message="Checking admin access..." />;
   }
 
   if (!user) {

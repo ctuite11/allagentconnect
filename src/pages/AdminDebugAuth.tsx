@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Copy, Check, ArrowLeft, RefreshCw, Eye, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { getAuthDiagnostics, checkIsAdmin, getAgentStatus, type AuthDiagnostic } from "@/lib/authDebug";
+import { getAuthDiagnostics, getAgentStatus, type AuthDiagnostic } from "@/lib/authDebug";
+import { isAdmin as checkIsAdminRole } from "@/lib/auth/roles";
 
 interface ViewAsState {
   active: boolean;
@@ -43,9 +44,9 @@ const AdminDebugAuth = () => {
         return;
       }
       
-      const adminResult = await checkIsAdmin(session.user.id);
+      const ok = await checkIsAdminRole(session.user.id);
       
-      if (!adminResult.isAdmin) {
+      if (!ok) {
         toast.error("Admin access required");
         navigate("/", { replace: true });
         return;
@@ -111,14 +112,14 @@ const AdminDebugAuth = () => {
       }
       
       // Get admin status and agent status for that user
-      const adminResult = await checkIsAdmin(profile.id);
+      const adminOk = await checkIsAdminRole(profile.id);
       const agentResult = await getAgentStatus(profile.id);
       
       const targetData: AuthDiagnostic = {
         userId: profile.id,
         email: profile.email,
-        isAdmin: adminResult.isAdmin,
-        adminCheckError: adminResult.error,
+        isAdmin: adminOk,
+        adminCheckError: null,
         agentStatus: agentResult.status,
         agentStatusError: agentResult.error,
         timestamp: new Date().toISOString(),
@@ -152,8 +153,9 @@ const AdminDebugAuth = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <p className="text-sm text-slate-500">Checking admin access...</p>
       </div>
     );
   }
