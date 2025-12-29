@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import { authDebug, checkIsAdmin, getAgentStatus } from "@/lib/authDebug";
+import { authDebug, getAgentStatus } from "@/lib/authDebug";
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -70,11 +70,20 @@ const PendingVerification = () => {
       authDebug("PendingVerification checking status", { userId, email });
 
       // PRIORITY 1: Check if user is admin using has_role RPC - bypass pending screen entirely
-      // This MUST happen before any agent status checks
-      const adminResult = await checkIsAdmin(userId);
-      authDebug("PendingVerification admin check", { userId, isAdmin: adminResult.isAdmin, error: adminResult.error });
+      // Do NOT rely on wrappers here; log raw RPC response for production debugging.
+      const { data: rpcData, error: rpcError } = await supabase.rpc("has_role", {
+        _user_id: userId,
+        _role: "admin",
+      });
 
-      if (adminResult.isAdmin === true) {
+      authDebug("PendingVerification has_role(admin)", {
+        email,
+        userId,
+        rpcData,
+        rpcError: rpcError?.message ?? null,
+      });
+
+      if (rpcData === true) {
         authDebug("PendingVerification", { action: "admin_redirect" });
         // Clear polling immediately for admins
         if (pollIntervalRef.current) {
