@@ -311,6 +311,10 @@ const Navigation = () => {
                   </button>
                 </>
               )}
+              {/* Signed in as email indicator */}
+              <span className="hidden lg:inline text-xs text-slate-400 max-w-[150px] truncate" title={user.email || undefined}>
+                {user.email}
+              </span>
               <button 
                 onClick={() => navigate(role === "agent" ? "/listing-search" : "/browse")}
                 className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"

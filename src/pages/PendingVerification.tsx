@@ -201,8 +201,8 @@ const PendingVerification = () => {
                 Thanks for your request. We'll email you as soon as your license verification is complete.
               </p>
               {userEmail && (
-                <p className="text-slate-500 text-sm mt-2">
-                  Registered as: {userEmail}
+                <p className="text-slate-500 text-sm mt-4 font-medium">
+                  Signed in as: {userEmail}
                 </p>
               )}
             </div>

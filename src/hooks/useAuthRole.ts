@@ -8,44 +8,45 @@ interface AuthRoleState {
   user: User | null;
   role: Role;
   loading: boolean;
+  isAdmin: boolean;
 }
 
 export function useAuthRole(): AuthRoleState {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
   const initialLoadDone = useRef(false);
 
-  // Load role for a given user - doesn't set loading state
-  // Prioritizes admin role when user has multiple roles
+  // Load role for a given user using has_role RPC (SECURITY DEFINER - bulletproof)
   async function loadRoleForUser(userId: string) {
-    // Check for admin role first
-    const { data: adminCheck } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
+    // PRIORITY 1: Check for admin role using has_role RPC (not table select)
+    const { data: hasAdminRole, error: adminError } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
 
-    if (adminCheck) {
+    if (!adminError && hasAdminRole === true) {
       setRole("admin");
+      setIsAdmin(true);
       return;
     }
 
-    // Fall back to other role check
-    const { data: roleRow, error: roleError } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .limit(1)
-      .maybeSingle();
+    // PRIORITY 2: Check for agent role using has_role RPC
+    const { data: hasAgentRole } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "agent",
+    });
 
-    if (roleError) {
-      console.error("Error loading role", roleError);
-      setRole(null);
-    } else {
-      setRole((roleRow?.role as Role) ?? null);
+    if (hasAgentRole === true) {
+      setRole("agent");
+      setIsAdmin(false);
+      return;
     }
+
+    // Fallback: no recognized role
+    setRole(null);
+    setIsAdmin(false);
   }
 
   useEffect(() => {
@@ -59,6 +60,7 @@ export function useAuthRole(): AuthRoleState {
       if (error || !user) {
         setUser(null);
         setRole(null);
+        setIsAdmin(false);
         setLoading(false);
         initialLoadDone.current = true;
         return;
@@ -90,6 +92,7 @@ export function useAuthRole(): AuthRoleState {
         }, 0);
       } else {
         setRole(null);
+        setIsAdmin(false);
       }
     });
 
@@ -98,5 +101,5 @@ export function useAuthRole(): AuthRoleState {
     };
   }, []);
 
-  return { user, role, loading };
+  return { user, role, loading, isAdmin };
 }
