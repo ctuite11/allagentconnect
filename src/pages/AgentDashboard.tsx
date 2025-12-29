@@ -465,21 +465,23 @@ const AgentDashboard = () => {
   };
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#F7F8FA]">
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24 max-w-7xl">
         {/* Hero Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8 sm:mb-12 animate-fade-in">
           <div className="space-y-3 sm:space-y-4 flex-1">
             <div className="space-y-1 sm:space-y-2">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1D1D1F] tracking-tight">
                 Hey {firstName || "Agent"}!
               </h1>
-              <p className="text-muted-foreground text-base sm:text-lg lg:text-xl max-w-2xl">
+              <p className="text-[#6E6E73] text-base sm:text-lg lg:text-xl max-w-2xl">
                 Welcome to your success hub – let's make it an amazing day
               </p>
+              {/* DEBUG STAMP - remove after verification */}
+              <span className="text-[10px] text-neutral-400 font-mono">BG:#F7F8FA / CARD:#FFF</span>
             </div>
-            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-card border-l-4 border-accent rounded-lg max-w-2xl shadow-sm border border-border">
+            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-[#FFFFFF] border-l-4 border-emerald-500 rounded-lg max-w-2xl border" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
               <p className="text-xs sm:text-sm italic text-foreground/90 leading-relaxed">
                 "{getDailyQuote()}"
               </p>
@@ -489,7 +491,7 @@ const AgentDashboard = () => {
 
         {/* Dashboard Overview Cards */}
         <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 mb-10 sm:mb-16 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={scrollToListings}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={scrollToListings}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Listings</CardTitle>
@@ -503,7 +505,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/hot-sheets")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/hot-sheets")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Hot Sheets</CardTitle>
@@ -517,7 +519,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/favorites")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/favorites")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Favorites</CardTitle>
@@ -531,7 +533,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/my-clients")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/my-clients")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Contacts</CardTitle>
@@ -545,7 +547,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/client-needs")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/client-needs")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Communications</CardTitle>
@@ -559,7 +561,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/agent-profile-editor")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/agent-profile-editor")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Profile</CardTitle>
@@ -581,7 +583,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/manage-team")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/manage-team")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Team</CardTitle>
@@ -604,7 +606,7 @@ const AgentDashboard = () => {
           </Card>
 
           {/* Communication Center Card */}
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer border border-neutral-200 bg-card overflow-hidden relative touch-manipulation h-40" onClick={() => navigate("/client-needs")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/client-needs")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">Communication Center</CardTitle>
@@ -621,7 +623,7 @@ const AgentDashboard = () => {
           </Card>
 
           {/* Recent Activity Feed - Full Width */}
-          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 border border-neutral-200 bg-card md:col-span-2 lg:col-span-3 overflow-hidden relative touch-manipulation">
+          {recentActivity.length > 0 && <Card className="group hover:shadow-xl transition-all duration-300 bg-[#FFFFFF] md:col-span-2 lg:col-span-3 overflow-hidden relative touch-manipulation" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
               
               <CardHeader className="flex flex-row items-center justify-between space-y-0 relative z-10 p-3 sm:p-4 pb-2">
                 <div>
