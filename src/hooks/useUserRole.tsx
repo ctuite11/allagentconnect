@@ -17,29 +17,44 @@ export const useUserRole = (user: User | null) => {
       }
 
       try {
-        // Check for admin role first (prioritize admin over other roles)
-        const { data: adminCheck } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
+        // Use has_role RPC for admin check (SECURITY DEFINER - no RLS issues)
+        const { data: hasAdminRole, error: adminError } = await supabase.rpc("has_role", {
+          _user_id: user.id,
+          _role: "admin" as const,
+        });
 
-        if (adminCheck) {
+        if (!adminError && hasAdminRole === true) {
           setRole("admin");
           setLoading(false);
           return;
         }
 
-        // Fall back to other role check
-        const { data, error } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .maybeSingle();
+        // Check for agent role using has_role RPC
+        const { data: hasAgentRole } = await supabase.rpc("has_role", {
+          _user_id: user.id,
+          _role: "agent" as const,
+        });
 
-        if (error) throw error;
-        setRole(data?.role as UserRole);
+        if (hasAgentRole === true) {
+          setRole("agent");
+          setLoading(false);
+          return;
+        }
+
+        // Check for buyer role using has_role RPC
+        const { data: hasBuyerRole } = await supabase.rpc("has_role", {
+          _user_id: user.id,
+          _role: "buyer" as const,
+        });
+
+        if (hasBuyerRole === true) {
+          setRole("buyer");
+          setLoading(false);
+          return;
+        }
+
+        // No recognized role
+        setRole(null);
       } catch (error) {
         console.error("Error fetching user role:", error);
         setRole(null);
