@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Copy, Check, ArrowLeft, RefreshCw, Eye, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getAuthDiagnostics, getAgentStatus, type AuthDiagnostic } from "@/lib/authDebug";
-import { isAdmin as checkIsAdminRole } from "@/lib/auth/roles";
+import { checkIsAdminRole } from "@/lib/auth/roles";
 
 interface ViewAsState {
   active: boolean;
