@@ -167,6 +167,13 @@ export default function AdminApprovals() {
         .select("id, aac_id, first_name, last_name, email, phone, company, bio, created_at")
         .order("created_at", { ascending: false });
 
+      // DIAGNOSTIC: Log raw profiles query result
+      console.log("[AdminApprovals] Profiles query:", {
+        error: profilesError?.message,
+        count: profiles?.length ?? 0,
+        sample: profiles?.[0] ?? null,
+      });
+
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
         toast.error("Failed to load agents");
@@ -175,6 +182,7 @@ export default function AdminApprovals() {
       }
 
       if (!profiles || profiles.length === 0) {
+        console.log("[AdminApprovals] No profiles found - setting empty agents");
         setAgents([]);
         setLoading(false);
         return;
@@ -186,6 +194,13 @@ export default function AdminApprovals() {
         .from("agent_settings")
         .select("user_id, agent_status, license_number, license_state, verified_at")
         .in("user_id", userIds);
+
+      // DIAGNOSTIC: Log raw settings query result
+      console.log("[AdminApprovals] Settings query:", {
+        error: settingsError?.message,
+        count: settings?.length ?? 0,
+        statuses: settings?.map(s => ({ user_id: s.user_id.slice(0,8), status: s.agent_status })) ?? [],
+      });
 
       if (settingsError) {
         console.error("Error fetching settings:", settingsError);
@@ -214,6 +229,20 @@ export default function AdminApprovals() {
           verified_at: s?.verified_at ?? null,
           created_at: p.created_at || new Date().toISOString(),
         };
+      });
+
+      // DIAGNOSTIC: Log merged agent list with status distribution
+      const statusCounts = agentList.reduce((acc, a) => {
+        acc[a.agent_status] = (acc[a.agent_status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      console.log("[AdminApprovals] Merged agents:", {
+        total: agentList.length,
+        statusDistribution: statusCounts,
+        sample: agentList.slice(0, 3).map(a => ({ 
+          name: `${a.first_name} ${a.last_name}`, 
+          status: a.agent_status 
+        })),
       });
 
       setAgents(agentList);
