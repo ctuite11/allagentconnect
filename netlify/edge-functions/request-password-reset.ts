@@ -26,6 +26,67 @@ interface PasswordResetRequest {
   email: string;
 }
 
+function buildLockedEmailHtml(resetLink: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Your Password</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f8fafc;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc;">
+    <tr>
+      <td align="center" style="padding:48px 24px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background-color:#ffffff;border-radius:8px;">
+          <!-- Header: Plain text only -->
+          <tr>
+            <td style="padding:32px 40px 24px;text-align:center;">
+              <p style="margin:0;font-size:20px;font-weight:600;color:#0F172A;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AllAgentConnect</p>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding:0 40px 32px;">
+              <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0F172A;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Reset your password</h2>
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+                We received a request to reset your password. Click below to choose a new one.
+              </p>
+              <!-- Button -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center" style="padding:8px 0 24px;">
+                    <a href="${resetLink}" target="_blank" style="display:inline-block;padding:14px 28px;background-color:#0F172A;color:#FFFFFF;text-decoration:none;font-size:14px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Reset Password</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+                This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
+              </p>
+              <!-- Fallback: NO <a> tag, code block only -->
+              <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+                If the button doesn't work, copy and paste this URL into your browser:
+              </p>
+              <div style="background-color:#F8FAFC;padding:12px;border-radius:6px;">
+                <p style="margin:0;font-size:12px;line-height:1.5;color:#475569;word-break:break-all;font-family:monospace;">${resetLink}</p>
+              </div>
+            </td>
+          </tr>
+          <!-- Footer: Plain text only -->
+          <tr>
+            <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
+              <p style="margin:0 0 4px;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AllAgentConnect</p>
+              <p style="margin:0;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">mail.allagentconnect.com</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 export default async function handler(request: Request, context: any) {
   // Only allow POST
   if (request.method !== "POST") {
@@ -132,7 +193,7 @@ export default async function handler(request: Request, context: any) {
 
     console.log("Recovery link generated successfully");
 
-    // Send branded email via Resend
+    // Send branded email via Resend with locked template
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -144,65 +205,7 @@ export default async function handler(request: Request, context: any) {
         reply_to: "hello@allagentconnect.com",
         to: [cleanEmail],
         subject: "Reset your password",
-        html: `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reset your password</title>
-</head>
-<body style="margin:0;padding:0;background-color:#f8fafc;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc;">
-    <tr>
-      <td align="center" style="padding:48px 24px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background-color:#ffffff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);overflow:hidden;">
-          <!-- Header with Logo -->
-          <tr>
-            <td style="padding:40px 40px 32px;text-align:center;background-color:#ffffff;">
-              <img src="https://allagentconnect.com/brand/aac-wordmark.png" alt="AllAgentConnect" height="32" style="display:block;margin:0 auto;height:32px;max-width:200px;" />
-            </td>
-          </tr>
-          <!-- Content -->
-          <tr>
-            <td style="padding:40px;background-color:#ffffff;">
-              <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f172a;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Reset your password</h2>
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-                We received a request to reset your password. Click below to choose a new one.
-              </p>
-              <!-- Button -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td align="center" style="padding:8px 0 28px;">
-                    <a href="${resetLink}" target="_blank" style="display:inline-block;padding:12px 18px;background-color:#0f172a;color:#ffffff !important;text-decoration:none;font-size:14px;font-weight:700;border-radius:12px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Reset Password</a>
-                  </td>
-                </tr>
-              </table>
-              <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#334155;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-                This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
-              </p>
-              <!-- Fallback Link -->
-              <div style="margin-top:18px;padding-top:16px;border-top:1px solid #e2e8f0;">
-                <p style="margin:0 0 8px;font-size:12px;line-height:1.6;color:#64748b;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-                  Link not working? Copy and paste this URL into your browser:
-                </p>
-                <p style="margin:0;font-size:12px;line-height:1.6;color:#334155;word-break:break-all;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-                  ${resetLink}
-                </p>
-              </div>
-            </td>
-          </tr>
-          <!-- Footer -->
-          <tr>
-            <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;background-color:#ffffff;">
-              <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">mail.allagentconnect.com</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`,
+        html: buildLockedEmailHtml(resetLink),
       }),
     });
 
