@@ -36,42 +36,72 @@ function baseEmailHtml(opts: { title: string; bodyHtml: string; ctaLabel?: strin
   const buttonHtml =
     ctaLabel && ctaUrl
       ? `
-      <div style="text-align:center;margin:32px 0;">
-        <a href="${escapeHtml(ctaUrl)}" style="display:inline-block;padding:14px 32px;background:#6FB83F;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:16px;">
-          ${escapeHtml(ctaLabel)}
-        </a>
-      </div>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:32px auto;">
+        <tr>
+          <td style="border-radius:6px;background:#18181b;">
+            <a href="${escapeHtml(ctaUrl)}" target="_blank" style="display:inline-block;padding:14px 36px;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+              ${escapeHtml(ctaLabel)}
+            </a>
+          </td>
+        </tr>
+      </table>
     `
       : "";
 
   return `
   <!DOCTYPE html>
-  <html>
+  <html lang="en">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="color-scheme" content="light">
+      <meta name="supported-color-schemes" content="light">
+      <title>AllAgentConnect</title>
     </head>
-    <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-      <div style="max-width:480px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-        <div style="background:#1a1a1a;padding:24px;text-align:center;">
-          <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.02em;">AllAgentConnect</span>
-        </div>
-        <div style="padding:32px 24px;">
-          <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1a1a1a;">
-            ${escapeHtml(title)}
-          </h1>
-          <div style="font-size:15px;line-height:1.6;color:#3f3f46;">
-            ${bodyHtml}
-          </div>
-          ${buttonHtml}
-          <p style="font-size:13px;color:#71717a;margin-top:24px;">
-            Questions? Reply to this email.
-          </p>
-        </div>
-        <div style="background:#f4f4f5;padding:16px;text-align:center;font-size:12px;color:#71717a;">
-          © ${new Date().getFullYear()} AllAgentConnect
-        </div>
-      </div>
+    <body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f8fafc;">
+        <tr>
+          <td align="center" style="padding:48px 16px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:480px;background-color:#ffffff;border-radius:8px;border:1px solid #e2e8f0;">
+              <!-- Header -->
+              <tr>
+                <td style="padding:32px 32px 24px;border-bottom:1px solid #e2e8f0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="font-size:20px;font-weight:700;color:#18181b;letter-spacing:-0.025em;">
+                        All<span style="color:#64748b;">Agent</span>Connect
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <!-- Body -->
+              <tr>
+                <td style="padding:32px;">
+                  <h1 style="margin:0 0 20px;font-size:24px;font-weight:700;color:#18181b;line-height:1.3;">
+                    ${escapeHtml(title)}
+                  </h1>
+                  <div style="font-size:15px;line-height:1.7;color:#475569;">
+                    ${bodyHtml}
+                  </div>
+                  ${buttonHtml}
+                </td>
+              </tr>
+              <!-- Footer -->
+              <tr>
+                <td style="padding:24px 32px;border-top:1px solid #e2e8f0;text-align:center;">
+                  <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">
+                    © ${new Date().getFullYear()} AllAgentConnect
+                  </p>
+                  <p style="margin:0;font-size:12px;color:#cbd5e1;">
+                    mail.allagentconnect.com
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
     </body>
   </html>`;
 }
@@ -87,20 +117,19 @@ function buildEmailForType(params: {
   const t = (type || "").toLowerCase();
 
   if (t.includes("recovery") || t.includes("reset")) {
-    const subject = "Reset your AllAgentConnect password";
+    const subject = "Reset your password";
     const title = "Reset your password";
     const bodyHtml = `
-      <p>We received a request to reset your password for AllAgentConnect.</p>
-      <p>If you made this request, use the button below to set a new password.</p>
-      <p>If you didn't request this, you can ignore this email.</p>
+      <p style="margin:0 0 16px;">Click below to set a new password for your account.</p>
+      <p style="margin:0;color:#64748b;font-size:14px;">This link expires in 24 hours. If you didn't request this, you can safely ignore this email.</p>
     `;
     const html = baseEmailHtml({
       title,
       bodyHtml,
-      ctaLabel: "Reset password",
+      ctaLabel: "Reset Password",
       ctaUrl: actionUrl,
     });
-    const text = `Reset your password: ${actionUrl ?? ""}\n\nIf you didn't request this, ignore this email.`;
+    const text = `Reset your password: ${actionUrl ?? ""}\n\nThis link expires in 24 hours. If you didn't request this, ignore this email.`;
     return { subject, html, text };
   }
 
