@@ -70,19 +70,25 @@ const PendingVerification = () => {
       authDebug("PendingVerification checking status", { userId, email });
 
       // PRIORITY 1: Check if user is admin using has_role RPC - bypass pending screen entirely
+      // This MUST happen before any agent status checks
       const adminResult = await checkIsAdmin(userId);
       authDebug("PendingVerification admin check", { userId, isAdmin: adminResult.isAdmin, error: adminResult.error });
 
-      if (adminResult.isAdmin) {
+      if (adminResult.isAdmin === true) {
         authDebug("PendingVerification", { action: "admin_redirect" });
+        // Clear polling immediately for admins
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
         if (!didNavigate.current) {
           didNavigate.current = true;
           navigate("/admin/approvals", { replace: true });
         }
-        return;
+        return; // HARD STOP - never continue to agent logic for admins
       }
 
-      // Check agent status
+      // PRIORITY 2: Check agent status (only for non-admins)
       const agentResult = await getAgentStatus(userId);
       authDebug("PendingVerification agent status", { userId, status: agentResult.status, error: agentResult.error });
       
