@@ -634,35 +634,17 @@ const Auth = () => {
       const validatedEmail = emailSchema.parse(email);
       const redirectUrl = `${window.location.origin}/auth/callback`;
 
-      // Try custom edge function first
-      let functionWorked = false;
-      try {
-        const { error: fnError } = await supabase.functions.invoke("send-password-reset", {
-          body: {
-            email: validatedEmail,
-            redirectUrl,
-          },
-        });
-        
-        if (!fnError) {
-          functionWorked = true;
-        } else {
-          console.warn("Password reset function error, trying fallback:", fnError);
-        }
-      } catch (fnException) {
-        console.warn("Password reset function exception, trying fallback:", fnException);
-      }
-
-      // If custom function failed, use native Supabase auth as fallback
-      if (!functionWorked) {
-        console.log("Using native resetPasswordForEmail fallback");
-        const { error: nativeError } = await supabase.auth.resetPasswordForEmail(validatedEmail, {
-          redirectTo: redirectUrl,
-        });
-        
-        if (nativeError) {
-          throw nativeError;
-        }
+      // Use custom edge function (bypasses Supabase default purple email)
+      const { error: fnError } = await supabase.functions.invoke("send-password-reset", {
+        body: {
+          email: validatedEmail,
+          redirectUrl,
+        },
+      });
+      
+      if (fnError) {
+        console.error("Password reset function error:", fnError);
+        throw new Error("Unable to send reset email. Please try again.");
       }
 
       setResetEmailSent(true);
