@@ -54,6 +54,7 @@ import NotFound from "./pages/NotFound";
 import MyListings from "./pages/MyListings";
 import ManageListingPhotos from "./pages/ManageListingPhotos";
 import AdminApprovals from "./pages/AdminApprovals";
+import AdminDebugAuth from "./pages/AdminDebugAuth";
 
 
 import ComingSoon from "./pages/ComingSoon";
@@ -167,6 +168,7 @@ const App = () => (
                 <Route path="/seed-test-data" element={<SeedTestData />} />
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
                 <Route path="/admin/approvals" element={<AdminApprovals />} />
+                <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </>

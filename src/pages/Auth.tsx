@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
 import { Logo } from "@/components/brand";
+import { authDebug, checkIsAdmin, getAgentStatus } from "@/lib/authDebug";
 
 // NOTE: This is generic only when it declares <T> and returns Promise<T>.
 // Timeout wrapper - truly generic + typed for PromiseLike
@@ -208,15 +209,13 @@ const Auth = () => {
         // Store session email for mismatch detection
         setSessionEmail(session.user.email || null);
         
-        // Check for admin role first - admins should go straight to admin panel
-        const { data: adminRole } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
+        authDebug("handleSession existing session", { userId: session.user.id, email: session.user.email });
+        
+        // Check for admin role first using has_role RPC - admins should go straight to admin panel
+        const adminResult = await checkIsAdmin(session.user.id);
+        authDebug("handleSession admin check", { isAdmin: adminResult.isAdmin, error: adminResult.error });
 
-        if (adminRole) {
+        if (adminResult.isAdmin) {
           // Admin user - redirect directly to admin panel
           if (mounted) {
             didNavigate.current = true;
@@ -228,14 +227,11 @@ const Auth = () => {
         setExistingSession(true);
         
         // Fetch agent status to determine UI for non-admin users
-        const { data: settings } = await supabase
-          .from('agent_settings')
-          .select('agent_status')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
+        const agentResult = await getAgentStatus(session.user.id);
+        authDebug("handleSession agent status", { status: agentResult.status, error: agentResult.error });
         
-        if (mounted && settings) {
-          setAgentStatus(settings.agent_status);
+        if (mounted && agentResult.status) {
+          setAgentStatus(agentResult.status);
         }
       }
       setCheckingSession(false);

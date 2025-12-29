@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { authDebug, checkIsAdmin, getAgentStatus } from "@/lib/authDebug";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -219,6 +220,8 @@ const AuthCallback = () => {
     if (didNavigate.current) return;
 
     try {
+      authDebug("routeUser start", { userId });
+      
       const { data: { session } } = await supabase.auth.getSession();
       
       // Check if this is a recovery session (type=recovery or sessionStorage flag only)
@@ -231,59 +234,43 @@ const AuthCallback = () => {
         sessionStorage.getItem("aac_recovery_flow") === "1";
       
       if (isRecoverySession) {
+        authDebug("routeUser", { action: "recovery_redirect" });
         didNavigate.current = true;
         navigate('/password-reset', { replace: true });
         return;
       }
 
-      // Check for admin role first (prioritize admin over other roles)
-      const { data: adminRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      if (adminRole) {
+      // PRIORITY 1: Check for admin role using has_role RPC
+      const adminResult = await checkIsAdmin(userId);
+      authDebug("routeUser admin check", { userId, isAdmin: adminResult.isAdmin, error: adminResult.error });
+      
+      if (adminResult.isAdmin) {
+        authDebug("routeUser", { action: "admin_redirect" });
         didNavigate.current = true;
         navigate('/admin/approvals', { replace: true });
         return;
       }
 
-      // Check for other roles
-      const { data: userRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (userRole?.role) {
+      // PRIORITY 2: Check agent status for non-admin users
+      const agentResult = await getAgentStatus(userId);
+      authDebug("routeUser agent status", { userId, status: agentResult.status, error: agentResult.error });
+      
+      const status = agentResult.status || 'pending';
+      
+      if (status === 'verified') {
+        authDebug("routeUser", { action: "dashboard_redirect" });
         didNavigate.current = true;
-        
-        // Agent-only platform: check verification status
-        const { data: settings } = await supabase
-          .from('agent_settings')
-          .select('agent_status')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        const status = settings?.agent_status || 'pending';
-        
-        if (status === 'verified') {
-          navigate('/agent-dashboard', { replace: true });
-        } else {
-          // pending or unverified -> pending verification
-          navigate('/pending-verification', { replace: true });
-        }
-        return;
+        navigate('/agent-dashboard', { replace: true });
+      } else {
+        // pending, unverified, or no status -> pending verification
+        authDebug("routeUser", { action: "pending_redirect", status });
+        didNavigate.current = true;
+        navigate('/pending-verification', { replace: true });
       }
-
-      // No role yet - default to pending verification (agent)
-      didNavigate.current = true;
-      navigate('/pending-verification', { replace: true });
 
     } catch (err) {
       console.error("[AuthCallback] Route error:", err);
+      authDebug("routeUser error", { error: err instanceof Error ? err.message : "Unknown" });
       didNavigate.current = true;
       navigate('/auth', { replace: true });
     }
