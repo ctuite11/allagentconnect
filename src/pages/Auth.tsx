@@ -211,19 +211,26 @@ const Auth = () => {
         
         authDebug("handleSession existing session", { userId: session.user.id, email: session.user.email });
         
-        // PRIORITY 1: Check for admin role using has_role RPC - MUST happen before agent checks
+        // ═══════════════════════════════════════════════════════════════════════
+        // PRIORITY 1 (HARD GATE): Admin check using has_role RPC
+        // Admin users MUST route to /admin/approvals and TERMINATE immediately.
+        // Do NOT run agent_settings queries, polling, or verification logic.
+        // ═══════════════════════════════════════════════════════════════════════
         const adminResult = await checkIsAdmin(session.user.id);
-        authDebug("handleSession admin check", { isAdmin: adminResult.isAdmin, error: adminResult.error });
+        authDebug("handleSession has_role(admin)", { 
+          isAdmin: adminResult.isAdmin, 
+          error: adminResult.error 
+        });
 
         if (adminResult.isAdmin === true) {
-          // Admin user - redirect directly to admin panel, NEVER continue to agent logic
-          authDebug("handleSession", { action: "admin_redirect_priority" });
+          authDebug("handleSession ADMIN_REDIRECT", { action: "terminal_redirect" });
           if (mounted) {
             didNavigate.current = true;
             navigate('/admin/approvals', { replace: true });
           }
-          return; // HARD STOP
+          return; // ═══ HARD STOP ═══ Admin NEVER touches agent logic
         }
+        // ═══════════════════════════════════════════════════════════════════════
 
         setExistingSession(true);
         

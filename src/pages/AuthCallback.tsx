@@ -240,9 +240,12 @@ const AuthCallback = () => {
         return;
       }
 
-      // PRIORITY 1: Check for admin role using has_role RPC - MUST happen before agent checks
-      // Do NOT rely on wrappers here; log raw RPC response for production debugging.
-      const { data: rpcData, error: rpcError } = await supabase.rpc("has_role", {
+      // ═══════════════════════════════════════════════════════════════════════
+      // PRIORITY 1 (HARD GATE): Admin check using has_role RPC
+      // Admin users MUST route to /admin/approvals and TERMINATE immediately.
+      // Do NOT run agent_settings queries, polling, or verification logic.
+      // ═══════════════════════════════════════════════════════════════════════
+      const { data: isAdmin, error: adminError } = await supabase.rpc("has_role", {
         _user_id: userId,
         _role: "admin",
       });
@@ -250,17 +253,17 @@ const AuthCallback = () => {
       authDebug("routeUser has_role(admin)", {
         email: session?.user?.email ?? null,
         userId,
-        rpcData,
-        rpcError: rpcError?.message ?? null,
+        isAdmin,
+        adminError: adminError?.message ?? null,
       });
 
-      const isAdmin = rpcData === true;
-      if (isAdmin) {
-        authDebug("routeUser", { action: "admin_redirect_priority" });
+      if (isAdmin === true) {
+        authDebug("routeUser ADMIN_REDIRECT", { action: "terminal_redirect" });
         didNavigate.current = true;
         navigate("/admin/approvals", { replace: true });
-        return; // HARD STOP - never continue to agent logic for admins
+        return; // ═══ HARD STOP ═══ Admin NEVER touches agent logic
       }
+      // ═══════════════════════════════════════════════════════════════════════
 
       // PRIORITY 2: Check agent status for non-admin users
       const agentResult = await getAgentStatus(userId);
