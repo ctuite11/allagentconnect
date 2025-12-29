@@ -240,15 +240,16 @@ All colors MUST be HSL.
     text-security: disc;
   }
 
-  /* AAC Card System - Locked Standard from Success Hub */
+  /* AAC Card System - Locked Standard (Apple Neutrals) */
   .aac-card {
-    @apply bg-white border border-aac-card-border rounded-2xl will-change-transform;
+    @apply bg-card border rounded-2xl will-change-transform;
+    border-color: hsl(var(--border));
     box-shadow: var(--aac-shadow);
     transition: all 150ms cubic-bezier(.2,.8,.2,1);
   }
 
   .aac-card:hover {
-    @apply border-aac-card-borderHover;
+    border-color: hsl(var(--aac-card-border-hover));
     box-shadow: var(--aac-shadow-hover);
     transform: translateY(-1px);
   }
@@ -264,17 +265,20 @@ All colors MUST be HSL.
 
   /* Card surface token - prevents drift */
   .card-surface {
-    @apply bg-white border border-neutral-200 rounded-2xl;
+    @apply bg-card border rounded-2xl;
+    border-color: hsl(var(--border));
     box-shadow: var(--aac-shadow);
   }
 
   .card-surface-elevated {
-    @apply bg-white border border-neutral-200 rounded-3xl;
+    @apply bg-card border rounded-3xl;
+    border-color: hsl(var(--border));
     box-shadow: var(--aac-shadow);
   }
 
   .card-surface-subtle {
-    @apply bg-white border border-neutral-200/70 rounded-xl;
+    @apply bg-card border rounded-xl;
+    border-color: hsl(var(--border) / 0.7);
     box-shadow: var(--aac-shadow);
   }
 

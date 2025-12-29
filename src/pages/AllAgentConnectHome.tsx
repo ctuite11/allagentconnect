@@ -171,7 +171,7 @@ const AllAgentConnectHome = () => {
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-[#F7F8FA]">
         <div className="mx-auto max-w-6xl px-6 pt-24 pb-10">
           {/* Hero Zone - ambient network lives here only */}
           <div className="relative mb-8 overflow-hidden">
@@ -181,7 +181,7 @@ const AllAgentConnectHome = () => {
             {/* Content (above ambient) */}
             <div className="relative z-10">
               <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-bold tracking-tight text-slate-900 font-display">
+                <h1 className="text-4xl font-bold tracking-tight text-[#1D1D1F] font-display">
                   Success Hub
                 </h1>
                 <span 
@@ -190,8 +190,12 @@ const AllAgentConnectHome = () => {
                 >
                   HUB v2
                 </span>
+                {/* DEBUG STAMP - remove after verification */}
+                <span className="text-[10px] text-neutral-400 font-mono">
+                  BG:#F7F8FA / CARD:#FFF
+                </span>
               </div>
-              <p className="mt-3 text-base text-neutral-500">
+              <p className="mt-3 text-base text-[#6E6E73]">
                 Connect · Communicate · Collaborate
               </p>
             </div>
