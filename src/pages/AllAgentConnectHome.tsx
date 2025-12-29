@@ -17,6 +17,7 @@ import {
   SearchCheck,
   Shield
 } from "lucide-react";
+import AmbientNetworkField from "@/components/allagent/AmbientNetworkField";
 
 // Build ID for verification (set via env or fallback to timestamp)
 const BUILD_ID = import.meta.env.VITE_BUILD_ID || `dev-${Date.now()}`;
@@ -170,24 +171,30 @@ const AllAgentConnectHome = () => {
         />
       </Helmet>
 
-      <div className="min-h-screen bg-neutral-50">
+      <div className="min-h-screen bg-[#F7F8FA]">
         <div className="mx-auto max-w-6xl px-6 pt-24 pb-10">
-          {/* Page Title with Hub v2 Badge */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3">
-              <h1 className="text-4xl font-semibold text-neutral-800 font-display">
-                Success Hub
-              </h1>
-              <span 
-                className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium"
-                title={`Build: ${BUILD_ID}`}
-              >
-                HUB v2
-              </span>
+          {/* Hero Zone - ambient network lives here only */}
+          <div className="relative mb-8 overflow-hidden">
+            {/* Ambient network field (decorative, behind content) */}
+            <AmbientNetworkField className="absolute -top-8 -right-8 z-0 hidden md:block" />
+            
+            {/* Content (above ambient) */}
+            <div className="relative z-10">
+              <div className="flex items-center gap-3">
+                <h1 className="text-4xl font-bold tracking-tight text-slate-900 font-display">
+                  Success Hub
+                </h1>
+                <span 
+                  className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium"
+                  title={`Build: ${BUILD_ID}`}
+                >
+                  HUB v2
+                </span>
+              </div>
+              <p className="mt-3 text-base text-neutral-500">
+                Connect · Communicate · Collaborate
+              </p>
             </div>
-            <p className="mt-3 text-base text-neutral-500">
-              Connect · Communicate · Collaborate
-            </p>
           </div>
 
           {/* Tier 1 – Command Panels: grid-cols-1 lg:grid-cols-3 */}
