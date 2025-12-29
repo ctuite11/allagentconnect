@@ -12,6 +12,7 @@ const PendingVerification = () => {
   const [loading, setLoading] = useState(true);
   const [isApproved, setIsApproved] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [fatalError, setFatalError] = useState<string | null>(null);
   const didNavigate = useRef(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const emailSentRef = useRef(false);
@@ -101,6 +102,21 @@ const PendingVerification = () => {
       const agentResult = await getAgentStatus(userId);
       authDebug("PendingVerification agent status", { userId, status: agentResult.status, error: agentResult.error });
       
+      // Handle fatal errors (404 = table not found/exposed, or severe RLS issue)
+      if (agentResult.error) {
+        const errMsg = agentResult.error.toLowerCase();
+        if (errMsg.includes("404") || errMsg.includes("not found") || errMsg.includes("relation") || errMsg.includes("does not exist")) {
+          authDebug("PendingVerification FATAL", { error: agentResult.error });
+          setFatalError("Configuration error: agent_settings table not found in API. Contact support.");
+          setLoading(false);
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
+          return;
+        }
+      }
+      
       const status = agentResult.status || 'unverified';
 
       if (status === 'verified') {
@@ -172,6 +188,38 @@ const PendingVerification = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  // Show fatal error screen - stops all polling
+  if (fatalError) {
+    return (
+      <div className="min-h-screen flex flex-col bg-white">
+        <main className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="w-full max-w-xl">
+            <div className="rounded-2xl p-8 md:p-10 text-center">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-red-600 text-2xl">⚠</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3">
+                Configuration Error
+              </h1>
+              <p className="text-slate-600 text-base mb-4">
+                {fatalError}
+              </p>
+              <p className="text-slate-500 text-sm mb-6">
+                Please contact support at hello@allagentconnect.com
+              </p>
+              <Button 
+                onClick={handleLogout} 
+                className="w-full bg-slate-900 text-white hover:bg-slate-800 h-11"
+              >
+                Log Out
+              </Button>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
