@@ -528,6 +528,10 @@ export default function AdminApprovals() {
         <div className="mb-4 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-xl font-mono text-sm">
           <div className="font-bold text-yellow-800 mb-2">🔍 DEBUG PANEL (remove after fix)</div>
           <div className="grid grid-cols-2 gap-2 text-yellow-900">
+            <div>isChecking: <span className="font-bold">{String(isChecking)}</span></div>
+            <div>isAdmin: <span className="font-bold">{String(isAdmin)}</span></div>
+            <div>user?.email: <span className="font-bold">{user?.email ?? 'null'}</span></div>
+            <div>SUPABASE_URL: <span className="font-bold text-xs break-all">{import.meta.env.VITE_SUPABASE_URL ?? 'undefined'}</span></div>
             <div>Profiles Query: <span className="font-bold">{debugInfo.profilesCount ?? 'pending...'}</span> {debugInfo.profilesError && <span className="text-red-600">ERROR: {debugInfo.profilesError}</span>}</div>
             <div>Settings Query: <span className="font-bold">{debugInfo.settingsCount ?? 'pending...'}</span> {debugInfo.settingsError && <span className="text-red-600">ERROR: {debugInfo.settingsError}</span>}</div>
             <div>Merged Agents: <span className="font-bold">{debugInfo.mergedCount ?? 'pending...'}</span></div>
