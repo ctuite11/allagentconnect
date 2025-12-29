@@ -70,9 +70,12 @@ const PendingVerification = () => {
       
       authDebug("PendingVerification checking status", { userId, email });
 
-      // PRIORITY 1: Check if user is admin using has_role RPC - bypass pending screen entirely
-      // Do NOT rely on wrappers here; log raw RPC response for production debugging.
-      const { data: rpcData, error: rpcError } = await supabase.rpc("has_role", {
+      // ═══════════════════════════════════════════════════════════════════════
+      // PRIORITY 1 (HARD GATE): Admin check using has_role RPC
+      // Admin users MUST NEVER see /pending-verification under ANY condition.
+      // If admin, immediately redirect and TERMINATE - no polling, no agent logic.
+      // ═══════════════════════════════════════════════════════════════════════
+      const { data: isAdmin, error: adminError } = await supabase.rpc("has_role", {
         _user_id: userId,
         _role: "admin",
       });
@@ -80,13 +83,13 @@ const PendingVerification = () => {
       authDebug("PendingVerification has_role(admin)", {
         email,
         userId,
-        rpcData,
-        rpcError: rpcError?.message ?? null,
+        isAdmin,
+        adminError: adminError?.message ?? null,
       });
 
-      if (rpcData === true) {
-        authDebug("PendingVerification", { action: "admin_redirect" });
-        // Clear polling immediately for admins
+      if (isAdmin === true) {
+        authDebug("PendingVerification ADMIN_REDIRECT", { action: "terminal_redirect" });
+        // IMMEDIATELY clear polling and redirect - no further logic
         if (pollIntervalRef.current) {
           clearInterval(pollIntervalRef.current);
           pollIntervalRef.current = null;
@@ -95,8 +98,9 @@ const PendingVerification = () => {
           didNavigate.current = true;
           navigate("/admin/approvals", { replace: true });
         }
-        return; // HARD STOP - never continue to agent logic for admins
+        return; // ═══ HARD STOP ═══ Admin NEVER touches agent logic
       }
+      // ═══════════════════════════════════════════════════════════════════════
 
       // PRIORITY 2: Check agent status (only for non-admins)
       const agentResult = await getAgentStatus(userId);
