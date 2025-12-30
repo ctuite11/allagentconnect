@@ -456,7 +456,7 @@ export default function AgentSuccessHub() {
       <Navigation />
       <div className="mx-auto max-w-6xl px-5 py-8 pt-28 space-y-10">
         {/* Header */}
-        <div className="flex items-center gap-3 pb-6">
+        <div className="flex items-center gap-3">
           <PageHeader
             title="Success Hub"
             subtitle="Your command center for client success"
@@ -468,8 +468,8 @@ export default function AgentSuccessHub() {
             HUB v2
           </span>
         </div>
-        {/* Hairline divider */}
-        <div className="w-full" style={{ borderBottom: '1px solid #E5E5EA' }} />
+        {/* Hairline divider - Apple style */}
+        <div className="w-full mt-6" style={{ borderBottom: '1px solid #D2D2D7' }} />
 
         {/* Unified Hub Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
