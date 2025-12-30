@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
-import heroEditorial from "@/assets/hero-editorial.png";
 
 const cx = (...c: Array<string | false | undefined | null>) => c.filter(Boolean).join(" ");
 
@@ -54,22 +53,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Editorial Image Panel */}
-          <div className="relative">
-            <div className="rounded-3xl overflow-hidden shadow-[0_18px_50px_rgba(0,0,0,0.10)]">
-              <div className="relative">
-                <img 
-                  src={heroEditorial} 
-                  alt="" 
-                  className="w-full h-auto object-cover opacity-[0.92]"
-                />
-                {/* Light white overlay */}
-                <div className="absolute inset-0 bg-white/[0.03]" />
-              </div>
-            </div>
-            {/* Soft glow */}
-            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-b from-emerald-200/25 via-transparent to-transparent blur-2xl" />
-          </div>
+          {/* NetworkGlobe is the visual on the right - handled by the component */}
+          <div className="hidden lg:block" aria-hidden="true" />
         </div>
       </section>
 

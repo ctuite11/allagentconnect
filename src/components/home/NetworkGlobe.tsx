@@ -56,20 +56,20 @@ const NetworkGlobe = () => {
     >
       {/* Fade mask - softens globe toward text on left */}
       <div 
-        className="absolute inset-0 z-10"
+        className="absolute inset-0 z-[1]"
         style={{
-          background: 'linear-gradient(90deg, white 0%, white 30%, transparent 60%)'
+          background: 'linear-gradient(90deg, white 0%, white 15%, transparent 45%)'
         }}
       />
       
       {/* Network sphere */}
-      <div className="absolute -right-20 top-1/2 -translate-y-1/2 w-[400px] h-[400px]">
+      <div className="absolute -right-10 top-1/2 -translate-y-1/2 w-[550px] h-[550px] z-[2]">
         <svg 
           viewBox="0 0 300 300" 
           className="w-full h-full"
           style={{
             animation: 'networkSpin 35s linear infinite',
-            opacity: 0.07
+            opacity: 0.12
           }}
         >
           {/* Connection lines */}
