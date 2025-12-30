@@ -28,8 +28,10 @@ export default function Home() {
         <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
           {/* Copy */}
           <div className="max-w-xl">
-            <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-neutral-900">
-              By Agents. For Agents. <span style={{ color: '#94A3B8' }}>All Agents.</span>
+            <h1 className="font-display text-5xl sm:text-6xl font-semibold tracking-tight text-neutral-900">
+              By Agents. For Agents.
+              <br />
+              <span style={{ color: '#94A3B8' }}>All Agents.</span>
             </h1>
 
             <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-neutral-900">
