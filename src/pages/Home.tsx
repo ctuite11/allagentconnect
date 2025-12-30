@@ -18,7 +18,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-slate-900">
+    <div className="min-h-screen bg-white text-slate-900">
       <Navigation />
       <main className="pt-20 pb-12">
         {/* Hero */}
@@ -198,9 +198,12 @@ export default function Home() {
               The value is participation. The bigger the professional network, the better the matches.
             </p>
 
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-[#F7F6F3] p-5">
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-neutral-50 p-5">
               <div className="flex items-start gap-3">
-                <ShieldCheck className={cx("h-5 w-5 mt-0.5", ACCENT)} />
+                <div className="relative mt-0.5">
+                  <ShieldCheck className={cx("h-5 w-5", ACCENT)} />
+                  <div className="absolute inset-0 -m-1.5 rounded-full bg-emerald-500/[0.04]" />
+                </div>
                 <div>
                   <div className="text-sm font-semibold text-slate-900">Professional-first</div>
                   <div className="text-sm text-slate-600">
@@ -215,7 +218,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200/70 bg-[#FAFAF8]">
+      <footer className="border-t border-slate-200/70 bg-white">
         <div className="mx-auto max-w-6xl px-5 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="text-sm text-slate-600">
             <span className="font-semibold text-slate-900">All Agent Connect</span> — where real deals get done.
@@ -298,14 +301,17 @@ function ProofCard({
   body: string;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition">
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-2xl border border-slate-200 bg-[#F7F6F3] flex items-center justify-center">
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition relative">
+      <div className="absolute top-5 right-5">
+        <div className="relative">
           {icon}
+          <div className="absolute inset-0 -m-2 rounded-full bg-emerald-500/[0.04]" />
         </div>
-        <div className="text-base font-semibold tracking-tight">{title}</div>
       </div>
-      <p className="mt-3 text-sm text-slate-600 leading-relaxed">{body}</p>
+      <div className="mt-6">
+        <div className="text-base font-semibold tracking-tight">{title}</div>
+        <p className="mt-2 text-sm text-slate-600 leading-relaxed">{body}</p>
+      </div>
     </div>
   );
 }
@@ -320,14 +326,17 @@ function HowCard({
   body: string;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition">
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-2xl border border-slate-200 bg-[#F7F6F3] flex items-center justify-center">
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition relative">
+      <div className="absolute top-5 right-5">
+        <div className="relative">
           {icon}
+          <div className="absolute inset-0 -m-2 rounded-full bg-emerald-500/[0.04]" />
         </div>
-        <div className="text-base font-semibold tracking-tight">{title}</div>
       </div>
-      <p className="mt-3 text-sm text-slate-600 leading-relaxed">{body}</p>
+      <div className="mt-6">
+        <div className="text-base font-semibold tracking-tight">{title}</div>
+        <p className="mt-2 text-sm text-slate-600 leading-relaxed">{body}</p>
+      </div>
     </div>
   );
 }
