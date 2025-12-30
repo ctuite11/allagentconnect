@@ -77,7 +77,7 @@ const NetworkGlobe = () => {
       
       {/* Network sphere */}
       <div 
-        className="absolute -right-10 top-1/2 -translate-y-1/2 w-[550px] h-[550px]"
+        className="absolute right-4 lg:right-10 top-1/2 -translate-y-1/2 w-[600px] h-[600px]"
         style={DEBUG_VISIBLE ? { outline: '2px solid red', outlineOffset: '-2px' } : {}}
       >
         <svg 

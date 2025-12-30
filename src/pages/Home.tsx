@@ -22,12 +22,12 @@ export default function Home() {
       <Navigation />
       <main className="pt-20 pb-12">
         {/* Hero */}
-        <section className="mx-auto max-w-6xl px-5 pt-14 pb-10 relative">
+        <section className="w-full px-6 sm:px-10 lg:px-20 pt-14 pb-10 relative min-h-[60vh] flex items-center">
         {/* Network globe - desktop only, behind content */}
         <NetworkGlobe />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
+        <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
           {/* Copy */}
-          <div>
+          <div className="max-w-xl">
             <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-neutral-900">
               By Agents. For Agents. <span className="text-neutral-400">All Agents.</span>
             </h1>
@@ -59,7 +59,7 @@ export default function Home() {
       </section>
 
       {/* Icon Benefits Strip */}
-      <section className="mx-auto max-w-6xl px-5 py-8">
+      <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-8">
         <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-sm text-neutral-600">
           <span className="inline-flex items-center gap-2">
             <ShieldCheck className={cx("h-[18px] w-[18px]", ACCENT)} />
@@ -77,7 +77,7 @@ export default function Home() {
       </section>
 
       {/* Proof */}
-      <section id="proof" className="mx-auto max-w-6xl px-5 py-10">
+      <section id="proof" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div>
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Built on proven closings — not theory.</h2>
@@ -107,7 +107,7 @@ export default function Home() {
       </section>
 
       {/* How it works */}
-      <section id="how" className="mx-auto max-w-6xl px-5 py-10">
+      <section id="how" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
         <div className="rounded-3xl bg-white p-7 sm:p-9 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">What actually happens here</h2>
           <p className="mt-2 text-neutral-600 max-w-2xl">
@@ -140,7 +140,7 @@ export default function Home() {
       </section>
 
       {/* Access */}
-      <section id="access" className="mx-auto max-w-6xl px-5 py-10 pb-16">
+      <section id="access" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
           <div className="lg:col-span-3 rounded-3xl bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <h3 className="text-xl font-semibold tracking-tight">Request access</h3>
@@ -211,7 +211,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-neutral-200/70 bg-white">
-        <div className="mx-auto max-w-6xl px-5 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="text-sm text-neutral-600">
             <span className="font-semibold text-neutral-900">All Agent Connect</span> — where real deals get done.
             <div className="mt-1 text-xs text-neutral-500">© {new Date().getFullYear()} • Verified agents only</div>
