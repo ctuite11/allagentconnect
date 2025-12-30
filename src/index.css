@@ -53,7 +53,7 @@ All colors MUST be HSL.
     /* ============ APPLE NEUTRALS + AAC GREEN (LOCKED) ============ */
     
     /* App Backgrounds - Apple neutral */
-    --background: 225 14% 97%;        /* #F7F8FA - page background */
+    --background: 0 0% 100%;          /* #FFFFFF - page background */
     --foreground: 240 6% 12%;         /* #1D1D1F - primary text */
     
     /* Typography hierarchy - Apple text colors */
