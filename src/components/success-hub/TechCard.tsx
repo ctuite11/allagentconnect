@@ -47,8 +47,8 @@ export const TechCard = ({
         </div>
       </div>
 
-      {/* Title - add top margin to account for icon position */}
-      <h3 className="text-base font-semibold tracking-tight text-slate-900 mb-2 mt-8">{title}</h3>
+      {/* Title - reduced top margin for better balance */}
+      <h3 className="text-base font-semibold tracking-tight text-slate-900 mb-2 mt-6">{title}</h3>
 
       {/* Description */}
       <p className="text-sm text-slate-600 mb-4 line-clamp-2">{description}</p>
@@ -62,10 +62,10 @@ export const TechCard = ({
         </div>
       )}
 
-      {/* CTA link - slate to emerald on hover */}
-      <span className="text-sm font-medium text-slate-700 inline-flex items-center group-hover:text-emerald-600 transition-colors duration-200">
+      {/* CTA link - arrow is AAC green, lightens on hover */}
+      <span className="text-sm font-medium text-slate-700 inline-flex items-center transition-colors duration-200">
         Open
-        <ArrowRight className="w-4 h-4 ml-1 transition-transform duration-200 group-hover:translate-x-1" />
+        <ArrowRight className="w-4 h-4 ml-1 text-emerald-600 group-hover:text-emerald-400 transition-all duration-200 group-hover:translate-x-1" />
       </span>
     </div>
   );
