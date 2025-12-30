@@ -7,7 +7,11 @@ import React from 'react';
  */
 
 // Toggle this to true for placement/sizing assessment
-const DEBUG_VISIBLE = true;
+const DEBUG_VISIBLE = false;
+
+// Brand colors
+const LINE_COLOR = '#059669'; // emerald-600
+const DOT_COLOR = '#6B7280';  // gray-500
 
 const NetworkGlobe = () => {
   // Generate network nodes in a spherical distribution
@@ -77,8 +81,12 @@ const NetworkGlobe = () => {
       
       {/* Network sphere */}
       <div 
-        className="absolute right-4 lg:right-10 top-1/2 -translate-y-1/2 w-[600px] h-[600px]"
-        style={DEBUG_VISIBLE ? { outline: '2px solid red', outlineOffset: '-2px' } : {}}
+        className="absolute right-4 lg:right-10 top-1/2 -translate-y-1/2 w-[550px] h-[550px]"
+        style={{
+          transform: 'translateY(-50%) rotateX(15deg) rotateY(-10deg)',
+          transformStyle: 'preserve-3d',
+          perspective: '1000px'
+        }}
       >
         <svg 
           viewBox="0 0 300 300" 
@@ -96,7 +104,7 @@ const NetworkGlobe = () => {
               y1={line.y1}
               x2={line.x2}
               y2={line.y2}
-              stroke="#000000"
+              stroke={LINE_COLOR}
               strokeWidth={lineStrokeWidth}
               opacity={line.opacity}
             />
@@ -109,8 +117,8 @@ const NetworkGlobe = () => {
               cx={node.x}
               cy={node.y}
               r={node.z > 0 ? nodeRadius.large : nodeRadius.small}
-              fill="#000000"
-              opacity={DEBUG_VISIBLE ? 0.7 : 0.3 + node.z * 0.3}
+              fill={DOT_COLOR}
+              opacity={DEBUG_VISIBLE ? 0.7 : 0.4 + node.z * 0.3}
             />
           ))}
           
@@ -121,7 +129,7 @@ const NetworkGlobe = () => {
             rx="120"
             ry="40"
             fill="none"
-            stroke="#000000"
+            stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
             opacity={DEBUG_VISIBLE ? 0.5 : 0.3}
           />
@@ -131,7 +139,7 @@ const NetworkGlobe = () => {
             rx="100"
             ry="100"
             fill="none"
-            stroke="#000000"
+            stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
             opacity={DEBUG_VISIBLE ? 0.4 : 0.2}
           />
