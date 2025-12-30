@@ -30,7 +30,7 @@ export default function Home() {
               By Agents. For Agents. <span className="text-neutral-400">All Agents.</span>
             </h1>
 
-            <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-neutral-400">
+            <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-neutral-900">
               Where real deals get done.
             </div>
 
