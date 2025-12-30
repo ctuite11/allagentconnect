@@ -43,13 +43,13 @@ const NetworkGlobe = () => {
           Math.pow(nodes[i].y - nodes[j].y, 2)
         );
         
-        if (dist < 100) {
+          if (dist < 100) {
           lines.push({
             x1: nodes[i].x,
             y1: nodes[i].y,
             x2: nodes[j].x,
             y2: nodes[j].y,
-            opacity: DEBUG_VISIBLE ? 0.5 : (1 - dist / 100) * 0.4
+            opacity: DEBUG_VISIBLE ? 0.5 : (1 - dist / 100) * 0.6
           });
         }
       }
@@ -58,9 +58,9 @@ const NetworkGlobe = () => {
   }, [nodes]);
 
   // Debug vs production styles
-  const svgOpacity = DEBUG_VISIBLE ? 0.55 : 0.12;
-  const lineStrokeWidth = DEBUG_VISIBLE ? 1.5 : 0.5;
-  const ringStrokeWidth = DEBUG_VISIBLE ? 1 : 0.3;
+  const svgOpacity = DEBUG_VISIBLE ? 0.55 : 0.35;
+  const lineStrokeWidth = DEBUG_VISIBLE ? 1.5 : 1;
+  const ringStrokeWidth = DEBUG_VISIBLE ? 1 : 0.6;
   const nodeRadius = DEBUG_VISIBLE ? { large: 4, small: 3 } : { large: 2, small: 1.5 };
 
   return (
@@ -69,15 +69,6 @@ const NetworkGlobe = () => {
       aria-hidden="true"
       style={DEBUG_VISIBLE ? { zIndex: 20 } : { zIndex: 2 }}
     >
-      {/* Fade mask - softens globe toward text on left (disabled in debug mode) */}
-      {!DEBUG_VISIBLE && (
-        <div 
-          className="absolute inset-0 z-[1]"
-          style={{
-            background: 'linear-gradient(90deg, white 0%, white 15%, transparent 45%)'
-          }}
-        />
-      )}
       
       {/* Network sphere */}
       <div 
