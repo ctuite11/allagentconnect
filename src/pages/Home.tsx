@@ -26,12 +26,12 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Copy */}
           <div>
-            <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900">
-              Where Real Deals Get Done.
+            <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-neutral-900">
+              By Agents. For Agents. All Agents.
             </h1>
 
-            <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-slate-800">
-              By Agents. For Agents. All Agents.
+            <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-neutral-400">
+              Where real deals get done.
             </div>
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
