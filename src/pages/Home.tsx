@@ -27,7 +27,7 @@ export default function Home() {
           {/* Copy */}
           <div>
             <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-neutral-900">
-              By Agents. For Agents. All Agents.
+              By Agents. For Agents. <span className="text-neutral-950">All Agents.</span>
             </h1>
 
             <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-neutral-400">
@@ -58,10 +58,10 @@ export default function Home() {
                 <img 
                   src={heroEditorial} 
                   alt="" 
-                  className="w-full h-auto object-cover"
+                  className="w-full h-auto object-cover opacity-[0.92]"
                 />
                 {/* Light white overlay */}
-                <div className="absolute inset-0 bg-white/10" />
+                <div className="absolute inset-0 bg-white/[0.03]" />
               </div>
             </div>
             {/* Soft glow */}
@@ -121,7 +121,7 @@ export default function Home() {
       {/* How it works */}
       <section id="how" className="mx-auto max-w-6xl px-5 py-10">
         <div className="rounded-3xl bg-white p-7 sm:p-9 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">What actually happens here</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">What actually happens here</h2>
           <p className="mt-2 text-neutral-600 max-w-2xl">
             Simple workflow. Serious intent. The fastest path from "need" to "signed."
           </p>
@@ -193,7 +193,7 @@ export default function Home() {
 
           <div className="lg:col-span-2 rounded-3xl bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <div className="text-xs text-neutral-500">Positioning</div>
-            <div className="mt-2 text-2xl font-semibold tracking-tight">Built for all agents.</div>
+            <div className="mt-2 text-2xl font-semibold tracking-tight">Built for <span className="text-neutral-950">all agents.</span></div>
             <p className="mt-3 text-neutral-600">
               The value is participation. The bigger the professional network, the better the matches.
             </p>
@@ -306,24 +306,24 @@ function ProofCard({
 }) {
   return (
     <div 
-      className="rounded-3xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 transition-transform duration-200 relative"
+      className="rounded-3xl px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 transition-transform duration-200 relative"
       style={{
         background: `linear-gradient(270deg, rgba(22,163,74,0.02) 0%, rgba(22,163,74,0.01) 35%, rgba(255,255,255,0) 70%), #FFFFFF`
       }}
     >
-      <div className="absolute top-5 right-5">
+      <div className="absolute top-4 right-4">
         <div 
-          className="h-10 w-10 flex items-center justify-center"
+          className="h-8 w-8 flex items-center justify-center opacity-90"
           style={{
-            background: 'radial-gradient(circle, rgba(111, 184, 63, 0.05) 0%, transparent 70%)'
+            background: 'radial-gradient(circle, rgba(111, 184, 63, 0.04) 0%, transparent 70%)'
           }}
         >
-          <div className="text-emerald-600">{icon}</div>
+          <div className="text-emerald-600/90">{icon}</div>
         </div>
       </div>
-      <div className="mt-6">
-        <div className="text-base font-semibold tracking-tight text-neutral-900">{title}</div>
-        <p className="mt-2 text-sm text-neutral-600 leading-relaxed">{body}</p>
+      <div className="mt-4">
+        <div className="text-sm font-semibold tracking-tight text-neutral-900">{title}</div>
+        <p className="mt-1.5 text-sm text-neutral-600 leading-relaxed">{body}</p>
       </div>
     </div>
   );
