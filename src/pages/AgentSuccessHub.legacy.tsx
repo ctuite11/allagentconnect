@@ -468,8 +468,6 @@ export default function AgentSuccessHub() {
             HUB v2
           </span>
         </div>
-        {/* Hairline divider - Apple style */}
-        <div className="w-full mt-6" style={{ borderBottom: '1px solid #D2D2D7' }} />
 
         {/* Unified Hub Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
