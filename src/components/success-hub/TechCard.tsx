@@ -24,15 +24,12 @@ export const TechCard = ({
   return (
     <div
       className={cn(
-        "relative rounded-3xl p-6 cursor-pointer group",
+        "relative rounded-3xl p-6 cursor-pointer group bg-white",
         "shadow-[0_6px_18px_rgba(0,0,0,0.06)]",
         "hover:shadow-[0_14px_34px_rgba(0,0,0,0.10)] hover:-translate-y-1",
         "transition-all duration-200 ease-out",
         className
       )}
-      style={{
-        background: `linear-gradient(90deg, rgba(22,163,74,0.02) 0%, rgba(22,163,74,0.01) 35%, rgba(255,255,255,0) 70%), #FFFFFF`
-      }}
       onClick={onClick}
     >
       {/* Icon top-right with subtle green radial fade */}
