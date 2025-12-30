@@ -465,7 +465,7 @@ const AgentDashboard = () => {
   };
   
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" style={{ backgroundColor: '#FFFFFF' }}>
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24 max-w-7xl">
         {/* Hero Section */}
