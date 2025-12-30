@@ -18,7 +18,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-white text-neutral-900">
       <Navigation />
       <main className="pt-20 pb-12">
         {/* Hero */}
@@ -37,14 +37,14 @@ export default function Home() {
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => navigate("/auth")}
-                className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
+                className="inline-flex items-center justify-center rounded-2xl bg-neutral-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
               >
                 Get Access <ArrowRight className="ml-2 h-4 w-4" />
               </button>
 
               <a
                 href="#how"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-semibold text-neutral-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
               >
                 See How It Works
               </a>
@@ -72,7 +72,7 @@ export default function Home() {
 
       {/* Icon Benefits Strip */}
       <section className="mx-auto max-w-6xl px-5 py-8">
-        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-sm text-slate-600">
+        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-sm text-neutral-600">
           <span className="inline-flex items-center gap-2">
             <ShieldCheck className={cx("h-[18px] w-[18px]", ACCENT)} />
             Verified agents
@@ -93,7 +93,7 @@ export default function Home() {
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div>
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Built on proven closings — not theory.</h2>
-            <p className="mt-2 text-slate-600 max-w-2xl">
+            <p className="mt-2 text-neutral-600 max-w-2xl">
               This isn't a "new idea." It's a working network with real behavior, real outcomes, and a track record.
             </p>
           </div>
@@ -120,9 +120,9 @@ export default function Home() {
 
       {/* How it works */}
       <section id="how" className="mx-auto max-w-6xl px-5 py-10">
-        <div className="rounded-3xl border border-slate-200 bg-white p-7 sm:p-9 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+        <div className="rounded-3xl border border-neutral-200 bg-white p-7 sm:p-9 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">What actually happens here</h2>
-          <p className="mt-2 text-slate-600 max-w-2xl">
+          <p className="mt-2 text-neutral-600 max-w-2xl">
             Simple workflow. Serious intent. The fastest path from "need" to "signed."
           </p>
 
@@ -154,13 +154,13 @@ export default function Home() {
       {/* Access */}
       <section id="access" className="mx-auto max-w-6xl px-5 py-10 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
-          <div className="lg:col-span-3 rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <div className="lg:col-span-3 rounded-3xl border border-neutral-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
             <h3 className="text-xl font-semibold tracking-tight">Request access</h3>
-            <p className="mt-2 text-slate-600">
+            <p className="mt-2 text-neutral-600">
               We keep it professional. Verified agents only. No noise. No spam. Just a network that works.
             </p>
 
-            <ul className="mt-5 space-y-3 text-sm text-slate-600">
+            <ul className="mt-5 space-y-3 text-sm text-neutral-600">
               <li className="flex gap-3">
                 <span className={cx("mt-0.5", ACCENT)}>●</span>
                 Identity + license verification (fast)
@@ -178,35 +178,39 @@ export default function Home() {
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => navigate("/auth")}
-                className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
+                className="inline-flex items-center justify-center rounded-2xl bg-neutral-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
               >
                 Get Access <ArrowRight className="ml-2 h-4 w-4" />
               </button>
               <button
                 onClick={() => navigate("/agent-dashboard")}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-semibold text-neutral-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
               >
                 Learn more
               </button>
             </div>
           </div>
 
-          <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
-            <div className="text-xs text-slate-500">Positioning</div>
+          <div className="lg:col-span-2 rounded-3xl border border-neutral-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+            <div className="text-xs text-neutral-500">Positioning</div>
             <div className="mt-2 text-2xl font-semibold tracking-tight">Built for all agents.</div>
-            <p className="mt-3 text-slate-600">
+            <p className="mt-3 text-neutral-600">
               The value is participation. The bigger the professional network, the better the matches.
             </p>
 
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-neutral-50 p-5">
+            <div className="mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
               <div className="flex items-start gap-3">
-                <div className="relative mt-0.5">
+                <div 
+                  className="mt-0.5 h-8 w-8 flex items-center justify-center"
+                  style={{
+                    background: 'radial-gradient(circle, rgba(111, 184, 63, 0.05) 0%, transparent 70%)'
+                  }}
+                >
                   <ShieldCheck className={cx("h-5 w-5", ACCENT)} />
-                  <div className="absolute inset-0 -m-1.5 rounded-full bg-emerald-500/[0.04]" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-slate-900">Professional-first</div>
-                  <div className="text-sm text-slate-600">
+                  <div className="text-sm font-semibold text-neutral-900">Professional-first</div>
+                  <div className="text-sm text-neutral-600">
                     Verified identities, clean comms, and a culture built around closing.
                   </div>
                 </div>
@@ -218,23 +222,23 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200/70 bg-white">
+      <footer className="border-t border-neutral-200/70 bg-white">
         <div className="mx-auto max-w-6xl px-5 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="text-sm text-slate-600">
-            <span className="font-semibold text-slate-900">All Agent Connect</span> — where real deals get done.
-            <div className="mt-1 text-xs text-slate-500">© {new Date().getFullYear()} • Verified agents only</div>
+          <div className="text-sm text-neutral-600">
+            <span className="font-semibold text-neutral-900">All Agent Connect</span> — where real deals get done.
+            <div className="mt-1 text-xs text-neutral-500">© {new Date().getFullYear()} • Verified agents only</div>
           </div>
 
           <div className="flex items-center gap-4 text-sm">
-            <a className="text-slate-600 hover:text-slate-900 transition" href="/privacy">
+            <a className="text-neutral-600 hover:text-neutral-900 transition" href="/privacy">
               Privacy
             </a>
-            <a className="text-slate-600 hover:text-slate-900 transition" href="/terms">
+            <a className="text-neutral-600 hover:text-neutral-900 transition" href="/terms">
               Terms
             </a>
             <button
               onClick={() => navigate("/auth")}
-              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition"
+              className="inline-flex items-center justify-center rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition"
             >
               Get Access
             </button>
@@ -263,7 +267,7 @@ const TICKER_ITEMS = [
 
 function ActivityTicker() {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 h-10 border-t border-slate-200/70 bg-white/85 backdrop-blur overflow-hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 h-10 border-t border-neutral-200/70 bg-white/85 backdrop-blur overflow-hidden">
       <div 
         className="h-full flex items-center hover:[animation-play-state:paused] motion-reduce:animate-none motion-reduce:justify-center"
         style={{
@@ -273,7 +277,7 @@ function ActivityTicker() {
         {/* Duplicate content for seamless loop */}
         {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, idx) => (
           <span key={idx} className="flex items-center whitespace-nowrap">
-            <span className="text-xs text-slate-700 px-4">{item}</span>
+            <span className="text-xs text-neutral-700 px-4">{item}</span>
             <span className="text-emerald-500">•</span>
           </span>
         ))}
