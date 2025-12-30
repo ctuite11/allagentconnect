@@ -11,7 +11,7 @@ const DEBUG_VISIBLE = false;
 
 // Brand colors
 const LINE_COLOR = '#059669'; // emerald-600
-const DOT_COLOR = '#525252';  // neutral-600
+const DOT_COLOR = '#94A3B8';  // slate-400 (matches "Connect" in logo)
 
 const NetworkGlobe = () => {
   // Generate network nodes in a spherical distribution
