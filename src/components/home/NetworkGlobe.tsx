@@ -80,7 +80,7 @@ const NetworkGlobe = () => {
               y1={line.y1}
               x2={line.x2}
               y2={line.y2}
-              stroke="#16a34a"
+              stroke="#000000"
               strokeWidth="0.5"
               opacity={line.opacity}
             />
@@ -93,7 +93,7 @@ const NetworkGlobe = () => {
               cx={node.x}
               cy={node.y}
               r={node.z > 0 ? 2 : 1.5}
-              fill="#16a34a"
+              fill="#000000"
               opacity={0.3 + node.z * 0.3}
             />
           ))}
@@ -105,7 +105,7 @@ const NetworkGlobe = () => {
             rx="120"
             ry="40"
             fill="none"
-            stroke="#16a34a"
+            stroke="#000000"
             strokeWidth="0.3"
             opacity="0.3"
           />
@@ -115,7 +115,7 @@ const NetworkGlobe = () => {
             rx="100"
             ry="100"
             fill="none"
-            stroke="#16a34a"
+            stroke="#000000"
             strokeWidth="0.3"
             opacity="0.2"
           />
