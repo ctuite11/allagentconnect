@@ -146,12 +146,14 @@ const NetworkGlobe = () => {
             opacity={DEBUG_VISIBLE ? 0.4 : 0.4}
           />
           
-          {/* Shooting star on horizontal ellipse */}
+          {/* Shooting star on horizontal ellipse - active first half of 8s cycle */}
           <circle r="4" fill="white" filter="url(#starGlow)">
             <animateMotion
               dur="4s"
               repeatCount="indefinite"
+              begin="0s; starCircle.end"
               path="M30,150 A120,40 0 1,0 270,150 A120,40 0 1,0 30,150"
+              id="starEllipse"
             />
             <animate
               attributeName="opacity"
@@ -159,16 +161,18 @@ const NetworkGlobe = () => {
               keyTimes="0;0.1;0.5;0.8;1"
               dur="4s"
               repeatCount="indefinite"
+              begin="0s; starCircle.end"
             />
           </circle>
           
-          {/* Shooting star on circular ring - offset timing */}
+          {/* Shooting star on circular ring - starts when ellipse finishes */}
           <circle r="4" fill="white" filter="url(#starGlow)">
             <animateMotion
               dur="4s"
               repeatCount="indefinite"
-              begin="2s"
+              begin="starEllipse.end"
               path="M50,150 A100,100 0 1,0 250,150 A100,100 0 1,0 50,150"
+              id="starCircle"
             />
             <animate
               attributeName="opacity"
@@ -176,7 +180,7 @@ const NetworkGlobe = () => {
               keyTimes="0;0.1;0.5;0.8;1"
               dur="4s"
               repeatCount="indefinite"
-              begin="2s"
+              begin="starEllipse.end"
             />
           </circle>
         </svg>
