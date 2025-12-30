@@ -161,6 +161,24 @@ const NetworkGlobe = () => {
               repeatCount="indefinite"
             />
           </circle>
+          
+          {/* Shooting star on circular ring - offset timing */}
+          <circle r="4" fill="white" filter="url(#starGlow)">
+            <animateMotion
+              dur="4s"
+              repeatCount="indefinite"
+              begin="2s"
+              path="M50,150 A100,100 0 1,0 250,150 A100,100 0 1,0 50,150"
+            />
+            <animate
+              attributeName="opacity"
+              values="0;1;1;0.8;0"
+              keyTimes="0;0.1;0.5;0.8;1"
+              dur="4s"
+              repeatCount="indefinite"
+              begin="2s"
+            />
+          </circle>
         </svg>
       </div>
       
