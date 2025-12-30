@@ -9,9 +9,9 @@ import React from 'react';
 // Toggle this to true for placement/sizing assessment
 const DEBUG_VISIBLE = false;
 
-// Brand colors
-const LINE_COLOR = '#059669'; // emerald-600
-const DOT_COLOR = '#6B7280';  // gray-500
+// Brand colors (use design tokens)
+const LINE_COLOR = 'hsl(var(--primary))';
+const DOT_COLOR = 'hsl(var(--muted-foreground))';
 
 const NetworkGlobe = () => {
   // Generate network nodes in a spherical distribution
@@ -49,7 +49,8 @@ const NetworkGlobe = () => {
             y1: nodes[i].y,
             x2: nodes[j].x,
             y2: nodes[j].y,
-            opacity: DEBUG_VISIBLE ? 0.5 : (1 - dist / 100) * 1.0
+            // Keep a minimum visibility so we don't get "faded" near-threshold lines
+            opacity: DEBUG_VISIBLE ? 0.5 : 0.25 + (1 - dist / 100) * 0.75
           });
         }
       }
@@ -58,7 +59,7 @@ const NetworkGlobe = () => {
   }, [nodes]);
 
   // Debug vs production styles
-  const svgOpacity = DEBUG_VISIBLE ? 0.55 : 0.9;
+  const svgOpacity = DEBUG_VISIBLE ? 0.55 : 1;
   const lineStrokeWidth = DEBUG_VISIBLE ? 1.5 : 2;
   const ringStrokeWidth = DEBUG_VISIBLE ? 1 : 1.5;
   const nodeRadius = DEBUG_VISIBLE ? { large: 4, small: 3 } : { large: 4, small: 3.5 };
@@ -120,7 +121,12 @@ const NetworkGlobe = () => {
               cy={node.y}
               r={node.z > 0 ? nodeRadius.large : nodeRadius.small}
               fill={DOT_COLOR}
-              opacity={DEBUG_VISIBLE ? 0.7 : 0.8 + node.z * 0.2}
+              opacity={
+                DEBUG_VISIBLE
+                  ? 0.7
+                  : // Map z (-1..1) to opacity (0.8..1.0)
+                    0.8 + ((node.z + 1) / 2) * 0.2
+              }
             />
           ))}
           
