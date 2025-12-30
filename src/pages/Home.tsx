@@ -37,14 +37,14 @@ export default function Home() {
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => navigate("/auth")}
-                className="inline-flex items-center justify-center rounded-2xl bg-neutral-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
+                className="inline-flex items-center justify-center rounded-2xl bg-[#111827] px-6 py-3 text-sm font-semibold text-white hover:-translate-y-0.5 transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20"
               >
                 Get Access <ArrowRight className="ml-2 h-4 w-4" />
               </button>
 
               <a
                 href="#how"
-                className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-semibold text-neutral-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                className="inline-flex items-center justify-center rounded-2xl border border-[#E5E5EA] bg-white px-6 py-3 text-sm font-semibold text-[#1D1D1F] hover:bg-black/[0.02] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10"
               >
                 See How It Works
               </a>
@@ -120,7 +120,7 @@ export default function Home() {
 
       {/* How it works */}
       <section id="how" className="mx-auto max-w-6xl px-5 py-10">
-        <div className="rounded-3xl border border-neutral-200 bg-white p-7 sm:p-9 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+        <div className="rounded-3xl bg-white p-7 sm:p-9 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">What actually happens here</h2>
           <p className="mt-2 text-neutral-600 max-w-2xl">
             Simple workflow. Serious intent. The fastest path from "need" to "signed."
@@ -154,7 +154,7 @@ export default function Home() {
       {/* Access */}
       <section id="access" className="mx-auto max-w-6xl px-5 py-10 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
-          <div className="lg:col-span-3 rounded-3xl border border-neutral-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <div className="lg:col-span-3 rounded-3xl bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <h3 className="text-xl font-semibold tracking-tight">Request access</h3>
             <p className="mt-2 text-neutral-600">
               We keep it professional. Verified agents only. No noise. No spam. Just a network that works.
@@ -178,27 +178,27 @@ export default function Home() {
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => navigate("/auth")}
-                className="inline-flex items-center justify-center rounded-2xl bg-neutral-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition"
+                className="inline-flex items-center justify-center rounded-2xl bg-[#111827] px-6 py-3 text-sm font-semibold text-white hover:-translate-y-0.5 transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20"
               >
                 Get Access <ArrowRight className="ml-2 h-4 w-4" />
               </button>
               <button
                 onClick={() => navigate("/agent-dashboard")}
-                className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-semibold text-neutral-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                className="inline-flex items-center justify-center rounded-2xl border border-[#E5E5EA] bg-white px-6 py-3 text-sm font-semibold text-[#1D1D1F] hover:bg-black/[0.02] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10"
               >
                 Learn more
               </button>
             </div>
           </div>
 
-          <div className="lg:col-span-2 rounded-3xl border border-neutral-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <div className="lg:col-span-2 rounded-3xl bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <div className="text-xs text-neutral-500">Positioning</div>
             <div className="mt-2 text-2xl font-semibold tracking-tight">Built for all agents.</div>
             <p className="mt-3 text-neutral-600">
               The value is participation. The bigger the professional network, the better the matches.
             </p>
 
-            <div className="mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
+            <div className="mt-6 rounded-2xl bg-neutral-50 p-5">
               <div className="flex items-start gap-3">
                 <div 
                   className="mt-0.5 h-8 w-8 flex items-center justify-center"
@@ -238,7 +238,7 @@ export default function Home() {
             </a>
             <button
               onClick={() => navigate("/auth")}
-              className="inline-flex items-center justify-center rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition"
+              className="inline-flex items-center justify-center rounded-xl bg-[#111827] px-4 py-2 text-sm font-semibold text-white hover:-translate-y-0.5 transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20"
             >
               Get Access
             </button>
@@ -305,7 +305,12 @@ function ProofCard({
   body: string;
 }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-[0_6px_18px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition relative">
+    <div 
+      className="rounded-3xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 transition-transform duration-200 relative"
+      style={{
+        background: `linear-gradient(270deg, rgba(22,163,74,0.02) 0%, rgba(22,163,74,0.01) 35%, rgba(255,255,255,0) 70%), #FFFFFF`
+      }}
+    >
       <div className="absolute top-5 right-5">
         <div 
           className="h-10 w-10 flex items-center justify-center"
@@ -334,7 +339,12 @@ function HowCard({
   body: string;
 }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition relative">
+    <div 
+      className="rounded-3xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 transition-transform duration-200 relative"
+      style={{
+        background: `linear-gradient(270deg, rgba(22,163,74,0.02) 0%, rgba(22,163,74,0.01) 35%, rgba(255,255,255,0) 70%), #FFFFFF`
+      }}
+    >
       <div className="absolute top-5 right-5">
         <div 
           className="h-10 w-10 flex items-center justify-center"
