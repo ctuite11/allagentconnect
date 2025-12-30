@@ -386,7 +386,7 @@ export default function AgentSuccessHub() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8]">
+      <div className="min-h-screen bg-white" style={{ backgroundColor: '#FFFFFF' }}>
         <Navigation />
         <div className="flex-1 flex items-center justify-center pt-20 min-h-[80vh]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
@@ -452,7 +452,7 @@ export default function AgentSuccessHub() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-slate-900">
+    <div className="min-h-screen bg-white text-slate-900" style={{ backgroundColor: '#FFFFFF' }}>
       <Navigation />
       <div className="mx-auto max-w-6xl px-5 py-8 pt-28 space-y-10">
         {/* Header */}
