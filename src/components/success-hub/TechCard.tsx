@@ -24,7 +24,7 @@ export const TechCard = ({
   return (
     <div
       className={cn(
-        "rounded-3xl border border-neutral-200 bg-white p-6 cursor-pointer group",
+        "relative rounded-3xl border border-neutral-200 bg-white p-6 cursor-pointer group",
         "shadow-[0_6px_18px_rgba(0,0,0,0.06)]",
         "hover:shadow-[0_14px_34px_rgba(0,0,0,0.10)] hover:-translate-y-1 hover:border-neutral-300",
         "transition-all duration-200 ease-out",
@@ -32,13 +32,20 @@ export const TechCard = ({
       )}
       onClick={onClick}
     >
-      {/* Icon with Home-style container */}
-      <div className="h-10 w-10 rounded-2xl border border-neutral-200 bg-neutral-50 flex items-center justify-center mb-4">
-        <div className="text-emerald-600">{icon}</div>
+      {/* Icon top-right with subtle green radial fade */}
+      <div className="absolute top-5 right-5">
+        <div 
+          className="relative h-10 w-10 flex items-center justify-center"
+          style={{
+            background: 'radial-gradient(circle, rgba(111, 184, 63, 0.05) 0%, transparent 70%)'
+          }}
+        >
+          <div className="text-emerald-600">{icon}</div>
+        </div>
       </div>
 
-      {/* Title */}
-      <h3 className="text-base font-semibold tracking-tight text-slate-900 mb-2">{title}</h3>
+      {/* Title - add top margin to account for icon position */}
+      <h3 className="text-base font-semibold tracking-tight text-slate-900 mb-2 mt-8">{title}</h3>
 
       {/* Description */}
       <p className="text-sm text-slate-600 mb-4 line-clamp-2">{description}</p>
