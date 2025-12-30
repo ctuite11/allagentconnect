@@ -99,12 +99,16 @@ const NetworkGlobe = () => {
             </filter>
             <linearGradient id="tailGradient1" x1="0%" y1="50%" x2="100%" y2="50%">
               <stop offset="0%" stopColor="white" stopOpacity="0"/>
-              <stop offset="70%" stopColor="white" stopOpacity="0.6"/>
+              <stop offset="30%" stopColor="white" stopOpacity="0.2"/>
+              <stop offset="60%" stopColor="white" stopOpacity="0.5"/>
+              <stop offset="85%" stopColor="white" stopOpacity="0.8"/>
               <stop offset="100%" stopColor="white" stopOpacity="1"/>
             </linearGradient>
             <linearGradient id="tailGradient2" x1="0%" y1="50%" x2="100%" y2="50%">
               <stop offset="0%" stopColor="white" stopOpacity="0"/>
-              <stop offset="70%" stopColor="white" stopOpacity="0.6"/>
+              <stop offset="30%" stopColor="white" stopOpacity="0.2"/>
+              <stop offset="60%" stopColor="white" stopOpacity="0.5"/>
+              <stop offset="85%" stopColor="white" stopOpacity="0.8"/>
               <stop offset="100%" stopColor="white" stopOpacity="1"/>
             </linearGradient>
           </defs>
@@ -160,7 +164,7 @@ const NetworkGlobe = () => {
           {/* Shooting star on horizontal ellipse with tail */}
           <g>
             {/* Tail */}
-            <line x1="0" y1="0" x2="-30" y2="0" stroke="url(#tailGradient1)" strokeWidth="2" strokeLinecap="round">
+            <line x1="0" y1="0" x2="-70" y2="0" stroke="url(#tailGradient1)" strokeWidth="2.5" strokeLinecap="round">
               <animateMotion
                 dur="4s"
                 repeatCount="indefinite"
@@ -197,7 +201,7 @@ const NetworkGlobe = () => {
           {/* Shooting star on circular ring with tail */}
           <g>
             {/* Tail */}
-            <line x1="0" y1="0" x2="-30" y2="0" stroke="url(#tailGradient2)" strokeWidth="2" strokeLinecap="round">
+            <line x1="0" y1="0" x2="-70" y2="0" stroke="url(#tailGradient2)" strokeWidth="2.5" strokeLinecap="round">
               <animateMotion
                 dur="4s"
                 repeatCount="indefinite"
