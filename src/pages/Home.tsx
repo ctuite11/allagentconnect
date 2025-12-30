@@ -8,6 +8,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import NetworkGlobe from "@/components/home/NetworkGlobe";
 import heroEditorial from "@/assets/hero-editorial.png";
 
 const cx = (...c: Array<string | false | undefined | null>) => c.filter(Boolean).join(" ");
@@ -22,8 +23,10 @@ export default function Home() {
       <Navigation />
       <main className="pt-20 pb-12">
         {/* Hero */}
-        <section className="mx-auto max-w-6xl px-5 pt-14 pb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <section className="mx-auto max-w-6xl px-5 pt-14 pb-10 relative">
+        {/* Network globe - desktop only, behind content */}
+        <NetworkGlobe />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
           {/* Copy */}
           <div>
             <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-neutral-900">
