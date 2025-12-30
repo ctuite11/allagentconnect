@@ -9,9 +9,9 @@ import React from 'react';
 // Toggle this to true for placement/sizing assessment
 const DEBUG_VISIBLE = false;
 
-// Brand colors (use design tokens)
-const LINE_COLOR = 'hsl(var(--primary))';
-const DOT_COLOR = 'hsl(var(--muted-foreground))';
+// Brand colors
+const LINE_COLOR = '#059669'; // emerald-600
+const DOT_COLOR = '#525252';  // neutral-600
 
 const NetworkGlobe = () => {
   // Generate network nodes in a spherical distribution
