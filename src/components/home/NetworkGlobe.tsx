@@ -88,15 +88,25 @@ const NetworkGlobe = () => {
             opacity: svgOpacity
           }}
         >
-          {/* Glow filter for shooting star */}
+          {/* Glow filter and gradient for shooting star tail */}
           <defs>
-            <filter id="starGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur"/>
+            <filter id="starGlow" x="-200%" y="-100%" width="400%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur"/>
               <feMerge>
                 <feMergeNode in="blur"/>
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
+            <linearGradient id="tailGradient1" x1="0%" y1="50%" x2="100%" y2="50%">
+              <stop offset="0%" stopColor="white" stopOpacity="0"/>
+              <stop offset="70%" stopColor="white" stopOpacity="0.6"/>
+              <stop offset="100%" stopColor="white" stopOpacity="1"/>
+            </linearGradient>
+            <linearGradient id="tailGradient2" x1="0%" y1="50%" x2="100%" y2="50%">
+              <stop offset="0%" stopColor="white" stopOpacity="0"/>
+              <stop offset="70%" stopColor="white" stopOpacity="0.6"/>
+              <stop offset="100%" stopColor="white" stopOpacity="1"/>
+            </linearGradient>
           </defs>
           
           {/* Connection lines */}
@@ -121,12 +131,7 @@ const NetworkGlobe = () => {
               cy={node.y}
               r={node.z > 0 ? nodeRadius.large : nodeRadius.small}
               fill={DOT_COLOR}
-              opacity={
-                DEBUG_VISIBLE
-                  ? 0.7
-                  : // Map z (-1..1) to opacity (0.8..1.0)
-                    0.8 + ((node.z + 1) / 2) * 0.2
-              }
+              opacity={1}
             />
           ))}
           
@@ -152,39 +157,79 @@ const NetworkGlobe = () => {
             opacity={DEBUG_VISIBLE ? 0.4 : 0.7}
           />
           
-          {/* Shooting star on horizontal ellipse - visible first 4s of 8s cycle */}
-          <circle r="4" fill="white" filter="url(#starGlow)">
-            <animateMotion
-              dur="4s"
-              repeatCount="indefinite"
-              begin="0s; 8s"
-              path="M30,150 A120,40 0 1,0 270,150 A120,40 0 1,0 30,150"
-            />
-            <animate
-              attributeName="opacity"
-              values="0;1;1;0.8;0;0"
-              keyTimes="0;0.05;0.4;0.45;0.5;1"
-              dur="8s"
-              repeatCount="indefinite"
-            />
-          </circle>
+          {/* Shooting star on horizontal ellipse with tail */}
+          <g>
+            {/* Tail */}
+            <line x1="0" y1="0" x2="-30" y2="0" stroke="url(#tailGradient1)" strokeWidth="2" strokeLinecap="round">
+              <animateMotion
+                dur="4s"
+                repeatCount="indefinite"
+                begin="0s; 8s"
+                path="M30,150 A120,40 0 1,0 270,150 A120,40 0 1,0 30,150"
+                rotate="auto"
+              />
+              <animate
+                attributeName="opacity"
+                values="0;1;1;0.8;0;0"
+                keyTimes="0;0.05;0.4;0.45;0.5;1"
+                dur="8s"
+                repeatCount="indefinite"
+              />
+            </line>
+            {/* Head */}
+            <circle r="3" fill="white" filter="url(#starGlow)">
+              <animateMotion
+                dur="4s"
+                repeatCount="indefinite"
+                begin="0s; 8s"
+                path="M30,150 A120,40 0 1,0 270,150 A120,40 0 1,0 30,150"
+              />
+              <animate
+                attributeName="opacity"
+                values="0;1;1;0.8;0;0"
+                keyTimes="0;0.05;0.4;0.45;0.5;1"
+                dur="8s"
+                repeatCount="indefinite"
+              />
+            </circle>
+          </g>
           
-          {/* Shooting star on circular ring - visible second 4s of 8s cycle */}
-          <circle r="4" fill="white" filter="url(#starGlow)">
-            <animateMotion
-              dur="4s"
-              repeatCount="indefinite"
-              begin="4s; 12s"
-              path="M50,150 A100,100 0 1,0 250,150 A100,100 0 1,0 50,150"
-            />
-            <animate
-              attributeName="opacity"
-              values="0;0;1;1;0.8;0"
-              keyTimes="0;0.5;0.55;0.9;0.95;1"
-              dur="8s"
-              repeatCount="indefinite"
-            />
-          </circle>
+          {/* Shooting star on circular ring with tail */}
+          <g>
+            {/* Tail */}
+            <line x1="0" y1="0" x2="-30" y2="0" stroke="url(#tailGradient2)" strokeWidth="2" strokeLinecap="round">
+              <animateMotion
+                dur="4s"
+                repeatCount="indefinite"
+                begin="4s; 12s"
+                path="M50,150 A100,100 0 1,0 250,150 A100,100 0 1,0 50,150"
+                rotate="auto"
+              />
+              <animate
+                attributeName="opacity"
+                values="0;0;1;1;0.8;0"
+                keyTimes="0;0.5;0.55;0.9;0.95;1"
+                dur="8s"
+                repeatCount="indefinite"
+              />
+            </line>
+            {/* Head */}
+            <circle r="3" fill="white" filter="url(#starGlow)">
+              <animateMotion
+                dur="4s"
+                repeatCount="indefinite"
+                begin="4s; 12s"
+                path="M50,150 A100,100 0 1,0 250,150 A100,100 0 1,0 50,150"
+              />
+              <animate
+                attributeName="opacity"
+                values="0;0;1;1;0.8;0"
+                keyTimes="0;0.5;0.55;0.9;0.95;1"
+                dur="8s"
+                repeatCount="indefinite"
+              />
+            </circle>
+          </g>
         </svg>
       </div>
       
