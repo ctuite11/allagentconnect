@@ -49,7 +49,7 @@ const NetworkGlobe = () => {
             y1: nodes[i].y,
             x2: nodes[j].x,
             y2: nodes[j].y,
-            opacity: DEBUG_VISIBLE ? 0.5 : (1 - dist / 100) * 0.6
+            opacity: DEBUG_VISIBLE ? 0.5 : (1 - dist / 100) * 1.0
           });
         }
       }
@@ -58,10 +58,10 @@ const NetworkGlobe = () => {
   }, [nodes]);
 
   // Debug vs production styles
-  const svgOpacity = DEBUG_VISIBLE ? 0.55 : 0.7;
-  const lineStrokeWidth = DEBUG_VISIBLE ? 1.5 : 1.5;
-  const ringStrokeWidth = DEBUG_VISIBLE ? 1 : 1;
-  const nodeRadius = DEBUG_VISIBLE ? { large: 4, small: 3 } : { large: 3, small: 2.5 };
+  const svgOpacity = DEBUG_VISIBLE ? 0.55 : 0.9;
+  const lineStrokeWidth = DEBUG_VISIBLE ? 1.5 : 2;
+  const ringStrokeWidth = DEBUG_VISIBLE ? 1 : 1.5;
+  const nodeRadius = DEBUG_VISIBLE ? { large: 4, small: 3 } : { large: 4, small: 3.5 };
 
   return (
     <div 
@@ -120,7 +120,7 @@ const NetworkGlobe = () => {
               cy={node.y}
               r={node.z > 0 ? nodeRadius.large : nodeRadius.small}
               fill={DOT_COLOR}
-              opacity={DEBUG_VISIBLE ? 0.7 : 0.6 + node.z * 0.3}
+              opacity={DEBUG_VISIBLE ? 0.7 : 0.8 + node.z * 0.2}
             />
           ))}
           
@@ -133,7 +133,7 @@ const NetworkGlobe = () => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={DEBUG_VISIBLE ? 0.5 : 0.5}
+            opacity={DEBUG_VISIBLE ? 0.5 : 0.8}
           />
           <ellipse
             cx="150"
@@ -143,7 +143,7 @@ const NetworkGlobe = () => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={DEBUG_VISIBLE ? 0.4 : 0.4}
+            opacity={DEBUG_VISIBLE ? 0.4 : 0.7}
           />
           
           {/* Shooting star on horizontal ellipse - visible first 4s of 8s cycle */}
