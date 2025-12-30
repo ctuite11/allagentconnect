@@ -58,10 +58,10 @@ const NetworkGlobe = () => {
   }, [nodes]);
 
   // Debug vs production styles
-  const svgOpacity = DEBUG_VISIBLE ? 0.55 : 0.35;
-  const lineStrokeWidth = DEBUG_VISIBLE ? 1.5 : 1;
-  const ringStrokeWidth = DEBUG_VISIBLE ? 1 : 0.6;
-  const nodeRadius = DEBUG_VISIBLE ? { large: 4, small: 3 } : { large: 2, small: 1.5 };
+  const svgOpacity = DEBUG_VISIBLE ? 0.55 : 0.7;
+  const lineStrokeWidth = DEBUG_VISIBLE ? 1.5 : 1.5;
+  const ringStrokeWidth = DEBUG_VISIBLE ? 1 : 1;
+  const nodeRadius = DEBUG_VISIBLE ? { large: 4, small: 3 } : { large: 3, small: 2.5 };
 
   return (
     <div 
@@ -87,6 +87,17 @@ const NetworkGlobe = () => {
             opacity: svgOpacity
           }}
         >
+          {/* Glow filter for shooting star */}
+          <defs>
+            <filter id="starGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          
           {/* Connection lines */}
           {connections.map((line, i) => (
             <line
@@ -109,7 +120,7 @@ const NetworkGlobe = () => {
               cy={node.y}
               r={node.z > 0 ? nodeRadius.large : nodeRadius.small}
               fill={DOT_COLOR}
-              opacity={DEBUG_VISIBLE ? 0.7 : 0.4 + node.z * 0.3}
+              opacity={DEBUG_VISIBLE ? 0.7 : 0.6 + node.z * 0.3}
             />
           ))}
           
@@ -122,7 +133,7 @@ const NetworkGlobe = () => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={DEBUG_VISIBLE ? 0.5 : 0.3}
+            opacity={DEBUG_VISIBLE ? 0.5 : 0.5}
           />
           <ellipse
             cx="150"
@@ -132,8 +143,24 @@ const NetworkGlobe = () => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={DEBUG_VISIBLE ? 0.4 : 0.2}
+            opacity={DEBUG_VISIBLE ? 0.4 : 0.4}
           />
+          
+          {/* Shooting star on horizontal ellipse */}
+          <circle r="4" fill="white" filter="url(#starGlow)">
+            <animateMotion
+              dur="4s"
+              repeatCount="indefinite"
+              path="M30,150 A120,40 0 1,0 270,150 A120,40 0 1,0 30,150"
+            />
+            <animate
+              attributeName="opacity"
+              values="0;1;1;0.8;0"
+              keyTimes="0;0.1;0.5;0.8;1"
+              dur="4s"
+              repeatCount="indefinite"
+            />
+          </circle>
         </svg>
       </div>
       
