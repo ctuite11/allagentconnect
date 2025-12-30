@@ -301,16 +301,20 @@ function ProofCard({
   body: string;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition relative">
+    <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-[0_6px_18px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition relative">
       <div className="absolute top-5 right-5">
-        <div className="relative">
-          {icon}
-          <div className="absolute inset-0 -m-2 rounded-full bg-emerald-500/[0.04]" />
+        <div 
+          className="h-10 w-10 flex items-center justify-center"
+          style={{
+            background: 'radial-gradient(circle, rgba(111, 184, 63, 0.05) 0%, transparent 70%)'
+          }}
+        >
+          <div className="text-emerald-600">{icon}</div>
         </div>
       </div>
       <div className="mt-6">
-        <div className="text-base font-semibold tracking-tight">{title}</div>
-        <p className="mt-2 text-sm text-slate-600 leading-relaxed">{body}</p>
+        <div className="text-base font-semibold tracking-tight text-neutral-900">{title}</div>
+        <p className="mt-2 text-sm text-neutral-600 leading-relaxed">{body}</p>
       </div>
     </div>
   );
@@ -326,16 +330,20 @@ function HowCard({
   body: string;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition relative">
+    <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition relative">
       <div className="absolute top-5 right-5">
-        <div className="relative">
-          {icon}
-          <div className="absolute inset-0 -m-2 rounded-full bg-emerald-500/[0.04]" />
+        <div 
+          className="h-10 w-10 flex items-center justify-center"
+          style={{
+            background: 'radial-gradient(circle, rgba(111, 184, 63, 0.05) 0%, transparent 70%)'
+          }}
+        >
+          <div className="text-emerald-600">{icon}</div>
         </div>
       </div>
       <div className="mt-6">
-        <div className="text-base font-semibold tracking-tight">{title}</div>
-        <p className="mt-2 text-sm text-slate-600 leading-relaxed">{body}</p>
+        <div className="text-base font-semibold tracking-tight text-neutral-900">{title}</div>
+        <p className="mt-2 text-sm text-neutral-600 leading-relaxed">{body}</p>
       </div>
     </div>
   );
