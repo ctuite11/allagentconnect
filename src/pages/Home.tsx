@@ -28,13 +28,13 @@ export default function Home() {
         <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
           {/* Copy */}
           <div className="max-w-xl">
-            <h1 className="font-display text-5xl sm:text-6xl font-semibold tracking-tight text-neutral-900">
+            <h1 className="font-display text-5xl sm:text-6xl font-semibold tracking-normal" style={{ color: '#1D1D1F' }}>
               <span className="whitespace-nowrap">By Agents. For Agents.</span>
               <br />
               <span style={{ color: '#94A3B8' }}>All Agents.</span>
             </h1>
 
-            <div className="mt-3 text-lg sm:text-xl font-semibold tracking-tight text-neutral-900">
+            <div className="mt-5 text-lg sm:text-xl font-medium tracking-normal" style={{ color: '#1D1D1F' }}>
               Where real deals get done.
             </div>
 
@@ -62,7 +62,7 @@ export default function Home() {
 
       {/* Icon Benefits Strip */}
       <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-8">
-        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-sm text-neutral-600">
+        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-sm" style={{ color: '#86868B' }}>
           <span className="inline-flex items-center gap-2">
             <ShieldCheck className={cx("h-[18px] w-[18px]", ACCENT)} />
             Verified agents
@@ -82,8 +82,8 @@ export default function Home() {
       <section id="proof" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Built on proven closings — not theory.</h2>
-            <p className="mt-2 text-neutral-600 max-w-2xl">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Built on proven closings — not theory.</h2>
+            <p className="mt-2 max-w-2xl" style={{ color: '#86868B' }}>
               This isn't a "new idea." It's a working network with real behavior, real outcomes, and a track record.
             </p>
           </div>
@@ -111,8 +111,8 @@ export default function Home() {
       {/* How it works */}
       <section id="how" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
         <div className="rounded-3xl bg-white p-7 sm:p-9 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">What actually happens here</h2>
-          <p className="mt-2 text-neutral-600 max-w-2xl">
+          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>What actually happens here</h2>
+          <p className="mt-2 max-w-2xl" style={{ color: '#86868B' }}>
             Simple workflow. Serious intent. The fastest path from "need" to "signed."
           </p>
 
@@ -145,12 +145,12 @@ export default function Home() {
       <section id="access" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
           <div className="lg:col-span-3 rounded-3xl bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-            <h3 className="text-xl font-semibold tracking-tight">Request access</h3>
-            <p className="mt-2 text-neutral-600">
+            <h3 className="text-xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Request access</h3>
+            <p className="mt-2" style={{ color: '#86868B' }}>
               We keep it professional. Verified agents only. No noise. No spam. Just a network that works.
             </p>
 
-            <ul className="mt-5 space-y-3 text-sm text-neutral-600">
+            <ul className="mt-5 space-y-3 text-sm" style={{ color: '#86868B' }}>
               <li className="flex gap-3">
                 <span className={cx("mt-0.5", ACCENT)}>●</span>
                 Identity + license verification (fast)
@@ -182,9 +182,9 @@ export default function Home() {
           </div>
 
           <div className="lg:col-span-2 rounded-3xl bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-            <div className="text-xs text-neutral-500">Positioning</div>
-            <div className="mt-2 text-2xl font-semibold tracking-tight">Built for <span className="text-neutral-950">all agents.</span></div>
-            <p className="mt-3 text-neutral-600">
+            <div className="text-xs" style={{ color: '#86868B' }}>Positioning</div>
+            <div className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Built for <span style={{ color: '#94A3B8' }}>all agents.</span></div>
+            <p className="mt-3" style={{ color: '#86868B' }}>
               The value is participation. The bigger the professional network, the better the matches.
             </p>
 
@@ -199,8 +199,8 @@ export default function Home() {
                   <ShieldCheck className={cx("h-5 w-5", ACCENT)} />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-neutral-900">Professional-first</div>
-                  <div className="text-sm text-neutral-600">
+                  <div className="text-sm font-semibold" style={{ color: '#1D1D1F' }}>Professional-first</div>
+                  <div className="text-sm" style={{ color: '#86868B' }}>
                     Verified identities, clean comms, and a culture built around closing.
                   </div>
                 </div>
@@ -312,8 +312,8 @@ function ProofCard({
         </div>
       </div>
       <div className="mt-4">
-        <div className="text-sm font-semibold tracking-tight text-neutral-900">{title}</div>
-        <p className="mt-1.5 text-sm text-neutral-600 leading-relaxed">{body}</p>
+        <div className="text-sm font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>{title}</div>
+        <p className="mt-1.5 text-sm leading-relaxed" style={{ color: '#86868B' }}>{body}</p>
       </div>
     </div>
   );
@@ -346,8 +346,8 @@ function HowCard({
         </div>
       </div>
       <div className="mt-6">
-        <div className="text-base font-semibold tracking-tight text-neutral-900">{title}</div>
-        <p className="mt-2 text-sm text-neutral-600 leading-relaxed">{body}</p>
+        <div className="text-base font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>{title}</div>
+        <p className="mt-2 text-sm leading-relaxed" style={{ color: '#86868B' }}>{body}</p>
       </div>
     </div>
   );
