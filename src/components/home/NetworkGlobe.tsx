@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 /**
  * Subtle network sphere animation for homepage hero
- * Cloudflare-inspired, infrastructure feel
+ * Calm, ambient, infrastructure feel
  * Desktop only, purely decorative
  */
 
@@ -12,8 +12,12 @@ const DEBUG_VISIBLE = false;
 // Brand colors
 const LINE_COLOR = '#059669'; // emerald-600
 const DOT_COLOR = '#94A3B8';  // slate-400 (matches "Connect" in logo)
+const PULSE_GREEN = '#059669'; // emerald-600 for green pulses
 
 const NetworkGlobe = () => {
+  // Track which nodes are currently pulsing
+  const [pulsingNodes, setPulsingNodes] = useState<Map<number, 'green' | 'white'>>(new Map());
+
   // Generate network nodes in a spherical distribution
   const nodes = React.useMemo(() => {
     const points: { x: number; y: number; z: number }[] = [];
@@ -43,13 +47,12 @@ const NetworkGlobe = () => {
           Math.pow(nodes[i].y - nodes[j].y, 2)
         );
         
-          if (dist < 100) {
+        if (dist < 100) {
           lines.push({
             x1: nodes[i].x,
             y1: nodes[i].y,
             x2: nodes[j].x,
             y2: nodes[j].y,
-            // Keep a minimum visibility so we don't get "faded" near-threshold lines
             opacity: DEBUG_VISIBLE ? 0.5 : 0.25 + (1 - dist / 100) * 0.75
           });
         }
@@ -57,6 +60,47 @@ const NetworkGlobe = () => {
     }
     return lines;
   }, [nodes]);
+
+  // Random node pulse effect
+  useEffect(() => {
+    const triggerPulse = () => {
+      const nodeIndex = Math.floor(Math.random() * nodes.length);
+      
+      // 90% chance green, 10% chance white
+      const pulseType: 'green' | 'white' = Math.random() < 0.9 ? 'green' : 'white';
+      const duration = pulseType === 'green' 
+        ? 200 + Math.random() * 100  // 200-300ms for green
+        : 120 + Math.random() * 60;   // 120-180ms for white
+      
+      setPulsingNodes(prev => {
+        const next = new Map(prev);
+        next.set(nodeIndex, pulseType);
+        return next;
+      });
+      
+      // Remove pulse after duration
+      setTimeout(() => {
+        setPulsingNodes(prev => {
+          const next = new Map(prev);
+          next.delete(nodeIndex);
+          return next;
+        });
+      }, duration);
+    };
+
+    // Trigger pulses at random intervals (2-5 seconds apart)
+    const scheduleNextPulse = () => {
+      const delay = 2000 + Math.random() * 3000;
+      return setTimeout(() => {
+        triggerPulse();
+        timerId = scheduleNextPulse();
+      }, delay);
+    };
+
+    let timerId = scheduleNextPulse();
+
+    return () => clearTimeout(timerId);
+  }, [nodes.length]);
 
   // Debug vs production styles
   const svgOpacity = DEBUG_VISIBLE ? 0.55 : 1;
@@ -84,35 +128,10 @@ const NetworkGlobe = () => {
           viewBox="0 0 300 300" 
           className="w-full h-full"
           style={{
-            animation: 'networkSpin 35s linear infinite',
+            animation: 'networkSpin 46s linear infinite',
             opacity: svgOpacity
           }}
         >
-          {/* Glow filter and gradient for shooting star tail */}
-          <defs>
-            <filter id="starGlow" x="-200%" y="-100%" width="400%" height="300%">
-              <feGaussianBlur stdDeviation="2" result="blur"/>
-              <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-            <linearGradient id="tailGradient1" x1="0%" y1="50%" x2="100%" y2="50%">
-              <stop offset="0%" stopColor="white" stopOpacity="0"/>
-              <stop offset="20%" stopColor="white" stopOpacity="0.3"/>
-              <stop offset="50%" stopColor="white" stopOpacity="0.6"/>
-              <stop offset="80%" stopColor="white" stopOpacity="0.85"/>
-              <stop offset="100%" stopColor="white" stopOpacity="1"/>
-            </linearGradient>
-            <linearGradient id="tailGradient2" x1="0%" y1="50%" x2="100%" y2="50%">
-              <stop offset="0%" stopColor="white" stopOpacity="0"/>
-              <stop offset="20%" stopColor="white" stopOpacity="0.3"/>
-              <stop offset="50%" stopColor="white" stopOpacity="0.6"/>
-              <stop offset="80%" stopColor="white" stopOpacity="0.85"/>
-              <stop offset="100%" stopColor="white" stopOpacity="1"/>
-            </linearGradient>
-          </defs>
-          
           {/* Connection lines */}
           {connections.map((line, i) => (
             <line
@@ -127,17 +146,29 @@ const NetworkGlobe = () => {
             />
           ))}
           
-          {/* Nodes */}
-          {nodes.map((node, i) => (
-            <circle
-              key={`node-${i}`}
-              cx={node.x}
-              cy={node.y}
-              r={node.z > 0 ? nodeRadius.large : nodeRadius.small}
-              fill={DOT_COLOR}
-              opacity={1}
-            />
-          ))}
+          {/* Nodes with pulse effect */}
+          {nodes.map((node, i) => {
+            const pulseType = pulsingNodes.get(i);
+            const isPulsing = pulseType !== undefined;
+            const fillColor = isPulsing 
+              ? (pulseType === 'green' ? PULSE_GREEN : '#FFFFFF')
+              : DOT_COLOR;
+            const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
+            
+            return (
+              <circle
+                key={`node-${i}`}
+                cx={node.x}
+                cy={node.y}
+                r={isPulsing ? radius * 1.3 : radius}
+                fill={fillColor}
+                opacity={1}
+                style={{
+                  transition: 'r 150ms ease-out, fill 100ms ease-out'
+                }}
+              />
+            );
+          })}
           
           {/* Subtle orbital rings */}
           <ellipse
@@ -160,80 +191,6 @@ const NetworkGlobe = () => {
             strokeWidth={ringStrokeWidth}
             opacity={DEBUG_VISIBLE ? 0.4 : 0.7}
           />
-          
-          {/* Shooting star on horizontal ellipse with tail */}
-          <g>
-            {/* Tail */}
-            <line x1="0" y1="0" x2="-120" y2="0" stroke="url(#tailGradient1)" strokeWidth="3" strokeLinecap="round" filter="url(#starGlow)">
-              <animateMotion
-                dur="4s"
-                repeatCount="indefinite"
-                begin="0s; 8s"
-                path="M30,150 A120,40 0 1,0 270,150 A120,40 0 1,0 30,150"
-                rotate="auto"
-              />
-              <animate
-                attributeName="opacity"
-                values="0;1;1;0.8;0;0"
-                keyTimes="0;0.05;0.4;0.45;0.5;1"
-                dur="8s"
-                repeatCount="indefinite"
-              />
-            </line>
-            {/* Head */}
-            <circle r="3" fill="white" filter="url(#starGlow)">
-              <animateMotion
-                dur="4s"
-                repeatCount="indefinite"
-                begin="0s; 8s"
-                path="M30,150 A120,40 0 1,0 270,150 A120,40 0 1,0 30,150"
-              />
-              <animate
-                attributeName="opacity"
-                values="0;1;1;0.8;0;0"
-                keyTimes="0;0.05;0.4;0.45;0.5;1"
-                dur="8s"
-                repeatCount="indefinite"
-              />
-            </circle>
-          </g>
-          
-          {/* Shooting star on circular ring with tail */}
-          <g>
-            {/* Tail */}
-            <line x1="0" y1="0" x2="-120" y2="0" stroke="url(#tailGradient2)" strokeWidth="3" strokeLinecap="round" filter="url(#starGlow)">
-              <animateMotion
-                dur="4s"
-                repeatCount="indefinite"
-                begin="4s; 12s"
-                path="M50,150 A100,100 0 1,0 250,150 A100,100 0 1,0 50,150"
-                rotate="auto"
-              />
-              <animate
-                attributeName="opacity"
-                values="0;0;1;1;0.8;0"
-                keyTimes="0;0.5;0.55;0.9;0.95;1"
-                dur="8s"
-                repeatCount="indefinite"
-              />
-            </line>
-            {/* Head */}
-            <circle r="3" fill="white" filter="url(#starGlow)">
-              <animateMotion
-                dur="4s"
-                repeatCount="indefinite"
-                begin="4s; 12s"
-                path="M50,150 A100,100 0 1,0 250,150 A100,100 0 1,0 50,150"
-              />
-              <animate
-                attributeName="opacity"
-                values="0;0;1;1;0.8;0"
-                keyTimes="0;0.5;0.55;0.9;0.95;1"
-                dur="8s"
-                repeatCount="indefinite"
-              />
-            </circle>
-          </g>
         </svg>
       </div>
       
