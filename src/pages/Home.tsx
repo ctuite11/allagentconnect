@@ -144,6 +144,28 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Private by Design */}
+      <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
+        <div className="p-7 sm:p-9">
+          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Private by design.</h2>
+          <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
+            Some sellers don't want exposure. They want control, discretion, and qualified interest — without marketing noise.
+          </p>
+          <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
+            All Agent Connect allows agents to share opportunities privately with verified professionals, giving sellers the option to explore real demand without going public.
+          </p>
+          <p className="mt-5 text-sm font-medium" style={{ color: '#1D1D1F' }}>
+            A better option for sellers who value privacy — and agents who value leverage.
+          </p>
+          <ul className="mt-5 space-y-2 text-sm" style={{ color: '#86868B' }}>
+            <li>Controlled visibility — agent decides who sees what</li>
+            <li>No public portals</li>
+            <li>No premature days-on-market signals</li>
+            <li>Real feedback from real agents</li>
+          </ul>
+        </div>
+      </section>
+
       {/* Competitive Advantage */}
       <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
         <div className="p-7 sm:p-9">
