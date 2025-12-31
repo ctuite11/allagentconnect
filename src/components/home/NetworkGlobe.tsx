@@ -63,25 +63,15 @@ const NetworkGlobe = () => {
   // White twinkle pulse effect - visible and alive
   useEffect(() => {
     const triggerPulse = () => {
-      // Pick 2-4 random nodes to pulse each tick
-      const nodesToPulse = 2 + Math.floor(Math.random() * 3); // 2, 3, or 4 nodes
-      const indices: number[] = [];
-      
-      for (let i = 0; i < nodesToPulse; i++) {
-        let nodeIndex = Math.floor(Math.random() * nodes.length);
-        // Avoid duplicates
-        while (indices.includes(nodeIndex)) {
-          nodeIndex = Math.floor(Math.random() * nodes.length);
-        }
-        indices.push(nodeIndex);
-      }
+      // Pick 1 random node to pulse
+      const nodeIndex = Math.floor(Math.random() * nodes.length);
       
       // Duration: 120-180ms per pulse
       const duration = 120 + Math.random() * 60;
       
       setPulsingNodes(prev => {
         const next = new Set(prev);
-        indices.forEach(idx => next.add(idx));
+        next.add(nodeIndex);
         return next;
       });
       
@@ -89,7 +79,7 @@ const NetworkGlobe = () => {
       setTimeout(() => {
         setPulsingNodes(prev => {
           const next = new Set(prev);
-          indices.forEach(idx => next.delete(idx));
+          next.delete(nodeIndex);
           return next;
         });
       }, duration);
