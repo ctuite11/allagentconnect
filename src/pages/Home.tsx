@@ -81,6 +81,39 @@ export default function Home() {
         </div>
       </section>
 
+      {/* What happens here */}
+      <section id="how" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
+        <div className="p-7 sm:p-9">
+          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>What happens here</h2>
+          <p className="mt-2 max-w-2xl" style={{ color: '#86868B' }}>
+            One network. Multiple ways to win.
+          </p>
+
+          <div className="mt-7 grid grid-cols-1 md:grid-cols-2 gap-5">
+            <HowCard
+              icon={<MapPinned className={cx("h-5 w-5", ACCENT)} />}
+              title="Share off-market & coming soon"
+              body="Post quietly with enough context for agents to act. Control visibility and timing."
+            />
+            <HowCard
+              icon={<Users className={cx("h-5 w-5", ACCENT)} />}
+              title="Match buyer needs in real time"
+              body="Buyer needs get surfaced to the right agents — quickly, without public exposure."
+            />
+            <HowCard
+              icon={<MessageSquare className={cx("h-5 w-5", ACCENT)} />}
+              title="Direct agent-to-agent messaging"
+              body="Fewer steps. Cleaner comms. Get to a showing, an offer, or a solution fast."
+            />
+            <HowCard
+              icon={<Handshake className={cx("h-5 w-5", ACCENT)} />}
+              title="Close deals with less friction"
+              body="The platform exists for one thing: moving real transactions forward."
+            />
+          </div>
+        </div>
+      </section>
+
       {/* How deals actually come together */}
       <section id="proof" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
         <div className="flex items-end justify-between gap-6 flex-wrap">
@@ -108,39 +141,6 @@ export default function Home() {
             title="Real transactions"
             body="Signed. Closed. Verified. The network exists to move deals forward."
           />
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section id="how" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
-        <div className="p-7 sm:p-9">
-          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>What actually happens here</h2>
-          <p className="mt-2 max-w-2xl" style={{ color: '#86868B' }}>
-            One network. Multiple ways to win.
-          </p>
-
-          <div className="mt-7 grid grid-cols-1 md:grid-cols-2 gap-5">
-            <HowCard
-              icon={<MapPinned className={cx("h-5 w-5", ACCENT)} />}
-              title="Share off-market & coming soon"
-              body="Post quietly with enough context for agents to act. Control visibility and timing."
-            />
-            <HowCard
-              icon={<Users className={cx("h-5 w-5", ACCENT)} />}
-              title="Match buyer needs in real time"
-              body="Buyer needs get surfaced to the right agents — quickly, without public exposure."
-            />
-            <HowCard
-              icon={<MessageSquare className={cx("h-5 w-5", ACCENT)} />}
-              title="Direct agent-to-agent messaging"
-              body="Fewer steps. Cleaner comms. Get to a showing, an offer, or a solution fast."
-            />
-            <HowCard
-              icon={<Handshake className={cx("h-5 w-5", ACCENT)} />}
-              title="Close deals with less friction"
-              body="The platform exists for one thing: moving real transactions forward."
-            />
-          </div>
         </div>
       </section>
 
