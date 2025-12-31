@@ -29,7 +29,7 @@ export default function Home() {
           {/* Copy */}
           <div className="max-w-xl">
             <h1 className="font-display text-5xl sm:text-6xl font-semibold tracking-tight text-neutral-900">
-              By Agents. For Agents.
+              <span className="whitespace-nowrap">By Agents. For Agents.</span>
               <br />
               <span style={{ color: '#94A3B8' }}>All Agents.</span>
             </h1>
