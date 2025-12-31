@@ -166,6 +166,25 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Private Seller-Submitted Opportunities */}
+      <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
+        <div className="p-7 sm:p-9">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Private seller-submitted opportunities with disclosed compensation</h2>
+            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Coming soon</span>
+          </div>
+          <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
+            Homeowners who want to sell discreetly can submit their property details directly to the All Agent Connect network, including seller-declared buyer-agent compensation.
+          </p>
+          <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
+            Opportunities are distributed only to agents whose criteria match the property — allowing agents to evaluate fit, terms, and intent before any public exposure.
+          </p>
+          <p className="mt-4 text-xs" style={{ color: '#94A3B8' }}>
+            Compensation terms are seller-proposed and subject to negotiation.
+          </p>
+        </div>
+      </section>
+
       {/* Competitive Advantage */}
       <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
         <div className="p-7 sm:p-9">
@@ -191,15 +210,27 @@ export default function Home() {
             <ul className="mt-5 space-y-3 text-sm" style={{ color: '#86868B' }}>
               <li className="flex gap-3">
                 <span className={cx("mt-0.5", ACCENT)}>●</span>
-                License-verified, agent-only network
+                Agent-driven opportunity, not scraped consumer leads
               </li>
               <li className="flex gap-3">
                 <span className={cx("mt-0.5", ACCENT)}>●</span>
-                Control who sees your listings, needs, and activity
+                Subscription access — opportunity is not sold to the highest bidder
               </li>
               <li className="flex gap-3">
                 <span className={cx("mt-0.5", ACCENT)}>●</span>
-                Compete for opportunities without losing relationships
+                Seller-submitted off-market opportunities shared with matching agents <span className="text-emerald-600 text-xs font-medium">(coming soon)</span>
+              </li>
+              <li className="flex gap-3">
+                <span className={cx("mt-0.5", ACCENT)}>●</span>
+                Seller-declared buyer-agent compensation displayed upfront <span className="text-emerald-600 text-xs font-medium">(coming soon)</span>
+              </li>
+              <li className="flex gap-3">
+                <span className={cx("mt-0.5", ACCENT)}>●</span>
+                Structured property details, filters, and controlled visibility
+              </li>
+              <li className="flex gap-3">
+                <span className={cx("mt-0.5", ACCENT)}>●</span>
+                Patent-approved technology designed to protect agents and clients
               </li>
             </ul>
 
