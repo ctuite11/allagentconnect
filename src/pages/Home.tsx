@@ -81,11 +81,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Proof */}
+      {/* How deals actually come together */}
       <section id="proof" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Built on proven closings — not theory.</h2>
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>How deals actually come together</h2>
             <p className="mt-2 max-w-2xl" style={{ color: '#86868B' }}>
               This is the infrastructure behind modern real estate collaboration.
             </p>
