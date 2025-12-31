@@ -66,14 +66,14 @@ const NetworkGlobe = () => {
 
   return (
     <div 
-      className="absolute inset-0 hidden md:block overflow-hidden pointer-events-none"
+      className="absolute inset-0 hidden md:block overflow-visible pointer-events-none"
       aria-hidden="true"
       style={DEBUG_VISIBLE ? { zIndex: 20 } : { zIndex: 2 }}
     >
       
       {/* Network sphere */}
       <div 
-        className="absolute right-4 lg:right-10 top-1/2 -translate-y-1/2 w-[550px] h-[550px]"
+        className="absolute right-4 lg:right-10 top-[48%] -translate-y-1/2 w-[420px] h-[420px] lg:w-[520px] lg:h-[520px] max-w-[70vh] max-h-[70vh]"
         style={{
           transform: 'translateY(-50%) rotateX(15deg) rotateY(-10deg)',
           transformStyle: 'preserve-3d',
