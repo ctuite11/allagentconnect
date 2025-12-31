@@ -85,11 +85,11 @@ export default function Home() {
       <section id="how" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
         <div className="p-7 sm:p-9">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>What happens here</h2>
-          <p className="mt-2 max-w-2xl" style={{ color: '#86868B' }}>
+          <p className="mt-2 sm:mt-3 max-w-2xl" style={{ color: '#86868B' }}>
             One network. Multiple ways to win.
           </p>
 
-          <div className="mt-7 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-2 gap-5">
             <HowCard
               icon={<MapPinned className={cx("h-5 w-5", ACCENT)} />}
               title="Share off-market & coming soon"
@@ -119,13 +119,13 @@ export default function Home() {
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div>
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>How deals actually come together</h2>
-            <p className="mt-2 max-w-2xl" style={{ color: '#86868B' }}>
+            <p className="mt-2 sm:mt-3 max-w-2xl" style={{ color: '#86868B' }}>
               This is the infrastructure behind modern real estate collaboration.
             </p>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="mt-5 sm:mt-7 grid grid-cols-1 md:grid-cols-3 gap-5">
           <ProofCard
             icon={<ShieldCheck className={cx("h-5 w-5", ACCENT)} />}
             title="Active since 2016"
@@ -148,7 +148,7 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
         <div className="p-7 sm:p-9">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Private by design.</h2>
-          <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
+          <p className="mt-2 sm:mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
             Some sellers don't want exposure. They want control, discretion, and qualified interest — without marketing noise.
           </p>
           <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
@@ -173,7 +173,7 @@ export default function Home() {
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Private seller-submitted opportunities with disclosed compensation</h2>
             <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Coming soon</span>
           </div>
-          <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
+          <p className="mt-2 sm:mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
             Homeowners who want to sell discreetly can submit their property details directly to the All Agent Connect network, including seller-declared buyer-agent compensation.
           </p>
           <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
@@ -189,7 +189,7 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
         <div className="p-7 sm:p-9">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Competitive advantage, built in.</h2>
-          <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
+          <p className="mt-2 sm:mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
             Agents use All Agent Connect to quietly compete for listings, buyers, and opportunities — anonymously when needed — without losing control of relationships or commissions.
           </p>
           <p className="mt-4 text-sm" style={{ color: '#94A3B8' }}>
