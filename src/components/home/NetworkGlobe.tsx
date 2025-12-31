@@ -85,10 +85,10 @@ const NetworkGlobe = () => {
       }, duration);
     };
 
-    // Slower cadence: trigger every 400-700ms
+    // Slower cadence: trigger every 800-1200ms
     const intervalId = setInterval(() => {
       triggerPulse();
-    }, 400 + Math.random() * 300); // ~550ms average
+    }, 800 + Math.random() * 400); // ~1000ms average
 
     // Initial trigger
     triggerPulse();
