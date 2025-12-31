@@ -95,10 +95,10 @@ const NetworkGlobe = () => {
       }, duration);
     };
 
-    // Constant cadence: trigger every 120-200ms
+    // Slower cadence: trigger every 400-700ms
     const intervalId = setInterval(() => {
       triggerPulse();
-    }, 120 + Math.random() * 80); // ~150ms average
+    }, 400 + Math.random() * 300); // ~550ms average
 
     // Initial trigger
     triggerPulse();
@@ -132,7 +132,7 @@ const NetworkGlobe = () => {
           viewBox="0 0 300 300" 
           className="w-full h-full"
           style={{
-            animation: 'networkSpin 46s linear infinite',
+            animation: 'networkSpin 90s linear infinite',
             opacity: svgOpacity
           }}
         >
