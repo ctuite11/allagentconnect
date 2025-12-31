@@ -15,8 +15,8 @@ const DOT_COLOR = '#94A3B8';  // slate-400 (matches "Connect" in logo)
 const PULSE_GREEN = '#059669'; // emerald-600 for green pulses
 
 const NetworkGlobe = () => {
-  // Track which nodes are currently pulsing
-  const [pulsingNodes, setPulsingNodes] = useState<Map<number, 'green' | 'white'>>(new Map());
+  // Track which nodes are currently pulsing (opacity value)
+  const [pulsingNodes, setPulsingNodes] = useState<Set<number>>(new Set());
 
   // Generate network nodes in a spherical distribution
   const nodes = React.useMemo(() => {
@@ -61,36 +61,44 @@ const NetworkGlobe = () => {
     return lines;
   }, [nodes]);
 
-  // Random node pulse effect
+  // Subtle opacity-based pulse effect
   useEffect(() => {
     const triggerPulse = () => {
-      const nodeIndex = Math.floor(Math.random() * nodes.length);
+      // Pick 1-2 random nodes to pulse
+      const nodesToPulse = Math.random() < 0.15 ? 2 : 1;
+      const indices: number[] = [];
       
-      // 90% chance green, 10% chance white
-      const pulseType: 'green' | 'white' = Math.random() < 0.9 ? 'green' : 'white';
-      const duration = pulseType === 'green' 
-        ? 200 + Math.random() * 100  // 200-300ms for green
-        : 120 + Math.random() * 60;   // 120-180ms for white
+      for (let i = 0; i < nodesToPulse; i++) {
+        let nodeIndex = Math.floor(Math.random() * nodes.length);
+        // Avoid duplicates
+        while (indices.includes(nodeIndex)) {
+          nodeIndex = Math.floor(Math.random() * nodes.length);
+        }
+        indices.push(nodeIndex);
+      }
+      
+      // Duration: 180-260ms
+      const duration = 180 + Math.random() * 80;
       
       setPulsingNodes(prev => {
-        const next = new Map(prev);
-        next.set(nodeIndex, pulseType);
+        const next = new Set(prev);
+        indices.forEach(idx => next.add(idx));
         return next;
       });
       
       // Remove pulse after duration
       setTimeout(() => {
         setPulsingNodes(prev => {
-          const next = new Map(prev);
-          next.delete(nodeIndex);
+          const next = new Set(prev);
+          indices.forEach(idx => next.delete(idx));
           return next;
         });
       }, duration);
     };
 
-    // Trigger pulses at random intervals (2-5 seconds apart)
+    // Trigger pulses at random intervals (0.6-1.4 seconds apart)
     const scheduleNextPulse = () => {
-      const delay = 2000 + Math.random() * 3000;
+      const delay = 600 + Math.random() * 800;
       return setTimeout(() => {
         triggerPulse();
         timerId = scheduleNextPulse();
@@ -146,13 +154,9 @@ const NetworkGlobe = () => {
             />
           ))}
           
-          {/* Nodes with pulse effect */}
+          {/* Nodes with subtle opacity pulse effect */}
           {nodes.map((node, i) => {
-            const pulseType = pulsingNodes.get(i);
-            const isPulsing = pulseType !== undefined;
-            const fillColor = isPulsing 
-              ? (pulseType === 'green' ? PULSE_GREEN : '#FFFFFF')
-              : DOT_COLOR;
+            const isPulsing = pulsingNodes.has(i);
             const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
             
             return (
@@ -160,11 +164,11 @@ const NetworkGlobe = () => {
                 key={`node-${i}`}
                 cx={node.x}
                 cy={node.y}
-                r={isPulsing ? radius * 1.3 : radius}
-                fill={fillColor}
-                opacity={1}
+                r={isPulsing ? radius * 1.08 : radius}
+                fill={DOT_COLOR}
+                opacity={isPulsing ? 0.35 : 1}
                 style={{
-                  transition: 'r 150ms ease-out, fill 100ms ease-out'
+                  transition: 'r 120ms ease-out, opacity 120ms ease-out'
                 }}
               />
             );
