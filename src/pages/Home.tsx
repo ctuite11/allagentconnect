@@ -22,7 +22,7 @@ export default function Home() {
       <Navigation />
       <main className="pt-20 pb-12">
         {/* Hero */}
-        <section className="w-full px-6 sm:px-10 lg:px-20 pt-14 pb-10 relative min-h-[60vh] flex items-center">
+        <section className="w-full px-6 sm:px-10 lg:px-20 pt-14 pb-10 relative min-h-[60vh] flex items-center overflow-visible">
         {/* Network globe - desktop only, behind content */}
         <NetworkGlobe />
         <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
