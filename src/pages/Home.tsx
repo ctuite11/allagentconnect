@@ -185,21 +185,21 @@ export default function Home() {
           <div className="lg:col-span-3 p-7">
             <h3 className="text-xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Request access</h3>
             <p className="mt-2" style={{ color: '#86868B' }}>
-              We keep it professional. Verified agents only. No noise. No spam. Just a network that works.
+              Verified agents only. Private infrastructure. Patent-protected technology built to give agents leverage.
             </p>
 
             <ul className="mt-5 space-y-3 text-sm" style={{ color: '#86868B' }}>
               <li className="flex gap-3">
                 <span className={cx("mt-0.5", ACCENT)}>●</span>
-                Identity + license verification (fast)
+                License-verified, agent-only network
               </li>
               <li className="flex gap-3">
                 <span className={cx("mt-0.5", ACCENT)}>●</span>
-                Access to collaboration + messaging
+                Control who sees your listings, needs, and activity
               </li>
               <li className="flex gap-3">
                 <span className={cx("mt-0.5", ACCENT)}>●</span>
-                No production thresholds — open to all licensed agents
+                Compete for opportunities without losing relationships
               </li>
             </ul>
 
