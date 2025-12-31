@@ -30,8 +30,7 @@ export default function Home() {
           <div className="max-w-xl">
             <h1 className="font-display text-5xl sm:text-6xl font-semibold tracking-normal" style={{ color: '#1D1D1F' }}>
               <span className="whitespace-nowrap">By Agents. For Agents.</span>
-              <br />
-              <span style={{ color: '#94A3B8' }}>All Agents.</span>
+              <div className="mt-3" style={{ color: '#94A3B8' }}>All Agents.</div>
             </h1>
 
             <div className="mt-5 text-lg sm:text-xl font-medium tracking-normal" style={{ color: '#1D1D1F' }}>
@@ -110,7 +109,7 @@ export default function Home() {
 
       {/* How it works */}
       <section id="how" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
-        <div className="rounded-3xl bg-white p-7 sm:p-9 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="p-7 sm:p-9">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>What actually happens here</h2>
           <p className="mt-2 max-w-2xl" style={{ color: '#86868B' }}>
             Simple workflow. Serious intent. The fastest path from "need" to "signed."
@@ -144,7 +143,7 @@ export default function Home() {
       {/* Access */}
       <section id="access" className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
-          <div className="lg:col-span-3 rounded-3xl bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="lg:col-span-3 p-7">
             <h3 className="text-xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Request access</h3>
             <p className="mt-2" style={{ color: '#86868B' }}>
               We keep it professional. Verified agents only. No noise. No spam. Just a network that works.
@@ -181,7 +180,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="lg:col-span-2 rounded-3xl bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="lg:col-span-2 p-7">
             <div className="text-xs" style={{ color: '#86868B' }}>Positioning</div>
             <div className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Built for <span style={{ color: '#94A3B8' }}>all agents.</span></div>
             <p className="mt-3" style={{ color: '#86868B' }}>
