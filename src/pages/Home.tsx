@@ -34,7 +34,7 @@ export default function Home() {
             </h1>
 
             <div className="mt-5 text-lg sm:text-xl font-medium tracking-normal" style={{ color: '#1D1D1F' }}>
-              Where real deals get done.
+              Where real deals get done — at scale.
             </div>
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
@@ -52,6 +52,10 @@ export default function Home() {
                 See How It Works
               </a>
             </div>
+
+            <p className="mt-5 text-sm leading-relaxed max-w-lg" style={{ color: '#86868B' }}>
+              A nationwide agent network for off-market listings, buyer and renter demand, direct collaboration, and competitive deal access — built to improve agent outcomes.
+            </p>
           </div>
 
           {/* NetworkGlobe is the visual on the right - handled by the component */}
@@ -83,7 +87,7 @@ export default function Home() {
           <div>
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Built on proven closings — not theory.</h2>
             <p className="mt-2 max-w-2xl" style={{ color: '#86868B' }}>
-              This isn't a "new idea." It's a working network with real behavior, real outcomes, and a track record.
+              This is the infrastructure behind modern real estate collaboration.
             </p>
           </div>
         </div>
@@ -112,7 +116,7 @@ export default function Home() {
         <div className="p-7 sm:p-9">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>What actually happens here</h2>
           <p className="mt-2 max-w-2xl" style={{ color: '#86868B' }}>
-            Simple workflow. Serious intent. The fastest path from "need" to "signed."
+            One network. Multiple ways to win.
           </p>
 
           <div className="mt-7 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -137,6 +141,19 @@ export default function Home() {
               body="The platform exists for one thing: moving real transactions forward."
             />
           </div>
+        </div>
+      </section>
+
+      {/* Competitive Advantage */}
+      <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
+        <div className="p-7 sm:p-9">
+          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>Competitive advantage, built in.</h2>
+          <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: '#86868B' }}>
+            Agents use All Agent Connect to quietly compete for listings, buyers, and opportunities — anonymously when needed — without losing control of relationships or commissions.
+          </p>
+          <p className="mt-4 text-sm" style={{ color: '#94A3B8' }}>
+            Patent-protected. Agent-first by design.
+          </p>
         </div>
       </section>
 
