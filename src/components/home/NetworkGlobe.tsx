@@ -15,9 +15,8 @@ const DOT_COLOR = '#94A3B8';  // slate-400 (matches "Connect" in logo)
 const PULSE_GREEN = '#059669'; // emerald-600 for green pulses
 
 const NetworkGlobe = () => {
-  // Track which nodes are currently pulsing (opacity value)
+  // Track which nodes are currently pulsing (for white blink)
   const [pulsingNodes, setPulsingNodes] = useState<Set<number>>(new Set());
-
   // Generate network nodes in a spherical distribution
   const nodes = React.useMemo(() => {
     const points: { x: number; y: number; z: number }[] = [];
@@ -61,11 +60,11 @@ const NetworkGlobe = () => {
     return lines;
   }, [nodes]);
 
-  // Subtle opacity-based pulse effect
+  // White twinkle pulse effect - visible and alive
   useEffect(() => {
     const triggerPulse = () => {
-      // Pick 1-2 random nodes to pulse
-      const nodesToPulse = Math.random() < 0.15 ? 2 : 1;
+      // Pick 2-4 random nodes to pulse each tick
+      const nodesToPulse = 2 + Math.floor(Math.random() * 3); // 2, 3, or 4 nodes
       const indices: number[] = [];
       
       for (let i = 0; i < nodesToPulse; i++) {
@@ -77,8 +76,8 @@ const NetworkGlobe = () => {
         indices.push(nodeIndex);
       }
       
-      // Duration: 180-260ms
-      const duration = 180 + Math.random() * 80;
+      // Duration: 120-180ms per pulse
+      const duration = 120 + Math.random() * 60;
       
       setPulsingNodes(prev => {
         const next = new Set(prev);
@@ -96,18 +95,15 @@ const NetworkGlobe = () => {
       }, duration);
     };
 
-    // Trigger pulses at random intervals (0.6-1.4 seconds apart)
-    const scheduleNextPulse = () => {
-      const delay = 600 + Math.random() * 800;
-      return setTimeout(() => {
-        triggerPulse();
-        timerId = scheduleNextPulse();
-      }, delay);
-    };
+    // Constant cadence: trigger every 120-200ms
+    const intervalId = setInterval(() => {
+      triggerPulse();
+    }, 120 + Math.random() * 80); // ~150ms average
 
-    let timerId = scheduleNextPulse();
+    // Initial trigger
+    triggerPulse();
 
-    return () => clearTimeout(timerId);
+    return () => clearInterval(intervalId);
   }, [nodes.length]);
 
   // Debug vs production styles
@@ -154,7 +150,7 @@ const NetworkGlobe = () => {
             />
           ))}
           
-          {/* Nodes with subtle opacity pulse effect */}
+          {/* Nodes with white twinkle pulse effect */}
           {nodes.map((node, i) => {
             const isPulsing = pulsingNodes.has(i);
             const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
@@ -164,11 +160,11 @@ const NetworkGlobe = () => {
                 key={`node-${i}`}
                 cx={node.x}
                 cy={node.y}
-                r={isPulsing ? radius * 1.08 : radius}
-                fill={DOT_COLOR}
-                opacity={isPulsing ? 0.35 : 1}
+                r={isPulsing ? radius * 1.2 : radius}
+                fill={isPulsing ? '#FFFFFF' : DOT_COLOR}
+                opacity={isPulsing ? 0.85 : 0.3}
                 style={{
-                  transition: 'r 120ms ease-out, opacity 120ms ease-out'
+                  transition: 'r 80ms ease-out, fill 80ms ease-out, opacity 80ms ease-out'
                 }}
               />
             );
