@@ -1,52 +1,62 @@
 /**
- * AAC Design System - Locked Style Tokens
+ * AAC Design System - Locked Style Tokens (Premium Zinc)
  * 
  * These tokens define the ACC standard visual spec.
  * All pages should import and use these tokens to prevent visual drift.
  * DO NOT modify these values without design review.
+ * 
+ * IMPORTANT: Uses ZINC palette (not slate) to eliminate muted blue cast.
+ * Blue is allowed ONLY in HeaderBackgroundSelector (user themes).
  */
 
 // Page Container
 export const pageContainer = "max-w-7xl mx-auto px-6 py-10 space-y-8";
 
 // Typography
-export const pageH1 = "text-3xl font-semibold text-slate-900";
-export const pageSubhead = "text-slate-500 mt-1";
-export const sectionH2 = "text-xl font-semibold text-slate-900";
-export const sectionHelper = "text-sm text-slate-500 mt-1";
+export const pageH1 = "text-3xl font-semibold text-zinc-900";
+export const pageSubhead = "text-zinc-500 mt-1";
+export const sectionH2 = "text-xl font-semibold text-zinc-900";
+export const sectionHelper = "text-sm text-zinc-500 mt-1";
 
 // Cards
-export const card = "bg-white border border-slate-200 rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all";
-export const cardTitle = "text-slate-900 font-semibold";
-export const cardDesc = "text-slate-500 text-sm";
+export const card = "bg-white border border-zinc-200 rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all";
+export const cardTitle = "text-zinc-900 font-semibold";
+export const cardDesc = "text-zinc-500 text-sm";
 
 // Icons
 export const iconGreen = "h-6 w-6 text-emerald-600";
 
 // Buttons
-export const neutralButton = "border border-slate-300 rounded-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors";
+export const neutralButton = "border border-zinc-300 rounded-full px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors";
 export const primaryButton = "bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-5 py-2.5 font-medium transition-colors";
-export const ghostButton = "text-sm text-slate-500 hover:text-slate-900 transition-colors";
+export const ghostButton = "text-sm text-zinc-500 hover:text-zinc-900 transition-colors";
 
-// Toggle/Switch (neutral, no blue - soft track, not black)
-export const toggleTrackOff = "bg-slate-200";
-export const toggleTrackOn = "bg-slate-400";
+// Toggle/Switch (neutral zinc, no blue, not black)
+// OFF: bg-zinc-200, ON: bg-zinc-400 (quiet signal, let status label do the work)
+// Use default Switch component (now neutral) for all toggles
+export const toggleTrackOff = "bg-zinc-200";
+export const toggleTrackOn = "bg-zinc-400";
 export const toggleThumb = "bg-white";
+export const focusRing = "focus:ring-zinc-300 focus:ring-offset-2";
 
 // Status indicators (dot + label)
 export const statusDotActive = "h-2 w-2 rounded-full bg-emerald-500";
-export const statusDotMuted = "h-2 w-2 rounded-full bg-slate-300";
-export const statusLabelActiveText = "text-slate-700 text-xs";
-export const statusLabelMutedText = "text-slate-500 text-xs";
+export const statusDotMuted = "h-2 w-2 rounded-full bg-zinc-300";
+export const statusLabelActiveText = "text-zinc-700 text-xs";
+export const statusLabelMutedText = "text-zinc-500 text-xs";
 
-// Status Labels
-export const statusLabelActive = "text-slate-700 text-xs";
-export const statusLabelMuted = "text-slate-500 text-xs";
+// Status Labels (legacy - use dot + label pattern above)
+export const statusLabelActive = "text-zinc-700 text-xs";
+export const statusLabelMuted = "text-zinc-500 text-xs";
 
-// Sticky Footer
-export const stickyFooter = "fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50";
-export const stickyFooterInner = "max-w-7xl mx-auto px-6 py-4 flex items-center justify-between";
-export const unsavedText = "text-slate-500 text-sm";
+// Semantic badges (NO BLUE - amber for pending)
+export const badgePending = "bg-amber-100 text-amber-800";
+export const badgeActive = "bg-emerald-100 text-emerald-800";
+
+// Sticky Footer (inside container, not fixed)
+export const stickyFooter = "sticky bottom-0 bg-white border-t border-zinc-200 z-40";
+export const stickyFooterInner = "px-6 py-4 flex items-center justify-between";
+export const unsavedText = "text-zinc-500 text-sm";
 
 // Compose class strings for common patterns
 export const aacStyles = {
@@ -74,10 +84,21 @@ export const aacStyles = {
   toggleTrackOff,
   toggleTrackOn,
   toggleThumb,
+  focusRing,
   
-  // Status
+  // Status indicators
+  statusDotActive,
+  statusDotMuted,
+  statusLabelActiveText,
+  statusLabelMutedText,
+  
+  // Status (legacy)
   statusLabelActive,
   statusLabelMuted,
+  
+  // Badges
+  badgePending,
+  badgeActive,
   
   // Footer
   stickyFooter,

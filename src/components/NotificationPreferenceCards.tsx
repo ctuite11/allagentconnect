@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, Users, TrendingUp, Home, MessageSquare } from "lucide-react";
 import { SendMessageDialog } from "./SendMessageDialog";
-import { NeutralSwitch } from "@/components/ui/neutral-switch";
+import { Switch } from "@/components/ui/switch";
 import { aacStyles } from "@/ui/aacStyles";
 
 interface NotificationPreferences {
@@ -153,7 +153,7 @@ export const NotificationPreferenceCards = () => {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-[120px] rounded-2xl bg-slate-100 animate-pulse"
+              className="h-[120px] rounded-2xl bg-zinc-100 animate-pulse"
             />
           ))}
         </div>
@@ -200,12 +200,12 @@ export const NotificationPreferenceCards = () => {
 
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1.5">
-                      <span className={card.active ? "h-2 w-2 rounded-full bg-emerald-500" : "h-2 w-2 rounded-full bg-slate-300"} />
-                      <span className={card.active ? "text-slate-700 text-xs" : "text-slate-500 text-xs"}>
+                      <span className={card.active ? aacStyles.statusDotActive : aacStyles.statusDotMuted} />
+                      <span className={card.active ? aacStyles.statusLabelActiveText : aacStyles.statusLabelMutedText}>
                         {card.active ? "Active" : "Muted"}
                       </span>
                     </div>
-                    <NeutralSwitch
+                    <Switch
                       id={`receive-${card.key}`}
                       checked={card.active}
                       onCheckedChange={() => togglePreference(card.key)}
