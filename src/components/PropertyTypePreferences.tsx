@@ -112,46 +112,46 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
 
   return (
   <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="aac-card bg-white border-neutral-200 rounded-2xl">
+      <Card className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
         <CollapsibleTrigger className="w-full">
-          <CardHeader className="cursor-pointer">
+          <CardHeader className="cursor-pointer p-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Home className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-neutral-900">Property Type</CardTitle>
+                <Home className="h-5 w-5 text-emerald-600" />
+                <CardTitle className="text-base font-medium text-zinc-900">Property Type</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5 text-neutral-500" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
+              {isOpen ? <ChevronUp className="h-5 w-5 text-zinc-400" /> : <ChevronDown className="h-5 w-5 text-zinc-400" />}
             </div>
-            <CardDescription className="text-left text-neutral-600">
+            <CardDescription className="text-left text-sm text-zinc-500 mt-1">
               Select which property types you want to receive notifications about
             </CardDescription>
             {!isOpen && selectedTypes.length > 0 && (
-              <div className="mt-2 bg-white border border-neutral-200 rounded-xl px-4 py-3 text-left">
-                <p className="text-sm font-medium text-neutral-900">
+              <div className="mt-2 bg-white border border-zinc-200 rounded-xl px-3 py-2 text-left">
+                <p className="text-sm font-medium text-zinc-900">
                   {selectedTypes.length} property type{selectedTypes.length !== 1 ? 's' : ''} selected
                 </p>
               </div>
             )}
             {!isOpen && selectedTypes.length === 0 && (
-              <p className="text-sm text-neutral-500 mt-1 text-left">
+              <p className="text-sm text-zinc-400 mt-1 text-left">
                 No property types selected
               </p>
             )}
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="space-y-4 pt-4">
+          <CardContent className="space-y-3 pt-4 px-0 pb-0">
         
         {/* Selection count */}
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-neutral-800">
+          <span className="text-sm text-zinc-500">
             {selectedTypes.length} of {PROPERTY_TYPES.length} types selected
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border border-neutral-200 rounded-xl p-4 max-h-80 overflow-y-auto bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border border-zinc-200 rounded-xl p-3 max-h-80 overflow-y-auto bg-white">
           {/* Select all as first checkbox item */}
-          <div className="flex items-center space-x-2 col-span-1 md:col-span-2 pb-2 mb-2 border-b border-neutral-200">
+          <div className="flex items-center space-x-2 col-span-1 md:col-span-2 pb-2 mb-2 border-b border-zinc-200">
             <Checkbox
               id="type-select-all"
               checked={allSelected}
@@ -159,7 +159,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
             />
             <Label
               htmlFor="type-select-all"
-              className={`cursor-pointer flex-1 ${allSelected ? "font-medium text-neutral-900" : "text-neutral-700"}`}
+              className={`cursor-pointer flex-1 text-sm ${allSelected ? "font-medium text-zinc-900" : "text-zinc-700"}`}
             >
               Select all
             </Label>
@@ -175,7 +175,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
                 />
                 <Label
                   htmlFor={`type-${type.value}`}
-                  className={`cursor-pointer flex-1 ${isChecked ? "font-medium text-neutral-900" : "text-neutral-600"}`}
+                  className={`cursor-pointer flex-1 text-sm ${isChecked ? "font-medium text-zinc-900" : "text-zinc-600"}`}
                 >
                   {type.label}
                 </Label>
@@ -185,11 +185,11 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
         </div>
 
         {selectedTypes.length > 0 && (
-          <div className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3">
+          <div className="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2">
             <p className="text-sm">
-              <span className="font-medium text-neutral-800">You will receive notifications for:</span>
+              <span className="font-medium text-zinc-700">You will receive notifications for:</span>
               <br />
-              <span className="text-neutral-900 font-medium">
+              <span className="text-zinc-900 font-medium">
                 {selectedTypes.map(type => {
                   const typeObj = PROPERTY_TYPES.find(t => t.value === type);
                   return typeObj?.label;
@@ -200,7 +200,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
         )}
 
         {selectedTypes.length === 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
             <p className="text-sm text-amber-900">
               <span className="font-medium">No property types selected</span>
               <br />

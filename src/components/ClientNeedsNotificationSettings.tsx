@@ -86,17 +86,17 @@ export const ClientNeedsNotificationSettings = () => {
   }
 
   return (
-    <Card className="aac-card border border-neutral-200">
-      <CardHeader>
+    <Card className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <CardHeader className="p-0 pb-3">
         <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5 text-muted-foreground" />
-          <CardTitle className="text-base">Email Frequency</CardTitle>
+          <Bell className="h-5 w-5 text-emerald-600" />
+          <CardTitle className="text-base font-medium text-zinc-900">Email Frequency</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 p-0">
         {/* Notification Schedule */}
-        <div className="space-y-3">
-          <Label className="text-base font-medium">
+        <div className="space-y-2">
+          <Label className="text-sm text-zinc-500">
             How often would you like to receive notifications?
           </Label>
           <RadioGroup
@@ -106,21 +106,21 @@ export const ClientNeedsNotificationSettings = () => {
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="immediate" id="immediate" />
-              <Label htmlFor="immediate" className="cursor-pointer font-normal">
+              <Label htmlFor="immediate" className="cursor-pointer text-sm text-zinc-700">
                 Immediately - Get alerts as soon as your preferences match
               </Label>
             </div>
 
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="daily" id="daily" />
-              <Label htmlFor="daily" className="cursor-pointer font-normal">
+              <Label htmlFor="daily" className="cursor-pointer text-sm text-zinc-700">
                 Daily - Receive a daily digest of new matches
               </Label>
             </div>
 
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="weekly" id="weekly" />
-              <Label htmlFor="weekly" className="cursor-pointer font-normal">
+              <Label htmlFor="weekly" className="cursor-pointer text-sm text-zinc-700">
                 Weekly - Receive a weekly summary of new matches
               </Label>
             </div>
