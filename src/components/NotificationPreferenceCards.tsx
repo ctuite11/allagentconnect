@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, Users, TrendingUp, Home, MessageSquare } from "lucide-react";
 import { SendMessageDialog } from "./SendMessageDialog";
+import { NeutralSwitch } from "@/components/ui/neutral-switch";
+import { aacStyles } from "@/ui/aacStyles";
 
 interface NotificationPreferences {
   buyer_need: boolean;
@@ -153,7 +153,7 @@ export const NotificationPreferenceCards = () => {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-[120px] rounded-xl bg-muted/40 animate-pulse"
+              className="h-[120px] rounded-2xl bg-slate-100 animate-pulse"
             />
           ))}
         </div>
@@ -170,65 +170,59 @@ export const NotificationPreferenceCards = () => {
           {cards.map((card) => {
             const IconComponent = card.icon;
             return (
-              <Card
+              <div
                 key={card.key}
-                className="aac-card bg-white border-neutral-200 rounded-2xl"
+                className={aacStyles.card}
               >
-                <CardContent className="p-5">
-                  {/* Top row: Icon + Title + Description */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                      <IconComponent className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="text-sm font-semibold text-foreground">{card.title}</h4>
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{card.description}</p>
-                    </div>
+                {/* Top row: Icon + Title + Description */}
+                <div className="flex items-start gap-3">
+                  <IconComponent className={aacStyles.iconGreen} />
+                  <div className="min-w-0 flex-1">
+                    <h4 className={aacStyles.cardTitle}>{card.title}</h4>
+                    <p className={aacStyles.cardDesc}>{card.description}</p>
                   </div>
-                  
-                  {/* Bottom row: Send + Receiving toggle - NO divider */}
-                  <div className="flex items-center justify-between mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenDialog({ open: true, category: card.key, title: card.title });
-                      }}
-                    >
-                      <Send className="h-3.5 w-3.5 mr-1.5" />
+                </div>
+                
+                {/* Bottom row: Send + Active/Muted toggle */}
+                <div className="flex items-center justify-between mt-4">
+                  <button
+                    className={aacStyles.neutralButton}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDialog({ open: true, category: card.key, title: card.title });
+                    }}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Send className="h-3.5 w-3.5" />
                       Send
-                    </Button>
+                    </span>
+                  </button>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {card.active ? "Receiving" : "Paused"}
-                      </span>
-                      <Switch
-                        id={`receive-${card.key}`}
-                        checked={card.active}
-                        onCheckedChange={() => togglePreference(card.key)}
-                      />
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className={card.active ? aacStyles.statusLabelActive : aacStyles.statusLabelMuted}>
+                      {card.active ? "Active" : "Muted"}
+                    </span>
+                    <NeutralSwitch
+                      id={`receive-${card.key}`}
+                      checked={card.active}
+                      onCheckedChange={() => togglePreference(card.key)}
+                    />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
 
-        {/* Bulk action aligned right inside surface */}
+        {/* Bulk action aligned right */}
         {anyEnabled && (
           <div className="flex justify-end mt-4">
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={deselectAllPreferences}
-              className="text-xs text-muted-foreground hover:text-foreground"
+              className={aacStyles.ghostButton}
             >
               Mute All
-            </Button>
+            </button>
           </div>
         )}
       </div>

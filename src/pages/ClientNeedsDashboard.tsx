@@ -2,14 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
-import { Loader2, Megaphone, Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
 import GeographicPreferencesManager, { GeographicData } from "@/components/GeographicPreferencesManager";
 import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePreferences";
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
 import { toast } from "sonner";
+import { aacStyles } from "@/ui/aacStyles";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -294,35 +294,30 @@ const ClientNeedsDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <Navigation />
-      <main className="container mx-auto px-4 py-8 pt-20 pb-32 max-w-6xl">
+      <main className={`${aacStyles.pageContainer} pt-20 pb-32`}>
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-              <Megaphone className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-neutral-800">Communications Center</h1>
-              <p className="text-sm text-muted-foreground">Agent-to-agent collaboration and deal flow</p>
-            </div>
-          </div>
+        <div>
+          <h1 className={aacStyles.pageH1}>Communications Center</h1>
+          <p className={aacStyles.pageSubhead}>Agent-to-agent collaboration and deal flow</p>
         </div>
 
         {/* Channels Section */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-neutral-800 mb-1">Channels</h2>
-          <p className="text-sm text-muted-foreground mb-4">Choose what you send and receive</p>
-          <NotificationPreferenceCards />
+        <section>
+          <h2 className={aacStyles.sectionH2}>Channels</h2>
+          <p className={aacStyles.sectionHelper}>Choose what you send and receive</p>
+          <div className="mt-4">
+            <NotificationPreferenceCards />
+          </div>
         </section>
 
         {/* My Preferences Section */}
-        <section className="mb-8" data-preferences-section>
-          <h2 className="text-2xl font-semibold tracking-tight text-neutral-800 mb-1">My Preferences</h2>
-          <p className="text-sm text-muted-foreground mb-4">For receiving email notifications only</p>
+        <section data-preferences-section>
+          <h2 className={aacStyles.sectionH2}>My Preferences</h2>
+          <p className={aacStyles.sectionHelper}>For receiving email notifications only</p>
           
-          <div className="space-y-3">
+          <div className="space-y-3 mt-4">
             <PriceRangePreferences 
               agentId={user?.id || ""} 
               onFiltersUpdated={handleFiltersUpdated}
@@ -341,44 +336,42 @@ const ClientNeedsDashboard = () => {
         </section>
 
         {/* Notification Settings Section */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-neutral-800 mb-1">Notification Settings</h2>
-          <p className="text-sm text-muted-foreground mb-4">Configure how you receive alerts</p>
-          <ClientNeedsNotificationSettings />
+        <section>
+          <h2 className={aacStyles.sectionH2}>Notification Settings</h2>
+          <p className={aacStyles.sectionHelper}>Configure how you receive alerts</p>
+          <div className="mt-4">
+            <ClientNeedsNotificationSettings />
+          </div>
         </section>
 
         {/* Warning Banner */}
         {showWarningBanner && (
-          <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
             <div className="flex items-start gap-3">
-              <div className="text-amber-600 dark:text-amber-400 text-xl">⚠️</div>
+              <div className="text-amber-600 text-xl">⚠️</div>
               <div className="flex-1">
-                <h3 className="font-semibold text-amber-900 dark:text-amber-100 text-sm mb-1">
+                <h3 className="font-semibold text-amber-900 text-sm mb-1">
                   Important: You'll Receive All Notifications
                 </h3>
-                <p className="text-xs text-amber-800 dark:text-amber-200 mb-3">
+                <p className="text-xs text-amber-800 mb-3">
                   You have email notifications enabled but haven't set any filters. 
                   This means you will receive notifications for <strong>ALL</strong> client needs.
                 </p>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs bg-background"
+                  <button
+                    className="h-7 px-3 text-xs rounded border border-amber-300 bg-white text-amber-900 hover:bg-amber-50"
                     onClick={() => {
                       document.querySelector('[data-preferences-section]')?.scrollIntoView({ behavior: 'smooth' });
                     }}
                   >
                     Set Preferences
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs bg-background"
+                  </button>
+                  <button
+                    className="h-7 px-3 text-xs rounded border border-amber-300 bg-white text-amber-900 hover:bg-amber-50"
                     onClick={() => setShowWarningDialog(true)}
                   >
                     Review Options
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
@@ -424,30 +417,27 @@ const ClientNeedsDashboard = () => {
         </AlertDialog>
       </main>
 
-      {/* Sticky Save Bar - Success Hub style */}
+      {/* Sticky Save Footer - Inside page container visually */}
       {hasUnsavedChanges && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur border-t border-border z-50">
-          <div className="container mx-auto px-4 py-3 max-w-6xl flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
+        <div className={aacStyles.stickyFooter}>
+          <div className={aacStyles.stickyFooterInner}>
+            <p className={aacStyles.unsavedText}>
               You have unsaved changes
             </p>
-            <Button 
+            <button 
               onClick={handleSavePreferences}
               disabled={saving}
-              size="sm"
+              className={aacStyles.primaryButton}
             >
               {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Saving...
-                </>
+                </span>
               ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Preferences
-                </>
+                "Save Preferences"
               )}
-            </Button>
+            </button>
           </div>
         </div>
       )}
