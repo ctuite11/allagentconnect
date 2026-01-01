@@ -55,8 +55,8 @@ import MyListings from "./pages/MyListings";
 import ManageListingPhotos from "./pages/ManageListingPhotos";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminDebugAuth from "./pages/AdminDebugAuth";
-import AdminEarlyAccess from "./pages/AdminEarlyAccess";
 import EarlyAccess from "./pages/EarlyAccess";
+
 
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
@@ -173,7 +173,6 @@ const App = () => (
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
                 <Route path="/admin/approvals" element={<AdminApprovals />} />
                 <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
-                <Route path="/admin/early-access" element={<AdminEarlyAccess />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </>
