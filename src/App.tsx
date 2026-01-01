@@ -55,7 +55,6 @@ import MyListings from "./pages/MyListings";
 import ManageListingPhotos from "./pages/ManageListingPhotos";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminDebugAuth from "./pages/AdminDebugAuth";
-import EarlyAccess from "./pages/EarlyAccess";
 
 
 import ComingSoon from "./pages/ComingSoon";
@@ -98,9 +97,6 @@ const App = () => (
                 <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
                 <Route path="/pending-verification" element={<PendingVerification />} />
                 <Route path="/password-reset" element={<PasswordReset />} />
-                
-                {/* Public early access */}
-                <Route path="/early-access" element={<EarlyAccess />} />
                 
                 {/* Legacy redirects - all go to /auth */}
                 <Route path="/choose" element={<Navigate to="/auth?mode=register" replace />} />

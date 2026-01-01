@@ -53,9 +53,3 @@ verify_jwt = false
 
 [functions.send-password-reset]
 verify_jwt = false
-
-[functions.send-early-access-registration]
-verify_jwt = false
-
-[functions.send-early-access-verified]
-verify_jwt = false
