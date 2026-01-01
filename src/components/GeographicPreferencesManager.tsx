@@ -182,7 +182,7 @@ const GeographicPreferencesManager = ({
         <CollapsibleTrigger className="w-full">
           <CardHeader className="cursor-pointer p-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <MapPin className="h-5 w-5 text-emerald-600" />
                 <CardTitle className="text-base font-medium text-zinc-900">Geographic Area</CardTitle>
               </div>
