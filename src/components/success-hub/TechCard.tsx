@@ -30,21 +30,12 @@ export const TechCard = ({
         "transition-all duration-200 ease-out",
         className
       )}
-      style={{
-        background: `linear-gradient(270deg, rgba(22,163,74,0.02) 0%, rgba(22,163,74,0.01) 35%, rgba(255,255,255,0) 70%), #FFFFFF`
-      }}
+      style={{ background: '#FFFFFF' }}
       onClick={onClick}
     >
       {/* Icon top-right with subtle green radial fade */}
       <div className="absolute top-5 right-5">
-        <div 
-          className="relative h-10 w-10 flex items-center justify-center"
-          style={{
-            background: 'radial-gradient(circle, rgba(111, 184, 63, 0.05) 0%, transparent 70%)'
-          }}
-        >
-          <div className="text-emerald-600">{icon}</div>
-        </div>
+        <div className="text-emerald-600">{icon}</div>
       </div>
 
       {/* Title - reduced top margin for better balance */}
