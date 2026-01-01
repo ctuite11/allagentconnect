@@ -95,7 +95,7 @@ export const ClientNeedsNotificationSettings = () => {
       </CardHeader>
       <CardContent className="space-y-4 p-0">
         {/* Notification Schedule */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Label className="text-sm text-zinc-500">
             How often would you like to receive notifications?
           </Label>
