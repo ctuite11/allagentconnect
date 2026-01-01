@@ -282,6 +282,63 @@ export type Database = {
           },
         ]
       }
+      agent_early_access: {
+        Row: {
+          brokerage: string
+          created_at: string
+          email: string
+          first_name: string
+          founding_partner: boolean
+          id: string
+          last_name: string
+          license_number: string
+          markets: string | null
+          notes: string | null
+          phone: string | null
+          specialties: string[] | null
+          state: string
+          status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          brokerage: string
+          created_at?: string
+          email: string
+          first_name: string
+          founding_partner?: boolean
+          id?: string
+          last_name: string
+          license_number: string
+          markets?: string | null
+          notes?: string | null
+          phone?: string | null
+          specialties?: string[] | null
+          state: string
+          status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          brokerage?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          founding_partner?: boolean
+          id?: string
+          last_name?: string
+          license_number?: string
+          markets?: string | null
+          notes?: string | null
+          phone?: string | null
+          specialties?: string[] | null
+          state?: string
+          status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
       agent_messages: {
         Row: {
           agent_id: string
@@ -419,6 +476,7 @@ export type Database = {
           approval_email_sent: boolean
           county: string | null
           created_at: string
+          early_access: boolean
           email_frequency: string
           last_verification_attempt_at: string | null
           license_last_name: string | null
@@ -451,6 +509,7 @@ export type Database = {
           approval_email_sent?: boolean
           county?: string | null
           created_at?: string
+          early_access?: boolean
           email_frequency?: string
           last_verification_attempt_at?: string | null
           license_last_name?: string | null
@@ -483,6 +542,7 @@ export type Database = {
           approval_email_sent?: boolean
           county?: string | null
           created_at?: string
+          early_access?: boolean
           email_frequency?: string
           last_verification_attempt_at?: string | null
           license_last_name?: string | null
@@ -2644,6 +2704,7 @@ export type Database = {
       }
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }
+      get_verified_early_access_count: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
