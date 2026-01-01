@@ -199,9 +199,12 @@ export const NotificationPreferenceCards = () => {
                   </button>
 
                   <div className="flex items-center gap-2">
-                    <span className={card.active ? aacStyles.statusLabelActive : aacStyles.statusLabelMuted}>
-                      {card.active ? "Active" : "Muted"}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={card.active ? "h-2 w-2 rounded-full bg-emerald-500" : "h-2 w-2 rounded-full bg-slate-300"} />
+                      <span className={card.active ? "text-slate-700 text-xs" : "text-slate-500 text-xs"}>
+                        {card.active ? "Active" : "Muted"}
+                      </span>
+                    </div>
                     <NeutralSwitch
                       id={`receive-${card.key}`}
                       checked={card.active}

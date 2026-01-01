@@ -21,17 +21,23 @@ export const cardTitle = "text-slate-900 font-semibold";
 export const cardDesc = "text-slate-500 text-sm";
 
 // Icons
-export const iconGreen = "h-5 w-5 text-emerald-600";
+export const iconGreen = "h-6 w-6 text-emerald-600";
 
 // Buttons
 export const neutralButton = "border border-slate-300 rounded-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors";
 export const primaryButton = "bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-5 py-2.5 font-medium transition-colors";
 export const ghostButton = "text-sm text-slate-500 hover:text-slate-900 transition-colors";
 
-// Toggle/Switch (neutral, no blue)
+// Toggle/Switch (neutral, no blue - soft track, not black)
 export const toggleTrackOff = "bg-slate-200";
-export const toggleTrackOn = "bg-slate-900";
+export const toggleTrackOn = "bg-slate-400";
 export const toggleThumb = "bg-white";
+
+// Status indicators (dot + label)
+export const statusDotActive = "h-2 w-2 rounded-full bg-emerald-500";
+export const statusDotMuted = "h-2 w-2 rounded-full bg-slate-300";
+export const statusLabelActiveText = "text-slate-700 text-xs";
+export const statusLabelMutedText = "text-slate-500 text-xs";
 
 // Status Labels
 export const statusLabelActive = "text-slate-700 text-xs";
