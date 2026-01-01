@@ -417,11 +417,11 @@ const ClientNeedsDashboard = () => {
         </AlertDialog>
       </main>
 
-      {/* Sticky Save Footer - Inside page container visually */}
+      {/* Sticky Save Footer - Inside page container */}
       {hasUnsavedChanges && (
-        <div className={aacStyles.stickyFooter}>
-          <div className={aacStyles.stickyFooterInner}>
-            <p className={aacStyles.unsavedText}>
+        <div className="sticky bottom-0 bg-white border-t border-zinc-200 z-40 -mx-6 px-6">
+          <div className="py-4 flex items-center justify-between max-w-7xl mx-auto">
+            <p className="text-zinc-500 text-sm">
               You have unsaved changes
             </p>
             <button 

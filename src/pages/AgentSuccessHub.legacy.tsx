@@ -389,7 +389,7 @@ export default function AgentSuccessHub() {
       <div className="min-h-screen bg-white" style={{ backgroundColor: '#FFFFFF' }}>
         <Navigation />
         <div className="flex-1 flex items-center justify-center pt-20 min-h-[80vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-900"></div>
         </div>
       </div>
     );
@@ -452,7 +452,7 @@ export default function AgentSuccessHub() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-900" style={{ backgroundColor: '#FFFFFF' }}>
+    <div className="min-h-screen bg-white text-zinc-900" style={{ backgroundColor: '#FFFFFF' }}>
       <Navigation />
       <div className="mx-auto max-w-6xl px-5 py-8 pt-28 space-y-10">
         {/* Header */}
@@ -487,25 +487,25 @@ export default function AgentSuccessHub() {
         {/* Two Columns - Buyers & Hotsheets */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Your Buyers Card */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <div className="rounded-3xl border border-zinc-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
             <div className="mb-6">
-              <h3 className="text-xl font-semibold tracking-tight text-slate-900">Your Buyers</h3>
-              <p className="text-sm text-slate-600 mt-1">{buyers.length} active buyer{buyers.length !== 1 ? 's' : ''}</p>
+              <h3 className="text-xl font-semibold tracking-tight text-zinc-900">Your Buyers</h3>
+              <p className="text-sm text-zinc-600 mt-1">{buyers.length} active buyer{buyers.length !== 1 ? 's' : ''}</p>
             </div>
             <div className="space-y-4">
               {buyers.length === 0 ? (
-                <p className="text-slate-500 text-sm">No active buyers yet</p>
+                <p className="text-zinc-500 text-sm">No active buyers yet</p>
               ) : (
                 buyers.slice(0, 5).map(buyer => (
-                  <div key={buyer.id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 bg-white">
+                  <div key={buyer.id} className="flex items-center justify-between p-4 rounded-2xl border border-zinc-200 bg-white">
                     <div className="flex-1">
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-zinc-900">
                         {buyer.first_name && buyer.last_name 
                           ? `${buyer.first_name} ${buyer.last_name}`
                           : buyer.email}
                       </p>
-                      <p className="text-sm text-slate-600">{buyer.email}</p>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                      <p className="text-sm text-zinc-600">{buyer.email}</p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-zinc-500">
                         <span>{buyer.hotsheet_count} hotsheet{buyer.hotsheet_count !== 1 ? 's' : ''}</span>
                         {buyer.last_activity && (
                           <span>Active {formatDistanceToNow(new Date(buyer.last_activity), { addSuffix: true })}</span>
@@ -513,7 +513,7 @@ export default function AgentSuccessHub() {
                       </div>
                     </div>
                     <button 
-                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                      className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
                       onClick={() => navigate(`/my-clients`)}
                     >
                       View
@@ -525,31 +525,31 @@ export default function AgentSuccessHub() {
           </div>
 
           {/* Your Hotsheets Card */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <div className="rounded-3xl border border-zinc-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
             <div className="mb-6">
-              <h3 className="text-xl font-semibold tracking-tight text-slate-900">Your Hotsheets</h3>
-              <p className="text-sm text-slate-600 mt-1">{hotsheets.length} hotsheet{hotsheets.length !== 1 ? 's' : ''}</p>
+              <h3 className="text-xl font-semibold tracking-tight text-zinc-900">Your Hotsheets</h3>
+              <p className="text-sm text-zinc-600 mt-1">{hotsheets.length} hotsheet{hotsheets.length !== 1 ? 's' : ''}</p>
             </div>
             <div className="space-y-4">
               {hotsheets.length === 0 ? (
-                <p className="text-slate-500 text-sm">No hotsheets created yet</p>
+                <p className="text-zinc-500 text-sm">No hotsheets created yet</p>
               ) : (
                 hotsheets.slice(0, 5).map(hs => (
-                  <div key={hs.id} className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
+                  <div key={hs.id} className="p-4 rounded-2xl border border-zinc-200 bg-white space-y-3">
                     <div>
-                      <p className="font-medium text-slate-900">{hs.name}</p>
+                      <p className="font-medium text-zinc-900">{hs.name}</p>
                       {(hs.client_name || hs.client_email) && (
-                        <p className="text-sm text-slate-600">
+                        <p className="text-sm text-zinc-600">
                           Client: {hs.client_name || hs.client_email}
                         </p>
                       )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                      <div className="flex items-center gap-4 mt-2 text-xs text-zinc-500">
                         <span>Updated {formatDistanceToNow(new Date(hs.updated_at), { addSuffix: true })}</span>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button 
-                        className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
+                        className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition"
                         onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
                       >
                         View
@@ -563,25 +563,25 @@ export default function AgentSuccessHub() {
         </div>
 
         {/* Recent Activity */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+        <div className="rounded-3xl border border-zinc-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
           <div className="mb-6">
-            <h3 className="text-xl font-semibold tracking-tight text-slate-900">Recent Activity</h3>
-            <p className="text-sm text-slate-600 mt-1">Last 30 days of client engagement</p>
+            <h3 className="text-xl font-semibold tracking-tight text-zinc-900">Recent Activity</h3>
+            <p className="text-sm text-zinc-600 mt-1">Last 30 days of client engagement</p>
           </div>
           {activities.length === 0 ? (
-            <p className="text-slate-500 text-sm">No recent activity</p>
+            <p className="text-zinc-500 text-sm">No recent activity</p>
           ) : (
             <div className="space-y-4">
               {activities.slice(0, 10).map((activity, index) => {
                 const Icon = activity.icon;
                 return (
                   <div key={index} className="flex items-start gap-4">
-                    <div className="h-10 w-10 rounded-2xl border border-slate-200 bg-[#F7F6F3] flex items-center justify-center flex-shrink-0">
+                    <div className="h-10 w-10 rounded-2xl border border-zinc-200 bg-[#F7F6F3] flex items-center justify-center flex-shrink-0">
                       <Icon className="w-4 h-4 text-emerald-600" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-slate-900">{activity.description}</p>
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-sm text-zinc-900">{activity.description}</p>
+                      <p className="text-xs text-zinc-500 mt-1">
                         {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
                       </p>
                     </div>
