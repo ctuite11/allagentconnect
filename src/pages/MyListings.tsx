@@ -708,7 +708,7 @@ function MyListingsView({
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-foreground">${l.price.toLocaleString()}</span>
                             <button
-                              className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                              className="text-xs text-primary hover:text-primary/80 hover:underline"
                               onClick={() => startQuickEdit(l)}
                               title="Quick edit price and status"
                             >
