@@ -643,8 +643,8 @@ function MyListingsView({
                       </div>
                     )}
 
-                    {/* Thumbnail */}
-                    <div className="w-32 h-24 rounded-lg overflow-hidden bg-neutral-soft shrink-0 cursor-pointer">
+                    {/* Thumbnail - larger, visual anchor */}
+                    <div className="w-[140px] h-[105px] rounded-xl overflow-hidden bg-neutral-soft shrink-0 cursor-pointer">
                       <img
                         src={thumbnail || "/placeholder.svg"}
                         alt={l.address}
@@ -658,18 +658,18 @@ function MyListingsView({
                       {/* Listing # - blue, clickable */}
                       {l.listing_number && (
                         <button 
-                          className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer"
+                          className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer leading-none"
                           onClick={() => onPreview(l.id)}
                         >
                           #{l.listing_number}
                         </button>
                       )}
                       {/* Address */}
-                      <div className="font-semibold text-base text-foreground truncate">
+                      <div className="font-semibold text-base text-foreground truncate leading-tight mt-0.5">
                         {formatAddressWithUnit(l)}
                       </div>
                       {/* Location + Neighborhood - secondary metadata */}
-                      <div className="text-sm text-muted-foreground mt-0.5">
+                      <div className="text-sm text-muted-foreground leading-tight mt-0.5">
                         {l.state} {l.zip_code}{l.neighborhood ? ` · ${l.neighborhood}` : ''}
                       </div>
 
