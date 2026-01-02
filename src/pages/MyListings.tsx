@@ -572,7 +572,7 @@ function MyListingsView({
                 className="aac-card aac-card-2 overflow-hidden"
               >
                 {/* Top tools bar - text links, no icons */}
-                <div className="flex flex-wrap items-center gap-3 text-sm px-4 py-2.5 border-b border-neutral-200 bg-white">
+                <div className="flex flex-wrap items-center gap-3 text-sm px-4 py-2.5 bg-white">
                   <button
                     className="text-zinc-600 hover:text-emerald-700 transition"
                     onClick={() => onEdit(l.id)}
