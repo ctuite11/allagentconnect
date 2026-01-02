@@ -673,11 +673,11 @@ function MyListingsView({
                 </div>
 
                 {/* Status + Dates - stacked, absolutely positioned top-right */}
-                <div className="absolute top-4 right-4 shrink-0 text-right space-y-1">
+                <div className="absolute top-4 right-4 shrink-0 text-right space-y-0.5">
                   <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium capitalize ${statusBadgeClass(l.status)}`}>
                     {l.status.replace("_", " ")}
                   </span>
-                  <div className="text-xs text-zinc-500 leading-tight">List: {listDate}</div>
+                  <div className="text-xs text-zinc-500 leading-tight pt-1">List: {listDate}</div>
                   <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate || "—"}</div>
                   <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
                 </div>
