@@ -612,7 +612,7 @@ function MyListingsView({
                 className="relative bg-white border border-zinc-200 rounded-2xl p-4"
               >
                 {/* Action row - tight, no vertical padding */}
-                <div className="mb-2 pr-36">
+                <div className="mb-4 pr-36">
                   <div className="flex items-center gap-2 text-sm leading-tight text-zinc-600">
                     <button
                       className="hover:text-emerald-700 transition"
