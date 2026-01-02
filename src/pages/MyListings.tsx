@@ -76,23 +76,18 @@ function statusBadgeClass(status: string) {
   switch (status) {
     case "active":
     case "new":
-      return "bg-emerald-100 text-emerald-700";
+      return "border border-emerald-200 bg-emerald-50 text-emerald-700";
     case "coming_soon":
-      return "bg-amber-100 text-amber-700";
     case "pending":
-      return "bg-blue-100 text-blue-700";
+      return "border border-amber-200 bg-amber-50 text-amber-700";
     case "sold":
-      return "bg-purple-100 text-purple-700";
-    case "off_market":
-      return "bg-muted text-muted-foreground";
     case "draft":
-      return "bg-neutral-100 text-neutral-500";
+    case "off_market":
     case "withdrawn":
     case "expired":
     case "cancelled":
-      return "bg-red-100 text-red-600";
     default:
-      return "bg-neutral-100 text-neutral-500";
+      return "border border-zinc-200 bg-zinc-50 text-zinc-700";
   }
 }
 
@@ -614,172 +609,167 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-                className="aac-card aac-card-2 overflow-hidden"
+                className="bg-white border border-zinc-200 rounded-2xl p-4"
               >
-                {/* Top tools bar - text links, no icons */}
-                <div className="flex items-start justify-between text-sm px-4 py-2.5 bg-white">
-                  {/* Left: Action buttons */}
-                  <div className="flex flex-wrap items-center gap-3">
+                {/* Action row - tight, no vertical padding */}
+                <div className="mb-2">
+                  <div className="flex items-center gap-2 text-sm leading-tight text-zinc-600">
                     <button
-                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      className="hover:text-emerald-700 transition"
                       onClick={() => onEdit(l.id)}
                     >
                       Edit
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
-                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      className="hover:text-emerald-700 transition"
                       onClick={() => onPhotos(l.id)}
                     >
                       Photos
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
-                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      className="hover:text-emerald-700 transition"
                       onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                     >
                       Open House
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
-                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      className="hover:text-emerald-700 transition"
                       onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                     >
                       Broker Tour
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
-                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      className="hover:text-emerald-700 transition"
                       onClick={() => onMatches(l)}
                     >
                       Matches ({matchCount})
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
-                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      className="hover:text-emerald-700 transition"
                       onClick={() => onEmail?.(l)}
                     >
                       Email
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
-                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      className="hover:text-emerald-700 transition"
                       onClick={() => onSocialShare(l)}
                     >
                       Social
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
-                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      className="hover:text-emerald-700 transition"
                       onClick={() => onStats(l.id)}
                     >
                       Stats
                     </button>
                   </div>
-                  
-                  {/* Right: Status + Dates stack */}
-                  <div className="flex flex-col items-end gap-0.5 shrink-0 text-xs">
-                  <span className={`font-medium px-2 py-0.5 rounded-full capitalize mb-1 ${statusBadgeClass(l.status)}`}>
-                    {l.status.replace("_", " ")}
-                  </span>
-                    <span className="text-muted-foreground">List: {listDate}</span>
-                    {expDate && <span className="text-muted-foreground">Exp: {expDate}</span>}
-                    <span className="text-muted-foreground">DOM: {dom}</span>
-                  </div>
                 </div>
 
-                {/* Main content section */}
-                <div className="p-4 relative">
-                  <div className="flex items-start gap-4">
-                    {/* Checkbox for draft selection */}
-                    {selectedStatuses.has("draft") && selectedStatuses.size === 1 && l.status === "draft" && (
-                      <div className="shrink-0 pt-1">
-                        <Checkbox
-                          checked={selectedDraftIds.has(l.id)}
-                          onCheckedChange={() => toggleDraftSelection(l.id)}
-                        />
-                      </div>
-                    )}
-
-                    {/* Thumbnail - larger, visual anchor */}
-                    <div className="w-[140px] h-[105px] rounded-xl overflow-hidden bg-neutral-soft shrink-0 cursor-pointer">
-                      <img
-                        src={thumbnail || "/placeholder.svg"}
-                        alt={l.address}
-                        className="w-full h-full object-cover"
-                        onClick={() => onPreview(l.id)}
+                {/* Content row - photo + info + status */}
+                <div className="flex items-start gap-4">
+                  {/* Checkbox for draft selection */}
+                  {selectedStatuses.has("draft") && selectedStatuses.size === 1 && l.status === "draft" && (
+                    <div className="shrink-0 pt-1">
+                      <Checkbox
+                        checked={selectedDraftIds.has(l.id)}
+                        onCheckedChange={() => toggleDraftSelection(l.id)}
                       />
                     </div>
+                  )}
 
-                    {/* Main content column: Listing # → Address → Location + Neighborhood → Price */}
-                    <div className="flex-1 min-w-0">
-                      {/* Listing # - blue, clickable */}
-                      {l.listing_number && (
-                        <button 
-                          className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer leading-none"
-                          onClick={() => onPreview(l.id)}
-                        >
-                          #{l.listing_number}
-                        </button>
-                      )}
-                      {/* Address */}
-                      <div className="font-semibold text-base text-foreground truncate leading-tight mt-0.5">
-                        {formatAddressWithUnit(l)}
-                      </div>
-                      {/* Location + Neighborhood - secondary metadata */}
-                      <div className="text-sm text-muted-foreground leading-tight mt-0.5">
-                        {l.state} {l.zip_code}{l.neighborhood ? ` · ${l.neighborhood}` : ''}
-                      </div>
+                  {/* Photo - locked size */}
+                  <div className="w-[140px] h-[100px] shrink-0 overflow-hidden rounded-xl bg-neutral-soft cursor-pointer">
+                    <img
+                      src={thumbnail || "/placeholder.svg"}
+                      alt={l.address}
+                      className="w-full h-full object-cover"
+                      onClick={() => onPreview(l.id)}
+                    />
+                  </div>
 
-                      {/* Price - left aligned under location */}
-                      <div className="mt-2">
-                        {isEditing ? (
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              className="border border-neutral-200 rounded px-2 py-1 text-sm w-28 bg-white"
-                              value={editPrice}
-                              onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                            />
-                            <select
-                              className="border border-neutral-200 rounded px-2 py-1 bg-white capitalize text-xs"
-                              value={editStatus}
-                              onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
-                            >
-                              {ALL_STATUSES.map((tab) => (
-                                <option key={tab.value} value={tab.value}>
-                                  {tab.label}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
-                              onClick={saveQuickEdit}
-                            >
-                              Save
-                            </button>
-                            <button
-                              className="text-xs text-muted-foreground hover:text-foreground hover:underline"
-                              onClick={cancelQuickEdit}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-foreground">${l.price.toLocaleString()}</span>
-                            <button
-                              className="text-xs text-primary hover:text-primary/80 hover:underline"
-                              onClick={() => startQuickEdit(l)}
-                              title="Quick edit price and status"
-                            >
-                              Quick Edit
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                  {/* Center text stack - compressed */}
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    {/* Listing # - blue, clickable */}
+                    {l.listing_number && (
+                      <button 
+                        className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer leading-none"
+                        onClick={() => onPreview(l.id)}
+                      >
+                        #{l.listing_number}
+                      </button>
+                    )}
+                    {/* Address */}
+                    <div className="font-semibold text-base text-foreground truncate leading-tight">
+                      {formatAddressWithUnit(l)}
                     </div>
+                    {/* Location + Neighborhood */}
+                    <div className="text-sm text-muted-foreground leading-tight">
+                      {l.state} {l.zip_code}{l.neighborhood ? ` · ${l.neighborhood}` : ''}
+                    </div>
+                    {/* Price */}
+                    <div className="mt-1">
+                      {isEditing ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            className="border border-neutral-200 rounded px-2 py-1 text-sm w-28 bg-white"
+                            value={editPrice}
+                            onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                          />
+                          <select
+                            className="border border-neutral-200 rounded px-2 py-1 bg-white capitalize text-xs"
+                            value={editStatus}
+                            onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
+                          >
+                            {ALL_STATUSES.map((tab) => (
+                              <option key={tab.value} value={tab.value}>
+                                {tab.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
+                            onClick={saveQuickEdit}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                            onClick={cancelQuickEdit}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">${l.price.toLocaleString()}</span>
+                          <button
+                            className="text-xs text-primary hover:text-primary/80 hover:underline"
+                            onClick={() => startQuickEdit(l)}
+                            title="Quick edit price and status"
+                          >
+                            Quick Edit
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
+                  {/* Status + Dates - pinned top-right */}
+                  <div className="shrink-0 self-start text-right space-y-1">
+                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium capitalize ${statusBadgeClass(l.status)}`}>
+                      {l.status.replace("_", " ")}
+                    </span>
+                    <div className="text-xs text-zinc-500 leading-tight">List: {listDate}</div>
+                    <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate || "—"}</div>
+                    <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
                   </div>
                 </div>
               </div>
