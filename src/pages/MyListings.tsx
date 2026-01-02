@@ -575,45 +575,45 @@ function MyListingsView({
                 key={l.id}
                 className="aac-card aac-card-2 overflow-hidden"
               >
-                {/* Top tools bar - match Success Hub button styling */}
-                <div className="flex flex-wrap items-center gap-2 text-xs px-4 py-2.5 border-b border-neutral-200 bg-white">
+                {/* Top tools bar - compact pills */}
+                <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-b border-neutral-200 bg-white">
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
+                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
                     onClick={() => onPhotos(l.id)}
                     title="Manage photos"
                   >
                     Photos
                   </button>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium flex items-center gap-1"
                     onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                   >
-                    <span className="text-xs">🎈</span>
+                    <span className="text-[10px]">🎈</span>
                     {hasPublicOpenHouse ? "View Schedule" : "Open House"}
                   </button>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium flex items-center gap-1"
                     onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                   >
-                    <span className="text-xs">🚙</span>
+                    <span className="text-[10px]">🚙</span>
                     {hasBrokerTour ? "View Schedule" : "Broker Tour"}
                   </button>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
+                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
                     onClick={() => onMatches(l)}
                     title="Contact matching buyers"
                   >
                     Matches ({matchCount})
                   </button>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
+                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
                     onClick={() => onSocialShare(l)}
                     title="Share on social media"
                   >
                     Share
                   </button>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium flex items-center gap-1"
                     onClick={() => onStats(l.id)}
                     title="View analytics"
                   >
@@ -623,11 +623,11 @@ function MyListingsView({
                 </div>
 
                 {/* Main content section */}
-                <div className="p-4">
-                  <div className="flex items-start gap-4">
+                <div className="p-3">
+                  <div className="flex items-start gap-3">
                     {/* Checkbox for draft selection */}
                     {activeStatus === "draft" && l.status === "draft" && (
-                      <div className="shrink-0 pt-1">
+                      <div className="shrink-0 pt-0.5">
                         <Checkbox
                           checked={selectedDraftIds.has(l.id)}
                           onCheckedChange={() => toggleDraftSelection(l.id)}
@@ -635,8 +635,8 @@ function MyListingsView({
                       </div>
                     )}
 
-                    {/* Thumbnail */}
-                    <div className="w-32 h-24 rounded-lg overflow-hidden bg-neutral-soft shrink-0 cursor-pointer">
+                    {/* Thumbnail - wider, confident image */}
+                    <div className="w-28 h-20 rounded-lg overflow-hidden bg-neutral-soft shrink-0 cursor-pointer">
                       <img
                         src={thumbnail || "/placeholder.svg"}
                         alt={l.address}
@@ -666,7 +666,7 @@ function MyListingsView({
                       </div>
 
                       {/* Price - left aligned under location */}
-                      <div className="mt-2">
+                      <div className="mt-1">
                         {isEditing ? (
                           <div className="flex items-center gap-2">
                             <input
@@ -715,27 +715,27 @@ function MyListingsView({
                     </div>
 
                     {/* Right column: Status → Dates → Actions */}
-                    <div className="flex flex-col items-end gap-2 shrink-0">
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
                       {/* Status badge - top right */}
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
                         {l.status.replace("_", " ")}
                       </span>
                       {/* Date metadata - below status */}
-                      <div className="text-xs text-muted-foreground text-right">
+                      <div className="text-xs text-muted-foreground text-right leading-tight">
                         <div>List: {listDate}</div>
                         {expDate && <div>Exp: {expDate}</div>}
                       </div>
 
                       {/* Action icons */}
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
+                                className="w-7 h-7 flex items-center justify-center rounded-md border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
                                 onClick={() => onEdit(l.id)}
                               >
-                                <Pencil size={16} />
+                                <Pencil size={14} />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent sideOffset={8}>
@@ -745,10 +745,10 @@ function MyListingsView({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
+                                className="w-7 h-7 flex items-center justify-center rounded-md border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
                                 onClick={() => onPreview(l.id)}
                               >
-                                <Eye size={16} />
+                                <Eye size={14} />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent sideOffset={8}>
@@ -763,9 +763,9 @@ function MyListingsView({
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <button
-                                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
+                                    className="w-7 h-7 flex items-center justify-center rounded-md border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
                                   >
-                                    <Share2 size={16} />
+                                    <Share2 size={14} />
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent sideOffset={8}>
@@ -776,11 +776,11 @@ function MyListingsView({
                           />
                         </TooltipProvider>
                         <button
-                          className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
+                          className="w-7 h-7 flex items-center justify-center rounded-md border border-neutral-200 bg-white text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
                           onClick={() => setListingToDelete(l)}
                           title="Delete"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </div>
