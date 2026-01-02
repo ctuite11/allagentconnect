@@ -617,7 +617,7 @@ function MyListingsView({
                 className="aac-card aac-card-2 overflow-hidden"
               >
                 {/* Top tools bar - text links, no icons */}
-                <div className="flex items-center justify-between text-sm px-4 py-2.5 bg-white">
+                <div className="flex items-start justify-between text-sm px-4 py-2.5 bg-white">
                   {/* Left: Action buttons */}
                   <div className="flex flex-wrap items-center gap-3">
                     <button
