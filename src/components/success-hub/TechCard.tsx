@@ -36,9 +36,9 @@ export const TechCard = ({
       style={{ background: '#FFFFFF' }}
       onClick={onClick}
     >
-      {/* Icon top-right - uses aacStyles.iconGreen */}
-      <div className="absolute top-4 right-4">
-        <div className={aacStyles.iconGreen}>{icon}</div>
+      {/* Icon top-right - section anchor, not utility glyph */}
+      <div className="absolute top-5 right-5">
+        <div className="h-7 w-7 text-emerald-600">{icon}</div>
       </div>
 
       {/* Title - uses aacStyles.cardTitle */}
