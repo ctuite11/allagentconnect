@@ -4,9 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search } from "lucide-react";
+import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -14,6 +13,7 @@ import { OpenHouseDialog } from "@/components/OpenHouseDialog";
 import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
 import { ReverseProspectDialog } from "@/components/ReverseProspectDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
+import { EmailShareModal } from "@/components/EmailShareModal";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -147,6 +147,7 @@ function MyListingsView({
   onViewOpenHouses,
   onMatches,
   onSocialShare,
+  onEmail,
   onStats,
 }: {
   listings: Listing[];
@@ -163,6 +164,7 @@ function MyListingsView({
   onViewOpenHouses: (listing: Listing) => void;
   onMatches: (listing: Listing) => void;
   onSocialShare: (listing: Listing) => void;
+  onEmail: (listing: Listing) => void;
   onStats: (id: string) => void;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -504,38 +506,28 @@ function MyListingsView({
                   {/* Price */}
                   <div className="text-muted-foreground text-sm mt-2 font-medium">${l.price.toLocaleString()}</div>
 
-                  <div className="mt-3 flex items-center justify-end">
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
-                        onClick={() => onEdit(l.id)}
-                        title="Edit"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
-                        onClick={() => onPreview(l.id)}
-                        title="Preview"
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
-                        onClick={() => onShare(l.id)}
-                        title="Share"
-                      >
-                        <Share2 size={16} />
-                      </button>
-                      <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition"
-                        onClick={() => setListingToDelete(l)}
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                  {/* Action text links - matching list view */}
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                    <button
+                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      onClick={() => onEdit(l.id)}
+                    >
+                      Edit
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      onClick={() => onPreview(l.id)}
+                    >
+                      View
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      onClick={() => onShare(l.id)}
+                    >
+                      Share
+                    </button>
                   </div>
                 </div>
               </div>
@@ -569,55 +561,71 @@ function MyListingsView({
               l.open_houses.some((oh: any) => oh.event_type === "in_person");
             const hasBrokerTour = Array.isArray(l.open_houses) && 
               l.open_houses.some((oh: any) => oh.event_type === "broker_tour");
+            
+            // Calculate Days on Market
+            const listDateObj = l.list_date ? new Date(l.list_date) : l.created_at ? new Date(l.created_at) : null;
+            const dom = listDateObj ? Math.max(0, Math.floor((Date.now() - listDateObj.getTime()) / (1000 * 60 * 60 * 24))) : 0;
 
             return (
               <div
                 key={l.id}
                 className="aac-card aac-card-2 overflow-hidden"
               >
-                {/* Top tools bar - match Success Hub button styling */}
-                <div className="flex flex-wrap items-center gap-2 text-xs px-4 py-2.5 border-b border-neutral-200 bg-white">
+                {/* Top tools bar - text links, no icons */}
+                <div className="flex flex-wrap items-center gap-3 text-sm px-4 py-2.5 border-b border-neutral-200 bg-white">
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
+                    className="text-zinc-600 hover:text-emerald-700 transition"
+                    onClick={() => onEdit(l.id)}
+                  >
+                    Edit
+                  </button>
+                  <span className="text-zinc-300">•</span>
+                  <button
+                    className="text-zinc-600 hover:text-emerald-700 transition"
                     onClick={() => onPhotos(l.id)}
-                    title="Manage photos"
                   >
                     Photos
                   </button>
+                  <span className="text-zinc-300">•</span>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
+                    className="text-zinc-600 hover:text-emerald-700 transition"
                     onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                   >
-                    <span className="text-xs">🎈</span>
-                    {hasPublicOpenHouse ? "View Schedule" : "Open House"}
+                    Open House
                   </button>
+                  <span className="text-zinc-300">•</span>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
+                    className="text-zinc-600 hover:text-emerald-700 transition"
                     onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                   >
-                    <span className="text-xs">🚙</span>
-                    {hasBrokerTour ? "View Schedule" : "Broker Tour"}
+                    Broker Tour
                   </button>
+                  <span className="text-zinc-300">•</span>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
+                    className="text-zinc-600 hover:text-emerald-700 transition"
                     onClick={() => onMatches(l)}
-                    title="Contact matching buyers"
                   >
                     Matches ({matchCount})
                   </button>
+                  <span className="text-zinc-300">•</span>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium"
-                    onClick={() => onSocialShare(l)}
-                    title="Share on social media"
+                    className="text-zinc-600 hover:text-emerald-700 transition"
+                    onClick={() => onEmail?.(l)}
                   >
-                    Share
+                    Email
                   </button>
+                  <span className="text-zinc-300">•</span>
                   <button
-                    className="px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-sm font-medium flex items-center gap-1"
-                    onClick={() => onStats(l.id)}
-                    title="View analytics"
+                    className="text-zinc-600 hover:text-emerald-700 transition"
+                    onClick={() => onSocialShare(l)}
                   >
-                    <BarChart3 className="h-3 w-3" />
+                    Social
+                  </button>
+                  <span className="text-zinc-300">•</span>
+                  <button
+                    className="text-zinc-600 hover:text-emerald-700 transition"
+                    onClick={() => onStats(l.id)}
+                  >
                     Stats
                   </button>
                 </div>
@@ -714,74 +722,17 @@ function MyListingsView({
                       </div>
                     </div>
 
-                    {/* Right column: Status → Dates → Actions */}
-                    <div className="flex flex-col items-end gap-2 shrink-0">
+                    {/* Right column: Status → Dates (List/Exp/DOM) */}
+                    <div className="flex flex-col items-end gap-1 shrink-0">
                       {/* Status badge - top right */}
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
                         {l.status.replace("_", " ")}
                       </span>
                       {/* Date metadata - below status */}
-                      <div className="text-xs text-muted-foreground text-right">
+                      <div className="text-xs text-muted-foreground text-right mt-1">
                         <div>List: {listDate}</div>
                         {expDate && <div>Exp: {expDate}</div>}
-                      </div>
-
-                      {/* Action icons */}
-                      <div className="flex items-center gap-1.5">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
-                                onClick={() => onEdit(l.id)}
-                              >
-                                <Pencil size={16} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent sideOffset={8}>
-                              Full edit
-                            </TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
-                                onClick={() => onPreview(l.id)}
-                              >
-                                <Eye size={16} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent sideOffset={8}>
-                              Preview
-                            </TooltipContent>
-                          </Tooltip>
-                          <SocialShareMenu
-                            url={getListingShareUrl(l.id)}
-                            title={`${formatAddressWithUnit(l)}, ${l.city} - $${l.price?.toLocaleString()}`}
-                            listingId={l.id}
-                            trigger={
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
-                                  >
-                                    <Share2 size={16} />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent sideOffset={8}>
-                                  Share
-                                </TooltipContent>
-                              </Tooltip>
-                            }
-                          />
-                        </TooltipProvider>
-                        <button
-                          className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
-                          onClick={() => setListingToDelete(l)}
-                          title="Delete"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <div>DOM: {dom} days</div>
                       </div>
                     </div>
                   </div>
@@ -812,6 +763,7 @@ const MyListings = () => {
   const [viewOpenHousesListing, setViewOpenHousesListing] = useState<Listing | null>(null);
   const [matchesListing, setMatchesListing] = useState<Listing | null>(null);
   const [socialShareListing, setSocialShareListing] = useState<Listing | null>(null);
+  const [emailListing, setEmailListing] = useState<Listing | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -980,6 +932,10 @@ const MyListings = () => {
     setSocialShareListing(listing);
   };
 
+  const handleEmail = (listing: Listing) => {
+    setEmailListing(listing);
+  };
+
   const handleStats = (id: string) => {
     navigate(`/analytics/${id}`);
   };
@@ -1075,6 +1031,7 @@ const MyListings = () => {
         onViewOpenHouses={handleViewOpenHouses}
         onMatches={handleMatches}
         onSocialShare={handleSocialShare}
+        onEmail={handleEmail}
         onStats={handleStats}
       />
 
@@ -1156,6 +1113,14 @@ const MyListings = () => {
           </div>
         </div>
       )}
+
+      {/* Email Share Modal */}
+      <EmailShareModal
+        open={!!emailListing}
+        onOpenChange={(open) => !open && setEmailListing(null)}
+        listingUrl={emailListing ? getListingShareUrl(emailListing.id) : ""}
+        listingAddress={emailListing ? `${emailListing.address}, ${emailListing.city}` : ""}
+      />
       </main>
     </div>
   );
