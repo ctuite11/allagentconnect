@@ -370,11 +370,11 @@ function MyListingsView({
         </DropdownMenu>
       </div>
 
-      {/* Premium Filter Tray */}
-      <div className="bg-zinc-50/60 border border-zinc-200 rounded-2xl p-3">
-        <div className="flex flex-col lg:flex-row lg:items-start gap-3">
+      {/* Premium Filter Bar */}
+      <div>
+        <div className="flex items-center gap-3">
           {/* Search */}
-          <div className="relative w-full lg:w-64 shrink-0">
+          <div className="relative w-[260px] shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by address or AAC #"
@@ -384,31 +384,14 @@ function MyListingsView({
             />
           </div>
 
-          {/* Status Pills Container */}
-          <div className="flex-1 flex flex-col gap-2">
-            {/* Row 1: Primary statuses */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {STATUS_ROW_1.map((tab) => (
+          {/* Status pills (single row, horizontal scroll) */}
+          <div className="flex-1 overflow-x-auto scrollbar-none">
+            <div className="flex flex-nowrap gap-2 whitespace-nowrap">
+              {ALL_STATUSES.map((tab) => (
                 <button
                   key={tab.value}
                   onClick={() => toggleStatus(tab.value)}
-                  className={`text-sm px-3 py-1.5 rounded-full font-medium transition-colors border ${
-                    selectedStatuses.has(tab.value)
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-800"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            {/* Row 2: Secondary statuses */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {STATUS_ROW_2.map((tab) => (
-                <button
-                  key={tab.value}
-                  onClick={() => toggleStatus(tab.value)}
-                  className={`text-sm px-3 py-1.5 rounded-full font-medium transition-colors border ${
+                  className={`shrink-0 text-sm px-3 py-1.5 rounded-full font-medium transition-colors border ${
                     selectedStatuses.has(tab.value)
                       ? "bg-emerald-50 border-emerald-200 text-emerald-800"
                       : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-800"
@@ -704,7 +687,12 @@ function MyListingsView({
                 </div>
 
                 {/* Main content section */}
-                <div className="p-4">
+                <div className="p-4 relative">
+                  {l.status === "coming_soon" && (
+                    <span className="absolute top-4 right-4 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                      Coming Soon
+                    </span>
+                  )}
                   <div className="flex items-start gap-4">
                     {/* Checkbox for draft selection */}
                     {selectedStatuses.has("draft") && selectedStatuses.size === 1 && l.status === "draft" && (
@@ -797,10 +785,12 @@ function MyListingsView({
 
                     {/* Right column: Status → Dates (List/Exp/DOM) */}
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                      {/* Status badge - top right */}
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
-                        {l.status.replace("_", " ")}
-                      </span>
+                      {/* Status badge - top right (hidden for coming_soon since it's absolute positioned) */}
+                      {l.status !== "coming_soon" && (
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
+                          {l.status.replace("_", " ")}
+                        </span>
+                      )}
                       {/* Date metadata - below status */}
                       <div className="text-xs text-muted-foreground text-right mt-1">
                         <div>List: {listDate}</div>
