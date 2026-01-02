@@ -42,7 +42,7 @@ export const TechCard = ({
       </div>
 
       {/* Title - uses aacStyles.cardTitle */}
-      <h3 className={cn("text-base font-semibold tracking-tight mb-2 mt-6", aacStyles.cardTitle)}>{title}</h3>
+      <h3 className={cn("text-base font-bold tracking-tight mb-2 mt-6", aacStyles.cardTitle)}>{title}</h3>
 
       {/* Description - uses aacStyles.cardDesc */}
       <p className={cn("mb-4 line-clamp-2", aacStyles.cardDesc)}>{description}</p>
