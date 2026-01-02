@@ -679,9 +679,9 @@ function MyListingsView({
                   
                   {/* Right: Status + Dates stack */}
                   <div className="flex flex-col items-end gap-0.5 shrink-0 text-xs">
-                    <span className={`font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
-                      {l.status.replace("_", " ")}
-                    </span>
+                  <span className={`font-medium px-2 py-0.5 rounded-full capitalize mb-1 ${statusBadgeClass(l.status)}`}>
+                    {l.status.replace("_", " ")}
+                  </span>
                     <span className="text-muted-foreground">List: {listDate}</span>
                     {expDate && <span className="text-muted-foreground">Exp: {expDate}</span>}
                     <span className="text-muted-foreground">DOM: {dom}</span>
