@@ -732,48 +732,48 @@ function MyListingsView({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition cursor-pointer"
+                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
                                 onClick={() => onEdit(l.id)}
                               >
                                 <Pencil size={16} />
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent className="bg-black text-white border-black">
+                            <TooltipContent sideOffset={8}>
                               Full edit
                             </TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition cursor-pointer"
+                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
                                 onClick={() => onPreview(l.id)}
                               >
                                 <Eye size={16} />
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent className="bg-black text-white border-black">
+                            <TooltipContent sideOffset={8}>
                               Preview
                             </TooltipContent>
                           </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <SocialShareMenu
-                                url={getListingShareUrl(l.id)}
-                                title={`${formatAddressWithUnit(l)}, ${l.city} - $${l.price?.toLocaleString()}`}
-                                listingId={l.id}
-                                trigger={
+                          <SocialShareMenu
+                            url={getListingShareUrl(l.id)}
+                            title={`${formatAddressWithUnit(l)}, ${l.city} - $${l.price?.toLocaleString()}`}
+                            listingId={l.id}
+                            trigger={
+                              <Tooltip>
+                                <TooltipTrigger asChild>
                                   <button
-                                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition cursor-pointer"
+                                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
                                   >
                                     <Share2 size={16} />
                                   </button>
-                                }
-                              />
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-black text-white border-black">
-                              Share
-                            </TooltipContent>
-                          </Tooltip>
+                                </TooltipTrigger>
+                                <TooltipContent sideOffset={8}>
+                                  Share
+                                </TooltipContent>
+                              </Tooltip>
+                            }
+                          />
                         </TooltipProvider>
                         <button
                           className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
