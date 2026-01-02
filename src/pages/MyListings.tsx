@@ -52,18 +52,25 @@ interface Listing {
   };
 }
 
-const STATUS_TABS: { label: string; value: ListingStatus }[] = [
+// Row 1: Primary statuses
+const STATUS_ROW_1: { label: string; value: ListingStatus }[] = [
   { label: "Off-Market", value: "off_market" },
   { label: "Coming Soon", value: "coming_soon" },
   { label: "New", value: "new" },
   { label: "Active", value: "active" },
   { label: "Pending", value: "pending" },
   { label: "Sold", value: "sold" },
+  { label: "Draft", value: "draft" },
+];
+
+// Row 2: Secondary statuses
+const STATUS_ROW_2: { label: string; value: ListingStatus }[] = [
   { label: "Withdrawn", value: "withdrawn" },
   { label: "Expired", value: "expired" },
   { label: "Cancelled", value: "cancelled" },
-  { label: "Draft", value: "draft" },
 ];
+
+const ALL_STATUSES = [...STATUS_ROW_1, ...STATUS_ROW_2];
 
 function statusBadgeClass(status: string) {
   switch (status) {
@@ -168,20 +175,38 @@ function MyListingsView({
   onStats: (id: string) => void;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const statusFromUrl = searchParams.get("status") as ListingStatus | null;
+  const statusFromUrl = searchParams.get("status");
   
-  const [activeStatus, setActiveStatus] = useState<ListingStatus | null>(statusFromUrl);
+  // Multi-select: parse comma-separated statuses from URL
+  const [selectedStatuses, setSelectedStatuses] = useState<Set<ListingStatus>>(() => {
+    if (!statusFromUrl) return new Set();
+    return new Set(statusFromUrl.split(",").filter(s => ALL_STATUSES.some(t => t.value === s)) as ListingStatus[]);
+  });
   const [view, setView] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Sync URL param with state
-  const handleStatusChange = (status: ListingStatus | null) => {
-    setActiveStatus(status);
-    if (status) {
-      setSearchParams({ status });
-    } else {
-      setSearchParams({});
-    }
+  // Sync URL param with state for multi-select
+  const toggleStatus = (status: ListingStatus) => {
+    setSelectedStatuses(prev => {
+      const next = new Set(prev);
+      if (next.has(status)) {
+        next.delete(status);
+      } else {
+        next.add(status);
+      }
+      // Update URL
+      if (next.size > 0) {
+        setSearchParams({ status: Array.from(next).join(",") });
+      } else {
+        setSearchParams({});
+      }
+      return next;
+    });
+  };
+
+  const clearStatusFilters = () => {
+    setSelectedStatuses(new Set());
+    setSearchParams({});
   };
 
   // Quick edit state
@@ -201,12 +226,12 @@ function MyListingsView({
   // Get draft listings for bulk selection
   const draftListings = useMemo(() => listings.filter(l => l.status === "draft"), [listings]);
 
-  // Clear selection when switching away from draft tab
+  // Clear selection when switching away from draft filter
   useEffect(() => {
-    if (activeStatus !== "draft") {
+    if (!selectedStatuses.has("draft")) {
       setSelectedDraftIds(new Set());
     }
-  }, [activeStatus]);
+  }, [selectedStatuses]);
 
   const toggleDraftSelection = (id: string) => {
     setSelectedDraftIds(prev => {
@@ -253,9 +278,9 @@ function MyListingsView({
   };
 
   const filteredListings = useMemo(() => {
-    let result = activeStatus === null 
+    let result = selectedStatuses.size === 0 
       ? listings 
-      : listings.filter((l) => l.status === activeStatus);
+      : listings.filter((l) => selectedStatuses.has(l.status as ListingStatus));
     
     // Apply search query filter
     if (searchQuery.trim()) {
@@ -271,7 +296,7 @@ function MyListingsView({
     // Sort newest first
     result.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
     return result;
-  }, [listings, activeStatus, searchQuery]);
+  }, [listings, selectedStatuses, searchQuery]);
 
   const startQuickEdit = (listing: Listing) => {
     setEditingId(listing.id);
@@ -345,55 +370,103 @@ function MyListingsView({
         </DropdownMenu>
       </div>
 
-      {/* Quick Search + Status Filters + View Toggle */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        {/* Quick Search */}
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by address or AAC #"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 text-sm"
-          />
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Status filter pills - match Success Hub styling */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {STATUS_TABS.map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => handleStatusChange(activeStatus === tab.value ? null : tab.value)}
-                className={`px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors ${
-                  activeStatus === tab.value
-                    ? "bg-neutral-soft text-foreground border-neutral-200"
-                    : "bg-white border-neutral-200 text-muted-foreground hover:text-foreground hover:bg-neutral-soft"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+      {/* Premium Filter Tray */}
+      <div className="bg-zinc-50/60 border border-zinc-200 rounded-2xl p-3">
+        <div className="flex flex-col lg:flex-row lg:items-start gap-3">
+          {/* Search */}
+          <div className="relative w-full lg:w-64 shrink-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by address or AAC #"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 text-sm bg-white"
+            />
           </div>
 
-          {/* View toggle - match Success Hub styling */}
-          <div className="inline-flex items-center border border-neutral-200 rounded-lg p-0.5 bg-white">
-            <button
-              onClick={() => setView("grid")}
-              className={`p-1.5 rounded-md transition-colors ${
-                view === "grid" ? "bg-neutral-soft text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-neutral-soft"
-              }`}
-            >
-              <Grid size={16} />
-            </button>
-            <button
-              onClick={() => setView("list")}
-              className={`p-1.5 rounded-md transition-colors ${
-                view === "list" ? "bg-neutral-soft text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-neutral-soft"
-              }`}
-            >
-              <ListIcon size={16} />
-            </button>
+          {/* Status Pills Container */}
+          <div className="flex-1 flex flex-col gap-2">
+            {/* Row 1: Primary statuses */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {STATUS_ROW_1.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => toggleStatus(tab.value)}
+                  className={`text-sm px-3 py-1.5 rounded-full font-medium transition-colors border ${
+                    selectedStatuses.has(tab.value)
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-800"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            {/* Row 2: Secondary statuses */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {STATUS_ROW_2.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => toggleStatus(tab.value)}
+                  className={`text-sm px-3 py-1.5 rounded-full font-medium transition-colors border ${
+                    selectedStatuses.has(tab.value)
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-800"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Right side: Clear + Sort + View toggle */}
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Clear link */}
+            {selectedStatuses.size > 0 && (
+              <button
+                onClick={clearStatusFilters}
+                className="text-sm text-zinc-500 hover:text-zinc-800 transition-colors"
+              >
+                Clear
+              </button>
+            )}
+
+            {/* Sort dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 text-sm text-zinc-600 hover:text-zinc-800 border border-zinc-200 bg-white rounded-lg px-3 py-1.5 transition-colors">
+                  Sort
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem className="cursor-pointer text-sm">Date (Newest)</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm">DOM</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm">Price</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm">Status</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* View toggle */}
+            <div className="inline-flex items-center border border-zinc-200 rounded-lg p-0.5 bg-white">
+              <button
+                onClick={() => setView("grid")}
+                className={`p-1.5 rounded-md transition-colors ${
+                  view === "grid" ? "bg-zinc-100 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-zinc-50"
+                }`}
+              >
+                <Grid size={16} />
+              </button>
+              <button
+                onClick={() => setView("list")}
+                className={`p-1.5 rounded-md transition-colors ${
+                  view === "list" ? "bg-zinc-100 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-zinc-50"
+                }`}
+              >
+                <ListIcon size={16} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -443,7 +516,7 @@ function MyListingsView({
       </AlertDialog>
 
       {/* Select All Drafts Row - only visible on Draft tab */}
-      {activeStatus === "draft" && draftListings.length > 0 && (
+      {selectedStatuses.has("draft") && selectedStatuses.size === 1 && draftListings.length > 0 && (
         <div className="flex items-center gap-4 py-2">
           <div className="flex items-center gap-2">
             <Checkbox
@@ -634,7 +707,7 @@ function MyListingsView({
                 <div className="p-4">
                   <div className="flex items-start gap-4">
                     {/* Checkbox for draft selection */}
-                    {activeStatus === "draft" && l.status === "draft" && (
+                    {selectedStatuses.has("draft") && selectedStatuses.size === 1 && l.status === "draft" && (
                       <div className="shrink-0 pt-1">
                         <Checkbox
                           checked={selectedDraftIds.has(l.id)}
@@ -688,7 +761,7 @@ function MyListingsView({
                               value={editStatus}
                               onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
                             >
-                              {STATUS_TABS.map((tab) => (
+                              {ALL_STATUSES.map((tab) => (
                                 <option key={tab.value} value={tab.value}>
                                   {tab.label}
                                 </option>
