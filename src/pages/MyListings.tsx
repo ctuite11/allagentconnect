@@ -4,17 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Pencil, Eye, Share2, Trash2, Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search } from "lucide-react";
+import { Grid, List as ListIcon, Plus, ChevronDown, Lock, Sparkles, Home, Search, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { OpenHouseDialog } from "@/components/OpenHouseDialog";
 import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
 import { ReverseProspectDialog } from "@/components/ReverseProspectDialog";
-import SocialShareMenu from "@/components/SocialShareMenu";
-import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
+import { EmailShareModal } from "@/components/EmailShareModal";
+import { getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/ui/page-header";
@@ -52,17 +52,34 @@ interface Listing {
   };
 }
 
-const STATUS_TABS: { label: string; value: ListingStatus }[] = [
-  { label: "Off-Market", value: "off_market" },
-  { label: "Coming Soon", value: "coming_soon" },
-  { label: "New", value: "new" },
+// Core status tabs shown directly
+const CORE_STATUS_TABS: { label: string; value: ListingStatus }[] = [
   { label: "Active", value: "active" },
+  { label: "Coming Soon", value: "coming_soon" },
   { label: "Pending", value: "pending" },
   { label: "Sold", value: "sold" },
+  { label: "Draft", value: "draft" },
+];
+
+// Additional statuses under "More"
+const MORE_STATUS_TABS: { label: string; value: ListingStatus }[] = [
+  { label: "New", value: "new" },
+  { label: "Off-Market", value: "off_market" },
   { label: "Withdrawn", value: "withdrawn" },
   { label: "Expired", value: "expired" },
   { label: "Cancelled", value: "cancelled" },
-  { label: "Draft", value: "draft" },
+];
+
+// Sort options
+type SortOption = "dom_desc" | "dom_asc" | "price_desc" | "price_asc" | "date_desc" | "date_asc" | "status";
+const SORT_OPTIONS: { label: string; value: SortOption }[] = [
+  { label: "DOM (High → Low)", value: "dom_desc" },
+  { label: "DOM (Low → High)", value: "dom_asc" },
+  { label: "Price (High → Low)", value: "price_desc" },
+  { label: "Price (Low → High)", value: "price_asc" },
+  { label: "Date (Newest)", value: "date_desc" },
+  { label: "Date (Oldest)", value: "date_asc" },
+  { label: "Status", value: "status" },
 ];
 
 function statusBadgeClass(status: string) {
@@ -186,6 +203,9 @@ function MyListingsView({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState<number | "">("");
   const [editStatus, setEditStatus] = useState<ListingStatus | "">("");
+  
+  // Sort state
+  const [sortBy, setSortBy] = useState<SortOption>("date_desc");
 
   // Bulk draft deletion state
   const [selectedDraftIds, setSelectedDraftIds] = useState<Set<string>>(new Set());
@@ -250,6 +270,15 @@ function MyListingsView({
     }
   };
 
+  // Helper to calculate days on market
+  const calculateDOM = (listing: Listing) => {
+    const startDate = listing.active_date || listing.list_date || listing.created_at;
+    if (!startDate) return 0;
+    const start = new Date(startDate);
+    const now = new Date();
+    return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
   const filteredListings = useMemo(() => {
     let result = activeStatus === null 
       ? listings 
@@ -266,10 +295,30 @@ function MyListingsView({
       );
     }
     
-    // Sort newest first
-    result.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
+    // Apply sorting
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "dom_desc":
+          return calculateDOM(b) - calculateDOM(a);
+        case "dom_asc":
+          return calculateDOM(a) - calculateDOM(b);
+        case "price_desc":
+          return (b.price || 0) - (a.price || 0);
+        case "price_asc":
+          return (a.price || 0) - (b.price || 0);
+        case "date_desc":
+          return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+        case "date_asc":
+          return new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime();
+        case "status":
+          return a.status.localeCompare(b.status);
+        default:
+          return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+      }
+    });
+    
     return result;
-  }, [listings, activeStatus, searchQuery]);
+  }, [listings, activeStatus, searchQuery, sortBy]);
 
   const startQuickEdit = (listing: Listing) => {
     setEditingId(listing.id);
@@ -294,9 +343,8 @@ function MyListingsView({
     cancelQuickEdit();
   };
 
-  const comingSoon = (feature: string) => {
-    toast.info(`${feature} is coming soon.`);
-  };
+  // All status tabs combined for the quick edit dropdown
+  const ALL_STATUS_TABS = [...CORE_STATUS_TABS, ...MORE_STATUS_TABS];
 
   return (
     <div className="max-w-[1280px] mx-auto px-6 py-6 space-y-6">
@@ -357,24 +405,75 @@ function MyListingsView({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Status filter pills - match Success Hub styling */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {STATUS_TABS.map((tab) => (
+          {/* All pill - show all listings */}
+          <button
+            onClick={() => handleStatusChange(null)}
+            className={`px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors ${
+              activeStatus === null
+                ? "bg-neutral-soft text-foreground border-neutral-200"
+                : "bg-white border-neutral-200 text-muted-foreground hover:text-foreground hover:bg-neutral-soft"
+            }`}
+          >
+            All
+          </button>
+          
+          {/* Core status filter pills */}
+          {CORE_STATUS_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => handleStatusChange(activeStatus === tab.value ? null : tab.value)}
+              className={`px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors ${
+                activeStatus === tab.value
+                  ? "bg-neutral-soft text-foreground border-neutral-200"
+                  : "bg-white border-neutral-200 text-muted-foreground hover:text-foreground hover:bg-neutral-soft"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+          
+          {/* More dropdown for additional statuses */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <button
-                key={tab.value}
-                onClick={() => handleStatusChange(activeStatus === tab.value ? null : tab.value)}
-                className={`px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors ${
-                  activeStatus === tab.value
+                className={`px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
+                  MORE_STATUS_TABS.some(tab => tab.value === activeStatus)
                     ? "bg-neutral-soft text-foreground border-neutral-200"
                     : "bg-white border-neutral-200 text-muted-foreground hover:text-foreground hover:bg-neutral-soft"
                 }`}
               >
-                {tab.label}
+                <MoreHorizontal className="h-4 w-4" />
+                More
               </button>
-            ))}
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {MORE_STATUS_TABS.map((tab) => (
+                <DropdownMenuItem
+                  key={tab.value}
+                  onClick={() => handleStatusChange(activeStatus === tab.value ? null : tab.value)}
+                  className={activeStatus === tab.value ? "bg-neutral-soft" : ""}
+                >
+                  {tab.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {/* Sort dropdown */}
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+            <SelectTrigger className="w-[150px] h-9">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          {/* View toggle - match Success Hub styling */}
+          {/* View toggle */}
           <div className="inline-flex items-center border border-neutral-200 rounded-lg p-0.5 bg-white">
             <button
               onClick={() => setView("grid")}
@@ -460,7 +559,6 @@ function MyListingsView({
               disabled={isDeleting}
               className="gap-2"
             >
-              <Trash2 className="h-4 w-4" />
               Delete Selected ({selectedDraftIds.size})
             </Button>
           )}
@@ -472,70 +570,65 @@ function MyListingsView({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
+            const matchCount = l.hot_sheet_matches ?? 0;
+            const dom = calculateDOM(l);
             return (
               <div
                 key={l.id}
-                className="aac-card aac-card-2 overflow-hidden"
+                className="bg-white border border-neutral-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
               >
-                <div className="w-full h-48 bg-neutral-soft overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
+                <div className="w-full h-40 bg-neutral-soft overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
                   <img src={thumbnail || "/placeholder.svg"} alt={l.address} className="w-full h-full object-cover" />
                 </div>
 
-                <div className="p-4">
+                <div className="p-3">
                   {/* Address */}
-                  <div className="font-semibold text-base text-foreground">
+                  <div className="font-semibold text-sm text-foreground truncate">
                     {formatAddressWithUnit(l)}
                   </div>
-                  {/* Location - secondary */}
-                  <div className="text-muted-foreground text-sm mt-0.5">
+                  {/* Location */}
+                  <div className="text-muted-foreground text-xs mt-0.5">
                     {l.state} {l.zip_code}
                   </div>
-                  {/* Status + Listing # as secondary metadata */}
-                  <div className="flex items-center gap-2 mt-2">
-                    <span
-                      className={`text-xs font-medium px-2.5 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}
-                    >
+                  {/* Price + Status */}
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-sm font-medium">${l.price.toLocaleString()}</span>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
                       {l.status.replace("_", " ")}
                     </span>
-                    {l.listing_number && (
-                      <span className="text-xs text-muted-foreground">#{l.listing_number}</span>
-                    )}
                   </div>
-                  {/* Price */}
-                  <div className="text-muted-foreground text-sm mt-2 font-medium">${l.price.toLocaleString()}</div>
-
-                  <div className="mt-3 flex items-center justify-end">
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
-                        onClick={() => onEdit(l.id)}
-                        title="Edit"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
-                        onClick={() => onPreview(l.id)}
-                        title="Preview"
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition"
-                        onClick={() => onShare(l.id)}
-                        title="Share"
-                      >
-                        <Share2 size={16} />
-                      </button>
-                      <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition"
-                        onClick={() => setListingToDelete(l)}
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                  {/* Action pills */}
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    <button
+                      className="px-2 py-0.5 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs"
+                      onClick={() => onEdit(l.id)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="px-2 py-0.5 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs"
+                      onClick={() => onSocialShare(l)}
+                    >
+                      Share via Email
+                    </button>
+                    <button
+                      className="px-2 py-0.5 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs"
+                      onClick={() => onStats(l.id)}
+                    >
+                      Stats
+                    </button>
+                    <button
+                      className="px-2 py-0.5 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs"
+                      onClick={() => onMatches(l)}
+                    >
+                      Matches ({matchCount})
+                    </button>
+                    <button
+                      className="px-2 py-0.5 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition text-xs"
+                      onClick={() => setListingToDelete(l)}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>
@@ -550,239 +643,146 @@ function MyListingsView({
         </div>
       )}
 
-      {/* LIST VIEW – with MLS-style quick tools + quick edit */}
-      {/* LIST VIEW – MLS-style tools + quick edit near price/status */}
-      {/* LIST VIEW – MLS-style tools + quick edit near price/status */}
+      {/* LIST VIEW – Compact listing rows with action pills */}
       {view === "list" && (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             const isEditing = editingId === l.id;
             const matchCount = l.hot_sheet_matches ?? 0;
-            const views = l.listing_stats?.view_count ?? 0;
-            const favorites = l.listing_stats?.save_count ?? 0;
-            const shares = l.listing_stats?.share_count ?? 0;
             const listDate = formatDate(l.list_date) || formatDate(l.created_at);
             const expDate = formatDate(l.expiration_date);
-            const hasOpenHouses = Array.isArray(l.open_houses) && l.open_houses.length > 0;
-            const hasPublicOpenHouse = Array.isArray(l.open_houses) && 
-              l.open_houses.some((oh: any) => oh.event_type === "in_person");
-            const hasBrokerTour = Array.isArray(l.open_houses) && 
-              l.open_houses.some((oh: any) => oh.event_type === "broker_tour");
+            const dom = calculateDOM(l);
 
             return (
               <div
                 key={l.id}
-                className="aac-card aac-card-2 overflow-hidden"
+                className="bg-white border border-neutral-200 rounded-lg overflow-hidden hover:shadow-sm transition-shadow"
               >
-                {/* Top tools bar - compact pills */}
-                <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-b border-neutral-200 bg-white">
-                  <button
-                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
-                    onClick={() => onPhotos(l.id)}
-                    title="Manage photos"
-                  >
-                    Photos
-                  </button>
-                  <button
-                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium flex items-center gap-1"
-                    onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
-                  >
-                    <span className="text-[10px]">🎈</span>
-                    {hasPublicOpenHouse ? "View Schedule" : "Open House"}
-                  </button>
-                  <button
-                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium flex items-center gap-1"
-                    onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
-                  >
-                    <span className="text-[10px]">🚙</span>
-                    {hasBrokerTour ? "View Schedule" : "Broker Tour"}
-                  </button>
-                  <button
-                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
-                    onClick={() => onMatches(l)}
-                    title="Contact matching buyers"
-                  >
-                    Matches ({matchCount})
-                  </button>
-                  <button
-                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
-                    onClick={() => onSocialShare(l)}
-                    title="Share on social media"
-                  >
-                    Share
-                  </button>
-                  <button
-                    className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium flex items-center gap-1"
-                    onClick={() => onStats(l.id)}
-                    title="View analytics"
-                  >
-                    <BarChart3 className="h-3 w-3" />
-                    Stats
-                  </button>
-                </div>
-
-                {/* Main content section */}
-                <div className="p-3">
-                  <div className="flex items-start gap-3">
-                    {/* Checkbox for draft selection */}
-                    {activeStatus === "draft" && l.status === "draft" && (
-                      <div className="shrink-0 pt-0.5">
-                        <Checkbox
-                          checked={selectedDraftIds.has(l.id)}
-                          onCheckedChange={() => toggleDraftSelection(l.id)}
-                        />
-                      </div>
-                    )}
-
-                    {/* Thumbnail - wider, confident image */}
-                    <div className="w-32 h-24 rounded-lg overflow-hidden bg-neutral-soft shrink-0 cursor-pointer">
-                      <img
-                        src={thumbnail || "/placeholder.svg"}
-                        alt={l.address}
-                        className="w-full h-full object-cover"
-                        onClick={() => onPreview(l.id)}
+                {/* Main content row */}
+                <div className="flex items-start gap-3 p-3">
+                  {/* Checkbox for draft selection */}
+                  {activeStatus === "draft" && l.status === "draft" && (
+                    <div className="shrink-0 pt-2">
+                      <Checkbox
+                        checked={selectedDraftIds.has(l.id)}
+                        onCheckedChange={() => toggleDraftSelection(l.id)}
                       />
                     </div>
+                  )}
 
-                    {/* Main content column: Listing # → Address → Location + Neighborhood → Price */}
-                    <div className="flex-1 min-w-0">
-                      {/* Listing # - blue, clickable */}
-                      {l.listing_number && (
-                        <button 
-                          className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer"
-                          onClick={() => onPreview(l.id)}
-                        >
-                          #{l.listing_number}
-                        </button>
-                      )}
-                      {/* Address */}
-                      <div className="font-semibold text-base text-foreground truncate">
-                        {formatAddressWithUnit(l)}
-                      </div>
-                      {/* Location + Neighborhood - secondary metadata */}
-                      <div className="text-sm text-muted-foreground mt-0.5">
-                        {l.state} {l.zip_code}{l.neighborhood ? ` · ${l.neighborhood}` : ''}
-                      </div>
+                  {/* Thumbnail */}
+                  <div className="w-28 h-20 rounded-md overflow-hidden bg-neutral-soft shrink-0 cursor-pointer" onClick={() => onPreview(l.id)}>
+                    <img
+                      src={thumbnail || "/placeholder.svg"}
+                      alt={l.address}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-                      {/* Price - left aligned under location */}
-                      <div className="mt-1">
-                        {isEditing ? (
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              className="border border-neutral-200 rounded px-2 py-1 text-sm w-28 bg-white"
-                              value={editPrice}
-                              onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                            />
-                            <select
-                              className="border border-neutral-200 rounded px-2 py-1 bg-white capitalize text-xs"
-                              value={editStatus}
-                              onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
-                            >
-                              {STATUS_TABS.map((tab) => (
-                                <option key={tab.value} value={tab.value}>
-                                  {tab.label}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
-                              onClick={saveQuickEdit}
-                            >
-                              Save
-                            </button>
-                            <button
-                              className="text-xs text-muted-foreground hover:text-foreground hover:underline"
-                              onClick={cancelQuickEdit}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-foreground">${l.price.toLocaleString()}</span>
-                            <button
-                              className="text-xs text-primary hover:text-primary/80 hover:underline"
-                              onClick={() => startQuickEdit(l)}
-                              title="Quick edit price and status"
-                            >
-                              Quick Edit
-                            </button>
-                          </div>
+                  {/* Main content */}
+                  <div className="flex-1 min-w-0">
+                    {/* Address + Status */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        {l.listing_number && (
+                          <button 
+                            className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer"
+                            onClick={() => onPreview(l.id)}
+                          >
+                            #{l.listing_number}
+                          </button>
                         )}
+                        <div className="font-semibold text-sm text-foreground truncate">
+                          {formatAddressWithUnit(l)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {l.state} {l.zip_code}{l.neighborhood ? ` · ${l.neighborhood}` : ''}
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Right column: Status → Dates → Actions */}
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      {/* Status badge - top right */}
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize shrink-0 ${statusBadgeClass(l.status)}`}>
                         {l.status.replace("_", " ")}
                       </span>
-                      {/* Date metadata - below status */}
-                      <div className="text-xs text-muted-foreground text-right leading-tight">
-                        <div>List: {listDate}</div>
-                        {expDate && <div>Exp: {expDate}</div>}
-                      </div>
+                    </div>
 
-                      {/* Action icons */}
-                      <div className="flex items-center gap-1">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                className="w-7 h-7 flex items-center justify-center rounded-md border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
-                                onClick={() => onEdit(l.id)}
-                              >
-                                <Pencil size={14} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent sideOffset={8}>
-                              Full edit
-                            </TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                className="w-7 h-7 flex items-center justify-center rounded-md border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
-                                onClick={() => onPreview(l.id)}
-                              >
-                                <Eye size={14} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent sideOffset={8}>
-                              Preview
-                            </TooltipContent>
-                          </Tooltip>
-                          <SocialShareMenu
-                            url={getListingShareUrl(l.id)}
-                            title={`${formatAddressWithUnit(l)}, ${l.city} - $${l.price?.toLocaleString()}`}
-                            listingId={l.id}
-                            trigger={
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    className="w-7 h-7 flex items-center justify-center rounded-md border border-neutral-200 bg-white text-emerald-600 hover:text-emerald-700 hover:bg-neutral-soft transition cursor-pointer"
-                                  >
-                                    <Share2 size={14} />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent sideOffset={8}>
-                                  Share
-                                </TooltipContent>
-                              </Tooltip>
-                            }
+                    {/* Price row */}
+                    <div className="mt-1.5">
+                      {isEditing ? (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <input
+                            type="number"
+                            className="border border-neutral-200 rounded px-2 py-1 text-xs w-24 bg-white"
+                            value={editPrice}
+                            onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
                           />
-                        </TooltipProvider>
-                        <button
-                          className="w-7 h-7 flex items-center justify-center rounded-md border border-neutral-200 bg-white text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
-                          onClick={() => setListingToDelete(l)}
-                          title="Delete"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                          <select
+                            className="border border-neutral-200 rounded px-2 py-1 bg-white capitalize text-xs"
+                            value={editStatus}
+                            onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
+                          >
+                            {ALL_STATUS_TABS.map((tab) => (
+                              <option key={tab.value} value={tab.value}>
+                                {tab.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
+                            onClick={saveQuickEdit}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                            onClick={cancelQuickEdit}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-sm font-medium">${l.price.toLocaleString()}</span>
+                      )}
+                    </div>
+
+                    {/* Timeline metadata */}
+                    <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                      <span>List: {listDate}</span>
+                      {expDate && <span>Expires: {expDate}</span>}
+                      <span className="font-medium text-foreground">DOM: {dom} days</span>
+                    </div>
+
+                    {/* Action pills */}
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      <button
+                        className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
+                        onClick={() => onEdit(l.id)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
+                        onClick={() => onSocialShare(l)}
+                      >
+                        Share via Email
+                      </button>
+                      <button
+                        className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
+                        onClick={() => onStats(l.id)}
+                      >
+                        Stats
+                      </button>
+                      <button
+                        className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
+                        onClick={() => onMatches(l)}
+                      >
+                        Matches ({matchCount})
+                      </button>
+                      <button
+                        className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition text-xs font-medium"
+                        onClick={() => setListingToDelete(l)}
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
