@@ -617,71 +617,79 @@ function MyListingsView({
                 className="aac-card aac-card-2 overflow-hidden"
               >
                 {/* Top tools bar - text links, no icons */}
-                <div className="flex flex-wrap items-center gap-3 text-sm px-4 py-2.5 bg-white">
-                  <button
-                    className="text-zinc-600 hover:text-emerald-700 transition"
-                    onClick={() => onEdit(l.id)}
-                  >
-                    Edit
-                  </button>
-                  <span className="text-zinc-300">•</span>
-                  <button
-                    className="text-zinc-600 hover:text-emerald-700 transition"
-                    onClick={() => onPhotos(l.id)}
-                  >
-                    Photos
-                  </button>
-                  <span className="text-zinc-300">•</span>
-                  <button
-                    className="text-zinc-600 hover:text-emerald-700 transition"
-                    onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
-                  >
-                    Open House
-                  </button>
-                  <span className="text-zinc-300">•</span>
-                  <button
-                    className="text-zinc-600 hover:text-emerald-700 transition"
-                    onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
-                  >
-                    Broker Tour
-                  </button>
-                  <span className="text-zinc-300">•</span>
-                  <button
-                    className="text-zinc-600 hover:text-emerald-700 transition"
-                    onClick={() => onMatches(l)}
-                  >
-                    Matches ({matchCount})
-                  </button>
-                  <span className="text-zinc-300">•</span>
-                  <button
-                    className="text-zinc-600 hover:text-emerald-700 transition"
-                    onClick={() => onEmail?.(l)}
-                  >
-                    Email
-                  </button>
-                  <span className="text-zinc-300">•</span>
-                  <button
-                    className="text-zinc-600 hover:text-emerald-700 transition"
-                    onClick={() => onSocialShare(l)}
-                  >
-                    Social
-                  </button>
-                  <span className="text-zinc-300">•</span>
-                  <button
-                    className="text-zinc-600 hover:text-emerald-700 transition"
-                    onClick={() => onStats(l.id)}
-                  >
-                    Stats
-                  </button>
+                <div className="flex items-center justify-between text-sm px-4 py-2.5 bg-white">
+                  {/* Left: Action buttons */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      onClick={() => onEdit(l.id)}
+                    >
+                      Edit
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      onClick={() => onPhotos(l.id)}
+                    >
+                      Photos
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
+                    >
+                      Open House
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
+                    >
+                      Broker Tour
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      onClick={() => onMatches(l)}
+                    >
+                      Matches ({matchCount})
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      onClick={() => onEmail?.(l)}
+                    >
+                      Email
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      onClick={() => onSocialShare(l)}
+                    >
+                      Social
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      className="text-zinc-600 hover:text-emerald-700 transition"
+                      onClick={() => onStats(l.id)}
+                    >
+                      Stats
+                    </button>
+                  </div>
+                  
+                  {/* Right: Status + Dates stack */}
+                  <div className="flex flex-col items-end gap-0.5 shrink-0 text-xs">
+                    <span className={`font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
+                      {l.status.replace("_", " ")}
+                    </span>
+                    <span className="text-muted-foreground">List: {listDate}</span>
+                    {expDate && <span className="text-muted-foreground">Exp: {expDate}</span>}
+                    <span className="text-muted-foreground">DOM: {dom}</span>
+                  </div>
                 </div>
 
                 {/* Main content section */}
                 <div className="p-4 relative">
-                  {l.status === "coming_soon" && (
-                    <span className="absolute top-4 right-4 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                      Coming Soon
-                    </span>
-                  )}
                   <div className="flex items-start gap-4">
                     {/* Checkbox for draft selection */}
                     {selectedStatuses.has("draft") && selectedStatuses.size === 1 && l.status === "draft" && (
@@ -772,21 +780,6 @@ function MyListingsView({
                       </div>
                     </div>
 
-                    {/* Right column: Status → Dates (List/Exp/DOM) */}
-                    <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
-                      {/* Status badge - top right (hidden for coming_soon since it's absolute positioned) */}
-                      {l.status !== "coming_soon" && (
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
-                          {l.status.replace("_", " ")}
-                        </span>
-                      )}
-                      {/* Date metadata - below status */}
-                      <div className="text-xs text-muted-foreground text-right mt-1">
-                        <div>List: {listDate}</div>
-                        {expDate && <div>Exp: {expDate}</div>}
-                        <div>DOM: {dom} days</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
