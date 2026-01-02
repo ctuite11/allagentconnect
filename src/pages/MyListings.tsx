@@ -645,32 +645,27 @@ function MyListingsView({
                       />
                     </div>
 
-                    {/* Main content column: Address → Location → Status + AAC# */}
+                    {/* Main content column: Listing # → Address → Location + Neighborhood → Price */}
                     <div className="flex-1 min-w-0">
+                      {/* Listing # - blue, clickable */}
+                      {l.listing_number && (
+                        <button 
+                          className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer"
+                          onClick={() => onPreview(l.id)}
+                        >
+                          #{l.listing_number}
+                        </button>
+                      )}
                       {/* Address */}
                       <div className="font-semibold text-base text-foreground truncate">
                         {formatAddressWithUnit(l)}
                       </div>
-                      {/* Location - secondary metadata */}
+                      {/* Location + Neighborhood - secondary metadata */}
                       <div className="text-sm text-muted-foreground mt-0.5">
-                        {l.state} {l.zip_code}
-                      </div>
-                      {/* Status + Listing # as secondary metadata under location */}
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
-                          {l.status.replace("_", " ")}
-                        </span>
-                        {l.listing_number && (
-                          <button 
-                            className="text-xs text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
-                            onClick={() => onPreview(l.id)}
-                          >
-                            #{l.listing_number}
-                          </button>
-                        )}
+                        {l.state} {l.zip_code}{l.neighborhood ? ` · ${l.neighborhood}` : ''}
                       </div>
 
-                      {/* Price - left aligned under status */}
+                      {/* Price - left aligned under location */}
                       <div className="mt-2">
                         {isEditing ? (
                           <div className="flex items-center gap-2">
@@ -717,18 +712,15 @@ function MyListingsView({
                           </div>
                         )}
                       </div>
-
-                      {/* Neighborhood if present */}
-                      {l.neighborhood && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {l.neighborhood}
-                        </div>
-                      )}
                     </div>
 
-                    {/* Right column: Dates at top, Actions below */}
-                    <div className="flex flex-col items-end gap-3 shrink-0">
-                      {/* Date metadata - top right, compact */}
+                    {/* Right column: Status → Dates → Actions */}
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      {/* Status badge - top right */}
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
+                        {l.status.replace("_", " ")}
+                      </span>
+                      {/* Date metadata - below status */}
                       <div className="text-xs text-muted-foreground text-right">
                         <div>List: {listDate}</div>
                         {expDate && <div>Exp: {expDate}</div>}
