@@ -399,7 +399,7 @@ export default function AgentSuccessHub() {
   const hubCards = [
     {
       key: "my_listings",
-      icon: <Home className="w-5 h-5" />,
+      icon: <Home className="h-6 w-6" />,
       title: "My Listings",
       description: "Manage all your listings in one place",
       metricValue: activeListingsCount,
@@ -408,7 +408,7 @@ export default function AgentSuccessHub() {
     },
     {
       key: "my_contacts",
-      icon: <Users className="w-5 h-5" />,
+      icon: <Users className="h-6 w-6" />,
       title: "My Contacts",
       description: "CRM for leads & clients",
       metricValue: activeBuyersCount,
@@ -417,7 +417,7 @@ export default function AgentSuccessHub() {
     },
     {
       key: "hot_sheets",
-      icon: <Bell className="w-5 h-5" />,
+      icon: <Bell className="h-6 w-6" />,
       title: "Hot Sheets",
       description: "Automated buyer and market tracking",
       metricValue: activeHotsheetsCount,
@@ -426,14 +426,14 @@ export default function AgentSuccessHub() {
     },
     {
       key: "communication_center",
-      icon: <Megaphone className="w-5 h-5" />,
+      icon: <Megaphone className="h-6 w-6" />,
       title: "Communications Center",
       description: "Outbound email campaigns & logs",
       route: "/communication-center",
     },
     {
       key: "profile_branding",
-      icon: <Palette className="w-5 h-5" />,
+      icon: <Palette className="h-6 w-6" />,
       title: "Profile & Branding",
       description: "Edit your profile and branding",
       route: "/agent-profile-editor",
@@ -444,7 +444,7 @@ export default function AgentSuccessHub() {
   if (role === "admin") {
     hubCards.push({
       key: "admin_tools",
-      icon: <Shield className="w-5 h-5" />,
+      icon: <Shield className="h-6 w-6" />,
       title: "Admin Tools",
       description: "Manage agent approvals and system settings",
       route: "/admin/approvals",
