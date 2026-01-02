@@ -577,7 +577,7 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-                className="bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+                className="group bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
               >
                 {/* Photo */}
                 <div className="w-full h-44 bg-zinc-100 overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
@@ -610,42 +610,42 @@ function MyListingsView({
                     </div>
                   </div>
 
-                  {/* Text action bar */}
-                  <div className="flex items-center flex-wrap gap-x-1 gap-y-1 mt-4 text-xs text-zinc-600">
-                    <button onClick={() => onEdit(l.id)} className="hover:text-emerald-700 transition">Edit</button>
+                  {/* Text action bar - premium opacity effect */}
+                  <div className="flex items-center flex-wrap gap-x-1 gap-y-1 mt-4 text-xs text-zinc-600 opacity-50 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => onEdit(l.id)} className="hover:text-emerald-700 transition-colors">Edit</button>
                     <span className="text-zinc-300">•</span>
-                    <button onClick={() => onSocialShare(l)} className="hover:text-emerald-700 transition">Email</button>
+                    <button onClick={() => onSocialShare(l)} className="hover:text-emerald-700 transition-colors">Email</button>
                     <span className="text-zinc-300">•</span>
-                    <button onClick={() => onPreview(l.id)} className="hover:text-emerald-700 transition">View</button>
+                    <button onClick={() => onPreview(l.id)} className="hover:text-emerald-700 transition-colors">View</button>
                     <span className="text-zinc-300">•</span>
-                    <button onClick={() => onStats(l.id)} className="hover:text-emerald-700 transition">Stats</button>
+                    <button onClick={() => onStats(l.id)} className="hover:text-emerald-700 transition-colors">Stats</button>
                     <span className="text-zinc-300">•</span>
-                    <button onClick={() => onMatches(l)} className="hover:text-emerald-700 transition">Matches ({matchCount})</button>
+                    <button onClick={() => onMatches(l)} className="hover:text-emerald-700 transition-colors">Matches ({matchCount})</button>
                     <span className="text-zinc-300">•</span>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="hover:text-emerald-700 transition inline-flex items-center gap-0.5">
-                            More <ChevronDown className="h-3 w-3" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40 bg-white border border-zinc-200 shadow-lg">
-                          <DropdownMenuItem onClick={() => onPhotos(l.id)}>Photos</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onOpenHouse(l)}>Open House</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onBrokerTour(l)}>Broker Tour</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            navigator.clipboard.writeText(getListingShareUrl(l.id));
-                            toast.success("Link copied!");
-                          }}>Copy Link</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onShare(l.id)}>Duplicate</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            onClick={() => setListingToDelete(l)}
-                            className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="hover:text-emerald-700 transition-colors inline-flex items-center gap-0.5">
+                          More <ChevronDown className="h-3 w-3" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem onClick={() => onPhotos(l.id)}>Photos</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onOpenHouse(l)}>Open House</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onBrokerTour(l)}>Broker Tour</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          navigator.clipboard.writeText(getListingShareUrl(l.id));
+                          toast.success("Link copied!");
+                        }}>Copy Link</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onShare(l.id)}>Duplicate</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => setListingToDelete(l)}
+                          className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </div>
@@ -674,7 +674,7 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-                className="bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+                className="group bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start gap-4 p-4">
                   {/* Checkbox for draft selection */}
@@ -769,25 +769,25 @@ function MyListingsView({
                       </div>
                     </div>
 
-                    {/* Text action bar */}
-                    <div className="flex items-center flex-wrap gap-x-1.5 gap-y-1 mt-3 text-sm text-zinc-600">
-                      <button onClick={() => onEdit(l.id)} className="hover:text-emerald-700 transition">Edit</button>
+                    {/* Text action bar - premium opacity effect */}
+                    <div className="flex items-center flex-wrap gap-x-1.5 gap-y-1 mt-3 text-sm text-zinc-600 opacity-50 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => onEdit(l.id)} className="hover:text-emerald-700 transition-colors">Edit</button>
                       <span className="text-zinc-300">•</span>
-                      <button onClick={() => onSocialShare(l)} className="hover:text-emerald-700 transition">Email</button>
+                      <button onClick={() => onSocialShare(l)} className="hover:text-emerald-700 transition-colors">Email</button>
                       <span className="text-zinc-300">•</span>
-                      <button onClick={() => onPreview(l.id)} className="hover:text-emerald-700 transition">View</button>
+                      <button onClick={() => onPreview(l.id)} className="hover:text-emerald-700 transition-colors">View</button>
                       <span className="text-zinc-300">•</span>
-                      <button onClick={() => onStats(l.id)} className="hover:text-emerald-700 transition">Stats</button>
+                      <button onClick={() => onStats(l.id)} className="hover:text-emerald-700 transition-colors">Stats</button>
                       <span className="text-zinc-300">•</span>
-                      <button onClick={() => onMatches(l)} className="hover:text-emerald-700 transition">Matches ({matchCount})</button>
+                      <button onClick={() => onMatches(l)} className="hover:text-emerald-700 transition-colors">Matches ({matchCount})</button>
                       <span className="text-zinc-300">•</span>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="hover:text-emerald-700 transition inline-flex items-center gap-0.5">
+                          <button className="hover:text-emerald-700 transition-colors inline-flex items-center gap-0.5">
                             More <ChevronDown className="h-3 w-3" />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40 bg-white border border-zinc-200 shadow-lg">
+                        <DropdownMenuContent align="end" className="w-40">
                           <DropdownMenuItem onClick={() => onPhotos(l.id)}>Photos</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onOpenHouse(l)}>Open House</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onBrokerTour(l)}>Broker Tour</DropdownMenuItem>
