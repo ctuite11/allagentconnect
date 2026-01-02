@@ -34,7 +34,7 @@ export default function Home() {
             </h1>
 
             <div className="mt-5 text-lg sm:text-xl font-medium tracking-normal" style={{ color: '#1D1D1F' }}>
-              Where real deals get done — at scale.
+              Where real deals get done.
             </div>
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
