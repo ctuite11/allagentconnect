@@ -373,17 +373,6 @@ function MyListingsView({
       {/* Premium Filter Bar */}
       <div>
         <div className="flex items-center gap-3">
-          {/* Search */}
-          <div className="relative w-[260px] shrink-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by address or AAC #"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-sm bg-white"
-            />
-          </div>
-
           {/* Status pills (single row, horizontal scroll) */}
           <div className="flex-1 overflow-x-auto scrollbar-none">
             <div className="flex flex-nowrap gap-2 whitespace-nowrap">
