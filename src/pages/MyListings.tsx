@@ -571,64 +571,81 @@ function MyListingsView({
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             const matchCount = l.hot_sheet_matches ?? 0;
+            const listDate = formatDate(l.list_date) || formatDate(l.created_at);
+            const expDate = formatDate(l.expiration_date);
             const dom = calculateDOM(l);
             return (
               <div
                 key={l.id}
-                className="bg-white border border-neutral-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
               >
-                <div className="w-full h-40 bg-neutral-soft overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
+                {/* Photo */}
+                <div className="w-full h-44 bg-zinc-100 overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
                   <img src={thumbnail || "/placeholder.svg"} alt={l.address} className="w-full h-full object-cover" />
                 </div>
 
-                <div className="p-3">
+                <div className="p-4">
                   {/* Address */}
-                  <div className="font-semibold text-sm text-foreground truncate">
+                  <div className="font-semibold text-foreground truncate">
                     {formatAddressWithUnit(l)}
                   </div>
                   {/* Location */}
-                  <div className="text-muted-foreground text-xs mt-0.5">
-                    {l.state} {l.zip_code}
+                  <div className="text-zinc-500 text-sm mt-0.5">
+                    {l.city}, {l.state} {l.zip_code}
                   </div>
-                  {/* Price + Status */}
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-sm font-medium">${l.price.toLocaleString()}</span>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
+                  {/* Price */}
+                  <div className="text-lg font-semibold mt-2">
+                    ${l.price.toLocaleString()}
+                  </div>
+
+                  {/* Status badge + Timeline metadata */}
+                  <div className="flex items-start justify-between mt-3 gap-3">
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize shrink-0 ${statusBadgeClass(l.status)}`}>
                       {l.status.replace("_", " ")}
                     </span>
+                    <div className="text-right text-xs text-zinc-500 leading-relaxed">
+                      <div>List: {listDate}</div>
+                      {expDate && <div>Exp: {expDate}</div>}
+                      <div className="font-medium text-zinc-700">DOM: {dom}</div>
+                    </div>
                   </div>
-                  {/* Action pills */}
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    <button
-                      className="px-2 py-0.5 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs"
-                      onClick={() => onEdit(l.id)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="px-2 py-0.5 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs"
-                      onClick={() => onSocialShare(l)}
-                    >
-                      Share via Email
-                    </button>
-                    <button
-                      className="px-2 py-0.5 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs"
-                      onClick={() => onStats(l.id)}
-                    >
-                      Stats
-                    </button>
-                    <button
-                      className="px-2 py-0.5 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs"
-                      onClick={() => onMatches(l)}
-                    >
-                      Matches ({matchCount})
-                    </button>
-                    <button
-                      className="px-2 py-0.5 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition text-xs"
-                      onClick={() => setListingToDelete(l)}
-                    >
-                      Delete
-                    </button>
+
+                  {/* Text action bar */}
+                  <div className="flex items-center flex-wrap gap-x-1 gap-y-1 mt-4 text-xs text-zinc-600">
+                    <button onClick={() => onEdit(l.id)} className="hover:text-emerald-700 transition">Edit</button>
+                    <span className="text-zinc-300">•</span>
+                    <button onClick={() => onSocialShare(l)} className="hover:text-emerald-700 transition">Email</button>
+                    <span className="text-zinc-300">•</span>
+                    <button onClick={() => onPreview(l.id)} className="hover:text-emerald-700 transition">View</button>
+                    <span className="text-zinc-300">•</span>
+                    <button onClick={() => onStats(l.id)} className="hover:text-emerald-700 transition">Stats</button>
+                    <span className="text-zinc-300">•</span>
+                    <button onClick={() => onMatches(l)} className="hover:text-emerald-700 transition">Matches ({matchCount})</button>
+                    <span className="text-zinc-300">•</span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="hover:text-emerald-700 transition inline-flex items-center gap-0.5">
+                            More <ChevronDown className="h-3 w-3" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40 bg-white border border-zinc-200 shadow-lg">
+                          <DropdownMenuItem onClick={() => onPhotos(l.id)}>Photos</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onOpenHouse(l)}>Open House</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onBrokerTour(l)}>Broker Tour</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            navigator.clipboard.writeText(getListingShareUrl(l.id));
+                            toast.success("Link copied!");
+                          }}>Copy Link</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onShare(l.id)}>Duplicate</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => setListingToDelete(l)}
+                            className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                   </div>
                 </div>
               </div>
@@ -636,16 +653,16 @@ function MyListingsView({
           })}
 
           {filteredListings.length === 0 && (
-            <div className="col-span-full text-center text-muted-foreground text-sm py-10">
+            <div className="col-span-full text-center text-zinc-500 text-sm py-10">
               No listings match your filters yet.
             </div>
           )}
         </div>
       )}
 
-      {/* LIST VIEW – Compact listing rows with action pills */}
+      {/* LIST VIEW – Compact listing rows with text action bar */}
       {view === "list" && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             const isEditing = editingId === l.id;
@@ -657,10 +674,9 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-                className="bg-white border border-neutral-200 rounded-lg overflow-hidden hover:shadow-sm transition-shadow"
+                className="bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
               >
-                {/* Main content row */}
-                <div className="flex items-start gap-3 p-3">
+                <div className="flex items-start gap-4 p-4">
                   {/* Checkbox for draft selection */}
                   {activeStatus === "draft" && l.status === "draft" && (
                     <div className="shrink-0 pt-2">
@@ -672,7 +688,7 @@ function MyListingsView({
                   )}
 
                   {/* Thumbnail */}
-                  <div className="w-28 h-20 rounded-md overflow-hidden bg-neutral-soft shrink-0 cursor-pointer" onClick={() => onPreview(l.id)}>
+                  <div className="w-32 h-24 rounded-lg overflow-hidden bg-zinc-100 shrink-0 cursor-pointer" onClick={() => onPreview(l.id)}>
                     <img
                       src={thumbnail || "/placeholder.svg"}
                       alt={l.address}
@@ -682,8 +698,8 @@ function MyListingsView({
 
                   {/* Main content */}
                   <div className="flex-1 min-w-0">
-                    {/* Address + Status */}
-                    <div className="flex items-start justify-between gap-2">
+                    {/* Top row: Address + Price | Status + Timeline */}
+                    <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         {l.listing_number && (
                           <button 
@@ -693,96 +709,102 @@ function MyListingsView({
                             #{l.listing_number}
                           </button>
                         )}
-                        <div className="font-semibold text-sm text-foreground truncate">
+                        <div className="font-semibold text-foreground truncate">
                           {formatAddressWithUnit(l)}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {l.state} {l.zip_code}{l.neighborhood ? ` · ${l.neighborhood}` : ''}
+                        <div className="text-sm text-zinc-500">
+                          {l.city}, {l.state} {l.zip_code}
+                        </div>
+                        
+                        {/* Price row */}
+                        <div className="mt-2">
+                          {isEditing ? (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <input
+                                type="number"
+                                className="border border-zinc-200 rounded px-2 py-1 text-sm w-28 bg-white"
+                                value={editPrice}
+                                onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                              />
+                              <select
+                                className="border border-zinc-200 rounded px-2 py-1 bg-white capitalize text-sm"
+                                value={editStatus}
+                                onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
+                              >
+                                {ALL_STATUS_TABS.map((tab) => (
+                                  <option key={tab.value} value={tab.value}>
+                                    {tab.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                className="px-3 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-sm"
+                                onClick={saveQuickEdit}
+                              >
+                                Save
+                              </button>
+                              <button
+                                className="text-sm text-zinc-500 hover:text-foreground hover:underline"
+                                onClick={cancelQuickEdit}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-lg font-semibold">${l.price.toLocaleString()}</span>
+                          )}
                         </div>
                       </div>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize shrink-0 ${statusBadgeClass(l.status)}`}>
-                        {l.status.replace("_", " ")}
-                      </span>
-                    </div>
 
-                    {/* Price row */}
-                    <div className="mt-1.5">
-                      {isEditing ? (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <input
-                            type="number"
-                            className="border border-neutral-200 rounded px-2 py-1 text-xs w-24 bg-white"
-                            value={editPrice}
-                            onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                          />
-                          <select
-                            className="border border-neutral-200 rounded px-2 py-1 bg-white capitalize text-xs"
-                            value={editStatus}
-                            onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
-                          >
-                            {ALL_STATUS_TABS.map((tab) => (
-                              <option key={tab.value} value={tab.value}>
-                                {tab.label}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
-                            onClick={saveQuickEdit}
-                          >
-                            Save
-                          </button>
-                          <button
-                            className="text-xs text-muted-foreground hover:text-foreground hover:underline"
-                            onClick={cancelQuickEdit}
-                          >
-                            Cancel
-                          </button>
+                      {/* Right side: Status + Timeline */}
+                      <div className="text-right shrink-0">
+                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize inline-block ${statusBadgeClass(l.status)}`}>
+                          {l.status.replace("_", " ")}
+                        </span>
+                        <div className="mt-2 text-xs text-zinc-500 leading-relaxed">
+                          <div>List: {listDate}</div>
+                          {expDate && <div>Exp: {expDate}</div>}
+                          <div className="font-medium text-zinc-700">DOM: {dom}</div>
                         </div>
-                      ) : (
-                        <span className="text-sm font-medium">${l.price.toLocaleString()}</span>
-                      )}
+                      </div>
                     </div>
 
-                    {/* Timeline metadata */}
-                    <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
-                      <span>List: {listDate}</span>
-                      {expDate && <span>Expires: {expDate}</span>}
-                      <span className="font-medium text-foreground">DOM: {dom} days</span>
-                    </div>
-
-                    {/* Action pills */}
-                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                      <button
-                        className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
-                        onClick={() => onEdit(l.id)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
-                        onClick={() => onSocialShare(l)}
-                      >
-                        Share via Email
-                      </button>
-                      <button
-                        className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
-                        onClick={() => onStats(l.id)}
-                      >
-                        Stats
-                      </button>
-                      <button
-                        className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-foreground hover:bg-neutral-soft transition text-xs font-medium"
-                        onClick={() => onMatches(l)}
-                      >
-                        Matches ({matchCount})
-                      </button>
-                      <button
-                        className="px-2.5 py-1 rounded-full border border-neutral-200 bg-white text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition text-xs font-medium"
-                        onClick={() => setListingToDelete(l)}
-                      >
-                        Delete
-                      </button>
+                    {/* Text action bar */}
+                    <div className="flex items-center flex-wrap gap-x-1.5 gap-y-1 mt-3 text-sm text-zinc-600">
+                      <button onClick={() => onEdit(l.id)} className="hover:text-emerald-700 transition">Edit</button>
+                      <span className="text-zinc-300">•</span>
+                      <button onClick={() => onSocialShare(l)} className="hover:text-emerald-700 transition">Email</button>
+                      <span className="text-zinc-300">•</span>
+                      <button onClick={() => onPreview(l.id)} className="hover:text-emerald-700 transition">View</button>
+                      <span className="text-zinc-300">•</span>
+                      <button onClick={() => onStats(l.id)} className="hover:text-emerald-700 transition">Stats</button>
+                      <span className="text-zinc-300">•</span>
+                      <button onClick={() => onMatches(l)} className="hover:text-emerald-700 transition">Matches ({matchCount})</button>
+                      <span className="text-zinc-300">•</span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="hover:text-emerald-700 transition inline-flex items-center gap-0.5">
+                            More <ChevronDown className="h-3 w-3" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40 bg-white border border-zinc-200 shadow-lg">
+                          <DropdownMenuItem onClick={() => onPhotos(l.id)}>Photos</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onOpenHouse(l)}>Open House</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onBrokerTour(l)}>Broker Tour</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            navigator.clipboard.writeText(getListingShareUrl(l.id));
+                            toast.success("Link copied!");
+                          }}>Copy Link</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onShare(l.id)}>Duplicate</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => setListingToDelete(l)}
+                            className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>
@@ -791,7 +813,7 @@ function MyListingsView({
           })}
 
           {filteredListings.length === 0 && (
-            <div className="text-center text-muted-foreground text-sm py-10">No listings match your filters yet.</div>
+            <div className="text-center text-zinc-500 text-sm py-10">No listings match your filters yet.</div>
           )}
         </div>
       )}
@@ -1142,20 +1164,13 @@ const MyListings = () => {
         matchCount={matchesListing?.hot_sheet_matches ?? 0}
       />
 
-      {/* Social Share Dialog */}
-      {socialShareListing && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setSocialShareListing(null)}>
-          <div className="bg-background p-6 rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold mb-4">Share Listing</h3>
-            <SocialShareMenu
-              url={getListingShareUrl(socialShareListing.id)}
-              title={`${socialShareListing.address}, ${socialShareListing.city} - $${socialShareListing.price.toLocaleString()}`}
-              description={`Check out this property listing`}
-              listingId={socialShareListing.id}
-            />
-          </div>
-        </div>
-      )}
+      {/* Email Share Modal */}
+      <EmailShareModal
+        open={!!socialShareListing}
+        onOpenChange={(open) => !open && setSocialShareListing(null)}
+        listingUrl={socialShareListing ? getListingShareUrl(socialShareListing.id) : ""}
+        listingAddress={socialShareListing ? `${socialShareListing.address}, ${socialShareListing.city}` : ""}
+      />
       </main>
     </div>
   );
