@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
+import { aacStyles } from "@/ui/aacStyles";
 
 interface TechCardProps {
   icon: ReactNode;
@@ -21,28 +22,30 @@ export const TechCard = ({
   onClick,
   className,
 }: TechCardProps) => {
+  // TODO: Migrate to shared hubCard token in aacStyles for single source of truth
   return (
     <div
       className={cn(
-        "relative rounded-3xl p-6 cursor-pointer group",
-        "shadow-[0_6px_18px_rgba(0,0,0,0.06)]",
-        "hover:shadow-[0_14px_34px_rgba(0,0,0,0.10)] hover:-translate-y-1",
-        "transition-all duration-200 ease-out",
+        "relative rounded-2xl p-6 cursor-pointer group",
+        "border border-zinc-100 hover:border-zinc-200",
+        "shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
+        "hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]",
+        "transition-shadow transition-colors duration-200 ease-out",
         className
       )}
       style={{ background: '#FFFFFF' }}
       onClick={onClick}
     >
-      {/* Icon top-right with subtle green radial fade */}
-      <div className="absolute top-5 right-5">
-        <div className="text-emerald-600">{icon}</div>
+      {/* Icon top-right - uses aacStyles.iconGreen */}
+      <div className="absolute top-4 right-4">
+        <div className={aacStyles.iconGreen}>{icon}</div>
       </div>
 
-      {/* Title - reduced top margin for better balance */}
-      <h3 className="text-base font-semibold tracking-tight text-slate-900 mb-2 mt-6">{title}</h3>
+      {/* Title - uses aacStyles.cardTitle */}
+      <h3 className={cn("text-base font-semibold tracking-tight mb-2 mt-6", aacStyles.cardTitle)}>{title}</h3>
 
-      {/* Description */}
-      <p className="text-sm text-slate-600 mb-4 line-clamp-2">{description}</p>
+      {/* Description - uses aacStyles.cardDesc */}
+      <p className={cn("mb-4 line-clamp-2", aacStyles.cardDesc)}>{description}</p>
 
       {/* Metric Pill - emerald accent */}
       {metricValue !== undefined && metricValue !== 0 && (
