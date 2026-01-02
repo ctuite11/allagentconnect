@@ -609,7 +609,7 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-                className="relative bg-white border border-zinc-200 rounded-2xl p-4"
+                className="relative bg-white border border-zinc-100 hover:border-zinc-200 rounded-2xl p-4 transition-shadow transition-colors hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
               >
                 {/* Action row - tight, no vertical padding */}
                 <div className="mb-3 pr-36">
@@ -674,7 +674,7 @@ function MyListingsView({
 
                 {/* Status + Dates - stacked, absolutely positioned top-right */}
                 <div className="absolute top-4 right-4 shrink-0 text-right space-y-0.5">
-                  <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium capitalize ${statusBadgeClass(l.status)}`}>
+                  <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium tracking-tight leading-none capitalize ${statusBadgeClass(l.status)}`}>
                     {l.status.replace("_", " ")}
                   </span>
                   <div className="text-xs text-zinc-500 leading-tight pt-1">List: {listDate}</div>
