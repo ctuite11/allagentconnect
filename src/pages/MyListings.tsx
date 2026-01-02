@@ -612,7 +612,7 @@ function MyListingsView({
                 className="bg-white border border-zinc-200 rounded-2xl p-4"
               >
                 {/* Action row - tight, no vertical padding */}
-                <div className="mb-2 flex items-start justify-between">
+                <div className="mb-2 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm leading-tight text-zinc-600">
                     <button
                       className="hover:text-emerald-700 transition"
@@ -671,14 +671,14 @@ function MyListingsView({
                     </button>
                   </div>
                   
-                  {/* Status + Dates - aligned right with action bar */}
-                  <div className="shrink-0 text-right space-y-1">
-                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium capitalize ${statusBadgeClass(l.status)}`}>
+                  {/* Status + Dates - horizontal inline with action bar */}
+                  <div className="shrink-0 flex items-center gap-3 text-xs text-zinc-500">
+                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 font-medium capitalize ${statusBadgeClass(l.status)}`}>
                       {l.status.replace("_", " ")}
                     </span>
-                    <div className="text-xs text-zinc-500 leading-tight">List: {listDate}</div>
-                    <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate || "—"}</div>
-                    <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
+                    <span>List: {listDate}</span>
+                    <span>Exp: {expDate || "—"}</span>
+                    <span>DOM: {dom}</span>
                   </div>
                 </div>
 
