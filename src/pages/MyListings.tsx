@@ -636,7 +636,7 @@ function MyListingsView({
                     )}
 
                     {/* Thumbnail - wider, confident image */}
-                    <div className="w-28 h-20 rounded-lg overflow-hidden bg-neutral-soft shrink-0 cursor-pointer">
+                    <div className="w-32 h-24 rounded-lg overflow-hidden bg-neutral-soft shrink-0 cursor-pointer">
                       <img
                         src={thumbnail || "/placeholder.svg"}
                         alt={l.address}
