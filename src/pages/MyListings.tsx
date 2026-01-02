@@ -773,7 +773,7 @@ function MyListingsView({
                     </div>
 
                     {/* Right column: Status → Dates (List/Exp/DOM) */}
-                    <div className="flex flex-col items-end gap-1 shrink-0">
+                    <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
                       {/* Status badge - top right (hidden for coming_soon since it's absolute positioned) */}
                       {l.status !== "coming_soon" && (
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}>
