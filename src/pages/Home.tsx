@@ -54,7 +54,7 @@ export default function Home() {
             </div>
 
             <p className="mt-5 text-sm leading-relaxed max-w-lg" style={{ color: '#86868B' }}>
-              A nationwide agent network for off-market listings, buyer and renter demand, direct collaboration, and competitive deal access — built to improve agent outcomes.
+              A nationwide agent network for off-market listings, buyer and renter needs, direct collaboration, and competitive deal access — built to improve agent outcomes.
             </p>
           </div>
 
