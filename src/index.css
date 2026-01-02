@@ -72,10 +72,10 @@ All colors MUST be HSL.
     --primary-foreground: 0 0% 100%;
 
     /* Soft hover surface: #F2F2F7 */
-    --secondary: 240 5% 96%;
+    --secondary: 0 0% 96%;
     --secondary-foreground: 240 6% 12%;
 
-    --muted: 240 5% 96%;              /* #F2F2F7 - soft hover surface */
+    --muted: 0 0% 96%;                /* Pure neutral - soft hover surface */
     --muted-foreground: 240 2% 43%;   /* #6E6E73 - secondary text */
 
     /* AAC Green accent - replaces Apple blue */
@@ -90,16 +90,16 @@ All colors MUST be HSL.
     --destructive-foreground: 0 0% 100%;
 
     /* Borders & Dividers - Apple hairline */
-    --border: 240 6% 83%;             /* #D2D2D7 - hairline border */
-    --input: 240 6% 83%;              /* #D2D2D7 */
+    --border: 0 0% 86%;               /* Pure neutral hairline border */
+    --input: 0 0% 86%;                /* Pure neutral */
     --ring: 161 91% 31%;
 
     /* Soft divider token */
-    --soft-divider: 240 6% 90%;       /* #E5E5EA */
+    --soft-divider: 0 0% 90%;         /* Pure neutral divider */
 
-    /* Card border tokens - Apple hairline */
-    --aac-card-border: 240 6% 83%;    /* #D2D2D7 */
-    --aac-card-border-hover: 240 6% 75%;
+    /* Card border tokens - Pure neutral */
+    --aac-card-border: 0 0% 86%;
+    --aac-card-border-hover: 0 0% 75%;
 
     /* Card shadow tokens - Apple-level subtle */
     --aac-shadow: 0 1px 2px rgba(0, 0, 0, 0.035);
@@ -122,8 +122,8 @@ All colors MUST be HSL.
     --warning: 38 92% 50%;
     --warning-soft: 38 92% 50%;
     --danger-soft: 0 84% 60%;
-    --neutral-soft: 240 5% 96%;       /* #F2F2F7 */
-    --neutral-text: 240 2% 43%;       /* #6E6E73 */
+    --neutral-soft: 0 0% 96%;         /* Pure neutral */
+    --neutral-text: 0 0% 43%;         /* Pure neutral text */
 
     /* Shadows - Apple-level subtle */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.035);
@@ -151,10 +151,10 @@ All colors MUST be HSL.
     --primary: 215 100% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 15%;
+    --secondary: 0 0% 14%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 15%;
+    --muted: 0 0% 14%;
     --muted-foreground: 0 0% 65%;
 
     /* AAC Brand Green (dark mode) */
@@ -168,13 +168,16 @@ All colors MUST be HSL.
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
+    --border: 0 0% 22%;
+    --input: 0 0% 22%;
     --ring: 161 91% 31%;
 
+    /* Soft divider token - dark mode */
+    --soft-divider: 0 0% 18%;
+
     /* Card border tokens - dark mode */
-    --aac-card-border: 0 0% 25%;
-    --aac-card-border-hover: 0 0% 35%;
+    --aac-card-border: 0 0% 22%;
+    --aac-card-border-hover: 0 0% 30%;
 
     /* Card shadow tokens - dark mode */
     --aac-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
@@ -189,7 +192,7 @@ All colors MUST be HSL.
     --warning: 38 92% 50%;
     --warning-soft: 38 92% 50%;
     --danger-soft: 0 84% 60%;
-    --neutral-soft: 0 0% 20%;
+    --neutral-soft: 0 0% 14%;
     --neutral-text: 0 0% 65%;
 
     --shadow-lg: 0 10px 40px -10px hsl(0 0% 0% / 0.4);
