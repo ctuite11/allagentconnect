@@ -300,7 +300,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
           <CardHeader className="cursor-pointer p-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <DollarSign className="h-5 w-5 text-emerald-600" />
+                <DollarSign className="h-6 w-6 text-emerald-600" />
                 <CardTitle className="text-base font-medium text-zinc-900">Price Range</CardTitle>
               </div>
               {isOpen ? <ChevronUp className="h-5 w-5 text-zinc-400" /> : <ChevronDown className="h-5 w-5 text-zinc-400" />}
