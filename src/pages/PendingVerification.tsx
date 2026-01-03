@@ -297,7 +297,7 @@ const PendingVerification = () => {
           {userEmail && (
             <p className="text-sm text-zinc-600">
               You'll receive a confirmation email at{" "}
-              <span className="font-medium text-zinc-800">{userEmail}</span>{" "}
+              <span className="text-zinc-700">{userEmail}</span>{" "}
               once verification is complete.
             </p>
           )}

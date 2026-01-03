@@ -66,7 +66,7 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log(`Sending ${approved ? 'approval' : 'rejection'} email to ${recipientEmail} (${recipientName})`);
 
-    // Build approved email HTML - uses subtle AAC green background, logo, and globe visual
+    // Build approved email HTML - minimal, confident, no fluff
     const approvedHtml = `
 <!DOCTYPE html>
 <html lang="en">
@@ -75,72 +75,38 @@ serve(async (req: Request): Promise<Response> => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>You're Approved</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #F3FAEE;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #F3FAEE;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc;">
     <tr>
-      <td align="center" style="padding: 40px 20px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06); border: 1px solid #e2e8f0;">
-          
-          <!-- Header with Logo -->
-          <tr>
-            <td style="padding: 32px 40px 24px 40px; border-bottom: 1px solid #f1f5f9;" align="center">
-              <img src="https://allagentconnect.com/brand/aac-wordmark.png" alt="AllAgentConnect" width="200" style="display: block; max-width: 200px; height: auto;" />
-            </td>
-          </tr>
+      <td align="center" style="padding: 48px 24px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px;">
           
           <!-- Content -->
           <tr>
-            <td style="padding: 40px;">
-              <!-- Globe icon - represents network access -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 24px auto;">
-                <tr>
-                  <td align="center">
-                    <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                      <img src="https://allagentconnect.com/brand/aac-globe.png" alt="" width="48" height="48" style="display: block;" />
-                    </div>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0; text-align: center;">
+            <td style="padding: 0;">
+              <p style="font-size: 15px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
                 Hi ${recipientName},
               </p>
               
-              <p style="font-size: 20px; color: #0f172a; line-height: 1.4; margin: 0 0 20px 0; font-weight: 600; text-align: center;">
-                You're officially approved.
+              <p style="font-size: 15px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
+                Your real estate license has been verified, and your access to AllAgentConnect is now active.
               </p>
               
-              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0; text-align: center;">
-                Your license has been verified and you now have full access to AllAgentConnect — the agent-only network for direct communication and off-market collaboration.
+              <p style="font-size: 15px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
+                You can sign in using the link below:
               </p>
               
-              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 32px 0; text-align: center;">
-                You can sign in anytime to explore the network, connect with agents, and start collaborating.
+              <p style="font-size: 15px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
+                <a href="https://allagentconnect.com/auth" style="color: #334155;">https://allagentconnect.com/auth</a>
               </p>
               
-              <!-- CTA Button - AAC accent green, pill shape -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 32px auto;">
-                <tr>
-                  <td style="background-color: #6FB83F; border-radius: 9999px;">
-                    <a href="https://allagentconnect.com/auth" target="_blank" style="display: inline-block; padding: 14px 32px; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none;">
-                      Enter AllAgentConnect
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0; text-align: center;">
-                Welcome to the network,<br>
-                <span style="color: #64748b;">— AllAgentConnect Team</span>
+              <p style="font-size: 15px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
+                If you have any questions, reach us anytime at <a href="mailto:hello@allagentconnect.com" style="color: #334155;">hello@allagentconnect.com</a>.
               </p>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 24px 40px; border-top: 1px solid #f1f5f9; background-color: #fafafa; border-radius: 0 0 16px 16px;">
-              <p style="font-size: 12px; color: #94a3b8; margin: 0; text-align: center;">
-                © ${new Date().getFullYear()} AllAgentConnect. All rights reserved.
+              
+              <p style="font-size: 15px; color: #64748b; line-height: 1.7; margin: 32px 0 0 0;">
+                —<br>
+                AllAgentConnect
               </p>
             </td>
           </tr>
@@ -241,7 +207,7 @@ serve(async (req: Request): Promise<Response> => {
         reply_to: "hello@allagentconnect.com",
         to: [recipientEmail],
         subject: approved 
-          ? "You're approved — welcome to AllAgentConnect"
+          ? "Your AllAgentConnect access is active"
           : "AllAgentConnect - Verification Update",
         html: approved ? approvedHtml : rejectedHtml,
       }),
