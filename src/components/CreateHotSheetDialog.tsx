@@ -31,6 +31,13 @@ interface CreateHotSheetDialogProps {
   onSuccess: (hotSheetId: string) => void;
   hotSheetId?: string;
   editMode?: boolean;
+  preSelectedClients?: Array<{
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone?: string | null;
+  }>;
 }
 
 export function CreateHotSheetDialog({
@@ -42,6 +49,7 @@ export function CreateHotSheetDialog({
   onSuccess,
   hotSheetId,
   editMode = false,
+  preSelectedClients,
 }: CreateHotSheetDialogProps) {
   const [hotSheetName, setHotSheetName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -159,6 +167,13 @@ export function CreateHotSheetDialog({
   // Add another contact modal
   const [showAddAnotherContactModal, setShowAddAnotherContactModal] = useState(false);
   const [createdHotSheetId, setCreatedHotSheetId] = useState<string | null>(null);
+
+  // Initialize from preSelectedClients when dialog opens (only once on open)
+  useEffect(() => {
+    if (open && preSelectedClients && preSelectedClients.length > 0 && selectedClients.length === 0) {
+      setSelectedClients(preSelectedClients);
+    }
+  }, [open, preSelectedClients]);
 
   // Fetch hot sheet data on mount if editing
   useEffect(() => {
