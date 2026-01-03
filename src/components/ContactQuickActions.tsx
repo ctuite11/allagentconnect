@@ -68,10 +68,10 @@ const ContactQuickActions = ({
             <Button
               variant="ghost"
               size={buttonSize}
-              className="px-2"
+              className="px-2 group"
               onClick={(e) => handleClick(e, () => onViewFavorites(client))}
             >
-              <Star className={cn(iconSize, "text-emerald-600")} />
+              <Star className={cn(iconSize, "text-zinc-500 group-hover:text-zinc-700")} />
             </Button>
           </TooltipTrigger>
           <TooltipContent sideOffset={8}>
