@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, Upload } from "lucide-react";
+import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, Upload, Check } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -26,6 +26,8 @@ import { ImportClientsDialog } from "@/components/ImportClientsDialog";
 import ContactDetailDrawer from "@/components/ContactDetailDrawer";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
 
 // Helper function for title case display (safe transform, doesn't modify stored data)
 const toTitleCase = (str: string) => {
@@ -94,9 +96,29 @@ const MyClients = () => {
   
   // Bulk hot sheet state
   const [bulkHotSheetDialogOpen, setBulkHotSheetDialogOpen] = useState(false);
+  
+  // Typeahead autocomplete state
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     checkAuth();
+  }, []);
+
+  // Click outside to close autocomplete
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        autocompleteRef.current &&
+        !autocompleteRef.current.contains(event.target as Node)
+      ) {
+        setShowAutocomplete(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const checkAuth = async () => {
@@ -627,14 +649,65 @@ const MyClients = () => {
               <div className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] mb-4">
                 <div className="p-6">
                   <div className="flex gap-4">
-                    <div className="relative flex-1">
+                    <div className="relative flex-1" ref={autocompleteRef}>
                       <Input
+                        ref={searchInputRef}
                         placeholder="Search contacts by name, email, phone, or type..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          // Show autocomplete if 2+ chars and there are matches
+                          setShowAutocomplete(e.target.value.length >= 2);
+                        }}
+                        onFocus={() => {
+                          if (searchTerm.length >= 2) {
+                            setShowAutocomplete(true);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") {
+                            setShowAutocomplete(false);
+                          }
+                        }}
                         className="pl-10"
                       />
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                      
+                      {/* Typeahead Autocomplete Dropdown */}
+                      {showAutocomplete && searchTerm.length >= 2 && filteredClients.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden">
+                          <Command className="bg-white">
+                            <CommandList>
+                              <CommandGroup heading="Quick Jump">
+                                {filteredClients.slice(0, 8).map((client) => (
+                                  <CommandItem
+                                    key={client.id}
+                                    value={`${client.first_name} ${client.last_name}`}
+                                    onSelect={() => {
+                                      setDrawerClient(client);
+                                      setDrawerOpen(true);
+                                      setShowAutocomplete(false);
+                                    }}
+                                    className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-zinc-50"
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium text-zinc-900">
+                                        {toTitleCase(`${client.first_name} ${client.last_name}`)}
+                                      </span>
+                                      <span className="text-sm text-zinc-500">{client.email}</span>
+                                    </div>
+                                    {client.client_type && (
+                                      <Badge variant="outline" className="text-xs capitalize border-zinc-200 text-zinc-600">
+                                        {client.client_type}
+                                      </Badge>
+                                    )}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </div>
+                      )}
                     </div>
                     <Select value={clientTypeFilter} onValueChange={setClientTypeFilter}>
                       <SelectTrigger className="w-[180px] bg-white border-zinc-200">
