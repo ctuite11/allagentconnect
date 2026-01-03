@@ -26,9 +26,17 @@ export const settingsEmpty = "text-sm text-zinc-400";
 
 // Cards
 export const card = "bg-white border border-zinc-200 rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all";
+export const cardContainer = "bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
 export const settingsCard = "bg-white border border-zinc-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all";
 export const cardTitle = "text-zinc-900 font-semibold";
 export const cardDesc = "text-zinc-500 text-sm";
+
+// Text
+export const metaText = "text-zinc-600 text-sm";
+export const mutedText = "text-zinc-500 text-sm";
+
+// Icons
+export const iconMuted = "text-zinc-400";
 
 // Icons
 export const iconGreen = "h-6 w-6 text-emerald-600";
@@ -83,13 +91,19 @@ export const aacStyles = {
   
   // Cards
   card,
+  cardContainer,
   settingsCard,
   cardTitle,
   cardDesc,
   
+  // Text
+  metaText,
+  mutedText,
+  
   // Icons
   iconGreen,
   iconGreenSmall,
+  iconMuted,
   
   // Buttons
   neutralButton,

@@ -143,7 +143,7 @@ const ContactDetailDrawer = ({
         <SheetHeader className="pb-4">
           <div className="flex items-start gap-4">
             <Avatar className="h-14 w-14">
-              <AvatarFallback className="text-base font-semibold bg-neutral-100 text-neutral-700">
+              <AvatarFallback className="text-base font-semibold bg-zinc-100 text-zinc-700">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -187,24 +187,24 @@ const ContactDetailDrawer = ({
 
           {/* Contact Info */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-neutral-900">Contact Information</h4>
+            <h4 className="text-sm font-semibold text-zinc-900">Contact Information</h4>
             <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-3 text-neutral-600">
-                <Mail className="h-4 w-4 text-neutral-400" />
-                <a href={`mailto:${client.email}`} className="hover:text-neutral-900 truncate">
+              <div className="flex items-center gap-3 text-zinc-600">
+                <Mail className="h-4 w-4 text-zinc-400" />
+                <a href={`mailto:${client.email}`} className="hover:text-zinc-900 truncate">
                   {client.email}
                 </a>
               </div>
               {client.phone && (
-                <div className="flex items-center gap-3 text-neutral-600">
-                  <Phone className="h-4 w-4 text-neutral-400" />
-                  <a href={`tel:${client.phone}`} className="hover:text-neutral-900">
+                <div className="flex items-center gap-3 text-zinc-600">
+                  <Phone className="h-4 w-4 text-zinc-400" />
+                  <a href={`tel:${client.phone}`} className="hover:text-zinc-900">
                     {formatPhoneNumber(client.phone)}
                   </a>
                 </div>
               )}
-              <div className="flex items-center gap-3 text-neutral-500 text-xs">
-                <Calendar className="h-4 w-4 text-neutral-400" />
+              <div className="flex items-center gap-3 text-zinc-600 text-xs">
+                <Calendar className="h-4 w-4 text-zinc-400" />
                 Added {new Date(client.created_at).toLocaleDateString()}
               </div>
             </div>
@@ -215,11 +215,11 @@ const ContactDetailDrawer = ({
             <>
               <Separator />
               <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-neutral-900 flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-neutral-400" />
+                <h4 className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-zinc-400" />
                   Notes
                 </h4>
-                <p className="text-sm text-neutral-600 whitespace-pre-wrap">{client.notes}</p>
+                <p className="text-sm text-zinc-600 whitespace-pre-wrap">{client.notes}</p>
               </div>
             </>
           )}
@@ -227,8 +227,8 @@ const ContactDetailDrawer = ({
           {/* Assigned Hot Sheets */}
           <Separator />
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-neutral-900 flex items-center gap-2">
-              <ListPlus className="h-4 w-4 text-neutral-400" />
+            <h4 className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+              <ListPlus className="h-4 w-4 text-zinc-400" />
               Assigned Hot Sheets
               {assignedHotSheets.length > 0 && (
                 <Badge variant="secondary" className="ml-auto text-xs">
@@ -238,23 +238,23 @@ const ContactDetailDrawer = ({
             </h4>
             
             {loading ? (
-              <p className="text-sm text-neutral-400 py-2">Loading...</p>
+              <p className="text-sm text-zinc-400 py-2">Loading...</p>
             ) : assignedHotSheets.length > 0 ? (
               <div className="space-y-2">
                 {assignedHotSheets.map((hotSheet) => (
                   <div
                     key={hotSheet.id}
-                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-neutral-50 hover:bg-neutral-100 cursor-pointer transition-colors"
+                    className="flex items-center justify-between py-2 px-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 cursor-pointer transition-colors"
                     onClick={() => {
                       navigate(`/hot-sheet/${hotSheet.id}/review`);
                       onOpenChange(false);
                     }}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-neutral-900 truncate">
+                      <p className="text-sm font-medium text-zinc-900 truncate">
                         {hotSheet.name}
                       </p>
-                      <p className="text-xs text-neutral-500 flex items-center gap-1">
+                      <p className="text-xs text-zinc-600 flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {new Date(hotSheet.created_at).toLocaleDateString()}
                       </p>
@@ -269,7 +269,7 @@ const ContactDetailDrawer = ({
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-neutral-400 py-2">
+              <p className="text-sm text-zinc-400 py-2">
                 No hot sheets assigned yet
               </p>
             )}

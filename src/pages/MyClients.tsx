@@ -613,7 +613,7 @@ const MyClients = () => {
               <div className="text-center py-4">
                   <User className="h-12 w-12 mx-auto mb-3 text-zinc-400" />
                   <h3 className="text-lg font-semibold text-zinc-900 mb-1">No contacts yet</h3>
-                  <p className="text-sm text-zinc-500 mb-5">
+                  <p className="text-sm text-zinc-600 mb-5">
                     Add your first contact to start managing their property search
                   </p>
                   <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleAddClient}>
@@ -668,11 +668,11 @@ const MyClients = () => {
                   <div className="flex items-center justify-between mt-2">
                     <div>
                       {(searchTerm || clientTypeFilter !== "all") && (
-                        <p className="text-sm text-zinc-500">
+                        <p className="text-sm text-zinc-600">
                           Found {filteredClients.length} of {clients.length} contacts
                         </p>
                       )}
-                      <p className="text-sm text-zinc-500">
+                      <p className="text-sm text-zinc-600">
                         {sortedClients.length === 1 
                           ? "Showing 1 of 1 contact"
                           : `Showing ${startIndex + 1}–${Math.min(endIndex, sortedClients.length)} of ${sortedClients.length} contacts`
@@ -680,7 +680,7 @@ const MyClients = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-zinc-500">Contacts per page:</span>
+                      <span className="text-sm text-zinc-600">Contacts per page:</span>
                       <Select value={itemsPerPage.toString()} onValueChange={(value) => {
                         setItemsPerPage(Number(value));
                         setCurrentPage(1);
@@ -702,7 +702,7 @@ const MyClients = () => {
 
               {/* Bulk Action Bar - appears when contacts are selected */}
               {selectedClients.size > 0 && (
-                <div className="flex items-center gap-3 py-3 px-4 bg-zinc-50 border border-zinc-200 rounded-lg mb-4">
+                <div className="flex items-center gap-3 py-3 px-4 bg-zinc-50 border border-zinc-300 rounded-xl mb-4">
                   <span className="text-sm text-zinc-600 font-medium">
                     {selectedClients.size} contact{selectedClients.size > 1 ? 's' : ''} selected
                   </span>
@@ -726,7 +726,7 @@ const MyClients = () => {
                   <div className="text-center">
                     <User className="h-16 w-16 mx-auto mb-4 text-zinc-400" />
                     <h3 className="text-xl font-semibold text-zinc-900 mb-2">No contacts found</h3>
-                    <p className="text-zinc-500 mb-6">
+                    <p className="text-zinc-600 mb-6">
                       Try adjusting your search criteria
                     </p>
                     <Button variant="outline" onClick={() => setSearchTerm("")}>
