@@ -54,7 +54,7 @@ const ContactQuickActions = ({
               className="px-2"
               onClick={(e) => handleClick(e, () => onHotSheet(client))}
             >
-              <ListPlus className={cn(iconSize, "text-aac")} />
+              <ListPlus className={cn(iconSize, "text-emerald-600")} />
             </Button>
           </TooltipTrigger>
           <TooltipContent sideOffset={8}>

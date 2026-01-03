@@ -38,14 +38,14 @@ export const mutedText = "text-zinc-500 text-sm";
 // Icons
 export const iconMuted = "text-zinc-400";
 
-// Icons - using AAC brand green token
-export const iconGreen = "h-6 w-6 text-aac";
-export const iconGreenSmall = "h-5 w-5 text-aac";
-export const iconGreenFill = "text-aac fill-aac";
+// Icons - using emerald-600
+export const iconGreen = "h-6 w-6 text-emerald-600";
+export const iconGreenSmall = "h-5 w-5 text-emerald-600";
+export const iconGreenFill = "text-emerald-600 fill-emerald-600";
 
-// Buttons - using AAC brand green token
+// Buttons - using emerald-600
 export const neutralButton = "border border-zinc-300 rounded-full px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors";
-export const primaryButton = "bg-aac hover:bg-aac-hover text-white rounded-full px-5 py-2.5 font-medium transition-colors";
+export const primaryButton = "bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-5 py-2.5 font-medium transition-colors";
 export const ghostButton = "text-sm text-zinc-500 hover:text-zinc-900 transition-colors";
 
 // Toggle/Switch (neutral zinc, no blue, not black)

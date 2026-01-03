@@ -506,17 +506,17 @@ const MyClients = () => {
             {clients.length > 0 && (
               <>
                 {selectedClients.size > 0 && (
-                  <Button className="bg-aac hover:bg-aac-hover text-white" onClick={handleBulkEmail}>
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleBulkEmail}>
                     <Send className="h-4 w-4 mr-2" />
                     Send Email ({selectedClients.size})
                   </Button>
                 )}
                 <Button variant="outline" onClick={() => setAnalyticsDialogOpen(true)}>
-                  <Mail className="h-4 w-4 mr-2 text-aac" />
+                  <Mail className="h-4 w-4 mr-2 text-emerald-600" />
                   Email Analytics
                 </Button>
                 <Button variant="ghost" className="text-zinc-600 hover:text-zinc-900" onClick={handleExportCSV}>
-                  <Download className="h-4 w-4 mr-2 text-aac" />
+                  <Download className="h-4 w-4 mr-2 text-emerald-600" />
                   Export CSV
                 </Button>
               </>
@@ -524,7 +524,7 @@ const MyClients = () => {
             
             {/* Import CSV - always visible so users can import their first contacts */}
             <Button variant="ghost" className="text-zinc-600 hover:text-zinc-900" onClick={() => setImportDialogOpen(true)}>
-              <Upload className="h-4 w-4 mr-2 text-aac" />
+              <Upload className="h-4 w-4 mr-2 text-emerald-600" />
               Import CSV
             </Button>
             
@@ -534,7 +534,7 @@ const MyClients = () => {
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button className="bg-aac hover:bg-aac-hover text-white" onClick={handleAddClient}>
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleAddClient}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Contact
                 </Button>
@@ -629,7 +629,7 @@ const MyClients = () => {
                     <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={saving} className="bg-aac hover:bg-aac-hover text-white">
+                    <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                       {saving ? "Saving..." : editingClient ? "Update" : "Add Contact"}
                     </Button>
                   </div>
@@ -646,7 +646,7 @@ const MyClients = () => {
                   <p className="text-sm text-zinc-600 mb-5">
                     Add your first contact to start managing their property search
                   </p>
-                  <Button className="bg-aac hover:bg-aac-hover text-white" onClick={handleAddClient}>
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleAddClient}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add First Contact
                   </Button>
