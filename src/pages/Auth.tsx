@@ -201,48 +201,73 @@ const Auth = () => {
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!mounted) return;
-      
-      if (session?.user) {
-        // Store session email for mismatch detection
-        setSessionEmail(session.user.email || null);
+      // ═══════════════════════════════════════════════════════════════════════
+      // STALE SESSION DETECTION: Clear corrupted refresh tokens
+      // This fixes the "Invalid Refresh Token" error after admin creates a user
+      // ═══════════════════════════════════════════════════════════════════════
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        authDebug("handleSession existing session", { userId: session.user.id, email: session.user.email });
-        
-        // ═══════════════════════════════════════════════════════════════════════
-        // PRIORITY 1 (HARD GATE): Admin check using has_role RPC
-        // Admin users MUST route to /admin/approvals and TERMINATE immediately.
-        // Do NOT run agent_settings queries, polling, or verification logic.
-        // ═══════════════════════════════════════════════════════════════════════
-        const adminResult = await checkIsAdmin(session.user.id);
-        authDebug("handleSession has_role(admin)", { 
-          isAdmin: adminResult.isAdmin, 
-          error: adminResult.error 
-        });
-
-        if (adminResult.isAdmin === true) {
-          authDebug("handleSession ADMIN_REDIRECT", { action: "terminal_redirect" });
+        // If there's a session error (like invalid refresh token), force sign out
+        if (sessionError) {
+          console.warn('[AUTH] Session error detected, forcing sign out:', sessionError.message);
+          await supabase.auth.signOut();
           if (mounted) {
-            didNavigate.current = true;
-            navigate('/admin/approvals', { replace: true });
+            setCheckingSession(false);
+            setExistingSession(false);
           }
-          return; // ═══ HARD STOP ═══ Admin NEVER touches agent logic
+          return;
         }
-        // ═══════════════════════════════════════════════════════════════════════
+        
+        if (!mounted) return;
+        
+        if (session?.user) {
+          // Store session email for mismatch detection
+          setSessionEmail(session.user.email || null);
+          
+          authDebug("handleSession existing session", { userId: session.user.id, email: session.user.email });
+          
+          // ═══════════════════════════════════════════════════════════════════════
+          // PRIORITY 1 (HARD GATE): Admin check using has_role RPC
+          // Admin users MUST route to /admin/approvals and TERMINATE immediately.
+          // Do NOT run agent_settings queries, polling, or verification logic.
+          // ═══════════════════════════════════════════════════════════════════════
+          const adminResult = await checkIsAdmin(session.user.id);
+          authDebug("handleSession has_role(admin)", { 
+            isAdmin: adminResult.isAdmin, 
+            error: adminResult.error 
+          });
 
-        setExistingSession(true);
-        
-        // Fetch agent status to determine UI for non-admin users
-        const agentResult = await getAgentStatus(session.user.id);
-        authDebug("handleSession agent status", { status: agentResult.status, error: agentResult.error });
-        
-        if (mounted && agentResult.status) {
-          setAgentStatus(agentResult.status);
+          if (adminResult.isAdmin === true) {
+            authDebug("handleSession ADMIN_REDIRECT", { action: "terminal_redirect" });
+            if (mounted) {
+              didNavigate.current = true;
+              navigate('/admin/approvals', { replace: true });
+            }
+            return; // ═══ HARD STOP ═══ Admin NEVER touches agent logic
+          }
+          // ═══════════════════════════════════════════════════════════════════════
+
+          setExistingSession(true);
+          
+          // Fetch agent status to determine UI for non-admin users
+          const agentResult = await getAgentStatus(session.user.id);
+          authDebug("handleSession agent status", { status: agentResult.status, error: agentResult.error });
+          
+          if (mounted && agentResult.status) {
+            setAgentStatus(agentResult.status);
+          }
+        }
+        setCheckingSession(false);
+      } catch (e: any) {
+        // Catch any thrown errors (like network issues) and clear session
+        console.error('[AUTH] Session check failed:', e?.message || e);
+        await supabase.auth.signOut();
+        if (mounted) {
+          setCheckingSession(false);
+          setExistingSession(false);
         }
       }
-      setCheckingSession(false);
     };
 
     handleSession();
