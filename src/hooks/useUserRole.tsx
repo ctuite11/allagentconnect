@@ -16,6 +16,9 @@ export const useUserRole = (user: User | null) => {
         return;
       }
 
+      // Reset loading to true when user transitions from null -> real user
+      setLoading(true);
+
       try {
         // Use has_role RPC for admin check (SECURITY DEFINER - no RLS issues)
         const { data: hasAdminRole, error: adminError } = await supabase.rpc("has_role", {

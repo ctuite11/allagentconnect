@@ -18,6 +18,7 @@ import {
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const [agentStatusLoading, setAgentStatusLoading] = useState(false);
   const navigate = useNavigate();
@@ -25,17 +26,26 @@ const Navigation = () => {
   const { role, loading: roleLoading } = useUserRole(user);
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    let cancelled = false;
+
+    const init = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      setUser(data.session?.user ?? null);
+      setAuthLoading(false);
+    };
+
+    init();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setAuthLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   // Check agent status for pending users
@@ -95,6 +105,7 @@ const Navigation = () => {
   // ---- Render gate: Navigation should not "change on its own" ----
   // Wait for auth + role; if agent, also wait for agent_status
   const navLoading =
+    authLoading ||
     roleLoading ||
     (user && role === "agent" && agentStatusLoading) ||
     (user && role === "agent" && agentStatus === null);

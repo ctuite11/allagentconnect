@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import Navigation from "@/components/Navigation";
 
 export default function ComingSoon() {
   const { toast } = useToast();
@@ -86,7 +85,6 @@ export default function ComingSoon() {
 
   return (
     <>
-      <Navigation />
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary-foreground to-secondary p-4 pt-20">
         <div className="max-w-4xl w-full text-center space-y-8">
         <div className="space-y-4">

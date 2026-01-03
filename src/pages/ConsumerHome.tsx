@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import FeaturedPropertyShowcase from "@/components/FeaturedPropertyShowcase";
 import AdBanner from "@/components/AdBanner";
@@ -33,7 +32,6 @@ const ConsumerHome = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
       <main className="pt-20">
         {/* Modern, unified hero */}
         <PropertySearchHero />
