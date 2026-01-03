@@ -293,28 +293,21 @@ const PendingVerification = () => {
             Application received.
           </h1>
           
-          {/* Body copy */}
+          {/* Body copy - single clear message */}
           <p className="text-zinc-600 text-base leading-relaxed">
             We've received your application and are verifying your real estate license.
-            <br />
-            This usually takes less than one business day.
           </p>
           
-          {/* Email confirmation */}
+          {/* Email confirmation - the one promise */}
           {userEmail && (
             <p className="text-zinc-500 text-sm mt-4">
               You'll receive a confirmation email at <span className="font-medium">{userEmail}</span> once verification is complete.
             </p>
           )}
 
-          {/* Value proposition - anticipation */}
-          <p className="text-zinc-500 text-sm mt-4">
-            Once approved, you'll have full access to private listings, agent-only intelligence, and off-market opportunities.
-          </p>
-
-          {/* Status badge - non-clickable acknowledgment */}
-          <div className="mt-8 inline-flex items-center px-5 py-2.5 rounded-full bg-zinc-100 text-zinc-600 text-sm font-medium">
-            Status: Pending verification
+          {/* Status indicator - disabled, non-clickable */}
+          <div className="mt-8 inline-flex items-center px-5 py-2.5 rounded-full bg-zinc-100 text-zinc-500 text-sm font-medium cursor-default select-none">
+            Verification in progress
           </div>
 
           {/* Support email */}
