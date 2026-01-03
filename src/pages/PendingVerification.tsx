@@ -273,72 +273,66 @@ const PendingVerification = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative bg-white">
-      {/* Ambient globe - reusing NetworkGlobe with desaturated/softened treatment */}
-      <div 
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        style={{ 
-          opacity: 0.15,
-          filter: 'saturate(0.6)',
-        }}
-      >
-        <div className="w-[320px] h-[320px]">
-          <NetworkGlobe />
-        </div>
-      </div>
-      
-      {/* Very subtle green wash overlay - barely perceptible */}
+      {/* Near-invisible background wash */}
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundColor: 'hsl(93 50% 48% / 0.02)',
+          backgroundColor: 'hsl(93 50% 96% / 0.5)',
         }}
       />
       
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-xl">
-          <div className="rounded-2xl p-8 md:p-10 text-center">
-            {/* Headline */}
-            <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-3">
-              Almost there.
-            </h1>
-            
-            {/* Body copy */}
-            <p className="text-zinc-600 text-base leading-relaxed">
-              Thanks for your request. We'll email you as soon as your license verification is complete.
-            </p>
-            
-            {/* Notify confirmation - pre-access state */}
-            {userEmail && (
-              <p className="text-zinc-500 text-sm mt-4">
-                We'll notify you at <span className="font-medium">{userEmail}</span> once verification is complete.
-              </p>
-            )}
-
-            {/* Primary CTA - strongest green on screen */}
-            <Button 
-              onClick={handleAcknowledge} 
-              className="w-full mt-8 rounded-full h-12 text-base font-medium"
-              style={{ 
-                backgroundColor: 'hsl(93 50% 48%)',
-                color: 'white',
-              }}
-            >
-              We'll notify you
-            </Button>
-
-            {/* Support email */}
-            <p className="text-zinc-500 text-xs mt-6">
-              Questions? Email us at hello@allagentconnect.com
-            </p>
+        <div className="w-full max-w-md text-center">
+          {/* Centered ambient globe - above headline */}
+          <div 
+            className="mx-auto mb-8 pointer-events-none"
+            style={{ 
+              opacity: 0.08,
+              filter: 'saturate(0.5) blur(0.5px)',
+              width: '140px',
+              height: '140px',
+            }}
+          >
+            <NetworkGlobe />
           </div>
+          
+          {/* Headline - strongest element */}
+          <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-3">
+            Almost there.
+          </h1>
+          
+          {/* Body copy */}
+          <p className="text-zinc-600 text-base leading-relaxed">
+            Thanks for your request. We'll email you as soon as your license verification is complete.
+          </p>
+          
+          {/* Notify confirmation - pre-access state */}
+          {userEmail && (
+            <p className="text-zinc-500 text-sm mt-4">
+              We'll notify you at <span className="font-medium">{userEmail}</span> once verification is complete.
+            </p>
+          )}
+
+          {/* Acknowledgment button - muted neutral, NOT green */}
+          <Button 
+            onClick={handleAcknowledge} 
+            className="w-full mt-8 rounded-full h-12 text-base font-medium bg-zinc-800 hover:bg-zinc-700 text-white"
+          >
+            We'll notify you
+          </Button>
+
+          {/* Support email */}
+          <p className="text-zinc-400 text-xs mt-6">
+            Questions? Email us at hello@allagentconnect.com
+          </p>
         </div>
       </main>
       
-      {/* Override NetworkGlobe's pulse animation - rotation only */}
+      {/* Override NetworkGlobe animations - slow rotation only */}
       <style>{`
-        .absolute [style*="animation: networkSpin"] circle {
-          animation: none !important;
-          transition: none !important;
+        @keyframes pendingRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>
