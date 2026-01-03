@@ -482,7 +482,7 @@ const MyClients = () => {
                   </Button>
                 )}
                 <Button variant="outline" onClick={() => setAnalyticsDialogOpen(true)}>
-                  <Mail className="h-4 w-4 mr-2" />
+                  <Mail className="h-4 w-4 mr-2 text-emerald-600" />
                   Email Analytics
                 </Button>
                 <Button variant="ghost" className="text-zinc-600 hover:text-zinc-900" onClick={handleExportCSV}>
@@ -708,7 +708,7 @@ const MyClients = () => {
                   </span>
                   <Separator orientation="vertical" className="h-4" />
                   <Button variant="outline" size="sm" onClick={handleBulkCreateHotSheet}>
-                    <ListPlus className="h-4 w-4 mr-2" />
+                    <ListPlus className="h-4 w-4 mr-2 text-emerald-600" />
                     Create Hot Sheet
                   </Button>
                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setBulkRemoveDialogOpen(true)}>
