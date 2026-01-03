@@ -3,7 +3,6 @@ import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormattedInput } from "@/components/ui/formatted-input";
@@ -12,8 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -22,8 +23,19 @@ import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { BulkEmailDialog } from "@/components/BulkEmailDialog";
 import { EmailAnalyticsDialog } from "@/components/EmailAnalyticsDialog";
 import { ImportClientsDialog } from "@/components/ImportClientsDialog";
+import ContactDetailDrawer from "@/components/ContactDetailDrawer";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { Checkbox } from "@/components/ui/checkbox";
+
+// Helper function for title case display (safe transform, doesn't modify stored data)
+const toTitleCase = (str: string) => {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 const clientSchema = z.object({
   first_name: z.string().trim().min(2, "First name must be at least 2 characters").max(100),
@@ -71,6 +83,17 @@ const MyClients = () => {
   const [clientTypeFilter, setClientTypeFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
+  
+  // Contact detail drawer state
+  const [drawerClient, setDrawerClient] = useState<Client | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  
+  // Bulk remove confirmation
+  const [bulkRemoveDialogOpen, setBulkRemoveDialogOpen] = useState(false);
+  const [removingBulk, setRemovingBulk] = useState(false);
+  
+  // Bulk hot sheet state
+  const [bulkHotSheetDialogOpen, setBulkHotSheetDialogOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -226,6 +249,76 @@ const MyClients = () => {
     fetchClients(user.id);
   };
 
+  // Drawer handlers
+  const openContactDrawer = (client: Client) => {
+    setDrawerClient(client);
+    setDrawerOpen(true);
+  };
+
+  const handleDrawerCreateHotSheet = (client: Client) => {
+    handleOpenHotSheetDialog(client);
+  };
+
+  const handleDrawerEdit = (client: Client) => {
+    handleEditClient(client);
+  };
+
+  const handleDrawerDelete = (clientId: string) => {
+    handleDeleteClient(clientId);
+  };
+
+  // Bulk remove handler
+  const handleBulkRemove = async () => {
+    if (selectedClients.size === 0) return;
+    
+    setRemovingBulk(true);
+    try {
+      // First delete from hot_sheet_clients junction table to avoid FK issues
+      const clientIds = Array.from(selectedClients);
+      
+      const { error: junctionError } = await supabase
+        .from('hot_sheet_clients' as any)
+        .delete()
+        .in('client_id', clientIds);
+      
+      if (junctionError) {
+        console.warn("Junction table cleanup warning:", junctionError);
+      }
+      
+      // Now delete the clients
+      const { error } = await supabase
+        .from("clients")
+        .delete()
+        .in("id", clientIds);
+      
+      if (error) throw error;
+      
+      toast.success(`Removed ${selectedClients.size} contact${selectedClients.size > 1 ? 's' : ''}`);
+      setSelectedClients(new Set());
+      setBulkRemoveDialogOpen(false);
+      fetchClients(user.id);
+    } catch (error: any) {
+      console.error("Error removing contacts:", error);
+      toast.error("Failed to remove contacts");
+    } finally {
+      setRemovingBulk(false);
+    }
+  };
+
+  // Bulk hot sheet handler
+  const handleBulkCreateHotSheet = () => {
+    if (selectedClients.size === 0) {
+      toast.error("Please select at least one contact");
+      return;
+    }
+    setBulkHotSheetDialogOpen(true);
+  };
+
+  // Get selected clients for bulk hot sheet
+  const getSelectedClientsForHotSheet = () => {
+    return clients.filter(client => selectedClients.has(client.id));
+  };
+
   const toggleSelectClient = (clientId: string) => {
     const newSelected = new Set(selectedClients);
     if (newSelected.has(clientId)) {
@@ -373,7 +466,7 @@ const MyClients = () => {
         <div className="container mx-auto px-4 py-8">
           <PageHeader
             title="My Contacts"
-            subtitle="Manage your contacts and create personalized hot sheets for them"
+            subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
             className="mb-8"
           />
 
@@ -580,7 +673,10 @@ const MyClients = () => {
                         </p>
                       )}
                       <p className="text-sm text-muted-foreground">
-                        Showing {startIndex + 1}-{Math.min(endIndex, sortedClients.length)} of {sortedClients.length} contacts
+                        {sortedClients.length === 1 
+                          ? "Showing 1 of 1 contact"
+                          : `Showing ${startIndex + 1}–${Math.min(endIndex, sortedClients.length)} of ${sortedClients.length} contacts`
+                        }
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -604,6 +700,27 @@ const MyClients = () => {
                 </div>
               </div>
 
+              {/* Bulk Action Bar - appears when contacts are selected */}
+              {selectedClients.size > 0 && (
+                <div className="flex items-center gap-3 py-3 px-4 bg-neutral-50 border border-neutral-200 rounded-lg mb-4">
+                  <span className="text-sm text-neutral-600 font-medium">
+                    {selectedClients.size} contact{selectedClients.size > 1 ? 's' : ''} selected
+                  </span>
+                  <Separator orientation="vertical" className="h-4" />
+                  <Button variant="outline" size="sm" onClick={handleBulkCreateHotSheet}>
+                    <ListPlus className="h-4 w-4 mr-2" />
+                    Create Hot Sheet
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setBulkRemoveDialogOpen(true)}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remove
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedClients(new Set())}>
+                    Clear selection
+                  </Button>
+                </div>
+              )}
+
               {filteredClients.length === 0 ? (
                 <div className="aac-card p-12">
                   <div className="text-center">
@@ -618,6 +735,7 @@ const MyClients = () => {
                   </div>
                 </div>
               ) : (
+                <>
                 <div className="aac-card overflow-hidden">
                   <Table>
                     <TableHeader>
@@ -649,15 +767,19 @@ const MyClients = () => {
                     </TableHeader>
                     <TableBody>
                       {paginatedClients.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell>
+                    <TableRow 
+                      key={client.id} 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => openContactDrawer(client)}
+                    >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={selectedClients.has(client.id)}
                           onCheckedChange={() => toggleSelectClient(client.id)}
                         />
                       </TableCell>
                       <TableCell className="font-medium">
-                        {client.first_name} {client.last_name}
+                        {toTitleCase(client.first_name)} {toTitleCase(client.last_name)}
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
@@ -678,14 +800,17 @@ const MyClients = () => {
                           {client.client_type || "—"}
                         </p>
                       </TableCell>
-                       <TableCell className="text-right">
+                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-end gap-2">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                onClick={() => handleOpenHotSheetDialog(client)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenHotSheetDialog(client);
+                                }}
                               >
                                 <ListPlus className="h-4 w-4" />
                               </Button>
@@ -700,13 +825,16 @@ const MyClients = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleEditClient(client)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditClient(client);
+                                }}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Edit Client</p>
+                              <p>Edit Contact</p>
                             </TooltipContent>
                           </Tooltip>
                           
@@ -715,13 +843,16 @@ const MyClients = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleDeleteClient(client.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteClient(client.id);
+                                }}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Delete Client</p>
+                              <p>Remove Contact</p>
                             </TooltipContent>
                           </Tooltip>
                         </div>
@@ -783,6 +914,14 @@ const MyClients = () => {
                 </div>
               )}
             </div>
+              
+              {/* Low-contact helper text */}
+              {clients.length > 0 && clients.length <= 3 && (
+                <p className="text-sm text-neutral-400 mt-4 text-center">
+                  Add contacts to start sending personalized Hot Sheets and private deal alerts.
+                </p>
+              )}
+              </>
               )}
             </>
           )}
@@ -830,6 +969,56 @@ const MyClients = () => {
         onImportComplete={() => {
           if (user) fetchClients(user.id);
         }}
+      />
+
+      {/* Contact Detail Drawer */}
+      <ContactDetailDrawer
+        client={drawerClient}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        onCreateHotSheet={handleDrawerCreateHotSheet}
+        onEdit={handleDrawerEdit}
+        onDelete={handleDrawerDelete}
+      />
+
+      {/* Bulk Remove Confirmation */}
+      <AlertDialog open={bulkRemoveDialogOpen} onOpenChange={setBulkRemoveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove {selectedClients.size} contact{selectedClients.size > 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the selected contacts and any associated hot sheet assignments. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removingBulk}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleBulkRemove}
+              disabled={removingBulk}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {removingBulk ? "Removing..." : "Remove"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Hot Sheet Dialog */}
+      <CreateHotSheetDialog
+        open={bulkHotSheetDialogOpen}
+        onOpenChange={(open) => {
+          setBulkHotSheetDialogOpen(open);
+          if (!open) {
+            setSelectedClients(new Set());
+          }
+        }}
+        userId={user?.id}
+        onSuccess={() => {
+          setBulkHotSheetDialogOpen(false);
+          setSelectedClients(new Set());
+          fetchClients(user.id);
+        }}
+        preSelectedClients={getSelectedClientsForHotSheet()}
       />
     </div>
     </TooltipProvider>

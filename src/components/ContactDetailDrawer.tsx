@@ -1,0 +1,283 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  Mail, 
+  Phone, 
+  ListPlus, 
+  Edit, 
+  Trash2, 
+  FileText,
+  Calendar,
+  Clock
+} from "lucide-react";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
+
+interface Client {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  client_type: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface HotSheetAssignment {
+  id: string;
+  name: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+interface ContactDetailDrawerProps {
+  client: Client | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreateHotSheet: (client: Client) => void;
+  onEdit: (client: Client) => void;
+  onDelete: (clientId: string) => void;
+}
+
+// Helper function for title case display
+const toTitleCase = (str: string) => {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const ContactDetailDrawer = ({ 
+  client, 
+  open, 
+  onOpenChange,
+  onCreateHotSheet,
+  onEdit,
+  onDelete
+}: ContactDetailDrawerProps) => {
+  const navigate = useNavigate();
+  const [assignedHotSheets, setAssignedHotSheets] = useState<HotSheetAssignment[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (client && open) {
+      fetchAssignedHotSheets();
+    }
+  }, [client, open]);
+
+  const fetchAssignedHotSheets = async () => {
+    if (!client) return;
+    setLoading(true);
+    
+    try {
+      // Use hot_sheet_clients as canonical source (per user instructions)
+      const { data: junctionData, error: junctionError } = await supabase
+        .from('hot_sheet_clients' as any)
+        .select(`
+          hot_sheet_id,
+          hot_sheets (
+            id,
+            name,
+            is_active,
+            created_at
+          )
+        `)
+        .eq('client_id', client.id);
+      
+      if (junctionError) throw junctionError;
+      
+      // Extract hot sheets from junction, avoiding duplicates
+      const hotSheetsFromJunction = (junctionData || [])
+        .map((item: any) => {
+          const hs = item.hot_sheets;
+          if (Array.isArray(hs)) return hs[0];
+          return hs;
+        })
+        .filter((hs: any): hs is HotSheetAssignment => hs !== null);
+      
+      // Also check legacy hot_sheets.client_id for any not in junction
+      const { data: legacyData, error: legacyError } = await supabase
+        .from('hot_sheets')
+        .select('id, name, is_active, created_at')
+        .eq('client_id', client.id);
+      
+      if (legacyError) throw legacyError;
+      
+      // Merge without duplicates (junction takes precedence)
+      const junctionIds = new Set(hotSheetsFromJunction.map(hs => hs.id));
+      const legacySheets = (legacyData || []).filter(hs => !junctionIds.has(hs.id));
+      
+      const allHotSheets = [...hotSheetsFromJunction, ...legacySheets];
+      setAssignedHotSheets(allHotSheets);
+    } catch (error) {
+      console.error("Error fetching assigned hot sheets:", error);
+      setAssignedHotSheets([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!client) return null;
+
+  const contactName = `${toTitleCase(client.first_name)} ${toTitleCase(client.last_name)}`;
+  const initials = `${client.first_name?.[0]?.toUpperCase() || ''}${client.last_name?.[0]?.toUpperCase() || ''}`;
+
+  const handleActionClick = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    action();
+    onOpenChange(false);
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-[400px] sm:w-[420px] overflow-y-auto bg-white">
+        <SheetHeader className="pb-4">
+          <div className="flex items-start gap-4">
+            <Avatar className="h-14 w-14">
+              <AvatarFallback className="text-base font-semibold bg-neutral-100 text-neutral-700">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <SheetTitle className="text-lg truncate">{contactName}</SheetTitle>
+              {client.client_type && (
+                <Badge variant="secondary" className="mt-1 capitalize text-xs">
+                  {client.client_type}
+                </Badge>
+              )}
+            </div>
+          </div>
+        </SheetHeader>
+
+        <div className="space-y-5 pt-4">
+          {/* Quick Actions */}
+          <div className="flex gap-2">
+            <Button 
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={(e) => handleActionClick(e, () => onCreateHotSheet(client))}
+            >
+              <ListPlus className="h-4 w-4 mr-2" />
+              Create Hot Sheet
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={(e) => handleActionClick(e, () => onEdit(client))}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={(e) => handleActionClick(e, () => onDelete(client.id))}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <Separator />
+
+          {/* Contact Info */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-neutral-900">Contact Information</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-3 text-neutral-600">
+                <Mail className="h-4 w-4 text-neutral-400" />
+                <a href={`mailto:${client.email}`} className="hover:text-neutral-900 truncate">
+                  {client.email}
+                </a>
+              </div>
+              {client.phone && (
+                <div className="flex items-center gap-3 text-neutral-600">
+                  <Phone className="h-4 w-4 text-neutral-400" />
+                  <a href={`tel:${client.phone}`} className="hover:text-neutral-900">
+                    {formatPhoneNumber(client.phone)}
+                  </a>
+                </div>
+              )}
+              <div className="flex items-center gap-3 text-neutral-500 text-xs">
+                <Calendar className="h-4 w-4 text-neutral-400" />
+                Added {new Date(client.created_at).toLocaleDateString()}
+              </div>
+            </div>
+          </div>
+
+          {/* Notes Section */}
+          {client.notes && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-neutral-900 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-neutral-400" />
+                  Notes
+                </h4>
+                <p className="text-sm text-neutral-600 whitespace-pre-wrap">{client.notes}</p>
+              </div>
+            </>
+          )}
+
+          {/* Assigned Hot Sheets */}
+          <Separator />
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-neutral-900 flex items-center gap-2">
+              <ListPlus className="h-4 w-4 text-neutral-400" />
+              Assigned Hot Sheets
+              {assignedHotSheets.length > 0 && (
+                <Badge variant="secondary" className="ml-auto text-xs">
+                  {assignedHotSheets.length}
+                </Badge>
+              )}
+            </h4>
+            
+            {loading ? (
+              <p className="text-sm text-neutral-400 py-2">Loading...</p>
+            ) : assignedHotSheets.length > 0 ? (
+              <div className="space-y-2">
+                {assignedHotSheets.map((hotSheet) => (
+                  <div
+                    key={hotSheet.id}
+                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-neutral-50 hover:bg-neutral-100 cursor-pointer transition-colors"
+                    onClick={() => {
+                      navigate(`/hot-sheet/${hotSheet.id}/review`);
+                      onOpenChange(false);
+                    }}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-neutral-900 truncate">
+                        {hotSheet.name}
+                      </p>
+                      <p className="text-xs text-neutral-500 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(hotSheet.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Badge 
+                      variant={hotSheet.is_active ? "default" : "secondary"}
+                      className={hotSheet.is_active ? "bg-emerald-600 text-white text-xs" : "text-xs"}
+                    >
+                      {hotSheet.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-neutral-400 py-2">
+                No hot sheets assigned yet
+              </p>
+            )}
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+export default ContactDetailDrawer;
