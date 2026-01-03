@@ -41,6 +41,7 @@ export const iconMuted = "text-zinc-400";
 // Icons
 export const iconGreen = "h-6 w-6 text-emerald-600";
 export const iconGreenSmall = "h-5 w-5 text-emerald-600";
+export const iconGreenFill = "text-emerald-600 fill-emerald-600";
 
 // Buttons
 export const neutralButton = "border border-zinc-300 rounded-full px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors";
@@ -103,6 +104,7 @@ export const aacStyles = {
   // Icons
   iconGreen,
   iconGreenSmall,
+  iconGreenFill,
   iconMuted,
   
   // Buttons

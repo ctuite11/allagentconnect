@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, Upload, Check } from "lucide-react";
+import ContactQuickActions from "@/components/ContactQuickActions";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -54,6 +55,7 @@ interface Client {
   email: string;
   phone: string | null;
   client_type: string | null;
+  is_favorite?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -269,6 +271,28 @@ const MyClients = () => {
     setHotSheetClientId(null);
     setHotSheetClientName("");
     fetchClients(user.id);
+  };
+
+  // Toggle favorite handler with optimistic update
+  const handleToggleFavorite = async (client: Client, newValue: boolean) => {
+    // Optimistic update
+    setClients(prev => prev.map(c => 
+      c.id === client.id ? { ...c, is_favorite: newValue } : c
+    ));
+    
+    // Persist to database
+    const { error } = await supabase
+      .from('clients')
+      .update({ is_favorite: newValue })
+      .eq('id', client.id);
+      
+    if (error) {
+      // Revert on failure
+      setClients(prev => prev.map(c => 
+        c.id === client.id ? { ...c, is_favorite: !newValue } : c
+      ));
+      toast.error("Failed to update favorite");
+    }
   };
 
   // Drawer handlers
@@ -874,40 +898,30 @@ const MyClients = () => {
                         </p>
                       </TableCell>
                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex justify-end gap-2">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenHotSheetDialog(client);
-                                }}
-                              >
-                                <ListPlus className="h-4 w-4 text-emerald-600" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Create Hot Sheet</p>
-                            </TooltipContent>
-                          </Tooltip>
+                        <div className="flex justify-end items-center gap-1">
+                          <ContactQuickActions
+                            client={client}
+                            size="sm"
+                            onHotSheet={handleOpenHotSheetDialog}
+                            onToggleFavorite={handleToggleFavorite}
+                            stopPropagation
+                          />
                           
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="group"
+                                className="px-2"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditClient(client);
                                 }}
                               >
-                                <Edit className="h-4 w-4 text-emerald-600" />
+                                <Edit className="h-4 w-4 text-zinc-500 hover:text-zinc-900" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>
+                            <TooltipContent sideOffset={8}>
                               <p>Edit Contact</p>
                             </TooltipContent>
                           </Tooltip>
@@ -917,6 +931,7 @@ const MyClients = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="px-2"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteClient(client.id);
@@ -925,7 +940,7 @@ const MyClients = () => {
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>
+                            <TooltipContent sideOffset={8}>
                               <p>Remove Contact</p>
                             </TooltipContent>
                           </Tooltip>
@@ -1053,6 +1068,7 @@ const MyClients = () => {
         onCreateHotSheet={handleDrawerCreateHotSheet}
         onEdit={handleDrawerEdit}
         onDelete={handleDrawerDelete}
+        onToggleFavorite={handleToggleFavorite}
       />
 
       {/* Bulk Remove Confirmation */}

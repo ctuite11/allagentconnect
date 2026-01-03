@@ -780,6 +780,7 @@ export type Database = {
           email: string
           first_name: string
           id: string
+          is_favorite: boolean
           last_name: string
           notes: string | null
           phone: string | null
@@ -792,6 +793,7 @@ export type Database = {
           email: string
           first_name: string
           id?: string
+          is_favorite?: boolean
           last_name: string
           notes?: string | null
           phone?: string | null
@@ -804,6 +806,7 @@ export type Database = {
           email?: string
           first_name?: string
           id?: string
+          is_favorite?: boolean
           last_name?: string
           notes?: string | null
           phone?: string | null
