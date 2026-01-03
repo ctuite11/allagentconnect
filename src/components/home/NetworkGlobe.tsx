@@ -3,7 +3,9 @@ import React, { useEffect, useState } from 'react';
 /**
  * Subtle network sphere animation for homepage hero
  * Calm, ambient, infrastructure feel
- * Desktop only, purely decorative
+ * Supports two variants:
+ * - "hero" (default): Home page positioning, full effects
+ * - "ambient": Centered, smaller, no pulse, slower rotation, desaturated
  */
 
 // Toggle this to true for placement/sizing assessment
@@ -12,10 +14,15 @@ const DEBUG_VISIBLE = false;
 // Brand colors
 const LINE_COLOR = '#059669'; // emerald-600
 const DOT_COLOR = '#94A3B8';  // slate-400 (matches "Connect" in logo)
-const PULSE_GREEN = '#059669'; // emerald-600 for green pulses
 
-const NetworkGlobe = () => {
-  // Track which nodes are currently pulsing (for white blink)
+interface NetworkGlobeProps {
+  variant?: 'hero' | 'ambient';
+}
+
+const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
+  const isAmbient = variant === 'ambient';
+  
+  // Track which nodes are currently pulsing (for white blink) - hero mode only
   const [pulsingNodes, setPulsingNodes] = useState<Set<number>>(new Set());
   // Generate network nodes in a spherical distribution
   const nodes = React.useMemo(() => {
@@ -60,8 +67,11 @@ const NetworkGlobe = () => {
     return lines;
   }, [nodes]);
 
-  // White twinkle pulse effect - visible and alive
+  // White twinkle pulse effect - visible and alive (hero mode only)
   useEffect(() => {
+    // Skip pulse animation in ambient mode
+    if (isAmbient) return;
+    
     const triggerPulse = () => {
       // Pick 1 random node to pulse
       const nodeIndex = Math.floor(Math.random() * nodes.length);
@@ -94,7 +104,7 @@ const NetworkGlobe = () => {
     triggerPulse();
 
     return () => clearInterval(intervalId);
-  }, [nodes.length]);
+  }, [nodes.length, isAmbient]);
 
   // Debug vs production styles
   const svgOpacity = DEBUG_VISIBLE ? 0.55 : 1;
@@ -102,6 +112,91 @@ const NetworkGlobe = () => {
   const ringStrokeWidth = DEBUG_VISIBLE ? 1 : 1.5;
   const nodeRadius = DEBUG_VISIBLE ? { large: 4, small: 3 } : { large: 4, small: 3.5 };
 
+  // Ambient mode: slower rotation, desaturated
+  const rotationSpeed = isAmbient ? '14s' : '90s';
+  const ambientFilter = isAmbient ? 'saturate(0.6)' : 'none';
+  const ambientOpacity = isAmbient ? 0.65 : svgOpacity;
+
+  // Hero mode: absolute positioned, desktop only
+  // Ambient mode: relative, centered, all breakpoints
+  if (isAmbient) {
+    return (
+      <div 
+        className="w-full h-full pointer-events-none"
+        aria-hidden="true"
+        style={{ filter: ambientFilter }}
+      >
+        <svg 
+          viewBox="0 0 300 300" 
+          className="w-full h-full"
+          style={{
+            animation: `networkSpin ${rotationSpeed} linear infinite`,
+            opacity: ambientOpacity
+          }}
+        >
+          {/* Connection lines */}
+          {connections.map((line, i) => (
+            <line
+              key={`line-${i}`}
+              x1={line.x1}
+              y1={line.y1}
+              x2={line.x2}
+              y2={line.y2}
+              stroke={LINE_COLOR}
+              strokeWidth={lineStrokeWidth}
+              opacity={line.opacity}
+            />
+          ))}
+          
+          {/* Nodes - no pulse in ambient mode */}
+          {nodes.map((node, i) => {
+            const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
+            return (
+              <circle
+                key={`node-${i}`}
+                cx={node.x}
+                cy={node.y}
+                r={radius}
+                fill={DOT_COLOR}
+                opacity={0.3}
+              />
+            );
+          })}
+          
+          {/* Subtle orbital rings */}
+          <ellipse
+            cx="150"
+            cy="150"
+            rx="120"
+            ry="40"
+            fill="none"
+            stroke={LINE_COLOR}
+            strokeWidth={ringStrokeWidth}
+            opacity={0.8}
+          />
+          <ellipse
+            cx="150"
+            cy="150"
+            rx="100"
+            ry="100"
+            fill="none"
+            stroke={LINE_COLOR}
+            strokeWidth={ringStrokeWidth}
+            opacity={0.7}
+          />
+        </svg>
+        
+        <style>{`
+          @keyframes networkSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Hero mode - original positioning and behavior
   return (
     <div 
       className="absolute inset-0 hidden md:block overflow-visible pointer-events-none"
