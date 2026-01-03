@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AAC Brand Tokens */
+/* AAC Brand Tokens - Logo Green (#6FB83F) */
 :root {
-  --aac: 160 84% 39%; /* #059669 in HSL */
-  --aac-hover: 162 89% 29%; /* #047857 */
-  --aac-active: 163 80% 25%; /* #065f46 */
-  --aac-ring: 160 84% 39% / 0.25;
-  --aac-soft: 160 84% 39% / 0.08;
+  --aac: 93 50% 48%; /* #6FB83F - AAC logo green */
+  --aac-hover: 93 55% 42%; /* Darker hover state */
+  --aac-active: 93 60% 36%; /* Active/pressed state */
+  --aac-ring: 93 50% 48% / 0.25;
+  --aac-soft: 93 50% 48% / 0.08;
 }
 
 /* iOS Safari tap highlight (blue/gray overlay) */
@@ -78,13 +78,13 @@ All colors MUST be HSL.
     --muted: 0 0% 96%;                /* Pure neutral - soft hover surface */
     --muted-foreground: 240 2% 43%;   /* #6E6E73 - secondary text */
 
-    /* AAC Green accent - replaces Apple blue */
+    /* AAC Green accent - Logo green (#6FB83F) */
     --accent: var(--aac);
     --accent-foreground: 0 0% 100%;
     --accent-hover: var(--aac-hover);
     --accent-active: var(--aac-active);
-    --accent-soft: 152 81% 96%;       /* #ECFDF5 - green soft background */
-    --accent-muted: 152 76% 80%;      /* #A7F3D0 - green border */
+    --accent-soft: 93 60% 95%;          /* Light lime-green background */
+    --accent-muted: 93 50% 75%;         /* Lime-green border */
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -92,7 +92,7 @@ All colors MUST be HSL.
     /* Borders & Dividers - Apple hairline */
     --border: 0 0% 86%;               /* Pure neutral hairline border */
     --input: 0 0% 86%;                /* Pure neutral */
-    --ring: 161 91% 31%;
+    --ring: 93 50% 48%;               /* AAC logo green for focus rings */
 
     /* Soft divider token */
     --soft-divider: 0 0% 90%;         /* Pure neutral divider */
@@ -108,17 +108,17 @@ All colors MUST be HSL.
     --radius: 1rem;
 
     /* Success uses AAC Green for verified/approved/active states */
-    --success: 161 91% 31%;
+    --success: 93 50% 48%;            /* AAC logo green */
     --success-foreground: 0 0% 100%;
 
     /* Tech-forward colors - blue only for primary actions */
     --electric-blue: 215 95% 55%;
     --neon-cyan: 185 100% 50%;
-    --neon-green: 165 100% 44%;
+    --neon-green: 93 50% 48%;         /* AAC logo green */
     
     /* Pill color tokens */
     --primary-soft: 217 91% 60%;
-    --success-soft: 161 91% 31%;
+    --success-soft: 93 50% 48%;       /* AAC logo green */
     --warning: 38 92% 50%;
     --warning-soft: 38 92% 50%;
     --danger-soft: 0 84% 60%;
