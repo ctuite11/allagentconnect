@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import Navigation from "@/components/Navigation";
 
 const SeedTestData = () => {
   const [loading, setLoading] = useState(false);
@@ -31,7 +30,6 @@ const SeedTestData = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
       <div className="container mx-auto px-4 py-8 pt-24">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>

@@ -7,7 +7,6 @@ import {
   MapPinned,
   ArrowRight,
 } from "lucide-react";
-import Navigation from "@/components/Navigation";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
 
 const cx = (...c: Array<string | false | undefined | null>) => c.filter(Boolean).join(" ");
@@ -19,7 +18,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white text-neutral-900">
-      <Navigation />
       <main className="pt-20 pb-12">
         {/* Hero */}
         <section className="w-full px-6 sm:px-10 lg:px-20 pt-14 pb-10 relative min-h-[60vh] flex items-center overflow-visible">
