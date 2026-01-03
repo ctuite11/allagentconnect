@@ -127,17 +127,17 @@ export default function Home() {
 
         <div className="mt-5 sm:mt-7 grid grid-cols-1 md:grid-cols-3 gap-5">
           <ProofCard
-            icon={<ShieldCheck className={cx("h-7 w-7", ACCENT)} />}
+            icon={<ShieldCheck className={cx("h-5 w-5", ACCENT)} />}
             title="Active since 2016"
             body="Long-running agent collaboration with documented deal flow — not a beta."
           />
           <ProofCard
-            icon={<Users className={cx("h-7 w-7", ACCENT)} />}
+            icon={<Users className={cx("h-5 w-5", ACCENT)} />}
             title="Built for the full market"
             body="Open to all licensed professionals. If you do real business, you belong."
           />
           <ProofCard
-            icon={<Handshake className={cx("h-7 w-7", ACCENT)} />}
+            icon={<Handshake className={cx("h-5 w-5", ACCENT)} />}
             title="Real transactions"
             body="Signed. Closed. Verified. The network exists to move deals forward."
           />
