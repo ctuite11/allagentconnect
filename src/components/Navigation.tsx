@@ -19,6 +19,7 @@ const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [agentStatus, setAgentStatus] = useState<string | null>(null);
+  const [agentStatusLoading, setAgentStatusLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { role, loading: roleLoading } = useUserRole(user);
@@ -39,11 +40,27 @@ const Navigation = () => {
 
   // Check agent status for pending users
   useEffect(() => {
+    let cancelled = false;
+
     const checkAgentStatus = async () => {
-      if (!user || role !== "agent") {
+      // If no user, nothing to check
+      if (!user) {
         setAgentStatus(null);
+        setAgentStatusLoading(false);
         return;
       }
+
+      // Wait until role is known
+      if (roleLoading) return;
+
+      // Only agents have agent_status
+      if (role !== "agent") {
+        setAgentStatus(null);
+        setAgentStatusLoading(false);
+        return;
+      }
+
+      setAgentStatusLoading(true);
 
       const { data: settings } = await supabase
         .from('agent_settings')
@@ -51,12 +68,18 @@ const Navigation = () => {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      setAgentStatus(settings?.agent_status || 'unverified');
+      if (cancelled) return;
+
+      // Default to 'unverified' if missing; don't block forever on error
+      setAgentStatus(settings?.agent_status ?? 'unverified');
+      setAgentStatusLoading(false);
     };
 
-    if (!roleLoading) {
-      checkAgentStatus();
-    }
+    checkAgentStatus();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user, role, roleLoading]);
 
   const handleLogout = async () => {
@@ -68,6 +91,15 @@ const Navigation = () => {
       console.error("Error logging out:", error);
     }
   };
+
+  // ---- Render gate: Navigation should not "change on its own" ----
+  // Wait for auth + role; if agent, also wait for agent_status
+  const navLoading =
+    roleLoading ||
+    (user && role === "agent" && agentStatusLoading) ||
+    (user && role === "agent" && agentStatus === null);
+
+  if (navLoading) return null;
 
   // Hide global navigation on auth page
   if (location.pathname === "/auth") return null;
