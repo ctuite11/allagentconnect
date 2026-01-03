@@ -2,10 +2,107 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { authDebug, getAgentStatus } from "@/lib/authDebug";
 
 const POLL_INTERVAL_MS = 5000;
+
+/**
+ * Animated AAC Globe for Pending Verification screen
+ * Slow continuous rotation (14s), optional subtle halo glow
+ */
+const PendingGlobe = () => {
+  return (
+    <div className="relative w-20 h-20 mx-auto mb-6">
+      {/* Subtle halo glow - barely perceptible */}
+      <div 
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: 'radial-gradient(circle, hsl(93 50% 48% / 0.08) 0%, transparent 70%)',
+          animation: 'pendingHaloGlow 7s ease-in-out infinite',
+        }}
+      />
+      
+      {/* Globe SVG with slow rotation */}
+      <svg
+        viewBox="0 0 100 100"
+        className="w-full h-full"
+        style={{
+          animation: 'pendingGlobeRotate 14s linear infinite',
+        }}
+      >
+        {/* Main circle */}
+        <circle
+          cx="50"
+          cy="50"
+          r="40"
+          fill="none"
+          stroke="hsl(93 50% 48%)"
+          strokeWidth="2"
+          opacity="0.9"
+        />
+        
+        {/* Horizontal ellipse (equator) */}
+        <ellipse
+          cx="50"
+          cy="50"
+          rx="40"
+          ry="14"
+          fill="none"
+          stroke="hsl(93 50% 48%)"
+          strokeWidth="1.5"
+          opacity="0.7"
+        />
+        
+        {/* Vertical ellipse (meridian) */}
+        <ellipse
+          cx="50"
+          cy="50"
+          rx="14"
+          ry="40"
+          fill="none"
+          stroke="hsl(93 50% 48%)"
+          strokeWidth="1.5"
+          opacity="0.7"
+        />
+        
+        {/* Additional meridian rotated */}
+        <ellipse
+          cx="50"
+          cy="50"
+          rx="28"
+          ry="40"
+          fill="none"
+          stroke="hsl(93 50% 48%)"
+          strokeWidth="1"
+          opacity="0.5"
+        />
+        
+        {/* Network nodes */}
+        <circle cx="50" cy="10" r="3" fill="hsl(93 50% 48%)" opacity="0.8" />
+        <circle cx="50" cy="90" r="3" fill="hsl(93 50% 48%)" opacity="0.8" />
+        <circle cx="10" cy="50" r="3" fill="hsl(93 50% 48%)" opacity="0.8" />
+        <circle cx="90" cy="50" r="3" fill="hsl(93 50% 48%)" opacity="0.8" />
+        <circle cx="28" cy="22" r="2.5" fill="hsl(93 50% 48%)" opacity="0.6" />
+        <circle cx="72" cy="22" r="2.5" fill="hsl(93 50% 48%)" opacity="0.6" />
+        <circle cx="28" cy="78" r="2.5" fill="hsl(93 50% 48%)" opacity="0.6" />
+        <circle cx="72" cy="78" r="2.5" fill="hsl(93 50% 48%)" opacity="0.6" />
+      </svg>
+      
+      {/* Animation keyframes */}
+      <style>{`
+        @keyframes pendingGlobeRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes pendingHaloGlow {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.05); }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 const PendingVerification = () => {
   const navigate = useNavigate();
@@ -191,15 +288,15 @@ const PendingVerification = () => {
     };
   }, [navigate]);
 
-  const handleLogout = async () => {
+  const handleAcknowledge = async () => {
     await supabase.auth.signOut();
     navigate("/auth", { replace: true });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'hsl(93 50% 96%)' }}>
+        <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
       </div>
     );
   }
@@ -207,25 +304,25 @@ const PendingVerification = () => {
   // Show fatal error screen - stops all polling
   if (fatalError) {
     return (
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'hsl(93 50% 96%)' }}>
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-xl">
-            <div className="rounded-2xl p-8 md:p-10 text-center">
+            <div className="rounded-2xl p-8 md:p-10 text-center bg-white/80">
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-red-600 text-2xl">⚠</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3">
+              <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-3">
                 Configuration Error
               </h1>
-              <p className="text-slate-600 text-base mb-4">
+              <p className="text-zinc-600 text-base mb-4">
                 {fatalError}
               </p>
-              <p className="text-slate-500 text-sm mb-6">
+              <p className="text-zinc-500 text-sm mb-6">
                 Please contact support at hello@allagentconnect.com
               </p>
               <Button 
-                onClick={handleLogout} 
-                className="w-full bg-slate-900 text-white hover:bg-slate-800 h-11"
+                onClick={handleAcknowledge} 
+                className="w-full bg-zinc-900 text-white hover:bg-zinc-800 h-11"
               >
                 Log Out
               </Button>
@@ -239,20 +336,18 @@ const PendingVerification = () => {
   // Show approval message before redirect
   if (isApproved) {
     return (
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'hsl(93 50% 96%)' }}>
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-xl">
-            <div className="rounded-2xl p-8 md:p-10 text-center">
-              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="h-9 w-9 text-emerald-600" />
-              </div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3">
+            <div className="rounded-2xl p-8 md:p-10 text-center bg-white/80">
+              <PendingGlobe />
+              <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-3">
                 You're approved.
               </h1>
-              <p className="text-slate-600 text-base mb-6">
+              <p className="text-zinc-600 text-base mb-6">
                 Taking you in…
               </p>
-              <Loader2 className="h-5 w-5 animate-spin text-slate-400 mx-auto" />
+              <Loader2 className="h-5 w-5 animate-spin text-zinc-400 mx-auto" />
             </div>
           </div>
         </main>
@@ -261,35 +356,44 @@ const PendingVerification = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'hsl(93 50% 96%)' }}>
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-xl">
-          <div className="rounded-2xl p-8 md:p-10">
-            <div className="text-center mb-8">
-              <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
-                <CheckCircle2 className="h-7 w-7 text-emerald-600" />
-              </div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3">
-                Almost there.
-              </h1>
-              <p className="text-slate-600 text-base leading-relaxed">
-                Thanks for your request. We'll email you as soon as your license verification is complete.
+          <div className="rounded-2xl p-8 md:p-10 text-center">
+            {/* Animated Globe */}
+            <PendingGlobe />
+            
+            {/* Headline */}
+            <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-3">
+              Almost there.
+            </h1>
+            
+            {/* Body copy */}
+            <p className="text-zinc-600 text-base leading-relaxed">
+              Thanks for your request. We'll email you as soon as your license verification is complete.
+            </p>
+            
+            {/* Signed-in confirmation */}
+            {userEmail && (
+              <p className="text-zinc-500 text-sm mt-4 font-medium">
+                Signed in as: {userEmail}
               </p>
-              {userEmail && (
-                <p className="text-slate-500 text-sm mt-4 font-medium">
-                  Signed in as: {userEmail}
-                </p>
-              )}
-            </div>
+            )}
 
+            {/* Primary CTA */}
             <Button 
-              onClick={handleLogout} 
-              className="w-full bg-slate-900 text-white hover:bg-slate-800 h-11"
+              onClick={handleAcknowledge} 
+              className="w-full mt-8 rounded-full h-12 text-base font-medium"
+              style={{ 
+                backgroundColor: 'hsl(93 50% 48%)',
+                color: 'white',
+              }}
             >
-              Done for now
+              We'll notify you
             </Button>
 
-            <p className="text-center text-slate-500 text-xs mt-6">
+            {/* Support email */}
+            <p className="text-zinc-500 text-xs mt-6">
               Questions? Email us at hello@allagentconnect.com
             </p>
           </div>
