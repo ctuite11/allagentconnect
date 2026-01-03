@@ -4,105 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { authDebug, getAgentStatus } from "@/lib/authDebug";
+import NetworkGlobe from "@/components/home/NetworkGlobe";
 
 const POLL_INTERVAL_MS = 5000;
-
-/**
- * Animated AAC Globe for Pending Verification screen
- * Slow continuous rotation (14s), optional subtle halo glow
- */
-const PendingGlobe = () => {
-  return (
-    <div className="relative w-20 h-20 mx-auto mb-6">
-      {/* Subtle halo glow - barely perceptible */}
-      <div 
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: 'radial-gradient(circle, hsl(93 50% 48% / 0.08) 0%, transparent 70%)',
-          animation: 'pendingHaloGlow 7s ease-in-out infinite',
-        }}
-      />
-      
-      {/* Globe SVG with slow rotation */}
-      <svg
-        viewBox="0 0 100 100"
-        className="w-full h-full"
-        style={{
-          animation: 'pendingGlobeRotate 14s linear infinite',
-        }}
-      >
-        {/* Main circle */}
-        <circle
-          cx="50"
-          cy="50"
-          r="40"
-          fill="none"
-          stroke="hsl(93 50% 48%)"
-          strokeWidth="2"
-          opacity="0.9"
-        />
-        
-        {/* Horizontal ellipse (equator) */}
-        <ellipse
-          cx="50"
-          cy="50"
-          rx="40"
-          ry="14"
-          fill="none"
-          stroke="hsl(93 50% 48%)"
-          strokeWidth="1.5"
-          opacity="0.7"
-        />
-        
-        {/* Vertical ellipse (meridian) */}
-        <ellipse
-          cx="50"
-          cy="50"
-          rx="14"
-          ry="40"
-          fill="none"
-          stroke="hsl(93 50% 48%)"
-          strokeWidth="1.5"
-          opacity="0.7"
-        />
-        
-        {/* Additional meridian rotated */}
-        <ellipse
-          cx="50"
-          cy="50"
-          rx="28"
-          ry="40"
-          fill="none"
-          stroke="hsl(93 50% 48%)"
-          strokeWidth="1"
-          opacity="0.5"
-        />
-        
-        {/* Network nodes */}
-        <circle cx="50" cy="10" r="3" fill="hsl(93 50% 48%)" opacity="0.8" />
-        <circle cx="50" cy="90" r="3" fill="hsl(93 50% 48%)" opacity="0.8" />
-        <circle cx="10" cy="50" r="3" fill="hsl(93 50% 48%)" opacity="0.8" />
-        <circle cx="90" cy="50" r="3" fill="hsl(93 50% 48%)" opacity="0.8" />
-        <circle cx="28" cy="22" r="2.5" fill="hsl(93 50% 48%)" opacity="0.6" />
-        <circle cx="72" cy="22" r="2.5" fill="hsl(93 50% 48%)" opacity="0.6" />
-        <circle cx="28" cy="78" r="2.5" fill="hsl(93 50% 48%)" opacity="0.6" />
-        <circle cx="72" cy="78" r="2.5" fill="hsl(93 50% 48%)" opacity="0.6" />
-      </svg>
-      
-      {/* Animation keyframes */}
-      <style>{`
-        @keyframes pendingGlobeRotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes pendingHaloGlow {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.05); }
-        }
-      `}</style>
-    </div>
-  );
-};
 
 const PendingVerification = () => {
   const navigate = useNavigate();
@@ -295,7 +199,7 @@ const PendingVerification = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'hsl(93 50% 96%)' }}>
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
       </div>
     );
@@ -304,10 +208,10 @@ const PendingVerification = () => {
   // Show fatal error screen - stops all polling
   if (fatalError) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'hsl(93 50% 96%)' }}>
+      <div className="min-h-screen flex flex-col bg-white">
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-xl">
-            <div className="rounded-2xl p-8 md:p-10 text-center bg-white/80">
+            <div className="rounded-2xl p-8 md:p-10 text-center bg-white">
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-red-600 text-2xl">⚠</span>
               </div>
@@ -336,11 +240,23 @@ const PendingVerification = () => {
   // Show approval message before redirect
   if (isApproved) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'hsl(93 50% 96%)' }}>
-        <main className="flex-1 flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen flex flex-col relative bg-white">
+        {/* Ambient globe - desaturated */}
+        <div 
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ 
+            opacity: 0.12,
+            filter: 'saturate(0.5)',
+          }}
+        >
+          <div className="w-[300px] h-[300px]">
+            <NetworkGlobe />
+          </div>
+        </div>
+        
+        <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-xl">
-            <div className="rounded-2xl p-8 md:p-10 text-center bg-white/80">
-              <PendingGlobe />
+            <div className="rounded-2xl p-8 md:p-10 text-center">
               <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-3">
                 You're approved.
               </h1>
@@ -356,13 +272,31 @@ const PendingVerification = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'hsl(93 50% 96%)' }}>
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex flex-col relative bg-white">
+      {/* Ambient globe - reusing NetworkGlobe with desaturated/softened treatment */}
+      <div 
+        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        style={{ 
+          opacity: 0.15,
+          filter: 'saturate(0.6)',
+        }}
+      >
+        <div className="w-[320px] h-[320px]">
+          <NetworkGlobe />
+        </div>
+      </div>
+      
+      {/* Very subtle green wash overlay - barely perceptible */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundColor: 'hsl(93 50% 48% / 0.02)',
+        }}
+      />
+      
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-xl">
           <div className="rounded-2xl p-8 md:p-10 text-center">
-            {/* Animated Globe */}
-            <PendingGlobe />
-            
             {/* Headline */}
             <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-3">
               Almost there.
@@ -373,14 +307,14 @@ const PendingVerification = () => {
               Thanks for your request. We'll email you as soon as your license verification is complete.
             </p>
             
-            {/* Signed-in confirmation */}
+            {/* Notify confirmation - pre-access state */}
             {userEmail && (
-              <p className="text-zinc-500 text-sm mt-4 font-medium">
-                Signed in as: {userEmail}
+              <p className="text-zinc-500 text-sm mt-4">
+                We'll notify you at <span className="font-medium">{userEmail}</span> once verification is complete.
               </p>
             )}
 
-            {/* Primary CTA */}
+            {/* Primary CTA - strongest green on screen */}
             <Button 
               onClick={handleAcknowledge} 
               className="w-full mt-8 rounded-full h-12 text-base font-medium"
@@ -399,6 +333,14 @@ const PendingVerification = () => {
           </div>
         </div>
       </main>
+      
+      {/* Override NetworkGlobe's pulse animation - rotation only */}
+      <style>{`
+        .absolute [style*="animation: networkSpin"] circle {
+          animation: none !important;
+          transition: none !important;
+        }
+      `}</style>
     </div>
   );
 };
