@@ -103,10 +103,10 @@ const Navigation = () => {
   };
 
   // ---- Render gate: Navigation should not "change on its own" ----
-  // Wait for auth + role; if agent, also wait for agent_status
+  // Wait for auth; if user exists, wait for role; if agent, also wait for agent_status
   const navLoading =
     authLoading ||
-    roleLoading ||
+    (user && roleLoading) ||
     (user && role === "agent" && agentStatusLoading) ||
     (user && role === "agent" && agentStatus === null);
 
