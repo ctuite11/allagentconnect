@@ -39,6 +39,8 @@ import {
 import { AgentEditDrawer } from "@/components/admin/AgentEditDrawer";
 import { DeleteAgentDialog } from "@/components/admin/DeleteAgentDialog";
 import { EmailAgentDialog } from "@/components/admin/EmailAgentDialog";
+import { CreateAgentDialog } from "@/components/admin/CreateAgentDialog";
+import { UserPlus } from "lucide-react";
 
 interface Agent {
   id: string;
@@ -152,6 +154,7 @@ export default function AdminApprovals() {
   const [editAgent, setEditAgent] = useState<Agent | null>(null);
   const [deleteAgent, setDeleteAgent] = useState<Agent | null>(null);
   const [emailRecipients, setEmailRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Check admin role using has_role RPC - loading → allow → deny pattern
   useEffect(() => {
@@ -545,17 +548,27 @@ export default function AdminApprovals() {
           <span className="text-sm text-slate-600">
             Signed in as: <span className="font-medium text-slate-900">{user?.email}</span>
           </span>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={async () => {
-              await supabase.auth.signOut();
-              navigate('/auth');
-            }}
-            className="text-sm text-slate-500 hover:text-slate-700"
-          >
-            Switch Account
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => setShowCreateDialog(true)}
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Create Agent
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                navigate('/auth');
+              }}
+              className="text-sm text-slate-500 hover:text-slate-700"
+            >
+              Switch Account
+            </Button>
+          </div>
         </div>
 
         {/* Pending Verifications Banner (fallback notifications) */}
@@ -875,6 +888,12 @@ export default function AdminApprovals() {
         open={emailRecipients.length > 0}
         onOpenChange={(open) => !open && setEmailRecipients([])}
         recipients={emailRecipients}
+      />
+
+      <CreateAgentDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSuccess={fetchAgents}
       />
     </div>
   );

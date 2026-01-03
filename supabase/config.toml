@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.send-password-reset]
 verify_jwt = false
+
+[functions.admin-create-user]
+verify_jwt = false
