@@ -486,7 +486,7 @@ const MyClients = () => {
                   Email Analytics
                 </Button>
                 <Button variant="ghost" className="text-zinc-600 hover:text-zinc-900" onClick={handleExportCSV}>
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4 mr-2 text-emerald-600" />
                   Export CSV
                 </Button>
               </>
@@ -494,7 +494,7 @@ const MyClients = () => {
             
             {/* Import CSV - always visible so users can import their first contacts */}
             <Button variant="ghost" className="text-zinc-600 hover:text-zinc-900" onClick={() => setImportDialogOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" />
+              <Upload className="h-4 w-4 mr-2 text-emerald-600" />
               Import CSV
             </Button>
             
@@ -634,7 +634,7 @@ const MyClients = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
                       />
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600" />
                     </div>
                     <Select value={clientTypeFilter} onValueChange={setClientTypeFilter}>
                       <SelectTrigger className="w-[180px] bg-white border-zinc-200">
@@ -655,7 +655,7 @@ const MyClients = () => {
                     </Select>
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                       <SelectTrigger className="w-[200px] bg-white border-zinc-200">
-                        <ArrowUpDown className="h-4 w-4 mr-2 text-zinc-400" />
+                        <ArrowUpDown className="h-4 w-4 mr-2 text-emerald-600" />
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-background z-50">
@@ -784,12 +784,12 @@ const MyClients = () => {
                       <TableCell>
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-3 w-3 text-zinc-400" />
+                            <Mail className="h-3 w-3 text-emerald-600" />
                             {client.email}
                           </div>
                           {client.phone && (
                             <div className="flex items-center gap-2 text-sm text-zinc-500">
-                              <Phone className="h-3 w-3 text-zinc-400" />
+                              <Phone className="h-3 w-3 text-emerald-600" />
                               {formatPhoneNumber(client.phone)}
                             </div>
                           )}
@@ -831,7 +831,7 @@ const MyClients = () => {
                                   handleEditClient(client);
                                 }}
                               >
-                                <Edit className="h-4 w-4 text-zinc-500 group-hover:text-zinc-700" />
+                                <Edit className="h-4 w-4 text-emerald-600" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
