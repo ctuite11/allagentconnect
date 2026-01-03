@@ -91,22 +91,22 @@ export default function Home() {
 
           <div className="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-2 gap-5">
             <HowCard
-              icon={<MapPinned className={cx("h-5 w-5", ACCENT)} />}
+              icon={<MapPinned className={cx("h-7 w-7", ACCENT)} />}
               title="Share off-market & coming soon"
               body="Post quietly with enough context for agents to act. Control visibility and timing."
             />
             <HowCard
-              icon={<Users className={cx("h-5 w-5", ACCENT)} />}
+              icon={<Users className={cx("h-7 w-7", ACCENT)} />}
               title="Match buyer needs in real time"
               body="Buyer needs get surfaced to the right agents — quickly, without public exposure."
             />
             <HowCard
-              icon={<MessageSquare className={cx("h-5 w-5", ACCENT)} />}
+              icon={<MessageSquare className={cx("h-7 w-7", ACCENT)} />}
               title="Direct agent-to-agent messaging"
               body="Fewer steps. Cleaner comms. Get to a showing, an offer, or a solution fast."
             />
             <HowCard
-              icon={<Handshake className={cx("h-5 w-5", ACCENT)} />}
+              icon={<Handshake className={cx("h-7 w-7", ACCENT)} />}
               title="Close deals with less friction"
               body="The platform exists for one thing: moving real transactions forward."
             />
@@ -127,17 +127,17 @@ export default function Home() {
 
         <div className="mt-5 sm:mt-7 grid grid-cols-1 md:grid-cols-3 gap-5">
           <ProofCard
-            icon={<ShieldCheck className={cx("h-5 w-5", ACCENT)} />}
+            icon={<ShieldCheck className={cx("h-7 w-7", ACCENT)} />}
             title="Active since 2016"
             body="Long-running agent collaboration with documented deal flow — not a beta."
           />
           <ProofCard
-            icon={<Users className={cx("h-5 w-5", ACCENT)} />}
+            icon={<Users className={cx("h-7 w-7", ACCENT)} />}
             title="Built for the full market"
             body="Open to all licensed professionals. If you do real business, you belong."
           />
           <ProofCard
-            icon={<Handshake className={cx("h-5 w-5", ACCENT)} />}
+            icon={<Handshake className={cx("h-7 w-7", ACCENT)} />}
             title="Real transactions"
             body="Signed. Closed. Verified. The network exists to move deals forward."
           />
