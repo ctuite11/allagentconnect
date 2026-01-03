@@ -290,32 +290,39 @@ const PendingVerification = () => {
           
           {/* Headline - strongest element */}
           <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-3">
-            Almost there.
+            Application received.
           </h1>
           
           {/* Body copy */}
           <p className="text-zinc-600 text-base leading-relaxed">
-            Thanks for your request. We'll email you as soon as your license verification is complete.
+            We've received your application and are verifying your real estate license.
+            <br />
+            This usually takes less than one business day.
           </p>
           
-          {/* Notify confirmation - pre-access state */}
+          {/* Email confirmation */}
           {userEmail && (
             <p className="text-zinc-500 text-sm mt-4">
-              We'll notify you at <span className="font-medium">{userEmail}</span> once verification is complete.
+              You'll receive a confirmation email at <span className="font-medium">{userEmail}</span> once verification is complete.
             </p>
           )}
 
-          {/* Acknowledgment button - muted neutral, NOT green */}
-          <Button 
-            onClick={handleAcknowledge} 
-            className="w-full mt-8 rounded-full h-12 text-base font-medium bg-zinc-800 hover:bg-zinc-700 text-white"
-          >
-            We'll notify you
-          </Button>
+          {/* Value proposition - anticipation */}
+          <p className="text-zinc-500 text-sm mt-4">
+            Once approved, you'll have full access to private listings, agent-only intelligence, and off-market opportunities.
+          </p>
+
+          {/* Status badge - non-clickable acknowledgment */}
+          <div className="mt-8 inline-flex items-center px-5 py-2.5 rounded-full bg-zinc-100 text-zinc-600 text-sm font-medium">
+            Status: Pending verification
+          </div>
 
           {/* Support email */}
           <p className="text-zinc-400 text-xs mt-6">
-            Questions? Email us at hello@allagentconnect.com
+            Questions? Reach us anytime at{" "}
+            <a href="mailto:hello@allagentconnect.com" className="hover:text-zinc-500 transition-colors">
+              hello@allagentconnect.com
+            </a>
           </p>
         </div>
       </main>
