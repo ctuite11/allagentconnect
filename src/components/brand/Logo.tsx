@@ -15,7 +15,7 @@ const sizeClasses = {
 
 // Primary colors
 const SLATE_900 = "#0F172A";
-const EMERALD_600 = "#059669";
+const AAC_GREEN = "#6FB83F"; // AAC logo green - single source of truth
 const WHITE = "#FFFFFF";
 const SLATE_400 = "#94A3B8"; // Matches "Connect" text color
 
@@ -27,7 +27,7 @@ export const Logo: React.FC<LogoProps> = ({
   const isReversed = variant === "reversed";
   const isIcon = variant === "icon";
   const primaryColor = isReversed ? WHITE : SLATE_900;
-  const accentColor = EMERALD_600;
+  const accentColor = AAC_GREEN;
 
   if (isIcon) {
     // Icon-only mark - stylized "AAC" monogram
@@ -116,7 +116,7 @@ export const Logo: React.FC<LogoProps> = ({
 // Email-safe version using inline styles (no external fonts required)
 export const LogoEmailSafe: React.FC<{ reversed?: boolean }> = ({ reversed = false }) => {
   const primaryColor = reversed ? WHITE : SLATE_900;
-  const accentColor = EMERALD_600;
+  const accentColor = AAC_GREEN;
   
   return (
     <table cellPadding="0" cellSpacing="0" border={0} style={{ borderCollapse: 'collapse' }}>
