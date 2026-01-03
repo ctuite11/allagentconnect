@@ -49,7 +49,7 @@ interface ContactDetailDrawerProps {
   onCreateHotSheet: (client: Client) => void;
   onEdit: (client: Client) => void;
   onDelete: (clientId: string) => void;
-  onToggleFavorite: (client: Client, newValue: boolean) => void;
+  onViewFavorites: (client: Client) => void;
 }
 
 // Helper function for title case display
@@ -69,7 +69,7 @@ const ContactDetailDrawer = ({
   onCreateHotSheet,
   onEdit,
   onDelete,
-  onToggleFavorite
+  onViewFavorites
 }: ContactDetailDrawerProps) => {
   const navigate = useNavigate();
   const [assignedHotSheets, setAssignedHotSheets] = useState<HotSheetAssignment[]>([]);
@@ -175,7 +175,10 @@ const ContactDetailDrawer = ({
                 onCreateHotSheet(client);
                 onOpenChange(false);
               }}
-              onToggleFavorite={(_, newValue) => onToggleFavorite(client, newValue)}
+              onViewFavorites={() => {
+                onViewFavorites(client);
+                onOpenChange(false);
+              }}
             />
             <Button 
               variant="outline"

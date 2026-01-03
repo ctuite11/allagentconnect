@@ -274,25 +274,9 @@ const MyClients = () => {
   };
 
   // Toggle favorite handler with optimistic update
-  const handleToggleFavorite = async (client: Client, newValue: boolean) => {
-    // Optimistic update
-    setClients(prev => prev.map(c => 
-      c.id === client.id ? { ...c, is_favorite: newValue } : c
-    ));
-    
-    // Persist to database
-    const { error } = await supabase
-      .from('clients')
-      .update({ is_favorite: newValue })
-      .eq('id', client.id);
-      
-    if (error) {
-      // Revert on failure
-      setClients(prev => prev.map(c => 
-        c.id === client.id ? { ...c, is_favorite: !newValue } : c
-      ));
-      toast.error("Failed to update favorite");
-    }
+  const handleViewFavorites = (client: Client) => {
+    // Navigate to the client's hot sheet / favorites page
+    navigate(`/my-clients/${client.id}/favorites`);
   };
 
   // Drawer handlers
@@ -903,7 +887,7 @@ const MyClients = () => {
                             client={client}
                             size="sm"
                             onHotSheet={handleOpenHotSheetDialog}
-                            onToggleFavorite={handleToggleFavorite}
+                            onViewFavorites={handleViewFavorites}
                             stopPropagation
                           />
                           
@@ -1068,7 +1052,7 @@ const MyClients = () => {
         onCreateHotSheet={handleDrawerCreateHotSheet}
         onEdit={handleDrawerEdit}
         onDelete={handleDrawerDelete}
-        onToggleFavorite={handleToggleFavorite}
+        onViewFavorites={handleViewFavorites}
       />
 
       {/* Bulk Remove Confirmation */}
