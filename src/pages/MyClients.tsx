@@ -451,7 +451,7 @@ const MyClients = () => {
       <div className="min-h-screen flex flex-col">
         <Navigation />
         <main className="flex-1 flex items-center justify-center pt-20">
-          <p className="text-muted-foreground">Loading contacts...</p>
+          <p className="text-zinc-500">Loading contacts...</p>
         </main>
       </div>
     );
@@ -485,7 +485,7 @@ const MyClients = () => {
                   <Mail className="h-4 w-4 mr-2" />
                   Email Analytics
                 </Button>
-                <Button variant="ghost" className="text-neutral-600 hover:text-neutral-900" onClick={handleExportCSV}>
+                <Button variant="ghost" className="text-zinc-600 hover:text-zinc-900" onClick={handleExportCSV}>
                   <Download className="h-4 w-4 mr-2" />
                   Export CSV
                 </Button>
@@ -493,7 +493,7 @@ const MyClients = () => {
             )}
             
             {/* Import CSV - always visible so users can import their first contacts */}
-            <Button variant="ghost" className="text-neutral-600 hover:text-neutral-900" onClick={() => setImportDialogOpen(true)}>
+            <Button variant="ghost" className="text-zinc-600 hover:text-zinc-900" onClick={() => setImportDialogOpen(true)}>
               <Upload className="h-4 w-4 mr-2" />
               Import CSV
             </Button>
@@ -509,10 +509,10 @@ const MyClients = () => {
                   Add Contact
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-white border border-neutral-200 rounded-2xl shadow-lg w-[min(92vw,500px)] max-h-[85vh] flex flex-col overflow-hidden p-0">
-                <DialogHeader className="px-6 py-5 border-b border-neutral-200">
-                  <DialogTitle className="text-xl font-semibold text-neutral-900">{editingClient ? "Edit Contact" : "Add New Contact"}</DialogTitle>
-                  <DialogDescription className="text-sm text-neutral-600">
+              <DialogContent className="bg-white border border-zinc-200 rounded-2xl shadow-lg w-[min(92vw,500px)] max-h-[85vh] flex flex-col overflow-hidden p-0">
+                <DialogHeader className="px-6 py-5 border-b border-zinc-200">
+                  <DialogTitle className="text-xl font-semibold text-zinc-900">{editingClient ? "Edit Contact" : "Add New Contact"}</DialogTitle>
+                  <DialogDescription className="text-sm text-zinc-500">
                     {editingClient ? "Update contact information" : "Add a new contact to your roster"}
                   </DialogDescription>
                 </DialogHeader>
@@ -572,7 +572,7 @@ const MyClients = () => {
                     <Label htmlFor="client_type" className="text-base font-semibold">
                       Contact Type
                     </Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-zinc-500">
                       Optional but will come in handy for organizing your contacts
                     </p>
                     <Select
@@ -595,7 +595,7 @@ const MyClients = () => {
                     </Select>
                   </div>
 
-                  <div className="sticky bottom-0 bg-white border-t border-neutral-200 -mx-6 -mb-5 px-6 py-4 flex justify-end gap-3 mt-6">
+                  <div className="sticky bottom-0 bg-white border-t border-zinc-200 -mx-6 -mb-5 px-6 py-4 flex justify-end gap-3 mt-6">
                     <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
                       Cancel
                     </Button>
@@ -609,11 +609,11 @@ const MyClients = () => {
           </div>
 
           {clients.length === 0 ? (
-            <div className="aac-card p-8">
+            <div className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] p-8">
               <div className="text-center py-4">
-                  <User className="h-12 w-12 mx-auto mb-3 text-neutral-400" />
-                  <h3 className="text-lg font-semibold text-neutral-800 mb-1">No contacts yet</h3>
-                  <p className="text-sm text-neutral-600 mb-5">
+                  <User className="h-12 w-12 mx-auto mb-3 text-zinc-400" />
+                  <h3 className="text-lg font-semibold text-zinc-900 mb-1">No contacts yet</h3>
+                  <p className="text-sm text-zinc-500 mb-5">
                     Add your first contact to start managing their property search
                   </p>
                   <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleAddClient}>
@@ -624,7 +624,7 @@ const MyClients = () => {
             </div>
           ) : (
             <>
-              <div className="aac-card mb-4">
+              <div className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] mb-4">
                 <div className="p-6">
                   <div className="flex gap-4">
                     <div className="relative flex-1">
@@ -634,10 +634,10 @@ const MyClients = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
                       />
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
                     </div>
                     <Select value={clientTypeFilter} onValueChange={setClientTypeFilter}>
-                      <SelectTrigger className="w-[180px] bg-white border-neutral-200">
+                      <SelectTrigger className="w-[180px] bg-white border-zinc-200">
                         <SelectValue placeholder="Filter by type" />
                       </SelectTrigger>
                       <SelectContent className="bg-background z-50">
@@ -654,8 +654,8 @@ const MyClients = () => {
                       </SelectContent>
                     </Select>
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                      <SelectTrigger className="w-[200px] bg-white border-neutral-200">
-                        <ArrowUpDown className="h-4 w-4 mr-2" />
+                      <SelectTrigger className="w-[200px] bg-white border-zinc-200">
+                        <ArrowUpDown className="h-4 w-4 mr-2 text-zinc-400" />
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-background z-50">
@@ -668,11 +668,11 @@ const MyClients = () => {
                   <div className="flex items-center justify-between mt-2">
                     <div>
                       {(searchTerm || clientTypeFilter !== "all") && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-zinc-500">
                           Found {filteredClients.length} of {clients.length} contacts
                         </p>
                       )}
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-zinc-500">
                         {sortedClients.length === 1 
                           ? "Showing 1 of 1 contact"
                           : `Showing ${startIndex + 1}–${Math.min(endIndex, sortedClients.length)} of ${sortedClients.length} contacts`
@@ -680,12 +680,12 @@ const MyClients = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Contacts per page:</span>
+                      <span className="text-sm text-zinc-500">Contacts per page:</span>
                       <Select value={itemsPerPage.toString()} onValueChange={(value) => {
                         setItemsPerPage(Number(value));
                         setCurrentPage(1);
                       }}>
-                        <SelectTrigger className="w-[100px] bg-white border-neutral-200">
+                        <SelectTrigger className="w-[100px] bg-white border-zinc-200">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-background z-50">
@@ -702,8 +702,8 @@ const MyClients = () => {
 
               {/* Bulk Action Bar - appears when contacts are selected */}
               {selectedClients.size > 0 && (
-                <div className="flex items-center gap-3 py-3 px-4 bg-neutral-50 border border-neutral-200 rounded-lg mb-4">
-                  <span className="text-sm text-neutral-600 font-medium">
+                <div className="flex items-center gap-3 py-3 px-4 bg-zinc-50 border border-zinc-200 rounded-lg mb-4">
+                  <span className="text-sm text-zinc-600 font-medium">
                     {selectedClients.size} contact{selectedClients.size > 1 ? 's' : ''} selected
                   </span>
                   <Separator orientation="vertical" className="h-4" />
@@ -722,11 +722,11 @@ const MyClients = () => {
               )}
 
               {filteredClients.length === 0 ? (
-                <div className="aac-card p-12">
+                <div className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] p-12">
                   <div className="text-center">
-                    <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-xl font-semibold text-neutral-800 mb-2">No contacts found</h3>
-                    <p className="text-muted-foreground mb-6">
+                    <User className="h-16 w-16 mx-auto mb-4 text-zinc-400" />
+                    <h3 className="text-xl font-semibold text-zinc-900 mb-2">No contacts found</h3>
+                    <p className="text-zinc-500 mb-6">
                       Try adjusting your search criteria
                     </p>
                     <Button variant="outline" onClick={() => setSearchTerm("")}>
@@ -736,7 +736,7 @@ const MyClients = () => {
                 </div>
               ) : (
                 <>
-                <div className="aac-card overflow-hidden">
+                <div className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -769,7 +769,7 @@ const MyClients = () => {
                       {paginatedClients.map((client) => (
                     <TableRow 
                       key={client.id} 
-                      className="cursor-pointer hover:bg-muted/50"
+                      className="cursor-pointer hover:bg-zinc-50"
                       onClick={() => openContactDrawer(client)}
                     >
                       <TableCell onClick={(e) => e.stopPropagation()}>
@@ -784,19 +784,19 @@ const MyClients = () => {
                       <TableCell>
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-3 w-3" />
+                            <Mail className="h-3 w-3 text-zinc-400" />
                             {client.email}
                           </div>
                           {client.phone && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Phone className="h-3 w-3" />
+                            <div className="flex items-center gap-2 text-sm text-zinc-500">
+                              <Phone className="h-3 w-3 text-zinc-400" />
                               {formatPhoneNumber(client.phone)}
                             </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="max-w-xs">
-                        <p className="text-sm text-muted-foreground truncate capitalize">
+                        <p className="text-sm text-zinc-500 truncate capitalize">
                           {client.client_type || "—"}
                         </p>
                       </TableCell>
@@ -812,7 +812,7 @@ const MyClients = () => {
                                   handleOpenHotSheetDialog(client);
                                 }}
                               >
-                                <ListPlus className="h-4 w-4" />
+                                <ListPlus className="h-4 w-4 text-emerald-600" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -825,12 +825,13 @@ const MyClients = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="group"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditClient(client);
                                 }}
                               >
-                                <Edit className="h-4 w-4" />
+                                <Edit className="h-4 w-4 text-zinc-500 group-hover:text-zinc-700" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -917,7 +918,7 @@ const MyClients = () => {
               
               {/* Low-contact helper text */}
               {clients.length > 0 && clients.length <= 3 && (
-                <p className="text-sm text-neutral-400 mt-4 text-center">
+                <p className="text-sm text-zinc-400 mt-4 text-center">
                   Add contacts to start sending personalized Hot Sheets and private deal alerts.
                 </p>
               )}
