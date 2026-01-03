@@ -17,6 +17,7 @@ import {
   Clock
 } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import ContactQuickActions from "@/components/ContactQuickActions";
 
 interface Client {
   id: string;
@@ -25,10 +26,14 @@ interface Client {
   email: string;
   phone: string | null;
   client_type: string | null;
+  is_favorite?: boolean;
   notes?: string | null;
   created_at: string;
   updated_at: string;
 }
+
+// Subset for ContactQuickActions compatibility
+type QuickActionsClient = Pick<Client, 'id' | 'first_name' | 'last_name' | 'email' | 'phone' | 'client_type' | 'is_favorite'>;
 
 interface HotSheetAssignment {
   id: string;
@@ -44,6 +49,7 @@ interface ContactDetailDrawerProps {
   onCreateHotSheet: (client: Client) => void;
   onEdit: (client: Client) => void;
   onDelete: (clientId: string) => void;
+  onToggleFavorite: (client: Client, newValue: boolean) => void;
 }
 
 // Helper function for title case display
@@ -62,7 +68,8 @@ const ContactDetailDrawer = ({
   onOpenChange,
   onCreateHotSheet,
   onEdit,
-  onDelete
+  onDelete,
+  onToggleFavorite
 }: ContactDetailDrawerProps) => {
   const navigate = useNavigate();
   const [assignedHotSheets, setAssignedHotSheets] = useState<HotSheetAssignment[]>([]);
@@ -160,26 +167,30 @@ const ContactDetailDrawer = ({
 
         <div className="space-y-5 pt-4">
           {/* Quick Actions */}
-          <div className="flex gap-2">
-            <Button 
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={(e) => handleActionClick(e, () => onCreateHotSheet(client))}
-            >
-              <ListPlus className="h-4 w-4 mr-2" />
-              Create Hot Sheet
-            </Button>
+          <div className="flex items-center gap-2">
+            <ContactQuickActions
+              client={client}
+              size="md"
+              onHotSheet={() => {
+                onCreateHotSheet(client);
+                onOpenChange(false);
+              }}
+              onToggleFavorite={(_, newValue) => onToggleFavorite(client, newValue)}
+            />
             <Button 
               variant="outline"
               onClick={(e) => handleActionClick(e, () => onEdit(client))}
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
             </Button>
             <Button 
               variant="ghost"
               className="text-destructive hover:text-destructive"
               onClick={(e) => handleActionClick(e, () => onDelete(client.id))}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4 mr-2" />
+              Remove
             </Button>
           </div>
 
