@@ -293,17 +293,24 @@ const PendingVerification = () => {
             Almost there.
           </h1>
           
-          {/* Single clear message - no fluff */}
+          {/* Single email line */}
           {userEmail && (
-            <p className="text-zinc-600 text-base leading-relaxed">
-              You'll receive a confirmation email at <span className="font-medium">{userEmail}</span> once verification is complete.
+            <p className="text-sm text-zinc-600">
+              You'll receive a confirmation email at{" "}
+              <span className="font-medium text-zinc-800">{userEmail}</span>{" "}
+              once verification is complete.
             </p>
           )}
 
-          {/* Status indicator - disabled, non-clickable */}
-          <div className="mt-8 inline-flex items-center px-5 py-2.5 rounded-full bg-zinc-100 text-zinc-500 text-sm font-medium cursor-default select-none">
+          {/* Disabled status button */}
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            className="mt-6 w-full max-w-md rounded-full bg-zinc-900 text-white py-3 text-sm font-medium opacity-90 cursor-default"
+          >
             Verification in progress
-          </div>
+          </button>
 
           {/* Support email */}
           <p className="text-zinc-400 text-xs mt-6">
