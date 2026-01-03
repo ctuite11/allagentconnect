@@ -277,23 +277,15 @@ const PendingVerification = () => {
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundColor: 'hsl(93 50% 96% / 0.5)',
+          backgroundColor: 'hsl(93 50% 96% / 0.3)',
         }}
       />
       
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md text-center">
           {/* Centered ambient globe - above headline */}
-          <div 
-            className="mx-auto mb-8 pointer-events-none"
-            style={{ 
-              opacity: 0.08,
-              filter: 'saturate(0.5) blur(0.5px)',
-              width: '140px',
-              height: '140px',
-            }}
-          >
-            <NetworkGlobe />
+          <div className="mx-auto mb-8 w-[160px] h-[160px]">
+            <NetworkGlobe variant="ambient" />
           </div>
           
           {/* Headline - strongest element */}
@@ -327,14 +319,6 @@ const PendingVerification = () => {
           </p>
         </div>
       </main>
-      
-      {/* Override NetworkGlobe animations - slow rotation only */}
-      <style>{`
-        @keyframes pendingRotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 };
