@@ -290,17 +290,12 @@ const PendingVerification = () => {
           
           {/* Headline - strongest element */}
           <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-3">
-            Application received.
+            Almost there.
           </h1>
           
-          {/* Body copy - single clear message */}
-          <p className="text-zinc-600 text-base leading-relaxed">
-            We've received your application and are verifying your real estate license.
-          </p>
-          
-          {/* Email confirmation - the one promise */}
+          {/* Single clear message - no fluff */}
           {userEmail && (
-            <p className="text-zinc-500 text-sm mt-4">
+            <p className="text-zinc-600 text-base leading-relaxed">
               You'll receive a confirmation email at <span className="font-medium">{userEmail}</span> once verification is complete.
             </p>
           )}
