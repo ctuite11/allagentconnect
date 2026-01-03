@@ -88,6 +88,7 @@ const statusColors: Record<string, string> = {
   rejected: "bg-rose-100 text-rose-800 border-rose-200",
   unverified: "bg-slate-100 text-slate-600 border-slate-200",
   suspended: "bg-orange-100 text-orange-800 border-orange-200",
+  unknown: "bg-purple-100 text-purple-800 border-purple-200",
 };
 
 const statusOptions = [
@@ -176,121 +177,61 @@ export default function AdminApprovals() {
     })();
   }, []);
 
-  // Fetch all agents - profiles first, then settings
+  // Fetch all agents via edge function (bypasses RLS issues)
   const fetchAgents = async () => {
     if (!isAdmin) return;
 
     setLoading(true);
     
     try {
-      // 1. Fetch ALL agent_profiles (source of truth)
-      const { data: profiles, error: profilesError } = await supabase
-        .from("agent_profiles")
-        .select("id, aac_id, first_name, last_name, email, phone, company, bio, created_at")
-        .order("created_at", { ascending: false });
+      // Use edge function for bulletproof admin data fetching
+      const { data, error } = await supabase.functions.invoke('admin-list-agents');
 
-      // DIAGNOSTIC: Log raw profiles query result
-      console.log("[AdminApprovals] Profiles query:", {
-        error: profilesError?.message,
-        count: profiles?.length ?? 0,
-        sample: profiles?.[0] ?? null,
-      });
-      
-      // DIAGNOSTIC: Update debug state
-      setDebugInfo(prev => ({
-        ...prev,
-        profilesCount: profiles?.length ?? 0,
-        profilesError: profilesError?.message ?? null,
-      }));
-
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        toast.error("Failed to load agents");
+      if (error) {
+        console.error("[AdminApprovals] Edge function error:", error);
+        toast.error("Failed to load agents - please refresh");
         setLoading(false);
         return;
       }
 
-      if (!profiles || profiles.length === 0) {
-        console.log("[AdminApprovals] No profiles found - setting empty agents");
+      const { agents: agentList, profilesCount, settingsCount, statusDistribution } = data;
+
+      // DIAGNOSTIC: Log results
+      console.log("[AdminApprovals] Edge function response:", {
+        profilesCount,
+        settingsCount,
+        agentCount: agentList?.length ?? 0,
+        statusDistribution,
+      });
+      
+      // DIAGNOSTIC: Update debug state
+      setDebugInfo({
+        profilesCount: profilesCount ?? 0,
+        profilesError: null,
+        settingsCount: settingsCount ?? 0,
+        settingsError: null,
+        mergedCount: agentList?.length ?? 0,
+        statusDistribution: statusDistribution ?? {},
+        stateCount: agentList?.length ?? 0,
+      });
+
+      // Check for settings mismatch and warn
+      if (profilesCount > 0 && settingsCount < profilesCount) {
+        const missing = profilesCount - settingsCount;
+        console.warn(`[AdminApprovals] ${missing} agents missing settings records`);
+        toast.warning(`${missing} agent(s) missing settings - status shown as "unknown"`);
+      }
+
+      if (!agentList || agentList.length === 0) {
+        console.log("[AdminApprovals] No agents found");
         setAgents([]);
         setLoading(false);
         return;
       }
 
-      // 2. Fetch settings for all profile IDs
-      const userIds = profiles.map((p) => p.id);
-      const { data: settings, error: settingsError } = await supabase
-        .from("agent_settings")
-        .select("user_id, agent_status, license_number, license_state, verified_at")
-        .in("user_id", userIds);
-
-      // DIAGNOSTIC: Log raw settings query result
-      console.log("[AdminApprovals] Settings query:", {
-        error: settingsError?.message,
-        count: settings?.length ?? 0,
-        statuses: settings?.map(s => ({ user_id: s.user_id.slice(0,8), status: s.agent_status })) ?? [],
-      });
-      
-      // DIAGNOSTIC: Update debug state
-      setDebugInfo(prev => ({
-        ...prev,
-        settingsCount: settings?.length ?? 0,
-        settingsError: settingsError?.message ?? null,
-      }));
-
-      if (settingsError) {
-        console.error("Error fetching settings:", settingsError);
-      }
-
-      // 3. Merge: create a map of settings by user_id
-      const settingsByUser = new Map(
-        settings?.map((s) => [s.user_id, s]) || []
-      );
-
-      // 4. Build final agent list
-      const agentList: Agent[] = profiles.map((p) => {
-        const s = settingsByUser.get(p.id);
-        return {
-          id: p.id,
-          aac_id: p.aac_id,
-          first_name: p.first_name,
-          last_name: p.last_name,
-          email: p.email,
-          phone: p.phone,
-          company: p.company,
-          bio: p.bio,
-          license_number: s?.license_number ?? null,
-          license_state: s?.license_state ?? null,
-          agent_status: s?.agent_status ?? "unverified",
-          verified_at: s?.verified_at ?? null,
-          created_at: p.created_at || new Date().toISOString(),
-        };
-      });
-
-      // DIAGNOSTIC: Log merged agent list with status distribution
-      const statusCounts = agentList.reduce((acc, a) => {
-        acc[a.agent_status] = (acc[a.agent_status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-      console.log("[AdminApprovals] Merged agents:", {
-        total: agentList.length,
-        statusDistribution: statusCounts,
-        sample: agentList.slice(0, 3).map(a => ({ 
-          name: `${a.first_name} ${a.last_name}`, 
-          status: a.agent_status 
-        })),
-      });
-      
-      // DIAGNOSTIC: Update debug state
-      setDebugInfo(prev => ({
-        ...prev,
-        mergedCount: agentList.length,
-        statusDistribution: statusCounts,
-      }));
-
       setAgents(agentList);
 
-      // 5. Fetch pending verifications (backup notifications)
+      // Fetch pending verifications (backup notifications)
       const { data: pendingData } = await supabase
         .from("pending_verifications")
         .select("*")
