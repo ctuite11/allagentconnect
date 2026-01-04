@@ -15,6 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Auth cache version - bump this to force clear stale sessions for all users
+const AUTH_CACHE_VERSION = "v2";
+
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -24,6 +27,19 @@ const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { role, loading: roleLoading } = useUserRole(user);
+
+  // One-time auth cache version check - clears stale Supabase state
+  useEffect(() => {
+    const storedVersion = localStorage.getItem("auth_cache_version");
+    if (storedVersion !== AUTH_CACHE_VERSION) {
+      console.log("Auth cache version mismatch, clearing stale Supabase state...");
+      Object.keys(localStorage)
+        .filter(k => k.startsWith("sb-"))
+        .forEach(k => localStorage.removeItem(k));
+      localStorage.setItem("auth_cache_version", AUTH_CACHE_VERSION);
+      window.location.reload();
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +80,14 @@ const Navigation = () => {
       sub.subscription.unsubscribe();
     };
   }, []);
+
+  // Reset agent status when user changes (prevents stale state)
+  useEffect(() => {
+    if (!user) {
+      setAgentStatus(null);
+      setAgentStatusLoading(false);
+    }
+  }, [user]);
 
   // Check agent status for pending users
   useEffect(() => {
@@ -128,11 +152,8 @@ const Navigation = () => {
     (user && role === "agent" && agentStatus === null);
 
   if (navLoading) {
-    return (
-      <div className="fixed top-0 left-0 right-0 z-[9999] bg-yellow-200 text-yellow-900 text-xs px-3 py-2 font-mono">
-        NAV HIDDEN — authLoading={String(authLoading)} user={user ? "yes" : "no"} roleLoading={String(roleLoading)} role={String(role)} agentStatusLoading={String(agentStatusLoading)} agentStatus={String(agentStatus)}
-      </div>
-    );
+    // Return null during loading - no debug bar in production
+    return null;
   }
 
   // Hide global navigation on auth page
