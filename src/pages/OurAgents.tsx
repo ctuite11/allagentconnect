@@ -312,7 +312,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
     <div className="flex min-h-screen flex-col bg-background">
       <Navigation />
 
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-24 pb-12">
         {/* Compact Hero */}
         <section className="border-b border-border bg-card py-8">
           <div className="container mx-auto px-4">
@@ -362,11 +362,12 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
                 </p>
               </div>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredAgents.map((agent) => (
                   <AgentDirectoryCard
                     key={agent.id}
                     agent={agent}
+                    showEmail={false}
                     onViewProfile={handleViewProfile}
                     onMessage={handleMessage}
                   />
