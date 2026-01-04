@@ -1,4 +1,5 @@
 import React from "react";
+import NetworkGlobe from "@/components/home/NetworkGlobe";
 
 type Agent = {
   id: string;
@@ -56,10 +57,8 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
               loading="lazy"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <div className="text-4xl font-semibold tracking-wide text-zinc-300">
-                {initials}
-              </div>
+            <div className="h-full w-full bg-white">
+              <NetworkGlobe variant="static" />
             </div>
           )}
         </div>

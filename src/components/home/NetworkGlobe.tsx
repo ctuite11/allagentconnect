@@ -16,11 +16,12 @@ const LINE_COLOR = '#059669'; // emerald-600
 const DOT_COLOR = '#94A3B8';  // slate-400 (matches "Connect" in logo)
 
 interface NetworkGlobeProps {
-  variant?: 'hero' | 'ambient';
+  variant?: 'hero' | 'ambient' | 'static';
 }
 
 const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
   const isAmbient = variant === 'ambient';
+  const isStatic = variant === 'static';
   
   // Track which nodes are currently pulsing (for white blink) - hero mode only
   const [pulsingNodes, setPulsingNodes] = useState<Set<number>>(new Set());
@@ -69,8 +70,8 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
 
   // White twinkle pulse effect - visible and alive (hero mode only)
   useEffect(() => {
-    // Skip pulse animation in ambient mode
-    if (isAmbient) return;
+    // Skip pulse animation in ambient/static mode
+    if (isAmbient || isStatic) return;
     
     const triggerPulse = () => {
       // Pick 1 random node to pulse
@@ -104,7 +105,7 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
     triggerPulse();
 
     return () => clearInterval(intervalId);
-  }, [nodes.length, isAmbient]);
+  }, [nodes.length, isAmbient, isStatic]);
 
   // Debug vs production styles
   const svgOpacity = DEBUG_VISIBLE ? 0.55 : 1;
@@ -116,6 +117,73 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
   const rotationSpeed = isAmbient ? '14s' : '90s';
   const ambientFilter = isAmbient ? 'saturate(0.6)' : 'none';
   const ambientOpacity = isAmbient ? 0.65 : svgOpacity;
+
+  // Static mode: no animation, AAC green, for placeholders
+  if (isStatic) {
+    return (
+      <div 
+        className="w-full h-full pointer-events-none flex items-center justify-center"
+        aria-hidden="true"
+      >
+        <svg 
+          viewBox="0 0 300 300" 
+          className="w-3/4 h-3/4"
+          style={{ opacity: 0.4 }}
+        >
+          {/* Connection lines */}
+          {connections.map((line, i) => (
+            <line
+              key={`line-${i}`}
+              x1={line.x1}
+              y1={line.y1}
+              x2={line.x2}
+              y2={line.y2}
+              stroke={LINE_COLOR}
+              strokeWidth={lineStrokeWidth}
+              opacity={line.opacity * 0.6}
+            />
+          ))}
+          
+          {/* Nodes - static, no pulse */}
+          {nodes.map((node, i) => {
+            const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
+            return (
+              <circle
+                key={`node-${i}`}
+                cx={node.x}
+                cy={node.y}
+                r={radius}
+                fill={LINE_COLOR}
+                opacity={0.5}
+              />
+            );
+          })}
+          
+          {/* Subtle orbital rings */}
+          <ellipse
+            cx="150"
+            cy="150"
+            rx="120"
+            ry="40"
+            fill="none"
+            stroke={LINE_COLOR}
+            strokeWidth={ringStrokeWidth}
+            opacity={0.5}
+          />
+          <ellipse
+            cx="150"
+            cy="150"
+            rx="100"
+            ry="100"
+            fill="none"
+            stroke={LINE_COLOR}
+            strokeWidth={ringStrokeWidth}
+            opacity={0.4}
+          />
+        </svg>
+      </div>
+    );
+  }
 
   // Hero mode: absolute positioned, desktop only
   // Ambient mode: relative, centered, all breakpoints
