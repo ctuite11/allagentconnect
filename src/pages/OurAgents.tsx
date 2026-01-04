@@ -362,8 +362,8 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
         />
 
         {/* Agent Grid */}
-        <section className="py-6">
-          <div className="container mx-auto px-4">
+        <section className="pt-8 pb-16">
+          <div className="mx-auto w-full max-w-[1200px] px-6">
             {loading || authLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -378,7 +378,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
               </div>
             ) : (
               <>
-                <div className="mx-auto w-full max-w-[1200px] grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
                   {filteredAgents.map((agent) => (
                     <AgentPhotoTile
                       key={agent.id}
