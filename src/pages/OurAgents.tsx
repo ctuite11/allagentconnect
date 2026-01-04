@@ -296,12 +296,16 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
     setSortOrder("a-z");
   };
 
-  const handleMessage = (agentId: string) => {
-    const agent = agents.find(a => a.id === agentId);
-    if (agent) {
-      setMessageAgent(agent);
+  const handleMessage = (agent: { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }) => {
+    const fullAgent = agents.find(a => a.id === agent.id);
+    if (fullAgent) {
+      setMessageAgent(fullAgent);
       setMessageDialogOpen(true);
     }
+  };
+
+  const handleViewProfile = (agentId: string) => {
+    navigate(`/agent/${agentId}`);
   };
 
   return (
@@ -363,7 +367,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
                   <AgentDirectoryCard
                     key={agent.id}
                     agent={agent}
-                    isAgentMode={isAgentMode}
+                    onViewProfile={handleViewProfile}
                     onMessage={handleMessage}
                   />
                 ))}
