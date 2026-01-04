@@ -44,8 +44,8 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
       onClick={() => onClick(agent.id)}
       className="group w-full text-left"
     >
-      {/* Bordered container (Compass exact) */}
-      <div className="border border-zinc-200">
+      {/* Borderless container (Compass exact) */}
+      <div>
         {/* PHOTO - 4:3 landscape ratio (Compass style) */}
         <div className="aspect-[4/3] w-full overflow-hidden bg-zinc-100">
           {agent.headshot_url ? (
@@ -64,9 +64,9 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
           )}
         </div>
 
-        {/* TEXT BLOCK - compact caption panel */}
-        <div className="border-t border-zinc-200 px-4 py-3">
-          <div className="text-base font-semibold leading-snug text-zinc-900">
+        {/* TEXT BLOCK - Compass style */}
+        <div className="pt-4">
+          <div className="text-lg font-semibold leading-tight text-zinc-900">
             {fullName}
           </div>
           {brokerage && (
