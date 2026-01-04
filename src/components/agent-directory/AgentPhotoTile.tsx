@@ -34,8 +34,6 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
   const fullName = titleCase(rawName);
 
   const brokerage = agent.company || agent.office_name || agent.team_name || "";
-  const phone = agent.cell_phone || agent.phone || "";
-  const email = agent.email || "";
 
   const initials = fullName
     .split(" ")
@@ -48,8 +46,8 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
       onClick={() => onClick(agent.id)}
       className="cursor-pointer"
     >
-      {/* Photo - 3:4 aspect ratio */}
-      <div className="aspect-[3/4] w-full overflow-hidden rounded-lg bg-zinc-100">
+      {/* Photo - 3:4 aspect ratio, square corners (Compass-style) */}
+      <div className="aspect-[3/4] w-full overflow-hidden bg-zinc-100">
         {agent.headshot_url ? (
           <img
             src={agent.headshot_url}
@@ -58,35 +56,20 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
             loading="lazy"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-4xl font-semibold text-zinc-400">
+          <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-zinc-400">
             {initials}
           </div>
         )}
       </div>
 
-      {/* Info */}
-      <div className="mt-4 space-y-1">
-        <div className="text-base font-semibold text-zinc-900">
+      {/* Info - Name + Brokerage only (Compass parity) */}
+      <div className="mt-3">
+        <div className="text-lg font-semibold text-zinc-900">
           {fullName}
         </div>
-
-        {brokerage && (
-          <div className="text-sm text-zinc-600">
-            {brokerage}
-          </div>
-        )}
-
-        {email && (
-          <div className="text-sm text-zinc-500">
-            {email}
-          </div>
-        )}
-
-        {phone && (
-          <div className="text-sm text-zinc-500">
-            {phone}
-          </div>
-        )}
+        <div className="mt-1 text-sm text-zinc-600">
+          {brokerage || "Licensed Agent"}
+        </div>
       </div>
     </div>
   );
