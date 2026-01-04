@@ -46,8 +46,8 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
     >
       {/* Borderless container (Compass exact) */}
       <div>
-        {/* PHOTO - 4:3 landscape ratio (Compass style) */}
-        <div className="aspect-[4/3] w-full overflow-hidden bg-zinc-100">
+        {/* PHOTO - 3:4 portrait ratio (Compass style) */}
+        <div className="aspect-[3/4] w-full overflow-hidden bg-zinc-100">
           {agent.headshot_url ? (
             <img
               src={agent.headshot_url}
