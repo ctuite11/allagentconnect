@@ -378,7 +378,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
+                <div className="mx-auto w-full max-w-[1200px] grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
                   {filteredAgents.map((agent) => (
                     <AgentPhotoTile
                       key={agent.id}
