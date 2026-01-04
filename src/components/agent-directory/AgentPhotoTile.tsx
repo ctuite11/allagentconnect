@@ -45,8 +45,8 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
       onClick={() => onClick(agent.id)}
       className="group w-full text-left"
     >
-      {/* Borderless container (Compass exact) */}
-      <div>
+      {/* Card container with AAC border */}
+      <div className="border border-zinc-200 overflow-hidden">
         {/* PHOTO - 3:4 portrait ratio (Compass style) */}
         <div className="aspect-[3/4] w-full overflow-hidden bg-zinc-100">
           {agent.headshot_url ? (
