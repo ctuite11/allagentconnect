@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuthRole } from "@/hooks/useAuthRole";
-import AgentDirectoryCard from "@/components/agent-directory/AgentDirectoryCard";
+import AgentPhotoTile from "@/components/agent-directory/AgentPhotoTile";
 import AgentDirectoryFilters from "@/components/agent-directory/AgentDirectoryFilters";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -82,10 +82,10 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
   const isAuthenticatedAgent = role === "agent";
   
   // Page titles based on mode
-  const pageTitle = isAgentMode ? "Our Members" : "Find an Agent";
+  const pageTitle = isAgentMode ? "AAC Referral Network" : "Trusted Agents";
   const pageSubtitle = isAgentMode 
-    ? "View member profiles, activity, and connect with colleagues"
-    : "Find experienced real estate professionals in your area";
+    ? "Connect with fellow agents for referrals and collaboration"
+    : "Connect directly with vetted local professionals";
 
   useEffect(() => {
     fetchData();
@@ -378,13 +378,12 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
               </div>
             ) : (
               <>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
                   {filteredAgents.map((agent) => (
-                    <AgentDirectoryCard
+                    <AgentPhotoTile
                       key={agent.id}
                       agent={agent}
-                      onViewProfile={handleViewProfile}
-                      onMessage={handleMessage}
+                      onClick={handleViewProfile}
                     />
                   ))}
                 </div>
