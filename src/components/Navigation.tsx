@@ -29,10 +29,21 @@ const Navigation = () => {
     let cancelled = false;
 
     const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (cancelled) return;
-      setUser(data.session?.user ?? null);
-      setAuthLoading(false);
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (cancelled) return;
+
+        if (error) {
+          setUser(null);
+        } else {
+          setUser(data.session?.user ?? null);
+        }
+      } catch {
+        if (cancelled) return;
+        setUser(null);
+      } finally {
+        if (!cancelled) setAuthLoading(false);
+      }
     };
 
     init();
@@ -42,8 +53,14 @@ const Navigation = () => {
       setAuthLoading(false);
     });
 
+    // Hard timeout failsafe (prevents "no header" if something hangs)
+    const timeoutId = window.setTimeout(() => {
+      if (!cancelled) setAuthLoading(false);
+    }, 2000);
+
     return () => {
       cancelled = true;
+      window.clearTimeout(timeoutId);
       sub.subscription.unsubscribe();
     };
   }, []);
@@ -110,7 +127,13 @@ const Navigation = () => {
     (user && role === "agent" && agentStatusLoading) ||
     (user && role === "agent" && agentStatus === null);
 
-  if (navLoading) return null;
+  if (navLoading) {
+    return (
+      <div className="fixed top-0 left-0 right-0 z-[9999] bg-yellow-200 text-yellow-900 text-xs px-3 py-2 font-mono">
+        NAV HIDDEN — authLoading={String(authLoading)} user={user ? "yes" : "no"} roleLoading={String(roleLoading)} role={String(role)} agentStatusLoading={String(agentStatusLoading)} agentStatus={String(agentStatus)}
+      </div>
+    );
+  }
 
   // Hide global navigation on auth page
   if (location.pathname === "/auth") return null;
