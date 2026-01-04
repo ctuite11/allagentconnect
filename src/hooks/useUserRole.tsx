@@ -9,65 +9,85 @@ export const useUserRole = (user: User | null) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    let timeoutId: number | undefined;
+
     const fetchRole = async () => {
-      if (!user) {
-        setRole(null);
-        setLoading(false);
+      if (!user?.id) {
+        if (!cancelled) {
+          setRole(null);
+          setLoading(false);
+        }
         return;
       }
 
-      // Reset loading to true when user transitions from null -> real user
-      setLoading(true);
+      if (!cancelled) setLoading(true);
+
+      // Failsafe timeout - prevents roleLoading from being stuck forever
+      timeoutId = window.setTimeout(() => {
+        if (!cancelled) {
+          console.warn("useUserRole: timeout reached, forcing loading=false");
+          setLoading(false);
+        }
+      }, 2000);
 
       try {
-        // Use has_role RPC for admin check (SECURITY DEFINER - no RLS issues)
+        // Check admin role
         const { data: hasAdminRole, error: adminError } = await supabase.rpc("has_role", {
           _user_id: user.id,
           _role: "admin" as const,
         });
 
+        if (cancelled) return;
+
         if (!adminError && hasAdminRole === true) {
           setRole("admin");
-          setLoading(false);
           return;
         }
 
-        // Check for agent role using has_role RPC
-        const { data: hasAgentRole } = await supabase.rpc("has_role", {
+        // Check agent role
+        const { data: hasAgentRole, error: agentError } = await supabase.rpc("has_role", {
           _user_id: user.id,
           _role: "agent" as const,
         });
 
-        if (hasAgentRole === true) {
+        if (cancelled) return;
+
+        if (!agentError && hasAgentRole === true) {
           setRole("agent");
-          setLoading(false);
           return;
         }
 
-        // Check for buyer role using has_role RPC
-        const { data: hasBuyerRole } = await supabase.rpc("has_role", {
+        // Check buyer role
+        const { data: hasBuyerRole, error: buyerError } = await supabase.rpc("has_role", {
           _user_id: user.id,
           _role: "buyer" as const,
         });
 
-        if (hasBuyerRole === true) {
+        if (cancelled) return;
+
+        if (!buyerError && hasBuyerRole === true) {
           setRole("buyer");
-          setLoading(false);
           return;
         }
 
-        // No recognized role
-        setRole(null);
+        if (!cancelled) setRole(null);
       } catch (error) {
         console.error("Error fetching user role:", error);
-        setRole(null);
+        if (!cancelled) setRole(null);
       } finally {
-        setLoading(false);
+        if (timeoutId) window.clearTimeout(timeoutId);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchRole();
-  }, [user]);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [user?.id]);
 
   return { role, loading };
 };
