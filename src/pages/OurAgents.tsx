@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormattedInput } from "@/components/ui/formatted-input";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { z } from "zod";
 import { PageTitle } from "@/components/ui/page-title";
 
@@ -28,6 +28,7 @@ interface EnrichedAgent {
   cell_phone?: string;
   headshot_url?: string;
   office_name?: string;
+  team_name?: string;
   buyer_incentives?: string;
   updated_at?: string;
   activeListingsCount: number;
@@ -38,6 +39,8 @@ interface EnrichedAgent {
   serviceAreas: string[];
   specialties: string[];
 }
+
+const PAGE_SIZE = 24;
 
 interface County {
   id: string;
@@ -72,6 +75,10 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [messageAgent, setMessageAgent] = useState<EnrichedAgent | null>(null);
 
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   const isAuthenticatedAgent = role === "agent";
   
   // Page titles based on mode
@@ -82,26 +89,32 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       
-      // Fetch agents with their coverage areas
-      const { data: agentData, error: agentError } = await supabase
+      const from = (page - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      
+      // Fetch agents with pagination and count
+      const { data: agentData, count, error: agentError } = await supabase
         .from("agent_profiles")
         .select(`
-          *,
+          id, first_name, last_name, company, office_name, team_name, cell_phone, phone, email, headshot_url, buyer_incentives, updated_at, title,
           agent_county_preferences(
             county_id,
             counties(name, state)
           ),
           agent_buyer_coverage_areas(city, state, county)
-        `)
-        .order("first_name", { ascending: true });
+        `, { count: "exact" })
+        .order("last_name", { ascending: true })
+        .range(from, to);
 
       if (agentError) throw agentError;
+      
+      setTotalCount(count || 0);
 
       // Fetch listings for all agents to get counts
       const { data: listingsData, error: listingsError } = await supabase
@@ -184,13 +197,14 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
           cell_phone: agent.cell_phone,
           headshot_url: agent.headshot_url,
           office_name: agent.office_name,
+          team_name: agent.team_name,
           buyer_incentives: agent.buyer_incentives,
           updated_at: agent.updated_at,
           activeListingsCount,
           comingSoonCount,
           offMarketCount,
           last12MonthsSales,
-          buyerMatchCount: 0, // Would need separate query for buyer matches
+          buyerMatchCount: 0,
           serviceAreas,
           specialties,
         };
@@ -294,6 +308,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
     setShowBuyerIncentivesOnly(false);
     setShowListingAgentsOnly(false);
     setSortOrder("a-z");
+    setPage(1);
   };
 
   const handleMessage = (agent: { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }) => {
@@ -362,17 +377,48 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
                 </p>
               </div>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredAgents.map((agent) => (
-                  <AgentDirectoryCard
-                    key={agent.id}
-                    agent={agent}
-                    showEmail={false}
-                    onViewProfile={handleViewProfile}
-                    onMessage={handleMessage}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredAgents.map((agent) => (
+                    <AgentDirectoryCard
+                      key={agent.id}
+                      agent={agent}
+                      showEmail={false}
+                      onViewProfile={handleViewProfile}
+                      onMessage={handleMessage}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalCount > PAGE_SIZE && (
+                  <div className="mt-8 flex items-center justify-center gap-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="gap-1"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Prev
+                    </Button>
+                    <span className="text-sm text-zinc-600">
+                      Page {page} of {Math.ceil(totalCount / PAGE_SIZE)}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => p + 1)}
+                      disabled={page * PAGE_SIZE >= totalCount}
+                      className="gap-1"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </section>

@@ -407,6 +407,7 @@ export type Database = {
           receive_buyer_alerts: boolean | null
           seller_incentives: string | null
           social_links: Json | null
+          team_name: string | null
           title: string | null
           updated_at: string | null
         }
@@ -436,6 +437,7 @@ export type Database = {
           receive_buyer_alerts?: boolean | null
           seller_incentives?: string | null
           social_links?: Json | null
+          team_name?: string | null
           title?: string | null
           updated_at?: string | null
         }
@@ -465,6 +467,7 @@ export type Database = {
           receive_buyer_alerts?: boolean | null
           seller_incentives?: string | null
           social_links?: Json | null
+          team_name?: string | null
           title?: string | null
           updated_at?: string | null
         }
