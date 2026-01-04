@@ -206,7 +206,7 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
       
       {/* Network sphere */}
       <div 
-        className="absolute right-0 lg:right-4 top-[48%] -translate-y-1/2 w-[500px] h-[500px] lg:w-[620px] lg:h-[620px] max-w-[80vh] max-h-[80vh]"
+        className="pt-3 absolute right-0 lg:right-4 top-[48%] -translate-y-1/2 w-[500px] h-[500px] lg:w-[620px] lg:h-[620px] max-w-[80vh] max-h-[80vh]"
         style={{
           transform: 'translateY(-50%) rotateX(15deg) rotateY(-10deg)',
           transformStyle: 'preserve-3d',
