@@ -118,7 +118,7 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
   const ambientFilter = isAmbient ? 'saturate(0.6)' : 'none';
   const ambientOpacity = isAmbient ? 0.65 : svgOpacity;
 
-  // Static mode: no animation, AAC green, for placeholders
+  // Static mode: no animation, full AAC green, same weight as homepage
   if (isStatic) {
     return (
       <div 
@@ -128,7 +128,6 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
         <svg 
           viewBox="0 0 300 300" 
           className="w-3/4 h-3/4"
-          style={{ opacity: 0.4 }}
         >
           {/* Connection lines */}
           {connections.map((line, i) => (
@@ -140,7 +139,7 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
               y2={line.y2}
               stroke={LINE_COLOR}
               strokeWidth={lineStrokeWidth}
-              opacity={line.opacity * 0.6}
+              opacity={line.opacity}
             />
           ))}
           
@@ -153,8 +152,8 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
                 cx={node.x}
                 cy={node.y}
                 r={radius}
-                fill={LINE_COLOR}
-                opacity={0.5}
+                fill={DOT_COLOR}
+                opacity={0.3}
               />
             );
           })}
@@ -168,7 +167,7 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={0.5}
+            opacity={0.8}
           />
           <ellipse
             cx="150"
@@ -178,7 +177,7 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={0.4}
+            opacity={0.7}
           />
         </svg>
       </div>
