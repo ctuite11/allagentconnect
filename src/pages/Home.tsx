@@ -28,7 +28,7 @@ export default function Home() {
               </h1>
 
               <p className="mt-6 text-lg sm:text-xl leading-relaxed text-slate-600">
-                A private agent network for off-market listings, buyer needs, and verified collaboration — built by agents, for agents.
+                A private collaboration network created to help agents share opportunities, match buyers, and close deals.
               </p>
 
               <div className="mt-8">

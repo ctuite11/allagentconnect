@@ -115,7 +115,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   // Structural stroke weights - no decoration, pure form
   const lineStrokeWidth = 3;
   const ringStrokeWidth = 2.5;
-  const nodeRadius = { large: 5, small: 4.5 };
+  const nodeRadius = { large: 3.5, small: 3 };
 
   // Ambient mode: slower rotation only
   const rotationSpeed = isAmbient ? '14s' : '90s';
@@ -274,7 +274,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       
       {/* Network sphere */}
       <div 
-        className="pt-3 absolute right-0 lg:right-4 top-[48%] -translate-y-1/2 w-[500px] h-[500px] lg:w-[620px] lg:h-[620px] max-w-[80vh] max-h-[80vh]"
+        className="pt-6 absolute right-0 lg:right-4 top-[48%] -translate-y-1/2 w-[500px] h-[500px] lg:w-[620px] lg:h-[620px] max-w-[80vh] max-h-[80vh]"
         style={{
           transform: 'translateY(-50%) rotateX(15deg) rotateY(-10deg)',
           transformStyle: 'preserve-3d',
