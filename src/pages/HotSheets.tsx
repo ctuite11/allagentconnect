@@ -244,6 +244,7 @@ const HotSheets = () => {
             title="Hot Sheets"
             subtitle="Create and manage your custom listing alerts"
             className="mb-8"
+            backTo="/agent-dashboard"
             actions={
               hotSheets.length > 0 ? (
                 <Button onClick={() => setCreateDialogOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white">
