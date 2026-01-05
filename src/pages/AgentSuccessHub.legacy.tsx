@@ -425,11 +425,11 @@ export default function AgentSuccessHub() {
       route: "/hot-sheets",
     },
     {
-      key: "communication_center",
+      key: "buyer_needs",
       icon: <Megaphone className="h-7 w-7" />,
-      title: "Communications Center",
-      description: "Outbound email campaigns & logs",
-      route: "/communication-center",
+      title: "Buyer Needs",
+      description: "Active buyer demand & client needs",
+      route: "/client-needs",
     },
     {
       key: "profile_branding",

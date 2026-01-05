@@ -327,6 +327,7 @@ function MyListingsView({
         title="My Listings"
         subtitle="Manage your active, pending, and past listings from one place."
         className="mb-6"
+        backTo="/agent-dashboard"
       />
 
       {/* New Listing Button Row */}
