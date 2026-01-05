@@ -28,12 +28,22 @@ export default function Home() {
                 Where Real Deals Get Done
               </h1>
 
-              <p className="mt-6 text-lg sm:text-xl leading-relaxed text-zinc-600">
+              {/* Tension line - creates FOMO */}
+              <p className="mt-4 text-lg font-medium" style={{ color: '#1D1D1F' }}>
+                The deals you don't see are the ones that change your year.
+              </p>
+
+              <p className="mt-5 text-lg sm:text-xl leading-relaxed text-zinc-600">
                 A private agent collaboration network designed to increase deal flow, surface hidden opportunities, and help agents close more transactions.
               </p>
 
               <p className="mt-4 text-base text-zinc-500">
                 Built by Agents. For Agents. <span className="font-bold text-zinc-700">ALL AGENTS.</span>
+              </p>
+
+              {/* Client pitch callout */}
+              <p className="mt-4 text-sm italic text-zinc-500">
+                ACC membership is something clients immediately understand — and ask for.
               </p>
 
               <div className="mt-8">
@@ -46,8 +56,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* NetworkGlobe is the visual on the right - handled by the component */}
-            <div className="hidden lg:block" aria-hidden="true" />
+            {/* Globe context - makes it feel alive */}
+            <div className="hidden lg:flex flex-col items-center justify-center" aria-hidden="true">
+              <p className="text-sm font-medium tracking-wide text-zinc-400 text-center">
+                Live buyer needs. Quiet listings. Active conversations.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -75,7 +89,12 @@ export default function Home() {
             Built to Increase Production
           </h2>
           
-          <div className="mt-10 max-w-2xl mx-auto space-y-4">
+          {/* Punch line - reframes as advantage vs disadvantage */}
+          <p className="mt-4 text-center text-base font-medium text-zinc-600">
+            Most agents rely on what's public. ACC members don't.
+          </p>
+          
+          <div className="mt-8 max-w-2xl mx-auto space-y-4">
             <BulletItem>See off-market and pre-market opportunities before others do</BulletItem>
             <BulletItem>Match active buyers quietly, without public competition</BulletItem>
             <BulletItem>Close more deals through direct agent-to-agent collaboration</BulletItem>
@@ -210,7 +229,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="text-sm text-neutral-600">
             <span className="font-semibold text-neutral-900">All Agent Connect</span> — where real deals get done.
-            <div className="mt-1 text-xs text-neutral-500">© {new Date().getFullYear()} • Verified agents only</div>
+            <div className="mt-1 text-xs text-neutral-500">© {new Date().getFullYear()} • ACC Member Network</div>
           </div>
 
           <div className="flex items-center gap-4 text-sm">
