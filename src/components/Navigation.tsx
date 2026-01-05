@@ -220,7 +220,7 @@ const Navigation = () => {
                 {user && role === "agent" && (
                   <DropdownMenuItem onClick={() => navigate("/our-members")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                     <Users className="mr-2 h-4 w-4" />
-                    Our Members
+                    Referrals
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={() => navigate("/agent-search")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
