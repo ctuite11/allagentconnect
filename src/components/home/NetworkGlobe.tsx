@@ -17,11 +17,16 @@ const DOT_COLOR = '#94A3B8';  // slate-400 (matches "Connect" in logo)
 
 interface NetworkGlobeProps {
   variant?: 'hero' | 'ambient' | 'static';
+  strokeColor?: string;
 }
 
-const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
+const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   const isAmbient = variant === 'ambient';
   const isStatic = variant === 'static';
+  
+  // Use provided strokeColor or default brand colors
+  const lineColor = strokeColor || LINE_COLOR;
+  const dotColor = strokeColor || DOT_COLOR;
   
   // Track which nodes are currently pulsing (for white blink) - hero mode only
   const [pulsingNodes, setPulsingNodes] = useState<Set<number>>(new Set());
@@ -118,7 +123,7 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
   const ambientFilter = isAmbient ? 'saturate(0.6)' : 'none';
   const ambientOpacity = isAmbient ? 0.65 : svgOpacity;
 
-  // Static mode: no animation, full AAC green, same weight as homepage
+  // Static mode: no animation, supports color inheritance via strokeColor prop
   if (isStatic) {
     return (
       <div 
@@ -127,7 +132,7 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
       >
         <svg 
           viewBox="0 0 300 300" 
-          className="w-3/4 h-3/4"
+          className="w-full h-full"
         >
           {/* Connection lines */}
           {connections.map((line, i) => (
@@ -137,9 +142,9 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
               y1={line.y1}
               x2={line.x2}
               y2={line.y2}
-              stroke={LINE_COLOR}
+              stroke={strokeColor ? 'currentColor' : lineColor}
               strokeWidth={lineStrokeWidth}
-              opacity={line.opacity * 0.6}
+              opacity={line.opacity}
             />
           ))}
           
@@ -152,8 +157,8 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
                 cx={node.x}
                 cy={node.y}
                 r={radius}
-                fill={DOT_COLOR}
-                opacity={0.3}
+                fill={strokeColor ? 'currentColor' : dotColor}
+                opacity={0.6}
               />
             );
           })}
@@ -165,9 +170,9 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
             rx="120"
             ry="40"
             fill="none"
-            stroke={LINE_COLOR}
+            stroke={strokeColor ? 'currentColor' : lineColor}
             strokeWidth={ringStrokeWidth}
-            opacity={0.5}
+            opacity={0.7}
           />
           <ellipse
             cx="150"
@@ -175,9 +180,9 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
             rx="100"
             ry="100"
             fill="none"
-            stroke={LINE_COLOR}
+            stroke={strokeColor ? 'currentColor' : lineColor}
             strokeWidth={ringStrokeWidth}
-            opacity={0.4}
+            opacity={0.6}
           />
         </svg>
       </div>

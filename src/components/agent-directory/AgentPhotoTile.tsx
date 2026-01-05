@@ -61,9 +61,9 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
               loading="lazy"
             />
           ) : (
-            <div className="h-full w-full bg-zinc-100 flex items-center justify-center">
-              <div className="w-28 h-28 opacity-30">
-                <NetworkGlobe variant="static" />
+            <div className="flex h-full w-full items-center justify-center bg-emerald-600">
+              <div className="h-44 w-44 text-white">
+                <NetworkGlobe variant="static" strokeColor="currentColor" />
               </div>
             </div>
           )}
