@@ -65,7 +65,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             y1: nodes[i].y,
             x2: nodes[j].x,
             y2: nodes[j].y,
-            opacity: DEBUG_VISIBLE ? 0.5 : 0.25 + (1 - dist / 100) * 0.75
+            opacity: DEBUG_VISIBLE ? 0.5 : 0.55 + (1 - dist / 100) * 0.45
           });
         }
       }
@@ -319,7 +319,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
                 cy={node.y}
                 r={isPulsing ? radius * 1.2 : radius}
                 fill={isPulsing ? '#FFFFFF' : DOT_COLOR}
-                opacity={isPulsing ? 0.85 : 0.3}
+                opacity={isPulsing ? 0.95 : 0.6}
                 style={{
                   transition: 'r 80ms ease-out, fill 80ms ease-out, opacity 80ms ease-out'
                 }}
@@ -336,7 +336,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={DEBUG_VISIBLE ? 0.5 : 0.8}
+            opacity={DEBUG_VISIBLE ? 0.5 : 0.9}
           />
           <ellipse
             cx="150"
@@ -346,7 +346,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={DEBUG_VISIBLE ? 0.4 : 0.7}
+            opacity={DEBUG_VISIBLE ? 0.4 : 0.85}
           />
         </svg>
       </div>
