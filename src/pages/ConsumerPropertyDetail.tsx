@@ -256,7 +256,7 @@ const ConsumerPropertyDetail = () => {
         listingId={id!}
       />
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24" style={{ maxWidth: '1600px' }}>
+      <div className="container mx-auto px-4 py-8 pt-20" style={{ maxWidth: '1600px' }}>
         <div className="mx-auto">
           {/* Hero Image Section with Carousel Controls */}
           <div className="relative mb-6">

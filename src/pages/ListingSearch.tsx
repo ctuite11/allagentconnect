@@ -180,7 +180,7 @@ const ListingSearch = () => {
     <div className="min-h-screen flex flex-col bg-neutral-50 text-neutral-900">
       <Navigation />
 
-      <main className="flex-1 pt-28">
+      <main className="flex-1 pt-20">
         <div className="max-w-[1280px] mx-auto px-6 py-6">
           {/* Page Header */}
           <PageHeader
