@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { PageHeader } from "@/components/ui/page-header";
@@ -7,6 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AgentSearchFilters from "@/components/agent-search/AgentSearchFilters";
 import AgentMarketplaceGrid from "@/components/agent-search/AgentMarketplaceGrid";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const AgentSearch = () => {
   const navigate = useNavigate();
@@ -14,6 +21,7 @@ const AgentSearch = () => {
   const [agents, setAgents] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedCompany, setSelectedCompany] = useState<string>("All");
 
   useEffect(() => {
     fetchAgents();
@@ -53,7 +61,19 @@ const AgentSearch = () => {
   const handleClearFilters = () => {
     setSearchQuery("");
     setSelectedState("");
+    setSelectedCompany("All");
   };
+
+  // Get unique companies from agents
+  const companies = useMemo(() => {
+    return Array.from(
+      new Set(
+        agents
+          .map((a) => (a.company || a.office_name || "").trim())
+          .filter(Boolean)
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  }, [agents]);
 
   // Get unique states from agents
   const uniqueStates = [...new Set(
@@ -83,6 +103,12 @@ const AgentSearch = () => {
       if (!agentStates.includes(selectedState)) return false;
     }
 
+    // Company filter
+    if (selectedCompany !== "All") {
+      const co = (agent.company || agent.office_name || "").trim();
+      if (co !== selectedCompany) return false;
+    }
+
     return true;
   });
 
@@ -100,16 +126,35 @@ const AgentSearch = () => {
           />
         </div>
 
-        {/* Simplified Filters */}
-        <AgentSearchFilters
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedState={selectedState}
-          setSelectedState={setSelectedState}
-          states={uniqueStates}
-          onClearFilters={handleClearFilters}
-          hasActiveFilters={!!(searchQuery || selectedState)}
-        />
+        {/* Filters Row */}
+        <div className="max-w-6xl mx-auto px-4 pb-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <AgentSearchFilters
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              selectedState={selectedState}
+              setSelectedState={setSelectedState}
+              states={uniqueStates}
+              onClearFilters={handleClearFilters}
+              hasActiveFilters={!!(searchQuery || selectedState || selectedCompany !== "All")}
+            />
+            
+            {/* Company Filter */}
+            <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+              <SelectTrigger className="w-[200px] bg-white border-zinc-200">
+                <SelectValue placeholder="Company" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Companies</SelectItem>
+                {companies.map((company) => (
+                  <SelectItem key={company} value={company}>
+                    {company}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         {/* Explainer Line */}
         <section className="py-4">

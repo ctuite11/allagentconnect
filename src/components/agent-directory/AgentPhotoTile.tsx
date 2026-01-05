@@ -66,19 +66,19 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
           )}
         </div>
 
-        {/* TEXT BLOCK - Fixed height for uniform cards */}
-        <div className="px-4 py-4 h-28">
-          <div className="text-lg font-semibold leading-tight text-zinc-900 truncate">
+        {/* TEXT BLOCK - Compass style with border-top */}
+        <div className="border-t border-zinc-200 px-5 pb-5 pt-5">
+          <div className="text-[18px] leading-[22px] font-semibold text-zinc-900 truncate">
             {fullName}
           </div>
-          <div className="mt-1 text-sm text-zinc-500 truncate">
-            {brokerage || "\u00A0"}
+          <div className="mt-2 text-[14px] leading-[18px] text-zinc-600 truncate">
+            {brokerage || <span className="text-transparent">.</span>}
           </div>
-          <div className="mt-1 text-sm text-zinc-500 truncate">
-            {agent.cell_phone || agent.phone || "\u00A0"}
+          <div className="mt-1 text-[14px] leading-[18px] text-zinc-600 truncate">
+            {agent.email || <span className="text-transparent">.</span>}
           </div>
-          <div className="mt-1 text-sm text-zinc-500 truncate">
-            {agent.email || "\u00A0"}
+          <div className="mt-1 text-[14px] leading-[18px] text-zinc-600 truncate">
+            {agent.cell_phone || agent.phone ? `M: ${agent.cell_phone || agent.phone}` : <span className="text-transparent">.</span>}
           </div>
         </div>
       </div>
