@@ -341,24 +341,24 @@ function MyListingsView({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             <DropdownMenuItem onClick={() => onNewListing("new")} className="cursor-pointer">
-              <Home className="h-4 w-4 mr-2 text-muted-foreground" />
+              <Home className="h-4 w-4 mr-2 text-zinc-500" />
               <div>
                 <div className="font-medium">New (Active)</div>
-                <div className="text-xs text-muted-foreground">Ready to go live on market</div>
+                <div className="text-xs text-zinc-500">Ready to go live on market</div>
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onNewListing("off_market")} className="cursor-pointer">
-              <Lock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <Lock className="h-4 w-4 mr-2 text-zinc-500" />
               <div>
                 <div className="font-medium">Off-Market (Private)</div>
-                <div className="text-xs text-muted-foreground">Private listing for agents only</div>
+                <div className="text-xs text-zinc-500">Private listing for agents only</div>
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onNewListing("coming_soon")} className="cursor-pointer">
-              <Sparkles className="h-4 w-4 mr-2 text-muted-foreground" />
+              <Sparkles className="h-4 w-4 mr-2 text-zinc-500" />
               <div>
                 <div className="font-medium">Coming Soon</div>
-                <div className="text-xs text-muted-foreground">Pre-market announcement</div>
+                <div className="text-xs text-zinc-500">Pre-market announcement</div>
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -420,7 +420,7 @@ function MyListingsView({
               <button
                 onClick={() => setView("grid")}
                 className={`p-1.5 rounded-md transition-colors ${
-                  view === "grid" ? "bg-zinc-100 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-zinc-50"
+                  view === "grid" ? "bg-zinc-100 text-zinc-900" : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
                 }`}
               >
                 <Grid size={16} />
@@ -428,7 +428,7 @@ function MyListingsView({
               <button
                 onClick={() => setView("list")}
                 className={`p-1.5 rounded-md transition-colors ${
-                  view === "list" ? "bg-zinc-100 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-zinc-50"
+                  view === "list" ? "bg-zinc-100 text-zinc-900" : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
                 }`}
               >
                 <ListIcon size={16} />
@@ -517,68 +517,68 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-                className="aac-card aac-card-2 overflow-hidden"
-              >
-                <div className="w-full h-48 bg-neutral-soft overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
-                  <img src={thumbnail || "/placeholder.svg"} alt={l.address} className="w-full h-full object-cover" />
+              className="aac-card aac-card-2 overflow-hidden"
+            >
+              <div className="w-full h-48 bg-zinc-100 overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
+                <img src={thumbnail || "/placeholder.svg"} alt={l.address} className="w-full h-full object-cover" />
+              </div>
+
+              <div className="p-4">
+                {/* Address */}
+                <div className="font-semibold text-base text-zinc-900">
+                  {formatAddressWithUnit(l)}
                 </div>
+                {/* Location - secondary */}
+                <div className="text-zinc-500 text-sm mt-0.5">
+                  {l.state} {l.zip_code}
+                </div>
+                {/* Status + Listing # as secondary metadata */}
+                <div className="flex items-center gap-2 mt-2">
+                  <span
+                    className={`text-xs font-medium px-2.5 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}
+                  >
+                    {l.status.replace("_", " ")}
+                  </span>
+                  {l.listing_number && (
+                    <span className="text-xs text-zinc-500">#{l.listing_number}</span>
+                  )}
+                </div>
+                {/* Price */}
+                <div className="text-zinc-600 text-sm mt-2 font-medium">${l.price.toLocaleString()}</div>
 
-                <div className="p-4">
-                  {/* Address */}
-                  <div className="font-semibold text-base text-foreground">
-                    {formatAddressWithUnit(l)}
-                  </div>
-                  {/* Location - secondary */}
-                  <div className="text-muted-foreground text-sm mt-0.5">
-                    {l.state} {l.zip_code}
-                  </div>
-                  {/* Status + Listing # as secondary metadata */}
-                  <div className="flex items-center gap-2 mt-2">
-                    <span
-                      className={`text-xs font-medium px-2.5 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}
-                    >
-                      {l.status.replace("_", " ")}
-                    </span>
-                    {l.listing_number && (
-                      <span className="text-xs text-muted-foreground">#{l.listing_number}</span>
-                    )}
-                  </div>
-                  {/* Price */}
-                  <div className="text-muted-foreground text-sm mt-2 font-medium">${l.price.toLocaleString()}</div>
-
-                  {/* Action text links - matching list view */}
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-                    <button
-                      className="text-zinc-600 hover:text-emerald-700 transition"
-                      onClick={() => onEdit(l.id)}
-                    >
-                      Edit
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="text-zinc-600 hover:text-emerald-700 transition"
-                      onClick={() => onPreview(l.id)}
-                    >
-                      View
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="text-zinc-600 hover:text-emerald-700 transition"
-                      onClick={() => onShare(l.id)}
-                    >
-                      Share
-                    </button>
-                  </div>
+                {/* Action text links - matching list view */}
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                  <button
+                    className="text-zinc-600 hover:text-emerald-700 transition"
+                    onClick={() => onEdit(l.id)}
+                  >
+                    Edit
+                  </button>
+                  <span className="text-zinc-300">•</span>
+                  <button
+                    className="text-zinc-600 hover:text-emerald-700 transition"
+                    onClick={() => onPreview(l.id)}
+                  >
+                    View
+                  </button>
+                  <span className="text-zinc-300">•</span>
+                  <button
+                    className="text-zinc-600 hover:text-emerald-700 transition"
+                    onClick={() => onShare(l.id)}
+                  >
+                    Share
+                  </button>
                 </div>
               </div>
-            );
-          })}
-
-          {filteredListings.length === 0 && (
-            <div className="col-span-full text-center text-muted-foreground text-sm py-10">
-              No listings match your filters yet.
             </div>
-          )}
+          );
+        })}
+
+        {filteredListings.length === 0 && (
+          <div className="col-span-full text-center text-zinc-500 text-sm py-10">
+            No listings match your filters yet.
+          </div>
+        )}
         </div>
       )}
 
@@ -695,7 +695,7 @@ function MyListingsView({
                   )}
 
                   {/* Photo - locked size */}
-                  <div className="w-[140px] h-[100px] shrink-0 overflow-hidden rounded-xl bg-neutral-soft cursor-pointer">
+                  <div className="w-[140px] h-[100px] shrink-0 overflow-hidden rounded-xl bg-zinc-100 cursor-pointer">
                     <img
                       src={thumbnail || "/placeholder.svg"}
                       alt={l.address}
@@ -716,11 +716,11 @@ function MyListingsView({
                       </button>
                     )}
                     {/* Address */}
-                    <div className="font-semibold text-base text-foreground truncate leading-tight">
+                    <div className="font-semibold text-base text-zinc-900 truncate leading-tight">
                       {formatAddressWithUnit(l)}
                     </div>
                     {/* Location + Neighborhood */}
-                    <div className="text-sm text-muted-foreground leading-tight">
+                    <div className="text-sm text-zinc-500 leading-tight">
                       {l.state} {l.zip_code}{l.neighborhood ? ` · ${l.neighborhood}` : ''}
                     </div>
                     {/* Price */}
@@ -729,12 +729,12 @@ function MyListingsView({
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
-                            className="border border-neutral-200 rounded px-2 py-1 text-sm w-28 bg-white"
+                            className="border border-zinc-200 rounded px-2 py-1 text-sm w-28 bg-white"
                             value={editPrice}
                             onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
                           />
                           <select
-                            className="border border-neutral-200 rounded px-2 py-1 bg-white capitalize text-xs"
+                            className="border border-zinc-200 rounded px-2 py-1 bg-white capitalize text-xs"
                             value={editStatus}
                             onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
                           >
@@ -751,7 +751,7 @@ function MyListingsView({
                             Save
                           </button>
                           <button
-                            className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                            className="text-xs text-zinc-500 hover:text-zinc-900 hover:underline"
                             onClick={cancelQuickEdit}
                           >
                             Cancel
@@ -759,7 +759,7 @@ function MyListingsView({
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-foreground">${l.price.toLocaleString()}</span>
+                          <span className="text-sm font-medium text-zinc-900">${l.price.toLocaleString()}</span>
                           <button
                             className="text-xs text-primary hover:text-primary/80 hover:underline"
                             onClick={() => startQuickEdit(l)}
@@ -778,7 +778,7 @@ function MyListingsView({
           })}
 
           {filteredListings.length === 0 && (
-            <div className="text-center text-muted-foreground text-sm py-10">No listings match your filters yet.</div>
+            <div className="text-center text-zinc-500 text-sm py-10">No listings match your filters yet.</div>
           )}
         </div>
       )}

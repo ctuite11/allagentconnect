@@ -39,7 +39,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { PageTitle } from "@/components/ui/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 
 const ManageTeam = () => {
   const navigate = useNavigate();
@@ -445,12 +445,10 @@ const ManageTeam = () => {
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <PageTitle>{team ? "Manage Team" : "Create Your Team"}</PageTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {team ? "Update your team profile and manage members" : "Create a team profile to collaborate with other agents"}
-              </p>
-            </div>
+            <PageHeader 
+              title={team ? "Manage Team" : "Create Your Team"}
+              subtitle={team ? "Update your team profile and manage members" : "Create a team profile to collaborate with other agents"}
+            />
             <div className="flex gap-2">
               {team && (
                 <Button onClick={() => navigate(`/team/${team.id}`)} variant="outline">
@@ -617,7 +615,7 @@ const ManageTeam = () => {
                       <img
                         src={logoUrl}
                         alt="Logo"
-                        className="w-48 h-32 rounded-lg object-contain border-2 border-border bg-muted p-2"
+                        className="w-48 h-32 rounded-lg object-contain border-2 border-zinc-200 bg-zinc-50 p-2"
                       />
                       {isOwner && (
                         <Button

@@ -534,11 +534,11 @@ setHeaderBackgroundType(profile.header_background_type || "color");
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-white">
         <Navigation />
         <div className="container mx-auto px-4 py-8 pt-20">
           <div className="flex items-center justify-center h-64">
-            <div className="animate-pulse text-muted-foreground">Loading profile...</div>
+            <div className="animate-pulse text-zinc-500">Loading profile...</div>
           </div>
         </div>
       </div>
@@ -546,7 +546,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <Navigation />
       <div className="container mx-auto px-4 py-8 pt-20 pb-32">
         {/* Header with inline back button */}
@@ -603,13 +603,13 @@ setHeaderBackgroundType(profile.header_background_type || "color");
           {/* Left Column - Form */}
           <div className="lg:col-span-2 space-y-6">
             {/* Profile Images Section */}
-            <Card>
+            <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-muted-foreground" />
+                  <User className="h-5 w-5 text-zinc-500" />
                   Profile Images
                 </CardTitle>
-                <CardDescription>Upload your photo and company logo</CardDescription>
+                <CardDescription className="text-zinc-500">Upload your photo and company logo</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-10">
@@ -620,7 +620,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                     onRemove={() => setHeadshotUrl("")}
                     aacId={aacId}
                   />
-                  <div className="hidden sm:block w-px h-32 bg-border" />
+                  <div className="hidden sm:block w-px h-32 bg-zinc-200" />
                   <CompanyLogoUpload
                     logoUrl={logoUrl}
                     uploadingLogo={uploadingLogo}
@@ -632,13 +632,13 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             </Card>
 
             {/* Header Theme Section - Collapsible by default */}
-            <Card>
+            <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <Home className="h-5 w-5 text-muted-foreground" />
+                  <Home className="h-5 w-5 text-zinc-500" />
                   Appearance
                 </CardTitle>
-                <CardDescription>Customize how your profile header looks</CardDescription>
+                <CardDescription className="text-zinc-500">Customize how your profile header looks</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <HeaderBackgroundSelector
@@ -651,13 +651,13 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             </Card>
 
             {/* Basic Info Section */}
-            <Card>
+            <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-muted-foreground" />
+                  <User className="h-5 w-5 text-zinc-500" />
                   Basic Information
                 </CardTitle>
-                <CardDescription>Your name and professional details</CardDescription>
+                <CardDescription className="text-zinc-500">Your name and professional details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -712,13 +712,13 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             </Card>
 
             {/* Contact Info Section */}
-            <Card>
+            <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <MapPin className="h-5 w-5 text-zinc-500" />
                   Contact Information
                 </CardTitle>
-                <CardDescription>Phone numbers and office details</CardDescription>
+                <CardDescription className="text-zinc-500">Phone numbers and office details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -756,7 +756,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                   <div className="flex items-center justify-between mb-2">
                     <Label htmlFor="office_address">Office Address</Label>
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="address-toggle" className="text-sm text-muted-foreground cursor-pointer">
+                      <Label htmlFor="address-toggle" className="text-sm text-zinc-500 cursor-pointer">
                         {useAddressAutocomplete ? "Autocomplete" : "Manual"}
                       </Label>
                       <Switch
@@ -803,13 +803,13 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             </Card>
 
             {/* Bio Section */}
-            <Card>
+            <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <FileText className="h-5 w-5 text-zinc-500" />
                   About You
                 </CardTitle>
-                <CardDescription>Tell clients about yourself and your expertise</CardDescription>
+                <CardDescription className="text-zinc-500">Tell clients about yourself and your expertise</CardDescription>
               </CardHeader>
               <CardContent>
                 <Textarea
@@ -819,20 +819,20 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                   rows={6}
                   className="resize-none"
                 />
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-zinc-500 mt-2">
                   {bio.length} characters
                 </p>
               </CardContent>
             </Card>
 
             {/* Incentives Section */}
-            <Card>
+            <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-muted-foreground" />
+                  <Star className="h-5 w-5 text-zinc-500" />
                   Client Incentives
                 </CardTitle>
-                <CardDescription>Special offers for buyers and sellers</CardDescription>
+                <CardDescription className="text-zinc-500">Special offers for buyers and sellers</CardDescription>
               </CardHeader>
               <CardContent>
                 <IncentivesSection
@@ -845,13 +845,13 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             </Card>
 
             {/* Social Links Section */}
-            <Card>
+            <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Share2 className="h-5 w-5 text-muted-foreground" />
+                  <Share2 className="h-5 w-5 text-zinc-500" />
                   Social Media
                 </CardTitle>
-                <CardDescription>Connect your social profiles</CardDescription>
+                <CardDescription className="text-zinc-500">Connect your social profiles</CardDescription>
               </CardHeader>
               <CardContent>
                 <SocialLinksSection
@@ -862,13 +862,13 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             </Card>
 
             {/* Buyer Leads Section */}
-            <Card className="overflow-hidden">
+            <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <MapPin className="h-5 w-5 text-zinc-500" />
                   Buyer Leads
                 </CardTitle>
-                <CardDescription className="mt-1.5">
+                <CardDescription className="mt-1.5 text-zinc-500">
                   Define your coverage areas to receive buyer leads (max 3 zip codes)
                 </CardDescription>
               </CardHeader>
