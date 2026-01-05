@@ -139,7 +139,7 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
               y2={line.y2}
               stroke={LINE_COLOR}
               strokeWidth={lineStrokeWidth}
-              opacity={line.opacity}
+              opacity={line.opacity * 0.6}
             />
           ))}
           
@@ -167,7 +167,7 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={0.8}
+            opacity={0.5}
           />
           <ellipse
             cx="150"
@@ -177,7 +177,7 @@ const NetworkGlobe = ({ variant = 'hero' }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={0.7}
+            opacity={0.4}
           />
         </svg>
       </div>
