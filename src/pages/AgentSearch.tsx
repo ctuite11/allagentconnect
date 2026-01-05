@@ -116,7 +116,7 @@ const AgentSearch = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
 
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-20">
         {/* Header */}
         <div className="max-w-6xl mx-auto px-4 py-8">
           <PageHeader

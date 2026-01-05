@@ -287,7 +287,7 @@ const MLSPINSearch = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
       
-      <div className="flex-1 flex overflow-hidden pt-16">
+      <div className="flex-1 flex overflow-hidden pt-20">
         {/* Filter Panel */}
         <MLSPINFilterPanel
           filters={filters}

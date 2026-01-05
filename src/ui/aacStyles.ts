@@ -9,7 +9,11 @@
  * Blue is allowed ONLY in HeaderBackgroundSelector (user themes).
  */
 
-// Page Container
+// Page Layout (prevents pt-* drift)
+export const page = "min-h-screen pt-20 px-6";
+export const pageInner = "mx-auto w-full max-w-6xl";
+
+// Page Container (legacy - prefer page + pageInner)
 export const pageContainer = "max-w-7xl mx-auto px-6 py-10 space-y-8";
 
 // Typography
@@ -78,6 +82,8 @@ export const unsavedText = "text-zinc-500 text-sm";
 // Compose class strings for common patterns
 export const aacStyles = {
   // Page layout
+  page,
+  pageInner,
   pageContainer,
   pageH1,
   pageSubhead,

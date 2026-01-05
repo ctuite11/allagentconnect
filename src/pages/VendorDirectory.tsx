@@ -97,7 +97,7 @@ const VendorDirectory = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 pt-24">
+    <div className="container mx-auto px-4 py-8 pt-20">
       <div className="mb-8">
         <PageTitle className="mb-4">Vendor Directory</PageTitle>
         <p className="text-xl text-muted-foreground">

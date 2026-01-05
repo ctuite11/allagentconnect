@@ -275,7 +275,7 @@ const ListingAnalytics = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
+      <div className="container mx-auto px-4 py-8 pt-20">
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate("/agent/listings")}

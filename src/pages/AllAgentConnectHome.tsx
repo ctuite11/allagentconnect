@@ -172,7 +172,7 @@ const AllAgentConnectHome = () => {
       </Helmet>
 
       <div className="min-h-screen bg-white">
-        <div className="mx-auto max-w-6xl px-6 pt-24 pb-10">
+        <div className="mx-auto max-w-6xl px-6 pt-20 pb-10">
           {/* Hero Zone - ambient network lives here only */}
           <div className="relative mb-8 overflow-hidden">
             {/* Ambient network field (decorative, behind content) */}

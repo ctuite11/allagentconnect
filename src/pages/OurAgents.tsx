@@ -317,7 +317,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
     <div className="flex min-h-screen flex-col bg-background">
       <Navigation />
 
-      <main className="flex-1 pt-24 pb-12">
+      <main className="flex-1 pt-20 pb-12">
         {/* Page Header + Search */}
         <section className="border-b border-zinc-200 bg-white py-8">
           <div className="mx-auto w-full max-w-[1200px] px-6">
