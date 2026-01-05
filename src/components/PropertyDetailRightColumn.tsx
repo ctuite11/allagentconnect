@@ -93,8 +93,9 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
               </Button>
               <Button
                 variant="outline"
-                onClick={() => navigate(`/communication-center?listing=${listing.id}`)}
-                className="w-full justify-start gap-2"
+                disabled
+                className="w-full justify-start gap-2 opacity-50 cursor-not-allowed"
+                title="Coming soon in Communications Center"
               >
                 <Send className="w-4 h-4" />
                 Send to Matching Agents

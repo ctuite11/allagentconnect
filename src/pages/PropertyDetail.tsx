@@ -936,8 +936,9 @@ const PropertyDetail = () => {
                   </div>
                   <Button
                     size="sm"
-                    onClick={() => navigate(`/communication-center?listing=${listing.id}`)}
-                    className="px-4"
+                    disabled
+                    className="px-4 opacity-50 cursor-not-allowed"
+                    title="Coming soon in Communications Center"
                   >
                     <Send className="w-4 h-4 mr-2" />
                     Message All Matches

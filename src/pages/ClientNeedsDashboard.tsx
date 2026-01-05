@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
+import { PageHeader } from "@/components/ui/page-header";
 import { Loader2 } from "lucide-react";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
@@ -297,11 +298,11 @@ const ClientNeedsDashboard = () => {
     <div className="min-h-screen bg-white">
       <Navigation />
       <main className={`${aacStyles.pageContainer} pt-20 pb-32`}>
-        {/* Header */}
-        <div>
-          <h1 className={aacStyles.pageH1}>Communications Center</h1>
-          <p className={aacStyles.pageSubhead}>Agent-to-agent collaboration and deal flow</p>
-        </div>
+        <PageHeader
+          title="Communications Center"
+          subtitle="Agent-to-agent collaboration and deal flow"
+          backTo="/agent-dashboard"
+        />
 
         {/* Channels Section */}
         <section>
