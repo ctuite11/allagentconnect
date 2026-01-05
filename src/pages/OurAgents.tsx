@@ -84,7 +84,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
   // Page titles based on mode
   const pageTitle = isAgentMode ? "AAC Referral Network" : "Trusted Agents";
   const pageSubtitle = isAgentMode 
-    ? "Connect with fellow agents for referrals and collaboration"
+    ? "A private network of vetted agents for referrals, introductions, and trusted collaboration."
     : "Connect directly with vetted local professionals";
 
   useEffect(() => {
@@ -322,8 +322,8 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
         <section className="border-b border-zinc-200 bg-white py-8">
           <div className="mx-auto w-full max-w-[1200px] px-6">
             <PageHeader
-              title="Trusted Agents"
-              subtitle="Connect directly with vetted local professionals"
+              title="AAC Referral Network"
+              subtitle="A private network of vetted agents for referrals, introductions, and trusted collaboration."
             />
             
             {/* Search Bar - Left Aligned */}
