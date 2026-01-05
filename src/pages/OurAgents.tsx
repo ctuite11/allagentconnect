@@ -13,9 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormattedInput } from "@/components/ui/formatted-input";
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { z } from "zod";
-import { PageTitle } from "@/components/ui/page-title";
 
 interface EnrichedAgent {
   id: string;
@@ -230,7 +229,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
   const filteredAgents = useMemo(() => {
     let result = [...agents];
 
-    // Text search
+    // Unified text search - searches name, company, email, office, and service areas
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(agent =>
@@ -238,7 +237,9 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
         agent.last_name?.toLowerCase().includes(query) ||
         agent.company?.toLowerCase().includes(query) ||
         agent.email?.toLowerCase().includes(query) ||
-        agent.office_name?.toLowerCase().includes(query)
+        agent.office_name?.toLowerCase().includes(query) ||
+        agent.team_name?.toLowerCase().includes(query) ||
+        agent.serviceAreas.some(area => area.toLowerCase().includes(query))
       );
     }
 
@@ -328,30 +329,27 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
       <Navigation />
 
       <main className="flex-1 pt-24 pb-12">
-        {/* Compact Hero */}
-        <section className="border-b border-border bg-card py-8">
-          <div className="container mx-auto px-4">
-            <PageTitle>{pageTitle}</PageTitle>
-            <p className="mt-1 text-muted-foreground">
-              {pageSubtitle}
+        {/* Compass-Style Search Hero */}
+        <section className="border-b border-zinc-200 bg-white py-12">
+          <div className="mx-auto max-w-2xl px-4 text-center">
+            <p className="text-[15px] text-zinc-600 mb-4">
+              Search by a specific agent or location
             </p>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
+              <Input
+                type="text"
+                placeholder="Neighborhood, city, county, ZIP code, office, or agent name"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-14 pl-12 pr-4 text-[16px] border-zinc-300 rounded-lg shadow-sm focus:border-zinc-400 focus:ring-0"
+              />
+            </div>
           </div>
         </section>
 
         {/* Filters */}
         <AgentDirectoryFilters
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedState={selectedState}
-          setSelectedState={setSelectedState}
-          selectedCounties={selectedCounties}
-          toggleCounty={toggleCounty}
-          counties={counties}
-          states={states}
-          showBuyerIncentivesOnly={showBuyerIncentivesOnly}
-          setShowBuyerIncentivesOnly={setShowBuyerIncentivesOnly}
-          showListingAgentsOnly={showListingAgentsOnly}
-          setShowListingAgentsOnly={setShowListingAgentsOnly}
           sortOrder={sortOrder}
           setSortOrder={setSortOrder}
           onClearFilters={handleClearFilters}
@@ -359,6 +357,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
           isAgentMode={isAgentMode}
           setIsAgentMode={setIsAgentMode}
           showAgentModeToggle={isAuthenticatedAgent}
+          hasActiveFilters={!!searchQuery}
         />
 
         {/* Agent Grid */}

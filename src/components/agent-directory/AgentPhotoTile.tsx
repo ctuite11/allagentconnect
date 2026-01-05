@@ -1,5 +1,6 @@
 import React from "react";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 type Agent = {
   id: string;
@@ -78,7 +79,7 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
             {agent.email || <span className="text-transparent">.</span>}
           </div>
           <div className="mt-1 text-[14px] leading-[18px] text-zinc-600 truncate">
-            {agent.cell_phone || agent.phone ? `M: ${agent.cell_phone || agent.phone}` : <span className="text-transparent">.</span>}
+            {agent.cell_phone || agent.phone ? `M: ${formatPhoneNumber(agent.cell_phone || agent.phone)}` : <span className="text-transparent">.</span>}
           </div>
         </div>
       </div>
