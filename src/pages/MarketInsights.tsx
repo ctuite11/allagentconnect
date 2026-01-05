@@ -197,7 +197,7 @@ const MarketInsights = () => {
     <div className="min-h-screen flex flex-col">
       <Navigation />
       
-      <main className="flex-1 bg-background pt-20">
+      <main className="flex-1 bg-white pt-20">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <PageHeader
@@ -247,46 +247,46 @@ const MarketInsights = () => {
 
           {loading ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Loading market data...</p>
+              <p className="text-zinc-500">Loading market data...</p>
             </div>
           ) : (
             <>
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <Card>
+                <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Sold</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    <TrendingUp className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{totalSold}</div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-zinc-500">
                       Properties sold in timeframe
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Average Sale Price</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <DollarSign className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{formatPrice(averagePrice)}</div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-zinc-500">
                       Mean closing price
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Avg Days on Market</CardTitle>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <Calendar className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{Math.round(averageDaysOnMarket)}</div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-zinc-500">
                       From listing to sale
                     </p>
                   </CardContent>
@@ -304,10 +304,10 @@ const MarketInsights = () => {
 
                 {/* Price Trends Tab */}
                 <TabsContent value="trends">
-                  <Card>
+                  <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                     <CardHeader>
                       <CardTitle>Price Trends Over Time</CardTitle>
-                      <CardDescription>Average sale prices by week</CardDescription>
+                      <CardDescription className="text-zinc-500">Average sale prices by week</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={400}>
@@ -332,10 +332,10 @@ const MarketInsights = () => {
 
                 {/* By Area Tab */}
                 <TabsContent value="areas">
-                  <Card>
+                  <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                     <CardHeader>
                       <CardTitle>Average Sale Prices by Area</CardTitle>
-                      <CardDescription>Top 10 cities by average sale price</CardDescription>
+                      <CardDescription className="text-zinc-500">Top 10 cities by average sale price</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={400}>
@@ -360,10 +360,10 @@ const MarketInsights = () => {
 
                 {/* Days on Market Tab */}
                 <TabsContent value="dom">
-                  <Card>
+                  <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                     <CardHeader>
                       <CardTitle>Days on Market Distribution</CardTitle>
-                      <CardDescription>How long properties stayed on the market before selling</CardDescription>
+                      <CardDescription className="text-zinc-500">How long properties stayed on the market before selling</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={400}>
@@ -378,10 +378,10 @@ const MarketInsights = () => {
                       </ResponsiveContainer>
                       <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
                         {daysOnMarketDistribution.map((bucket, idx) => (
-                          <div key={bucket.range} className="text-center p-4 bg-muted rounded-lg">
+                          <div key={bucket.range} className="text-center p-4 bg-zinc-50 rounded-lg">
                             <div className="text-2xl font-bold">{bucket.percentage}%</div>
-                            <div className="text-sm text-muted-foreground">{bucket.range} days</div>
-                            <div className="text-xs text-muted-foreground">({bucket.count} properties)</div>
+                            <div className="text-sm text-zinc-500">{bucket.range} days</div>
+                            <div className="text-xs text-zinc-500">({bucket.count} properties)</div>
                           </div>
                         ))}
                       </div>
@@ -391,10 +391,10 @@ const MarketInsights = () => {
 
                 {/* Property Types Tab */}
                 <TabsContent value="types">
-                  <Card>
+                  <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                     <CardHeader>
                       <CardTitle>Property Type Distribution</CardTitle>
-                      <CardDescription>Sales breakdown by property type</CardDescription>
+                      <CardDescription className="text-zinc-500">Sales breakdown by property type</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="grid md:grid-cols-2 gap-6">
@@ -419,7 +419,7 @@ const MarketInsights = () => {
                         </ResponsiveContainer>
                         <div className="space-y-3">
                           {propertyTypeDistribution.map((type, idx) => (
-                            <div key={type.name} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                            <div key={type.name} className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg">
                               <div className="flex items-center gap-3">
                                 <div 
                                   className="w-4 h-4 rounded" 

@@ -171,7 +171,7 @@ const AllAgentConnectHome = () => {
         />
       </Helmet>
 
-      <div className="min-h-screen bg-[#F7F8FA]">
+      <div className="min-h-screen bg-white">
         <div className="mx-auto max-w-6xl px-6 pt-24 pb-10">
           {/* Hero Zone - ambient network lives here only */}
           <div className="relative mb-8 overflow-hidden">
@@ -181,7 +181,7 @@ const AllAgentConnectHome = () => {
             {/* Content (above ambient) */}
             <div className="relative z-10">
               <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-bold tracking-tight text-[#1D1D1F] font-display">
+                <h1 className="text-4xl font-bold tracking-tight text-zinc-900 font-display">
                   Success Hub
                 </h1>
                 <span 
@@ -190,12 +190,8 @@ const AllAgentConnectHome = () => {
                 >
                   HUB v2
                 </span>
-                {/* DEBUG STAMP - remove after verification */}
-                <span className="text-[10px] text-neutral-400 font-mono">
-                  BG:#F7F8FA / CARD:#FFF
-                </span>
               </div>
-              <p className="mt-3 text-base text-[#6E6E73]">
+              <p className="mt-3 text-base text-zinc-500">
                 Connect · Communicate · Collaborate
               </p>
             </div>
@@ -207,10 +203,10 @@ const AllAgentConnectHome = () => {
             <div className={`${hubCard} ${tier1} flex flex-col`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center">
-                    <Search className="h-5 w-5 text-neutral-400" />
+                  <div className="h-10 w-10 rounded-full bg-zinc-100 flex items-center justify-center">
+                    <Search className="h-5 w-5 text-zinc-400" />
                   </div>
-                  <h2 className="text-base font-semibold text-neutral-800">Listing Search</h2>
+                  <h2 className="text-base font-semibold text-zinc-800">Listing Search</h2>
                 </div>
               </div>
               <div className="mt-auto">
@@ -229,13 +225,13 @@ const AllAgentConnectHome = () => {
             <div className={`${hubCard} ${tier1} flex flex-col`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center">
-                    <FileStack className="h-5 w-5 text-neutral-400" />
+                  <div className="h-10 w-10 rounded-full bg-zinc-100 flex items-center justify-center">
+                    <FileStack className="h-5 w-5 text-zinc-400" />
                   </div>
-                  <h2 className="text-base font-semibold text-neutral-800">Hotsheets</h2>
+                  <h2 className="text-base font-semibold text-zinc-800">Hotsheets</h2>
                 </div>
                 {hotsheets.length > 0 && (
-                  <span className="text-sm text-neutral-400">
+                  <span className="text-sm text-zinc-400">
                     {hotsheets.length} active
                   </span>
                 )}
@@ -256,10 +252,10 @@ const AllAgentConnectHome = () => {
             <div className={`${hubCard} ${tier1} flex flex-col`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-neutral-400" />
+                  <div className="h-10 w-10 rounded-full bg-zinc-100 flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-zinc-400" />
                   </div>
-                  <h2 className="text-base font-semibold text-neutral-800">Comm Center</h2>
+                  <h2 className="text-base font-semibold text-zinc-800">Comm Center</h2>
                 </div>
               </div>
               <div className="mt-auto">
@@ -281,33 +277,33 @@ const AllAgentConnectHome = () => {
               onClick={() => handleCardClick("my_listings", "/agent/listings")}
               className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
-              <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
-                <Home className="h-5 w-5 text-neutral-400" />
+              <div className="h-10 w-10 rounded-full bg-zinc-100 flex items-center justify-center shrink-0">
+                <Home className="h-5 w-5 text-zinc-400" />
               </div>
-              <h3 className="text-sm font-medium text-neutral-700">My Listings</h3>
-              <ArrowRight className="h-4 w-4 text-neutral-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <h3 className="text-sm font-medium text-zinc-700">My Listings</h3>
+              <ArrowRight className="h-4 w-4 text-zinc-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
 
             <button
               onClick={() => handleCardClick("my_contacts", "/my-clients")}
               className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
-              <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
-                <Users className="h-5 w-5 text-neutral-400" />
+              <div className="h-10 w-10 rounded-full bg-zinc-100 flex items-center justify-center shrink-0">
+                <Users className="h-5 w-5 text-zinc-400" />
               </div>
-              <h3 className="text-sm font-medium text-neutral-700">My Contacts</h3>
-              <ArrowRight className="h-4 w-4 text-neutral-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <h3 className="text-sm font-medium text-zinc-700">My Contacts</h3>
+              <ArrowRight className="h-4 w-4 text-zinc-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
 
             <button
               onClick={() => handleCardClick("profile_branding", "/agent-profile-editor")}
               className={`${hubCard} ${tier2} group flex items-center gap-4 text-left`}
             >
-              <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
-                <UserCircle className="h-5 w-5 text-neutral-400" />
+              <div className="h-10 w-10 rounded-full bg-zinc-100 flex items-center justify-center shrink-0">
+                <UserCircle className="h-5 w-5 text-zinc-400" />
               </div>
-              <h3 className="text-sm font-medium text-neutral-700">Profile & Branding</h3>
-              <ArrowRight className="h-4 w-4 text-neutral-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <h3 className="text-sm font-medium text-zinc-700">Profile & Branding</h3>
+              <ArrowRight className="h-4 w-4 text-zinc-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           </div>
 
@@ -317,22 +313,22 @@ const AllAgentConnectHome = () => {
               onClick={() => handleCardClick("manage_team", "/manage-team")}
               className={`${hubCard} ${tier3} group flex items-center gap-3 text-left`}
             >
-              <div className="h-9 w-9 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
-                <UsersRound className="h-4 w-4 text-neutral-400" />
+              <div className="h-9 w-9 rounded-full bg-zinc-100 flex items-center justify-center shrink-0">
+                <UsersRound className="h-4 w-4 text-zinc-400" />
               </div>
-              <h3 className="text-sm font-medium text-neutral-600">Manage Team</h3>
-              <ArrowRight className="h-3.5 w-3.5 text-neutral-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <h3 className="text-sm font-medium text-zinc-600">Manage Team</h3>
+              <ArrowRight className="h-3.5 w-3.5 text-zinc-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
 
             <button
               onClick={() => handleCardClick("global_search", "/agent-search")}
               className={`${hubCard} ${tier3} group flex items-center gap-3 text-left`}
             >
-              <div className="h-9 w-9 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
-                <SearchCheck className="h-4 w-4 text-neutral-400" />
+              <div className="h-9 w-9 rounded-full bg-zinc-100 flex items-center justify-center shrink-0">
+                <SearchCheck className="h-4 w-4 text-zinc-400" />
               </div>
-              <h3 className="text-sm font-medium text-neutral-600">Global Search</h3>
-              <ArrowRight className="h-3.5 w-3.5 text-neutral-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <h3 className="text-sm font-medium text-zinc-600">Global Search</h3>
+              <ArrowRight className="h-3.5 w-3.5 text-zinc-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           </div>
 
@@ -346,8 +342,8 @@ const AllAgentConnectHome = () => {
                 <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
                   <Shield className="h-4 w-4 text-amber-600" />
                 </div>
-                <h3 className="text-sm font-medium text-neutral-600">Admin Tools</h3>
-                <ArrowRight className="h-3.5 w-3.5 text-neutral-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                <h3 className="text-sm font-medium text-zinc-600">Admin Tools</h3>
+                <ArrowRight className="h-3.5 w-3.5 text-zinc-300 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
               </button>
             </div>
           )}
