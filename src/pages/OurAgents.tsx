@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { Loader2, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { z } from "zod";
+import { PageHeader } from "@/components/ui/page-header";
 
 interface EnrichedAgent {
   id: string;
@@ -317,21 +318,26 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
       <Navigation />
 
       <main className="flex-1 pt-24 pb-12">
-        {/* Compass-Style Search Hero */}
-        <section className="border-b border-zinc-200 bg-white py-12">
-          <div className="mx-auto max-w-2xl px-4 text-center">
-            <p className="text-[15px] text-zinc-600 mb-4">
-              Search by a specific agent or location
-            </p>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
-              <Input
-                type="text"
-                placeholder="Neighborhood, city, county, ZIP code, office, or agent name"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-14 pl-12 pr-4 text-[16px] border-zinc-300 rounded-lg shadow-sm focus:border-zinc-400 focus:ring-0"
-              />
+        {/* Page Header + Search */}
+        <section className="border-b border-zinc-200 bg-white py-8">
+          <div className="mx-auto w-full max-w-[1200px] px-6">
+            <PageHeader
+              title="Trusted Agents"
+              subtitle="Connect directly with vetted local professionals"
+            />
+            
+            {/* Search Bar - Left Aligned */}
+            <div className="mt-6 max-w-xl">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
+                <Input
+                  type="text"
+                  placeholder="Search by name, company, city, or ZIP..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-12 pl-12 pr-4 text-[15px] border-zinc-300 rounded-lg"
+                />
+              </div>
             </div>
           </div>
         </section>
