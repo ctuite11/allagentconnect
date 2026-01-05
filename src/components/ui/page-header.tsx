@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
@@ -58,10 +58,10 @@ export function PageHeader({
         {backTo && (
           <button
             onClick={handleBack}
-            className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            className="p-1.5 -ml-1.5 rounded-md hover:bg-zinc-100 transition-colors text-zinc-600 hover:text-zinc-900"
             aria-label="Go back"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5" />
           </button>
         )}
         
