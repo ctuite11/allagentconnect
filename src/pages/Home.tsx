@@ -8,8 +8,7 @@ import {
 } from "lucide-react";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
 
-const ACCENT_BLUE = "text-[#0E56F5]"; // Royal Blue for CTAs only
-const ICON_NEUTRAL = "text-slate-500"; // Neutral icons - let CTA own the blue
+const ACCENT_BLUE = "text-[#0E56F5]"; // Royal Blue
 
 export default function Home() {
   const navigate = useNavigate();
@@ -51,15 +50,15 @@ export default function Home() {
         <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
           <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm" style={{ color: '#1D1D1F' }}>
             <span className="inline-flex items-center gap-2 font-medium">
-              <ShieldCheck className={`h-5 w-5 ${ICON_NEUTRAL}`} />
+              <ShieldCheck className={`h-5 w-5 ${ACCENT_BLUE}`} />
               Operating since 2016
             </span>
             <span className="inline-flex items-center gap-2 font-medium">
-              <Users className={`h-5 w-5 ${ICON_NEUTRAL}`} />
+              <Users className={`h-5 w-5 ${ACCENT_BLUE}`} />
               Thousands of agents nationwide
             </span>
             <span className="inline-flex items-center gap-2 font-medium">
-              <Handshake className={`h-5 w-5 ${ICON_NEUTRAL}`} />
+              <Handshake className={`h-5 w-5 ${ACCENT_BLUE}`} />
               Off-market deals closed
             </span>
           </div>
