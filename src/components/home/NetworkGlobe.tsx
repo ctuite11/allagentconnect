@@ -11,8 +11,8 @@ import React, { useEffect, useState } from 'react';
 // Toggle this to true for placement/sizing assessment
 const DEBUG_VISIBLE = false;
 
-// Brand colors
-const LINE_COLOR = '#4169E1'; // Royal Blue
+// Brand colors - LOCKED
+const LINE_COLOR = '#0E56F5'; // Royal Blue (HSL 221 92% 51%)
 const DOT_COLOR = '#94A3B8';  // slate-400 (matches "Connect" in logo)
 
 interface NetworkGlobeProps {
