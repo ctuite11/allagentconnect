@@ -8,7 +8,8 @@ import {
 } from "lucide-react";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
 
-const ACCENT = "text-[#4169E1]"; // Royal Blue
+const ACCENT_BLUE = "text-[#0E56F5]"; // Royal Blue for CTAs only
+const ICON_NEUTRAL = "text-slate-500"; // Neutral icons - let CTA own the blue
 
 export default function Home() {
   const navigate = useNavigate();
@@ -27,14 +28,14 @@ export default function Home() {
                 Where Real Deals Get Done
               </h1>
 
-              <p className="mt-6 text-lg sm:text-xl leading-relaxed" style={{ color: '#86868B' }}>
+              <p className="mt-6 text-lg sm:text-xl leading-relaxed text-slate-600">
                 A private agent network for off-market listings, buyer needs, and verified collaboration — built by agents, for agents.
               </p>
 
               <div className="mt-8">
                 <button
                   onClick={() => navigate("/auth")}
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#4169E1] px-8 py-4 text-base font-semibold text-white hover:bg-[#3558C0] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169E1]/40"
+                  className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
                 >
                   Request Access <ArrowRight className="ml-2 h-5 w-5" />
                 </button>
@@ -50,15 +51,15 @@ export default function Home() {
         <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10 border-y border-neutral-200/70">
           <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm" style={{ color: '#1D1D1F' }}>
             <span className="inline-flex items-center gap-2 font-medium">
-              <ShieldCheck className={`h-5 w-5 ${ACCENT}`} />
+              <ShieldCheck className={`h-5 w-5 ${ICON_NEUTRAL}`} />
               Operating since 2016
             </span>
             <span className="inline-flex items-center gap-2 font-medium">
-              <Users className={`h-5 w-5 ${ACCENT}`} />
+              <Users className={`h-5 w-5 ${ICON_NEUTRAL}`} />
               Thousands of agents nationwide
             </span>
             <span className="inline-flex items-center gap-2 font-medium">
-              <Handshake className={`h-5 w-5 ${ACCENT}`} />
+              <Handshake className={`h-5 w-5 ${ICON_NEUTRAL}`} />
               Off-market deals closed
             </span>
           </div>
@@ -107,13 +108,13 @@ export default function Home() {
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>
               Request Access
             </h2>
-            <p className="mt-4" style={{ color: '#86868B' }}>
+            <p className="mt-4 text-slate-600">
               Verified agents only. Private infrastructure. Built for real business.
             </p>
             <div className="mt-8">
               <button
                 onClick={() => navigate("/auth")}
-                className="inline-flex items-center justify-center rounded-2xl bg-[#4169E1] px-8 py-4 text-base font-semibold text-white hover:bg-[#3558C0] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169E1]/40"
+                className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
               >
                 Request Access <ArrowRight className="ml-2 h-5 w-5" />
               </button>
@@ -139,7 +140,7 @@ export default function Home() {
             </a>
             <button
               onClick={() => navigate("/auth")}
-              className="inline-flex items-center justify-center rounded-xl bg-[#4169E1] px-4 py-2 text-sm font-semibold text-white hover:bg-[#3558C0] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4169E1]/40"
+              className="inline-flex items-center justify-center rounded-xl bg-[#0E56F5] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
             >
               Get Access
             </button>
@@ -178,7 +179,7 @@ function StepItem({
 }) {
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="h-12 w-12 rounded-full bg-[#4169E1] flex items-center justify-center">
+      <div className="h-12 w-12 rounded-full bg-[#0E56F5] flex items-center justify-center">
         <span className="text-white font-semibold">{number}</span>
       </div>
       <span className="text-base font-medium" style={{ color: '#1D1D1F' }}>{label}</span>
