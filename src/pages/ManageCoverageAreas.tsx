@@ -39,7 +39,7 @@ const ManageCoverageAreas = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto px-4 py-8 pt-24">
+        <div className="container mx-auto px-4 py-8 pt-20">
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -53,7 +53,7 @@ const ManageCoverageAreas = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
+      <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-4xl mx-auto">
           <PageHeader
             title="Manage Coverage Areas"

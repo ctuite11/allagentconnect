@@ -72,7 +72,7 @@ export default function ClientFavoritesPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto px-4 pt-24 pb-12">
+      <main className="container mx-auto px-4 pt-20 pb-12">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <PageTitle icon={<Heart className="w-8 h-8 text-primary" />} className="mb-2">

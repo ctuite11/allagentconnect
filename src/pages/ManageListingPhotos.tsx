@@ -258,7 +258,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
   }
 
   return (
-    <div className="container mx-auto p-6 pt-24 max-w-7xl space-y-6">
+    <div className="container mx-auto p-6 pt-20 max-w-7xl space-y-6">
       {/* Header with inline back button */}
       <div className="flex items-center justify-between">
         <PageHeader

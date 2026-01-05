@@ -336,7 +336,7 @@ const EditListing: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
       
-      <div className="flex-1 container mx-auto px-4 py-8 pt-24">
+      <div className="flex-1 container mx-auto px-4 py-8 pt-20">
         <div className="max-w-2xl mx-auto space-y-6">
           <PageHeader 
             title="Edit Listing" 

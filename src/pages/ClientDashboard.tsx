@@ -168,7 +168,7 @@ export default function ClientDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto px-4 pt-24 pb-12">
+      <main className="container mx-auto px-4 pt-20 pb-12">
         <div className="max-w-6xl mx-auto space-y-8">
           <div>
             <PageTitle className="mb-2">My Dashboard</PageTitle>
