@@ -254,7 +254,7 @@ function ClientBenefitCard({
   benefits: string[];
 }) {
   return (
-    <div className="rounded-2xl bg-white border border-zinc-200 p-6 shadow-[0_2px_8px_rgba(0,0,0,0.035)]">
+    <div className="rounded-2xl bg-white border border-zinc-100 hover:border-zinc-200 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200">
       <h3 className="text-lg font-semibold mb-4" style={{ color: '#1D1D1F' }}>{title}</h3>
       <div className="space-y-3">
         {benefits.map((benefit, index) => (
@@ -281,7 +281,7 @@ function FeatureCard({
 }) {
   return (
     <div 
-      className="rounded-2xl bg-white border border-zinc-200 p-6 shadow-[0_2px_8px_rgba(0,0,0,0.035)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:border-zinc-300 hover:-translate-y-0.5 transition-all duration-200"
+      className="rounded-2xl bg-white border border-zinc-100 hover:border-zinc-200 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200"
     >
       <div className="h-10 w-10 rounded-full bg-zinc-100 flex items-center justify-center mb-4">
         <Icon className="h-5 w-5 text-zinc-400" />
