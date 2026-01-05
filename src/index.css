@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AAC Brand Tokens - Emerald 600 (#059669) */
+/* AAC Brand Tokens - Royal Blue (#4169E1) */
 :root {
-  --aac: 160 84% 39%; /* #059669 - emerald-600 */
-  --aac-hover: 160 84% 33%; /* Darker hover state */
-  --aac-active: 160 84% 28%; /* Active/pressed state */
-  --aac-ring: 160 84% 39% / 0.25;
-  --aac-soft: 160 84% 39% / 0.08;
+  --aac: 225 73% 57%; /* #4169E1 - Royal Blue */
+  --aac-hover: 225 73% 47%; /* Darker hover state */
+  --aac-active: 225 73% 40%; /* Active/pressed state */
+  --aac-ring: 225 73% 57% / 0.25;
+  --aac-soft: 225 73% 57% / 0.08;
 }
 
 /* iOS Safari tap highlight (blue/gray overlay) */
