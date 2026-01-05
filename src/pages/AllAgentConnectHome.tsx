@@ -248,20 +248,20 @@ const AllAgentConnectHome = () => {
               </div>
             </div>
 
-            {/* Comm Center */}
+            {/* Communications Center */}
             <div className={`${hubCard} ${tier1} flex flex-col`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-zinc-100 flex items-center justify-center">
                     <MessageSquare className="h-5 w-5 text-zinc-400" />
                   </div>
-                  <h2 className="text-base font-semibold text-zinc-800">Comm Center</h2>
+                  <h2 className="text-base font-semibold text-zinc-800">Communications Center</h2>
                 </div>
               </div>
               <div className="mt-auto">
                 <Button 
                   size="sm" 
-                  onClick={() => handleCardClick("communication_center", "/communication-center")}
+                  onClick={() => handleCardClick("communications_center", "/client-needs")}
                   className="gap-2"
                 >
                   Open
