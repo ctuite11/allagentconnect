@@ -66,6 +66,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
   const [showBuyerIncentivesOnly, setShowBuyerIncentivesOnly] = useState(false);
   const [showListingAgentsOnly, setShowListingAgentsOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<"a-z" | "z-a" | "listings" | "recent">("a-z");
+  const [selectedCompany, setSelectedCompany] = useState("");
   
   // View mode - default based on prop
   const [isAgentMode, setIsAgentMode] = useState(defaultAgentMode);
@@ -225,6 +226,13 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
     return Array.from(stateSet).sort();
   }, [counties]);
 
+  // Get unique companies from agents
+  const companies = useMemo(() => {
+    return Array.from(
+      new Set(agents.map(a => (a.company || a.office_name || "").trim()).filter(Boolean))
+    ).sort((a, b) => a.localeCompare(b));
+  }, [agents]);
+
   // Filter and sort agents
   const filteredAgents = useMemo(() => {
     let result = [...agents];
@@ -243,6 +251,13 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
       );
     }
 
+    // Company filter
+    if (selectedCompany) {
+      result = result.filter(agent => {
+        const co = (agent.company || agent.office_name || "").trim();
+        return co === selectedCompany;
+      });
+    }
     // State filter (check service areas)
     if (selectedState) {
       result = result.filter(agent =>
@@ -292,7 +307,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
     }
 
     return result;
-  }, [agents, searchQuery, selectedState, selectedCounties, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder]);
+  }, [agents, searchQuery, selectedCompany, selectedState, selectedCounties, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder]);
 
   const toggleCounty = (countyId: string) => {
     setSelectedCounties(prev =>
@@ -308,6 +323,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
     setSelectedCounties([]);
     setShowBuyerIncentivesOnly(false);
     setShowListingAgentsOnly(false);
+    setSelectedCompany("");
     setSortOrder("a-z");
     setPage(1);
   };
@@ -357,7 +373,10 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
           isAgentMode={isAgentMode}
           setIsAgentMode={setIsAgentMode}
           showAgentModeToggle={isAuthenticatedAgent}
-          hasActiveFilters={!!searchQuery}
+          hasActiveFilters={!!searchQuery || !!selectedCompany}
+          companies={companies}
+          selectedCompany={selectedCompany}
+          setSelectedCompany={setSelectedCompany}
         />
 
         {/* Agent Grid */}
