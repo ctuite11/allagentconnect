@@ -7,6 +7,7 @@ import {
   Share2,
   Megaphone,
   MessageCircle,
+  Check,
 } from "lucide-react";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
 
@@ -27,8 +28,12 @@ export default function Home() {
                 Where Real Deals Get Done
               </h1>
 
-              <p className="mt-6 text-lg sm:text-xl leading-relaxed text-slate-600">
-                A private collaboration network created to help agents share opportunities, match buyers, and close deals.
+              <p className="mt-6 text-lg sm:text-xl leading-relaxed text-zinc-600">
+                A private agent collaboration network designed to increase deal flow, surface hidden opportunities, and help agents close more transactions.
+              </p>
+
+              <p className="mt-4 text-base text-zinc-500">
+                Built by Agents. For Agents. <span className="font-bold text-zinc-700">ALL AGENTS.</span>
               </p>
 
               <div className="mt-8">
@@ -62,6 +67,64 @@ export default function Home() {
               Off-market deals closed
             </span>
           </div>
+        </section>
+
+        {/* Built to Increase Production */}
+        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
+            Built to Increase Production
+          </h2>
+          
+          <div className="mt-10 max-w-2xl mx-auto space-y-4">
+            <BulletItem>See off-market and pre-market opportunities before others do</BulletItem>
+            <BulletItem>Match active buyers quietly, without public competition</BulletItem>
+            <BulletItem>Close more deals through direct agent-to-agent collaboration</BulletItem>
+            <BulletItem>Increase GCI by operating ahead of the open market</BulletItem>
+          </div>
+        </section>
+
+        {/* Why Clients Love It */}
+        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
+            Why Clients Love When Their Agent Is in ACC
+          </h2>
+          
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <ClientBenefitCard
+              title="For Sellers"
+              benefits={[
+                "Discreet exposure to serious buyers before going public",
+                "Faster, higher-quality feedback from active agents",
+                "A smarter launch strategy, not an all-or-nothing gamble",
+              ]}
+            />
+            <ClientBenefitCard
+              title="For Buyers"
+              benefits={[
+                "Early access to opportunities they'll never see online",
+                "Less competition and fewer bidding wars",
+                "Better outcomes through agent collaboration",
+              ]}
+            />
+          </div>
+        </section>
+
+        {/* The ACC Advantage */}
+        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
+            The ACC Advantage
+          </h2>
+          
+          <div className="mt-10 max-w-2xl mx-auto space-y-4">
+            <BulletItem>ACC members collaborate privately instead of competing publicly</BulletItem>
+            <BulletItem>Opportunities circulate inside the network before hitting the market</BulletItem>
+            <BulletItem>Members see deals non-members never do</BulletItem>
+            <BulletItem>Built by working agents who actually close transactions</BulletItem>
+          </div>
+
+          <p className="mt-10 text-center text-lg font-medium text-zinc-700 max-w-2xl mx-auto">
+            ACC members don't wait for the market. They operate ahead of it.
+          </p>
         </section>
 
         {/* What You Can Do */}
@@ -102,15 +165,34 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Coming Soon */}
+        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
+            Coming Soon
+          </h2>
+          
+          <div className="mt-10 max-w-2xl mx-auto space-y-4">
+            <BulletItem>Expanded markets and regional growth</BulletItem>
+            <BulletItem>Enhanced buyer-needs matching</BulletItem>
+            <BulletItem>New tools for listing presentations</BulletItem>
+            <BulletItem>Additional member-only collaboration features</BulletItem>
+          </div>
+        </section>
+
         {/* Final CTA */}
         <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>
               Request Access
             </h2>
-            <p className="mt-4 text-slate-600">
-              Verified agents only. Private infrastructure. Built for real business.
-            </p>
+            
+            {/* Proof + Patent text */}
+            <div className="mt-6 space-y-1 text-sm text-zinc-500">
+              <p>Operating since 2016</p>
+              <p>Built on proprietary, patented collaboration technology</p>
+              <p>Designed to protect agent relationships and deal integrity</p>
+            </div>
+
             <div className="mt-8">
               <button
                 onClick={() => navigate("/auth")}
@@ -152,6 +234,41 @@ export default function Home() {
 }
 
 /* -------------------- Components -------------------- */
+
+function BulletItem({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="h-5 w-5 rounded-full bg-zinc-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <Check className="h-3 w-3 text-zinc-400" />
+      </div>
+      <span className="text-base text-zinc-600 leading-relaxed">{children}</span>
+    </div>
+  );
+}
+
+function ClientBenefitCard({
+  title,
+  benefits,
+}: {
+  title: string;
+  benefits: string[];
+}) {
+  return (
+    <div className="rounded-2xl bg-white border border-zinc-200 p-6 shadow-[0_2px_8px_rgba(0,0,0,0.035)]">
+      <h3 className="text-lg font-semibold mb-4" style={{ color: '#1D1D1F' }}>{title}</h3>
+      <div className="space-y-3">
+        {benefits.map((benefit, index) => (
+          <div key={index} className="flex items-start gap-3">
+            <div className="h-5 w-5 rounded-full bg-zinc-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Check className="h-3 w-3 text-zinc-400" />
+            </div>
+            <span className="text-sm text-zinc-600 leading-relaxed">{benefit}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function FeatureCard({
   icon: Icon,
