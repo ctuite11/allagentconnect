@@ -9,6 +9,9 @@ type Agent = {
   office_name?: string | null;
   team_name?: string | null;
   headshot_url?: string | null;
+  phone?: string | null;
+  cell_phone?: string | null;
+  email?: string | null;
 };
 
 type Props = {
@@ -63,16 +66,20 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
           )}
         </div>
 
-        {/* TEXT BLOCK - Compass style */}
-        <div className="pt-4">
-          <div className="text-lg font-semibold leading-tight text-zinc-900">
+        {/* TEXT BLOCK - Fixed height for uniform cards */}
+        <div className="px-4 py-4 h-28">
+          <div className="text-lg font-semibold leading-tight text-zinc-900 truncate">
             {fullName}
           </div>
-          {brokerage && (
-            <div className="mt-1 text-xs leading-snug text-zinc-500">
-              {brokerage}
-            </div>
-          )}
+          <div className="mt-1 text-sm text-zinc-500 truncate">
+            {brokerage || "\u00A0"}
+          </div>
+          <div className="mt-1 text-sm text-zinc-500 truncate">
+            {agent.cell_phone || agent.phone || "\u00A0"}
+          </div>
+          <div className="mt-1 text-sm text-zinc-500 truncate">
+            {agent.email || "\u00A0"}
+          </div>
         </div>
       </div>
     </button>
