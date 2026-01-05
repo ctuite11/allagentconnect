@@ -48,7 +48,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     return points;
   }, []);
 
-  // Generate connections between nearby nodes
+  // Generate connections between nearby nodes with z-based depth opacity
   const connections = React.useMemo(() => {
     const lines: { x1: number; y1: number; x2: number; y2: number; opacity: number }[] = [];
     
@@ -60,12 +60,17 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         );
         
         if (dist < 100) {
+          // Z-based depth: avgZ in [-1, 1] → opacity 0.58..0.98
+          const avgZ = (nodes[i].z + nodes[j].z) / 2;
+          const t = (avgZ + 1) / 2; // normalize to 0..1
+          const depthOpacity = 0.58 + t * 0.40; // tight institutional range
+          
           lines.push({
             x1: nodes[i].x,
             y1: nodes[i].y,
             x2: nodes[j].x,
             y2: nodes[j].y,
-            opacity: 1
+            opacity: depthOpacity
           });
         }
       }
