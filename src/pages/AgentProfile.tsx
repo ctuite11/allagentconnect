@@ -191,7 +191,7 @@ const AgentProfile = () => {
       <Navigation />
       
       {/* Premium Header - Extends to very top (behind nav) */}
-      <div className="pt-16">
+      <div className="pt-20">
         <AgentProfileHeader 
           agent={agent} 
           onSaveContact={() => generateVCard(agent)} 
