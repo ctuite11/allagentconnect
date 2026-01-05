@@ -65,8 +65,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
   const [selectedCounties, setSelectedCounties] = useState<string[]>([]);
   const [showBuyerIncentivesOnly, setShowBuyerIncentivesOnly] = useState(false);
   const [showListingAgentsOnly, setShowListingAgentsOnly] = useState(false);
-  const [sortOrder, setSortOrder] = useState<"a-z" | "z-a" | "listings" | "recent">("a-z");
-  const [selectedCompany, setSelectedCompany] = useState("");
+  const [sortOrder, setSortOrder] = useState<"a-z" | "z-a">("a-z");
   
   // View mode - default based on prop
   const [isAgentMode, setIsAgentMode] = useState(defaultAgentMode);
@@ -226,12 +225,6 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
     return Array.from(stateSet).sort();
   }, [counties]);
 
-  // Get unique companies from agents
-  const companies = useMemo(() => {
-    return Array.from(
-      new Set(agents.map(a => (a.company || a.office_name || "").trim()).filter(Boolean))
-    ).sort((a, b) => a.localeCompare(b));
-  }, [agents]);
 
   // Filter and sort agents
   const filteredAgents = useMemo(() => {
@@ -251,13 +244,6 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
       );
     }
 
-    // Company filter
-    if (selectedCompany) {
-      result = result.filter(agent => {
-        const co = (agent.company || agent.office_name || "").trim();
-        return co === selectedCompany;
-      });
-    }
     // State filter (check service areas)
     if (selectedState) {
       result = result.filter(agent =>
@@ -286,28 +272,15 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
       result = result.filter(agent => agent.activeListingsCount > 0);
     }
 
-    // Sort
-    switch (sortOrder) {
-      case "a-z":
-        result.sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
-        break;
-      case "z-a":
-        result.sort((a, b) => `${b.first_name} ${b.last_name}`.localeCompare(`${a.first_name} ${a.last_name}`));
-        break;
-      case "listings":
-        result.sort((a, b) => b.activeListingsCount - a.activeListingsCount);
-        break;
-      case "recent":
-        result.sort((a, b) => {
-          if (!a.updated_at) return 1;
-          if (!b.updated_at) return -1;
-          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-        });
-        break;
+    // Sort by last name
+    if (sortOrder === "a-z") {
+      result.sort((a, b) => (a.last_name || "").localeCompare(b.last_name || ""));
+    } else {
+      result.sort((a, b) => (b.last_name || "").localeCompare(a.last_name || ""));
     }
 
     return result;
-  }, [agents, searchQuery, selectedCompany, selectedState, selectedCounties, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder]);
+  }, [agents, searchQuery, selectedState, selectedCounties, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder]);
 
   const toggleCounty = (countyId: string) => {
     setSelectedCounties(prev =>
@@ -323,7 +296,6 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
     setSelectedCounties([]);
     setShowBuyerIncentivesOnly(false);
     setShowListingAgentsOnly(false);
-    setSelectedCompany("");
     setSortOrder("a-z");
     setPage(1);
   };
@@ -368,15 +340,8 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
         <AgentDirectoryFilters
           sortOrder={sortOrder}
           setSortOrder={setSortOrder}
-          onClearFilters={handleClearFilters}
           resultCount={filteredAgents.length}
-          isAgentMode={isAgentMode}
-          setIsAgentMode={setIsAgentMode}
-          showAgentModeToggle={isAuthenticatedAgent}
-          hasActiveFilters={!!searchQuery || !!selectedCompany}
-          companies={companies}
-          selectedCompany={selectedCompany}
-          setSelectedCompany={setSelectedCompany}
+          searchQuery={searchQuery}
         />
 
         {/* Agent Grid */}
