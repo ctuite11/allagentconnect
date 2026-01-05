@@ -48,7 +48,7 @@ export default function Home() {
         </section>
 
         {/* Proof Strip */}
-        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10 border-y border-neutral-200/70">
+        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
           <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm" style={{ color: '#1D1D1F' }}>
             <span className="inline-flex items-center gap-2 font-medium">
               <ShieldCheck className={`h-5 w-5 ${ICON_NEUTRAL}`} />
@@ -95,9 +95,7 @@ export default function Home() {
           
           <div className="mt-10 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
             <StepItem number={1} label="Verify" />
-            <div className="hidden md:block w-16 h-px bg-neutral-200" />
             <StepItem number={2} label="Connect" />
-            <div className="hidden md:block w-16 h-px bg-neutral-200" />
             <StepItem number={3} label="Close" />
           </div>
         </section>
