@@ -1026,6 +1026,7 @@ const MyListings = () => {
               title="My Listings"
               subtitle="Manage your active, pending, and past listings from one place."
               className="mb-8"
+              backTo="/agent-dashboard"
             />
             
             {/* Empty State - matches Hot Sheets pattern */}
