@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
-import aacLogoBlue from "@/assets/aac-logo-blue.png";
+import aacLogoBlueSilver from "@/assets/aac-logo-blue-silver.png";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -24,9 +24,9 @@ export default function Home() {
           <span className="text-sm font-medium text-zinc-500">Logo Preview</span>
         </div>
         <div className="bg-zinc-50 rounded-xl p-6">
-          <img src={aacLogoBlue} alt="AAC Logo Blue" className="h-24 w-auto" />
+          <img src={aacLogoBlueSilver} alt="AAC Logo Blue Silver" className="h-24 w-auto" />
         </div>
-        <p className="text-xs text-zinc-400">src/assets/aac-logo-blue.png</p>
+        <p className="text-xs text-zinc-400">src/assets/aac-logo-blue-silver.png</p>
       </div>
 
       <main className="pt-20 pb-12">
