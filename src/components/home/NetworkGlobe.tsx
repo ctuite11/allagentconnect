@@ -12,7 +12,7 @@ import React, { useEffect, useState } from 'react';
 const DEBUG_VISIBLE = false;
 
 // Brand colors
-const LINE_COLOR = '#059669'; // emerald-600
+const LINE_COLOR = '#4169E1'; // Royal Blue
 const DOT_COLOR = '#94A3B8';  // slate-400 (matches "Connect" in logo)
 
 interface NetworkGlobeProps {
